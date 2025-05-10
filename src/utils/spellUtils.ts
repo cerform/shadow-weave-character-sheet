@@ -1,4 +1,3 @@
-
 import { Character, CharacterSpell } from "@/types/character";
 import { SpellData } from "@/types/spells";
 
@@ -314,4 +313,53 @@ export const convertSpellsForState = (spells: SpellData[]): CharacterSpell[] => 
     ritual: spell.ritual || false,
     concentration: spell.concentration || false
   }));
+};
+
+/**
+ * Вычисляет СЛ заклинаний (Spell DC) для персонажа
+ */
+export const calculateSpellcastingDC = (character: Character): number => {
+  // Базовая СЛ = 8 + бонус мастерства + модификатор характеристики
+  if (!character) return 8;
+  
+  // Получаем модификатор основной характеристики для заклинаний
+  const abilityMod = getSpellcastingAbilityModifier(character);
+  
+  // Получаем бонус мастерства
+  const profBonus = character.proficiencyBonus || Math.floor((character.level - 1) / 4) + 2;
+  
+  // Формула для вычисления СЛ заклинания
+  return 8 + profBonus + abilityMod;
+};
+
+/**
+ * Вычисляет бонус атаки заклинанием для персонажа
+ */
+export const calculateSpellAttackBonus = (character: Character): number => {
+  if (!character) return 0;
+  
+  // Получаем модификатор основной характеристики для заклинаний
+  const abilityMod = getSpellcastingAbilityModifier(character);
+  
+  // Получаем бонус мастерства
+  const profBonus = character.proficiencyBonus || Math.floor((character.level - 1) / 4) + 2;
+  
+  // Формула для вычисления бонуса атаки заклинанием
+  return profBonus + abilityMod;
+};
+
+/**
+ * Возвращает основную характеристику для заклинаний по умолчанию в зависимости от класса
+ */
+export const getDefaultCastingAbility = (characterClass: string): string => {
+  const classLower = characterClass.toLowerCase();
+  
+  if (['жрец', 'друид', 'следопыт', 'cleric', 'druid', 'ranger'].includes(classLower)) {
+    return 'wisdom';
+  } else if (['волшебник', 'wizard', 'artificer', 'артефайсер'].includes(classLower)) {
+    return 'intelligence';
+  } else {
+    // Бард, Колдун, Чародей, Паладин
+    return 'charisma';
+  }
 };

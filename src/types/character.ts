@@ -1,160 +1,73 @@
+
+// Import necessary types
+import { Feature } from './character';
+
+// Define Character interface
 export interface Character {
-  id?: string;
+  id: string;
   name: string;
-  race?: string;
+  race: string;
   subrace?: string;
-  class?: string;
-  className?: string;
+  class: string;
   subclass?: string;
-  background?: string;
+  background: string;
+  alignment: string;
   level: number;
-  experience?: number;
-  alignment?: string;
-  abilities?: {
-    STR: number;
-    DEX: number;
-    CON: number;
-    INT: number;
-    WIS: number;
-    CHA: number;
-    strength: number;
-    dexterity: number;
-    constitution: number;
-    intelligence: number;
-    wisdom: number;
-    charisma: number;
-  };
-  stats?: {
-    strength: number;
-    dexterity: number;
-    constitution: number;
-    intelligence: number;
-    wisdom: number;
-    charisma: number;
-  };
-  skills?: Record<string, {
-    proficient: boolean;
-    expertise?: boolean;
-    value?: number;
-    bonus?: number;
-  }>;
-  // Добавляем недостающие свойства
-  skillProficiencies?: string[];
-  skillBonuses?: Record<string, number>;
-  savingThrowProficiencies?: string[];
-  expertise?: string[];
-  
-  hitPoints?: {
-    current: number;
-    maximum: number;
-    temporary: number;
-  };
-  maxHp?: number;
-  currentHp?: number;
-  tempHp?: number;
-  temporaryHp?: number;
-  armorClass?: number;
-  speed?: number;
-  proficiencyBonus?: number;
-  initiative?: number;
-  savingThrows?: Record<string, boolean>;
-  
-  proficiencies?: {
-    languages?: string[];
-    tools?: string[];
-    weapons?: string[];
-    armor?: string[];
-    skills?: string[];
-  } | string[];
-  
-  equipment?: Item[] | string[] | {
-    weapons?: string[];
-    armor?: string;
-    items?: string[];
-    gold?: number;
-  };
-  
-  features?: string[] | Feature[];
-  spells?: CharacterSpell[] | string[];
-  spellSlots?: Record<string | number, { max: number; used: number }>;
-  money?: {
-    cp?: number;
-    sp?: number;
-    ep?: number;
-    gp?: number;
-    pp?: number;
-  };
-  gold?: number;
-  deathSaves?: {
-    successes: number;
-    failures: number;
-  };
-  inspiration?: boolean;
-  bonds?: string;
-  flaws?: string;
-  ideals?: string;
-  personalityTraits?: string;
-  appearance?: string;
-  backstory?: string;
-  raceFeatures?: {
-    name: string;
-    description: string;
-    level?: number;
-  }[];
-  classFeatures?: {
-    name: string;
-    description: string;
-    level?: number;
-  }[];
-  backgroundFeatures?: {
-    name: string;
-    description: string;
-    level?: number;
-  }[];
-  feats?: {
-    name: string;
-    description: string;
-    level?: number;
-  }[];
-  currency?: {
-    cp?: number;
-    sp?: number;
-    ep?: number;
-    gp?: number;
-    pp?: number;
-  };
-  updatedAt?: string;
-  createdAt?: string;
-  image?: string;
-  gender?: string;
-  userId?: string;
-  abilityPointsUsed?: number;
-  strength?: number;
-  dexterity?: number;
-  constitution?: number;
-  intelligence?: number;
-  wisdom?: number;
-  charisma?: number;
-  
-  notes?: string;
-  hitDice?: {
+  xp: number;
+  abilities: AbilityScores;
+  savingThrows: AbilityScores;
+  skills: Record<string, { proficient: boolean; expertise: boolean; value: number }>;
+  hp: number;
+  maxHp: number;
+  temporaryHp: number; 
+  ac: number;
+  proficiencyBonus: number;
+  speed: number;
+  initiative: number; 
+  inspiration: boolean;
+  hitDice: {
     total: number;
     used: number;
     dieType: string;
   };
-  resources?: Record<string, {
+  resources: Record<string, {
     max: number;
     used: number;
     name: string;
     recoveryType?: 'short-rest' | 'long-rest' | 'short' | 'long';
   }>;
+  deathSaves: {
+    successes: number;
+    failures: number;
+  };
+  spellcasting?: {
+    ability: string;
+    dc: number;
+    attack: number;
+    preparedSpellsLimit?: number;
+  };
+  spellSlots?: Record<string, { max: number; used: number }>;
   sorceryPoints?: {
     max: number;
     current?: number;
     used?: number;
+  }; 
+  spells: (CharacterSpell | string)[];
+  equipment: {
+    weapons: string[];
+    armor: string;
+    items: string[];
+    gold: number;
   };
-  
-  // Исправляем тип lastDiceRoll для соответствия коду в DicePanel.tsx
+  proficiencies: {
+    languages: string[];
+    tools: string[];
+    weapons?: string[];
+    armor?: string[];
+    skills?: string[];
+  };
+  features: (Feature | string)[];
+  notes?: string;
   lastDiceRoll?: {
     type: string;
     result: number | number[];
@@ -163,45 +76,21 @@ export interface Character {
     advantage?: boolean;
     disadvantage?: boolean;
     timestamp: number;
-    // Добавляем дополнительные свойства, используемые в компонентах
-    diceType?: string;
-    count?: number;
-    rolls?: number[];
-    label?: string;
   };
-
-  // Adding missing properties from errors
+  // Additional properties
+  currentHp?: number;
+  gender?: string;
   additionalClasses?: string[];
-  spellcasting?: {
-    ability?: string;
-    dc?: number;
-    attack?: number;
-    preparedSpellsLimit?: number;
-  };
-  
-  // Make sure these properties exist as mentioned in errors
-  notes?: string;
   savingThrowProficiencies?: string[];
   skillProficiencies?: string[];
   expertise?: string[];
   skillBonuses?: Record<string, number>;
-  
-  // Ensure spell property is flexible enough
-  spells?: (CharacterSpell | string)[] | CharacterSpell[] | string[];
-  
-  // Ensure equipment property is flexible enough
-  equipment?: Item[] | string[] | {
-    weapons?: string[];
-    armor?: string;
-    items?: string[];
-    gold?: number;
-  };
-  
-  // Ensure features property is flexible enough
-  features?: string[] | Feature[] | (string | Feature)[];
+  languages?: string[];
 }
 
+// Define Character Spell interface
 export interface CharacterSpell {
+  id?: string;
   name: string;
   level: number;
   school?: string;
@@ -211,63 +100,49 @@ export interface CharacterSpell {
   duration?: string;
   description?: string | string[];
   classes?: string[] | string;
-  source?: string;
+  prepared?: boolean;
   ritual?: boolean;
   concentration?: boolean;
   verbal?: boolean;
   somatic?: boolean;
   material?: boolean;
-  prepared?: boolean;
-  higherLevel?: string;
-  higherLevels?: string;
-  id?: string | number;
   materials?: string;
 }
 
-export interface Item {
-  name: string;
-  quantity: number;
-  weight?: number;
-  description?: string;
-  type?: string;
-  equipped?: boolean;
-  cost?: number;
-  costUnit?: string;
-}
-
+// Define Feature interface if it doesn't exist elsewhere
 export interface Feature {
+  id?: string;
   name: string;
-  source: string;
+  source?: string;
   description: string;
   level?: number;
+  active?: boolean;
+  uses?: {
+    max: number;
+    current: number;
+    recharge: 'short' | 'long' | 'daily' | 'other';
+  };
 }
 
-export interface PlayerCharacter extends Character {
-  userId: string;
+// Define AbilityScores interface if it doesn't exist elsewhere
+export interface AbilityScores {
+  strength?: number;
+  dexterity?: number;
+  constitution?: number;
+  intelligence?: number;
+  wisdom?: number;
+  charisma?: number;
+  [key: string]: number | undefined;
 }
 
-export const ABILITY_SCORE_CAPS = {
-  BASE_CAP: 20,
-  EPIC_CAP: 22,
-  LEGENDARY_CAP: 24
-};
-
-export interface HitPointEvent {
-  id: string;
-  type: 'damage' | 'healing' | 'temp' | 'heal' | 'tempHP' | 'death-save';
-  amount: number;
-  source?: string;
-  timestamp: number | Date;
-  previousHP?: number;
-  newHP?: number;
-}
-
-export interface LevelFeature {
-  id: string;
-  level: number;
+// Define Item interface for equipment
+export interface Item {
+  id?: string;
   name: string;
-  description: string;
-  type: string;
-  class?: string;
-  required?: boolean;
+  type?: string;
+  description?: string;
+  weight?: number;
+  cost?: number;
+  equipped?: boolean;
+  quantity?: number;
 }

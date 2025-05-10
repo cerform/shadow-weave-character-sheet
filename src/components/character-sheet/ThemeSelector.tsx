@@ -14,7 +14,8 @@ import {
 import { PaintBucket } from 'lucide-react';
 
 const ThemeSelector: React.FC = () => {
-  const { currentTheme, setTheme, theme } = useTheme();
+  // Change from currentTheme to theme to match the hook's return value
+  const { theme, setTheme } = useTheme();
   
   const handleThemeChange = (themeKey: ThemeType) => {
     setTheme(themeKey);

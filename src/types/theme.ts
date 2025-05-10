@@ -1,3 +1,4 @@
+
 export type ThemeType = 'default' | 'dark' | 'light' | 'system' | 'red' | 'green' | 'blue' | 'purple' | 'orange' | 'yellow' | 'pink' | 'gray' | 
   'warlock' | 'wizard' | 'druid' | 'warrior' | 'bard' | 'monk' | 'ranger' | 'sorcerer' | 'cyberpunk' | 'fantasy' | string;
 

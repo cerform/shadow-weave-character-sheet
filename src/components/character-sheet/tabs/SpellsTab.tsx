@@ -8,11 +8,11 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
 import { Separator } from '@/components/ui/separator';
 import {
-  calculateSpellcastingDC,
-  calculateSpellAttackBonus,
   getPreparedSpellsLimit,
   canPrepareMoreSpells,
-  getDefaultCastingAbility
+  getDefaultCastingAbility,
+  calculateSpellcastingDC,
+  calculateSpellAttackBonus
 } from '@/utils/spellUtils';
 import { SpellData } from '@/types/spells';
 
@@ -235,3 +235,5 @@ export const SpellsTab: React.FC<SpellsTabProps> = ({ character, onUpdate }) => 
     </Card>
   );
 };
+
+export default SpellsTab;

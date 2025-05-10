@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -5,6 +6,7 @@ import { ThemeProvider as NextThemesProvider } from "next-themes"
 import { type ThemeProviderProps } from "next-themes/dist/types"
 import { themes } from '@/lib/themes'
 import { useUserTheme } from '@/hooks/use-user-theme'
+import { ThemeType } from '@/types/theme'
 
 export interface ThemeContextType {
   theme: string;
