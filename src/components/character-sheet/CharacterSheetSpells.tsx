@@ -37,8 +37,10 @@ const CharacterSheetSpells: React.FC<CharacterSheetSpellsProps> = ({ character: 
         if (typeof spell === 'string') {
           // Если заклинание представлено строкой, создаем минимальный объект
           const basicSpell: CharacterSpell = {
+            id: `spell-${spell.toLowerCase().replace(/\s+/g, '-')}`,
             name: spell,
-            level: 0, // По умолчанию считаем заговором
+            level: 0,
+            school: 'Универсальная',
             prepared: true
           };
           
@@ -83,7 +85,14 @@ const CharacterSheetSpells: React.FC<CharacterSheetSpellsProps> = ({ character: 
     // Обновляем состояние подготовки заклинания
     if (character && character.spells) {
       const updatedSpells = character.spells.map(s => {
-        if (typeof s === 'string') return s;
+        if (typeof s === 'string') {
+          return {
+            id: `spell-${s.toLowerCase().replace(/\s+/g, '-')}`,
+            name: s,
+            level: 0,
+            school: 'Универсальная'
+          };
+        }
         
         if (s.name === spell.name) {
           return { ...s, prepared: !s.prepared };

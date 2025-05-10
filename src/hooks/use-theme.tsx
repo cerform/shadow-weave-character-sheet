@@ -27,7 +27,7 @@ export const UserThemeProvider: React.FC<UserThemeProviderProps> = ({
   defaultTheme = 'default' 
 }) => {
   const [activeTheme, setActiveTheme] = useState<ThemeType>(defaultTheme);
-  const [currentTheme, setCurrentTheme] = useState(themes[defaultTheme as keyof typeof themes] || themes.default);
+  const [currentTheme, setCurrentTheme] = useState<Theme>(themes[defaultTheme as keyof typeof themes] || themes.default);
   
   // Function for setting the theme
   const setUserTheme = (theme: ThemeType) => {

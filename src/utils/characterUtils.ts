@@ -1,70 +1,16 @@
 
-import { ABILITY_SCORE_CAPS } from "@/types/character";
-import type Character from "@/types/character";
+import { Character, AbilityScores } from '@/types/character';
 
-// Function to calculate the modifier from an ability score
-export const getModifierFromAbilityScore = (abilityScore: number): number => {
-  return Math.floor((abilityScore - 10) / 2);
-};
-
-// Function to get the modifier as a string (e.g., "+2" or "-1")
-export const getModifierString = (abilityScore: number): string => {
-  const modifier = Math.floor((abilityScore - 10) / 2);
-  if (modifier >= 0) {
-    return `+${modifier}`;
-  }
-  return `${modifier}`;
-};
-
-// Function to check if an ability score is within valid limits
-export const isValidAbilityScore = (abilityScore: number): boolean => {
-  return abilityScore >= ABILITY_SCORE_CAPS.MIN && abilityScore <= ABILITY_SCORE_CAPS.MAX;
-};
-
-// Function to calculate proficiency bonus based on character level
-export const calculateProficiencyBonus = (level: number): number => {
-  return Math.ceil((level + 1) / 4) + 1;
-};
-
-// Function to determine the saving throw bonus
-export const getSavingThrowBonus = (abilityScore: number, proficiency: boolean, characterLevel: number): number => {
-  let bonus = getModifierFromAbilityScore(abilityScore);
-  if (proficiency) {
-    bonus += calculateProficiencyBonus(characterLevel);
-  }
-  return bonus;
-};
-
-// Function to determine the skill check bonus
-export const getSkillCheckBonus = (abilityScore: number, proficiency: boolean, expertise: boolean, characterLevel: number): number => {
-  let bonus = getModifierFromAbilityScore(abilityScore);
-  if (proficiency) {
-    bonus += calculateProficiencyBonus(characterLevel);
-  }
-  if (expertise) {
-    bonus += calculateProficiencyBonus(characterLevel);
-  }
-  return bonus;
-};
-
-// Calculate numeric modifier (alias for getModifierFromAbilityScore)
-export const getNumericModifier = (abilityScore: number): number => {
-  return Math.floor((abilityScore - 10) / 2);
-};
-
-// Calculate ability modifier
-export const calculateAbilityModifier = (abilityScore: number): number => {
-  return Math.floor((abilityScore - 10) / 2);
-};
-
-// Create a default character
+// Создание персонажа по умолчанию
 export const createDefaultCharacter = (): Character => {
+  const id = `char_${Date.now()}_${Math.floor(Math.random() * 10000)}`;
+  
   return {
-    id: crypto.randomUUID(),
-    name: '',
-    race: '',
-    class: '',
-    background: '',
+    id,
+    name: 'Новый персонаж',
+    race: 'Человек',
+    class: 'Воин',
+    background: 'Солдат',
     alignment: 'Нейтральный',
     level: 1,
     xp: 0,
@@ -77,10 +23,10 @@ export const createDefaultCharacter = (): Character => {
       CHA: 10,
       strength: 10,
       dexterity: 10,
-      constitution: 10,
-      intelligence: 10, 
+      constitution: 10, 
+      intelligence: 10,
       wisdom: 10,
-      charisma: 10,
+      charisma: 10
     },
     savingThrows: {
       STR: 0,
@@ -94,11 +40,11 @@ export const createDefaultCharacter = (): Character => {
       constitution: 0,
       intelligence: 0,
       wisdom: 0,
-      charisma: 0,
+      charisma: 0
     },
     skills: {},
-    hp: 0,
-    maxHp: 0,
+    hp: 10,
+    maxHp: 10,
     temporaryHp: 0,
     ac: 10,
     proficiencyBonus: 2,
@@ -108,17 +54,17 @@ export const createDefaultCharacter = (): Character => {
     hitDice: {
       total: 1,
       used: 0,
-      dieType: 'd8',
+      dieType: 'd8'
     },
     resources: {},
     deathSaves: {
       successes: 0,
-      failures: 0,
+      failures: 0
     },
     spellcasting: {
       ability: 'intelligence',
       dc: 10,
-      attack: 0,
+      attack: 2,
     },
     spellSlots: {},
     spells: [],
@@ -126,19 +72,63 @@ export const createDefaultCharacter = (): Character => {
       weapons: [],
       armor: '',
       items: [],
-      gold: 0,
+      gold: 0
     },
     proficiencies: {
-      languages: ['Common'],
+      languages: ['Общий'],
       tools: [],
       weapons: [],
       armor: [],
+      skills: []
     },
     features: [],
     notes: '',
-    savingThrowProficiencies: [],
-    skillProficiencies: [],
-    expertise: [],
-    skillBonuses: {},
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
   };
+};
+
+// Расчет модификатора характеристики
+export const calculateAbilityModifier = (abilityScore: number): number => {
+  return Math.floor((abilityScore - 10) / 2);
+};
+
+// Получение числового модификатора из значения характеристики
+export const getNumericModifier = (value: number): number => {
+  return Math.floor((value - 10) / 2);
+};
+
+// Получение строкового представления модификатора
+export const getModifierString = (value: number): string => {
+  const mod = getNumericModifier(value);
+  return mod >= 0 ? `+${mod}` : `${mod}`;
+};
+
+// Получение модификатора из характеристик персонажа
+export const getAbilityModifier = (character: Character, ability: string): number => {
+  if (!character || !character.abilities) return 0;
+  
+  const abilityLower = ability.toLowerCase();
+  let score = 10;
+  
+  if (abilityLower === 'strength' || abilityLower === 'str') {
+    score = character.abilities.STR || character.abilities.strength || 10;
+  } 
+  else if (abilityLower === 'dexterity' || abilityLower === 'dex') {
+    score = character.abilities.DEX || character.abilities.dexterity || 10;
+  } 
+  else if (abilityLower === 'constitution' || abilityLower === 'con') {
+    score = character.abilities.CON || character.abilities.constitution || 10;
+  } 
+  else if (abilityLower === 'intelligence' || abilityLower === 'int') {
+    score = character.abilities.INT || character.abilities.intelligence || 10;
+  } 
+  else if (abilityLower === 'wisdom' || abilityLower === 'wis') {
+    score = character.abilities.WIS || character.abilities.wisdom || 10;
+  } 
+  else if (abilityLower === 'charisma' || abilityLower === 'cha') {
+    score = character.abilities.CHA || character.abilities.charisma || 10;
+  }
+  
+  return calculateAbilityModifier(score);
 };

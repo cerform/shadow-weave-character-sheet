@@ -33,10 +33,10 @@ export interface Item {
 }
 
 export interface CharacterSpell {
-  id: string; // Make id required to match SpellData
+  id: string; // Обязательное поле
   name: string;
   level: number;
-  school: string; // Make school required to match SpellData
+  school: string; // Обязательное поле
   castingTime?: string;
   range?: string;
   components?: string;

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -71,8 +72,11 @@ const SpellSelectionModal: React.FC<SpellSelectionModalProps> = ({
       activeTab === 'all' || 
       (spell.classes && 
         (Array.isArray(spell.classes) 
-          ? spell.classes.some(cls => cls.toLowerCase().includes(activeTab.toLowerCase()))
-          : spell.classes.toLowerCase().includes(activeTab.toLowerCase()))
+          ? spell.classes.some(cls => {
+              const clsStr = String(cls).toLowerCase();
+              return clsStr.includes(activeTab.toLowerCase());
+            })
+          : String(spell.classes).toLowerCase().includes(activeTab.toLowerCase()))
       );
     
     return matchesSearch && matchesClass;
@@ -101,23 +105,35 @@ const SpellSelectionModal: React.FC<SpellSelectionModalProps> = ({
       return;
     }
     
-    const characterSpell = convertSpellDataToCharacterSpell(spell);
-    const existingSpells = character.spells || [];
+    const characterSpell: CharacterSpell = {
+      id: spell.id,
+      name: spell.name,
+      level: spell.level,
+      school: spell.school,
+      castingTime: spell.castingTime,
+      range: spell.range,
+      components: spell.components,
+      duration: spell.duration,
+      description: spell.description,
+      classes: spell.classes,
+      prepared: true
+    };
     
-    // Convert to ensure ID is present for each spell
-    const updatedSpells: CharacterSpell[] = [...existingSpells.map(s => {
-      if (typeof s === 'string') {
-        return {
-          id: `spell-${s.toLowerCase().replace(/\s+/g, '-')}`,
-          name: s,
-          level: 0
-        };
-      }
-      return {
-        ...s,
-        id: s.id || `spell-${s.name.toLowerCase().replace(/\s+/g, '-')}`
-      };
-    }), characterSpell];
+    const existingSpells: CharacterSpell[] = character.spells 
+      ? character.spells.map(s => {
+          if (typeof s === 'string') {
+            return {
+              id: `spell-${s.toLowerCase().replace(/\s+/g, '-')}`,
+              name: s,
+              level: 0,
+              school: 'Универсальная'
+            };
+          }
+          return s;
+        })
+      : [];
+    
+    const updatedSpells = [...existingSpells, characterSpell];
     
     onUpdate({ spells: updatedSpells });
     
@@ -146,7 +162,8 @@ const SpellSelectionModal: React.FC<SpellSelectionModalProps> = ({
         return {
           id: `spell-${existingSpell.toLowerCase().replace(/\s+/g, '-')}`,
           name: existingSpell,
-          level: 0
+          level: 0,
+          school: 'Универсальная'
         };
       }
       if (existingSpell.name === spell.name) {

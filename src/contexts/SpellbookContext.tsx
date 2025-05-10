@@ -2,7 +2,7 @@
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
 import { Character, CharacterSpell } from '@/types/character';
 import { SpellData } from '@/types/spells';
-import { isSpellAdded, convertSpellList } from '@/utils/spellUtils';
+import { isSpellAdded, convertToSpellData } from '@/utils/spellUtils';
 import { useToast } from '@/hooks/use-toast';
 
 interface SpellbookContextProps {
@@ -44,12 +44,12 @@ export function SpellbookProvider({ children, character, onUpdate }: {
   useEffect(() => {
     if (character?.spells && Array.isArray(character.spells) && character.spells.length > 0) {
       // Convert each spell to appropriate type and ensure ID exists
-      const convertedSpells: SpellData[] = character.spells.map(spell => {
+      const convertedSpells: SpellData[] = (character.spells || []).map(spell => {
         if (typeof spell === 'string') {
           return {
-            id: `spell-${spell.toLowerCase().replace(/\s+/g, '-')}`,
-            name: spell,
-            level: 0, // Assume cantrip for string spells
+            id: `spell-${String(spell).toLowerCase().replace(/\s+/g, '-')}`,
+            name: String(spell),
+            level: 0,
             school: 'Универсальная',
             castingTime: '1 действие',
             range: 'На себя',
@@ -61,7 +61,7 @@ export function SpellbookProvider({ children, character, onUpdate }: {
         
         // Ensure SpellData has required properties
         return {
-          id: spell.id || `spell-${spell.name.toLowerCase().replace(/\s+/g, '-')}`,
+          id: spell.id || `spell-${String(spell.name).toLowerCase().replace(/\s+/g, '-')}`,
           name: spell.name,
           level: spell.level,
           school: spell.school || 'Универсальная',
@@ -103,8 +103,8 @@ export function SpellbookProvider({ children, character, onUpdate }: {
   // Import spells from external source
   const importSpells = (spells: CharacterSpell[]) => {
     // Convert CharacterSpell[] to SpellData[]
-    const convertedSpells: SpellData[] = spells.map(spell => ({
-      id: spell.id || `spell-${spell.name.toLowerCase().replace(/\s+/g, '-')}`,
+    const convertedSpells: SpellData[] = (spells || []).map(spell => ({
+      id: spell.id || `spell-${String(spell.name).toLowerCase().replace(/\s+/g, '-')}`,
       name: spell.name,
       level: spell.level || 0,
       school: spell.school || 'Универсальная',
@@ -121,7 +121,7 @@ export function SpellbookProvider({ children, character, onUpdate }: {
 
   // Add a spell to selected spells
   const addSpell = (spell: SpellData) => {
-    if (isSpellAdded(spell.id)) {
+    if (isSpellInSelectedSpells(spell.id)) {
       toast({
         title: "Заклинание уже добавлено",
         description: `${spell.name} уже в списке`,
@@ -138,7 +138,7 @@ export function SpellbookProvider({ children, character, onUpdate }: {
   };
 
   // Check if a spell is already selected
-  const isSpellAdded = (spellId: string): boolean => {
+  const isSpellInSelectedSpells = (spellId: string): boolean => {
     return selectedSpells.some(spell => String(spell.id) === String(spellId));
   };
 
@@ -234,7 +234,7 @@ export function SpellbookProvider({ children, character, onUpdate }: {
       saveCharacterSpells,
       getSpellLimits,
       getSelectedSpellCount,
-      isSpellAdded
+      isSpellAdded: isSpellInSelectedSpells
     }}>
       {children}
     </SpellbookContext.Provider>

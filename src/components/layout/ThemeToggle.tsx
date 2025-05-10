@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Paintbrush, Check } from "lucide-react";
 
 const ThemeToggle: React.FC = () => {
-  const { theme, setTheme, themeStyles } = useTheme();
+  const { theme, setTheme, currentTheme } = useTheme();
   const { setUserTheme } = useUserTheme();
   
   const themeOptions = [
@@ -40,6 +40,7 @@ const ThemeToggle: React.FC = () => {
     localStorage.setItem('dnd-theme', themeName);
   };
   
+  const themeStyles = currentTheme || themes.default;
   const currentAccent = themeStyles?.accent || themes.default.accent;
   
   return (
