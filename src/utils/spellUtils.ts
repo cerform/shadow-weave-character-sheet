@@ -13,193 +13,113 @@ export const convertToSpellData = (spell: CharacterSpell): SpellData => {
     school: spell.school || 'Универсальная',
     castingTime: spell.castingTime || '1 действие',
     range: spell.range || 'На себя',
-    components: spell.components || '',
     duration: spell.duration || 'Мгновенная',
+    components: spell.components || '',
     description: spell.description || '',
     classes: spell.classes || [],
-    prepared: spell.prepared || false,
     ritual: spell.ritual || false,
     concentration: spell.concentration || false,
     verbal: spell.verbal || false,
     somatic: spell.somatic || false,
     material: spell.material || false,
     materials: spell.materials || '',
-    source: spell.source || ''
+    source: spell.source || 'PHB',
+    higherLevels: spell.higherLevels || spell.higherLevel || '',
   };
 };
 
-// Converting array of spells for state management
+// Add missing function for calculating max spell level
+export const getMaxSpellLevel = (character: Character): number => {
+  const { level } = character;
+  
+  if (level <= 2) return 1;
+  if (level <= 4) return 2;
+  if (level <= 6) return 3;
+  if (level <= 8) return 4;
+  if (level <= 10) return 5;
+  if (level <= 12) return 6;
+  if (level <= 14) return 7;
+  if (level <= 16) return 8;
+  return 9;
+};
+
+// Add missing function to calculate available spells by class and level
+export const calculateAvailableSpellsByClassAndLevel = (
+  characterClass: string, 
+  level: number
+): { cantrips: number; spells: number } => {
+  // Default values
+  const result = { cantrips: 0, spells: 0 };
+  
+  // Convert to lowercase for case-insensitive comparison
+  const className = safeToString(characterClass).toLowerCase();
+  
+  if (className.includes('волшебник') || className.includes('wizard')) {
+    result.cantrips = 3 + Math.floor((level - 1) / 9);
+    result.spells = 6 + (level * 2);
+  } 
+  else if (className.includes('жрец') || className.includes('cleric') || 
+           className.includes('друид') || className.includes('druid')) {
+    result.cantrips = 3 + Math.floor(level / 10);
+    result.spells = level + 1;
+  }
+  else if (className.includes('бард') || className.includes('bard')) {
+    result.cantrips = 2 + Math.floor(level / 10);
+    result.spells = level + 2;
+  }
+  else if (className.includes('колдун') || className.includes('warlock')) {
+    result.cantrips = 2 + Math.floor((level - 1) / 6);
+    result.spells = level + 1;
+  }
+  else if (className.includes('чародей') || className.includes('sorcerer')) {
+    result.cantrips = 4 + Math.floor((level - 1) / 8);
+    result.spells = level + 1;
+  }
+  else if ((className.includes('паладин') || className.includes('paladin')) && level >= 2) {
+    result.spells = Math.floor(level / 2) + 1;
+  }
+  else if ((className.includes('следопыт') || className.includes('ranger')) && level >= 2) {
+    result.spells = Math.floor(level / 2) + 1;
+  }
+  
+  return result;
+};
+
+// Add canPrepareMoreSpells helper
+export const canPrepareMoreSpells = (character: Character): boolean => {
+  if (!character?.spellcasting) return false;
+  
+  // Some classes don't prepare spells
+  const noPrep = ['чародей', 'колдун', 'бард', 'sorcerer', 'warlock', 'bard'];
+  if (character.class && noPrep.some(c => character.class.toLowerCase().includes(c))) {
+    return true;
+  }
+  
+  const preparedCount = (character.spells || []).filter(s => s.prepared).length;
+  
+  // Calculate prepared spell limit based on class and level
+  const abilityMod = getAbilityModifier(character, character.spellcasting.ability || 'intelligence');
+  const classLevel = character.level || 1;
+  
+  // Most spellcasters prepare spells equal to their level + ability modifier
+  let prepLimit = classLevel + abilityMod;
+  
+  // Paladin and Ranger prepare half their level + ability modifier
+  if (character.class && 
+      (character.class.toLowerCase().includes('паладин') || 
+       character.class.toLowerCase().includes('следопыт') ||
+       character.class.toLowerCase().includes('paladin') ||
+       character.class.toLowerCase().includes('ranger'))) {
+    prepLimit = Math.floor(classLevel / 2) + abilityMod;
+  }
+  
+  // Set a minimum of 1 prepared spell
+  prepLimit = Math.max(1, prepLimit);
+  
+  return preparedCount < prepLimit;
+};
+
+// Add convertSpellsForState function
 export const convertSpellsForState = (spells: CharacterSpell[]): SpellData[] => {
   return spells.map(spell => convertToSpellData(spell));
-};
-
-// Normalizing an array of spells from a character
-export const normalizeSpells = (character: Character): CharacterSpell[] => {
-  if (!character.spells || !Array.isArray(character.spells)) return [];
-  
-  return character.spells.map(spell => {
-    // If spell is just a string, create a minimal spell object
-    if (typeof spell === 'string') {
-      return {
-        id: `spell-${safeToString(spell).toLowerCase().replace(/\s+/g, '-')}`,
-        name: spell,
-        level: 0,
-        school: 'Универсальная',
-        prepared: true
-      };
-    }
-    // If it's already a CharacterSpell object, just ensure it has an ID
-    return {
-      ...spell,
-      id: spell.id || `spell-${safeToString(spell.name).toLowerCase().replace(/\s+/g, '-')}`
-    };
-  });
-};
-
-// Calculate if more spells can be prepared
-export const canPrepareMoreSpells = (character: Character): boolean => {
-  if (!character) return false;
-  const limit = getPreparedSpellsLimit(character);
-  
-  const preparedCount = (character.spells || [])
-    .filter(spell => {
-      if (typeof spell === 'string') return false;
-      return spell.prepared && spell.level > 0;
-    })
-    .length;
-  
-  return preparedCount < limit;
-};
-
-// Calculate the limit of prepared spells
-export const getPreparedSpellsLimit = (character: Character): number => {
-  if (!character || !character.class) return 0;
-  
-  const classLower = safeToString(character.class).toLowerCase();
-  
-  // Classes that need to prepare spells
-  if (['жрец', 'друид', 'волшебник', 'cleric', 'druid', 'wizard', 'паладин', 'paladin'].includes(classLower)) {
-    const abilityMod = classLower === 'волшебник' || classLower === 'wizard' ? 
-      getAbilityModifier(character, 'intelligence') : 
-      getAbilityModifier(character, 'wisdom');
-    
-    const level = character.level || 1;
-    return Math.max(1, level + abilityMod);
-  }
-  
-  // Classes that don't need to prepare spells
-  return 0;
-};
-
-// Calculate spellcasting ability modifier based on class
-export const getSpellcastingAbilityModifier = (character: Character): number => {
-  if (!character || !character.class) return 0;
-  
-  const classLower = safeToString(character.class).toLowerCase();
-  
-  if (['жрец', 'друид', 'cleric', 'druid'].includes(classLower)) {
-    return getAbilityModifier(character, 'wisdom');
-  } 
-  else if (['волшебник', 'wizard'].includes(classLower)) {
-    return getAbilityModifier(character, 'intelligence');
-  }
-  else {
-    return getAbilityModifier(character, 'charisma');
-  }
-};
-
-// Filter spells by class and level
-export const filterSpellsByClassAndLevel = (
-  spells: SpellData[],
-  characterClass: string,
-  level: number
-): SpellData[] => {
-  if (!spells || !characterClass) return [];
-  
-  const maxSpellLevel = Math.ceil(level / 2);
-  const classLower = safeToString(characterClass).toLowerCase();
-  
-  return spells.filter(spell => {
-    // Check spell level
-    if (spell.level > maxSpellLevel) return false;
-    
-    // Check if spell is available for class
-    if (Array.isArray(spell.classes)) {
-      return spell.classes.some(cls => safeToString(cls).toLowerCase().includes(classLower));
-    } 
-    else if (typeof spell.classes === 'string') {
-      return safeToString(spell.classes).toLowerCase().includes(classLower);
-    }
-    
-    return false;
-  });
-};
-
-// Calculate available spells by class and level
-export const calculateAvailableSpellsByClassAndLevel = (
-  className: string,
-  level: number,
-  abilityModifier: number = 0
-) => {
-  // Default values
-  let cantripsCount = 0;
-  let knownSpells = 0;
-  let maxSpellLevel = Math.max(1, Math.ceil(level / 2));
-  
-  const classLower = safeToString(className).toLowerCase();
-  
-  switch(classLower) {
-    case 'волшебник':
-    case 'wizard':
-      cantripsCount = level >= 10 ? 5 : level >= 4 ? 4 : 3;
-      knownSpells = 6 + (level * 2);
-      break;
-      
-    case 'жрец':
-    case 'cleric':
-    case 'друид':
-    case 'druid':
-      cantripsCount = level >= 10 ? 5 : level >= 4 ? 4 : 3;
-      knownSpells = level + Math.max(1, abilityModifier);
-      break;
-      
-    case 'бард':
-    case 'bard':
-      cantripsCount = level >= 10 ? 4 : 2;
-      knownSpells = Math.max(4, level + 3);
-      break;
-      
-    case 'колдун':
-    case 'warlock':
-      cantripsCount = level >= 10 ? 4 : 2;
-      knownSpells = Math.min(15, level + 1);
-      break;
-      
-    case 'чародей':
-    case 'sorcerer':
-      cantripsCount = level >= 10 ? 6 : level >= 4 ? 5 : 4;
-      knownSpells = level + 1;
-      break;
-      
-    case 'паладин':
-    case 'paladin':
-      cantripsCount = 0;
-      knownSpells = Math.ceil(level / 2) + Math.max(1, abilityModifier);
-      maxSpellLevel = Math.min(5, Math.ceil(level / 2));
-      break;
-      
-    case 'следопыт':
-    case 'ranger':
-      cantripsCount = 0;
-      knownSpells = Math.ceil(level / 2) + Math.max(1, abilityModifier);
-      maxSpellLevel = Math.min(5, Math.ceil(level / 2));
-      break;
-      
-    default:
-      cantripsCount = 0;
-      knownSpells = 0;
-      maxSpellLevel = 0;
-  }
-  
-  return { maxSpellLevel, cantripsCount, knownSpells };
 };

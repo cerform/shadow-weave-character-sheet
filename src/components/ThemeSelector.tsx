@@ -1,139 +1,73 @@
 
-import React, { useEffect, useMemo, useCallback } from 'react';
-import { Button } from "@/components/ui/button";
+import React from 'react';
+import { themes } from '@/lib/themes';
+import { Button } from '@/components/ui/button';
+import { useTheme } from '@/hooks/use-theme';
+import { ThemeType } from '@/types/theme';
+
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Paintbrush, Check } from "lucide-react";
-import { useUserTheme } from '@/hooks/use-user-theme';
-import { useTheme } from '@/hooks/use-theme';
-import { themes } from '@/lib/themes';
-import { ThemeType } from '@/types/theme';
+import { PaintBucket } from 'lucide-react';
 
-export const ThemeSelector = () => {
-  const { setUserTheme, activeTheme } = useUserTheme();
+const ThemeSelector: React.FC = () => {
+  // Используем правильные имена из хука
   const { theme, setTheme } = useTheme();
   
-  // Получаем список тем в формате массива объектов
-  const themesList = useMemo(() => [
-    { name: "default" as ThemeType, label: "По умолчанию" },
-    { name: "warlock" as ThemeType, label: "Чернокнижник" },
-    { name: "wizard" as ThemeType, label: "Волшебник" },
-    { name: "druid" as ThemeType, label: "Друид" },
-    { name: "warrior" as ThemeType, label: "Воин" },
-    { name: "bard" as ThemeType, label: "Бард" },
-  ], []);
-
-  // Получаем текущую тему из контекстов и определяем стили
-  const currentThemeId = useMemo(() => activeTheme || theme || 'default', [activeTheme, theme]);
-  const currentTheme = useMemo(() => themes[currentThemeId as keyof typeof themes] || themes.default, [currentThemeId]);
+  const handleThemeChange = (themeKey: string) => {
+    // Explicitly cast the string to ThemeType for type safety
+    setTheme(themeKey as ThemeType);
+  };
   
-  // Синхронизируем темы между контекстами при инициализации
-  useEffect(() => {
-    if (activeTheme && theme !== activeTheme) {
-      if (setTheme) {
-        setTheme(activeTheme as ThemeType);
-      }
-      // Явно применяем CSS-переменные
-      applyThemeToDom(activeTheme);
+  const getThemeName = (themeKey: string): string => {
+    switch(themeKey) {
+      case 'default': return 'Стандартная';
+      case 'dark': return 'Тёмная';
+      case 'light': return 'Светлая';
+      case 'red': return 'Красная';
+      case 'green': return 'Зелёная';
+      case 'blue': return 'Синяя';
+      case 'purple': return 'Фиолетовая';
+      case 'orange': return 'Оранжевая';
+      case 'yellow': return 'Жёлтая';
+      case 'pink': return 'Розовая';
+      case 'gray': return 'Серая';
+      case 'system': return 'Системная';
+      default: return themeKey;
     }
-  }, []);
+  };
   
-  // Функция для применения темы к DOM
-  const applyThemeToDom = useCallback((themeName: string | ThemeType) => {
-    const selectedTheme = themes[themeName as keyof typeof themes] || themes.default;
-    
-    document.documentElement.setAttribute('data-theme', themeName.toString());
-    document.body.className = '';
-    document.body.classList.add(`theme-${themeName}`);
-    
-    // Установка CSS-переменных
-    document.documentElement.style.setProperty('--background', selectedTheme.background);
-    document.documentElement.style.setProperty('--foreground', selectedTheme.foreground);
-    document.documentElement.style.setProperty('--primary', selectedTheme.primary);
-    document.documentElement.style.setProperty('--accent', selectedTheme.accent);
-    document.documentElement.style.setProperty('--text-color', selectedTheme.textColor);
-    document.documentElement.style.setProperty('--card-background', selectedTheme.cardBackground);
-    
-    console.log('Тема применена к DOM:', themeName);
-  }, []);
-
-  // Обработчик переключения тем - fixing type issues
-  const handleThemeChange = useCallback((themeName: ThemeType) => {
-    if (themeName === currentThemeId) return;
-    
-    if (setUserTheme) {
-      setUserTheme(themeName);
-    }
-    
-    if (setTheme) {
-      // Use as ThemeType to ensure correct type is passed
-      setTheme(themeName);
-    }
-    
-    // Применяем тему к DOM
-    applyThemeToDom(themeName);
-    
-    // Сохраняем в localStorage
-    localStorage.setItem('theme', themeName.toString());
-    localStorage.setItem('userTheme', themeName.toString());
-    localStorage.setItem('dnd-theme', themeName.toString());
-    
-    console.log('Тема изменена на:', themeName);
-  }, [currentThemeId, setUserTheme, setTheme, applyThemeToDom]);
-
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button 
-          variant="ghost" 
-          size="icon" 
-          className="relative"
-          style={{ 
-            borderColor: currentTheme.accent,
-            backgroundColor: 'rgba(0, 0, 0, 0.7)'
-          }}
-        >
-          <Paintbrush className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all" />
-          <span className="sr-only">Изменить тему</span>
-          <div 
-            className="absolute bottom-0 right-0 h-2 w-2 rounded-full" 
-            style={{ backgroundColor: currentTheme.accent }}
-          />
+        <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+          <PaintBucket className="h-4 w-4" />
+          <span className="sr-only">Сменить тему</span>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent 
-        align="end"
-        style={{ 
-          backgroundColor: 'rgba(0, 0, 0, 0.85)',
-          borderColor: currentTheme.accent,
-          color: currentTheme.textColor
-        }}
-      >
-        {themesList.map((themeItem) => {
-          const themeColor = themes[themeItem.name]?.accent || themes.default.accent;
-          const isActive = currentThemeId === themeItem.name;
-          
+      <DropdownMenuContent align="end">
+        {Object.keys(themes).map((themeKey) => {
+          const currentTheme = themes[themeKey as keyof typeof themes];
           return (
             <DropdownMenuItem
-              key={themeItem.name}
-              onClick={() => handleThemeChange(themeItem.name)}
-              className={isActive ? "bg-primary/20" : ""}
-              style={{ 
-                color: currentTheme.textColor,
-                borderLeft: isActive ? `3px solid ${themeColor}` : '',
-                paddingLeft: isActive ? '13px' : ''
+              key={themeKey}
+              onClick={() => handleThemeChange(themeKey)}
+              className="cursor-pointer"
+              style={{
+                backgroundColor: theme === themeKey ? '#f4f4f5' : 'transparent',
               }}
             >
-              <div className="flex items-center gap-2">
-                <div 
-                  className="h-3 w-3 rounded-full" 
-                  style={{ backgroundColor: themeColor }}
+              <div className="flex items-center">
+                <div
+                  className="h-4 w-4 rounded-full mr-2"
+                  style={{
+                    backgroundColor: currentTheme.primary || currentTheme.accent || '#000000',
+                  }}
                 />
-                {themeItem.label} {isActive && <Check className="ml-2 h-3 w-3" />}
+                {getThemeName(themeKey)}
               </div>
             </DropdownMenuItem>
           );

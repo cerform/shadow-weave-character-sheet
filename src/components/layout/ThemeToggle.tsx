@@ -15,10 +15,10 @@ const ThemeToggle = () => {
   // На основе текущей темы определяем, на какую переключаться
   const toggleTheme = () => {
     if (isDarkTheme) {
-      // Если тема темная, переключаемся на светлую
+      // If theme is dark, switch to light theme
       setTheme('light' as ThemeType);
     } else {
-      // Если тема светлая, переключаемся на темную
+      // If theme is light, switch to dark theme
       setTheme('dark' as ThemeType);
     }
   };

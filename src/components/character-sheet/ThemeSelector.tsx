@@ -2,7 +2,8 @@
 import React from 'react';
 import { themes } from '@/lib/themes';
 import { Button } from '@/components/ui/button';
-import { useTheme, ThemeType } from '@/hooks/use-theme';
+import { useTheme } from '@/hooks/use-theme';
+import { ThemeType } from '@/types/theme';
 
 import {
   DropdownMenu,
@@ -16,8 +17,9 @@ const ThemeSelector: React.FC = () => {
   // Используем правильные имена из хука
   const { theme, setTheme } = useTheme();
   
-  const handleThemeChange = (themeKey: ThemeType) => {
-    setTheme(themeKey);
+  const handleThemeChange = (themeKey: string) => {
+    // Explicitly cast the string to ThemeType for type safety
+    setTheme(themeKey as ThemeType);
   };
   
   const getThemeName = (themeKey: string): string => {
@@ -52,7 +54,7 @@ const ThemeSelector: React.FC = () => {
           return (
             <DropdownMenuItem
               key={themeKey}
-              onClick={() => handleThemeChange(themeKey as ThemeType)}
+              onClick={() => handleThemeChange(themeKey)}
               className="cursor-pointer"
               style={{
                 backgroundColor: theme === themeKey ? '#f4f4f5' : 'transparent',

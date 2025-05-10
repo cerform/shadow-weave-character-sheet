@@ -137,3 +137,24 @@ export const getAbilityModifier = (character: Character, ability: string): numbe
   
   return calculateAbilityModifier(score);
 };
+
+// Add the missing hasValue function
+export const hasValue = (value: any): boolean => {
+  return value !== undefined && value !== null;
+};
+
+// Default ability scores for type safety
+export const defaultAbilityScores: AbilityScores = {
+  STR: 10,
+  DEX: 10,
+  CON: 10,
+  INT: 10,
+  WIS: 10,
+  CHA: 10,
+  strength: 10,
+  dexterity: 10,
+  constitution: 10,
+  intelligence: 10,
+  wisdom: 10,
+  charisma: 10
+};
