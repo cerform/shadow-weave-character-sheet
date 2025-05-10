@@ -1,15 +1,24 @@
 
+// Add these missing properties to the Theme interface
 export interface Theme {
   name: string;
+  background: string;
+  foreground: string; 
+  accent: string;
   primary: string;
   secondary: string;
-  accent: string;
-  background: string;
-  foreground: string;
   textColor: string;
   mutedTextColor: string;
   cardBackground: string;
-  buttonText?: string;
+  success: string;
+  warning: string;
+  danger: string;
+  info: string;
+  // Add these new properties
+  backgroundBrightness?: number;
+  backgroundGradient?: string;
+  decorativeCorners?: boolean;
+  primaryColor?: string; // Alias for primary
 }
 
 export const themes: Record<string, Theme> = {

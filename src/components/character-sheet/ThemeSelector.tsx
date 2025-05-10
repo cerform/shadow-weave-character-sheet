@@ -62,7 +62,7 @@ const ThemeSelector: React.FC = () => {
                 <div
                   className="h-4 w-4 rounded-full mr-2"
                   style={{
-                    backgroundColor: currentTheme.primary || currentTheme.primaryColor || '#000000',
+                    backgroundColor: currentTheme.primary || currentTheme.accent || '#000000',
                   }}
                 />
                 {getThemeName(themeKey)}

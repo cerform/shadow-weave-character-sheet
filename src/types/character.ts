@@ -64,6 +64,13 @@ export interface HitPointEvent {
   description?: string;
 }
 
+export interface LevelFeature {
+  level: number;
+  title: string;
+  description: string;
+  options?: string[];
+}
+
 export interface Character {
   id: string;
   name: string;
@@ -108,6 +115,7 @@ export interface Character {
     ability: string;
     dc: number;
     attack: number;
+    preparedSpellsLimit?: number;
   };
   spellSlots: Record<string, { max: number; used: number }>;
   sorceryPoints?: {
@@ -172,7 +180,7 @@ export interface Character {
     wisdom: number;
     charisma: number;
   };
-  // Добавляем свойства, к которым обращаются напрямую
+  // Explicit properties for direct access
   strength?: number;
   dexterity?: number;
   constitution?: number;
@@ -193,7 +201,21 @@ export interface Character {
   userId?: string; // For database reference
   additionalClasses?: Array<{class: string, level: number, subclass?: string}>;
   abilityPointsUsed?: number;
+  savingThrowProficiencies?: string[];
+  skillProficiencies?: string[];
+  skillBonuses?: Record<string, number>;
+  expertise?: string[];
 }
+
+// Export default constants
+export const ABILITY_SCORE_CAPS = {
+  MIN: 1,               // Minimum ability score
+  MAX: 30,              // Theoretical maximum (gods/artifacts)
+  DEFAULT: 10,          // Default starting value
+  BASE_CAP: 20,         // Normal character maximum
+  EPIC_CAP: 22,         // Epic level maximum (level 10+)
+  LEGENDARY_CAP: 24     // Legendary maximum (level 16+)
+};
 
 // Export Character as both default and named export for compatibility
 export default Character;

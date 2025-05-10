@@ -1,3 +1,4 @@
+
 import { Character, CharacterSpell } from '@/types/character';
 import { SpellData } from '@/types/spells';
 
@@ -128,30 +129,18 @@ export const getPreparedSpellsLimit = (character: Character): number => {
   if (!character.class || !character.level) return 0;
   
   // Get spellcasting ability
-  let abilityName = '';
-  switch(character.class.toLowerCase()) {
-    case 'бард':
-    case 'чародей':
-    case 'колдун':
-    case 'паладин':
-      abilityName = 'charisma';
-      break;
-    case 'жрец':
-    case 'друид':
-    case 'следопыт':
-      abilityName = 'wisdom';
-      break;
-    case 'волшебник':
-      abilityName = 'intelligence';
-      break;
-    default:
-      return 0;
-  }
+  let abilityName = getDefaultCastingAbility(character.class);
   
   // Get ability modifier
   let abilityScore = 0;
   if (character.abilities) {
-    abilityScore = character.abilities[abilityName as keyof typeof character.abilities] as number || 10;
+    if (abilityName === 'charisma') {
+      abilityScore = character.abilities.charisma || character.abilities.CHA || character.charisma || 10;
+    } else if (abilityName === 'wisdom') {
+      abilityScore = character.abilities.wisdom || character.abilities.WIS || character.wisdom || 10;
+    } else if (abilityName === 'intelligence') {
+      abilityScore = character.abilities.intelligence || character.abilities.INT || character.intelligence || 10;
+    }
   }
   
   // Calculate modifier
@@ -159,6 +148,74 @@ export const getPreparedSpellsLimit = (character: Character): number => {
   
   // For most classes, it's class level + ability modifier
   return character.level + modifier;
+};
+
+/**
+ * Get the default spellcasting ability for a class
+ */
+export const getDefaultCastingAbility = (characterClass: string): string => {
+  const classLower = characterClass.toLowerCase();
+  
+  if (['бард', 'чародей', 'колдун', 'паладин'].includes(classLower)) {
+    return 'charisma';
+  } else if (['жрец', 'друид', 'следопыт'].includes(classLower)) {
+    return 'wisdom';
+  } else if (['волшебник', 'маг'].includes(classLower)) {
+    return 'intelligence';
+  }
+  
+  return 'charisma'; // Default
+};
+
+/**
+ * Calculate spell save DC
+ */
+export const calculateSpellcastingDC = (character: Character): number => {
+  // Base DC = 8 + proficiency bonus + spellcasting ability modifier
+  const baseDC = 8;
+  const profBonus = character.proficiencyBonus || Math.max(2, Math.floor((character.level || 1) / 4) + 2);
+  
+  // Get the spellcasting ability
+  const abilityName = getDefaultCastingAbility(character.class || "");
+  
+  // Get the ability modifier
+  let abilityMod = 0;
+  if (character.abilities) {
+    if (abilityName === 'charisma') {
+      abilityMod = Math.floor(((character.abilities.charisma || character.abilities.CHA || character.charisma || 10) - 10) / 2);
+    } else if (abilityName === 'wisdom') {
+      abilityMod = Math.floor(((character.abilities.wisdom || character.abilities.WIS || character.wisdom || 10) - 10) / 2);
+    } else if (abilityName === 'intelligence') {
+      abilityMod = Math.floor(((character.abilities.intelligence || character.abilities.INT || character.intelligence || 10) - 10) / 2);
+    }
+  }
+  
+  return baseDC + profBonus + abilityMod;
+};
+
+/**
+ * Calculate spell attack bonus
+ */
+export const calculateSpellAttackBonus = (character: Character): number => {
+  // Attack bonus = proficiency bonus + spellcasting ability modifier
+  const profBonus = character.proficiencyBonus || Math.max(2, Math.floor((character.level || 1) / 4) + 2);
+  
+  // Get the spellcasting ability
+  const abilityName = getDefaultCastingAbility(character.class || "");
+  
+  // Get the ability modifier
+  let abilityMod = 0;
+  if (character.abilities) {
+    if (abilityName === 'charisma') {
+      abilityMod = Math.floor(((character.abilities.charisma || character.abilities.CHA || character.charisma || 10) - 10) / 2);
+    } else if (abilityName === 'wisdom') {
+      abilityMod = Math.floor(((character.abilities.wisdom || character.abilities.WIS || character.wisdom || 10) - 10) / 2);
+    } else if (abilityName === 'intelligence') {
+      abilityMod = Math.floor(((character.abilities.intelligence || character.abilities.INT || character.intelligence || 10) - 10) / 2);
+    }
+  }
+  
+  return profBonus + abilityMod;
 };
 
 /**
@@ -238,30 +295,13 @@ export const getSpellcastingAbilityModifier = (character: Character): number => 
   if (!character.class) return 0;
   
   // Get the appropriate ability for each class
-  let ability = '';
-  switch(character.class.toLowerCase()) {
-    case 'бард':
-    case 'чародей':
-    case 'колдун':
-      ability = 'charisma';
-      break;
-    case 'жрец':
-    case 'друид':
-    case 'следопыт':
-      ability = 'wisdom';
-      break;
-    case 'волшебник':
-      ability = 'intelligence';
-      break;
-    case 'паладин':
-      ability = 'charisma';
-      break;
-    default:
-      return 0;
-  }
+  let ability = getDefaultCastingAbility(character.class);
   
   // Get the ability score
-  const abilityScore = character.abilities?.[ability as keyof typeof character.abilities] || 10;
+  const abilityScore = character.abilities?.[ability as keyof typeof character.abilities] || 
+    (ability === 'charisma' ? character.charisma : 
+     ability === 'wisdom' ? character.wisdom : 
+     ability === 'intelligence' ? character.intelligence : 10);
   
   // Calculate the modifier
   return Math.floor((abilityScore - 10) / 2);

@@ -22,7 +22,7 @@ export interface SpellData {
   source?: string;
 }
 
-// Добавим функцию для конвертации CharacterSpell в SpellData
+// Add conversion function for CharacterSpell to SpellData
 export const convertCharacterSpellToSpellData = (spell: any): SpellData => {
   return {
     id: spell.id || `spell-${spell.name.replace(/\s+/g, '-').toLowerCase()}`,
@@ -42,4 +42,20 @@ export const convertCharacterSpellToSpellData = (spell: any): SpellData => {
     higherLevel: spell.higherLevel || spell.higherLevels || '',
     source: spell.source || ''
   };
+};
+
+// Add conversion function for SpellData to CharacterSpell
+export const convertSpellDataToCharacterSpell = (spell: SpellData): any => {
+  return {
+    ...spell,
+    // Make sure all required CharacterSpell properties are set
+    name: spell.name,
+    level: spell.level,
+    id: spell.id // Передаем id из SpellData в CharacterSpell
+  };
+};
+
+// Convert array of spells
+export const convertSpellArray = (spells: any[]): SpellData[] => {
+  return spells.map(spell => convertCharacterSpellToSpellData(spell));
 };
