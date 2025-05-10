@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Character, CharacterSpell } from '@/types/character';
 import { SpellData } from '@/types/spells';
-import { getDefaultCastingAbility, calculateSpellcastingDC, calculateSpellAttackBonus } from '@/utils/spellUtils';
+import { getDefaultCastingAbility, calculateSpellcastingDC, calculateSpellAttackBonus } from "@/utils/spellUtils";
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
 
@@ -21,9 +21,16 @@ const ensureCharacterSpellTypes = (spells: (string | CharacterSpell)[] | undefin
   
   return spells.map(spell => {
     if (typeof spell === 'string') {
-      return { name: spell, level: 0 };
+      return { 
+        id: `spell-${spell.toLowerCase().replace(/\s+/g, '-')}`,
+        name: spell, 
+        level: 0 
+      };
     }
-    return spell;
+    return {
+      ...spell,
+      id: spell.id || `spell-${spell.name.toLowerCase().replace(/\s+/g, '-')}`
+    };
   });
 };
 

@@ -1,4 +1,6 @@
+
 import { ABILITY_SCORE_CAPS } from "@/types/character";
+import type Character from "@/types/character";
 
 // Function to calculate the modifier from an ability score
 export const getModifierFromAbilityScore = (abilityScore: number): number => {
@@ -43,4 +45,102 @@ export const getSkillCheckBonus = (abilityScore: number, proficiency: boolean, e
     bonus += calculateProficiencyBonus(characterLevel);
   }
   return bonus;
+};
+
+// Added missing utility functions
+
+// Calculate numeric modifier (alias for getModifierFromAbilityScore)
+export const getNumericModifier = (abilityScore: number): number => {
+  return Math.floor((abilityScore - 10) / 2);
+};
+
+// Calculate ability modifier
+export const calculateAbilityModifier = (abilityScore: number): number => {
+  return Math.floor((abilityScore - 10) / 2);
+};
+
+// Create a default character
+export const createDefaultCharacter = (): Character => {
+  return {
+    id: crypto.randomUUID(),
+    name: '',
+    race: '',
+    class: '',
+    background: '',
+    alignment: 'Нейтральный',
+    level: 1,
+    xp: 0,
+    abilities: {
+      STR: 10,
+      DEX: 10,
+      CON: 10,
+      INT: 10,
+      WIS: 10,
+      CHA: 10,
+      strength: 10,
+      dexterity: 10,
+      constitution: 10,
+      intelligence: 10, 
+      wisdom: 10,
+      charisma: 10,
+    },
+    savingThrows: {
+      STR: 0,
+      DEX: 0,
+      CON: 0,
+      INT: 0,
+      WIS: 0,
+      CHA: 0,
+      strength: 0,
+      dexterity: 0,
+      constitution: 0,
+      intelligence: 0,
+      wisdom: 0,
+      charisma: 0,
+    },
+    skills: {},
+    hp: 0,
+    maxHp: 0,
+    temporaryHp: 0,
+    ac: 10,
+    proficiencyBonus: 2,
+    speed: 30,
+    initiative: 0,
+    inspiration: false,
+    hitDice: {
+      total: 1,
+      used: 0,
+      dieType: 'd8',
+    },
+    resources: {},
+    deathSaves: {
+      successes: 0,
+      failures: 0,
+    },
+    spellcasting: {
+      ability: 'intelligence',
+      dc: 10,
+      attack: 0,
+    },
+    spellSlots: {},
+    spells: [],
+    equipment: {
+      weapons: [],
+      armor: '',
+      items: [],
+      gold: 0,
+    },
+    proficiencies: {
+      languages: ['Common'],
+      tools: [],
+      weapons: [],
+      armor: [],
+    },
+    features: [],
+    notes: '',
+    savingThrowProficiencies: [],
+    skillProficiencies: [],
+    expertise: [],
+    skillBonuses: {},
+  };
 };

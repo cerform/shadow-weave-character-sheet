@@ -5,11 +5,11 @@ import { Button } from '@/components/ui/button';
 import { Character, CharacterSpell } from '@/types/character';
 import { SpellData, convertSpellDataToCharacterSpell } from '@/types/spells';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Search, Plus, BookOpen, Check } from 'lucide-react';
+import { Search, Plus, Check } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { getPreparedSpellsLimit, canPrepareMoreSpells } from '@/utils/spellUtils';
+import { getPreparedSpellsLimit, canPrepareMoreSpells, isSpellAdded } from '@/utils/spellUtils';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
 
@@ -87,17 +87,13 @@ const SpellSelectionModal: React.FC<SpellSelectionModalProps> = ({
   }, {});
   
   // Check if a spell is already added to the character
-  const isSpellAdded = (spellName: string): boolean => {
-    if (!character.spells) return false;
-    return character.spells.some(spell => {
-      if (typeof spell === 'string') return spell === spellName;
-      return spell.name === spellName;
-    });
+  const isSpellAlreadyAdded = (spellName: string): boolean => {
+    return isSpellAdded(character, spellName);
   };
   
   // Add a spell to the character
   const addSpellToCharacter = (spell: SpellData) => {
-    if (isSpellAdded(spell.name)) {
+    if (isSpellAlreadyAdded(spell.name)) {
       toast({
         title: "Заклинание уже добавлено",
         description: `Заклинание ${spell.name} уже в списке известных заклинаний`
@@ -107,7 +103,21 @@ const SpellSelectionModal: React.FC<SpellSelectionModalProps> = ({
     
     const characterSpell = convertSpellDataToCharacterSpell(spell);
     const existingSpells = character.spells || [];
-    const updatedSpells = [...existingSpells, characterSpell];
+    
+    // Convert to ensure ID is present for each spell
+    const updatedSpells: CharacterSpell[] = [...existingSpells.map(s => {
+      if (typeof s === 'string') {
+        return {
+          id: `spell-${s.toLowerCase().replace(/\s+/g, '-')}`,
+          name: s,
+          level: 0
+        };
+      }
+      return {
+        ...s,
+        id: s.id || `spell-${s.name.toLowerCase().replace(/\s+/g, '-')}`
+      };
+    }), characterSpell];
     
     onUpdate({ spells: updatedSpells });
     
@@ -132,11 +142,24 @@ const SpellSelectionModal: React.FC<SpellSelectionModalProps> = ({
     }
     
     const updatedSpells = character.spells.map(existingSpell => {
-      if (typeof existingSpell === 'string') return existingSpell;
-      if (existingSpell.name === spell.name) {
-        return { ...existingSpell, prepared: !existingSpell.prepared };
+      if (typeof existingSpell === 'string') {
+        return {
+          id: `spell-${existingSpell.toLowerCase().replace(/\s+/g, '-')}`,
+          name: existingSpell,
+          level: 0
+        };
       }
-      return existingSpell;
+      if (existingSpell.name === spell.name) {
+        return { 
+          ...existingSpell, 
+          id: existingSpell.id || `spell-${existingSpell.name.toLowerCase().replace(/\s+/g, '-')}`,
+          prepared: !existingSpell.prepared 
+        };
+      }
+      return {
+        ...existingSpell,
+        id: existingSpell.id || `spell-${existingSpell.name.toLowerCase().replace(/\s+/g, '-')}`
+      };
     });
     
     onUpdate({ spells: updatedSpells });
@@ -159,7 +182,7 @@ const SpellSelectionModal: React.FC<SpellSelectionModalProps> = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[800px] max-h-[80vh] flex flex-col">
         <DialogHeader>
-          <DialogTitle>��ыбор заклинаний</DialogTitle>
+          <DialogTitle>Выбор заклинаний</DialogTitle>
         </DialogHeader>
         
         <div className="flex flex-col h-full space-y-4">
@@ -200,7 +223,7 @@ const SpellSelectionModal: React.FC<SpellSelectionModalProps> = ({
                     </h4>
                     <div className="space-y-2">
                       {spells.map(spell => {
-                        const isAdded = isSpellAdded(spell.name);
+                        const isAdded = isSpellAlreadyAdded(spell.name);
                         
                         return (
                           <div 

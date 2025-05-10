@@ -1,3 +1,4 @@
+
 // Define essential types
 export interface AbilityScores {
   STR: number;
@@ -19,6 +20,7 @@ export interface Feature {
   source: string;
   description: string;
   level?: number;
+  id?: string; // Added ID property for LevelFeature compatibility
 }
 
 export interface Item {
@@ -32,7 +34,7 @@ export interface Item {
 }
 
 export interface CharacterSpell {
-  id?: string;
+  id: string; // Make id required to match SpellData
   name: string;
   level: number;
   school?: string;
@@ -68,6 +70,7 @@ export interface LevelFeature {
   title: string;
   description: string;
   options?: string[];
+  id?: string; // Added ID property for compatibility
 }
 
 export interface Character {
@@ -152,7 +155,7 @@ export interface Character {
     label?: string;
   };
   
-  // Additional properties
+  // Additional properties needed
   currentHp?: number;
   gender?: string;
   avatar?: string;

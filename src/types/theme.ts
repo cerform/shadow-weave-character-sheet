@@ -15,7 +15,7 @@ export interface Theme {
   accent: string;
   foreground: string;
   cardBackground: string;
-  buttonText: string;       // Added buttonText property
+  buttonText: string;       // Required property for button text color
   success?: string;
   warning?: string;
   danger?: string;

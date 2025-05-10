@@ -1,20 +1,20 @@
 
-import { useContext } from "react";
-import { ThemeProviderContext } from "@/components/theme-provider";
-import type { ThemeType } from "@/types/theme";
+import { useContext } from 'react';
+import { ThemeContext } from '@/contexts/ThemeContext';
+import { Theme } from '@/types/theme';
 
-export type { ThemeType };
+// Export the hook and types
+export { ThemeContext };
+
+// Export types correctly with 'export type'
+export type { Theme, ThemeType } from '@/types/theme';
 
 export const useTheme = () => {
-  const context = useContext(ThemeProviderContext);
-  
-  if (context === undefined)
-    throw new Error("useTheme must be used within a ThemeProvider");
-  
-  return {
-    theme: context.theme as ThemeType,
-    setTheme: context.setTheme as (theme: ThemeType) => void,
-    themeStyles: context.themeStyles,
-    effectiveTheme: context.effectiveTheme
-  };
+  const context = useContext(ThemeContext);
+  if (context === undefined) {
+    throw new Error('useTheme must be used within a ThemeProvider');
+  }
+  return context;
 };
+
+export default useTheme;

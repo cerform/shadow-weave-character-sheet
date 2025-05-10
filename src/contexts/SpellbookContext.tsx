@@ -1,183 +1,248 @@
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { SpellData } from '@/types/spells';
+import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
 import { Character, CharacterSpell } from '@/types/character';
-import { getAllSpells, getSpellsByClass } from '@/data/spells';
-import { useCharacter } from './CharacterContext';
+import { SpellData } from '@/types/spells';
+import { isSpellAdded, convertSpellList } from '@/utils/spellUtils';
 import { useToast } from '@/hooks/use-toast';
-import { convertSpellDataToCharacterSpell } from '@/types/spells';
 
 interface SpellbookContextProps {
   availableSpells: SpellData[];
   selectedSpells: SpellData[];
   addSpell: (spell: SpellData) => void;
   removeSpell: (spellId: string) => void;
-  getSpellLimits: () => { cantrips: number; spells: number };
-  getSelectedSpellCount: () => number;
-  saveCharacterSpells: () => void;
   loadSpellsForCharacter: (characterClass: string, level: number) => void;
+  importSpells: (spells: CharacterSpell[]) => void;
+  saveCharacterSpells: () => void;
+  getSpellLimits: (characterClass: string, level: number) => { cantripsCount: number; knownSpells: number; };
+  getSelectedSpellCount: (level: number) => number;
+  isSpellAdded: (spellId: string) => boolean;
 }
 
-export const SpellbookContext = createContext<SpellbookContextProps>({
+const SpellbookContext = createContext<SpellbookContextProps>({
   availableSpells: [],
   selectedSpells: [],
   addSpell: () => {},
   removeSpell: () => {},
-  getSpellLimits: () => ({ cantrips: 0, spells: 0 }),
-  getSelectedSpellCount: () => 0,
-  saveCharacterSpells: () => {},
   loadSpellsForCharacter: () => {},
+  importSpells: () => {},
+  saveCharacterSpells: () => {},
+  getSpellLimits: () => ({ cantripsCount: 0, knownSpells: 0 }),
+  getSelectedSpellCount: () => 0,
+  isSpellAdded: () => false
 });
 
-export const useSpellbook = () => useContext(SpellbookContext);
-
-interface SpellbookProviderProps {
-  children: React.ReactNode;
-}
-
-export const SpellbookProvider: React.FC<SpellbookProviderProps> = ({ children }) => {
+export function SpellbookProvider({ children, character, onUpdate }: { 
+  children: ReactNode; 
+  character?: Character;
+  onUpdate?: (updates: Partial<Character>) => void;
+}) {
   const [availableSpells, setAvailableSpells] = useState<SpellData[]>([]);
   const [selectedSpells, setSelectedSpells] = useState<SpellData[]>([]);
-  const { character, updateCharacter } = useCharacter();
   const { toast } = useToast();
 
-  // Load spells from data on mount
+  // Initialize selected spells from character
   useEffect(() => {
-    const allSpells = getAllSpells();
-    setAvailableSpells(allSpells);
-  }, []);
-
-  // Convert CharacterSpell to SpellData
-  const convertCharacterSpellToSpellData = (spell: CharacterSpell): SpellData => {
-    return {
-      id: spell.id || `spell-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-      name: spell.name,
-      level: spell.level,
-      school: spell.school || 'Evocation',
-      castingTime: spell.castingTime || '1 action',
-      range: spell.range || 'Self',
-      components: spell.components || '',
-      duration: spell.duration || 'Instantaneous',
-      description: spell.description || '',
-      classes: spell.classes || [],
-      ritual: spell.ritual || false,
-      concentration: spell.concentration || false,
-      verbal: spell.verbal || false,
-      somatic: spell.somatic || false,
-      material: spell.material || false,
-      materials: spell.materials || '',
-      prepared: spell.prepared || false
-    };
-  };
-
-  // Update character spells
-  useEffect(() => {
-    if (character?.spells) {
-      const characterSpells = character.spells
-        .filter((spell): spell is CharacterSpell => typeof spell !== 'string')
-        .map(spell => convertCharacterSpellToSpellData(spell));
+    if (character?.spells && Array.isArray(character.spells) && character.spells.length > 0) {
+      // Convert each spell to appropriate type and ensure ID exists
+      const convertedSpells: SpellData[] = character.spells.map(spell => {
+        if (typeof spell === 'string') {
+          return {
+            id: `spell-${spell.toLowerCase().replace(/\s+/g, '-')}`,
+            name: spell,
+            level: 0, // Assume cantrip for string spells
+            school: 'Универсальная',
+            castingTime: '1 действие',
+            range: 'На себя',
+            components: '',
+            duration: 'Мгновенная',
+            description: ''
+          };
+        }
+        
+        // Ensure SpellData has required properties
+        return {
+          id: spell.id || `spell-${spell.name.toLowerCase().replace(/\s+/g, '-')}`,
+          name: spell.name,
+          level: spell.level,
+          school: spell.school || 'Универсальная',
+          castingTime: spell.castingTime || '1 действие',
+          range: spell.range || 'На себя',
+          components: spell.components || '',
+          duration: spell.duration || 'Мгновенная',
+          description: spell.description || '',
+          prepared: spell.prepared
+        };
+      });
       
-      setSelectedSpells(characterSpells);
+      setSelectedSpells(convertedSpells);
     }
-  }, [character]);
+  }, [character?.spells]);
 
-  // Function to add a spell to the selected spells
+  // Load all available spells
+  const loadAvailableSpells = async () => {
+    try {
+      const spellsModule = await import('@/data/spells');
+      const spells = spellsModule.getAllSpells();
+      setAvailableSpells(spells);
+    } catch (error) {
+      console.error('Error loading spells:', error);
+    }
+  };
+
+  // Load spells for a specific class and level
+  const loadSpellsForCharacter = async (characterClass: string, level: number) => {
+    try {
+      const spellsModule = await import('@/data/spells');
+      const spells = spellsModule.getSpellsByClass(characterClass);
+      setAvailableSpells(spells);
+    } catch (error) {
+      console.error(`Error loading spells for ${characterClass}:`, error);
+    }
+  };
+
+  // Import spells from external source
+  const importSpells = (spells: CharacterSpell[]) => {
+    // Convert CharacterSpell[] to SpellData[]
+    const convertedSpells: SpellData[] = spells.map(spell => ({
+      id: spell.id || `spell-${spell.name.toLowerCase().replace(/\s+/g, '-')}`,
+      name: spell.name,
+      level: spell.level || 0,
+      school: spell.school || 'Универсальная',
+      castingTime: spell.castingTime || '1 действие',
+      range: spell.range || 'На себя',
+      components: spell.components || '',
+      duration: spell.duration || 'Мгновенная',
+      description: spell.description || '',
+      prepared: spell.prepared
+    }));
+    
+    setSelectedSpells(convertedSpells);
+  };
+
+  // Add a spell to selected spells
   const addSpell = (spell: SpellData) => {
-    setSelectedSpells(prevSpells => {
-      const updatedSpells = [...prevSpells, spell];
-      return updatedSpells;
-    });
+    if (isSpellAdded(spell.id)) {
+      toast({
+        title: "Заклинание уже добавлено",
+        description: `${spell.name} уже в списке`,
+      });
+      return;
+    }
+    
+    setSelectedSpells(prev => [...prev, spell]);
   };
 
-  // Function to remove a spell from the selected spells
+  // Remove a spell from selected spells
   const removeSpell = (spellId: string) => {
-    setSelectedSpells(prevSpells => {
-      const updatedSpells = prevSpells.filter(spell => spell.id.toString() !== spellId);
-      return updatedSpells;
-    });
+    setSelectedSpells(prev => prev.filter(spell => String(spell.id) !== String(spellId)));
   };
 
-  // Function to get spell limits based on character class and level
-  const getSpellLimits = () => {
-    // Placeholder logic - replace with actual calculation
-    return { cantrips: 3, spells: 5 };
+  // Check if a spell is already selected
+  const isSpellAdded = (spellId: string): boolean => {
+    return selectedSpells.some(spell => String(spell.id) === String(spellId));
   };
 
-  // Function to get the number of selected spells
-  const getSelectedSpellCount = () => {
-    return selectedSpells.length;
+  // Get spell limits based on class and level
+  const getSpellLimits = (characterClass: string, level: number) => {
+    // Default values
+    let cantripsCount = 0;
+    let knownSpells = 0;
+
+    const classLower = characterClass.toLowerCase();
+    
+    // Class-specific spell counts
+    switch (classLower) {
+      case 'волшебник':
+      case 'wizard':
+        cantripsCount = level >= 10 ? 5 : level >= 4 ? 4 : 3;
+        knownSpells = 6 + (level * 2); // Level 1 starts with 6, +2 per level
+        break;
+      case 'жрец':
+      case 'cleric':
+      case 'друид':
+      case 'druid':
+        cantripsCount = level >= 10 ? 5 : level >= 4 ? 4 : 3;
+        knownSpells = 6; // Level + wisdom modifier handled elsewhere
+        break;
+      case 'бард':
+      case 'bard':
+        cantripsCount = level >= 10 ? 4 : 2;
+        knownSpells = Math.max(4, level + 3); // Starts at 4, increases with level
+        break;
+      case 'колдун':
+      case 'warlock':
+        cantripsCount = level >= 10 ? 4 : 2;
+        knownSpells = Math.min(15, level + 1); // Starts at 2, increases with level, max 15
+        break;
+      case 'чародей':
+      case 'sorcerer':
+        cantripsCount = level >= 10 ? 6 : level >= 4 ? 5 : 4;
+        knownSpells = level + 1; // Starts at 2, increases with level
+        break;
+      default:
+        cantripsCount = 0;
+        knownSpells = 0;
+    }
+
+    return { cantripsCount, knownSpells };
   };
 
-  // Function to save selected spells to the character
+  // Get count of selected spells by level
+  const getSelectedSpellCount = (level: number): number => {
+    return selectedSpells.filter(spell => spell.level === level).length;
+  };
+
+  // Save selected spells to character
   const saveCharacterSpells = () => {
-    if (!character) return;
+    if (!character || !onUpdate) return;
     
     // Convert SpellData[] to CharacterSpell[]
-    const characterSpells: CharacterSpell[] = selectedSpells.map(spell => 
-      convertSpellDataToCharacterSpell(spell)
-    );
+    const spells: CharacterSpell[] = selectedSpells.map(spell => ({
+      id: spell.id,
+      name: spell.name,
+      level: spell.level,
+      school: spell.school,
+      castingTime: spell.castingTime,
+      range: spell.range,
+      components: spell.components,
+      duration: spell.duration,
+      description: spell.description,
+      prepared: spell.prepared || false
+    }));
     
-    // Update character state with the new spells
-    updateCharacter({ spells: characterSpells });
+    onUpdate({ spells });
     
     toast({
       title: "Заклинания сохранены",
-      description: "Выбранные заклинания сохранены для персонажа",
+      description: `${spells.length} заклинаний сохранено для персонажа ${character.name}`,
     });
   };
 
-  // Function to load spells for a character based on class and level
-  const loadSpellsForCharacter = useCallback((characterClass: string, level: number) => {
-    try {
-      // Fetch spells for the given class
-      const classSpells = getSpellsByClass(characterClass);
-      
-      // Filter spells based on level
-      const maxSpellLevel = Math.ceil(level / 2);
-      const filteredSpells = classSpells.filter(spell => spell.level <= maxSpellLevel);
-      
-      // Convert to SpellData[]
-      const spells: SpellData[] = filteredSpells.map(spell => ({
-        id: spell.id || `spell-${spell.name.replace(/\s+/g, '-').toLowerCase()}`,
-        name: spell.name,
-        level: spell.level,
-        school: spell.school || 'Универсальная',
-        castingTime: spell.castingTime || '1 действие',
-        range: spell.range || 'На себя',
-        components: spell.components || '',
-        duration: spell.duration || 'Мгновенная',
-        description: spell.description || ['Нет описания'],
-        classes: spell.classes || [],
-        ritual: spell.ritual || false,
-        concentration: spell.concentration || false
-      }));
-      
-      // Update available spells in the context
-      setAvailableSpells(spells);
-    } catch (error) {
-      console.error("Error loading spells:", error);
-      toast({
-        title: "Ошибка загрузки",
-        description: "Не удалось загрузить список заклинаний",
-        variant: "destructive"
-      });
-    }
-  }, [toast]);
-
-  const value: SpellbookContextProps = {
-    availableSpells,
-    selectedSpells,
-    addSpell,
-    removeSpell,
-    getSpellLimits,
-    getSelectedSpellCount,
-    saveCharacterSpells,
-    loadSpellsForCharacter,
-  };
+  // Initial load of available spells
+  useEffect(() => {
+    loadAvailableSpells();
+  }, []);
 
   return (
-    <SpellbookContext.Provider value={value}>
+    <SpellbookContext.Provider value={{
+      availableSpells,
+      selectedSpells,
+      addSpell,
+      removeSpell,
+      loadSpellsForCharacter,
+      importSpells,
+      saveCharacterSpells,
+      getSpellLimits,
+      getSelectedSpellCount,
+      isSpellAdded
+    }}>
       {children}
     </SpellbookContext.Provider>
   );
-};
+}
+
+// Export the hook for using the context
+export const useSpellbook = () => useContext(SpellbookContext);
+
+// Export the context for direct access
+export { SpellbookContext };

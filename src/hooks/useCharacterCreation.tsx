@@ -1,6 +1,6 @@
 
 import { useState, useCallback } from 'react';
-import { Character } from "@/types/character";
+import { Character, AbilityScores } from "@/types/character";
 import { toast } from 'sonner';
 import { getModifierFromAbilityScore } from "@/utils/characterUtils";
 import { getCurrentUid } from "@/utils/authHelpers";
@@ -146,7 +146,7 @@ export function useCharacterCreation() {
       await saveCharacterToFirestore(updatedCharacter);
       
       toast({
-        title: 'Персонаж создан!',
+        title: "Персонаж создан!",
         description: `${character.name} успешно сохранен.`
       });
       
@@ -154,9 +154,9 @@ export function useCharacterCreation() {
     } catch (error) {
       console.error('Error saving character:', error);
       toast({
-        title: 'Ошибка при сохранении',
-        description: 'Не удалось сохранить персонажа. Попробуйте позже.',
-        variant: 'destructive',
+        variant: "destructive",
+        title: "Ошибка при сохранении",
+        description: "Не удалось сохранить персонажа. Попробуйте позже."
       });
       return null;
     } finally {

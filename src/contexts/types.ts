@@ -17,7 +17,11 @@ export interface Theme {
   backgroundBrightness?: number;
   backgroundGradient?: string;
   decorativeCorners?: boolean;
+  success?: string;
+  warning?: string;
+  danger?: string;
+  info?: string;
 }
 
-// Re-export Character for use across the project
+// Re-export Character as type to avoid isolatedModules error
 export type { Character };

@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { pdfjs } from 'react-pdf';
 import { PDFDownloadLink, Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer';
 import { Button } from '@/components/ui/button';
 import { FileDown } from 'lucide-react';
@@ -8,7 +7,7 @@ import { Character, Item, CharacterSpell } from '@/types/character';
 import { useToast } from '@/hooks/use-toast';
 
 // Configure PDF.js worker
-pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.js`;
+// pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.js`;
 
 // Styles for PDF document
 const styles = StyleSheet.create({
@@ -238,4 +237,5 @@ export const CharacterExportPDF = ({ character }: { character: Character }) => {
   );
 };
 
+// Export both named and default export
 export default CharacterExportPDF;
