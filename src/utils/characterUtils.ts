@@ -93,7 +93,7 @@ export const calculateAbilityModifier = (abilityScore: number): number => {
   return Math.floor((abilityScore - 10) / 2);
 };
 
-// Добавляем функцию getModifierFromAbilityScore
+// Add the missing getModifierFromAbilityScore function
 export const getModifierFromAbilityScore = (abilityScore: number): number => {
   return Math.floor((abilityScore - 10) / 2);
 };

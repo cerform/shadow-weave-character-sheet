@@ -31,9 +31,9 @@ export interface ThemeContextType {
   activeTheme?: ThemeType;
   setUserTheme?: (theme: ThemeType) => void;
   currentTheme?: Theme;
-  themeStyles?: Theme; // Required property
+  themeStyles?: Theme; // Adding this to fix the errors
   theme?: string | ThemeType; // Required property
-  setTheme?: (theme: string | ThemeType) => void; // Required property
+  setTheme?: (theme: string | ThemeType) => void; // Changed to accept string or ThemeType
 }
 
 export interface ThemeStore {

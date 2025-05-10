@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { useCharacter } from '@/contexts/CharacterContext';
-import { getCharacterById, getAllCharacters, saveCharacterToFirestore, deleteCharacterById } from '@/services/characterService';
+import { getCharacter, getAllCharacters, saveCharacterToFirestore, deleteCharacter } from '@/services/characterService';
 import { getCurrentUid } from '@/utils/authHelpers';
 import { createDefaultCharacter } from '@/utils/characterUtils';
 
@@ -39,7 +39,7 @@ const CharactersPageDebugger: React.FC<CharactersPageDebuggerProps> = ({
     setErrorMessage('');
     
     try {
-      const loadedCharacter = await getCharacterById(characterId);
+      const loadedCharacter = await getCharacter(characterId);
       if (loadedCharacter) {
         setCharacterJson(JSON.stringify(loadedCharacter, null, 2));
         toast({
@@ -152,7 +152,7 @@ const CharactersPageDebugger: React.FC<CharactersPageDebuggerProps> = ({
     setErrorMessage('');
     
     try {
-      await deleteCharacterById(id);
+      await deleteCharacter(id);
       
       toast({
         title: 'Персонаж удален',
@@ -175,17 +175,14 @@ const CharactersPageDebugger: React.FC<CharactersPageDebuggerProps> = ({
     }
   };
   
-  // Обработка ошибок
-  const handleError = (error: string | Error): void => {
-    if (error instanceof Error) {
-      setErrorMessage(error.message);
-    } else {
-      setErrorMessage(error);
-    }
+  // Обработка ошибок - fixing the type issue
+  const handleError = (error: unknown): void => {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    setErrorMessage(errorMessage);
     
     toast({
       title: 'Ошибка',
-      description: typeof error === 'string' ? error : error.message,
+      description: errorMessage,
       variant: 'destructive'
     });
   };

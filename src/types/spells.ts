@@ -54,7 +54,7 @@ export const convertCharacterSpellToSpellData = (spell: CharacterSpell): SpellDa
     id: spell.id,
     name: spell.name,
     level: spell.level,
-    school: spell.school,
+    school: spell.school || 'Универсальная',
     castingTime: spell.castingTime || '1 действие',
     range: spell.range || 'На себя',
     components: spell.components || '',
@@ -70,4 +70,13 @@ export const convertCharacterSpellToSpellData = (spell: CharacterSpell): SpellDa
     materials: spell.materials,
     source: spell.source
   };
+};
+
+// Add the missing utility functions
+export const convertSpellsForState = (spells: CharacterSpell[]): SpellData[] => {
+  return spells.map(spell => convertCharacterSpellToSpellData(spell));
+};
+
+export const convertSpellList = (spells: CharacterSpell[]): SpellData[] => {
+  return spells.map(spell => convertCharacterSpellToSpellData(spell));
 };

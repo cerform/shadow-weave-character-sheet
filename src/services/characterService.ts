@@ -1,9 +1,9 @@
 
 import { collection, doc, getDocs, query, where, getDoc, addDoc, updateDoc, deleteDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebase'; // Используем центральный экземпляр db
+import { db } from '@/lib/firebase';
 import { Character } from '@/types/character';
 import { getCurrentUid } from '@/utils/authHelpers';
-import { auth } from '@/lib/firebase'; // Импортируем auth из центрального места
+import { auth } from '@/lib/firebase';
 
 /**
  * Получение всех персонажей
@@ -127,6 +127,11 @@ export const getCharacter = async (id: string): Promise<Character | null> => {
   }
 };
 
+// Adding the missing getCharacterById function (alias for getCharacter)
+export const getCharacterById = async (id: string): Promise<Character | null> => {
+  return getCharacter(id);
+};
+
 /**
  * Сохранение персонажа
  * @param character Данные персонажа
@@ -238,6 +243,11 @@ export const deleteCharacter = async (id: string): Promise<void> => {
     console.error(`Ошибка при удалении персонажа с ID ${id}:`, error);
     throw error;
   }
+};
+
+// Adding the missing deleteCharacterById function (alias for deleteCharacter)
+export const deleteCharacterById = async (id: string): Promise<void> => {
+  return deleteCharacter(id);
 };
 
 /**

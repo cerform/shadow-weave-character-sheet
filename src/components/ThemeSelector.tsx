@@ -9,8 +9,9 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Paintbrush, Check } from "lucide-react";
 import { useUserTheme } from '@/hooks/use-user-theme';
-import { useTheme, ThemeType } from '@/hooks/use-theme';
+import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
+import { ThemeType } from '@/types/theme';
 
 export const ThemeSelector = () => {
   const { setUserTheme, activeTheme } = useUserTheme();
@@ -60,7 +61,7 @@ export const ThemeSelector = () => {
     console.log('Тема применена к DOM:', themeName);
   }, []);
 
-  // Обработчик переключения тем
+  // Обработчик переключения тем - fixing type issues
   const handleThemeChange = useCallback((themeName: ThemeType) => {
     if (themeName === currentThemeId) return;
     
@@ -69,6 +70,7 @@ export const ThemeSelector = () => {
     }
     
     if (setTheme) {
+      // Use as ThemeType to ensure correct type is passed
       setTheme(themeName);
     }
     
