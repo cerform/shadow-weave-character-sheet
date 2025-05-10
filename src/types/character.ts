@@ -1,9 +1,76 @@
-interface Character {
+
+// Define essential types
+export interface AbilityScores {
+  STR: number;
+  DEX: number;
+  CON: number;
+  INT: number;
+  WIS: number;
+  CHA: number;
+  strength?: number;
+  dexterity?: number;
+  constitution?: number;
+  intelligence?: number;
+  wisdom?: number;
+  charisma?: number;
+}
+
+export interface Feature {
+  name: string;
+  source: string;
+  description: string;
+  level?: number;
+}
+
+export interface Item {
+  name: string;
+  quantity?: number;
+  type?: 'weapon' | 'armor' | 'item';
+  description?: string;
+  properties?: string[];
+  cost?: number;
+  weight?: number;
+}
+
+export interface CharacterSpell {
+  id?: string;
+  name: string;
+  level: number;
+  school?: string;
+  castingTime?: string;
+  range?: string;
+  components?: string;
+  duration?: string;
+  description?: string | string[];
+  prepared?: boolean;
+  ritual?: boolean;
+  concentration?: boolean;
+  verbal?: boolean;
+  somatic?: boolean;
+  material?: boolean;
+  materials?: string;
+  higherLevels?: string;
+  higherLevel?: string;
+  classes?: string[] | string;
+  source?: string;
+}
+
+export interface HitPointEvent {
+  id: string;
+  type: 'damage' | 'healing' | 'temp' | 'tempHP' | 'heal' | 'death-save';
+  amount: number;
+  source: string;
+  timestamp: string | number | Date;
+  description?: string;
+}
+
+export interface Character {
   id: string;
   name: string;
   race: string;
   subrace?: string;
   class: string;
+  className?: string;
   subclass?: string;
   background: string;
   alignment: string;
@@ -52,7 +119,7 @@ interface Character {
     armor: string;
     items: string[];
     gold: number;
-  };
+  } | Item[];
   proficiencies: {
     languages: string[];
     tools: string[];
@@ -71,18 +138,43 @@ interface Character {
     disadvantage?: boolean;
     timestamp: number;
   };
-  // Add properties that were missing or needed across multiple components
+  // Additional properties
   currentHp?: number;
   gender?: string;
+  avatar?: string;
+  currency?: {
+    cp: number;
+    sp: number;
+    ep: number;
+    gp: number;
+    pp: number;
+  };
+  personalityTraits?: string;
+  ideals?: string;
+  bonds?: string;
+  flaws?: string;
+  appearance?: string;
+  backstory?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  stats?: {
+    strength: number;
+    dexterity: number;
+    constitution: number;
+    intelligence: number;
+    wisdom: number;
+    charisma: number;
+  };
+  raceFeatures?: Feature[];
+  classFeatures?: Feature[];
+  backgroundFeatures?: Feature[];
+  feats?: Feature[];
+  hitPoints?: {
+    current: number;
+    max: number;
+    temporary: number;
+  };
 }
 
-export interface HitPointEvent {
-  id: string;
-  type: 'damage' | 'healing' | 'temp';
-  amount: number;
-  source: string;
-  timestamp: string;
-  description?: string;
-}
-
+// Export Character as both default and named export for compatibility
 export default Character;

@@ -11,6 +11,7 @@ import CharacterReview from './CharacterReview';
 import CharacterLevelSelection from './CharacterLevelSelection';
 import { backgrounds } from '@/data/backgrounds'; // Import backgrounds data
 import { classes } from '@/data/classes'; // Import classes data
+import { races } from '@/data/races'; // Import races data
 
 interface CharacterCreationContentProps {
   step: number;
@@ -41,6 +42,9 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
         <CharacterRace
           character={character}
           onUpdate={updateCharacter}
+          races={races}
+          nextStep={nextStep}
+          prevStep={prevStep}
         />
       );
     case 2:
@@ -57,7 +61,7 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
       return (
         <CharacterLevelSelection
           character={character}
-          onUpdate={updateCharacter} // Use onUpdate instead of updateCharacter
+          onUpdate={updateCharacter}
           nextStep={nextStep}
           prevStep={prevStep}
           onLevelChange={handleLevelChange}
@@ -79,7 +83,7 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
           onUpdate={updateCharacter}
           nextStep={nextStep}
           prevStep={prevStep}
-          backgrounds={backgrounds} // Pass backgrounds data
+          backgrounds={backgrounds}
         />
       );
 

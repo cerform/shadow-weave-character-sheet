@@ -1,7 +1,8 @@
 
 // Re-export for easier imports across the project
-import type { Character, CharacterSpell, Feature, AbilityScores, Item } from '@/types/character';
+import Character, { CharacterSpell, Feature, AbilityScores, Item, HitPointEvent } from '@/types/character';
 import { ABILITY_SCORE_CAPS, REST_TYPES, SPELL_SOURCES, GAME_MECHANICS } from '@/types/constants';
+import { calculateAbilityModifier } from './characterUtils';
 
 // Use Character as CharacterSheet for backward compatibility
 export type CharacterSheet = Character;
@@ -13,8 +14,10 @@ export {
   Feature,
   AbilityScores,
   Item,
+  HitPointEvent,
   ABILITY_SCORE_CAPS,
   REST_TYPES,
   SPELL_SOURCES,
-  GAME_MECHANICS
+  GAME_MECHANICS,
+  calculateAbilityModifier
 };

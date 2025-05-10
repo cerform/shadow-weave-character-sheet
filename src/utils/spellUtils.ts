@@ -1,365 +1,215 @@
-import { Character, CharacterSpell } from "@/types/character";
-import { SpellData } from "@/types/spells";
+
+import { Character, CharacterSpell } from '@/types/character';
+import { SpellData } from '@/types/spells';
+import { calculateAbilityModifier } from './characterUtils';
 
 /**
- * Вычисляет доступные заклинания по классу и уровню
+ * Gets the default spellcasting ability for a given class
+ * @param characterClass The character's class
+ * @returns The default spellcasting ability
+ */
+export const getDefaultCastingAbility = (characterClass: string): string => {
+  const lowerClass = characterClass.toLowerCase();
+  
+  if (['чародей', 'бард', 'колдун', 'sorcerer', 'bard', 'warlock'].includes(lowerClass)) {
+    return 'charisma';
+  } else if (['волшебник', 'wizard'].includes(lowerClass)) {
+    return 'intelligence';
+  } else if (['жрец', 'друид', 'следопыт', 'cleric', 'druid', 'ranger'].includes(lowerClass)) {
+    return 'wisdom';
+  }
+  
+  return 'intelligence'; // Default fallback
+};
+
+/**
+ * Gets the spellcasting ability modifier for a character
+ * @param character The character object
+ * @returns The ability modifier
+ */
+export const getSpellcastingAbilityModifier = (character: Character): number => {
+  if (!character) return 0;
+  
+  const ability = character.spellcasting?.ability || getDefaultCastingAbility(character.class || '');
+  
+  // Get the appropriate ability score
+  let abilityScore = 10;
+  
+  if (ability === 'strength' && character.abilities) {
+    abilityScore = character.abilities.STR || character.abilities.strength || 10;
+  } else if (ability === 'dexterity' && character.abilities) {
+    abilityScore = character.abilities.DEX || character.abilities.dexterity || 10;
+  } else if (ability === 'constitution' && character.abilities) {
+    abilityScore = character.abilities.CON || character.abilities.constitution || 10;
+  } else if (ability === 'intelligence' && character.abilities) {
+    abilityScore = character.abilities.INT || character.abilities.intelligence || 10;
+  } else if (ability === 'wisdom' && character.abilities) {
+    abilityScore = character.abilities.WIS || character.abilities.wisdom || 10;
+  } else if (ability === 'charisma' && character.abilities) {
+    abilityScore = character.abilities.CHA || character.abilities.charisma || 10;
+  }
+  
+  return calculateAbilityModifier(abilityScore);
+};
+
+/**
+ * Calculates the spell save DC for a character
+ * @param character The character object
+ * @returns The spell save DC
+ */
+export const calculateSpellcastingDC = (character: Character): number => {
+  if (!character) return 8;
+  
+  const abilityMod = getSpellcastingAbilityModifier(character);
+  const profBonus = character.proficiencyBonus || Math.floor((character.level - 1) / 4) + 2;
+  
+  return 8 + profBonus + abilityMod;
+};
+
+/**
+ * Calculates the spell attack bonus for a character
+ * @param character The character object
+ * @returns The spell attack bonus
+ */
+export const calculateSpellAttackBonus = (character: Character): number => {
+  if (!character) return 0;
+  
+  const abilityMod = getSpellcastingAbilityModifier(character);
+  const profBonus = character.proficiencyBonus || Math.floor((character.level - 1) / 4) + 2;
+  
+  return profBonus + abilityMod;
+};
+
+/**
+ * Checks if a character can prepare more spells
+ * @param character The character object
+ * @returns Boolean indicating if character can prepare more spells
+ */
+export const canPrepareMoreSpells = (character: Character): boolean => {
+  const limit = getPreparedSpellsLimit(character);
+  
+  if (limit <= 0) return true; // No limit
+  
+  const preparedCount = (character.spells || []).filter(spell => {
+    if (typeof spell === 'string') return false;
+    return spell.prepared && spell.level > 0; // Excluding cantrips
+  }).length;
+  
+  return preparedCount < limit;
+};
+
+/**
+ * Gets the maximum number of prepared spells for a character
+ * @param character The character object
+ * @returns The maximum number of prepared spells
+ */
+export const getPreparedSpellsLimit = (character: Character): number => {
+  if (!character) return 0;
+  
+  const className = character.class?.toLowerCase() || '';
+  const level = character.level || 1;
+  
+  // Classes that prepare spells
+  if (['жрец', 'cleric', 'druid', 'друид', 'wizard', 'волшебник', 'палладин', 'paladin'].includes(className)) {
+    const abilityMod = getSpellcastingAbilityModifier(character);
+    return Math.max(1, level + abilityMod);
+  }
+  
+  // Classes with spells known
+  return 0; // No preparation limit for other classes
+};
+
+/**
+ * Calculate available spells for a character based on class and level
  */
 export const calculateAvailableSpellsByClassAndLevel = (
   characterClass: string,
   level: number,
-  abilityModifier: number = 0
+  abilityModifier: number
 ) => {
-  // Если класс не задан или уровень меньше 1, возвращаем пустые значения
-  if (!characterClass || level < 1) {
-    return {
-      knownSpells: 0,
-      cantripsCount: 0,
-      maxSpellLevel: 0
-    };
-  }
+  // Default values
+  let maxSpellLevel = 0;
+  let cantripsCount = 0;
+  let knownSpells = 0;
 
   const lowerClass = characterClass.toLowerCase();
   
-  // Вычисляем максимальный уровень заклинаний
-  const maxSpellLevel = getMaxSpellLevel(characterClass, level);
-  
-  // Вычисляем количество известных заговоров
-  let cantripsCount = 0;
-  if (['бард', 'чародей', 'колдун', 'wizard', 'волшебник'].includes(lowerClass)) {
-    if (level < 4) cantripsCount = 2;
-    else if (level < 10) cantripsCount = 3;
-    else cantripsCount = 4;
-  } else if (['cleric', 'жрец', 'друид', 'druid'].includes(lowerClass)) {
-    if (level < 4) cantripsCount = 3;
-    else if (level < 10) cantripsCount = 4;
-    else cantripsCount = 5;
-  } else if (['artificer', 'артефайсер'].includes(lowerClass)) {
-    if (level < 10) cantripsCount = 2;
-    else cantripsCount = 3;
-  } else if (['следопыт', 'ranger'].includes(lowerClass)) {
-    cantripsCount = 0; // Rangers don't get cantrips in base 5e
-  } else if (['паладин', 'paladin'].includes(lowerClass)) {
-    cantripsCount = 0; // Paladins don't get cantrips in base 5e
+  // Determine spell slots by class and level
+  if (['wizard', 'волшебник'].includes(lowerClass)) {
+    cantripsCount = level >= 10 ? 5 : level >= 4 ? 4 : 3;
+    knownSpells = level + Math.max(1, abilityModifier); // Int mod + level
+  } else if (['bard', 'бард'].includes(lowerClass)) {
+    cantripsCount = level >= 10 ? 4 : 2;
+    knownSpells = level >= 17 ? 22 : level >= 15 ? 19 : level >= 13 ? 16 : level >= 11 ? 15 :
+                   level >= 10 ? 14 : level >= 9 ? 13 : level >= 8 ? 11 : level >= 6 ? 9 :
+                   level >= 5 ? 8 : level >= 4 ? 7 : level >= 3 ? 6 : level >= 2 ? 5 : 4;
+  } else if (['sorcerer', 'чародей'].includes(lowerClass)) {
+    cantripsCount = level >= 10 ? 6 : level >= 4 ? 5 : 4;
+    knownSpells = level >= 17 ? 15 : level >= 15 ? 14 : level >= 13 ? 13 : level >= 11 ? 12 :
+                  level >= 10 ? 11 : level >= 9 ? 10 : level >= 8 ? 9 : level >= 7 ? 8 :
+                  level >= 6 ? 7 : level >= 5 ? 6 : level >= 4 ? 5 : level >= 3 ? 4 : level >= 2 ? 3 : 2;
+  } else if (['warlock', 'колдун'].includes(lowerClass)) {
+    cantripsCount = level >= 10 ? 4 : level >= 4 ? 3 : 2;
+    knownSpells = level >= 17 ? 19 : level >= 15 ? 18 : level >= 13 ? 17 : level >= 11 ? 16 :
+                  level >= 10 ? 10 : level >= 9 ? 9 : level >= 7 ? 8 : level >= 5 ? 7 :
+                  level >= 3 ? 6 : level >= 2 ? 3 : 2;
+  } else if (['cleric', 'жрец', 'druid', 'друид'].includes(lowerClass)) {
+    cantripsCount = lowerClass === 'druid' || lowerClass === 'друид' ? (level >= 4 ? 3 : 2) : (level >= 10 ? 5 : level >= 4 ? 4 : 3);
+    knownSpells = level + Math.max(1, abilityModifier); // Wis mod + level (prepared spells)
   }
   
-  // Вычисляем количество известных заклинаний
-  let knownSpells = 0;
-  if (['чародей', 'sorcerer'].includes(lowerClass)) {
-    // Чародей: Level + 1 известных заклинаний
-    knownSpells = level + 1;
-  } else if (['бард', 'bard'].includes(lowerClass)) {
-    // Бард: формула (level + Char mod)
-    knownSpells = Math.max(1, Math.floor(level / 2) + 4);
-  } else if (['колдун', 'warlock'].includes(lowerClass)) {
-    // Колдун: (level + 1) известных заклинаний
-    knownSpells = level + 1;
-  } else if (['жрец', 'cleric', 'друид', 'druid'].includes(lowerClass)) {
-    // Жрец/Друид: уровень + модификатор способности
-    knownSpells = level + abilityModifier;
-  } else if (['wizard', 'волшебник'].includes(lowerClass)) {
-    // Волшебник: 6 + 2 за каждый уровень
-    knownSpells = 6 + (level - 1) * 2;
-  } else if (['следопыт', 'ranger'].includes(lowerClass)) {
-    // Следопыт: начиная с 2 уровня
-    if (level >= 2) {
-      knownSpells = Math.ceil(level / 2) + 1;
-    }
-  } else if (['паладин', 'paladin'].includes(lowerClass)) {
-    // Паладин: начиная с 2 уровня, половина уровня + модификатор
-    if (level >= 2) {
-      knownSpells = Math.floor(level / 2) + abilityModifier;
-    }
-  }
+  // Determine max spell level
+  if (level >= 17) maxSpellLevel = 9;
+  else if (level >= 15) maxSpellLevel = 8;
+  else if (level >= 13) maxSpellLevel = 7;
+  else if (level >= 11) maxSpellLevel = 6;
+  else if (level >= 9) maxSpellLevel = 5;
+  else if (level >= 7) maxSpellLevel = 4;
+  else if (level >= 5) maxSpellLevel = 3;
+  else if (level >= 3) maxSpellLevel = 2;
+  else if (level >= 1) maxSpellLevel = 1;
   
   return {
-    knownSpells: Math.max(0, knownSpells),
-    cantripsCount: Math.max(0, cantripsCount),
-    maxSpellLevel
+    maxSpellLevel,
+    cantripsCount,
+    knownSpells
   };
 };
 
 /**
- * Возвращает максимальный уровень заклинаний для класса и уровня
- */
-export const getMaxSpellLevel = (characterClass: string, level: number): number => {
-  if (!characterClass || level < 1) return 0;
-  
-  const lowerClass = characterClass.toLowerCase();
-  
-  // Полные заклинатели (Жрец, Друид, Волшебник, Бард, Чародей)
-  if (['жрец', 'cleric', 'друид', 'druid', 'wizard', 'волшебник', 'бард', 'bard', 'чародей', 'sorcerer'].includes(lowerClass)) {
-    if (level < 3) return 1;
-    else if (level < 5) return 2;
-    else if (level < 7) return 3;
-    else if (level < 9) return 4;
-    else if (level < 11) return 5;
-    else if (level < 13) return 6;
-    else if (level < 15) return 7;
-    else if (level < 17) return 8;
-    else return 9;
-  }
-  
-  // Полу-заклинатели (Паладин, Следопыт)
-  if (['паладин', 'paladin', 'следопыт', 'ranger'].includes(lowerClass)) {
-    if (level < 5) return 1;
-    else if (level < 9) return 2;
-    else if (level < 13) return 3;
-    else if (level < 17) return 4;
-    else return 5;
-  }
-  
-  // Особый случай - Колдун
-  if (['колдун', 'warlock'].includes(lowerClass)) {
-    if (level < 3) return 1;
-    else if (level < 5) return 2;
-    else if (level < 7) return 3;
-    else if (level < 9) return 4;
-    else return 5;
-  }
-  
-  return 0; // Для не-магических классов
-};
-
-/**
- * Фильтрует заклинания по классу и уровню
+ * Filter spells by class and level
  */
 export const filterSpellsByClassAndLevel = (
   spells: SpellData[],
   characterClass: string,
   characterLevel: number
 ): SpellData[] => {
-  if (!spells || !characterClass) return [];
+  if (!spells || !spells.length) return [];
   
-  const maxLevel = getMaxSpellLevel(characterClass, characterLevel);
-  const classLower = characterClass.toLowerCase();
+  const lowerClass = characterClass.toLowerCase();
+  
+  // Determine max spell level for this character
+  let maxLevel = 0;
+  if (characterLevel >= 17) maxLevel = 9;
+  else if (characterLevel >= 15) maxLevel = 8;
+  else if (characterLevel >= 13) maxLevel = 7;
+  else if (characterLevel >= 11) maxLevel = 6;
+  else if (characterLevel >= 9) maxLevel = 5;
+  else if (characterLevel >= 7) maxLevel = 4;
+  else if (characterLevel >= 5) maxLevel = 3;
+  else if (characterLevel >= 3) maxLevel = 2;
+  else if (characterLevel >= 1) maxLevel = 1;
   
   return spells.filter(spell => {
-    // Проверяем уровень заклинания
+    // Check if spell level is within character's capability
     if (spell.level > maxLevel) return false;
     
-    // Проверяем, принадлежит ли заклинание классу
-    let isClassSpell = false;
-    
-    if (typeof spell.classes === 'string') {
-      // Обрабатываем случай, когда classes - это строка
-      isClassSpell = spell.classes.toLowerCase().includes(classLower) || 
-                      (classLower === 'жрец' && spell.classes.toLowerCase().includes('cleric')) ||
-                      (classLower === 'волшебник' && spell.classes.toLowerCase().includes('wizard')) ||
-                      (classLower === 'друид' && spell.classes.toLowerCase().includes('druid')) ||
-                      (classLower === 'бард' && spell.classes.toLowerCase().includes('bard')) ||
-                      (classLower === 'паладин' && spell.classes.toLowerCase().includes('paladin')) ||
-                      (classLower === 'следопыт' && spell.classes.toLowerCase().includes('ranger')) ||
-                      (classLower === 'чародей' && spell.classes.toLowerCase().includes('sorcerer')) ||
-                      (classLower === 'колдун' && spell.classes.toLowerCase().includes('warlock'));
-    } else if (Array.isArray(spell.classes)) {
-      // Обрабатываем случай, когда classes - это массив
-      isClassSpell = spell.classes.some(cls => {
-        if (typeof cls !== 'string') return false;
-        
-        const clsLower = cls.toLowerCase();
-        return clsLower.includes(classLower) ||
-              (classLower === 'жрец' && clsLower.includes('cleric')) ||
-              (classLower === 'волшебник' && clsLower.includes('wizard')) ||
-              (classLower === 'друид' && clsLower.includes('druid')) ||
-              (classLower === 'бард' && clsLower.includes('bard')) ||
-              (classLower === 'паладин' && clsLower.includes('paladin')) ||
-              (classLower === 'следопыт' && clsLower.includes('ranger')) ||
-              (classLower === 'чародей' && clsLower.includes('sorcerer')) ||
-              (classLower === 'колдун' && clsLower.includes('warlock'));
-      });
+    // Check if spell is available to this class
+    if (spell.classes) {
+      const spellClasses = Array.isArray(spell.classes) ? spell.classes : [spell.classes];
+      return spellClasses.some(cls => cls.toLowerCase().includes(lowerClass));
     }
     
-    return isClassSpell;
+    return false;
   });
-};
-
-/**
- * Нормализует массив заклинаний персонажа
- */
-export const normalizeSpells = (character: Character): CharacterSpell[] => {
-  if (!character.spells) return [];
-  
-  return character.spells.map(spell => {
-    if (typeof spell === 'string') {
-      return {
-        name: spell,
-        level: 0,
-        school: 'Универсальная',
-        prepared: true
-      };
-    }
-    return spell;
-  });
-};
-
-/**
- * Преобразует CharacterSpell в SpellData
- */
-export const convertToSpellData = (spell: CharacterSpell): SpellData => {
-  // Ensure classes is always a string array
-  let classesArray: string[] = [];
-  
-  if (!spell.classes) {
-    classesArray = [];
-  } else if (typeof spell.classes === 'string') {
-    classesArray = [spell.classes]; // Convert string to array
-  } else if (Array.isArray(spell.classes)) {
-    classesArray = spell.classes.map(c => String(c));
-  }
-  
-  return {
-    id: spell.id || `spell-${spell.name.replace(/\s+/g, '-').toLowerCase()}`,
-    name: spell.name,
-    level: spell.level || 0,
-    school: spell.school || 'Универсальная',
-    castingTime: spell.castingTime || '1 действие',
-    range: spell.range || 'На себя',
-    components: spell.components || '',
-    duration: spell.duration || 'Мгновенная',
-    description: spell.description || 'Нет описания',
-    classes: classesArray,
-    ritual: spell.ritual || false,
-    concentration: spell.concentration || false,
-    prepared: spell.prepared || false,
-    verbal: spell.verbal || false,
-    somatic: spell.somatic || false,
-    material: spell.material || false
-  };
-};
-
-/**
- * Получает модификатор способности для заклинаний на основе класса
- */
-export const getSpellcastingAbilityModifier = (character: Character): number => {
-  if (!character || !character.class) return 0;
-  
-  const charClass = character.class.toLowerCase();
-  let abilityScore = 10; // По умолчанию 10 (модификатор 0)
-
-  // Определяем основную характеристику в зависимости от класса
-  if (['жрец', 'друид', 'cleric', 'druid'].includes(charClass)) {
-    // Мудрость
-    abilityScore = character.wisdom || character.abilities?.WIS || character.abilities?.wisdom || 10;
-  } else if (['волшебник', 'wizard', 'artificer', 'артефайсер'].includes(charClass)) {
-    // Интеллект
-    abilityScore = character.intelligence || character.abilities?.INT || character.abilities?.intelligence || 10;
-  } else {
-    // Харизма (бард, колдун, чародей, паладин)
-    abilityScore = character.charisma || character.abilities?.CHA || character.abilities?.charisma || 10;
-  }
-
-  // Вычисляем модификатор
-  return Math.floor((abilityScore - 10) / 2);
-};
-
-/**
- * Вычисляет лимит подготовленных заклинаний
- */
-export const getPreparedSpellsLimit = (character: Character): number => {
-  if (!character.class) return 0;
-  
-  const classLower = character.class.toLowerCase();
-  
-  // Классы, которые готовят заклинания
-  if (['жрец', 'друид', 'волшебник', 'cleric', 'druid', 'wizard'].includes(classLower)) {
-    const abilityMod = getSpellcastingAbilityModifier(character);
-    return Math.max(1, character.level + abilityMod);
-  }
-  
-  // Классы с известными заклинаниями (не готовят их)
-  if (['бард', 'чародей', 'колдун', 'bard', 'sorcerer', 'warlock'].includes(classLower)) {
-    return 0; // Не готовят заклинания, а просто знают их
-  }
-  
-  // Паладин и следопыт
-  if (['паладин', 'следопыт', 'paladin', 'ranger'].includes(classLower)) {
-    const abilityMod = getSpellcastingAbilityModifier(character);
-    return Math.max(1, Math.floor(character.level / 2) + abilityMod);
-  }
-  
-  return 0;
-};
-
-/**
- * Проверяет, может ли персонаж подготовить ещё заклинания
- */
-export const canPrepareMoreSpells = (character: Character): boolean => {
-  const limit = getPreparedSpellsLimit(character);
-  if (limit <= 0) return true; // Если лимита нет, всегда можно подготовить
-  
-  const preparedCount = normalizeSpells(character).filter(spell => 
-    spell.prepared && spell.level > 0 // Заговоры не считаются
-  ).length;
-  
-  return preparedCount < limit;
-};
-
-/**
- * Конвертирует заклинания для хранения в состоянии
- */
-export const convertSpellsForState = (spells: SpellData[]): CharacterSpell[] => {
-  return spells.map(spell => ({
-    id: spell.id.toString(),
-    name: spell.name,
-    level: spell.level,
-    school: spell.school,
-    castingTime: spell.castingTime,
-    range: spell.range,
-    components: spell.components,
-    duration: spell.duration,
-    description: Array.isArray(spell.description) ? spell.description.join('\n') : spell.description,
-    classes: Array.isArray(spell.classes) ? spell.classes : [spell.classes as string],
-    prepared: spell.prepared || false,
-    ritual: spell.ritual || false,
-    concentration: spell.concentration || false
-  }));
-};
-
-/**
- * Вычисляет СЛ заклинаний (Spell DC) для персонажа
- */
-export const calculateSpellcastingDC = (character: Character): number => {
-  // Базовая СЛ = 8 + бонус мастерства + модификатор характеристики
-  if (!character) return 8;
-  
-  // Получаем модификатор основной характеристики для заклинаний
-  const abilityMod = getSpellcastingAbilityModifier(character);
-  
-  // Получаем бонус мастерства
-  const profBonus = character.proficiencyBonus || Math.floor((character.level - 1) / 4) + 2;
-  
-  // Формула для вычисления СЛ заклинания
-  return 8 + profBonus + abilityMod;
-};
-
-/**
- * Вычисляет бонус атаки заклинанием для персонажа
- */
-export const calculateSpellAttackBonus = (character: Character): number => {
-  if (!character) return 0;
-  
-  // Получаем модификатор основной характеристики для заклинаний
-  const abilityMod = getSpellcastingAbilityModifier(character);
-  
-  // Получаем бонус мастерства
-  const profBonus = character.proficiencyBonus || Math.floor((character.level - 1) / 4) + 2;
-  
-  // Формула для вычисления бонуса атаки заклинанием
-  return profBonus + abilityMod;
-};
-
-/**
- * Возвращает основную характеристику для заклинаний по умолчанию в зависимости от класса
- */
-export const getDefaultCastingAbility = (characterClass: string): string => {
-  const classLower = characterClass.toLowerCase();
-  
-  if (['жрец', 'друид', 'следопыт', 'cleric', 'druid', 'ranger'].includes(classLower)) {
-    return 'wisdom';
-  } else if (['волшебник', 'wizard', 'artificer', 'артефайсер'].includes(classLower)) {
-    return 'intelligence';
-  } else {
-    // Бард, Колдун, Чародей, Паладин
-    return 'charisma';
-  }
 };
