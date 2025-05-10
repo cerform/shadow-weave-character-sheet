@@ -1,13 +1,13 @@
 
 import { useContext } from 'react';
 import { ThemeContext } from '@/contexts/ThemeContext';
-import { Theme } from '@/types/theme';
+import { Theme, ThemeType, ThemeContextType } from '@/types/theme';
 
-// Export the hook and types
+// Export the hook and context
 export { ThemeContext };
 
 // Export types correctly with 'export type'
-export type { Theme, ThemeType } from '@/types/theme';
+export type { Theme, ThemeType, ThemeContextType };
 
 export const useTheme = () => {
   const context = useContext(ThemeContext);

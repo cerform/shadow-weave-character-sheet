@@ -18,7 +18,7 @@ const ThemeSelector: React.FC = () => {
   const { theme, setTheme } = useTheme();
   
   const handleThemeChange = (themeKey: string) => {
-    // Use as ThemeType instead of as Theme to match the expected type
+    // Convert the string to ThemeType before passing to setTheme
     setTheme(themeKey as ThemeType);
   };
   

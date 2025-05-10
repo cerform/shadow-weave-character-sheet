@@ -1,80 +1,124 @@
+// Ability Scores interface
+export interface AbilityScores {
+  STR: number;
+  DEX: number;
+  CON: number;
+  INT: number;
+  WIS: number;
+  CHA: number;
+  strength: number;
+  dexterity: number;
+  constitution: number;
+  intelligence: number;
+  wisdom: number;
+  charisma: number;
+}
 
-interface Character {
+// Character Spell interface
+export interface CharacterSpell {
+  id: string;
+  name: string;
+  level: number;
+  school?: string;
+  castingTime?: string;
+  range?: string;
+  components?: string;
+  duration?: string;
+  description?: string | string[];
+  classes?: string[] | string;
+  source?: string;
+  verbal?: boolean;
+  somatic?: boolean;
+  material?: boolean;
+  prepared?: boolean;
+  higherLevel?: string;
+  higherLevels?: string;
+  ritual?: boolean;
+  concentration?: boolean;
+  materials?: string;
+}
+
+// Main Character interface
+export interface Character {
   id: string;
   name: string;
   race: string;
   subrace?: string;
   class: string;
   subclass?: string;
-  background: string;
-  alignment: string;
   level: number;
-  xp: number;
-  abilities: AbilityScores;
-  savingThrows: AbilityScores;
-  skills: Record<string, { proficient: boolean; expertise: boolean; value: number }>;
-  hp: number;
-  maxHp: number;
-  temporaryHp: number; 
-  ac: number;
-  proficiencyBonus: number;
-  speed: number;
-  initiative: number; 
-  inspiration: boolean;
-  hitDice: {
-    total: number;
-    used: number;
-    dieType: string;
+  background?: string;
+  alignment?: string;
+  experience?: number;
+  
+  // Core stats
+  abilities?: AbilityScores;
+  proficiencyBonus?: number;
+  armorClass?: number;
+  initiative?: number;
+  speed?: number;
+  maxHitPoints?: number;
+  currentHitPoints?: number;
+  temporaryHitPoints?: number;
+  
+  // Hit Dice
+  hitDice?: {
+    value: string;
+    total?: number;
+    remaining?: number;
   };
-  resources: Record<string, {
-    max: number;
-    used: number;
-    name: string;
-    recoveryType?: 'short-rest' | 'long-rest' | 'short' | 'long';
-  }>;
-  deathSaves: {
-    successes: number;
-    failures: number;
-  };
-  spellcasting: {
+  
+  // Combat stats
+  attackBonus?: number;
+  savingThrows?: Record<string, number>;
+  skills?: Record<string, any>;
+  
+  // Equipment
+  inventory?: any[];
+  equipment?: any[];
+  weapons?: any[];
+  armor?: any[];
+  
+  // Magic
+  spellcasting?: {
     ability: string;
-    dc: number;
-    attack: number;
+    saveDC?: number;
+    attackBonus?: number;
   };
-  spellSlots: Record<string, { max: number; used: number }>;
-  sorceryPoints?: {
-    max: number;
-    current?: number;
-    used?: number;
-  }; 
-  spells: CharacterSpell[];
-  equipment: {
-    weapons: string[];
-    armor: string;
-    items: string[];
-    gold: number;
-  };
-  proficiencies: {
-    languages: string[];
-    tools: string[];
+  spells?: (CharacterSpell | string)[];
+  spellSlots?: Record<string, { max: number; used: number }>;
+  
+  // Features
+  features?: any[];
+  traits?: any[];
+  proficiencies?: {
+    languages?: string[];
+    tools?: string[];
     weapons?: string[];
     armor?: string[];
     skills?: string[];
   };
-  features: Feature[];
-  notes: string;
-  lastDiceRoll?: {
-    type: string;
-    result: number | number[];
-    modifier: number;
-    total: number;
-    advantage?: boolean;
-    disadvantage?: boolean;
-    timestamp: number;
+  
+  // Personal details
+  appearance?: string;
+  backstory?: string;
+  personality?: {
+    traits?: string;
+    ideals?: string;
+    bonds?: string;
+    flaws?: string;
   };
-  // Add properties that were missing or needed across multiple components
-  currentHp?: number;
-  gender?: string;
+  
+  // Notes
+  notes?: string;
+  
+  // Metadata
+  createdAt?: string;
+  updatedAt?: string;
+  lastUsed?: string;
+  
+  // Other details as needed
+  [key: string]: any;
 }
 
 export default Character;

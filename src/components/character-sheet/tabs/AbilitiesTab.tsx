@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from '@/components/ui/label';
@@ -7,7 +6,7 @@ import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
-import { calculateAbilityModifier, getModifierString, defaultAbilityScores } from '@/utils/characterUtils';
+import { calculateAbilityModifier, getModifierString } from '@/utils/characterUtils';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
 import { Separator } from '@/components/ui/separator';
@@ -21,6 +20,27 @@ type SkillType = {
   proficient: boolean;
   expertise: boolean;
   value: number;
+};
+
+// Default ability scores to use if none exist
+const defaultAbilityScores: AbilityScores = {
+  STR: 10,
+  DEX: 10,
+  CON: 10,
+  INT: 10,
+  WIS: 10,
+  CHA: 10,
+  strength: 10,
+  dexterity: 10,
+  constitution: 10,
+  intelligence: 10,
+  wisdom: 10,
+  charisma: 10
+};
+
+// Utility function to check if a value exists
+const hasValue = (value: any): boolean => {
+  return value !== undefined && value !== null;
 };
 
 // Ability scores component
@@ -57,10 +77,10 @@ const AbilitiesTab: React.FC<AbilitiesTabProps> = ({ character, onUpdate }) => {
   const [savingThrows, setSavingThrows] = useState(character.savingThrows || {});
   
   // Languages, tools, and other proficiencies
-  const [languages, setLanguages] = useState(character.proficiencies?.languages || []);
-  const [tools, setTools] = useState(character.proficiencies?.tools || []);
-  const [weapons, setWeapons] = useState(character.proficiencies?.weapons || []);
-  const [armor, setArmor] = useState(character.proficiencies?.armor || []);
+  const [languages, setLanguages] = useState<string[]>(character.proficiencies?.languages || []);
+  const [tools, setTools] = useState<string[]>(character.proficiencies?.tools || []);
+  const [weapons, setWeapons] = useState<string[]>(character.proficiencies?.weapons || []);
+  const [armor, setArmor] = useState<string[]>(character.proficiencies?.armor || []);
   const [proficiencyText, setProficiencyText] = useState('');
   
   // Handler for ability score changes
@@ -234,12 +254,7 @@ const AbilitiesTab: React.FC<AbilitiesTabProps> = ({ character, onUpdate }) => {
     return abilityMod;
   };
   
-  // Function to check if a value exists
-  const hasValue = (value: any): boolean => {
-    return value !== undefined && value !== null;
-  };
-  
-  // Update proficiency text
+  // Update proficiency text - fixed to use Textarea instead of Input
   const handleProficiencyTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setProficiencyText(e.target.value);
     
@@ -694,9 +709,8 @@ const AbilitiesTab: React.FC<AbilitiesTabProps> = ({ character, onUpdate }) => {
               Языки
             </div>
             <div className="flex items-center gap-2">
-              <Input 
-                type="text" 
-                value={proficiencyText}
+              <Textarea 
+                value={languages.join(', ')}
                 onChange={handleProficiencyTextChange}
                 className="w-full"
                 style={{ backgroundColor: currentTheme.cardBackground, color: currentTheme.textColor }}
@@ -708,9 +722,8 @@ const AbilitiesTab: React.FC<AbilitiesTabProps> = ({ character, onUpdate }) => {
               Инструменты
             </div>
             <div className="flex items-center gap-2">
-              <Input 
-                type="text" 
-                value={proficiencyText}
+              <Textarea 
+                value={tools.join(', ')}
                 onChange={handleProficiencyTextChange}
                 className="w-full"
                 style={{ backgroundColor: currentTheme.cardBackground, color: currentTheme.textColor }}
@@ -722,9 +735,8 @@ const AbilitiesTab: React.FC<AbilitiesTabProps> = ({ character, onUpdate }) => {
               Оружие
             </div>
             <div className="flex items-center gap-2">
-              <Input 
-                type="text" 
-                value={proficiencyText}
+              <Textarea 
+                value={weapons.join(', ')}
                 onChange={handleProficiencyTextChange}
                 className="w-full"
                 style={{ backgroundColor: currentTheme.cardBackground, color: currentTheme.textColor }}
@@ -736,9 +748,8 @@ const AbilitiesTab: React.FC<AbilitiesTabProps> = ({ character, onUpdate }) => {
               Доспех
             </div>
             <div className="flex items-center gap-2">
-              <Input 
-                type="text" 
-                value={proficiencyText}
+              <Textarea 
+                value={armor.join(', ')}
                 onChange={handleProficiencyTextChange}
                 className="w-full"
                 style={{ backgroundColor: currentTheme.cardBackground, color: currentTheme.textColor }}
@@ -751,5 +762,4 @@ const AbilitiesTab: React.FC<AbilitiesTabProps> = ({ character, onUpdate }) => {
   );
 };
 
-// Export single default export
 export default AbilitiesTab;

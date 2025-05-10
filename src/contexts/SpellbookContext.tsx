@@ -2,7 +2,7 @@
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
 import { Character, CharacterSpell } from '@/types/character';
 import { SpellData } from '@/types/spells';
-import { isSpellAdded, convertToSpellData } from '@/utils/spellUtils';
+import { convertToSpellData } from '@/utils/spellUtils';
 import { useToast } from '@/hooks/use-toast';
 
 interface SpellbookContextProps {
@@ -83,7 +83,8 @@ export function SpellbookProvider({ children, character, onUpdate }: {
     try {
       const spellsModule = await import('@/data/spells');
       const spells = spellsModule.getAllSpells();
-      setAvailableSpells(spells);
+      const convertedSpells = spells.map(spell => convertToSpellData(spell));
+      setAvailableSpells(convertedSpells);
     } catch (error) {
       console.error('Error loading spells:', error);
     }
@@ -94,7 +95,8 @@ export function SpellbookProvider({ children, character, onUpdate }: {
     try {
       const spellsModule = await import('@/data/spells');
       const spells = spellsModule.getSpellsByClass(characterClass);
-      setAvailableSpells(spells);
+      const convertedSpells = spells.map(spell => convertToSpellData(spell));
+      setAvailableSpells(convertedSpells);
     } catch (error) {
       console.error(`Error loading spells for ${characterClass}:`, error);
     }
@@ -103,19 +105,7 @@ export function SpellbookProvider({ children, character, onUpdate }: {
   // Import spells from external source
   const importSpells = (spells: CharacterSpell[]) => {
     // Convert CharacterSpell[] to SpellData[]
-    const convertedSpells: SpellData[] = (spells || []).map(spell => ({
-      id: spell.id || `spell-${String(spell.name).toLowerCase().replace(/\s+/g, '-')}`,
-      name: spell.name,
-      level: spell.level || 0,
-      school: spell.school || 'Универсальная',
-      castingTime: spell.castingTime || '1 действие',
-      range: spell.range || 'На себя',
-      components: spell.components || '',
-      duration: spell.duration || 'Мгновенная',
-      description: spell.description || '',
-      prepared: spell.prepared
-    }));
-    
+    const convertedSpells: SpellData[] = (spells || []).map(spell => convertToSpellData(spell));
     setSelectedSpells(convertedSpells);
   };
 

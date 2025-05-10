@@ -3,6 +3,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Dices } from 'lucide-react';
 import { useTheme } from '@/hooks/use-theme';
 import { DiceRollModal } from './DiceRollModal';
+import { themes } from '@/lib/themes';
 
 interface Position {
   x: number;
@@ -10,7 +11,10 @@ interface Position {
 }
 
 const FloatingDiceButton: React.FC = () => {
-  const { themeStyles } = useTheme();
+  const { theme } = useTheme();
+  const themeKey = (theme || 'default') as keyof typeof themes;
+  const currentTheme = themes[themeKey] || themes.default;
+  
   const [isOpen, setIsOpen] = useState(false);
   const [position, setPosition] = useState<Position>({ x: 20, y: 20 });
   const [isDragging, setIsDragging] = useState(false);
@@ -18,7 +22,7 @@ const FloatingDiceButton: React.FC = () => {
   const buttonRef = useRef<HTMLDivElement>(null);
   
   // Кешируем цвет кнопки для предотвращения мерцания
-  const buttonColor = themeStyles?.accent || '#8B5A2B';
+  const buttonColor = currentTheme.accent || '#8B5A2B';
 
   // Сохраняем позицию в localStorage
   useEffect(() => {
