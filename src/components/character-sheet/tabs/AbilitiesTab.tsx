@@ -1,765 +1,508 @@
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Label } from '@/components/ui/label';
+import React from 'react';
 import { Character, AbilityScores } from '@/types/character';
-import { Switch } from '@/components/ui/switch';
-import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
-import { Checkbox } from '@/components/ui/checkbox';
-import { calculateAbilityModifier, getModifierString } from '@/utils/characterUtils';
-import { useTheme } from '@/hooks/use-theme';
-import { themes } from '@/lib/themes';
+import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
 
-export interface AbilitiesTabProps {
+// Define helper functions that were missing
+const toggleSavingThrow = (ability: string, character: Character, onUpdate: (updates: Partial<Character>) => void) => {
+  const savingThrows = { ...(character.savingThrows || {}) };
+  savingThrows[ability] = savingThrows[ability] ? 0 : 1;
+  onUpdate({ savingThrows });
+};
+
+const calculateSavingThrow = (ability: string, abilityScore: number, proficient: boolean, proficiencyBonus: number): number => {
+  const modifier = Math.floor((abilityScore - 10) / 2);
+  return proficient ? modifier + proficiencyBonus : modifier;
+};
+
+const hasSkillProficiency = (skill: string, character: Character): boolean => {
+  if (!character.skills) return false;
+  const skillValue = character.skills[skill];
+  if (!skillValue) return false;
+  
+  if (typeof skillValue === 'number') {
+    return skillValue > 0;
+  }
+  
+  return skillValue.proficient;
+};
+
+const toggleSkillProficiency = (skill: string, character: Character, onUpdate: (updates: Partial<Character>) => void) => {
+  const skills = { ...(character.skills || {}) };
+  
+  const currentSkill = skills[skill];
+  if (typeof currentSkill === 'number') {
+    skills[skill] = currentSkill > 0 ? 0 : 1;
+  } else if (currentSkill && typeof currentSkill === 'object') {
+    skills[skill] = {
+      ...currentSkill,
+      proficient: !currentSkill.proficient
+    };
+  } else {
+    skills[skill] = { proficient: true, expertise: false, value: 0 };
+  }
+  
+  onUpdate({ skills });
+};
+
+const calculateSkillBonus = (skill: string, ability: string, abilityScore: number, proficient: boolean, proficiencyBonus: number): number => {
+  const modifier = Math.floor((abilityScore - 10) / 2);
+  return proficient ? modifier + proficiencyBonus : modifier;
+};
+
+interface AbilitiesTabProps {
   character: Character;
   onUpdate: (updates: Partial<Character>) => void;
 }
 
-type SkillType = {
-  proficient: boolean;
-  expertise: boolean;
-  value: number;
-};
-
-// Default ability scores to use if none exist
-const defaultAbilityScores: AbilityScores = {
-  STR: 10,
-  DEX: 10,
-  CON: 10,
-  INT: 10,
-  WIS: 10,
-  CHA: 10,
-  strength: 10,
-  dexterity: 10,
-  constitution: 10,
-  intelligence: 10,
-  wisdom: 10,
-  charisma: 10
-};
-
-// Utility function to check if a value exists
-const hasValue = (value: any): boolean => {
-  return value !== undefined && value !== null;
-};
-
-// Ability scores component
 const AbilitiesTab: React.FC<AbilitiesTabProps> = ({ character, onUpdate }) => {
-  const { theme } = useTheme();
-  const themeKey = (theme || 'default') as keyof typeof themes;
-  const currentTheme = themes[themeKey] || themes.default;
-  
-  // Use default ability scores if none exist
-  const abilities = character.abilities || defaultAbilityScores;
-  
-  // State for abilities values
-  const [abilityValues, setAbilityValues] = useState<AbilityScores>({
-    STR: abilities.STR || abilities.strength || 10,
-    DEX: abilities.DEX || abilities.dexterity || 10,
-    CON: abilities.CON || abilities.constitution || 10,
-    INT: abilities.INT || abilities.intelligence || 10,
-    WIS: abilities.WIS || abilities.wisdom || 10,
-    CHA: abilities.CHA || abilities.charisma || 10,
-    strength: abilities.STR || abilities.strength || 10,
-    dexterity: abilities.DEX || abilities.dexterity || 10,
-    constitution: abilities.CON || abilities.constitution || 10,
-    intelligence: abilities.INT || abilities.intelligence || 10,
-    wisdom: abilities.WIS || abilities.wisdom || 10,
-    charisma: abilities.CHA || abilities.charisma || 10
-  });
-  
-  // State for skills
-  const [skills, setSkills] = useState<Record<string, SkillType>>(
-    character.skills as Record<string, SkillType> || {}
-  );
-  
-  // State for saving throws
-  const [savingThrows, setSavingThrows] = useState(character.savingThrows || {});
-  
-  // Languages, tools, and other proficiencies
-  const [languages, setLanguages] = useState<string[]>(character.proficiencies?.languages || []);
-  const [tools, setTools] = useState<string[]>(character.proficiencies?.tools || []);
-  const [weapons, setWeapons] = useState<string[]>(character.proficiencies?.weapons || []);
-  const [armor, setArmor] = useState<string[]>(character.proficiencies?.armor || []);
-  const [proficiencyText, setProficiencyText] = useState('');
-  
-  // Handler for ability score changes
-  const handleAbilityChange = (key: keyof AbilityScores, value: number) => {
-    // Update both abbreviated and full name values
-    let updates: Partial<AbilityScores> = {};
-    
-    switch(key) {
-      case 'STR':
-      case 'strength':
-        updates.STR = value;
-        updates.strength = value;
-        break;
-      case 'DEX':
-      case 'dexterity':
-        updates.DEX = value;
-        updates.dexterity = value;
-        break;
-      case 'CON':
-      case 'constitution':
-        updates.CON = value;
-        updates.constitution = value;
-        break;
-      case 'INT':
-      case 'intelligence':
-        updates.INT = value;
-        updates.intelligence = value;
-        break;
-      case 'WIS':
-      case 'wisdom':
-        updates.WIS = value;
-        updates.wisdom = value;
-        break;
-      case 'CHA':
-      case 'charisma':
-        updates.CHA = value;
-        updates.charisma = value;
-        break;
-    }
-    
-    setAbilityValues(prev => ({ ...prev, ...updates }));
-    onUpdate({ abilities: { ...abilityValues, ...updates } });
+  // Initialize abilities with default values if they don't exist
+  const abilities: AbilityScores = character.abilities || {
+    STR: 10, DEX: 10, CON: 10, INT: 10, WIS: 10, CHA: 10,
+    strength: 10, dexterity: 10, constitution: 10, intelligence: 10, wisdom: 10, charisma: 10
   };
-  
-  // Handler for skill proficiency changes
-  const handleSkillChange = (skillKey: string, field: 'proficient' | 'expertise', value: boolean) => {
-    const updatedSkills = { ...skills };
+
+  // Calculate proficiency bonus
+  const proficiencyBonus = character.proficiencyBonus || Math.floor((character.level + 7) / 4);
+
+  // Calculate ability modifiers
+  const getModifier = (score: number): number => Math.floor((score - 10) / 2);
+
+  // Handle ability score changes
+  const handleAbilityChange = (ability: keyof AbilityScores, value: number) => {
+    const newAbilities = { ...character.abilities } as AbilityScores;
+    newAbilities[ability] = value;
     
-    // Initialize the skill object if it doesn't exist
-    if (!updatedSkills[skillKey]) {
-      updatedSkills[skillKey] = {
-        proficient: false,
-        expertise: false,
-        value: 0
-      };
-    }
+    // Update both short and long forms of the ability score
+    if (ability === 'STR') newAbilities.strength = value;
+    if (ability === 'DEX') newAbilities.dexterity = value;
+    if (ability === 'CON') newAbilities.constitution = value;
+    if (ability === 'INT') newAbilities.intelligence = value;
+    if (ability === 'WIS') newAbilities.wisdom = value;
+    if (ability === 'CHA') newAbilities.charisma = value;
     
-    // Update the specific field
-    updatedSkills[skillKey] = {
-      ...updatedSkills[skillKey],
-      [field]: value
-    };
-    
-    // Calculate skill value
-    let abilityMod = 0;
-    let profBonus = character.proficiencyBonus || 2;
-    
-    // Map skill to ability
-    switch(skillKey) {
-      case 'athletics':
-        abilityMod = calculateAbilityModifier(abilityValues.STR);
-        break;
-      case 'acrobatics':
-      case 'sleightOfHand':
-      case 'stealth':
-        abilityMod = calculateAbilityModifier(abilityValues.DEX);
-        break;
-      case 'arcana':
-      case 'history':
-      case 'investigation':
-      case 'nature':
-      case 'religion':
-        abilityMod = calculateAbilityModifier(abilityValues.INT);
-        break;
-      case 'animalHandling':
-      case 'insight':
-      case 'medicine':
-      case 'perception':
-      case 'survival':
-        abilityMod = calculateAbilityModifier(abilityValues.WIS);
-        break;
-      case 'deception':
-      case 'intimidation':
-      case 'performance':
-      case 'persuasion':
-        abilityMod = calculateAbilityModifier(abilityValues.CHA);
-        break;
-      default:
-        abilityMod = 0;
-    }
-    
-    // Calculate skill value
-    let skillValue = abilityMod;
-    if (updatedSkills[skillKey].proficient) {
-      skillValue += profBonus;
-    }
-    if (updatedSkills[skillKey].expertise) {
-      skillValue += profBonus;
-    }
-    
-    updatedSkills[skillKey].value = skillValue;
-    
-    setSkills(updatedSkills);
-    onUpdate({ skills: updatedSkills });
+    onUpdate({ abilities: newAbilities });
   };
-  
-  // Function to check if a skill has proficiency
-  const hasSkillProficiency = (skillKey: string): boolean => {
-    return !!(skills[skillKey] && skills[skillKey].proficient);
-  };
-  
-  // Function to toggle skill proficiency
-  const toggleSkillProficiency = (skillKey: string) => {
-    if (!skills[skillKey]) {
-      handleSkillChange(skillKey, 'proficient', true);
-    } else {
-      handleSkillChange(skillKey, 'proficient', !skills[skillKey].proficient);
-    }
-  };
-  
-  // Function to calculate skill bonus
-  const calculateSkillBonus = (skillKey: string, ability: keyof AbilityScores): number => {
-    const abilityMod = calculateAbilityModifier(abilityValues[ability]);
-    const profBonus = character.proficiencyBonus || 2;
-    
-    if (skills[skillKey] && skills[skillKey].proficient) {
-      return abilityMod + profBonus + (skills[skillKey].expertise ? profBonus : 0);
-    }
-    
-    return abilityMod;
-  };
-  
-  // Handler for saving throw proficiency changes
-  const handleSavingThrowChange = (ability: string, value: boolean) => {
-    const updatedSavingThrows = { ...savingThrows };
-    
-    const profBonus = character.proficiencyBonus || 2;
-    const abilityMod = calculateAbilityModifier(abilityValues[ability as keyof AbilityScores] || 10);
-    
-    updatedSavingThrows[ability] = value ? abilityMod + profBonus : abilityMod;
-    
-    setSavingThrows(updatedSavingThrows);
-    onUpdate({ savingThrows: updatedSavingThrows });
-  };
-  
-  // Function to toggle saving throw proficiency
-  const toggleSavingThrow = (ability: string) => {
-    const currentValue = !!(character.savingThrows && character.savingThrows[ability]);
-    handleSavingThrowChange(ability, !currentValue);
-  };
-  
-  // Function to calculate saving throw value
-  const calculateSavingThrow = (ability: string): number => {
-    const abilityMod = calculateAbilityModifier(abilityValues[ability as keyof AbilityScores] || 10);
-    const profBonus = character.proficiencyBonus || 2;
-    
-    if (character.savingThrows && character.savingThrows[ability]) {
-      return abilityMod + profBonus;
-    }
-    
-    return abilityMod;
-  };
-  
-  // Update proficiency text - fixed to use Textarea instead of Input
-  const handleProficiencyTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setProficiencyText(e.target.value);
-    
-    // Parse text to extract proficiencies
-    const text = e.target.value.toLowerCase();
-    const newLanguages: string[] = [];
-    const newTools: string[] = [];
-    const newWeapons: string[] = [];
-    const newArmor: string[] = [];
-    
-    // Simple parsing logic - could be improved
-    if (text.includes('common') || text.includes('общий')) newLanguages.push('Общий');
-    if (text.includes('dwarvish') || text.includes('гномий')) newLanguages.push('Гномий');
-    if (text.includes('elvish') || text.includes('эльфий')) newLanguages.push('Эльфийский');
-    
-    if (text.includes('thieves') || text.includes('воров')) newTools.push('Воровские инструменты');
-    if (text.includes('smith') || text.includes('кузнечные')) newTools.push('Кузнечные инструменты');
-    
-    if (text.includes('simple') || text.includes('простое')) newWeapons.push('Простое оружие');
-    if (text.includes('martial') || text.includes('воинское')) newWeapons.push('Воинское оружие');
-    
-    if (text.includes('light') || text.includes('легкий')) newArmor.push('Легкий доспех');
-    if (text.includes('medium') || text.includes('средний')) newArmor.push('Средний доспех');
-    if (text.includes('heavy') || text.includes('тяжелый')) newArmor.push('Тяжелый доспех');
-    
-    setLanguages(newLanguages.length > 0 ? newLanguages : character.proficiencies?.languages || []);
-    setTools(newTools.length > 0 ? newTools : character.proficiencies?.tools || []);
-    setWeapons(newWeapons.length > 0 ? newWeapons : character.proficiencies?.weapons || []);
-    setArmor(newArmor.length > 0 ? newArmor : character.proficiencies?.armor || []);
-    
-    onUpdate({
-      proficiencies: {
-        languages: newLanguages.length > 0 ? newLanguages : character.proficiencies?.languages || [],
-        tools: newTools.length > 0 ? newTools : character.proficiencies?.tools || [],
-        weapons: newWeapons.length > 0 ? newWeapons : character.proficiencies?.weapons || [],
-        armor: newArmor.length > 0 ? newArmor : character.proficiencies?.armor || [],
-        skills: character.proficiencies?.skills || []
-      }
-    });
+
+  // Handle text input changes for personality traits etc.
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>, field: keyof Character) => {
+    onUpdate({ [field]: e.target.value });
   };
 
   return (
-    <div className="space-y-4">
-      {/* Ability Scores */}
-      <Card style={{ backgroundColor: currentTheme.cardBackground, borderColor: currentTheme.accent + '30' }}>
-        <CardHeader className="pb-2">
-          <CardTitle style={{ color: currentTheme.textColor }}>
-            Характеристики
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2">
-          {/* STR */}
-          <div className="flex flex-col items-center border p-2 rounded-md" 
-               style={{ borderColor: currentTheme.accent + '50' }}>
-            <span className="font-bold mb-1" style={{color: currentTheme.textColor}}>СИЛ</span>
-            <Input 
-              type="number" 
-              value={abilityValues.STR}
-              onChange={(e) => handleAbilityChange('STR', parseInt(e.target.value) || 10)}
-              className="w-12 text-center mb-1"
-              style={{backgroundColor: currentTheme.cardBackground, color: currentTheme.textColor}}
+    <div className="space-y-6">
+      {/* Abilities section */}
+      <section>
+        <h3 className="text-lg font-semibold mb-2">Характеристики</h3>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+          <div className="flex flex-col items-center">
+            <label className="text-sm font-medium">Сила (STR)</label>
+            <Input
+              type="number"
+              value={abilities.STR}
+              onChange={(e) => handleAbilityChange('STR', parseInt(e.target.value))}
+              className="w-16 text-center"
             />
-            <span className="text-lg font-medium" style={{color: currentTheme.accent}}>
-              {getModifierString(abilityValues.STR)}
+            <span className="text-sm mt-1">Мод: {getModifier(abilities.STR)}</span>
+          </div>
+          <div className="flex flex-col items-center">
+            <label className="text-sm font-medium">Ловкость (DEX)</label>
+            <Input
+              type="number"
+              value={abilities.DEX}
+              onChange={(e) => handleAbilityChange('DEX', parseInt(e.target.value))}
+              className="w-16 text-center"
+            />
+            <span className="text-sm mt-1">Мод: {getModifier(abilities.DEX)}</span>
+          </div>
+          <div className="flex flex-col items-center">
+            <label className="text-sm font-medium">Телосложение (CON)</label>
+            <Input
+              type="number"
+              value={abilities.CON}
+              onChange={(e) => handleAbilityChange('CON', parseInt(e.target.value))}
+              className="w-16 text-center"
+            />
+            <span className="text-sm mt-1">Мод: {getModifier(abilities.CON)}</span>
+          </div>
+          <div className="flex flex-col items-center">
+            <label className="text-sm font-medium">Интеллект (INT)</label>
+            <Input
+              type="number"
+              value={abilities.INT}
+              onChange={(e) => handleAbilityChange('INT', parseInt(e.target.value))}
+              className="w-16 text-center"
+            />
+            <span className="text-sm mt-1">Мод: {getModifier(abilities.INT)}</span>
+          </div>
+          <div className="flex flex-col items-center">
+            <label className="text-sm font-medium">Мудрость (WIS)</label>
+            <Input
+              type="number"
+              value={abilities.WIS}
+              onChange={(e) => handleAbilityChange('WIS', parseInt(e.target.value))}
+              className="w-16 text-center"
+            />
+            <span className="text-sm mt-1">Мод: {getModifier(abilities.WIS)}</span>
+          </div>
+          <div className="flex flex-col items-center">
+            <label className="text-sm font-medium">Харизма (CHA)</label>
+            <Input
+              type="number"
+              value={abilities.CHA}
+              onChange={(e) => handleAbilityChange('CHA', parseInt(e.target.value))}
+              className="w-16 text-center"
+            />
+            <span className="text-sm mt-1">Мод: {getModifier(abilities.CHA)}</span>
+          </div>
+        </div>
+      </section>
+
+      {/* Saving Throws section */}
+      <section>
+        <h3 className="text-lg font-semibold mb-2">Спасброски</h3>
+        <Separator className="my-2" />
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+          <div className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              checked={character.savingThrows?.STR > 0}
+              onChange={() => toggleSavingThrow('STR', character, onUpdate)}
+              className="rounded"
+            />
+            <span className="text-sm">
+              Сила: {calculateSavingThrow('STR', abilities.STR, !!character.savingThrows?.STR, proficiencyBonus)}
+            </span>
+          </div>
+          <div className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              checked={character.savingThrows?.DEX > 0}
+              onChange={() => toggleSavingThrow('DEX', character, onUpdate)}
+              className="rounded"
+            />
+            <span className="text-sm">
+              Ловкость: {calculateSavingThrow('DEX', abilities.DEX, !!character.savingThrows?.DEX, proficiencyBonus)}
+            </span>
+          </div>
+          <div className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              checked={character.savingThrows?.CON > 0}
+              onChange={() => toggleSavingThrow('CON', character, onUpdate)}
+              className="rounded"
+            />
+            <span className="text-sm">
+              Телосложение: {calculateSavingThrow('CON', abilities.CON, !!character.savingThrows?.CON, proficiencyBonus)}
+            </span>
+          </div>
+          <div className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              checked={character.savingThrows?.INT > 0}
+              onChange={() => toggleSavingThrow('INT', character, onUpdate)}
+              className="rounded"
+            />
+            <span className="text-sm">
+              Интеллект: {calculateSavingThrow('INT', abilities.INT, !!character.savingThrows?.INT, proficiencyBonus)}
+            </span>
+          </div>
+          <div className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              checked={character.savingThrows?.WIS > 0}
+              onChange={() => toggleSavingThrow('WIS', character, onUpdate)}
+              className="rounded"
+            />
+            <span className="text-sm">
+              Мудрость: {calculateSavingThrow('WIS', abilities.WIS, !!character.savingThrows?.WIS, proficiencyBonus)}
+            </span>
+          </div>
+          <div className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              checked={character.savingThrows?.CHA > 0}
+              onChange={() => toggleSavingThrow('CHA', character, onUpdate)}
+              className="rounded"
+            />
+            <span className="text-sm">
+              Харизма: {calculateSavingThrow('CHA', abilities.CHA, !!character.savingThrows?.CHA, proficiencyBonus)}
+            </span>
+          </div>
+        </div>
+      </section>
+
+      {/* Skills section */}
+      <section>
+        <h3 className="text-lg font-semibold mb-2">Навыки</h3>
+        <Separator className="my-2" />
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+          <div className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              checked={hasSkillProficiency('acrobatics', character)}
+              onChange={() => toggleSkillProficiency('acrobatics', character, onUpdate)}
+              className="rounded"
+            />
+            <span className="text-sm">
+              Акробатика (ЛОВ): {calculateSkillBonus('acrobatics', 'DEX', abilities.DEX, hasSkillProficiency('acrobatics', character), proficiencyBonus)}
             </span>
           </div>
           
-          {/* DEX */}
-          <div className="flex flex-col items-center border p-2 rounded-md" 
-               style={{ borderColor: currentTheme.accent + '50' }}>
-            <span className="font-bold mb-1" style={{color: currentTheme.textColor}}>ЛОВ</span>
-            <Input 
-              type="number" 
-              value={abilityValues.DEX}
-              onChange={(e) => handleAbilityChange('DEX', parseInt(e.target.value) || 10)}
-              className="w-12 text-center mb-1"
-              style={{backgroundColor: currentTheme.cardBackground, color: currentTheme.textColor}}
+          <div className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              checked={hasSkillProficiency('animalHandling', character)}
+              onChange={() => toggleSkillProficiency('animalHandling', character, onUpdate)}
+              className="rounded"
             />
-            <span className="text-lg font-medium" style={{color: currentTheme.accent}}>
-              {getModifierString(abilityValues.DEX)}
+            <span className="text-sm">
+              Обращение с животными (МДР): {calculateSkillBonus('animalHandling', 'WIS', abilities.WIS, hasSkillProficiency('animalHandling', character), proficiencyBonus)}
             </span>
           </div>
           
-          {/* CON */}
-          <div className="flex flex-col items-center border p-2 rounded-md" 
-               style={{ borderColor: currentTheme.accent + '50' }}>
-            <span className="font-bold mb-1" style={{color: currentTheme.textColor}}>ТЕЛ</span>
-            <Input 
-              type="number" 
-              value={abilityValues.CON}
-              onChange={(e) => handleAbilityChange('CON', parseInt(e.target.value) || 10)}
-              className="w-12 text-center mb-1"
-              style={{backgroundColor: currentTheme.cardBackground, color: currentTheme.textColor}}
+          <div className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              checked={hasSkillProficiency('arcana', character)}
+              onChange={() => toggleSkillProficiency('arcana', character, onUpdate)}
+              className="rounded"
             />
-            <span className="text-lg font-medium" style={{color: currentTheme.accent}}>
-              {getModifierString(abilityValues.CON)}
+            <span className="text-sm">
+              Магия (ИНТ): {calculateSkillBonus('arcana', 'INT', abilities.INT, hasSkillProficiency('arcana', character), proficiencyBonus)}
             </span>
           </div>
           
-          {/* INT */}
-          <div className="flex flex-col items-center border p-2 rounded-md" 
-               style={{ borderColor: currentTheme.accent + '50' }}>
-            <span className="font-bold mb-1" style={{color: currentTheme.textColor}}>ИНТ</span>
-            <Input 
-              type="number" 
-              value={abilityValues.INT}
-              onChange={(e) => handleAbilityChange('INT', parseInt(e.target.value) || 10)}
-              className="w-12 text-center mb-1"
-              style={{backgroundColor: currentTheme.cardBackground, color: currentTheme.textColor}}
+          <div className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              checked={hasSkillProficiency('athletics', character)}
+              onChange={() => toggleSkillProficiency('athletics', character, onUpdate)}
+              className="rounded"
             />
-            <span className="text-lg font-medium" style={{color: currentTheme.accent}}>
-              {getModifierString(abilityValues.INT)}
+            <span className="text-sm">
+              Атлетика (СИЛ): {calculateSkillBonus('athletics', 'STR', abilities.STR, hasSkillProficiency('athletics', character), proficiencyBonus)}
             </span>
           </div>
           
-          {/* WIS */}
-          <div className="flex flex-col items-center border p-2 rounded-md" 
-               style={{ borderColor: currentTheme.accent + '50' }}>
-            <span className="font-bold mb-1" style={{color: currentTheme.textColor}}>МДР</span>
-            <Input 
-              type="number" 
-              value={abilityValues.WIS}
-              onChange={(e) => handleAbilityChange('WIS', parseInt(e.target.value) || 10)}
-              className="w-12 text-center mb-1"
-              style={{backgroundColor: currentTheme.cardBackground, color: currentTheme.textColor}}
+          <div className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              checked={hasSkillProficiency('deception', character)}
+              onChange={() => toggleSkillProficiency('deception', character, onUpdate)}
+              className="rounded"
             />
-            <span className="text-lg font-medium" style={{color: currentTheme.accent}}>
-              {getModifierString(abilityValues.WIS)}
+            <span className="text-sm">
+              Обман (ХАР): {calculateSkillBonus('deception', 'CHA', abilities.CHA, hasSkillProficiency('deception', character), proficiencyBonus)}
             </span>
           </div>
           
-          {/* CHA */}
-          <div className="flex flex-col items-center border p-2 rounded-md" 
-               style={{ borderColor: currentTheme.accent + '50' }}>
-            <span className="font-bold mb-1" style={{color: currentTheme.textColor}}>ХАР</span>
-            <Input 
-              type="number" 
-              value={abilityValues.CHA}
-              onChange={(e) => handleAbilityChange('CHA', parseInt(e.target.value) || 10)}
-              className="w-12 text-center mb-1"
-              style={{backgroundColor: currentTheme.cardBackground, color: currentTheme.textColor}}
+          <div className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              checked={hasSkillProficiency('history', character)}
+              onChange={() => toggleSkillProficiency('history', character, onUpdate)}
+              className="rounded"
             />
-            <span className="text-lg font-medium" style={{color: currentTheme.accent}}>
-              {getModifierString(abilityValues.CHA)}
+            <span className="text-sm">
+              История (ИНТ): {calculateSkillBonus('history', 'INT', abilities.INT, hasSkillProficiency('history', character), proficiencyBonus)}
             </span>
           </div>
-        </CardContent>
-      </Card>
-      
-      {/* Saving Throws */}
-      <Card style={{ backgroundColor: currentTheme.cardBackground }}>
-        <CardContent className="pt-4">
-          <h3 className="text-lg font-bold mb-2" style={{ color: currentTheme.textColor }}>
-            Спасброски
-          </h3>
-          <Separator className="my-2" />
-          <div className="space-y-2">
-            {[
-              { key: 'STR', name: 'Сила' },
-              { key: 'DEX', name: 'Ловкость' },
-              { key: 'CON', name: 'Телосложение' },
-              { key: 'INT', name: 'Интеллект' },
-              { key: 'WIS', name: 'Мудрость' },
-              { key: 'CHA', name: 'Харизма' },
-            ].map((ability) => (
-              <div key={`save-${ability.key}`} className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Checkbox
-                    checked={!!(character.savingThrows && character.savingThrows[ability.key])}
-                    onCheckedChange={() => toggleSavingThrow(ability.key)}
-                  />
-                  <span style={{ color: currentTheme.textColor }}>{ability.name}</span>
-                </div>
-                <span 
-                  className="font-medium"
-                  style={{ 
-                    color: character.savingThrows && character.savingThrows[ability.key] ? 
-                      currentTheme.accent : currentTheme.textColor 
-                  }}
-                >
-                  {calculateSavingThrow(ability.key) >= 0 ? '+' : ''}
-                  {calculateSavingThrow(ability.key)}
-                </span>
-              </div>
-            ))}
+          
+          <div className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              checked={hasSkillProficiency('insight', character)}
+              onChange={() => toggleSkillProficiency('insight', character, onUpdate)}
+              className="rounded"
+            />
+            <span className="text-sm">
+              Проницательность (МДР): {calculateSkillBonus('insight', 'WIS', abilities.WIS, hasSkillProficiency('insight', character), proficiencyBonus)}
+            </span>
           </div>
-        </CardContent>
-      </Card>
-      
-      {/* Skills */}
-      <Card style={{ backgroundColor: currentTheme.cardBackground }}>
-        <CardContent className="pt-4">
-          <h3 className="text-lg font-bold mb-2" style={{ color: currentTheme.textColor }}>
-            Навыки
-          </h3>
-          <Separator className="my-2" />
-          <div className="space-y-1">
-            {/* Dexterity Skills */}
-            <div className="text-sm font-medium" style={{ color: currentTheme.accent }}>
-              Ловкость (DEX)
-            </div>
-            {[
-              { key: 'acrobatics', name: 'Акробатика' },
-              { key: 'sleightOfHand', name: 'Ловкость рук' },
-              { key: 'stealth', name: 'Скрытность' },
-            ].map((skill) => (
-              <div key={skill.key} className="flex items-center justify-between">
-                <div 
-                  className="flex items-center gap-2 cursor-pointer"
-                  onClick={() => toggleSkillProficiency(skill.key)}
-                >
-                  <div 
-                    className="w-4 h-4 flex items-center justify-center border rounded"
-                    style={{ 
-                      borderColor: currentTheme.accent,
-                      backgroundColor: hasSkillProficiency(skill.key) ? 
-                        (skills[skill.key] && skills[skill.key].expertise ? currentTheme.accent : 'transparent') : 'transparent'
-                    }}
-                  >
-                    {hasSkillProficiency(skill.key) && (
-                      <div 
-                        className={`w-2 h-2 rounded-full`}
-                        style={{ 
-                          backgroundColor: skills[skill.key] && skills[skill.key].expertise ? 
-                            currentTheme.cardBackground : currentTheme.accent
-                        }}
-                      />
-                    )}
-                  </div>
-                  <span style={{ color: currentTheme.textColor }}>{skill.name}</span>
-                </div>
-                <span 
-                  className="font-medium"
-                  style={{ 
-                    color: hasSkillProficiency(skill.key) ? 
-                      currentTheme.accent : currentTheme.textColor
-                  }}
-                >
-                  {calculateSkillBonus(skill.key, 'DEX') >= 0 ? '+' : ''}
-                  {calculateSkillBonus(skill.key, 'DEX')}
-                </span>
-              </div>
-            ))}
-            
-            {/* More skills for other abilities */}
-            <Separator className="my-1" />
-            <div className="text-sm font-medium" style={{ color: currentTheme.accent }}>
-              Сила (STR)
-            </div>
-            {[
-              { key: 'athletics', name: 'Атлетика' },
-            ].map((skill) => (
-              <div key={skill.key} className="flex items-center justify-between">
-                <div 
-                  className="flex items-center gap-2 cursor-pointer"
-                  onClick={() => toggleSkillProficiency(skill.key)}
-                >
-                  <div 
-                    className="w-4 h-4 flex items-center justify-center border rounded"
-                    style={{ 
-                      borderColor: currentTheme.accent,
-                      backgroundColor: hasSkillProficiency(skill.key) ? 
-                        (skills[skill.key] && skills[skill.key].expertise ? currentTheme.accent : 'transparent') : 'transparent'
-                    }}
-                  >
-                    {hasSkillProficiency(skill.key) && (
-                      <div 
-                        className={`w-2 h-2 rounded-full`}
-                        style={{ 
-                          backgroundColor: skills[skill.key] && skills[skill.key].expertise ? 
-                            currentTheme.cardBackground : currentTheme.accent 
-                        }}
-                      />
-                    )}
-                  </div>
-                  <span style={{ color: currentTheme.textColor }}>{skill.name}</span>
-                </div>
-                <span 
-                  className="font-medium"
-                  style={{ 
-                    color: hasSkillProficiency(skill.key) ? 
-                      currentTheme.accent : currentTheme.textColor 
-                  }}
-                >
-                  {calculateSkillBonus(skill.key, 'STR') >= 0 ? '+' : ''}
-                  {calculateSkillBonus(skill.key, 'STR')}
-                </span>
-              </div>
-            ))}
-            
-            {/* Intelligence Skills */}
-            <Separator className="my-1" />
-            <div className="text-sm font-medium" style={{ color: currentTheme.accent }}>
-              Интеллект (INT)
-            </div>
-            {[
-              { key: 'arcana', name: 'Магия' },
-              { key: 'history', name: 'История' },
-              { key: 'investigation', name: 'Расследование' },
-              { key: 'nature', name: 'Природа' },
-              { key: 'religion', name: 'Религия' },
-            ].map((skill) => (
-              <div key={skill.key} className="flex items-center justify-between">
-                <div 
-                  className="flex items-center gap-2 cursor-pointer"
-                  onClick={() => toggleSkillProficiency(skill.key)}
-                >
-                  <div 
-                    className="w-4 h-4 flex items-center justify-center border rounded"
-                    style={{ 
-                      borderColor: currentTheme.accent,
-                      backgroundColor: hasSkillProficiency(skill.key) ? 
-                        (skills[skill.key] && skills[skill.key].expertise ? currentTheme.accent : 'transparent') : 'transparent'
-                    }}
-                  >
-                    {hasSkillProficiency(skill.key) && (
-                      <div 
-                        className={`w-2 h-2 rounded-full`}
-                        style={{ 
-                          backgroundColor: skills[skill.key] && skills[skill.key].expertise ? 
-                            currentTheme.cardBackground : currentTheme.accent
-                        }}
-                      />
-                    )}
-                  </div>
-                  <span style={{ color: currentTheme.textColor }}>{skill.name}</span>
-                </div>
-                <span 
-                  className="font-medium"
-                  style={{ 
-                    color: hasSkillProficiency(skill.key) ? 
-                      currentTheme.accent : currentTheme.textColor 
-                  }}
-                >
-                  {calculateSkillBonus(skill.key, 'INT') >= 0 ? '+' : ''}
-                  {calculateSkillBonus(skill.key, 'INT')}
-                </span>
-              </div>
-            ))}
-            
-            {/* Wisdom Skills */}
-            <Separator className="my-1" />
-            <div className="text-sm font-medium" style={{ color: currentTheme.accent }}>
-              Мудрость (WIS)
-            </div>
-            {[
-              { key: 'animalHandling', name: 'Обращение с животными' },
-              { key: 'insight', name: 'Проницательность' },
-              { key: 'medicine', name: 'Медицина' },
-              { key: 'perception', name: 'Внимательность' },
-              { key: 'survival', name: 'Выживание' },
-            ].map((skill) => (
-              <div key={skill.key} className="flex items-center justify-between">
-                <div 
-                  className="flex items-center gap-2 cursor-pointer"
-                  onClick={() => toggleSkillProficiency(skill.key)}
-                >
-                  <div 
-                    className="w-4 h-4 flex items-center justify-center border rounded"
-                    style={{ 
-                      borderColor: currentTheme.accent,
-                      backgroundColor: hasSkillProficiency(skill.key) ? 
-                        (skills[skill.key] && skills[skill.key].expertise ? currentTheme.accent : 'transparent') : 'transparent'
-                    }}
-                  >
-                    {hasSkillProficiency(skill.key) && (
-                      <div 
-                        className={`w-2 h-2 rounded-full`}
-                        style={{ 
-                          backgroundColor: skills[skill.key] && skills[skill.key].expertise ? 
-                            currentTheme.cardBackground : currentTheme.accent
-                        }}
-                      />
-                    )}
-                  </div>
-                  <span style={{ color: currentTheme.textColor }}>{skill.name}</span>
-                </div>
-                <span 
-                  className="font-medium"
-                  style={{ 
-                    color: hasSkillProficiency(skill.key) ? 
-                      currentTheme.accent : currentTheme.textColor
-                  }}
-                >
-                  {calculateSkillBonus(skill.key, 'WIS') >= 0 ? '+' : ''}
-                  {calculateSkillBonus(skill.key, 'WIS')}
-                </span>
-              </div>
-            ))}
-            
-            {/* Charisma Skills */}
-            <Separator className="my-1" />
-            <div className="text-sm font-medium" style={{ color: currentTheme.accent }}>
-              Харизма (CHA)
-            </div>
-            {[
-              { key: 'deception', name: 'Обман' },
-              { key: 'intimidation', name: 'Запугивание' },
-              { key: 'performance', name: 'Выступление' },
-              { key: 'persuasion', name: 'Убеждение' },
-            ].map((skill) => (
-              <div key={skill.key} className="flex items-center justify-between">
-                <div 
-                  className="flex items-center gap-2 cursor-pointer"
-                  onClick={() => toggleSkillProficiency(skill.key)}
-                >
-                  <div 
-                    className="w-4 h-4 flex items-center justify-center border rounded"
-                    style={{ 
-                      borderColor: currentTheme.accent,
-                      backgroundColor: hasSkillProficiency(skill.key) ? 
-                        (skills[skill.key] && skills[skill.key].expertise ? currentTheme.accent : 'transparent') : 'transparent'
-                    }}
-                  >
-                    {hasSkillProficiency(skill.key) && (
-                      <div 
-                        className={`w-2 h-2 rounded-full`}
-                        style={{ 
-                          backgroundColor: skills[skill.key] && skills[skill.key].expertise ? 
-                            currentTheme.cardBackground : currentTheme.accent
-                        }}
-                      />
-                    )}
-                  </div>
-                  <span style={{ color: currentTheme.textColor }}>{skill.name}</span>
-                </div>
-                <span 
-                  className="font-medium"
-                  style={{ 
-                    color: hasSkillProficiency(skill.key) ? 
-                      currentTheme.accent : currentTheme.textColor
-                  }}
-                >
-                  {calculateSkillBonus(skill.key, 'CHA') >= 0 ? '+' : ''}
-                  {calculateSkillBonus(skill.key, 'CHA')}
-                </span>
-              </div>
-            ))}
+          
+          <div className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              checked={hasSkillProficiency('intimidation', character)}
+              onChange={() => toggleSkillProficiency('intimidation', character, onUpdate)}
+              className="rounded"
+            />
+            <span className="text-sm">
+              Запугивание (ХАР): {calculateSkillBonus('intimidation', 'CHA', abilities.CHA, hasSkillProficiency('intimidation', character), proficiencyBonus)}
+            </span>
           </div>
-        </CardContent>
-      </Card>
-      
-      {/* Proficiencies */}
-      <Card style={{ backgroundColor: currentTheme.cardBackground }}>
-        <CardContent className="pt-4">
-          <h3 className="text-lg font-bold mb-2" style={{ color: currentTheme.textColor }}>
-            Профили
-          </h3>
-          <Separator className="my-2" />
-          <div className="space-y-1">
-            <div className="text-sm font-medium" style={{ color: currentTheme.accent }}>
-              Языки
-            </div>
-            <div className="flex items-center gap-2">
-              <Textarea 
-                value={languages.join(', ')}
-                onChange={handleProficiencyTextChange}
-                className="w-full"
-                style={{ backgroundColor: currentTheme.cardBackground, color: currentTheme.textColor }}
-              />
-            </div>
-            
-            <Separator className="my-1" />
-            <div className="text-sm font-medium" style={{ color: currentTheme.accent }}>
-              Инструменты
-            </div>
-            <div className="flex items-center gap-2">
-              <Textarea 
-                value={tools.join(', ')}
-                onChange={handleProficiencyTextChange}
-                className="w-full"
-                style={{ backgroundColor: currentTheme.cardBackground, color: currentTheme.textColor }}
-              />
-            </div>
-            
-            <Separator className="my-1" />
-            <div className="text-sm font-medium" style={{ color: currentTheme.accent }}>
-              Оружие
-            </div>
-            <div className="flex items-center gap-2">
-              <Textarea 
-                value={weapons.join(', ')}
-                onChange={handleProficiencyTextChange}
-                className="w-full"
-                style={{ backgroundColor: currentTheme.cardBackground, color: currentTheme.textColor }}
-              />
-            </div>
-            
-            <Separator className="my-1" />
-            <div className="text-sm font-medium" style={{ color: currentTheme.accent }}>
-              Доспех
-            </div>
-            <div className="flex items-center gap-2">
-              <Textarea 
-                value={armor.join(', ')}
-                onChange={handleProficiencyTextChange}
-                className="w-full"
-                style={{ backgroundColor: currentTheme.cardBackground, color: currentTheme.textColor }}
-              />
-            </div>
+          
+          <div className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              checked={hasSkillProficiency('investigation', character)}
+              onChange={() => toggleSkillProficiency('investigation', character, onUpdate)}
+              className="rounded"
+            />
+            <span className="text-sm">
+              Расследование (ИНТ): {calculateSkillBonus('investigation', 'INT', abilities.INT, hasSkillProficiency('investigation', character), proficiencyBonus)}
+            </span>
           </div>
-        </CardContent>
-      </Card>
+          
+          <div className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              checked={hasSkillProficiency('medicine', character)}
+              onChange={() => toggleSkillProficiency('medicine', character, onUpdate)}
+              className="rounded"
+            />
+            <span className="text-sm">
+              Медицина (МДР): {calculateSkillBonus('medicine', 'WIS', abilities.WIS, hasSkillProficiency('medicine', character), proficiencyBonus)}
+            </span>
+          </div>
+          
+          <div className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              checked={hasSkillProficiency('nature', character)}
+              onChange={() => toggleSkillProficiency('nature', character, onUpdate)}
+              className="rounded"
+            />
+            <span className="text-sm">
+              Природа (ИНТ): {calculateSkillBonus('nature', 'INT', abilities.INT, hasSkillProficiency('nature', character), proficiencyBonus)}
+            </span>
+          </div>
+          
+          <div className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              checked={hasSkillProficiency('perception', character)}
+              onChange={() => toggleSkillProficiency('perception', character, onUpdate)}
+              className="rounded"
+            />
+            <span className="text-sm">
+              Восприятие (МДР): {calculateSkillBonus('perception', 'WIS', abilities.WIS, hasSkillProficiency('perception', character), proficiencyBonus)}
+            </span>
+          </div>
+          
+          <div className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              checked={hasSkillProficiency('performance', character)}
+              onChange={() => toggleSkillProficiency('performance', character, onUpdate)}
+              className="rounded"
+            />
+            <span className="text-sm">
+              Выступление (ХАР): {calculateSkillBonus('performance', 'CHA', abilities.CHA, hasSkillProficiency('performance', character), proficiencyBonus)}
+            </span>
+          </div>
+          
+          <div className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              checked={hasSkillProficiency('persuasion', character)}
+              onChange={() => toggleSkillProficiency('persuasion', character, onUpdate)}
+              className="rounded"
+            />
+            <span className="text-sm">
+              Убеждение (ХАР): {calculateSkillBonus('persuasion', 'CHA', abilities.CHA, hasSkillProficiency('persuasion', character), proficiencyBonus)}
+            </span>
+          </div>
+          
+          <div className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              checked={hasSkillProficiency('religion', character)}
+              onChange={() => toggleSkillProficiency('religion', character, onUpdate)}
+              className="rounded"
+            />
+            <span className="text-sm">
+              Религия (ИНТ): {calculateSkillBonus('religion', 'INT', abilities.INT, hasSkillProficiency('religion', character), proficiencyBonus)}
+            </span>
+          </div>
+          
+          <div className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              checked={hasSkillProficiency('sleightOfHand', character)}
+              onChange={() => toggleSkillProficiency('sleightOfHand', character, onUpdate)}
+              className="rounded"
+            />
+            <span className="text-sm">
+              Ловкость рук (ЛОВ): {calculateSkillBonus('sleightOfHand', 'DEX', abilities.DEX, hasSkillProficiency('sleightOfHand', character), proficiencyBonus)}
+            </span>
+          </div>
+          
+          <div className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              checked={hasSkillProficiency('stealth', character)}
+              onChange={() => toggleSkillProficiency('stealth', character, onUpdate)}
+              className="rounded"
+            />
+            <span className="text-sm">
+              Скрытность (ЛОВ): {calculateSkillBonus('stealth', 'DEX', abilities.DEX, hasSkillProficiency('stealth', character), proficiencyBonus)}
+            </span>
+          </div>
+          
+          <div className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              checked={hasSkillProficiency('survival', character)}
+              onChange={() => toggleSkillProficiency('survival', character, onUpdate)}
+              className="rounded"
+            />
+            <span className="text-sm">
+              Выживание (МДР): {calculateSkillBonus('survival', 'WIS', abilities.WIS, hasSkillProficiency('survival', character), proficiencyBonus)}
+            </span>
+          </div>
+        </div>
+      </section>
+
+      {/* Personality traits */}
+      <section>
+        <h3 className="text-lg font-semibold mb-2">Личностные черты</h3>
+        <Textarea
+          value={character.personalityTraits || ''}
+          onChange={(e) => handleInputChange(e, 'personalityTraits')}
+          placeholder="Опишите личностные черты вашего персонажа"
+          className="min-h-[100px]"
+        />
+      </section>
+
+      {/* Ideals */}
+      <section>
+        <h3 className="text-lg font-semibold mb-2">Идеалы</h3>
+        <Textarea
+          value={character.ideals || ''}
+          onChange={(e) => handleInputChange(e, 'ideals')}
+          placeholder="Опишите идеалы вашего персонажа"
+          className="min-h-[100px]"
+        />
+      </section>
+
+      {/* Bonds */}
+      <section>
+        <h3 className="text-lg font-semibold mb-2">Привязанности</h3>
+        <Textarea
+          value={character.bonds || ''}
+          onChange={(e) => handleInputChange(e, 'bonds')}
+          placeholder="Опишите привязанности вашего персонажа"
+          className="min-h-[100px]"
+        />
+      </section>
+
+      {/* Flaws */}
+      <section>
+        <h3 className="text-lg font-semibold mb-2">Слабости</h3>
+        <Textarea
+          value={character.flaws || ''}
+          onChange={(e) => handleInputChange(e, 'flaws')}
+          placeholder="Опишите слабости вашего персонажа"
+          className="min-h-[100px]"
+        />
+      </section>
     </div>
   );
 };
 
+// Export the component
 export default AbilitiesTab;

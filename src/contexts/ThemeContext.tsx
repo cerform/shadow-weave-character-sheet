@@ -1,16 +1,20 @@
 
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
-
-export type Theme = 'default' | 'dark' | 'fantasy' | 'cyber' | 'nature' | 'warlock' | 'wizard' | 'druid' | 'warrior' | 'bard';
+import { themes } from '@/lib/themes';
+import { Theme, ThemeType } from '@/types/theme';
 
 interface ThemeContextType {
-  theme: Theme;
-  setTheme: (theme: Theme) => void;
+  theme: ThemeType;
+  setTheme: (theme: ThemeType) => void;
+  currentTheme: Theme;
+  themeStyles: Theme; // Added required property
 }
 
 const defaultThemeContext: ThemeContextType = {
   theme: 'default',
   setTheme: () => {},
+  currentTheme: themes.default,
+  themeStyles: themes.default, // Added required property
 };
 
 export const ThemeContext = createContext<ThemeContextType>(defaultThemeContext);
@@ -22,14 +26,16 @@ interface ThemeProviderProps {
 }
 
 export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
-  const [theme, setTheme] = useState<Theme>('default');
+  const [theme, setTheme] = useState<ThemeType>('default');
+  const [currentTheme, setCurrentTheme] = useState<Theme>(themes.default);
 
   // Загружаем сохраненную тему при инициализации
   useEffect(() => {
     try {
       const savedTheme = localStorage.getItem('theme');
-      if (savedTheme && ['default', 'dark', 'fantasy', 'cyber', 'nature', 'warlock', 'wizard', 'druid', 'warrior', 'bard'].includes(savedTheme)) {
-        setTheme(savedTheme as Theme);
+      if (savedTheme && Object.keys(themes).includes(savedTheme)) {
+        setTheme(savedTheme as ThemeType);
+        setCurrentTheme(themes[savedTheme as keyof typeof themes] || themes.default);
       }
     } catch (error) {
       console.error('Ошибка при загрузке темы из localStorage:', error);
@@ -37,9 +43,11 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
   }, []);
 
   // Сохраняем тему при изменении
-  const handleSetTheme = (newTheme: Theme) => {
+  const handleSetTheme = (newTheme: ThemeType) => {
     try {
       setTheme(newTheme);
+      const themeObj = themes[newTheme] || themes.default;
+      setCurrentTheme(themeObj);
       localStorage.setItem('theme', newTheme);
       console.log('Тема изменена на:', newTheme);
       
@@ -47,13 +55,26 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
       document.documentElement.setAttribute('data-theme', newTheme);
       document.body.className = '';
       document.body.classList.add(`theme-${newTheme}`);
+      
+      // Apply CSS variables from theme
+      document.documentElement.style.setProperty('--background', themeObj.background);
+      document.documentElement.style.setProperty('--foreground', themeObj.foreground);
+      document.documentElement.style.setProperty('--primary', themeObj.primary);
+      document.documentElement.style.setProperty('--accent', themeObj.accent);
+      document.documentElement.style.setProperty('--text', themeObj.textColor);
+      document.documentElement.style.setProperty('--card-bg', themeObj.cardBackground);
     } catch (error) {
       console.error('Ошибка при сохранении темы в localStorage:', error);
     }
   };
 
   return (
-    <ThemeContext.Provider value={{ theme, setTheme: handleSetTheme }}>
+    <ThemeContext.Provider value={{ 
+      theme, 
+      setTheme: handleSetTheme,
+      currentTheme,
+      themeStyles: currentTheme, // Ensure themeStyles is provided
+    }}>
       {children}
     </ThemeContext.Provider>
   );

@@ -126,3 +126,15 @@ export const filterSpells = (options: {
     return true;
   });
 };
+
+// Add additional utility functions to help fix errors
+export const isSpellAdded = (spellId: string, spells: CharacterSpell[]): boolean => {
+  return spells.some(spell => spell.id === spellId);
+};
+
+export const convertSpellsForState = (spells: CharacterSpell[]): CharacterSpell[] => {
+  return spells.map(spell => ({
+    ...spell,
+    id: spell.id || `spell-${spell.name.toLowerCase().replace(/\s+/g, '-')}`
+  }));
+};
