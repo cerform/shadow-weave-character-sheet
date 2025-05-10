@@ -60,4 +60,6 @@ const ProfileCard: React.FC<ProfileCardProps> = ({ character }) => {
   );
 };
 
+// Экспортируем как именованный и как дефолтный экспорт, чтобы работали оба варианта импорта
+export { ProfileCard };
 export default ProfileCard;

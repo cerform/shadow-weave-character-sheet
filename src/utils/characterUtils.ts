@@ -23,22 +23,22 @@ export const getAbilityScore = (character: Character, ability: string): number =
   switch (ability.toLowerCase()) {
     case 'str':
     case 'strength':
-      return character.abilities.STR || character.abilities.strength || 10;
+      return character.abilities.STR || character.abilities.strength || character.strength || 10;
     case 'dex':
     case 'dexterity':
-      return character.abilities.DEX || character.abilities.dexterity || 10;
+      return character.abilities.DEX || character.abilities.dexterity || character.dexterity || 10;
     case 'con':
     case 'constitution':
-      return character.abilities.CON || character.abilities.constitution || 10;
+      return character.abilities.CON || character.abilities.constitution || character.constitution || 10;
     case 'int':
     case 'intelligence':
-      return character.abilities.INT || character.abilities.intelligence || 10;
+      return character.abilities.INT || character.abilities.intelligence || character.intelligence || 10;
     case 'wis':
     case 'wisdom':
-      return character.abilities.WIS || character.abilities.wisdom || 10;
+      return character.abilities.WIS || character.abilities.wisdom || character.wisdom || 10;
     case 'cha':
     case 'charisma':
-      return character.abilities.CHA || character.abilities.charisma || 10;
+      return character.abilities.CHA || character.abilities.charisma || character.charisma || 10;
     default:
       return 10;
   }
@@ -146,7 +146,13 @@ export const createDefaultCharacter = (): Character => {
       CHA: 0
     },
     skills: {},
-    xp: 0
+    xp: 0,
+    strength: 10,
+    dexterity: 10,
+    constitution: 10,
+    intelligence: 10,
+    wisdom: 10,
+    charisma: 10
   };
 };
 

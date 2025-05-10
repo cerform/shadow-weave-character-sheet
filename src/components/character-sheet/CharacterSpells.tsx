@@ -79,11 +79,10 @@ const CharacterSpells: React.FC<CharacterSpellsProps> = ({
     onUpdate({ spells: updatedSpells });
   };
 
-  // Обработчик клика по заклинанию с правильным преобразованием типов
+  // Обработчик клика по заклинанию
   const handleSpellClick = (spell: CharacterSpell) => {
     if (onSpellClick) {
-      // Преобразуем CharacterSpell в SpellData с дефолтными значениями для обязательных полей
-      const spellData: SpellData = convertToSpellData(spell);
+      const spellData = convertToSpellData(spell);
       onSpellClick(spellData);
     }
   };

@@ -91,7 +91,7 @@ const DamageLog = ({ events = [], maxEvents = 10 }: DamageLogProps) => {
         : typeof timestamp === 'string' 
           ? new Date(timestamp) 
           : timestamp;
-          
+      
       return formatDistance(date, new Date(), { 
         addSuffix: true,
         locale: ru 

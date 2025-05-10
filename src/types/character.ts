@@ -172,6 +172,13 @@ export interface Character {
     wisdom: number;
     charisma: number;
   };
+  // Добавляем свойства, к которым обращаются напрямую
+  strength?: number;
+  dexterity?: number;
+  constitution?: number;
+  intelligence?: number;
+  wisdom?: number;
+  charisma?: number;
   experience?: number; // Alias for xp
   raceFeatures?: Feature[];
   classFeatures?: Feature[];

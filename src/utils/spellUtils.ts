@@ -1,5 +1,5 @@
-
 import { Character, CharacterSpell } from '@/types/character';
+import { SpellData } from '@/types/spells';
 
 export interface SpellData {
   id: string;
@@ -97,6 +97,139 @@ export const calculateAvailableSpellsByClassAndLevel = (
 };
 
 /**
+ * Get maximum spell level based on character class and level
+ */
+export const getMaxSpellLevel = (characterClass: string, level: number): number => {
+  const { maxSpellLevel } = calculateAvailableSpellsByClassAndLevel(characterClass, level);
+  return maxSpellLevel;
+};
+
+/**
+ * Check if a character can prepare more spells
+ */
+export const canPrepareMoreSpells = (character: Character): boolean => {
+  if (!character.spells) return true;
+  
+  const preparedCount = Array.isArray(character.spells) 
+    ? character.spells.filter(spell => {
+        if (typeof spell === 'string') return false;
+        return spell.prepared;
+      }).length 
+    : 0;
+    
+  const limit = getPreparedSpellsLimit(character);
+  return preparedCount < limit;
+};
+
+/**
+ * Get prepared spells limit for a character
+ */
+export const getPreparedSpellsLimit = (character: Character): number => {
+  if (!character.class || !character.level) return 0;
+  
+  // Get spellcasting ability
+  let abilityName = '';
+  switch(character.class.toLowerCase()) {
+    case 'бард':
+    case 'чародей':
+    case 'колдун':
+    case 'паладин':
+      abilityName = 'charisma';
+      break;
+    case 'жрец':
+    case 'друид':
+    case 'следопыт':
+      abilityName = 'wisdom';
+      break;
+    case 'волшебник':
+      abilityName = 'intelligence';
+      break;
+    default:
+      return 0;
+  }
+  
+  // Get ability modifier
+  let abilityScore = 0;
+  if (character.abilities) {
+    abilityScore = character.abilities[abilityName as keyof typeof character.abilities] as number || 10;
+  }
+  
+  // Calculate modifier
+  const modifier = Math.floor((abilityScore - 10) / 2);
+  
+  // For most classes, it's class level + ability modifier
+  return character.level + modifier;
+};
+
+/**
+ * Normalize spell array to ensure all are CharacterSpell objects
+ */
+export const normalizeSpells = (character: Character): CharacterSpell[] => {
+  if (!character.spells || !Array.isArray(character.spells)) return [];
+  
+  return character.spells.map(spell => {
+    if (typeof spell === 'string') {
+      return {
+        name: spell,
+        level: 0
+      };
+    }
+    return spell;
+  });
+};
+
+/**
+ * Convert CharacterSpell to SpellData
+ */
+export const convertToSpellData = (spell: CharacterSpell): SpellData => {
+  return {
+    id: spell.id || `spell-${spell.name.replace(/\s+/g, '-').toLowerCase()}`,
+    name: spell.name,
+    level: spell.level || 0,
+    school: spell.school || 'Универсальная',
+    castingTime: spell.castingTime || '1 действие',
+    range: spell.range || 'На себя',
+    components: spell.components || '',
+    duration: spell.duration || 'Мгновенная',
+    description: Array.isArray(spell.description) ? spell.description : [spell.description || 'Нет описания'],
+    classes: spell.classes || [],
+    prepared: spell.prepared || false,
+    ritual: spell.ritual || false,
+    concentration: spell.concentration || false,
+    higherLevels: spell.higherLevels || spell.higherLevel || '',
+    higherLevel: spell.higherLevel || spell.higherLevels || '',
+    source: spell.source || ''
+  };
+};
+
+/**
+ * Convert spells for state management
+ */
+export const convertSpellsForState = (spells: SpellData[]): CharacterSpell[] => {
+  return spells.map(spell => ({
+    id: spell.id?.toString(),
+    name: spell.name,
+    level: spell.level,
+    school: spell.school,
+    castingTime: spell.castingTime,
+    range: spell.range,
+    components: spell.components,
+    duration: spell.duration,
+    description: spell.description,
+    prepared: spell.prepared,
+    ritual: spell.ritual,
+    concentration: spell.concentration,
+    verbal: spell.verbal,
+    somatic: spell.somatic,
+    material: spell.material,
+    higherLevels: spell.higherLevels,
+    higherLevel: spell.higherLevel,
+    classes: spell.classes,
+    source: spell.source
+  }));
+};
+
+/**
  * Get the spellcasting ability modifier for a character
  * @param character The character object
  * @returns The spellcasting ability modifier
@@ -154,106 +287,4 @@ export const filterSpellsByClassAndLevel = (spells: SpellData[], characterClass:
     
     return isForClass && validLevel;
   });
-};
-
-/**
- * Get maximum spell level based on character class and level
- * @param characterClass Character class
- * @param level Character level
- * @returns Maximum spell level
- */
-export const getMaxSpellLevel = (characterClass: string, level: number): number => {
-  const { maxSpellLevel } = calculateAvailableSpellsByClassAndLevel(characterClass, level);
-  return maxSpellLevel;
-};
-
-/**
- * Convert CharacterSpell array to SpellData array
- * @param spells Array of character spells
- * @returns Array of SpellData objects
- */
-export const convertToSpellData = (spells: (CharacterSpell | string)[]): SpellData[] => {
-  return spells.map(spell => {
-    if (typeof spell === 'string') {
-      return {
-        id: spell,
-        name: spell,
-        level: 0,
-        school: 'Unknown',
-        castingTime: 'Unknown',
-        range: 'Unknown',
-        components: 'Unknown',
-        duration: 'Unknown',
-        description: 'Unknown spell'
-      };
-    } else {
-      return {
-        id: spell.id || spell.name,
-        name: spell.name,
-        level: spell.level,
-        school: spell.school || 'Unknown',
-        castingTime: spell.castingTime || 'Unknown',
-        range: spell.range || 'Unknown',
-        components: spell.components || 'Unknown',
-        duration: spell.duration || 'Unknown',
-        description: spell.description || 'No description available',
-        higherLevel: spell.higherLevel,
-        higherLevels: spell.higherLevels,
-        classes: spell.classes,
-        ritual: spell.ritual,
-        concentration: spell.concentration,
-        verbal: spell.verbal,
-        somatic: spell.somatic,
-        material: spell.material,
-        prepared: spell.prepared,
-        source: spell.source
-      };
-    }
-  });
-};
-
-/**
- * Normalize spell array to ensure all are CharacterSpell objects
- * @param spells Mixed array of spells
- * @returns Array of CharacterSpell objects
- */
-export const normalizeSpells = (spells: (CharacterSpell | string)[]): CharacterSpell[] => {
-  return spells.map(spell => {
-    if (typeof spell === 'string') {
-      return {
-        name: spell,
-        level: 0
-      };
-    }
-    return spell;
-  });
-};
-
-/**
- * Convert spells for state management
- * @param spells SpellData array
- * @returns CharacterSpell array
- */
-export const convertSpellsForState = (spells: SpellData[]): CharacterSpell[] => {
-  return spells.map(spell => ({
-    id: spell.id,
-    name: spell.name,
-    level: spell.level,
-    school: spell.school,
-    castingTime: spell.castingTime,
-    range: spell.range,
-    components: spell.components,
-    duration: spell.duration,
-    description: spell.description,
-    prepared: spell.prepared,
-    ritual: spell.ritual,
-    concentration: spell.concentration,
-    verbal: spell.verbal,
-    somatic: spell.somatic,
-    material: spell.material,
-    higherLevels: spell.higherLevels,
-    higherLevel: spell.higherLevel,
-    classes: spell.classes,
-    source: spell.source
-  }));
 };

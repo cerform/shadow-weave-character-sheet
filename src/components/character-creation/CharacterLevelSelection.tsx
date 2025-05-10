@@ -1,73 +1,126 @@
+
 import React, { useState } from 'react';
 import { Character } from '@/types/character';
-import { ABILITY_SCORE_CAPS } from '@/types/constants';
-import { Label } from "@/components/ui/label"
-import { Slider } from "@/components/ui/slider"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
+import { Slider } from '@/components/ui/slider';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
+import NavigationButtons from './NavigationButtons';
+import { Shield, BookOpen } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
-// Update interface to match usage in CharacterCreationContent
 export interface CharacterLevelSelectionProps {
   character: Character;
-  onUpdate: (updates: Partial<Character>) => void; // Changed from updateCharacter to onUpdate
+  onUpdate: (updates: Partial<Character>) => void;
+  onLevelChange: (level: number) => void;
   nextStep: () => void;
   prevStep: () => void;
-  onLevelChange: (level: number) => void;
 }
 
-// Component implementation
 const CharacterLevelSelection: React.FC<CharacterLevelSelectionProps> = ({
   character,
   onUpdate,
+  onLevelChange,
   nextStep,
-  prevStep,
-  onLevelChange
+  prevStep
 }) => {
-  const [level, setLevel] = useState(character.level || 1);
+  const [level, setLevel] = useState<number>(character.level || 1);
   
-  // Update this to use onUpdate instead of updateCharacter
-  const handleLevelChange = (newLevel: number) => {
-    onUpdate({ level: newLevel });
+  const handleLevelChange = (newLevels: number[]) => {
+    const newLevel = newLevels[0];
+    setLevel(newLevel);
     onLevelChange(newLevel);
   };
   
-  const handleNext = () => {
-    handleLevelChange(level);
+  const handleContinue = () => {
+    onUpdate({ level });
     nextStep();
   };
-  
-  const handlePrev = () => {
-    handleLevelChange(level);
-    prevStep();
+
+  // Описания тиров игры для разных уровней
+  const getTierDescription = (level: number) => {
+    if (level <= 4) {
+      return {
+        name: 'Локальные герои',
+        description: 'Персонажи являются начинающими искателями приключений, становясь известными в небольшой деревне или городе.'
+      };
+    } else if (level <= 10) {
+      return {
+        name: 'Герои региона',
+        description: 'Персонажи достигли заметной силы и начинают влиять на события в регионе или королевстве.'
+      };
+    } else if (level <= 16) {
+      return {
+        name: 'Герои королевств',
+        description: 'Персонажи обладают значительной силой и их деяния известны во многих странах и королевствах.'
+      };
+    } else {
+      return {
+        name: 'Герои мультивселенной',
+        description: 'Герои эпических масштабов, способные влиять на судьбы планов существования и миров.'
+      };
+    }
   };
 
+  const tierInfo = getTierDescription(level);
+  
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Выберите уровень персонажа</CardTitle>
-        <CardDescription>Укажите уровень вашего персонажа.</CardDescription>
-      </CardHeader>
-      <CardContent className="grid gap-4">
-        <div className="flex items-center space-x-2">
-          <Label htmlFor="level">Уровень:</Label>
-          <span className="text-lg font-semibold">{level}</span>
-        </div>
-        <Slider
-          id="level"
-          defaultValue={[character.level || 1]}
-          max={20}
-          min={1}
-          step={1}
-          onValueChange={(value) => setLevel(value[0])}
-        />
-        <div className="flex justify-between">
-          <Button variant="secondary" onClick={handlePrev}>
-            Назад
-          </Button>
-          <Button onClick={handleNext}>Далее</Button>
-        </div>
-      </CardContent>
-    </Card>
+    <div className="space-y-6">
+      <h2 className="text-2xl font-bold">Выберите уровень персонажа</h2>
+      
+      <Card className="border-primary/20">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Shield className="h-5 w-5 text-primary" />
+            <span>Уровень {level}</span>
+          </CardTitle>
+          <CardDescription className="font-bold text-lg">{tierInfo.name}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <p className="mb-4 text-muted-foreground">
+            {tierInfo.description}
+          </p>
+          
+          <div className="mb-8">
+            <Slider
+              defaultValue={[character.level || 1]}
+              min={1}
+              max={20}
+              step={1}
+              value={[level]}
+              onValueChange={handleLevelChange}
+              className="my-6"
+            />
+            <div className="flex justify-between text-xs text-muted-foreground">
+              <span>1</span>
+              <span>5</span>
+              <span>10</span>
+              <span>15</span>
+              <span>20</span>
+            </div>
+          </div>
+
+          {level > 1 && (
+            <div className="bg-amber-600/20 border border-amber-600/30 p-4 rounded-lg">
+              <div className="flex items-start gap-2">
+                <BookOpen className="h-5 w-5 text-amber-500 shrink-0 mt-1" />
+                <div>
+                  <h3 className="font-medium text-amber-500">Персонаж повышенного уровня</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Начиная с уровня выше 1-го, ваш персонаж будет иметь дополнительные особенности, заклинания и возможности.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+      
+      <NavigationButtons
+        nextStep={handleContinue}
+        prevStep={prevStep}
+        allowNext={level >= 1}
+        isFirstStep={false}
+      />
+    </div>
   );
 };
 
