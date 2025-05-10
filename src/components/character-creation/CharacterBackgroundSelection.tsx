@@ -1,3 +1,4 @@
+
 // Import dependencies
 import React, { useState, useEffect } from 'react';
 import { Character } from '@/types/character';
@@ -23,9 +24,11 @@ const CharacterBackgroundSelection: React.FC<CharacterBackgroundSelectionProps> 
       if (background) {
         // Create a proper proficiencies object with the expected structure
         const proficiencies = {
-          languages: background.languages || [],
-          tools: background.tools || [],
-          skills: background.skills || []
+          languages: background.proficiencies?.languages || [],
+          tools: background.proficiencies?.tools ? 
+            (typeof background.proficiencies.tools === 'string' ? 
+              [background.proficiencies.tools] : background.proficiencies.tools) : [],
+          skills: background.proficiencies?.skills || []
         };
         
         onSelectionChange({

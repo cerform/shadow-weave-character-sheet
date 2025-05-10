@@ -1,4 +1,3 @@
-
 import { Character } from '@/types/character';
 
 /**
@@ -7,6 +6,15 @@ import { Character } from '@/types/character';
 export const calculateProficiencyBonus = (level: number): number => {
   if (level < 1) return 2;
   return Math.floor((level - 1) / 4) + 2;
+};
+
+/**
+ * Рассчитывает модификатор характеристики на основе значения
+ * @param abilityScore Значение характеристики
+ * @return Модификатор характеристики
+ */
+export const calculateAbilityModifier = (abilityScore: number): number => {
+  return Math.floor((abilityScore - 10) / 2);
 };
 
 /**

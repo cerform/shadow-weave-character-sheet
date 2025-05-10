@@ -3,7 +3,10 @@
 export const ABILITY_SCORE_CAPS = {
   MIN: 3,
   MAX: 20,
-  DEFAULT: 10
+  DEFAULT: 10,
+  BASE_CAP: 20,
+  EPIC_CAP: 22,
+  LEGENDARY_CAP: 24
 };
 
 export const REST_TYPES = {
