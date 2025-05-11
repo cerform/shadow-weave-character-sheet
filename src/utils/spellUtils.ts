@@ -1,6 +1,20 @@
 
 import { Character } from '@/types/character';
 import { SpellData } from '@/types/spells';
+import { 
+  canPrepareMoreSpells as canPrepareMore, 
+  getPreparedSpellsLimit as getPreparedLimit,
+  normalizeSpells as normalizeSpellArray,
+  convertToSpellData as convertToSpellDataHelper
+} from './spellHelpers';
+
+// Re-export functions from spellHelpers.ts to maintain backward compatibility
+export { 
+  canPrepareMoreSpells, 
+  getPreparedSpellsLimit,
+  normalizeSpells,
+  convertToSpellData
+} from './spellHelpers';
 
 // Получение модификатора характеристики для заклинаний
 export const getSpellcastingAbilityModifier = (character: Character): number => {
@@ -128,7 +142,7 @@ export const filterSpellsByClassAndLevel = (
   });
 };
 
-// Вспомогательные функции для работы с заклинаниями
+// Вспомогательные функции для работы с заклинаниями - now imported from spellHelpers
 export const convertCharacterSpellsToSpellData = (spells: any[]): SpellData[] => {
   if (!spells || !Array.isArray(spells)) return [];
   

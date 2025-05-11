@@ -254,3 +254,5 @@ export const useSpellbook = () => {
 };
 
 export type UseSpellbookReturn = ReturnType<typeof useSpellbook>;
+
+export default useSpellbook;
