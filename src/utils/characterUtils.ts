@@ -130,7 +130,12 @@ export const createDefaultCharacter = (): Character => {
       armor: '',
       items: [],
       gold: 0
-    }
+    },
+    spellSlots: {}, // Добавляем это поле, которое отсутствовало
+    savingThrowProficiencies: [],
+    skillProficiencies: [],
+    expertise: [],
+    skillBonuses: {}
   };
 };
 
@@ -246,7 +251,7 @@ export const convertToCharacter = (partial: Partial<Character>): Character => {
     skillProficiencies: partial.skillProficiencies || [],
     expertise: partial.expertise || [],
     skillBonuses: partial.skillBonuses || {},
-    spellSlots: partial.spellSlots || {}
+    spellSlots: partial.spellSlots || {} // Добавляем это поле, которое требуется
   };
   
   return character;

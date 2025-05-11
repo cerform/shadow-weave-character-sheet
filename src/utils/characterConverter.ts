@@ -68,7 +68,7 @@ export const convertToCharacter = (data: any): Character => {
       skillProficiencies: [],
       expertise: [],
       skillBonuses: {},
-      spellSlots: {},
+      spellSlots: {}, // Добавлено spellSlots
       speed: 30,
       initiative: 0,
       proficiencyBonus: 2
@@ -108,7 +108,7 @@ export const convertToCharacter = (data: any): Character => {
     };
   }
   
-  // Исправляем савинг троу
+  // Исправляем savingThrows
   if (!character.savingThrows) {
     character.savingThrows = {
       STR: 0, DEX: 0, CON: 0, INT: 0, WIS: 0, CHA: 0,
@@ -289,7 +289,7 @@ export const createEmptyCharacter = (): Character => {
     skillProficiencies: [],
     expertise: [],
     skillBonuses: {},
-    spellSlots: {},
+    spellSlots: {}, // Добавлено spellSlots
     speed: 30,
     initiative: 0
   };
