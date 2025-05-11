@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -69,8 +70,11 @@ const DicePanel: React.FC<DicePanelProps> = ({
   };
   
   const handleAbilityCheck = (ability: string) => {
-    const abilityScore = character[ability.toLowerCase() as keyof Character] as number;
-    const abilityMod = getModifierFromAbilityScore(abilityScore);
+    const abilityScore = character.abilities?.[ability.toLowerCase() as keyof typeof character.abilities] || 10;
+    // Исправляем тип, передавая числовое значение
+    const abilityMod = typeof abilityScore === 'number' ? 
+      Math.floor((abilityScore - 10) / 2) : 
+      0;
     
     rollDice(20, 1, abilityMod, `Проверка ${getAbilityLabel(ability)}`);
   };

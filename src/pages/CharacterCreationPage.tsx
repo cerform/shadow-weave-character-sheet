@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent } from "@/components/ui/card";
@@ -388,11 +387,10 @@ const CharacterCreationPage: React.FC = () => {
               rollAllAbilities={rollAllAbilities}
               rollSingleAbility={rollSingleAbility}
               abilityScorePoints={abilityScorePoints}
-              isMagicClass={isMagicClass(character)}
+              isMagicClass={isMagicClass()}
               rollsHistory={rollsHistory}
               onLevelChange={handleLevelChange}
               maxAbilityScore={maxAbilityScore}
-              setCurrentStep={setCurrentStep}
             />
           </CardContent>
         </Card>

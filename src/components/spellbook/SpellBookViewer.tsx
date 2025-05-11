@@ -8,7 +8,6 @@ import { Badge } from '@/components/ui/badge';
 import { Character } from '@/types/character';
 import { SpellData } from '@/types/spells';
 import { useTheme } from '@/hooks/use-theme';
-import { ThemeStyles } from '@/types/theme';
 import { ChevronDown, ChevronUp, Plus, Search, BookOpen } from 'lucide-react';
 import SpellCard from './SpellCard';
 import SpellDetails from './SpellDetails';
