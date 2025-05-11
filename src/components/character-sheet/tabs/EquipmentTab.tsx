@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Character } from '@/types/character';
+import { Character, Item } from '@/types/character';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -111,9 +111,17 @@ export const EquipmentTab: React.FC<EquipmentTabProps> = ({ character, equipment
     
     // Обрабатываем существующее снаряжение
     if (Array.isArray(character.equipment)) {
-      updatedEquipment = [...character.equipment, newItem];
+      // Если equipment - это массив Item[]
+      if (character.equipment.length > 0 && typeof character.equipment[0] === 'object') {
+        const newItemObj: Item = { name: newItem, quantity: 1 };
+        updatedEquipment = [...character.equipment.map(item => typeof item === 'string' ? { name: item, quantity: 1 } : item), newItemObj];
+      }
+      // Если equipment - это массив строк
+      else {
+        updatedEquipment = [...(character.equipment as string[]), newItem];
+      }
     } else if (typeof character.equipment === 'object' && character.equipment) {
-      // Конвертируем объект в массив для упрощения
+      // Конвертируем объект в массив строк
       const existingItems: string[] = [];
       if (character.equipment.weapons) existingItems.push(...character.equipment.weapons);
       if (character.equipment.armor) existingItems.push(character.equipment.armor);
@@ -136,9 +144,17 @@ export const EquipmentTab: React.FC<EquipmentTabProps> = ({ character, equipment
     
     // Обрабатываем существующее снаряжение
     if (Array.isArray(character.equipment)) {
-      updatedEquipment = [...character.equipment, item];
+      // Если equipment - это массив Item[]
+      if (character.equipment.length > 0 && typeof character.equipment[0] === 'object') {
+        const newItemObj: Item = { name: item, quantity: 1 };
+        updatedEquipment = [...character.equipment.map(item => typeof item === 'string' ? { name: item, quantity: 1 } : item), newItemObj];
+      }
+      // Если equipment - это массив строк
+      else {
+        updatedEquipment = [...(character.equipment as string[]), item];
+      }
     } else if (typeof character.equipment === 'object' && character.equipment) {
-      // Конвертируем объект в массив для упрощения
+      // Конвертируем объект в массив строк
       const existingItems: string[] = [];
       if (character.equipment.weapons) existingItems.push(...character.equipment.weapons);
       if (character.equipment.armor) existingItems.push(character.equipment.armor);
@@ -157,7 +173,16 @@ export const EquipmentTab: React.FC<EquipmentTabProps> = ({ character, equipment
     let currentEquipment: string[] = [];
     
     if (Array.isArray(character.equipment)) {
-      currentEquipment = [...character.equipment];
+      // Если equipment - это массив Item[]
+      if (character.equipment.length > 0 && typeof character.equipment[0] === 'object') {
+        currentEquipment = character.equipment.map(item => 
+          typeof item === 'object' ? item.name : item
+        ) as string[];
+      }
+      // Если equipment - это массив строк
+      else {
+        currentEquipment = character.equipment as string[];
+      }
     } else if (typeof character.equipment === 'object' && character.equipment) {
       if (character.equipment.weapons) currentEquipment.push(...character.equipment.weapons);
       if (character.equipment.armor) currentEquipment.push(character.equipment.armor);
@@ -179,7 +204,14 @@ export const EquipmentTab: React.FC<EquipmentTabProps> = ({ character, equipment
     }
     
     if (Array.isArray(character.equipment)) {
-      return character.equipment;
+      // Если equipment - это массив Item[]
+      if (character.equipment.length > 0 && typeof character.equipment[0] === 'object') {
+        return character.equipment.map(item => 
+          typeof item === 'object' ? item.name : item
+        ) as string[];
+      }
+      // Если equipment - это массив строк
+      return character.equipment as string[];
     }
     
     if (typeof character.equipment === 'object' && character.equipment) {

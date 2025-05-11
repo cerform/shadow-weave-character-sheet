@@ -116,9 +116,22 @@ const AbilitiesTab: React.FC<AbilitiesTabProps> = ({ character, onUpdate }) => {
 
   // Обработчик переключения владения спасброском
   const toggleSavingThrowProficiency = (ability: string) => {
-    const currentProficiencies = character.savingThrowProficiencies || [];
+    let currentProficiencies: string[] = [];
     
-    if (currentProficiencies.includes(ability)) {
+    if (character.savingThrowProficiencies) {
+      if (Array.isArray(character.savingThrowProficiencies)) {
+        currentProficiencies = [...character.savingThrowProficiencies];
+      } else {
+        // Преобразуем объект в массив
+        currentProficiencies = Object.entries(character.savingThrowProficiencies)
+          .filter(([_, value]) => value)
+          .map(([key]) => key);
+      }
+    }
+    
+    const hasAbility = currentProficiencies.includes(ability);
+    
+    if (hasAbility) {
       onUpdate({
         savingThrowProficiencies: currentProficiencies.filter(a => a !== ability)
       });
@@ -131,18 +144,43 @@ const AbilitiesTab: React.FC<AbilitiesTabProps> = ({ character, onUpdate }) => {
 
   // Обработчик переключения владения навыком
   const toggleSkillProficiency = (skill: string) => {
-    const currentProficiencies = character.skillProficiencies || [];
-    const currentExpertise = character.expertise || [];
+    let currentProficiencies: string[] = [];
+    let currentExpertise: string[] = [];
+    
+    if (character.skillProficiencies) {
+      if (Array.isArray(character.skillProficiencies)) {
+        currentProficiencies = [...character.skillProficiencies];
+      } else {
+        // Преобразуем объект в массив
+        currentProficiencies = Object.entries(character.skillProficiencies)
+          .filter(([_, value]) => value)
+          .map(([key]) => key);
+      }
+    }
+    
+    if (character.expertise) {
+      if (Array.isArray(character.expertise)) {
+        currentExpertise = [...character.expertise];
+      } else {
+        // Преобразуем объект в массив
+        currentExpertise = Object.entries(character.expertise)
+          .filter(([_, value]) => value)
+          .map(([key]) => key);
+      }
+    }
+    
+    const hasSkill = currentProficiencies.includes(skill);
+    const hasExpertise = currentExpertise.includes(skill);
     
     // Если уже есть экспертиза, удаляем и навык и экспертизу
-    if (currentExpertise.includes(skill)) {
+    if (hasExpertise) {
       onUpdate({
         skillProficiencies: currentProficiencies.filter(s => s !== skill),
         expertise: currentExpertise.filter(s => s !== skill)
       });
     }
     // Если есть владение, но нет экспертизы, добавляем экспертизу
-    else if (currentProficiencies.includes(skill)) {
+    else if (hasSkill) {
       onUpdate({
         expertise: [...currentExpertise, skill]
       });
@@ -183,7 +221,15 @@ const AbilitiesTab: React.FC<AbilitiesTabProps> = ({ character, onUpdate }) => {
   // Получаем бонус спасброска
   const getSavingThrowBonus = (ability: string): number => {
     const abilityModifier = getModifier(ability);
-    const isProficient = character.savingThrowProficiencies?.includes(ability) || false;
+    let isProficient = false;
+    
+    if (character.savingThrowProficiencies) {
+      if (Array.isArray(character.savingThrowProficiencies)) {
+        isProficient = character.savingThrowProficiencies.includes(ability);
+      } else {
+        isProficient = !!character.savingThrowProficiencies[ability];
+      }
+    }
     
     return abilityModifier + (isProficient ? proficiencyBonus : 0);
   };
@@ -192,8 +238,25 @@ const AbilitiesTab: React.FC<AbilitiesTabProps> = ({ character, onUpdate }) => {
   const getSkillBonus = (skill: string): number => {
     const skillInfo = SKILLS[skill as keyof typeof SKILLS];
     const abilityModifier = getModifier(skillInfo.ability);
-    const isProficient = character.skillProficiencies?.includes(skill) || false;
-    const isExpert = character.expertise?.includes(skill) || false;
+    let isProficient = false;
+    let isExpert = false;
+    
+    if (character.skillProficiencies) {
+      if (Array.isArray(character.skillProficiencies)) {
+        isProficient = character.skillProficiencies.includes(skill);
+      } else {
+        isProficient = !!character.skillProficiencies[skill];
+      }
+    }
+    
+    if (character.expertise) {
+      if (Array.isArray(character.expertise)) {
+        isExpert = character.expertise.includes(skill);
+      } else {
+        isExpert = !!character.expertise[skill];
+      }
+    }
+    
     const additionalBonus = character.skillBonuses?.[skill] || 0;
     
     return abilityModifier + 
@@ -204,8 +267,24 @@ const AbilitiesTab: React.FC<AbilitiesTabProps> = ({ character, onUpdate }) => {
 
   // Получаем статус владения навыком
   const getSkillProficiencyStatus = (skill: string): 'none' | 'proficient' | 'expert' => {
-    const isProficient = character.skillProficiencies?.includes(skill) || false;
-    const isExpert = character.expertise?.includes(skill) || false;
+    let isProficient = false;
+    let isExpert = false;
+    
+    if (character.skillProficiencies) {
+      if (Array.isArray(character.skillProficiencies)) {
+        isProficient = character.skillProficiencies.includes(skill);
+      } else {
+        isProficient = !!character.skillProficiencies[skill];
+      }
+    }
+    
+    if (character.expertise) {
+      if (Array.isArray(character.expertise)) {
+        isExpert = character.expertise.includes(skill);
+      } else {
+        isExpert = !!character.expertise[skill];
+      }
+    }
     
     if (isExpert) return 'expert';
     if (isProficient) return 'proficient';

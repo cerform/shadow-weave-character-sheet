@@ -1,3 +1,4 @@
+
 export interface Character {
   id?: string;
   name: string;
@@ -53,7 +54,7 @@ export interface Character {
   speed?: number;
   proficiencyBonus?: number;
   savingThrows?: Record<string, boolean>;
-  savingThrowProficiencies?: Record<string, boolean>;
+  savingThrowProficiencies?: string[] | Record<string, boolean>;
   proficiencies?: {
     languages?: string[];
     tools?: string[];
@@ -61,10 +62,14 @@ export interface Character {
     armor?: string[];
     skills?: string[];
   } | string[];
-  equipment?: Item[];
+  equipment?: Item[] | {
+    weapons?: string[];
+    armor?: string;
+    items?: string[];
+  };
   features?: string[];
   spells?: (CharacterSpell | string)[];
-  spellSlots?: Record<number, { max: number; used: number }>;
+  spellSlots?: Record<number, { max: number; used: number; current?: number }>;
   money?: {
     cp?: number;
     sp?: number;
@@ -155,10 +160,16 @@ export interface Character {
     used?: number; // Добавляем для совместимости
   };
   // Добавляем поля для навыков
-  skillProficiencies?: Record<string, boolean>;
-  expertise?: Record<string, boolean>;
+  skillProficiencies?: string[] | Record<string, boolean>;
+  expertise?: string[] | Record<string, boolean>;
   // Добавляем поле для бонусов навыков
   skillBonuses?: Record<string, number>;
+  // Добавляем поле для информации о заклинаниях
+  spellcasting?: {
+    ability?: string;
+    saveDC?: number;
+    attackBonus?: number;
+  };
 }
 
 export interface CharacterSpell {

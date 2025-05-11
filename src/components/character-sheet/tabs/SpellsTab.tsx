@@ -112,7 +112,7 @@ const SpellsTab: React.FC<SpellsTabProps> = ({ character, onUpdate }) => {
           <Book className="mr-2 h-6 w-6" />
           Заклинания
         </h2>
-        <Button onClick={handleAddSpell}>Добавить заклинание</Button>
+        <Button onClick={() => setIsAddSpellModalOpen(true)}>Добавить заклинание</Button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

@@ -1,26 +1,24 @@
-
 export interface SpellData {
   id: string | number;
   name: string;
-  name_en?: string;
   level: number;
-  school: string;  // Required in SpellData
+  school: string;
   castingTime: string;
   range: string;
   components: string;
   duration: string;
   description: string | string[];
-  classes?: string[] | string;
+  classes: string[] | string;
   source?: string;
+  ritual?: boolean;
+  concentration?: boolean;
   verbal?: boolean;
   somatic?: boolean;
   material?: boolean;
+  materials?: string;
   prepared?: boolean;
   higherLevel?: string;
   higherLevels?: string;
-  ritual?: boolean;
-  concentration?: boolean;
-  materials?: string;
 }
 
 export interface SpellbookEntry {
@@ -38,11 +36,28 @@ export interface SpellbookEntry {
 
 import { CharacterSpell } from './character';
 
-export const convertCharacterSpellToSpellData = (spell: CharacterSpell): SpellData => {
+export function getSpellLevelName(level: number): string {
+  const spellLevels = [
+    'Заговор',
+    'Первый уровень',
+    'Второй уровень',
+    'Третий уровень',
+    'Четвёртый уровень',
+    'Пятый уровень',
+    'Шестой уровень',
+    'Седьмой уровень',
+    'Восьмой уровень',
+    'Девятый уровень',
+  ];
+  
+  return spellLevels[level] || `Уровень ${level}`;
+}
+
+export function convertCharacterSpellToSpellData(spell: any): SpellData {
   return {
-    id: spell.id || `spell-${spell.name.replace(/\s+/g, '-').toLowerCase()}`,
-    name: spell.name,
-    level: spell.level,
+    id: spell.id || `spell-${Math.random().toString(36).substring(2, 11)}`,
+    name: spell.name || '',
+    level: typeof spell.level === 'number' ? spell.level : 0,
     school: spell.school || 'Универсальная',
     castingTime: spell.castingTime || '1 действие',
     range: spell.range || 'Касание',
@@ -50,36 +65,28 @@ export const convertCharacterSpellToSpellData = (spell: CharacterSpell): SpellDa
     duration: spell.duration || 'Мгновенная',
     description: spell.description || '',
     classes: spell.classes || [],
-    ritual: spell.ritual || false,
-    concentration: spell.concentration || false,
+    source: spell.source || '',
+    ritual: !!spell.ritual,
+    concentration: !!spell.concentration,
+    verbal: !!spell.verbal,
+    somatic: !!spell.somatic,
+    material: !!spell.material,
+    prepared: !!spell.prepared,
+    materials: spell.materials || '',
+    higherLevel: spell.higherLevel || '',
+    higherLevels: spell.higherLevels || '',
   };
-};
+}
 
-export const convertSpellDataToCharacterSpell = (spell: SpellData): CharacterSpell => {
+export function convertSpellDataToCharacterSpell(spell: SpellData): CharacterSpell {
   return {
     ...spell,
     name: spell.name,
     level: spell.level,
     id: spell.id
   };
-};
+}
 
-export const convertSpellArray = (spells: CharacterSpell[]): SpellData[] => {
+export function convertSpellArray(spells: CharacterSpell[]): SpellData[] {
   return spells.map(spell => convertCharacterSpellToSpellData(spell));
-};
-
-export const getSpellLevelName = (level: number): string => {
-  switch (level) {
-    case 0: return "Заговоры";
-    case 1: return "1-й уровень";
-    case 2: return "2-й уровень";
-    case 3: return "3-й уровень";
-    case 4: return "4-й уровень";
-    case 5: return "5-й уровень";
-    case 6: return "6-й уровень";
-    case 7: return "7-й уровень";
-    case 8: return "8-й уровень";
-    case 9: return "9-й уровень";
-    default: return `${level}-й уровень`;
-  }
-};
+}

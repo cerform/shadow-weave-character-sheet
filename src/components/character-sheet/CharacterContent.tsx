@@ -47,7 +47,7 @@ const CharacterContent: React.FC<CharacterContentProps> = ({
             <div className="flex justify-between items-center">
               <span style={{ color: currentTheme.textColor }}>Инициатива:</span>
               <span style={{ color: currentTheme.textColor }}>
-                {character.initiative !== undefined ? `${character.initiative}` : '+0'}
+                {character.initiative !== undefined ? `${character.initiative >= 0 ? '+' : ''}${character.initiative}` : '+0'}
               </span>
             </div>
             
@@ -68,21 +68,22 @@ const CharacterContent: React.FC<CharacterContentProps> = ({
         </CardHeader>
         <CardContent>
           <div className="space-y-2">
-            {character.skills && typeof character.skills === 'object' && Object.entries(character.skills).map(([skillName, skillValue]) => (
-              <div key={`skill-${skillName}`} className="flex justify-between items-center">
-                <span style={{ color: currentTheme.textColor }}>{skillName}</span>
-                <span style={{ color: currentTheme.textColor }}>
-                  {typeof skillValue === 'number' ? (skillValue >= 0 ? `+${skillValue}` : `${skillValue}`) : ''}
-                  {typeof skillValue === 'object' && skillValue !== null && 'value' in skillValue ? 
-                    (skillValue.value !== undefined && Number(skillValue.value) >= 0 ? 
-                      `+${skillValue.value}` : `${skillValue.value}`) : ''}
-                  {typeof skillValue === 'object' && skillValue !== null && 'bonus' in skillValue ? 
-                    (skillValue.bonus !== undefined && Number(skillValue.bonus) >= 0 ? 
-                      `+${skillValue.bonus}` : `${skillValue.bonus}`) : ''}
-                </span>
-              </div>
-            ))}
-            {(!character.skills || Object.keys(character.skills).length === 0) && (
+            {character.skills && typeof character.skills === 'object' && character.skills !== null ? (
+              Object.entries(character.skills).map(([skillName, skillValue]) => (
+                <div key={`skill-${skillName}`} className="flex justify-between items-center">
+                  <span style={{ color: currentTheme.textColor }}>{skillName}</span>
+                  <span style={{ color: currentTheme.textColor }}>
+                    {typeof skillValue === 'number' ? (skillValue >= 0 ? `+${skillValue}` : `${skillValue}`) : ''}
+                    {typeof skillValue === 'object' && skillValue !== null && 'value' in skillValue ? 
+                      (skillValue.value !== undefined && Number(skillValue.value) >= 0 ? 
+                        `+${skillValue.value}` : `${skillValue.value}`) : ''}
+                    {typeof skillValue === 'object' && skillValue !== null && 'bonus' in skillValue ? 
+                      (skillValue.bonus !== undefined && Number(skillValue.bonus) >= 0 ? 
+                        `+${skillValue.bonus}` : `${skillValue.bonus}`) : ''}
+                  </span>
+                </div>
+              ))
+            ) : (
               <div className="text-center text-muted-foreground">
                 Нет доступных навыков
               </div>
