@@ -63,3 +63,6 @@ export const getAbilityScore = (character: any, abilityName: string): number => 
   
   return 10;
 };
+
+// Export getModifier since other files need it
+export { getModifier } from './characterUtils';

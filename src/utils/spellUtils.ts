@@ -1,3 +1,4 @@
+
 import { Character, CharacterSpell } from '@/types/character';
 import { SpellData } from '@/types/spells';
 import { getModifier } from '@/utils/characterUtils';
@@ -171,7 +172,8 @@ export function calculateSpellSaveDC(character: Character): number {
   const profBonus = Math.ceil(1 + (character.level || 1) / 4);
   const abilityMod = getSpellcastingAbilityModifier(character);
   
-  return 8 + profBonus + abilityMod;
+  // Ensure we're dealing with a number
+  return 8 + profBonus + (typeof abilityMod === 'string' ? parseInt(abilityMod) : abilityMod);
 }
 
 /**
@@ -183,7 +185,8 @@ export function calculateSpellAttackBonus(character: Character): number {
   const profBonus = Math.ceil(1 + (character.level || 1) / 4);
   const abilityMod = getSpellcastingAbilityModifier(character);
   
-  return profBonus + abilityMod;
+  // Ensure we're dealing with a number
+  return profBonus + (typeof abilityMod === 'string' ? parseInt(abilityMod) : abilityMod);
 }
 
 /**

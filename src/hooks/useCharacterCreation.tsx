@@ -20,7 +20,6 @@ export const useCharacterCreation = (options: UseCharacterCreationOptions = {}) 
     class: '',
     level: 1,
     abilities: {
-      STR: 10, DEX: 10, CON: 10, INT: 10, WIS: 10, CHA: 10,
       strength: 10, dexterity: 10, constitution: 10, intelligence: 10, wisdom: 10, charisma: 10
     },
     spells: [],
@@ -40,12 +39,6 @@ export const useCharacterCreation = (options: UseCharacterCreationOptions = {}) 
           ...prev.abilities, 
           ...updates.abilities,
           // Обеспечиваем согласованность всех полей способностей
-          STR: updates.abilities.STR ?? prev.abilities?.STR ?? 10,
-          DEX: updates.abilities.DEX ?? prev.abilities?.DEX ?? 10, 
-          CON: updates.abilities.CON ?? prev.abilities?.CON ?? 10,
-          INT: updates.abilities.INT ?? prev.abilities?.INT ?? 10,
-          WIS: updates.abilities.WIS ?? prev.abilities?.WIS ?? 10,
-          CHA: updates.abilities.CHA ?? prev.abilities?.CHA ?? 10,
           strength: updates.abilities.strength ?? prev.abilities?.strength ?? 10,
           dexterity: updates.abilities.dexterity ?? prev.abilities?.dexterity ?? 10,
           constitution: updates.abilities.constitution ?? prev.abilities?.constitution ?? 10,
@@ -61,12 +54,6 @@ export const useCharacterCreation = (options: UseCharacterCreationOptions = {}) 
         if (racialBonuses && racialBonuses.abilities) {
           updated.abilities = {
             ...updated.abilities!,
-            STR: (updated.abilities?.STR || 10) + (racialBonuses.abilities.STR || 0),
-            DEX: (updated.abilities?.DEX || 10) + (racialBonuses.abilities.DEX || 0),
-            CON: (updated.abilities?.CON || 10) + (racialBonuses.abilities.CON || 0),
-            INT: (updated.abilities?.INT || 10) + (racialBonuses.abilities.INT || 0),
-            WIS: (updated.abilities?.WIS || 10) + (racialBonuses.abilities.WIS || 0),
-            CHA: (updated.abilities?.CHA || 10) + (racialBonuses.abilities.CHA || 0),
             strength: (updated.abilities?.strength || 10) + (racialBonuses.abilities.strength || 0),
             dexterity: (updated.abilities?.dexterity || 10) + (racialBonuses.abilities.dexterity || 0),
             constitution: (updated.abilities?.constitution || 10) + (racialBonuses.abilities.constitution || 0),
@@ -92,7 +79,7 @@ export const useCharacterCreation = (options: UseCharacterCreationOptions = {}) 
         ...finalCharacter,
         ...character,
         id: character.id || uuidv4() // Гарантируем, что id всегда существует
-      };
+      } as Character; // Используем явное приведение типа
       
       // Save character to context
       if (addCharacter) {
@@ -101,7 +88,7 @@ export const useCharacterCreation = (options: UseCharacterCreationOptions = {}) 
       
       // Show success notification
       toast({
-        title: 'Персонаж создан',
+        title: "Персонаж создан",
         description: `${mergedCharacter.name} готов к приключениям!`,
       });
       
@@ -128,7 +115,6 @@ export const useCharacterCreation = (options: UseCharacterCreationOptions = {}) 
       class: '',
       level: 1,
       abilities: {
-        STR: 10, DEX: 10, CON: 10, INT: 10, WIS: 10, CHA: 10,
         strength: 10, dexterity: 10, constitution: 10, intelligence: 10, wisdom: 10, charisma: 10
       },
       spells: [],
@@ -155,13 +141,34 @@ export const useCharacterCreation = (options: UseCharacterCreationOptions = {}) 
     character,
     updateCharacter,
     nextStep,
-    prevStep,
-    resetCharacter,
+    prevStep: useCallback(() => {
+      setCurrentStep(prev => Math.max(0, prev - 1));
+    }, []),
+    resetCharacter: useCallback(() => {
+      setCharacter({
+        id: uuidv4(),
+        name: '',
+        race: '',
+        class: '',
+        level: 1,
+        abilities: {
+          strength: 10, dexterity: 10, constitution: 10, intelligence: 10, wisdom: 10, charisma: 10
+        },
+        spells: [],
+      });
+      setCurrentStep(0);
+    }, []),
     setCurrentStep,
     isFirstStep: currentStep === 0,
     isLastStep: currentStep === 6,
-    isMagicClass,
-    convertToCharacter: convertToFullCharacter
+    isMagicClass: useCallback(() => {
+      const magicClasses = [
+        'Бард', 'Жрец', 'Друид', 'Волшебник', 'Колдун', 
+        'Чародей', 'Паладин', 'Следопыт'
+      ];
+      return character.class ? magicClasses.includes(character.class) : false;
+    }, [character.class]),
+    convertToCharacter: convertToCharacter
   };
 };
 

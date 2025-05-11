@@ -2,14 +2,10 @@
 import { Character } from '@/types/character';
 import { v4 as uuidv4 } from 'uuid';
 import { auth } from '@/lib/firebase';
-import { createClient } from '@supabase/supabase-js';
 import { createDefaultCharacter } from '@/utils/characterUtils';
 
-// Создаем Supabase клиент
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
-
-const supabase = createClient(supabaseUrl, supabaseKey);
+// Mock storage for characters - will be used instead of Supabase
+const charactersStore: Record<string, Character[]> = {};
 
 // Генерируем уникальный ID для персонажа
 const generateId = (): string => {
@@ -28,19 +24,8 @@ export const getUserCharacters = async (userId?: string): Promise<Character[]> =
       throw new Error('Пользователь не авторизован');
     }
     
-    // Запрашиваем персонажей из Supabase
-    const { data, error } = await supabase
-      .from('characters')
-      .select('*')
-      .eq('userId', currentUserId)
-      .order('updatedAt', { ascending: false });
-    
-    if (error) {
-      console.error('Ошибка при получении персонажей:', error);
-      throw error;
-    }
-    
-    return (data || []) as Character[];
+    // Возвращаем персонажей из локального хранилища (вместо Supabase)
+    return charactersStore[currentUserId] || [];
   } catch (error) {
     console.error('Не удалось получить персонажей:', error);
     return [];
@@ -48,7 +33,7 @@ export const getUserCharacters = async (userId?: string): Promise<Character[]> =
 };
 
 /**
- * Alias для getUserCharacters - добавляем для исправления ссылок в коде
+ * Alias для getUserCharacters - экспортируем для исправления импортов
  */
 export const getAllCharacters = getUserCharacters;
 
@@ -64,19 +49,14 @@ export const getCharactersByUserId = async (userId: string): Promise<Character[]
  */
 export const getCharacter = async (characterId: string): Promise<Character | null> => {
   try {
-    // Запрашиваем персонажа из Supabase
-    const { data, error } = await supabase
-      .from('characters')
-      .select('*')
-      .eq('id', characterId)
-      .single();
-    
-    if (error) {
-      console.error('Ошибка при получении персонажа:', error);
-      throw error;
+    // Ищем персонажа во всех хранилищах пользователей
+    for (const userId in charactersStore) {
+      const character = charactersStore[userId]?.find(char => char.id === characterId);
+      if (character) {
+        return character;
+      }
     }
-    
-    return data as Character;
+    return null;
   } catch (error) {
     console.error(`Не удалось получить персонажа с ID ${characterId}:`, error);
     return null;
@@ -84,7 +64,7 @@ export const getCharacter = async (characterId: string): Promise<Character | nul
 };
 
 /**
- * Сохранение персонажа в Supabase
+ * Сохранение персонажа (заменяем функцию saveCharacterToFirestore)
  */
 export const saveCharacterToFirestore = async (character: Character): Promise<Character> => {
   try {
@@ -112,49 +92,31 @@ export const saveCharacterToFirestore = async (character: Character): Promise<Ch
       character.userId = currentUser.uid;
     }
     
-    // Преобразуем персонажа в формат, подходящий для Supabase
-    // используем распаковку объекта для избежания ошибок типов с Supabase
-    const characterForSupabase = { ...character };
-    
-    // Проверяем существующего персонажа
-    const { data: existingCharacter } = await supabase
-      .from('characters')
-      .select('id')
-      .eq('id', character.id)
-      .single();
-    
-    let result;
-    
-    if (existingCharacter) {
-      // Обновляем существующего персонажа
-      const { data, error } = await supabase
-        .from('characters')
-        .update(characterForSupabase)
-        .eq('id', character.id)
-        .select()
-        .single();
-      
-      if (error) {
-        throw error;
-      }
-      
-      result = data;
-    } else {
-      // Создаем нового персонажа
-      const { data, error } = await supabase
-        .from('characters')
-        .insert(characterForSupabase)
-        .select()
-        .single();
-      
-      if (error) {
-        throw error;
-      }
-      
-      result = data;
+    // Проверяем, существует ли этот пользователь в нашем хранилище
+    const userId = character.userId || 'anonymous';
+    if (!charactersStore[userId]) {
+      charactersStore[userId] = [];
     }
     
-    return result as Character;
+    // Ищем существующего персонажа
+    const existingCharIndex = charactersStore[userId].findIndex(char => char.id === character.id);
+    
+    if (existingCharIndex >= 0) {
+      // Обновляем существующего персонажа
+      charactersStore[userId][existingCharIndex] = character;
+    } else {
+      // Создаем нового персонажа
+      charactersStore[userId].push(character);
+    }
+    
+    // Также сохраняем в localStorage
+    try {
+      localStorage.setItem(`character_${character.id}`, JSON.stringify(character));
+    } catch (e) {
+      console.warn('Не удалось сохранить в localStorage:', e);
+    }
+    
+    return character;
   } catch (error) {
     console.error('Ошибка при сохранении персонажа:', error);
     throw error;
@@ -166,13 +128,20 @@ export const saveCharacterToFirestore = async (character: Character): Promise<Ch
  */
 export const deleteCharacter = async (characterId: string): Promise<void> => {
   try {
-    const { error } = await supabase
-      .from('characters')
-      .delete()
-      .eq('id', characterId);
+    const currentUser = auth.currentUser;
+    if (!currentUser) throw new Error('Пользователь не авторизован');
     
-    if (error) {
-      throw error;
+    const userId = currentUser.uid;
+    
+    if (charactersStore[userId]) {
+      charactersStore[userId] = charactersStore[userId].filter(char => char.id !== characterId);
+    }
+    
+    // Удаляем из localStorage
+    try {
+      localStorage.removeItem(`character_${characterId}`);
+    } catch (e) {
+      console.warn('Не удалось удалить из localStorage:', e);
     }
   } catch (error) {
     console.error(`Не удалось удалить персонажа с ID ${characterId}:`, error);
