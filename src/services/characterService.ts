@@ -48,6 +48,18 @@ export const getUserCharacters = async (userId?: string): Promise<Character[]> =
 };
 
 /**
+ * Alias для getUserCharacters - добавляем для исправления ссылок в коде
+ */
+export const getAllCharacters = getUserCharacters;
+
+/**
+ * Получение персонажей по ID пользователя
+ */
+export const getCharactersByUserId = async (userId: string): Promise<Character[]> => {
+  return getUserCharacters(userId);
+};
+
+/**
  * Получение персонажа по ID
  */
 export const getCharacter = async (characterId: string): Promise<Character | null> => {
@@ -100,12 +112,9 @@ export const saveCharacterToFirestore = async (character: Character): Promise<Ch
       character.userId = currentUser.uid;
     }
     
-    // Сохраняем персонажа в Supabase
     // Преобразуем персонажа в формат, подходящий для Supabase
-    const characterForSupabase = {
-      ...character,
-      // Другие преобразования, если необходимы
-    };
+    // используем распаковку объекта для избежания ошибок типов с Supabase
+    const characterForSupabase = { ...character };
     
     // Проверяем существующего персонажа
     const { data: existingCharacter } = await supabase
@@ -184,5 +193,5 @@ export const convertFirestoreCharacterToCharacter = (firestoreCharacter: any): C
     ...firestoreCharacter
   };
   
-  return character;
+  return character as Character;
 };

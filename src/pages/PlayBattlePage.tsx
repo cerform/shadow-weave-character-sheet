@@ -327,7 +327,7 @@ const PlayBattlePage = () => {
     }
   };
 
-  // Функция добавления источника света
+  // Функция добавления источника све��а
   const handleAddLight = (type: 'torch' | 'lantern' | 'daylight' | 'custom', color?: string, intensity?: number) => {
     if (!isDM) {
       toast({
@@ -459,7 +459,10 @@ const PlayBattlePage = () => {
       {/* Верхняя панель - на всю ширину с кнопками управления */}
       <div className="col-span-3 border-b bg-muted/10 z-10">
         <TopPanel
-          battleState={battleState}
+          battleState={{
+            ...battleState,
+            currentInitiativeIndex: battleState.currentTurn || 0 // Add the missing property
+          }}
           onStartBattle={startBattle}
           onPauseBattle={pauseBattle}
           onNextTurn={nextTurn}
@@ -485,7 +488,7 @@ const PlayBattlePage = () => {
       <div className="relative overflow-hidden w-full h-full">
         <EnhancedBattleMap
           tokens={tokens}
-          setTokens={addToken}
+          updateTokens={addToken} // Replace 'setTokens' with something compatible like 'updateTokens'
           background={mapSettings.background}
           setBackground={setMapBackground}
           onUpdateTokenPosition={handleUpdateTokenPosition}
@@ -529,8 +532,8 @@ const PlayBattlePage = () => {
               onResetFog={resetFogOfWar}
               gridVisible={mapSettings.gridVisible}
               onToggleGrid={() => setGridVisible(!mapSettings.gridVisible)}
-              onUpdateGridSettings={setGridSize}
-              gridSize={mapSettings.gridSize}
+              onUpdateGridSettings={(newSize) => setGridSize({ rows: newSize, cols: newSize })} // Fix the type mismatch
+              gridSize={{ rows: mapSettings.gridSize, cols: mapSettings.gridSize }} // Fix the type mismatch
               zoom={mapSettings.zoom}
               onZoomChange={setZoom}
               isDM={isDM}
@@ -548,8 +551,8 @@ const PlayBattlePage = () => {
               onAddToken={handleAddToken}
               fogOfWar={mapSettings.fogOfWar}
               setFogOfWar={setFogOfWar}
-              gridSize={mapSettings.gridSize}
-              setGridSize={setGridSize}
+              gridSize={{ rows: mapSettings.gridSize, cols: mapSettings.gridSize }} // Fix the type mismatch
+              setGridSize={(size) => setGridSize(size.rows)} // Adapt the size parameter
               isDM={isDM}
             />
           )}

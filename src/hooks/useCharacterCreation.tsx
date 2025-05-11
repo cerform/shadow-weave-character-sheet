@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from 'react';
 import { Character } from '@/types/character';
 import { v4 as uuidv4 } from 'uuid';
@@ -21,7 +20,6 @@ export const useCharacterCreation = (options: UseCharacterCreationOptions = {}) 
     class: '',
     level: 1,
     abilities: {
-      STR: 10, DEX: 10, CON: 10, INT: 10, WIS: 10, CHA: 10,
       strength: 10, dexterity: 10, constitution: 10, intelligence: 10, wisdom: 10, charisma: 10
     },
     spells: [],
@@ -40,19 +38,13 @@ export const useCharacterCreation = (options: UseCharacterCreationOptions = {}) 
         updated.abilities = { 
           ...prev.abilities, 
           ...updates.abilities,
-          // Обеспечиваем дублирование для совместимости
-          STR: updates.abilities.strength ?? updates.abilities.STR ?? prev.abilities?.STR ?? 10,
-          DEX: updates.abilities.dexterity ?? updates.abilities.DEX ?? prev.abilities?.DEX ?? 10,
-          CON: updates.abilities.constitution ?? updates.abilities.CON ?? prev.abilities?.CON ?? 10,
-          INT: updates.abilities.intelligence ?? updates.abilities.INT ?? prev.abilities?.INT ?? 10,
-          WIS: updates.abilities.wisdom ?? updates.abilities.WIS ?? prev.abilities?.WIS ?? 10,
-          CHA: updates.abilities.charisma ?? updates.abilities.CHA ?? prev.abilities?.CHA ?? 10,
-          strength: updates.abilities.STR ?? updates.abilities.strength ?? prev.abilities?.strength ?? 10,
-          dexterity: updates.abilities.DEX ?? updates.abilities.dexterity ?? prev.abilities?.dexterity ?? 10,
-          constitution: updates.abilities.CON ?? updates.abilities.constitution ?? prev.abilities?.constitution ?? 10,
-          intelligence: updates.abilities.INT ?? updates.abilities.intelligence ?? prev.abilities?.intelligence ?? 10,
-          wisdom: updates.abilities.WIS ?? updates.abilities.wisdom ?? prev.abilities?.wisdom ?? 10,
-          charisma: updates.abilities.CHA ?? updates.abilities.charisma ?? prev.abilities?.charisma ?? 10
+          // Обеспечиваем согласованность всех полей способностей
+          strength: updates.abilities.strength ?? prev.abilities?.strength ?? 10,
+          dexterity: updates.abilities.dexterity ?? prev.abilities?.dexterity ?? 10,
+          constitution: updates.abilities.constitution ?? prev.abilities?.constitution ?? 10,
+          intelligence: updates.abilities.intelligence ?? prev.abilities?.intelligence ?? 10,
+          wisdom: updates.abilities.wisdom ?? prev.abilities?.wisdom ?? 10,
+          charisma: updates.abilities.charisma ?? prev.abilities?.charisma ?? 10
         };
       }
       
@@ -62,16 +54,10 @@ export const useCharacterCreation = (options: UseCharacterCreationOptions = {}) 
         if (racialBonuses && racialBonuses.abilities) {
           updated.abilities = {
             ...updated.abilities!,
-            STR: (updated.abilities?.STR || 10) + (racialBonuses.abilities.STR || 0),
-            DEX: (updated.abilities?.DEX || 10) + (racialBonuses.abilities.DEX || 0),
-            CON: (updated.abilities?.CON || 10) + (racialBonuses.abilities.CON || 0),
-            INT: (updated.abilities?.INT || 10) + (racialBonuses.abilities.INT || 0),
-            WIS: (updated.abilities?.WIS || 10) + (racialBonuses.abilities.WIS || 0),
-            CHA: (updated.abilities?.CHA || 10) + (racialBonuses.abilities.CHA || 0),
             strength: (updated.abilities?.strength || 10) + (racialBonuses.abilities.strength || 0),
             dexterity: (updated.abilities?.dexterity || 10) + (racialBonuses.abilities.dexterity || 0),
             constitution: (updated.abilities?.constitution || 10) + (racialBonuses.abilities.constitution || 0),
-            intelligence: (updated.abilities?.intelligence || 10) + (racialBonuses.abilities.INT || 0),
+            intelligence: (updated.abilities?.intelligence || 10) + (racialBonuses.abilities.intelligence || 0),
             wisdom: (updated.abilities?.wisdom || 10) + (racialBonuses.abilities.wisdom || 0),
             charisma: (updated.abilities?.charisma || 10) + (racialBonuses.abilities.charisma || 0)
           };
@@ -129,7 +115,6 @@ export const useCharacterCreation = (options: UseCharacterCreationOptions = {}) 
       class: '',
       level: 1,
       abilities: {
-        STR: 10, DEX: 10, CON: 10, INT: 10, WIS: 10, CHA: 10,
         strength: 10, dexterity: 10, constitution: 10, intelligence: 10, wisdom: 10, charisma: 10
       },
       spells: [],
