@@ -43,10 +43,7 @@ const CharacterCreationPage: React.FC = () => {
   const [abilitiesMethod, setAbilitiesMethod] = useState<"pointbuy" | "standard" | "roll" | "manual">("pointbuy");
   const navigate = useNavigate();
   const { themeStyles } = useTheme();
-  const { addCharacter, updateCharacter: updateCharacterContext } = useCharacter() as { 
-    addCharacter: (character: Character) => void, 
-    updateCharacter: (character: Character) => void 
-  };
+  const characterContext = useCharacter();
   const { toast } = useToast();
   
   // Функция для обновления состояния персонажа
@@ -130,6 +127,15 @@ const CharacterCreationPage: React.FC = () => {
     return { rolls, total };
   };
   
+  // Адаптер для преобразования rollSingleAbility к формату, ожидаемому компонентом
+  const rollSingleAbilityIndexAdapter = (index: number): { rolls: number[], total: number } => {
+    const abilities = ['strength', 'dexterity', 'constitution', 'intelligence', 'wisdom', 'charisma'];
+    if (index >= 0 && index < abilities.length) {
+      return rollSingleAbility(abilities[index]);
+    }
+    return { rolls: [], total: 0 };
+  };
+  
   // Получить модификатор для отображения с + знаком
   const getModifier = (score: number): string => {
     const modifier = calculateAbilityModifier(score);
@@ -153,22 +159,28 @@ const CharacterCreationPage: React.FC = () => {
   
   // Функция для сохранения персонажа
   const saveCharacter = () => {
-    // Проверяем, существует ли уже персонаж с таким ID
-    if (character.id) {
-      // Если ID существует, обновляем существующего персонажа
-      updateCharacterContext(character);
-      toast({
-        title: "Персонаж обновлен",
-        description: `${character.name} успешно обновлен.`,
-      });
-    } else {
-      // Если ID не существует, добавляем нового персонажа
-      const newCharacter = { ...character, id: uuidv4() };
-      addCharacter(newCharacter);
-      toast({
-        title: "Персонаж создан",
-        description: `${character.name} успешно создан.`,
-      });
+    if (characterContext) {
+      // Проверяем, существует ли уже персонаж с таким ID
+      if (character.id) {
+        // Если ID существует, обновляем существующего персонажа
+        if ('updateCharacter' in characterContext) {
+          characterContext.updateCharacter(character);
+        }
+        toast({
+          title: "Персонаж обновлен",
+          description: `${character.name} успешно обновлен.`,
+        });
+      } else {
+        // Если ID не существует, добавляем нового персонажа
+        const newCharacter = { ...character, id: uuidv4() };
+        if ('addCharacter' in characterContext && typeof characterContext.addCharacter === 'function') {
+          characterContext.addCharacter(newCharacter);
+        }
+        toast({
+          title: "Персонаж создан",
+          description: `${character.name} успешно создан.`,
+        });
+      }
     }
     
     navigate('/characters');
@@ -194,10 +206,7 @@ const CharacterCreationPage: React.FC = () => {
                 getModifier={getModifier}
                 rollAbility={rollAbility}
                 rollAllAbilities={rollAllAbilities}
-                rollSingleAbility={(index: number) => {
-                  const abilities = ['strength', 'dexterity', 'constitution', 'intelligence', 'wisdom', 'charisma'];
-                  return rollSingleAbility(abilities[index]);
-                }}
+                rollSingleAbility={rollSingleAbilityIndexAdapter}
                 abilityScorePoints={abilityScorePoints}
                 isMagicClass={isMagicClass()}
                 rollsHistory={rollsHistory}
@@ -224,10 +233,7 @@ const CharacterCreationPage: React.FC = () => {
                 getModifier={getModifier}
                 rollAbility={rollAbility}
                 rollAllAbilities={rollAllAbilities}
-                rollSingleAbility={(index: number) => {
-                  const abilities = ['strength', 'dexterity', 'constitution', 'intelligence', 'wisdom', 'charisma'];
-                  return rollSingleAbility(abilities[index]);
-                }}
+                rollSingleAbility={rollSingleAbilityIndexAdapter}
                 abilityScorePoints={abilityScorePoints}
                 isMagicClass={isMagicClass()}
                 rollsHistory={rollsHistory}
@@ -254,10 +260,7 @@ const CharacterCreationPage: React.FC = () => {
                 getModifier={getModifier}
                 rollAbility={rollAbility}
                 rollAllAbilities={rollAllAbilities}
-                rollSingleAbility={(index: number) => {
-                  const abilities = ['strength', 'dexterity', 'constitution', 'intelligence', 'wisdom', 'charisma'];
-                  return rollSingleAbility(abilities[index]);
-                }}
+                rollSingleAbility={rollSingleAbilityIndexAdapter}
                 abilityScorePoints={abilityScorePoints}
                 isMagicClass={isMagicClass()}
                 rollsHistory={rollsHistory}
@@ -284,10 +287,7 @@ const CharacterCreationPage: React.FC = () => {
                 getModifier={getModifier}
                 rollAbility={rollAbility}
                 rollAllAbilities={rollAllAbilities}
-                rollSingleAbility={(index: number) => {
-                  const abilities = ['strength', 'dexterity', 'constitution', 'intelligence', 'wisdom', 'charisma'];
-                  return rollSingleAbility(abilities[index]);
-                }}
+                rollSingleAbility={rollSingleAbilityIndexAdapter}
                 abilityScorePoints={abilityScorePoints}
                 isMagicClass={isMagicClass()}
                 rollsHistory={rollsHistory}
@@ -314,6 +314,9 @@ const CharacterCreationPage: React.FC = () => {
         disablePrev={currentStep === 1}
         disableNext={false}
         nextLabel={currentStep === 4 ? "Сохранить" : "Далее"}
+        currentStep={currentStep} 
+        totalSteps={4}
+        saveCharacter={saveCharacter}
       />
     </div>
   );

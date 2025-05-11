@@ -162,7 +162,7 @@ const SpellBookViewer: React.FC<SpellBookViewerProps> = ({ character, onAddSpell
                           <CardContent className="pt-0 pb-3">
                             <SpellCard 
                               spell={spell} 
-                              currentTheme={theme as string}
+                              currentTheme={typeof theme === 'string' ? theme : 'default'}
                               onClick={() => handleSpellClick(spell.id)}
                             />
                           </CardContent>

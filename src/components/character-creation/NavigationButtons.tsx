@@ -31,7 +31,8 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
   allowNext = true,
   currentStep,
   totalSteps,
-  saveCharacter
+  saveCharacter,
+  isFirstStep
 }) => {
   // Используем onPrev или prevStep, в зависимости от того, что передано
   const handlePrev = onPrev || prevStep;
