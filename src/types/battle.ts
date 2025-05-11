@@ -1,4 +1,3 @@
-
 export interface Token {
   id: number;
   name: string;
@@ -45,16 +44,18 @@ export interface VisibleArea {
 
 export interface EnhancedBattleMapProps {
   tokens: Token[];
-  background: string | null;
-  onUpdateTokenPosition: (id: number, x: number, y: number) => void;
-  onSelectToken: (id: number | null) => void;
-  selectedTokenId: number | null;
-  initiative: InitiativeItem[];
-  battleActive: boolean;
-  fogOfWar: boolean;
+  updateTokenPosition: (id: number, x: number, y: number) => void;
+  background?: string;
+  width?: number;
+  height?: number;
+  gridSize?: number;
+  initiative?: InitiativeItem[];
+  selectedTokenId?: number | null;
+  onSelectToken?: (id: number | null) => void;
+  battleActive?: boolean;
+  fogOfWar?: boolean;
   revealedCells?: {row: number, col: number}[];
   onRevealCell?: (row: number, col: number) => void;
-  gridSize?: {rows: number, cols: number};  // Изменяем тип gridSize на объект
   gridVisible?: boolean;
   gridOpacity?: number;
   zoom?: number;

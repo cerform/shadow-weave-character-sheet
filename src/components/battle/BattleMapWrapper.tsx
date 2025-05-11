@@ -85,24 +85,11 @@ const BattleMapWrapper: React.FC<BattleMapWrapperProps> = ({
     <EnhancedBattleMap
       tokens={tokens}
       background={background}
-      updateTokenPosition={onUpdateTokenPosition}  // Changed from onUpdateTokenPosition to updateTokenPosition
+      updateTokenPosition={onUpdateTokenPosition}
       gridSize={gridObject.rows} // Pass only the number as required by EnhancedBattleMap
-      selectedTokenId={rest.selectedTokenId}
-      onSelectToken={rest.onSelectToken}
-      initiative={rest.initiative}
-      battleActive={rest.battleActive}
-      fogOfWar={fogEnabled}
-      revealedCells={fogData}
-      onRevealCell={rest.onRevealCell}
-      gridVisible={showGrid}
-      gridOpacity={rest.gridOpacity}
-      zoom={rest.zoom}
-      isDM={rest.isDM}
-      lightSources={rest.lightSources}
-      isDynamicLighting={rest.isDynamicLighting}
-      className={rest.className}
-      showPlayerView={showPlayerView}
-      {...rest}
+      width={rest.width || 800}
+      height={rest.height || 600}
+      initiative={rest.initiative || []}
     />
   );
 };

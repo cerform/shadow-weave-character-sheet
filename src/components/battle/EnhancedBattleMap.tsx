@@ -2,22 +2,12 @@
 import React, { useRef, useState } from 'react';
 import { Stage, Layer, Rect, Circle, Group } from 'react-konva';
 import { KonvaEventObject } from 'konva/lib/Node';
-import { Token, InitiativeItem } from '@/types/battle';
+import { Token, InitiativeItem, EnhancedBattleMapProps } from '@/types/battle';
 import TokenComponent from './TokenComponent';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
-
-interface EnhancedBattleMapProps {
-  tokens: Token[];
-  updateTokenPosition: (id: number, x: number, y: number) => void;
-  background?: string;
-  width: number;
-  height: number;
-  gridSize?: number;
-  initiative?: InitiativeItem[];
-}
 
 const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
   tokens,
@@ -26,10 +16,24 @@ const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
   width = 800,
   height = 600,
   gridSize = 50,
-  initiative = []
+  initiative = [],
+  selectedTokenId = null,
+  onSelectToken,
+  battleActive = false,
+  fogOfWar = false,
+  revealedCells = [],
+  onRevealCell,
+  gridVisible = true,
+  gridOpacity = 0.3,
+  zoom = 1,
+  isDM = false,
+  lightSources = [],
+  isDynamicLighting = false,
+  className = "",
+  showPlayerView = false
 }) => {
   const stageRef = useRef<any>(null);
-  const [selectedTokenId, setSelectedTokenId] = useState<number | null>(null);
+  const [internalSelectedTokenId, setInternalSelectedTokenId] = useState<number | null>(selectedTokenId);
   const { theme } = useTheme();
   const currentTheme = themes[theme as keyof typeof themes] || themes.default;
   
@@ -40,7 +44,12 @@ const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
 
   // Handle token selection
   const handleTokenClick = (id: number) => {
-    setSelectedTokenId(id === selectedTokenId ? null : id);
+    const newSelectedId = id === internalSelectedTokenId ? null : id;
+    setInternalSelectedTokenId(newSelectedId);
+    
+    if (onSelectToken) {
+      onSelectToken(newSelectedId);
+    }
   };
 
   // Handle token position update
@@ -60,7 +69,7 @@ const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
   
   // Draw grid
   const renderGrid = () => {
-    if (!gridSize) return null;
+    if (!gridSize || !gridVisible) return null;
     
     const gridLines = [];
     
@@ -73,7 +82,7 @@ const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
           y={y}
           width={width}
           height={1}
-          fill="rgba(255, 255, 255, 0.2)"
+          fill={`rgba(255, 255, 255, ${gridOpacity})`}
         />
       );
     }
@@ -87,7 +96,7 @@ const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
           y={0}
           width={1}
           height={height}
-          fill="rgba(255, 255, 255, 0.2)"
+          fill={`rgba(255, 255, 255, ${gridOpacity})`}
         />
       );
     }
@@ -105,7 +114,7 @@ const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
 
   return (
     <motion.div 
-      className="relative border border-accent rounded-lg overflow-hidden"
+      className={`relative border border-accent rounded-lg overflow-hidden ${className}`}
       style={{ borderColor: currentTheme.accent }}
     >
       <Stage width={width} height={height} ref={stageRef}>
@@ -144,7 +153,7 @@ const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
               >
                 <TokenComponent
                   token={token}
-                  isSelected={token.id === selectedTokenId}
+                  isSelected={token.id === (selectedTokenId ?? internalSelectedTokenId)}
                   isActive={isActive}
                 />
               </Group>
