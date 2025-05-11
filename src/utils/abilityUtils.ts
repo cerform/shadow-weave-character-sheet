@@ -1,11 +1,13 @@
 
+import { getModifier, getModifierFromAbilityScore } from './characterUtils';
+
 /**
  * Get a modifier string from an ability score
  * @param abilityScore The ability score
  * @returns A formatted string with the modifier (e.g. "+3" or "-1")
  */
-export const getModifier = (abilityScore: number): string => {
-  const modifier = Math.floor((abilityScore - 10) / 2);
+export const getModifierString = (abilityScore: number): string => {
+  const modifier = getModifier(abilityScore);
   return modifier >= 0 ? `+${modifier}` : `${modifier}`;
 };
 
@@ -15,7 +17,7 @@ export const getModifier = (abilityScore: number): string => {
  * @returns The numeric modifier
  */
 export const getModifierValue = (abilityScore: number): number => {
-  return Math.floor((abilityScore - 10) / 2);
+  return getModifierFromAbilityScore(abilityScore);
 };
 
 /**
@@ -26,7 +28,7 @@ export const getModifierValue = (abilityScore: number): number => {
  */
 export const getAbilityModifierString = (character: any, abilityName: string): string => {
   const abilityScore = getAbilityScore(character, abilityName);
-  return getModifier(abilityScore);
+  return getModifierString(abilityScore);
 };
 
 /**

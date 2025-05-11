@@ -8,6 +8,61 @@ export const getModifier = (abilityScore: number): number => {
 };
 
 /**
+ * Get modifier string with "+" sign if positive
+ */
+export const getModifierString = (abilityScore: number): string => {
+  const mod = getModifier(abilityScore);
+  return mod >= 0 ? `+${mod}` : `${mod}`;
+};
+
+/**
+ * Get numeric modifier value
+ */
+export const getNumericModifier = (abilityScore: number): number => {
+  return getModifier(abilityScore);
+};
+
+/**
+ * Get ability modifier based on ability name
+ */
+export const getAbilityModifier = (character: Character, abilityName: string): number => {
+  if (!character || !character.abilities) return 0;
+  
+  const abilityNameLower = abilityName.toLowerCase();
+  let abilityScore = 10;
+  
+  if (abilityNameLower === 'strength' || abilityNameLower === 'str') {
+    abilityScore = character.abilities.strength || character.abilities.STR || 10;
+  } else if (abilityNameLower === 'dexterity' || abilityNameLower === 'dex') {
+    abilityScore = character.abilities.dexterity || character.abilities.DEX || 10;
+  } else if (abilityNameLower === 'constitution' || abilityNameLower === 'con') {
+    abilityScore = character.abilities.constitution || character.abilities.CON || 10;
+  } else if (abilityNameLower === 'intelligence' || abilityNameLower === 'int') {
+    abilityScore = character.abilities.intelligence || character.abilities.INT || 10;
+  } else if (abilityNameLower === 'wisdom' || abilityNameLower === 'wis') {
+    abilityScore = character.abilities.wisdom || character.abilities.WIS || 10;
+  } else if (abilityNameLower === 'charisma' || abilityNameLower === 'cha') {
+    abilityScore = character.abilities.charisma || character.abilities.CHA || 10;
+  }
+  
+  return getModifier(abilityScore);
+};
+
+/**
+ * Calculate modifier from ability score
+ */
+export const getModifierFromAbilityScore = (abilityScore: number): number => {
+  return getModifier(abilityScore);
+};
+
+/**
+ * Calculate ability modifier (alias for clarity)
+ */
+export const calculateAbilityModifier = (abilityScore: number): number => {
+  return getModifier(abilityScore);
+};
+
+/**
  * Calculate proficiency bonus based on level
  */
 export const getProficiencyBonus = (level: number): number => {
@@ -379,15 +434,15 @@ export const convertToCharacter = (partialChar: Partial<Character>): Character =
     ...partialChar,
     abilities: {
       ...defaultCharacter.abilities,
-      ...partialChar.abilities,
+      ...(partialChar.abilities || {}),
     },
     savingThrows: {
       ...defaultCharacter.savingThrows,
-      ...partialChar.savingThrows,
+      ...(partialChar.savingThrows || {}),
     },
     proficiencies: {
       ...defaultCharacter.proficiencies,
-      ...partialChar.proficiencies,
+      ...(partialChar.proficiencies || {}),
     },
   } as Character;
 };
