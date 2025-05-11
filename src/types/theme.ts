@@ -1,4 +1,5 @@
 
+
 export type ThemeType = 'default' | 'dark' | 'light' | 'fantasy' | 'magical' | 'parchment' | 'nature' | 'dungeon' | 'wizard' | 'warlock' | 'druid' | 'warrior' | 'bard' | 'cyberpunk';
 
 export interface ThemeStyles {
@@ -29,3 +30,4 @@ export interface ThemeStyles {
 
 // Export Theme as ThemeStyles for backward compatibility
 export type Theme = ThemeStyles;
+
