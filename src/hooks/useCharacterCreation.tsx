@@ -185,7 +185,8 @@ export const useCharacterCreation = (options: UseCharacterCreationOptions = {}) 
         class: '',
         level: 1,
         abilities: {
-          strength: 10, dexterity: 10, constitution: 10, intelligence: 10, wisdom: 10, charisma: 10
+          strength: 10, dexterity: 10, constitution: 10, intelligence: 10, wisdom: 10, charisma: 10,
+          STR: 10, DEX: 10, CON: 10, INT: 10, WIS: 10, CHA: 10
         },
         spells: [],
       });

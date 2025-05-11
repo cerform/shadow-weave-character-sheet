@@ -80,27 +80,27 @@ const BattleMapWrapper: React.FC<BattleMapWrapperProps> = ({
     }
   };
 
-  // Make sure to pass a proper gridSize compatible with EnhancedBattleMap props
-  // EnhancedBattleMap may require a specific format for gridSize
+  // Make sure to pass only the props that EnhancedBattleMap actually accepts
   return (
     <EnhancedBattleMap
       tokens={tokens}
       background={background}
-      setBackground={setBackground}
       onUpdateTokenPosition={onUpdateTokenPosition}
       gridSize={gridObject.rows} // Pass only the number as required by EnhancedBattleMap
-      setGridSize={handleGridSizeChange}
-      showGrid={showGrid}
-      setShowGrid={setShowGrid}
-      fogEnabled={fogEnabled}
-      setFogEnabled={setFogEnabled}
-      fogData={fogData}
-      updateFogData={updateFogData}
-      clearAllFog={clearAllFog}
-      revealAllFog={revealAllFog}
-      activePlayer={activePlayer}
-      isClickable={isClickable}
-      interactiveTokens={interactiveTokens}
+      selectedTokenId={rest.selectedTokenId}
+      onSelectToken={rest.onSelectToken}
+      initiative={rest.initiative}
+      battleActive={rest.battleActive}
+      fogOfWar={fogEnabled}
+      revealedCells={fogData}
+      onRevealCell={rest.onRevealCell}
+      gridVisible={showGrid}
+      gridOpacity={rest.gridOpacity}
+      zoom={rest.zoom}
+      isDM={rest.isDM}
+      lightSources={rest.lightSources}
+      isDynamicLighting={rest.isDynamicLighting}
+      className={rest.className}
       showPlayerView={showPlayerView}
       {...rest}
     />

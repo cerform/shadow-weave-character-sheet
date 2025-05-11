@@ -404,6 +404,13 @@ const PlayBattlePage = () => {
     });
   };
 
+  // Create a wrapper function to adapt updateToken to match the expected updateTokens signature
+  const handleUpdateToken = (token: Token) => {
+    if (token && token.id) {
+      updateToken(token.id, token);
+    }
+  };
+
   // Создаем панель управления картой для правой части
   const mapControlPanel = (
     <div className="space-y-4">
@@ -499,7 +506,7 @@ const PlayBattlePage = () => {
       <div className="relative overflow-hidden w-full h-full">
         <BattleMapWrapper
           tokens={tokens}
-          updateTokens={updateToken}
+          updateTokens={handleUpdateToken}
           background={mapSettings.background}
           setBackground={setMapBackground}
           onUpdateTokenPosition={handleUpdateTokenPosition}

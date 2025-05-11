@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useCharacter } from '@/contexts/CharacterContext';
 import { Character, CharacterSpell } from '@/types/character';
@@ -138,10 +137,28 @@ const CharacterSheetSpells: React.FC<CharacterSheetSpellsProps> = ({ character: 
     .filter(spell => typeof spell !== 'string' && spell.prepared && spell.level > 0)
     .length;
   
+  // If the character is provided via props, we need a way to update it
+  const handleCharacterUpdate = (updates: Partial<Character>) => {
+    if (propCharacter) {
+      // If we're using a prop character, use the updateCharacter from context
+      // but merge with the prop character first to preserve all properties
+      updateCharacter({
+        ...propCharacter,
+        ...updates
+      });
+    } else {
+      // Otherwise, just use the context's updateCharacter
+      updateCharacter(updates);
+    }
+  };
+  
   return (
     <div className="space-y-4">
       {/* Панель использования заклинаний */}
-      <SpellCastingPanel character={character} />
+      <SpellCastingPanel 
+        character={character} 
+        onUpdate={handleCharacterUpdate} 
+      />
       
       {/* Панель ячеек заклинаний */}
       <SpellSlotManager character={character} />
