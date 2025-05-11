@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { SpellData } from '@/types/spells';
+import { SpellData, convertCharacterSpellToSpellData } from '@/types/spells';
 import { calculateAvailableSpellsByClassAndLevel, filterSpellsByClassAndLevel } from '@/utils/spellUtils';
 import { getSpellcastingAbilityModifier } from '@/utils/spellUtils';
 import { useCharacter } from '@/contexts/CharacterContext';

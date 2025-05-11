@@ -31,12 +31,12 @@ const SpellCastingPanel: React.FC<SpellCastingPanelProps> = ({ character }) => {
     
     // Интеллект для волшебников, мудрость для жрецов и друидов, харизма для остальных магических классов
     if (classLower.includes('волшебник') || classLower.includes('wizard')) {
-      abilityMod = getAbilityModifier(character, 'INT');
+      abilityMod = getAbilityModifier(character.abilities?.INT || 10);
     } else if (classLower.includes('жрец') || classLower.includes('cleric') || 
                classLower.includes('друид') || classLower.includes('druid')) {
-      abilityMod = getAbilityModifier(character, 'WIS');
+      abilityMod = getAbilityModifier(character.abilities?.WIS || 10);
     } else {
-      abilityMod = getAbilityModifier(character, 'CHA');
+      abilityMod = getAbilityModifier(character.abilities?.CHA || 10);
     }
     
     const profBonus = character.proficiencyBonus || 2;

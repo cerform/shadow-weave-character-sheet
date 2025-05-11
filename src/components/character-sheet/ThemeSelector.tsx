@@ -1,7 +1,6 @@
 
 import React from 'react';
-import { useTheme } from '@/hooks/use-theme';
-import { ThemeType } from '@/types/theme';
+import { useTheme, ThemeType } from '@/hooks/use-theme';
 import { Button } from '@/components/ui/button';
 import { Moon, Sun, Palette, Wand } from 'lucide-react';
 
@@ -15,6 +14,11 @@ const ThemeSelector = () => {
     { id: 'warlock', name: 'Колдун', icon: <Palette className="h-4 w-4" /> },
   ];
 
+  const handleThemeChange = (newTheme: ThemeType) => {
+    console.log('Changing theme to:', newTheme);
+    setTheme(newTheme);
+  };
+
   return (
     <div className="space-y-2">
       <h3 className="text-sm font-medium">Тема оформления</h3>
@@ -25,7 +29,7 @@ const ThemeSelector = () => {
             size="sm"
             variant={theme === t.id ? 'default' : 'outline'}
             className="flex items-center gap-1"
-            onClick={() => setTheme(t.id)}
+            onClick={() => handleThemeChange(t.id)}
           >
             {t.icon}
             <span>{t.name}</span>
