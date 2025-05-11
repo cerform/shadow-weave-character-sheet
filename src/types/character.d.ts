@@ -63,7 +63,7 @@ export interface Character {
   backstory?: string;
   initiative?: number;  // Added missing property
   spellSlots?: Record<string, { max: number; used: number }>;
-  resources?: Record<string, { max: number; used: number }>;  // Added missing property
+  resources?: Record<string, { max: number; used: number; recoveryType?: 'short' | 'short-rest' | 'long' | 'long-rest' }>;  // Added missing property with recovery type
   sorceryPoints?: {     // Added missing property
     max: number;
     current: number;
@@ -108,3 +108,4 @@ export interface CharacterSpell {
   higherLevel?: string;
   higherLevels?: string;
 }
+

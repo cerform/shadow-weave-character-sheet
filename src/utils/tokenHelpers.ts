@@ -1,5 +1,5 @@
 
-import { Token } from '@/stores/battleStore';
+import { Token } from '@/types/battle';
 
 /**
  * Converts a size string to a numeric size multiplier
@@ -60,6 +60,7 @@ export const createToken = (
     size: options.size || (type === 'boss' ? 'large' : 'medium'),
     img: options.img || '',
     conditions: options.conditions || [],
+    resources: options.resources || {},
     ...options
   };
 };

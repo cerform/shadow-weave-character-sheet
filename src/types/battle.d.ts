@@ -1,4 +1,5 @@
 
+
 export interface Token {
   id: number;
   name: string;
@@ -50,3 +51,4 @@ export interface LightSource {
   flickering?: boolean;
   attachedToTokenId?: number;
 }
+

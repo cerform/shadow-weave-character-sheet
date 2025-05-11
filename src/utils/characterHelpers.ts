@@ -1,3 +1,4 @@
+
 import { Character } from '@/types/character';
 
 /**
@@ -82,26 +83,26 @@ export const getHitDice = (character: Character) => {
  * @param character The character to get resources for
  * @returns An object with resources or an empty object if not available
  */
-export const getResources = (character: Character): Record<string, { max: number; used: number }> => {
+export const getResources = (character: Character): Record<string, { max: number; used: number; recoveryType?: string }> => {
   if (!character) return {};
   
   if (character.resources) return character.resources;
   
   // Default resources based on class if not defined
-  const defaultResources: Record<string, { max: number; used: number }> = {};
+  const defaultResources: Record<string, { max: number; used: number; recoveryType?: string }> = {};
   
   const characterClass = character.class?.toLowerCase() || '';
   
   if (['бард', 'bard'].includes(characterClass)) {
-    defaultResources['Вдохновение'] = { max: Math.max(1, Math.floor((character.abilities?.charisma - 10) / 2)), used: 0 };
+    defaultResources['Вдохновение'] = { max: Math.max(1, Math.floor((character.abilities?.charisma - 10) / 2)), used: 0, recoveryType: 'long-rest' };
   }
   
   if (['чародей', 'sorcerer'].includes(characterClass)) {
-    defaultResources['Единицы чародейства'] = { max: character.level, used: 0 };
+    defaultResources['Единицы чародейства'] = { max: character.level, used: 0, recoveryType: 'long-rest' };
   }
   
   if (['монах', 'monk'].includes(characterClass)) {
-    defaultResources['Ци'] = { max: character.level, used: 0 };
+    defaultResources['Ци'] = { max: character.level, used: 0, recoveryType: 'short-rest' };
   }
   
   return defaultResources;

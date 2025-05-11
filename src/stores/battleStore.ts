@@ -13,21 +13,22 @@ export interface Token {
   visible?: boolean; // Compatibility with older code
   scale?: number;
   rotation?: number;
-  img?: string; // Added missing property
-  ac?: number; // Added missing property
-  initiative?: number; // Added missing property
+  img?: string;
+  ac?: number;
+  initiative?: number;
   conditions?: string[];
   characterId?: string;
   tokenColor?: string;
   size?: 'tiny' | 'small' | 'medium' | 'large' | 'huge' | 'gargantuan' | number;
+  resources?: Record<string, { max: number; used: number }>;
 }
 
 export interface Initiative {
   id: number;
-  tokenId: number; // Added missing property
+  tokenId: number;
   name: string;
-  roll: number; // Added missing property
-  isActive: boolean; // Added missing property
+  roll: number;
+  isActive: boolean;
 }
 
 export interface BattleState {

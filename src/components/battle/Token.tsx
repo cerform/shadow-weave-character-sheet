@@ -1,7 +1,8 @@
 
 import React from 'react';
-import { Token as TokenType } from '@/stores/battleStore';
+import { Token as TokenType } from '@/types/battle';
 import TokenHealthBar from './TokenHealthBar';
+import { getSizeMultiplier } from '@/utils/tokenHelpers';
 
 interface TokenProps {
   token: TokenType;
@@ -73,8 +74,8 @@ const Token: React.FC<TokenProps> = ({
     document.removeEventListener('mouseup', handleMouseUp);
   };
   
-  // Размер токена с учетом масштаба
-  const tokenSize = 30 * (token.size || 1);
+  // Размер токена с учетом масштаба - используем getSizeMultiplier для корректной обработки size
+  const tokenSize = 30 * getSizeMultiplier(token.size);
   
   // Стиль для токена
   const tokenStyle: React.CSSProperties = {
