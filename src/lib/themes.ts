@@ -8,6 +8,7 @@ export interface ThemeStyles {
   borderColor: string;
   accent: string;
   shadowColor: string;
+  mutedTextColor?: string;
   fontFamily?: string;
 }
 
@@ -171,5 +172,8 @@ export const themes: Record<ThemeType, ThemeStyles> = {
     fontFamily: '"Alegreya", serif'
   }
 };
+
+// Export the default theme for backward compatibility
+export const defaultTheme = themes.dark;
 
 export default themes;

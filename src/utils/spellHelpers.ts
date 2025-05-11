@@ -7,6 +7,14 @@ export function generateSpellId(name: string): string {
 }
 
 /**
+ * Get a formatted spell level name in Russian
+ */
+export function getSpellLevelName(level: number): string {
+  if (level === 0) return 'Заговор';
+  return `${level}-й уровень`;
+}
+
+/**
  * Extract spell details from text block
  */
 export function extractSpellDetailsFromText(text: string): {
