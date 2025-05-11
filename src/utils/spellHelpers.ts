@@ -1,4 +1,5 @@
 
+
 import { CharacterSpell } from '@/types/character';
 import { SpellData } from '@/types/spells';
 
@@ -124,42 +125,4 @@ export function extractSpellDetailsFromText(text: string): Partial<CharacterSpel
     somatic,
     material
   };
-}
-
-/**
- * Import spells from text format
- */
-export function importSpellsFromText(text: string, existingSpells: CharacterSpell[] = []): CharacterSpell[] {
-  if (!text) return existingSpells;
-  
-  const lines = text.split('\n').filter(line => line.trim() !== '');
-  const newSpells = lines.map(line => {
-    const details = extractSpellDetailsFromText(line);
-    return {
-      id: generateSpellId({ name: details.name || 'unknown' }),
-      name: details.name || 'Неизвестное заклинание',
-      level: details.level || 0,
-      school: 'Универсальная',
-      verbal: details.verbal || false,
-      somatic: details.somatic || false,
-      material: details.material || false,
-      prepared: true
-    } as CharacterSpell;
-  });
-  
-  // Combine with existing spells, avoiding duplicates
-  const combinedSpells = [...existingSpells];
-  
-  newSpells.forEach(newSpell => {
-    const existingIndex = combinedSpells.findIndex(s => s.name === newSpell.name);
-    if (existingIndex >= 0) {
-      // Update existing spell
-      combinedSpells[existingIndex] = { ...combinedSpells[existingIndex], ...newSpell };
-    } else {
-      // Add new spell
-      combinedSpells.push(newSpell);
-    }
-  });
-  
-  return combinedSpells;
 }

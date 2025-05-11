@@ -79,8 +79,10 @@ const CharacterSheetSpells: React.FC<CharacterSheetSpellsProps> = ({ character: 
   // Обработчик переключения подготовки заклинания
   const toggleSpellPreparation = (spell: CharacterSpell) => {
     // Проверяем, можно ли подготовить еще заклинаний
-    if (!spell.prepared && !canPrepareMoreSpells(character, character.class || '')) {
-      return; // Достигнут лимит подготовленных заклинаний
+    if (!spell.prepared && character && character.class) {
+      if (!canPrepareMoreSpells(character, character.class)) {
+        return; // Достигнут лимит подготовленных заклинаний
+      }
     }
     
     // Обновляем состояние подготовки заклинания
@@ -129,7 +131,7 @@ const CharacterSheetSpells: React.FC<CharacterSheetSpellsProps> = ({ character: 
   }
   
   // Получаем лимит подготовленных заклинаний
-  const preparedLimit = needsPreparation() ? getPreparedSpellsLimit(character, character.class || '') : 0;
+  const preparedLimit = needsPreparation() && character.class ? getPreparedSpellsLimit(character, character.class) : 0;
   
   // Счетчик текущих подготовленных заклинаний
   const preparedCount = character.spells

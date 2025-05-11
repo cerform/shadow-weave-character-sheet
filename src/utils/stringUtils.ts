@@ -1,24 +1,32 @@
+
 /**
- * Преобразует строку в slug-формат (для URL или ID)
- * @param text Текст для преобразования
- * @returns Преобразованная строка в формате slug
+ * Safely converts any value to a string
  */
-export function slugify(text: string): string {
-  return text
-    .toLowerCase()
-    .replace(/\s+/g, '-')
-    .replace(/[^\w-]+/g, '')
-    .replace(/--+/g, '-')
-    .replace(/^-+/, '')
-    .replace(/-+$/, '');
+export function safeToString(value: any): string {
+  if (value === null || value === undefined) {
+    return '';
+  }
+  
+  if (typeof value === 'string') {
+    return value;
+  }
+  
+  try {
+    return String(value);
+  } catch (e) {
+    return '';
+  }
 }
 
 /**
- * Безопасно преобразует значение в строку
- * @param value Значение для преобразования
- * @returns Строковое представление значения или пустая строка
+ * Converts a string to a URL-safe slug
  */
-export function safeToString(value: any): string {
-  if (value === null || value === undefined) return '';
-  return String(value);
+export function slugify(str: string): string {
+  return str
+    .toLowerCase()
+    .replace(/[\s_]+/g, '-')
+    .replace(/[^\w\-]+/g, '')
+    .replace(/\-\-+/g, '-')
+    .replace(/^-+/, '')
+    .replace(/-+$/, '');
 }

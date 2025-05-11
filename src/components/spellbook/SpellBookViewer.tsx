@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { convertCharacterSpellsToSpellData } from '@/utils/spellHelpers';
 import { Character } from '@/types/character';
 import { SpellData } from '@/types/spells';
 import { useTheme } from '@/hooks/use-theme';
@@ -13,6 +12,7 @@ import { themes } from '@/lib/themes';
 import { ChevronDown, ChevronUp, Plus, Search, BookOpen } from 'lucide-react';
 import SpellCard from './SpellCard';
 import SpellDetails from './SpellDetails';
+import { normalizeSpells, convertToSpellData } from '@/utils/spellUtils';
 
 interface SpellBookViewerProps {
   character: Character;
@@ -31,7 +31,9 @@ const SpellBookViewer: React.FC<SpellBookViewerProps> = ({ character, onAddSpell
   // Convert character spells to SpellData format for display
   useEffect(() => {
     if (character.spells) {
-      setSpells(convertCharacterSpellsToSpellData(character.spells));
+      const normalizedSpells = normalizeSpells(character.spells || []);
+      const spellDataList = normalizedSpells.map(spell => convertToSpellData(spell));
+      setSpells(spellDataList);
     } else {
       setSpells([]);
     }
@@ -160,7 +162,11 @@ const SpellBookViewer: React.FC<SpellBookViewerProps> = ({ character, onAddSpell
                         
                         {expandedSpellId === spell.id && (
                           <CardContent className="pt-0 pb-3">
-                            <SpellCard spell={spell} />
+                            <SpellCard 
+                              spell={spell} 
+                              currentTheme={currentTheme} 
+                              onClick={() => handleSpellClick(spell.id)}
+                            />
                           </CardContent>
                         )}
                       </Card>

@@ -1,35 +1,17 @@
 
-export type ThemeType = 
-  | 'default' 
-  | 'dark' 
-  | 'light' 
-  | 'fantasy' 
-  | 'purple' 
-  | 'modern' 
-  | 'retro' 
-  | 'cavernous' 
-  | 'forest' 
-  | 'mountain'
-  | string;
-
-export interface ThemeContextType {
-  theme: ThemeType;
-  setTheme: (theme: ThemeType) => void;
-  themeStyles: any;
-  effectiveTheme?: ThemeType;
-}
+export type ThemeType = 'default' | 'dark' | 'fantasy' | 'magical' | 'parchment' | 'nature' | 'dungeon';
 
 export interface ThemeStyles {
+  name: string;
   background: string;
   foreground: string;
+  cardBackground: string;
   primary: string;
+  secondary: string;
   accent: string;
   textColor: string;
-  cardBackground: string;
-  buttonText?: string;
-  mutedTextColor?: string;
-  errorText?: string;
-  successText?: string;
-  infoText?: string;
-  warningText?: string;
+  mutedTextColor: string;
+  borderColor: string;
+  shadowColor: string;
+  fontFamily: string;
 }

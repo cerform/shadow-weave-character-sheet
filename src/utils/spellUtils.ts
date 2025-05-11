@@ -69,6 +69,14 @@ export function getDefaultCastingAbility(characterClass?: string): 'intelligence
 }
 
 /**
+ * Get maximum spell level a character can cast
+ */
+export function getMaxSpellLevel(characterClass: string, level: number): number {
+  if (level < 1) return 0;
+  return Math.min(9, Math.ceil(level / 2));
+}
+
+/**
  * Calculate available spells by class and level
  */
 export function calculateAvailableSpellsByClassAndLevel(characterClass: string, level: number, abilityModifier: number = 0): {
@@ -79,14 +87,9 @@ export function calculateAvailableSpellsByClassAndLevel(characterClass: string, 
   const lowerClass = (characterClass || '').toLowerCase();
   
   // Default values
-  let maxSpellLevel = 0;
+  let maxSpellLevel = getMaxSpellLevel(characterClass, level);
   let cantripsCount = 0;
   let knownSpells = 0;
-  
-  // Calculate max spell level
-  if (level >= 1) {
-    maxSpellLevel = Math.min(9, Math.ceil(level / 2));
-  }
   
   // Class-specific calculations
   if (['волшебник', 'wizard'].includes(lowerClass)) {

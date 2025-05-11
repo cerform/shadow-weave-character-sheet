@@ -4,9 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { importSpellsFromText } from '@/utils/spellHelpers';
-import { spells as allSpells } from '@/data/spells';
 import { CharacterSpell } from '@/types/character';
+import { extractSpellDetailsFromText, generateSpellId } from '@/utils/spellHelpers';
 
 interface SpellImporterProps {
   onClose: () => void;
@@ -19,9 +18,45 @@ const SpellImporter: React.FC<SpellImporterProps> = ({ onClose, onImport }) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const { toast } = useToast();
 
+  const importSpellsFromText = (text: string, existingSpells: CharacterSpell[] = []): CharacterSpell[] => {
+    if (!text) return existingSpells;
+    
+    const lines = text.split('\n').filter(line => line.trim() !== '');
+    const newSpells = lines.map(line => {
+      const details = extractSpellDetailsFromText(line);
+      return {
+        id: generateSpellId({ name: details.name || 'unknown' }),
+        name: details.name || 'Неизвестное заклинание',
+        level: details.level || 0,
+        school: 'Универсальная',
+        verbal: details.verbal || false,
+        somatic: details.somatic || false,
+        material: details.material || false,
+        prepared: true
+      } as CharacterSpell;
+    });
+    
+    // Combine with existing spells, avoiding duplicates
+    const combinedSpells = [...existingSpells];
+    
+    newSpells.forEach(newSpell => {
+      const existingIndex = combinedSpells.findIndex(s => s.name === newSpell.name);
+      if (existingIndex >= 0) {
+        // Update existing spell
+        combinedSpells[existingIndex] = { ...combinedSpells[existingIndex], ...newSpell };
+      } else {
+        // Add new spell
+        combinedSpells.push(newSpell);
+      }
+    });
+    
+    return combinedSpells;
+  };
+
   const handleImport = () => {
     try {
       setIsProcessing(true);
+      const allSpells: CharacterSpell[] = [];
       const updatedSpells = importSpellsFromText(inputText, allSpells);
       const newCount = updatedSpells.length - allSpells.length;
       setImportedCount(newCount > 0 ? newCount : 0);
