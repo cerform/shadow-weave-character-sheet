@@ -165,7 +165,7 @@ export interface Character {
   gender?: string;
   avatar?: string;
   portrait?: string; // Added for backward compatibility
-  personality?: string; // Added for backward compatibility
+  image?: string; // Добавляем поле image для совместимости с characterPdfGenerator.ts
   currency?: {
     cp: number;
     sp: number;
@@ -214,7 +214,6 @@ export interface Character {
   skillProficiencies?: string[];
   skillBonuses?: Record<string, number>;
   expertise?: string[];
-  image?: string; // Добавляем поле image для совместимости с characterPdfGenerator.ts
 }
 
 // Export ABILITY_SCORE_CAPS constant for use in other files

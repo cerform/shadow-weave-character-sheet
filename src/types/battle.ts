@@ -1,18 +1,30 @@
 
-export interface VisibleArea {
+export interface Token {
+  id: number;
+  name: string;
+  type: "player" | "monster" | "npc" | "boss";
+  img: string;
   x: number;
   y: number;
-  radius: number;
+  hp: number;
+  maxHp: number;
+  ac: number;
+  initiative?: number;
+  conditions?: string[];
+  resources?: Record<string, number>;
+  visible: boolean;
+  size?: number;
+  attachedLightId?: number;
+}
+
+export interface InitiativeItem {
+  id: number;
   tokenId: number;
+  name: string;
+  roll: number;
+  isActive: boolean;
 }
 
-// Добавляем привязку к SessionStore
-export interface TokenOwner {
-  userId: string;
-  userName: string;
-}
-
-// Тип для источника света
 export interface LightSource {
   id: number;
   type: 'torch' | 'lantern' | 'daylight' | 'custom';
@@ -24,35 +36,31 @@ export interface LightSource {
   attachedToTokenId?: number;
 }
 
-// Экспортируем Token и InitiativeItem напрямую
-export interface Token {
-  id: number;
+export interface VisibleArea {
   x: number;
   y: number;
-  width?: number;
-  height?: number;
-  name: string;
-  img: string;
-  isSelected?: boolean;
-  isPlayer?: boolean;
-  currentHP?: number;
-  maxHP?: number;
-  hp?: number;
-  maxHp?: number;
-  initiative?: number;
-  tokenType?: string;
-  type?: string;
-  conditions?: string[];
-  ac?: number;
-  resources?: Record<string, any>;
-  visible?: boolean;
-  size?: number;
+  radius: number;
+  tokenId: number;
 }
 
-export interface InitiativeItem {
-  id: number;
-  tokenId: number;
-  name: string;
-  roll: number;
-  isActive: boolean;
+export interface EnhancedBattleMapProps {
+  tokens: Token[];
+  background: string | null;
+  onUpdateTokenPosition: (id: number, x: number, y: number) => void;
+  onSelectToken: (id: number | null) => void;
+  selectedTokenId: number | null;
+  initiative: InitiativeItem[];
+  battleActive: boolean;
+  fogOfWar: boolean;
+  revealedCells?: {row: number, col: number}[];
+  onRevealCell?: (row: number, col: number) => void;
+  gridSize?: number;
+  gridVisible?: boolean;
+  gridOpacity?: number;
+  zoom?: number;
+  isDM?: boolean;
+  lightSources?: LightSource[];
+  isDynamicLighting?: boolean;
+  className?: string;
+  showPlayerView?: boolean;
 }
