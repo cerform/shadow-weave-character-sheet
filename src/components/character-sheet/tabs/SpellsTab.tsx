@@ -1,9 +1,8 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Character, CharacterSpell } from '@/types/character';
 import { SpellData } from '@/types/spells';
-import { getDefaultCastingAbility, calculateSpellcastingDC, calculateSpellAttackBonus } from "@/utils/spellUtils";
+import { getDefaultCastingAbility, calculateSpellSaveDC, calculateSpellAttackBonus } from "@/utils/spellUtils";
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
 
@@ -57,7 +56,7 @@ export const SpellsTab: React.FC<SpellsTabProps> = ({ character, onUpdate, onSpe
 
   // Calculate spellcasting info
   const defaultAbility = getDefaultCastingAbility(character.class);
-  const spellSaveDC = calculateSpellcastingDC(character);
+  const spellSaveDC = calculateSpellSaveDC(character);
   const spellAttackBonus = calculateSpellAttackBonus(character);
 
   return (

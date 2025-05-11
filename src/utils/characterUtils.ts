@@ -2,6 +2,17 @@
 import { Character, AbilityScores } from '@/types/character';
 import { v4 as uuidv4 } from 'uuid';
 
+// Получить модификатор характеристики
+export const getModifier = (score: number): number => {
+  return Math.floor((Number(score) - 10) / 2);
+};
+
+// Синоним для getModifier для обратной совместимости
+export const calculateAbilityModifier = getModifier;
+export const getAbilityModifier = getModifier;
+export const getModifierFromAbilityScore = getModifier;
+export const getNumericModifier = getModifier;
+
 // Get default ability scores
 export const getDefaultAbilities = (): AbilityScores => {
   return {

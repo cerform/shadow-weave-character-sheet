@@ -1,3 +1,4 @@
+
 import { CharacterSpell } from '@/types/character';
 import { slugify } from '@/utils/stringUtils';
 
@@ -37,6 +38,7 @@ export const level4_part3: CharacterSpell[] = [
     classes: ["Друид", "Следопыт"]
   },
   {
+    id: slugify("призыв-малых-элементалей"),
     name: "Призыв малых элементалей",
     level: 4,
     school: "Вызов",
@@ -262,5 +264,8 @@ export const level4_part3: CharacterSpell[] = [
     classes: ["Волшебник"]
   }
 ];
+
+// Export as both level4_part3 and level4Part3 for compatibility
+export { level4_part3 as level4Part3 };
 
 export default level4_part3;
