@@ -3,13 +3,17 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
 
-interface NavigationButtonsProps {
+export interface NavigationButtonsProps {
   prevStep?: () => void;
   nextStep?: () => void;
   nextDisabled?: boolean;
   prevDisabled?: boolean;
   nextLabel?: string;
   prevLabel?: string;
+  allowNext?: boolean;
+  isFirstStep?: boolean;
+  nextText?: string;
+  disableNext?: boolean;
 }
 
 const NavigationButtons: React.FC<NavigationButtonsProps> = ({
@@ -18,8 +22,16 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
   nextDisabled = false,
   prevDisabled = false,
   nextLabel = "Далее",
-  prevLabel = "Назад"
+  prevLabel = "Назад",
+  allowNext,
+  isFirstStep,
+  nextText,
+  disableNext
 }) => {
+  // Use the most restrictive disabled state
+  const isNextDisabled = nextDisabled || (disableNext ?? false) || (allowNext === false);
+  const finalNextLabel = nextText || nextLabel;
+
   return (
     <div className="mt-8 flex justify-between">
       {prevStep ? (
@@ -39,10 +51,10 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
       {nextStep && (
         <Button
           onClick={nextStep}
-          disabled={nextDisabled}
+          disabled={isNextDisabled}
           className="flex items-center"
         >
-          {nextLabel}
+          {finalNextLabel}
           <ArrowRight className="ml-2 h-4 w-4" />
         </Button>
       )}

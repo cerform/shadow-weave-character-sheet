@@ -12,6 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import NavigationButtons from './NavigationButtons';
 import { getSpellcastingAbilityModifier, filterSpellsByClassAndLevel } from '@/utils/spellUtils';
+import { SpellData } from '@/types/spells';
 
 interface CharacterSpellSelectionProps {
   character: Character;
@@ -26,27 +27,23 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
   nextStep,
   prevStep
 }) => {
-  const { 
-    availableSpells: allSpells,
-    loadSpellsForCharacter 
-  } = useSpellbook();
-
+  const spellbook = useSpellbook();
   const [selectedSpells, setSelectedSpells] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filteredSpells, setFilteredSpells] = useState<any[]>([]);
+  const [filteredSpells, setFilteredSpells] = useState<SpellData[]>([]);
   
   useEffect(() => {
     if (character && character.class) {
-      loadSpellsForCharacter(character.class, character.level || 1);
+      spellbook.loadSpellsForCharacter(character.class, character.level || 1);
     }
-  }, [character?.class, character?.level]);
+  }, [character?.class, character?.level, spellbook]);
 
   // Фильтрация заклинаний по поиску и классу/уровню
   useEffect(() => {
-    if (!allSpells || !character.class) return;
+    if (!spellbook.availableSpells || !character.class) return;
 
     // Сначала фильтруем по классу и уровню
-    const classSpells = filterSpellsByClassAndLevel(allSpells, character.class, character.level || 1);
+    const classSpells = filterSpellsByClassAndLevel(spellbook.availableSpells, character.class, character.level || 1);
 
     // Затем фильтруем по поиску, если есть
     const searchFiltered = searchTerm
@@ -57,7 +54,7 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
       : classSpells;
 
     setFilteredSpells(searchFiltered);
-  }, [allSpells, searchTerm, character.class, character.level]);
+  }, [spellbook.availableSpells, searchTerm, character.class, character.level]);
 
   // При инициализации загружаем уже выбранные заклинания
   useEffect(() => {
@@ -176,8 +173,7 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
         <NavigationButtons
           prevStep={prevStep}
           nextStep={handleSaveSpells}
-          nextText="Сохранить и продолжить"
-          disableNext={false}
+          nextLabel="Сохранить и продолжить"
         />
       </CardContent>
     </Card>

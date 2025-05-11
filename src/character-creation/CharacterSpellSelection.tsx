@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { SpellData } from '@/types/spells';
 import { Character } from '@/types/character';
@@ -115,7 +116,7 @@ const filterSpellsByClassAndLevel = (
       return false;
     }
     
-    // Проверка со��тветствия классу
+    // Проверка соответствия классу
     if (spell.classes) {
       if (Array.isArray(spell.classes)) {
         return spell.classes.some(cls => {
@@ -147,7 +148,7 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
   onSpellChange,
 }) => {
   const { character, setCharacter } = useCharacter();
-  const { selectedSpells } = useSpellbook();
+  const spellbook = useSpellbook();
   const [filteredSpells, setFilteredSpells] = useState<SpellData[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const { theme } = useTheme();
