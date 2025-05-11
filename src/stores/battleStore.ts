@@ -1,29 +1,33 @@
-
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 
 export interface Token {
   id: number;
   name: string;
+  type: 'player' | 'monster' | 'boss' | 'npc';
   x: number;
   y: number;
-  hp: number;
   maxHp: number;
-  ac: number;
-  type: "player" | "monster" | "boss" | "npc";
-  img?: string;
-  size: number;
-  conditions: string[];
-  notes?: string;
-  isVisible?: boolean;
+  hp: number;
+  isVisible: boolean;
+  visible?: boolean; // Compatibility with older code
+  scale?: number;
+  rotation?: number;
+  img?: string; // Added missing property
+  ac?: number; // Added missing property
+  initiative?: number; // Added missing property
+  conditions?: string[];
+  characterId?: string;
+  tokenColor?: string;
+  size?: 'tiny' | 'small' | 'medium' | 'large' | 'huge' | 'gargantuan';
 }
 
 export interface Initiative {
   id: number;
-  tokenId: number;
+  tokenId: number; // Added missing property
   name: string;
-  roll: number;
-  isActive: boolean;
+  roll: number; // Added missing property
+  isActive: boolean; // Added missing property
 }
 
 export interface BattleState {

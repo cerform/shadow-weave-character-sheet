@@ -1,24 +1,17 @@
-
 export interface Character {
-  id?: string;
   name: string;
-  race?: string;
-  subrace?: string;
-  class?: string;
-  className?: string;
-  subclass?: string;
-  background?: string;
+  class: string;
   level: number;
-  experience?: number;
-  alignment?: string;
-  abilities?: {
+  race: string;
+  background: string;
+  alignment: string;
+  abilities: {
     STR: number;
     DEX: number;
     CON: number;
     INT: number;
     WIS: number;
     CHA: number;
-    // Добавляем алиасы для удобства
     strength: number;
     dexterity: number;
     constitution: number;
@@ -26,103 +19,54 @@ export interface Character {
     wisdom: number;
     charisma: number;
   };
-  stats?: {
-    strength: number;
-    dexterity: number;
-    constitution: number;
-    intelligence: number;
-    wisdom: number;
-    charisma: number;
-  };
-  skills?: Record<string, {
-    proficient: boolean;
-    expertise?: boolean;
-    value?: number;
-    bonus?: number;
-  }>;
-  hitPoints?: {
-    current: number;
-    maximum: number;
-    temporary: number;
-  };
-  maxHp?: number;
-  currentHp?: number;
+  maxHp: number;
+  currentHp: number;
   tempHp?: number;
-  temporaryHp?: number;
-  armorClass?: number;
-  speed?: number;
-  proficiencyBonus?: number;
-  savingThrows?: Record<string, boolean>;
-  proficiencies?: {
-    languages?: string[];
-    tools?: string[];
-    weapons?: string[];
-    armor?: string[];
-    skills?: string[];
-  } | string[];
-  // Добавляем поддержку обоих типов equipment
-  equipment?: Item[] | {
-    weapons?: string[];
-    armor?: string;
-    items?: string[];
+  temporaryHp?: number;  // Added for compatibility
+  armorClass: number;
+  proficiencyBonus: number;
+  speed: number;
+  equipment: any[];
+  features: any[];
+  spells: (CharacterSpell | string)[];
+  proficiencies: {
+    languages: string[];
+    tools: string[];
+    weapons: string[];
+    armor: string[];
+    skills?: string[];  // Added missing property
   };
-  features?: Feature[] | string[];
-  spells?: CharacterSpell[] | string[];
-  spellSlots?: Record<number, { max: number; used: number }>;
-  money?: {
-    cp?: number;
-    sp?: number;
-    ep?: number;
-    gp?: number;
-    pp?: number;
+  hitDice?: {
+    total: number;
+    used: number;
+    dieType: string;
+    value: string;
   };
-  gold?: number;
-  deathSaves?: {
+  money: {
+    cp: number;
+    sp: number;
+    ep: number;
+    gp: number;
+    pp: number;
+  };
+  deathSaves: {
     successes: number;
     failures: number;
   };
-  inspiration?: boolean;
+  gender?: string;
+  personalityTraits?: string;
+  ideals?: string;
   bonds?: string;
   flaws?: string;
-  ideals?: string;
-  personalityTraits?: string;
-  appearance?: string;
   backstory?: string;
-  notes?: string;
-  raceFeatures?: {
-    name: string;
-    description: string;
-    level?: number;
-  }[];
-  classFeatures?: {
-    name: string;
-    description: string;
-    level?: number;
-  }[];
-  backgroundFeatures?: {
-    name: string;
-    description: string;
-    level?: number;
-  }[];
-  feats?: {
-    name: string;
-    description: string;
-    level?: number;
-  }[];
-  gender?: string;
-  userId?: string;
-  abilityPointsUsed?: number;
-  updatedAt?: string;
-  createdAt?: string;
-  image?: string;
-  strength?: number;
-  dexterity?: number;
-  constitution?: number;
-  intelligence?: number;
-  wisdom?: number;
-  charisma?: number;
-  initiative?: string | number;
-  lastDiceRoll?: {
+  initiative?: number;  // Added missing property
+  spellSlots?: Record<string, { max: number; used: number }>;
+  resources?: Record<string, { max: number; used: number }>;  // Added missing property
+  sorceryPoints?: {     // Added missing property
+    max: number;
+    current: number;
+  };
+  lastDiceRoll?: {      // Added missing property
     diceType: string;
     count: number;
     modifier: number;
@@ -131,29 +75,16 @@ export interface Character {
     label: string;
     timestamp: string;
   };
-  hitDice?: {
-    total: number;
-    used: number;
-    dieType: string;
-    value: string;
-  };
-  resources?: Record<string, {
-    max: number;
-    used: number;
-    recoveryType?: 'short' | 'long' | 'short-rest' | 'long-rest';
-  }>;
-  sorceryPoints?: {
-    max: number;
-    current: number;
-  };
+  notes?: string;       // Added missing property
   spellcasting?: {
-    ability?: string;
-    saveDC?: number;
-    attackBonus?: number;
+    ability: string;
+    saveDC: number;
+    attackBonus: number;
   };
 }
 
 export interface CharacterSpell {
+  id?: string | number;
   name: string;
   level: number;
   school?: string;
@@ -163,66 +94,15 @@ export interface CharacterSpell {
   duration?: string;
   description?: string | string[];
   classes?: string[] | string;
-  source?: string;
   ritual?: boolean;
   concentration?: boolean;
   verbal?: boolean;
   somatic?: boolean;
   material?: boolean;
+  materials?: string;
   prepared?: boolean;
+  source?: string;
+  higher_level?: string;
   higherLevel?: string;
   higherLevels?: string;
-  id?: string | number;
-  materials?: string;
-}
-
-export interface Item {
-  name: string;
-  quantity: number;
-  weight?: number;
-  description?: string;
-  type?: string;
-  equipped?: boolean;
-  cost?: number;
-  costUnit?: string;
-}
-
-export interface Feature {
-  name: string;
-  source: string;
-  description: string;
-  level?: number;
-}
-
-export interface PlayerCharacter extends Character {
-  userId: string;
-}
-
-// Export ability score caps
-export const ABILITY_SCORE_CAPS = {
-  BASE_CAP: 20,
-  EPIC_CAP: 22,
-  LEGENDARY_CAP: 24
-};
-
-// Add HitPointEvent for DamageLog
-export interface HitPointEvent {
-  id: string;
-  type: 'damage' | 'healing' | 'temp' | 'heal' | 'tempHP' | 'death-save';
-  amount: number;
-  source?: string;
-  timestamp: number | Date;
-  previousHP?: number;
-  newHP?: number;
-}
-
-// Add LevelFeature interface for useLevelFeatures hook
-export interface LevelFeature {
-  id: string;
-  level: number;
-  name: string;
-  description: string;
-  type: string;
-  class?: string;
-  required?: boolean;
 }
