@@ -26,15 +26,28 @@ export const SpellSlotsPanel: React.FC<SpellSlotsPanelProps> = ({ className }) =
     if (!character || !updateCharacter) return;
 
     const updatedSpellSlots = { ...character.spellSlots };
-    updatedSpellSlots[level] = newSlots;
+    
+    // Convert to object structure if it's a number
+    if (typeof updatedSpellSlots[level] === 'number' || !updatedSpellSlots[level]) {
+      const maxSlots = getMaxSlotsForLevel(level);
+      updatedSpellSlots[level] = {
+        max: maxSlots,
+        used: maxSlots - newSlots
+      };
+    } else {
+      // Update existing object structure
+      updatedSpellSlots[level] = {
+        ...updatedSpellSlots[level],
+        used: updatedSpellSlots[level].max - newSlots
+      };
+    }
 
     updateCharacter({ spellSlots: updatedSpellSlots });
   };
 
   // Calculate max slots for each level based on character class and level
   const getMaxSlotsForLevel = (level: number): number => {
-    // This is a placeholder, ideally you'd have logic based on class and level
-    // For now, using a simplified version
+    // Упрощенная версия, вы можете заменить её на более сложную логику
     const maxSlotsByLevel: Record<number, number> = {
       1: 4,
       2: 3,
@@ -50,6 +63,30 @@ export const SpellSlotsPanel: React.FC<SpellSlotsPanelProps> = ({ className }) =
     return maxSlotsByLevel[level] || 0;
   };
 
+  // Получение текущего количества слотов (совместимо с обоими форматами)
+  const getCurrentSlots = (level: number): number => {
+    if (!spellSlots[level]) return 0;
+    
+    if (typeof spellSlots[level] === 'number') {
+      return spellSlots[level] as number;
+    } else {
+      const slotObj = spellSlots[level] as { max: number; used: number };
+      return slotObj.max - slotObj.used;
+    }
+  };
+
+  // Получение максимального количества слотов (совместимо с обоими форматами)
+  const getMaxSlots = (level: number): number => {
+    if (!spellSlots[level]) return getMaxSlotsForLevel(level);
+    
+    if (typeof spellSlots[level] === 'number') {
+      return getMaxSlotsForLevel(level);
+    } else {
+      const slotObj = spellSlots[level] as { max: number; used: number };
+      return slotObj.max;
+    }
+  };
+
   return (
     <Card className={className}>
       <CardHeader>
@@ -60,8 +97,8 @@ export const SpellSlotsPanel: React.FC<SpellSlotsPanelProps> = ({ className }) =
           const level = i + 1;
           const spellCount = getSelectedSpellCount(level);
           const hasSpells = spellCount > 0;
-          const currentSlots = typeof spellSlots[level] === 'number' ? spellSlots[level] : 0;
-          const maxSlots = getMaxSlotsForLevel(level);
+          const currentSlots = getCurrentSlots(level);
+          const maxSlots = getMaxSlots(level);
 
           return (
             <div key={level} className="flex items-center justify-between">

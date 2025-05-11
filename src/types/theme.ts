@@ -14,8 +14,8 @@ export interface ThemeStyles {
   borderColor: string;
   shadowColor: string;
   fontFamily: string;
-  buttonText: string; // Added buttonText property
-  // Optional properties
+  buttonText: string;
+  // Добавляем дополнительные свойства, которые используются в различных компонентах
   success?: string;
   warning?: string;
   danger?: string;
@@ -24,4 +24,5 @@ export interface ThemeStyles {
   backgroundGradient?: string;
   decorativeCorners?: boolean;
   primaryColor?: string;
+  accentTextColor?: string;
 }

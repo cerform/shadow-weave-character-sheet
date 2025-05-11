@@ -1,85 +1,99 @@
 
-import React, { useState } from 'react';
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import React from 'react';
 import { Button } from "@/components/ui/button";
-import { Slider } from "@/components/ui/slider";
-import { Badge } from "@/components/ui/badge";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Character } from '@/types/character';
 
 export interface SpellSlotsPopoverProps {
   level: number;
-  currentSlots: number;
-  maxSlots: number;
-  onSlotsChange: (newSlots: number) => void;
+  currentSlots?: number;
+  maxSlots?: number;
+  onSlotsChange?: (newSlots: number) => void;
   disabled?: boolean;
+  character?: Character; // Добавляем опциональный character prop
+  onUpdate?: (updates: Partial<Character>) => void; // Добавляем опциональный onUpdate prop
 }
 
-export const SpellSlotsPopover: React.FC<SpellSlotsPopoverProps> = ({
-  level,
-  currentSlots,
-  maxSlots,
-  onSlotsChange,
-  disabled = false
+export const SpellSlotsPopover: React.FC<SpellSlotsPopoverProps> = ({ 
+  level, 
+  currentSlots = 0, 
+  maxSlots = 0, 
+  onSlotsChange, 
+  disabled = false,
+  character,
+  onUpdate
 }) => {
-  const [open, setOpen] = useState(false);
-  const [value, setValue] = useState(currentSlots);
-
-  const handleValueChange = (newValue: number[]) => {
-    setValue(newValue[0]);
+  
+  // Функция для обработки изменения слотов через оба варианта API
+  const handleSlotChange = (newSlots: number) => {
+    // Если передан onSlotsChange, используем его
+    if (onSlotsChange) {
+      onSlotsChange(newSlots);
+    }
+    // Если передан character и onUpdate, используем их
+    else if (character && onUpdate) {
+      const updatedSpellSlots = { ...character.spellSlots };
+      
+      // Проверяем, существует ли структура spellSlots[level]
+      if (!updatedSpellSlots[level] || typeof updatedSpellSlots[level] === 'number') {
+        // Если это число или слота нет, создаем структуру
+        updatedSpellSlots[level] = { max: maxSlots, used: maxSlots - newSlots };
+      } else {
+        // Если это объект, обновляем used
+        updatedSpellSlots[level] = {
+          ...updatedSpellSlots[level],
+          used: maxSlots - newSlots
+        };
+      }
+      
+      onUpdate({ spellSlots: updatedSpellSlots });
+    }
   };
-
-  const handleCommit = () => {
-    onSlotsChange(value);
-    setOpen(false);
-  };
+  
+  // Получаем текущее значение слотов из любого источника
+  const currentValue = character && character.spellSlots && character.spellSlots[level] 
+    ? (typeof character.spellSlots[level] === 'number' 
+      ? character.spellSlots[level] 
+      : (character.spellSlots[level].max - character.spellSlots[level].used))
+    : currentSlots;
+  
+  // Получаем максимальное значение слотов
+  const maxValue = character && character.spellSlots && character.spellSlots[level] && typeof character.spellSlots[level] !== 'number' 
+    ? character.spellSlots[level].max
+    : maxSlots;
 
   return (
-    <Popover open={open && !disabled} onOpenChange={disabled ? undefined : setOpen}>
+    <Popover>
       <PopoverTrigger asChild>
         <Button 
           variant="outline" 
-          size="sm"
+          size="sm" 
+          className="h-7" 
           disabled={disabled}
-          className={disabled ? "opacity-50 cursor-not-allowed" : ""}
         >
-          {currentSlots} / {maxSlots}
+          {currentValue} / {maxValue}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-80">
-        <div className="space-y-4">
-          <h4 className="font-medium text-center">
-            Ячейки заклинаний {level} уровня
-          </h4>
-          
-          <div className="flex items-center justify-center space-x-2">
-            <Badge variant="outline" className="text-lg h-8 w-8 flex items-center justify-center">
-              {value}
-            </Badge>
-            <span className="mx-2">из</span>
-            <Badge variant="outline" className="text-lg h-8 w-8 flex items-center justify-center">
-              {maxSlots}
-            </Badge>
-          </div>
-          
-          <Slider
-            defaultValue={[currentSlots]}
-            max={maxSlots}
-            min={0}
-            step={1}
-            value={[value]}
-            onValueChange={handleValueChange}
-            className="my-4"
-          />
-          
-          <div className="flex justify-between">
-            <Button variant="outline" size="sm" onClick={() => setOpen(false)}>
-              Отмена
-            </Button>
-            <Button size="sm" onClick={handleCommit}>
-              Применить
-            </Button>
+      <PopoverContent className="w-48">
+        <div className="space-y-2">
+          <h4 className="font-medium text-sm">Ячейки заклинаний {level}-го уровня</h4>
+          <div className="flex flex-wrap gap-1">
+            {Array.from({ length: maxValue + 1 }).map((_, i) => (
+              <Button
+                key={i}
+                variant={currentValue === i ? "default" : "outline"}
+                size="sm"
+                className="w-8 h-8"
+                onClick={() => handleSlotChange(i)}
+              >
+                {i}
+              </Button>
+            ))}
           </div>
         </div>
       </PopoverContent>
     </Popover>
   );
 };
+
+export default SpellSlotsPopover;

@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -49,26 +50,49 @@ const SpellPanel: React.FC<SpellPanelProps> = ({ character, onUpdate, onSpellCli
   );
 
   // Функция для отображения использования слотов заклинаний
-  const renderSpellSlotUse = (character: Character, level: number) => {
+  const renderSpellSlotUse = (level: number) => {
     if (!character.spellSlots) return null;
     
     const slotInfo = character.spellSlots[level];
     if (!slotInfo) return null;
     
-    const used = slotInfo.used || 0;
-    const max = slotInfo.max || 0;
+    // Получить количество используемых и максимальных слотов в зависимости от формата
+    let used = 0;
+    let max = 0;
+    
+    if (typeof slotInfo === 'number') {
+      max = level === 0 ? 0 : 4; // Заговоры не имеют слотов
+      used = max - slotInfo;
+    } else {
+      max = slotInfo.max;
+      used = slotInfo.used;
+    }
     
     return (
       <div key={`spell-slots-${level}`} className="flex items-center justify-between">
         <span style={{ color: currentTheme.textColor }}>{level}-й уровень:</span>
         <div className="flex items-center space-x-2">
           <Badge variant="secondary" style={{ color: currentTheme.textColor }}>
-            {used} / {max}
+            {max - used} / {max}
           </Badge>
-          <SpellSlotsPopover 
+          <SpellSlotsPopover
             level={level}
-            character={character}
-            onUpdate={onUpdate}
+            currentSlots={max - used}
+            maxSlots={max}
+            onSlotsChange={(newSlots) => {
+              const updatedSpellSlots = { ...character.spellSlots };
+              
+              if (typeof updatedSpellSlots[level] === 'number') {
+                updatedSpellSlots[level] = newSlots;
+              } else {
+                updatedSpellSlots[level] = {
+                  max: max,
+                  used: max - newSlots
+                };
+              }
+              
+              onUpdate({ spellSlots: updatedSpellSlots });
+            }}
           />
         </div>
       </div>
@@ -122,7 +146,7 @@ const SpellPanel: React.FC<SpellPanelProps> = ({ character, onUpdate, onSpellCli
         <CardFooter className="flex flex-col space-y-2">
           <Separator style={{ backgroundColor: `${currentTheme.accent}40` }} />
           {character.spellSlots && Object.keys(character.spellSlots).map((level) =>
-            renderSpellSlotUse(character, parseInt(level))
+            renderSpellSlotUse(parseInt(level))
           )}
         </CardFooter>
         <SpellSelectionModal
@@ -177,22 +201,15 @@ const SpellPanel: React.FC<SpellPanelProps> = ({ character, onUpdate, onSpellCli
                           onClick={() => onSpellClick && onSpellClick(convertToSpellData(spell))}
                           style={{ color: currentTheme.textColor }}
                         >
-                          <div className="flex items-center w-full">
-                            <span className="flex-1 truncate">{spell.name}</span>
-                            {spell.prepared && (
-                              <Badge variant="outline" className="ml-2">П</Badge>
-                            )}
-                          </div>
+                          {spell.name}
                         </Button>
                       </TooltipTrigger>
-                      <TooltipContent side="right">
-                        <div className="max-w-[200px]">
-                          <p className="font-bold">{spell.name}</p>
-                          <p className="text-xs">{spell.school || "Универсальная"}</p>
-                          {spell.castingTime && <p className="text-xs">Время: {spell.castingTime}</p>}
-                          {spell.range && <p className="text-xs">Дистанция: {spell.range}</p>}
-                          {spell.components && <p className="text-xs">Компоненты: {spell.components}</p>}
-                          {spell.duration && <p className="text-xs">Длительность: {spell.duration}</p>}
+                      <TooltipContent>
+                        <div className="max-w-xs">
+                          <div className="font-medium">{spell.name}</div>
+                          <div className="text-xs opacity-80">
+                            {spell.school} {spell.level === 0 ? "Заговор" : `${spell.level}-й уровень`}
+                          </div>
                         </div>
                       </TooltipContent>
                     </Tooltip>
@@ -201,17 +218,12 @@ const SpellPanel: React.FC<SpellPanelProps> = ({ character, onUpdate, onSpellCli
               </div>
             </div>
           ))}
-          {normalizedSpells.length === 0 && (
-            <div className="text-center py-4 text-muted-foreground">
-              Нет известных заклинаний
-            </div>
-          )}
         </ScrollArea>
       </CardContent>
       <CardFooter className="flex flex-col space-y-2">
         <Separator style={{ backgroundColor: `${currentTheme.accent}40` }} />
         {character.spellSlots && Object.keys(character.spellSlots).map((level) =>
-          renderSpellSlotUse(character, parseInt(level))
+          renderSpellSlotUse(parseInt(level))
         )}
       </CardFooter>
       <SpellSelectionModal

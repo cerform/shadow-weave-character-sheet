@@ -1,3 +1,4 @@
+
 export interface ThemeStyles {
   background: string;
   cardBackground: string;
@@ -12,13 +13,51 @@ export interface ThemeStyles {
   primary?: string;
   foreground?: string;
   secondary?: string;
-  name?: string;
+  name: string;
+  // Дополнительные свойства
+  success?: string;
+  warning?: string;
+  danger?: string;
+  info?: string;
+  backgroundBrightness?: number;
+  backgroundGradient?: string;
+  decorativeCorners?: boolean;
+  primaryColor?: string;
 }
 
 export type ThemeType = 'light' | 'dark' | 'warlock' | 'wizard' | 'bard' | 'druid' | 'cleric' | 'paladin' | 'rogue' | 'ranger' | 'barbarian' | 'monk' | 'fighter' | 'sorcerer' | 'default';
 
-// Define themes
-export const themes: Record<ThemeType, ThemeStyles> = {
+// Функция для добавления обязательных свойств ко всем темам
+const addRequiredProps = (theme: Partial<ThemeStyles>, themeName: string): ThemeStyles => {
+  return {
+    ...theme,
+    name: themeName,
+    mutedTextColor: theme.mutedTextColor || '#6c757d',
+    success: theme.success || '#10b981',
+    warning: theme.warning || '#f59e0b',
+    danger: theme.danger || '#ef4444',
+    info: theme.info || '#3b82f6',
+    backgroundBrightness: theme.backgroundBrightness || 100,
+    backgroundGradient: theme.backgroundGradient || 'linear-gradient(to bottom, rgba(0,0,0,0.1), rgba(0,0,0,0.3))',
+    decorativeCorners: theme.decorativeCorners !== undefined ? theme.decorativeCorners : true,
+    primary: theme.primary || theme.accent || '#818cf8',
+    foreground: theme.foreground || '#1e293b',
+    secondary: theme.secondary || '#334155',
+    fontFamily: theme.fontFamily || 'system-ui, sans-serif',
+    // Убеждаемся, что все обязательные свойства присутствуют
+    background: theme.background || '#0f172a',
+    cardBackground: theme.cardBackground || '#1e293b',
+    textColor: theme.textColor || '#e2e8f0',
+    accentTextColor: theme.accentTextColor || '#818cf8',
+    buttonText: theme.buttonText || '#ffffff',
+    borderColor: theme.borderColor || '#334155',
+    accent: theme.accent || '#818cf8',
+    shadowColor: theme.shadowColor || 'rgba(0, 0, 0, 0.5)',
+  };
+};
+
+// Определение базовых тем
+const baseThemes: Record<ThemeType, Partial<ThemeStyles>> = {
   light: {
     background: '#f8f9fa',
     cardBackground: '#ffffff',
@@ -32,7 +71,6 @@ export const themes: Record<ThemeType, ThemeStyles> = {
     primary: '#6366f1',
     foreground: '#ffffff',
     secondary: '#e2e8f0',
-    name: 'light'
   },
   dark: {
     background: '#0f172a',
@@ -47,7 +85,6 @@ export const themes: Record<ThemeType, ThemeStyles> = {
     primary: '#818cf8',
     foreground: '#1e293b',
     secondary: '#334155',
-    name: 'dark'
   },
   default: {
     background: '#0f172a',
@@ -62,7 +99,6 @@ export const themes: Record<ThemeType, ThemeStyles> = {
     primary: '#818cf8',
     foreground: '#1e293b',
     secondary: '#334155',
-    name: 'default'
   },
   warlock: {
     background: '#18181b',
@@ -77,7 +113,6 @@ export const themes: Record<ThemeType, ThemeStyles> = {
     primary: '#d946ef',
     foreground: '#27272a',
     secondary: '#3f3f46',
-    name: 'warlock'
   },
   wizard: {
     background: '#0c0a20',
@@ -92,7 +127,6 @@ export const themes: Record<ThemeType, ThemeStyles> = {
     primary: '#60a5fa',
     foreground: '#1a1a3a',
     secondary: '#2d2b42',
-    name: 'wizard'
   },
   bard: {
     background: '#2d1b36',
@@ -107,7 +141,6 @@ export const themes: Record<ThemeType, ThemeStyles> = {
     primary: '#f9a8d4',
     foreground: '#432352',
     secondary: '#583168',
-    name: 'bard'
   },
   druid: {
     background: '#064e3b',
@@ -122,7 +155,6 @@ export const themes: Record<ThemeType, ThemeStyles> = {
     primary: '#6ee7b7',
     foreground: '#115e59',
     secondary: '#0f766e',
-    name: 'druid'
   },
   cleric: {
     background: '#3f3f46',
@@ -137,7 +169,6 @@ export const themes: Record<ThemeType, ThemeStyles> = {
     primary: '#e4e4e7',
     foreground: '#52525b',
     secondary: '#71717a',
-    name: 'cleric'
   },
   paladin: {
     background: '#172554',
@@ -152,7 +183,6 @@ export const themes: Record<ThemeType, ThemeStyles> = {
     primary: '#fcd34d',
     foreground: '#1e3a8a',
     secondary: '#1e40af',
-    name: 'paladin'
   },
   rogue: {
     background: '#18181b',
@@ -167,7 +197,6 @@ export const themes: Record<ThemeType, ThemeStyles> = {
     primary: '#9f1239',
     foreground: '#27272a',
     secondary: '#3f3f46',
-    name: 'rogue'
   },
   ranger: {
     background: '#1c1917',
@@ -182,7 +211,6 @@ export const themes: Record<ThemeType, ThemeStyles> = {
     primary: '#84cc16',
     foreground: '#292524',
     secondary: '#44403c',
-    name: 'ranger'
   },
   barbarian: {
     background: '#7f1d1d',
@@ -197,7 +225,6 @@ export const themes: Record<ThemeType, ThemeStyles> = {
     primary: '#fbbf24',
     foreground: '#991b1b',
     secondary: '#b91c1c',
-    name: 'barbarian'
   },
   monk: {
     background: '#1e293b',
@@ -212,7 +239,6 @@ export const themes: Record<ThemeType, ThemeStyles> = {
     primary: '#c084fc',
     foreground: '#334155',
     secondary: '#475569',
-    name: 'monk'
   },
   fighter: {
     background: '#374151',
@@ -227,7 +253,6 @@ export const themes: Record<ThemeType, ThemeStyles> = {
     primary: '#f97316',
     foreground: '#4b5563',
     secondary: '#6b7280',
-    name: 'fighter'
   },
   sorcerer: {
     background: '#4c1d95',
@@ -242,12 +267,17 @@ export const themes: Record<ThemeType, ThemeStyles> = {
     primary: '#fb7185',
     foreground: '#581c87',
     secondary: '#7e22ce',
-    name: 'sorcerer'
   }
 };
 
+// Применяем обязательные свойства ко всем темам
+export const themes: Record<ThemeType, ThemeStyles> = Object.entries(baseThemes).reduce((acc, [key, theme]) => {
+  acc[key as ThemeType] = addRequiredProps(theme, key);
+  return acc;
+}, {} as Record<ThemeType, ThemeStyles>);
+
 // Export the default theme for backward compatibility
-export const defaultTheme = themes.default;
+export const defaultTheme: ThemeStyles = themes.default;
 
 // Export Theme type for components that use it
 export type Theme = ThemeStyles;

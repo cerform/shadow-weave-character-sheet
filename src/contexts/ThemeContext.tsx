@@ -13,6 +13,8 @@ interface ThemeContextType {
 // Add missing properties to match ThemeStyles interface
 const defaultTheme: ThemeStyles = {
   ...themes.default,
+  name: 'default', // Добавляем name, так как он обязателен в ThemeStyles
+  mutedTextColor: '#6c757d', // Добавляем обязательное свойство
   borderColor: 'rgba(107, 33, 168, 0.3)',
   shadowColor: 'rgba(107, 33, 168, 0.2)',
   fontFamily: 'system-ui, sans-serif',
@@ -43,9 +45,12 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
       const savedTheme = localStorage.getItem('theme');
       if (savedTheme && Object.keys(themes).includes(savedTheme)) {
         setTheme(savedTheme as ThemeType);
+        
         // Add missing properties to match ThemeStyles interface
         const themeWithAllProps: ThemeStyles = {
           ...(themes[savedTheme as keyof typeof themes] || themes.default),
+          name: savedTheme || 'default', // Добавляем name, так как он обязателен
+          mutedTextColor: themes[savedTheme as keyof typeof themes]?.mutedTextColor || '#6c757d',
           borderColor: 'rgba(107, 33, 168, 0.3)',
           shadowColor: 'rgba(107, 33, 168, 0.2)',
           fontFamily: 'system-ui, sans-serif',
@@ -61,9 +66,12 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
   const handleSetTheme = (newTheme: ThemeType) => {
     try {
       setTheme(newTheme);
+      
       // Add missing properties to match ThemeStyles interface
       const themeWithAllProps: ThemeStyles = {
         ...(themes[newTheme as keyof typeof themes] || themes.default),
+        name: newTheme || 'default', // Добавляем name, так как он обязателен
+        mutedTextColor: themes[newTheme as keyof typeof themes]?.mutedTextColor || '#6c757d',
         borderColor: 'rgba(107, 33, 168, 0.3)',
         shadowColor: 'rgba(107, 33, 168, 0.2)',
         fontFamily: 'system-ui, sans-serif',
@@ -80,8 +88,8 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
       // Apply CSS variables from theme
       const themeObj = themes[newTheme as keyof typeof themes] || themes.default;
       document.documentElement.style.setProperty('--background', themeObj.background);
-      document.documentElement.style.setProperty('--foreground', themeObj.foreground);
-      document.documentElement.style.setProperty('--primary', themeObj.primary);
+      document.documentElement.style.setProperty('--foreground', themeObj.foreground || '#1e293b');
+      document.documentElement.style.setProperty('--primary', themeObj.primary || '#818cf8');
       document.documentElement.style.setProperty('--accent', themeObj.accent);
       document.documentElement.style.setProperty('--text', themeObj.textColor);
       document.documentElement.style.setProperty('--card-bg', themeObj.cardBackground);
@@ -103,4 +111,3 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
 };
 
 export default ThemeProvider;
-
