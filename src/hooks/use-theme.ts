@@ -12,3 +12,5 @@ export const useTheme = () => {
 };
 
 export type { ThemeType };
+export { ThemeContext } from '@/contexts/ThemeContext';
+

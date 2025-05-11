@@ -1,15 +1,14 @@
 
 import { useState } from 'react';
 import { Character } from '@/types/character';
-import { useCharacterCreation } from './useCharacterCreation';
+import { createDefaultCharacter } from '@/utils/characterUtils';
 
 /**
  * Хук для работы с персонажем в компонентах, которые требуют Character вместо Partial<Character>
  */
 export const useCharacter = (initialCharacter?: Partial<Character>) => {
-  const { convertToCharacter } = useCharacterCreation();
   const [character, setCharacter] = useState<Character>(
-    convertToCharacter(initialCharacter || {})
+    initialCharacter ? { ...createDefaultCharacter(), ...initialCharacter } : createDefaultCharacter()
   );
 
   const updateCharacter = (updates: Partial<Character>) => {
@@ -26,3 +25,4 @@ export const useCharacter = (initialCharacter?: Partial<Character>) => {
 };
 
 export default useCharacter;
+

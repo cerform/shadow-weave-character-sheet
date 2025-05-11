@@ -20,11 +20,13 @@ export interface UseCreationStepConfig {
 export interface LevelFeature {
   id: string;
   level: number;
-  name: string;
+  title: string; // Required field
+  name?: string; // Optional for backward compatibility
   description: string;
-  type: 'subclass' | 'ability_increase' | 'extra_attack' | 'spell_level' | 'feature';
-  class?: string;
+  type?: 'subclass' | 'ability_increase' | 'extra_attack' | 'spell_level' | 'feature';
+  class?: string; // Added for class-specific features
   required?: boolean;
+  options?: string[];
 }
 
 // Добавляем структуру для автоматического заполнения особенностей при создании персонажа
@@ -72,3 +74,4 @@ export interface UseLevelFeaturesResult {
 
 // Импортируем необходимые типы
 import { Character, Item } from './character';
+

@@ -1,5 +1,5 @@
 
-export type ThemeType = 'default' | 'dark' | 'fantasy' | 'magical' | 'parchment' | 'nature' | 'dungeon';
+export type ThemeType = 'default' | 'dark' | 'light' | 'fantasy' | 'magical' | 'parchment' | 'nature' | 'dungeon' | 'wizard' | 'warlock' | 'druid' | 'warrior' | 'bard' | 'cyberpunk';
 
 export interface ThemeStyles {
   name: string;
@@ -14,4 +14,15 @@ export interface ThemeStyles {
   borderColor: string;
   shadowColor: string;
   fontFamily: string;
+  buttonText: string; // Added buttonText property
+  // Optional properties
+  success?: string;
+  warning?: string;
+  danger?: string;
+  info?: string;
+  backgroundBrightness?: number;
+  backgroundGradient?: string;
+  decorativeCorners?: boolean;
+  primaryColor?: string;
 }
+

@@ -3,7 +3,7 @@ import { useState, useCallback } from 'react';
 import { Character } from '@/types/character';
 import { v4 as uuidv4 } from 'uuid';
 import { useToast } from './use-toast';
-import { calculateStatBonuses } from '@/utils/characterUtils';
+import { calculateStatBonuses, createDefaultCharacter, convertToCharacter } from '@/utils/characterUtils';
 import { useCharacter } from '@/contexts/CharacterContext';
 
 export interface UseCharacterCreationOptions {
@@ -26,7 +26,7 @@ export const useCharacterCreation = (options: UseCharacterCreationOptions = {}) 
     },
     spells: [],
   });
-  const { addCharacter } = useCharacter();
+  const { addCharacter } = useCharacter() as any; // Temporary type assertion
   const { toast } = useToast();
 
   // Обновить персонажа
@@ -86,43 +86,22 @@ export const useCharacterCreation = (options: UseCharacterCreationOptions = {}) 
   const nextStep = useCallback(() => {
     if (currentStep === 6) {
       // Завершаем создание персонажа
-      const finalCharacter = character as Character; // Type assertion as completed character
+      const finalCharacter = convertToCharacter(character);
       
-      // Adding default values for required fields
-      const completedCharacter: Character = {
-        ...finalCharacter,
-        personalityTraits: finalCharacter.personalityTraits || '',
-        ideals: finalCharacter.ideals || '',
-        bonds: finalCharacter.bonds || '',
-        flaws: finalCharacter.flaws || '',
-        abilities: finalCharacter.abilities || {
-          strength: 10, dexterity: 10, constitution: 10, intelligence: 10, wisdom: 10, charisma: 10,
-          STR: 10, DEX: 10, CON: 10, INT: 10, WIS: 10, CHA: 10
-        },
-        hitDice: finalCharacter.hitDice || {
-          total: finalCharacter.level || 1,
-          used: 0, 
-          dieType: 'd8',
-          value: 'd8',
-          remaining: finalCharacter.level || 1,
-        },
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        lastUsed: new Date().toISOString(),
-      };
-
       // Save character to context
-      addCharacter(completedCharacter);
+      if (addCharacter) {
+        addCharacter(finalCharacter);
+      }
       
       // Show success notification
       toast({
         title: 'Персонаж создан',
-        description: `${completedCharacter.name} готов к приключениям!`,
+        description: `${finalCharacter.name} готов к приключениям!`,
       });
       
       // Call onComplete callback if provided
       if (onComplete) {
-        onComplete(completedCharacter);
+        onComplete(finalCharacter);
       }
     } else {
       setCurrentStep(prev => prev + 1);
@@ -151,6 +130,15 @@ export const useCharacterCreation = (options: UseCharacterCreationOptions = {}) 
     setCurrentStep(0);
   }, []);
 
+  // Check if character's class is a magic user
+  const isMagicClass = useCallback(() => {
+    const magicClasses = [
+      'Бард', 'Жрец', 'Друид', 'Волшебник', 'Колдун', 
+      'Чародей', 'Паладин', 'Следопыт'
+    ];
+    return character.class ? magicClasses.includes(character.class) : false;
+  }, [character.class]);
+
   return {
     currentStep,
     character,
@@ -161,7 +149,10 @@ export const useCharacterCreation = (options: UseCharacterCreationOptions = {}) 
     setCurrentStep,
     isFirstStep: currentStep === 0,
     isLastStep: currentStep === 6,
+    isMagicClass,
+    convertToCharacter
   };
 };
 
 export default useCharacterCreation;
+

@@ -9,7 +9,7 @@ const ThemeToggle = () => {
   const { theme, setTheme } = useTheme();
   
   // Определяем, какая тема активна сейчас
-  const isDarkTheme = theme === 'dark' || theme === 'warlock' || theme === 'wizard';
+  const isDarkTheme = ['dark', 'warlock', 'wizard'].includes(theme);
   
   // На основе текущей темы определяем, на какую переключаться
   const toggleTheme = () => {
@@ -41,3 +41,4 @@ const ThemeToggle = () => {
 };
 
 export default ThemeToggle;
+

@@ -1,6 +1,6 @@
 
 import { useContext } from 'react';
-import { ThemeContext } from './use-theme';
+import { ThemeContext } from '@/contexts/ThemeContext';
 import { ThemeType } from '@/types/theme';
 
 export function useUserTheme() {
@@ -13,8 +13,9 @@ export function useUserTheme() {
   return {
     activeTheme: context.theme as ThemeType,
     setUserTheme: context.setTheme,
-    currentTheme: context.themeStyles
+    currentTheme: context.currentTheme
   };
 }
 
 export default useUserTheme;
+

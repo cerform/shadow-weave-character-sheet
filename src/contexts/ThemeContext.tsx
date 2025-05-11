@@ -10,11 +10,19 @@ interface ThemeContextType {
   themeStyles: ThemeStyles;
 }
 
+// Add missing properties to match ThemeStyles interface
+const defaultTheme: ThemeStyles = {
+  ...themes.default,
+  borderColor: 'rgba(107, 33, 168, 0.3)',
+  shadowColor: 'rgba(107, 33, 168, 0.2)',
+  fontFamily: 'system-ui, sans-serif',
+};
+
 const defaultThemeContext: ThemeContextType = {
   theme: 'default',
   setTheme: () => {},
-  currentTheme: themes.default,
-  themeStyles: themes.default,
+  currentTheme: defaultTheme,
+  themeStyles: defaultTheme,
 };
 
 export const ThemeContext = createContext<ThemeContextType>(defaultThemeContext);
@@ -27,7 +35,7 @@ interface ThemeProviderProps {
 
 export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
   const [theme, setTheme] = useState<ThemeType>('default');
-  const [currentTheme, setCurrentTheme] = useState<ThemeStyles>(themes.default);
+  const [currentTheme, setCurrentTheme] = useState<ThemeStyles>(defaultTheme);
 
   // Загружаем сохраненную тему при инициализации
   useEffect(() => {
@@ -35,7 +43,14 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
       const savedTheme = localStorage.getItem('theme');
       if (savedTheme && Object.keys(themes).includes(savedTheme)) {
         setTheme(savedTheme as ThemeType);
-        setCurrentTheme(themes[savedTheme as keyof typeof themes] || themes.default);
+        // Add missing properties to match ThemeStyles interface
+        const themeWithAllProps: ThemeStyles = {
+          ...(themes[savedTheme as keyof typeof themes] || themes.default),
+          borderColor: 'rgba(107, 33, 168, 0.3)',
+          shadowColor: 'rgba(107, 33, 168, 0.2)',
+          fontFamily: 'system-ui, sans-serif',
+        };
+        setCurrentTheme(themeWithAllProps);
       }
     } catch (error) {
       console.error('Ошибка при загрузке темы из localStorage:', error);
@@ -46,8 +61,14 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
   const handleSetTheme = (newTheme: ThemeType) => {
     try {
       setTheme(newTheme);
-      const themeObj = themes[newTheme as keyof typeof themes] || themes.default;
-      setCurrentTheme(themeObj);
+      // Add missing properties to match ThemeStyles interface
+      const themeWithAllProps: ThemeStyles = {
+        ...(themes[newTheme as keyof typeof themes] || themes.default),
+        borderColor: 'rgba(107, 33, 168, 0.3)',
+        shadowColor: 'rgba(107, 33, 168, 0.2)',
+        fontFamily: 'system-ui, sans-serif',
+      };
+      setCurrentTheme(themeWithAllProps);
       localStorage.setItem('theme', newTheme as string);
       console.log('Тема изменена на:', newTheme);
       
@@ -57,6 +78,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
       document.body.classList.add(`theme-${newTheme}`);
       
       // Apply CSS variables from theme
+      const themeObj = themes[newTheme as keyof typeof themes] || themes.default;
       document.documentElement.style.setProperty('--background', themeObj.background);
       document.documentElement.style.setProperty('--foreground', themeObj.foreground);
       document.documentElement.style.setProperty('--primary', themeObj.primary);
@@ -81,3 +103,4 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
 };
 
 export default ThemeProvider;
+
