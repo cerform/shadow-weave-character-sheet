@@ -72,7 +72,7 @@ export const convertCharacterSpellToSpellData = (spell: CharacterSpell): SpellDa
   };
 };
 
-// Add the missing utility functions
+// Convert spells for state
 export const convertSpellsForState = (spells: CharacterSpell[]): SpellData[] => {
   return spells.map(spell => convertCharacterSpellToSpellData(spell));
 };

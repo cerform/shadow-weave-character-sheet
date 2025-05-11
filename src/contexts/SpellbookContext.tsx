@@ -4,6 +4,7 @@ import { Character, CharacterSpell } from '@/types/character';
 import { SpellData } from '@/types/spells';
 import { convertToSpellData } from '@/utils/spellUtils';
 import { useToast } from '@/hooks/use-toast';
+import { slugify } from '@/utils/stringUtils';
 
 interface SpellbookContextProps {
   availableSpells: SpellData[];
@@ -47,7 +48,7 @@ export function SpellbookProvider({ children, character, onUpdate }: {
       const convertedSpells: SpellData[] = (character.spells || []).map(spell => {
         if (typeof spell === 'string') {
           return {
-            id: `spell-${String(spell).toLowerCase().replace(/\s+/g, '-')}`,
+            id: slugify(String(spell)),
             name: String(spell),
             level: 0,
             school: 'Универсальная',
@@ -60,18 +61,7 @@ export function SpellbookProvider({ children, character, onUpdate }: {
         }
         
         // Ensure SpellData has required properties
-        return {
-          id: spell.id || `spell-${String(spell.name).toLowerCase().replace(/\s+/g, '-')}`,
-          name: spell.name,
-          level: spell.level,
-          school: spell.school || 'Универсальная',
-          castingTime: spell.castingTime || '1 действие',
-          range: spell.range || 'На себя',
-          components: spell.components || '',
-          duration: spell.duration || 'Мгновенная',
-          description: spell.description || '',
-          prepared: spell.prepared
-        };
+        return convertToSpellData(spell);
       });
       
       setSelectedSpells(convertedSpells);
@@ -197,7 +187,13 @@ export function SpellbookProvider({ children, character, onUpdate }: {
       components: spell.components,
       duration: spell.duration,
       description: spell.description,
-      prepared: spell.prepared || false
+      prepared: spell.prepared || false,
+      verbal: spell.verbal,
+      somatic: spell.somatic,
+      material: spell.material,
+      ritual: spell.ritual,
+      concentration: spell.concentration,
+      classes: spell.classes
     }));
     
     onUpdate({ spells });

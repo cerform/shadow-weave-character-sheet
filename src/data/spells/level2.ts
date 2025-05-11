@@ -36,4 +36,6 @@ export const level2: CharacterSpell[] = [
   }
 ];
 
-export const level2Spells = level2; // Alternate export for backward compatibility
+// This is needed for backward compatibility
+export default level2;
+export const level2Spells = level2;

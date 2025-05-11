@@ -1,8 +1,9 @@
-
 import { CharacterSpell } from '@/types/character';
+import { slugify } from '@/utils/stringUtils';
 
 export const level4: CharacterSpell[] = [
   {
+    id: slugify("аура-жизни"),
     name: "Аура жизни",
     level: 4,
     school: "Ограждение",
@@ -19,6 +20,7 @@ export const level4: CharacterSpell[] = [
     classes: ["Паладин", "Жрец"]
   },
   {
+    id: slugify("аура-очищения"),
     name: "Аура очищения",
     level: 4,
     school: "Ограждение",
@@ -35,6 +37,7 @@ export const level4: CharacterSpell[] = [
     classes: ["Паладин", "Жрец"]
   },
   {
+    id: slugify("болезненное-сияние"),
     name: "Болезненное сияние",
     level: 4,
     school: "Воплощение",
@@ -51,6 +54,7 @@ export const level4: CharacterSpell[] = [
     classes: ["Жрец", "Волшебник", "Искуситель"]
   },
   {
+    id: slugify("быстрый-гонец-гальдера"),
     name: "Быстрый гонец Гальдера",
     level: 4,
     school: "Вызов",
@@ -67,6 +71,7 @@ export const level4: CharacterSpell[] = [
     classes: ["Волшебник", "Бард"]
   },
   {
+    id: slugify("верный-пёс-морденкайнена"),
     name: "Верный пёс Морденкайнена",
     level: 4,
     school: "Вызов",
@@ -83,6 +88,7 @@ export const level4: CharacterSpell[] = [
     classes: ["Волшебник"]
   },
   {
+    id: slugify("власть-над-водами"),
     name: "Власть над водами",
     level: 4,
     school: "Преобразование",
@@ -99,6 +105,7 @@ export const level4: CharacterSpell[] = [
     classes: ["Друид", "Волшебник", "Жрец"]
   },
   {
+    id: slugify("водяная-сфера"),
     name: "Водяная сфера",
     level: 4,
     school: "Вызов",
@@ -115,6 +122,7 @@ export const level4: CharacterSpell[] = [
     classes: ["Друид", "Волшебник", "Чародей"]
   },
   {
+    id: slugify("воображаемый-убийца"),
     name: "Воображаемый убийца",
     level: 4,
     school: "Иллюзия",
@@ -131,6 +139,7 @@ export const level4: CharacterSpell[] = [
     classes: ["Волшебник", "Бард"]
   },
   {
+    id: slugify("высшая-невидимость"),
     name: "Высшая невидимость",
     level: 4,
     school: "Иллюзия",
@@ -147,6 +156,7 @@ export const level4: CharacterSpell[] = [
     classes: ["Бард", "Волшебник", "Чародей"]
   },
   {
+    id: slugify("гигантское-насекомое"),
     name: "Гигантское насекомое",
     level: 4,
     school: "Преобразование",
@@ -163,6 +173,7 @@ export const level4: CharacterSpell[] = [
     classes: ["Друид", "Жрец"]
   },
   {
+    id: slugify("град"),
     name: "Град",
     level: 4,
     school: "Воплощение",
@@ -179,6 +190,7 @@ export const level4: CharacterSpell[] = [
     classes: ["Друид", "Волшебник", "Чародей"]
   },
   {
+    id: slugify("дух-смерти"),
     name: "Дух смерти",
     level: 4,
     school: "Некромантия",
@@ -195,6 +207,7 @@ export const level4: CharacterSpell[] = [
     classes: ["Волшебник", "Чародей"]
   },
   {
+    id: slugify("едкий-шар"),
     name: "Едкий шар",
     level: 4,
     school: "Воплощение",
@@ -211,6 +224,7 @@ export const level4: CharacterSpell[] = [
     classes: ["Волшебник", "Чародей"]
   },
   {
+    id: slugify("запечатывание-врат"),
     name: "Запечатывание врат",
     level: 4,
     school: "Ограждение",
@@ -227,6 +241,7 @@ export const level4: CharacterSpell[] = [
     classes: ["Волшебник", "Жрец", "Паладин"]
   },
   {
+    id: slugify("защита-от-смерти"),
     name: "Защита от смерти",
     level: 4,
     school: "Ограждение",
@@ -243,6 +258,7 @@ export const level4: CharacterSpell[] = [
     classes: ["Жрец", "Паладин"]
   },
   {
+    id: slugify("изгнание"),
     name: "Изгнание",
     level: 4,
     school: "Ограждение",
@@ -259,6 +275,7 @@ export const level4: CharacterSpell[] = [
     classes: ["Волшебник", "Жрец", "Паладин", "Колдун"]
   },
   {
+    id: slugify("изготовление"),
     name: "Изготовление",
     level: 4,
     school: "Преобразование",
@@ -275,6 +292,7 @@ export const level4: CharacterSpell[] = [
     classes: ["Волшебник", "Искуситель"]
   },
   {
+    id: slugify("изменение-формы-камня"),
     name: "Изменение формы камня",
     level: 4,
     school: "Преобразование",
@@ -291,6 +309,7 @@ export const level4: CharacterSpell[] = [
     classes: ["Друид", "Волшебник", "Искуситель"]
   },
   {
+    id: slugify("кабинет-морденкайнена"),
     name: "Кабинет Морденкайнена",
     level: 4,
     school: "Вызов",
@@ -307,6 +326,7 @@ export const level4: CharacterSpell[] = [
     classes: ["Бард", "Волшебник"]
   },
   {
+    id: slugify("каменная-кожа"),
     name: "Каменная кожа",
     level: 4,
     school: "Ограждение",

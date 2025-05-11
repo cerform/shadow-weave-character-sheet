@@ -33,3 +33,12 @@ export function getDefaultAbilityScore(method: "standard" | "pointbuy" | "roll" 
       return 10;
   }
 }
+
+/**
+ * Formats ability modifier as a string with proper sign
+ * @param modifier The ability modifier value
+ * @returns Formatted string like "+3" or "-1"
+ */
+export function getAbilityModifierString(modifier: number): string {
+  return modifier >= 0 ? `+${modifier}` : `${modifier}`;
+}
