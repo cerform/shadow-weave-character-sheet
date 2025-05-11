@@ -1,173 +1,268 @@
-import React, { useState, useEffect } from 'react';
-import { useCharacter } from '@/contexts/CharacterContext';
-import { CharacterSpell } from '@/types/character';
+import React, { useState, useMemo } from 'react';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Character, CharacterSpell } from '@/types/character';
+import { normalizeSpells, convertToSpellData } from '@/utils/spellUtils'; // Обновленный импорт
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Book, CheckCircle, Circle } from 'lucide-react';
+import { useTheme } from '@/hooks/use-theme';
+import { themes } from '@/lib/themes';
 import { SpellData } from '@/types/spells';
-import { normalizeSpells, convertToSpellData } from '@/utils/spellUtils';
-import { safeToString } from '@/utils/stringUtils';
 
-interface SpellsProps {
-  className?: string;
+interface CharacterSpellsProps {
+  character: Character;
+  onUpdate?: (updates: Partial<Character>) => void;
+  onSpellClick?: (spell: SpellData) => void;
 }
 
-export function CharacterSpells({ className }: SpellsProps) {
-  const { character, updateCharacter } = useCharacter();
-  const [spellsByLevel, setSpellsByLevel] = useState<Record<number, SpellData[]>>({});
-  const [selectedSpell, setSelectedSpell] = useState<SpellData | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
+const CharacterSpells: React.FC<CharacterSpellsProps> = ({ 
+  character, 
+  onUpdate,
+  onSpellClick
+}) => {
+  const [activeTab, setActiveTab] = useState('all');
+  const { theme } = useTheme();
+  const themeKey = (theme || 'default') as keyof typeof themes;
+  const currentTheme = themes[themeKey] || themes.default;
 
-  // Process spells whenever character changes
-  useEffect(() => {
-    if (!character) return;
+  // Нормализуем заклинания персонажа
+  const spells = useMemo(() => {
+    if (!character.spells || !Array.isArray(character.spells)) return [];
+    return normalizeSpells(character);
+  }, [character.spells]);
 
-    // Use the normalizeSpells utility function to ensure all spells have correct types
-    const normalizedSpells = normalizeSpells(character.spells || []);
-    
-    // Convert CharacterSpell[] to SpellData[] for consistency
-    const spellDataList = normalizedSpells.map(spell => convertToSpellData(spell));
-    
-    // Group by level
-    const grouped = spellDataList.reduce((acc, spell) => {
-      const level = spell.level;
+  // Группируем заклинания по уровням
+  const spellsByLevel = useMemo(() => {
+    return spells.reduce((acc: Record<number, CharacterSpell[]>, spell) => {
+      const level = spell.level || 0;
       if (!acc[level]) acc[level] = [];
       acc[level].push(spell);
       return acc;
-    }, {} as Record<number, SpellData[]>);
+    }, {});
+  }, [spells]);
 
-    setSpellsByLevel(grouped);
-  }, [character]);
-  
-  // Handle spell click to show details
-  const handleSpellClick = (spell: SpellData) => {
-    setSelectedSpell(spell);
-    setIsModalOpen(true);
+  // Подготовленные заклинания
+  const preparedSpells = useMemo(() => {
+    return spells.filter(spell => spell.prepared);
+  }, [spells]);
+
+  // Получаем цвет для бейджа уровня заклинания
+  const getSpellLevelColor = (level: number): string => {
+    const colors = {
+      0: "#6b7280", // Заговор - серый
+      1: "#10b981", // 1 уровень - зеленый
+      2: "#3b82f6", // 2 уровень - синий
+      3: "#8b5cf6", // 3 уровень - фиолетовый
+      4: "#ec4899", // 4 уровень - розовый
+      5: "#f59e0b", // 5 уровень - оранжевый
+      6: "#ef4444", // 6 уровень - красный
+      7: "#6366f1", // 7 уровень - индиго
+      8: "#0ea5e9", // 8 уровень - голубой
+      9: "#7c3aed"  // 9 уровень - насыщенный фиолетовый
+    };
+    return colors[level as keyof typeof colors] || colors[0];
   };
 
-  // Toggle spell prepared status
-  const togglePreparedStatus = (spellId: string) => {
-    if (!character || !character.spells) return;
+  // Обработчик переключения "подготовлено"
+  const handleTogglePrepared = (spellName: string) => {
+    if (!onUpdate) return;
 
-    const updatedSpells = character.spells.map(spell => {
-      if (typeof spell === 'string') {
-        return {
-          id: `spell-${safeToString(spell).toLowerCase().replace(/\s+/g, '-')}`,
-          name: spell,
-          level: 0,
-          school: 'Универсальная',
-          prepared: false
-        };
-      }
-      
-      if (spell.id === spellId) {
+    const updatedSpells = spells.map(spell => {
+      if (spell.name === spellName) {
         return { ...spell, prepared: !spell.prepared };
       }
-      
       return spell;
     });
 
-    updateCharacter({ spells: updatedSpells });
+    onUpdate({ spells: updatedSpells });
   };
 
-  // Open spell selection modal
-  const openSpellModal = () => {
-    setIsModalOpen(true);
-  };
-
-  // Render each level's spells
-  const renderSpellLevel = (level: number, spells: SpellData[]) => {
-    const levelName = level === 0 ? 'Заговоры' : `${level} уровень`;
-
-    return (
-      <div key={`level-${level}`} className="mb-4">
-        <h3 className="text-lg font-semibold">{levelName}</h3>
-        <div className="space-y-1">
-          {spells.map(spell => (
-            <div
-              key={spell.id}
-              className="flex items-center justify-between p-2 border rounded cursor-pointer hover:bg-secondary/10"
-              onClick={() => handleSpellClick(spell)}
-            >
-              <span>{spell.name}</span>
-              <input
-                type="checkbox"
-                checked={spell.prepared}
-                onChange={(e) => {
-                  e.stopPropagation();
-                  togglePreparedStatus(spell.id);
-                }}
-                className="ml-2"
-              />
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  };
-
-  // Get spells to show based on search or all spells
-  const getSpellsToShow = () => {
-    if (searchTerm.trim() === '') {
-      // Show all spells grouped by level
-      return Object.entries(spellsByLevel)
-        .sort(([a], [b]) => Number(a) - Number(b))
-        .map(([level, spells]) => renderSpellLevel(Number(level), spells));
-    } else {
-      // Show filtered spells
-      const allSpells = Object.values(spellsByLevel).flat();
-      const filtered = allSpells.filter(spell => 
-        spell.name.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-      
-      if (filtered.length === 0) {
-        return <p className="text-center py-4">Заклинания не найдены</p>;
-      }
-      
-      return renderSpellLevel(99, filtered); // Use a dummy level number
+  // Обработчик клика по заклинанию с правильным преобразованием типов
+  const handleSpellClick = (spell: CharacterSpell) => {
+    if (onSpellClick) {
+      // Преобразуем CharacterSpell в SpellData с дефолтными значениями для обязательных полей
+      const spellData: SpellData = convertToSpellData(spell);
+      onSpellClick(spellData);
     }
   };
 
-  if (!character) return null;
+  // Проверка, есть ли заклинания
+  if (!spells.length) {
+    return (
+      <Card className="w-full">
+        <CardHeader>
+          <CardTitle style={{ color: currentTheme.textColor }}>Заклинания</CardTitle>
+        </CardHeader>
+        <CardContent className="text-center text-muted-foreground">
+          У персонажа нет известных заклинаний
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
-    <div className={className}>
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-bold">Заклинания</h2>
-        <div className="space-x-2">
-          <input
-            type="text"
-            placeholder="Поиск..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="px-2 py-1 border rounded"
-          />
-          <button
-            onClick={openSpellModal}
-            className="px-3 py-1 bg-primary text-white rounded"
-          >
-            Добавить
-          </button>
-        </div>
-      </div>
-      
-      {getSpellsToShow()}
-      
-      {/* Spell Modal would be rendered here */}
-      {selectedSpell && isModalOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4">
-          <div className="bg-white p-4 rounded max-w-lg w-full">
-            <h3 className="text-xl font-bold">{selectedSpell.name}</h3>
-            <p>{selectedSpell.description}</p>
-            <button
-              onClick={() => setIsModalOpen(false)}
-              className="mt-4 px-3 py-1 bg-primary text-white rounded"
-            >
-              Закрыть
-            </button>
-          </div>
-        </div>
-      )}
-    </div>
+    <Card className="w-full">
+      <CardHeader>
+        <CardTitle style={{ color: currentTheme.textColor }}>Заклинания</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab}>
+          <TabsList className="w-full mb-4">
+            <TabsTrigger value="all">Все</TabsTrigger>
+            <TabsTrigger value="prepared">Подготовленные</TabsTrigger>
+            {Object.keys(spellsByLevel).sort((a, b) => Number(a) - Number(b)).map(level => (
+              <TabsTrigger key={`level-tab-${level}`} value={level}>
+                {Number(level) === 0 ? 'Заговоры' : `Уровень ${level}`}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+
+          <ScrollArea className="h-[300px]">
+            {/* Вкладка "Все заклинания" */}
+            <TabsContent value="all" className="space-y-4">
+              {Object.entries(spellsByLevel)
+                .sort(([a], [b]) => Number(a) - Number(b))
+                .map(([level, spellList]) => {
+                  // Проверяем, является ли spellList массивом перед вызовом map
+                  const spells = Array.isArray(spellList) ? spellList : [];
+                  return (
+                    <div key={`level-group-${level}`} className="space-y-2">
+                      <h3 className="text-lg font-medium" style={{ color: currentTheme.textColor }}>
+                        {Number(level) === 0 ? 'Заговоры' : `Заклинания ${level} уровня`}
+                      </h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                        {spells.map((spell: CharacterSpell) => (
+                          <div 
+                            key={`all-${spell.name}`} 
+                            className="flex items-center justify-between p-2 border rounded-md hover:bg-black/20"
+                            style={{ borderColor: spell.prepared ? getSpellLevelColor(spell.level || 0) : 'inherit' }}
+                          >
+                            <div className="flex items-center gap-2">
+                              <Badge 
+                                style={{ backgroundColor: getSpellLevelColor(spell.level || 0) }}
+                                className="text-white"
+                              >
+                                {spell.level === 0 ? 'Заговор' : spell.level}
+                              </Badge>
+                              <span style={{ color: currentTheme.textColor }}>{spell.name}</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <Button 
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleSpellClick(spell)}
+                              >
+                                <Book className="h-4 w-4" />
+                              </Button>
+                              {onUpdate && spell.level > 0 && (
+                                <Button 
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleTogglePrepared(spell.name)}
+                                >
+                                  {spell.prepared ? (
+                                    <CheckCircle className="h-4 w-4 text-primary" />
+                                  ) : (
+                                    <Circle className="h-4 w-4" />
+                                  )}
+                                </Button>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+            </TabsContent>
+
+            {/* Вкладка "Подготовленные заклинания" */}
+            <TabsContent value="prepared" className="space-y-2">
+              {preparedSpells.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                  {preparedSpells.map(spell => (
+                    <div 
+                      key={`prepared-${spell.name}`} 
+                      className="flex items-center justify-between p-2 border rounded-md hover:bg-black/20"
+                      style={{ borderColor: getSpellLevelColor(spell.level || 0) }}
+                    >
+                      <div className="flex items-center gap-2">
+                        <Badge 
+                          style={{ backgroundColor: getSpellLevelColor(spell.level || 0) }}
+                          className="text-white"
+                        >
+                          {spell.level === 0 ? 'Заговор' : spell.level}
+                        </Badge>
+                        <span style={{ color: currentTheme.textColor }}>{spell.name}</span>
+                      </div>
+                      <Button 
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleSpellClick(spell)}
+                      >
+                        <Book className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center text-muted-foreground py-4">
+                  Нет подготовленных заклинаний
+                </div>
+              )}
+            </TabsContent>
+
+            {/* Вкладки для каждого уровня заклинаний */}
+            {Object.entries(spellsByLevel)
+              .sort(([a], [b]) => Number(a) - Number(b))
+              .map(([level, spellList]) => {
+                // Проверяем, является ли spellList массивом перед вызовом map
+                const spells = Array.isArray(spellList) ? spellList : [];
+                return (
+                  <TabsContent key={`level-content-${level}`} value={level} className="space-y-2">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                      {spells.map((spell: CharacterSpell) => (
+                        <div 
+                          key={`level-spell-${spell.name}`} 
+                          className="flex items-center justify-between p-2 border rounded-md hover:bg-black/20"
+                          style={{ borderColor: spell.prepared ? getSpellLevelColor(Number(level)) : 'inherit' }}
+                        >
+                          <span style={{ color: currentTheme.textColor }}>{spell.name}</span>
+                          <div className="flex items-center gap-1">
+                            <Button 
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleSpellClick(spell)}
+                            >
+                              <Book className="h-4 w-4" />
+                            </Button>
+                            {onUpdate && Number(level) > 0 && (
+                              <Button 
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleTogglePrepared(spell.name)}
+                              >
+                                {spell.prepared ? (
+                                  <CheckCircle className="h-4 w-4 text-primary" />
+                                ) : (
+                                  <Circle className="h-4 w-4" />
+                                )}
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </TabsContent>
+                );
+              })}
+          </ScrollArea>
+        </Tabs>
+      </CardContent>
+    </Card>
   );
-}
+};
 
 export default CharacterSpells;

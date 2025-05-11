@@ -1,3 +1,4 @@
+
 import React, { ReactNode, useEffect, useState } from 'react';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
@@ -52,10 +53,6 @@ const BackgroundWrapper: React.FC<BackgroundWrapperProps> = ({
   // 2. Замените путь в backgroundImage ниже на путь к вашему изображению
   // 3. Вы можете использовать любое изображение формата jpg, png, svg и т.д.
   
-  const backgroundBrightness = currentTheme.backgroundBrightness || 1;
-  const backgroundGradient = currentTheme.backgroundGradient || 'none';
-  const decorativeCorners = currentTheme.decorativeCorners !== undefined ? currentTheme.decorativeCorners : false;
-
   return (
     <div 
       className="min-h-screen relative overflow-hidden"
@@ -69,7 +66,7 @@ const BackgroundWrapper: React.FC<BackgroundWrapperProps> = ({
           backgroundPosition: 'center',
           backgroundRepeat: 'no-repeat',
           transform: `scale(${scale})`,
-          filter: `brightness(${backgroundBrightness})`,
+          filter: `brightness(${currentTheme.backgroundBrightness || 0.7})`,
           transition: 'transform 0.5s ease-out'
         }}
       />
@@ -79,7 +76,7 @@ const BackgroundWrapper: React.FC<BackgroundWrapperProps> = ({
         <div 
           className="absolute inset-0 w-full h-full z-0"
           style={{ 
-            background: backgroundGradient || 
+            background: currentTheme.backgroundGradient || 
               `linear-gradient(to bottom, rgba(0, 0, 0, ${opacity}), rgba(0, 0, 0, ${opacity - 0.1}))`,
             opacity: opacity
           }}
@@ -87,7 +84,7 @@ const BackgroundWrapper: React.FC<BackgroundWrapperProps> = ({
       )}
       
       {/* Добавляем декоративные элементы по углам */}
-      {decorativeCorners && (
+      {currentTheme.decorativeCorners && (
         <>
           <div className="absolute top-0 left-0 w-24 h-24 bg-contain bg-no-repeat z-10 opacity-70"
                style={{ backgroundImage: 'url("/lovable-uploads/corner-tl.png")' }} />

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useCharacter } from '@/contexts/CharacterContext';
 import { Character, CharacterSpell } from '@/types/character';
@@ -9,9 +10,8 @@ import { canPrepareMoreSpells, getPreparedSpellsLimit } from '@/utils/spellUtils
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
 import { ChevronDown, ChevronUp, BookOpen, Star } from 'lucide-react';
-import { SpellCastingPanel } from './SpellCastingPanel'; // Fix import to use named export
+import SpellCastingPanel from './SpellCastingPanel';
 import SpellSlotManager from './SpellSlotManager';
-import { safeToString } from '@/utils/stringUtils';
 
 interface CharacterSheetSpellsProps {
   character?: Character;
@@ -37,10 +37,8 @@ const CharacterSheetSpells: React.FC<CharacterSheetSpellsProps> = ({ character: 
         if (typeof spell === 'string') {
           // Если заклинание представлено строкой, создаем минимальный объект
           const basicSpell: CharacterSpell = {
-            id: `spell-${safeToString(spell).toLowerCase().replace(/\s+/g, '-')}`,
             name: spell,
-            level: 0,
-            school: 'Универсальная',
+            level: 0, // По умолчанию считаем заговором
             prepared: true
           };
           
@@ -64,7 +62,7 @@ const CharacterSheetSpells: React.FC<CharacterSheetSpellsProps> = ({ character: 
         setExpandedLevels([0]);
       }
     }
-  }, [character?.spells, expandedLevels]);
+  }, [character?.spells]);
   
   // Обработчик переключения развернутости уровня заклинаний
   const toggleLevelExpansion = (level: number) => {
@@ -78,26 +76,16 @@ const CharacterSheetSpells: React.FC<CharacterSheetSpellsProps> = ({ character: 
   // Обработчик переключения подготовки заклинания
   const toggleSpellPreparation = (spell: CharacterSpell) => {
     // Проверяем, можно ли подготовить еще заклинаний
-    if (!spell.prepared && character && character.class) {
-      if (!canPrepareMoreSpells(character, character.class)) {
-        return; // Достигнут лимит подготовленных заклинаний
-      }
+    if (!spell.prepared && !canPrepareMoreSpells(character)) {
+      return; // Достигнут лимит подготовленных заклинаний
     }
     
     // Обновляем состояние подготовки заклинания
     if (character && character.spells) {
       const updatedSpells = character.spells.map(s => {
-        if (typeof s === 'string') {
-          return {
-            id: `spell-${safeToString(s).toLowerCase().replace(/\s+/g, '-')}`,
-            name: s,
-            level: 0,
-            school: 'Универсальная',
-            prepared: false
-          };
-        }
+        if (typeof s === 'string') return s;
         
-        if (s.id === spell.id) {
+        if (s.name === spell.name) {
           return { ...s, prepared: !s.prepared };
         }
         return s;
@@ -112,7 +100,7 @@ const CharacterSheetSpells: React.FC<CharacterSheetSpellsProps> = ({ character: 
     if (!character || !character.class) return false;
     
     const preparingClasses = ['жрец', 'друид', 'волшебник', 'cleric', 'druid', 'wizard', 'паладин', 'paladin', 'следопыт', 'ranger', 'изобретатель', 'artificer'];
-    return preparingClasses.includes(safeToString(character.class).toLowerCase());
+    return preparingClasses.includes(character.class.toLowerCase());
   };
   
   // Проверяем, является ли класс магическим
@@ -121,7 +109,7 @@ const CharacterSheetSpells: React.FC<CharacterSheetSpellsProps> = ({ character: 
     
     const magicClasses = ['жрец', 'волшебник', 'бард', 'друид', 'колдун', 'чародей', 'паладин', 'следопыт', 'изобретатель',
                         'cleric', 'wizard', 'bard', 'druid', 'warlock', 'sorcerer', 'paladin', 'ranger', 'artificer'];
-    return magicClasses.includes(safeToString(character.class).toLowerCase());
+    return magicClasses.includes(character.class.toLowerCase());
   };
   
   // Если у персонажа нет заклинаний или он не заклинатель, не отображаем компонент
@@ -130,35 +118,17 @@ const CharacterSheetSpells: React.FC<CharacterSheetSpellsProps> = ({ character: 
   }
   
   // Получаем лимит подготовленных заклинаний
-  const preparedLimit = needsPreparation() && character.class ? getPreparedSpellsLimit(character, character.class) : 0;
+  const preparedLimit = needsPreparation() ? getPreparedSpellsLimit(character) : 0;
   
   // Счетчик текущих подготовленных заклинаний
   const preparedCount = character.spells
     .filter(spell => typeof spell !== 'string' && spell.prepared && spell.level > 0)
     .length;
   
-  // If the character is provided via props, we need a way to update it
-  const handleCharacterUpdate = (updates: Partial<Character>) => {
-    if (propCharacter) {
-      // If we're using a prop character, use the updateCharacter from context
-      // but merge with the prop character first to preserve all properties
-      updateCharacter({
-        ...propCharacter,
-        ...updates
-      });
-    } else {
-      // Otherwise, just use the context's updateCharacter
-      updateCharacter(updates);
-    }
-  };
-  
   return (
     <div className="space-y-4">
       {/* Панель использования заклинаний */}
-      <SpellCastingPanel 
-        character={character} 
-        onUpdate={handleCharacterUpdate} 
-      />
+      <SpellCastingPanel character={character} />
       
       {/* Панель ячеек заклинаний */}
       <SpellSlotManager character={character} />
@@ -237,19 +207,27 @@ const CharacterSheetSpells: React.FC<CharacterSheetSpellsProps> = ({ character: 
                             {spell.concentration && ', Концентрация'}
                           </div>
                         </div>
-                        {needsPreparation() && level > 0 && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              toggleSpellPreparation(spell);
-                            }}
-                            className={`p-1 ${spell.prepared ? 'bg-primary/20' : ''}`}
-                          >
-                            <Star className={`h-4 w-4 ${spell.prepared ? 'fill-primary' : ''}`} />
-                          </Button>
-                        )}
+                        <div className="flex space-x-2">
+                          {/* Кнопка для переключения подготовки заклинания */}
+                          {needsPreparation() && level > 0 && (
+                            <Button
+                              variant={spell.prepared ? "default" : "outline"}
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                toggleSpellPreparation(spell);
+                              }}
+                              disabled={!spell.prepared && preparedCount >= preparedLimit}
+                              style={{
+                                backgroundColor: spell.prepared ? currentTheme.accent : 'transparent',
+                                borderColor: currentTheme.accent,
+                                color: spell.prepared ? 'white' : currentTheme.accent
+                              }}
+                            >
+                              <Star className="w-4 h-4" />
+                            </Button>
+                          )}
+                        </div>
                       </div>
                     </React.Fragment>
                   ))}

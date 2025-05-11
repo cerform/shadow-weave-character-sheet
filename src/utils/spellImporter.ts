@@ -1,7 +1,6 @@
 
 import { CharacterSpell } from '@/types/character';
 import { parseComponents } from './spellProcessors';
-import { SpellComponents } from '@/types/spellComponents';
 
 /**
  * Parses a spell entry from the raw text format
@@ -27,19 +26,10 @@ export const parseSpellEntry = (entry: string): {
   const name = match[2].trim();
   const componentCode = match[3] || '';
   
-  // Parse the components
-  const parsedComponents = parseComponents(componentCode);
-  
-  // Ensure all required properties are explicitly set to boolean values
   return {
     name,
     level,
-    components: {
-      verbal: Boolean(parsedComponents.verbal || false),
-      somatic: Boolean(parsedComponents.somatic || false),
-      material: Boolean(parsedComponents.material || false),
-      ritual: Boolean(parsedComponents.ritual || false)
-    }
+    components: parseComponents(componentCode)
   };
 };
 

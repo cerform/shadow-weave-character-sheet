@@ -1,6 +1,6 @@
 
 import { create } from 'zustand';
-import { Token, InitiativeItem, LightSource, VisibleArea } from '@/types/battle';
+import { InitiativeItem, Token } from '@/types/battle';
 
 interface BattleStore {
   // Состояние боя
@@ -16,28 +16,6 @@ interface BattleStore {
   fogOfWar: boolean;
   revealedAreas: { x: number, y: number, radius: number }[];
   zoom: number;
-  
-  // Новые свойства для PlayBattlePage
-  battleState: {
-    isActive: boolean;
-    round: number;
-    currentTurn: number;
-  };
-  mapSettings: {
-    background: string | null;
-    gridSize: number;
-    gridVisible: boolean;
-    gridOpacity: number;
-    fogOfWar: boolean;
-    revealedCells: {row: number, col: number}[];
-    revealRadius: number;
-    zoom: number;
-    isDynamicLighting: boolean;
-    lightSources: LightSource[];
-  };
-  selectedTokenId: number | null;
-  isDM: boolean;
-  showWebcams: boolean;
   
   // Действия для управления боем
   startBattle: () => void;
@@ -56,8 +34,6 @@ interface BattleStore {
   removeToken: (id: number) => void;
   updateToken: (id: number, updates: Partial<Token>) => void;
   updateTokenPosition: (id: number, x: number, y: number) => void;
-  updateTokenHP: (id: number, change: number) => void;
-  selectToken: (id: number | null) => void;
   
   // Действия для управления картой
   setBackgroundImage: (url: string | null) => void;
@@ -68,29 +44,11 @@ interface BattleStore {
   revealAllFog: () => void;
   setZoom: (value: number) => void;
   
-  // Новые методы для PlayBattlePage
-  setMapBackground: (url: string | null) => void;
-  setFogOfWar: (value: boolean) => void;
-  revealCell: (row: number, col: number) => void;
-  resetFogOfWar: () => void;
-  setGridVisible: (value: boolean) => void;
-  setGridOpacity: (value: number) => void;
-  setGridSize: (value: number) => void;
-  setRevealRadius: (value: number) => void;
-  setIsDM: (value: boolean) => void;
-  setShowWebcams: (value: boolean) => void;
-  addLightSource: (light: Omit<LightSource, "id">) => void;
-  removeLightSource: (id: number) => void;
-  updateLightSource: (id: number, updates: Partial<LightSource>) => void;
-  setDynamicLighting: (value: boolean) => void;
-  attachLightToToken: (lightId: number, tokenId: number) => void;
-  
   // Получить текущее активное существо
   getCurrentCreature: () => Token | null;
 }
 
-// Экспортируем типы для повторного использования
-export type { Token, InitiativeItem, LightSource, VisibleArea }; 
+export type { Token }; // Экспортируем тип для повторного использования
 
 const useBattleStore = create<BattleStore>((set, get) => ({
   // Начальное состояние
@@ -105,28 +63,6 @@ const useBattleStore = create<BattleStore>((set, get) => ({
   fogOfWar: false,
   revealedAreas: [],
   zoom: 1.0,
-  
-  // Новые начальные значения для дополнительных свойств
-  battleState: {
-    isActive: false,
-    round: 0,
-    currentTurn: -1
-  },
-  mapSettings: {
-    background: null,
-    gridSize: 50,
-    gridVisible: true,
-    gridOpacity: 0.8,
-    fogOfWar: false,
-    revealedCells: [],
-    revealRadius: 5,
-    zoom: 1.0,
-    isDynamicLighting: false,
-    lightSources: []
-  },
-  selectedTokenId: null,
-  isDM: true,
-  showWebcams: false,
   
   // Методы для управления боем
   startBattle: () => {
@@ -161,12 +97,7 @@ const useBattleStore = create<BattleStore>((set, get) => ({
       isActive: true,
       round: 1,
       currentInitiativeIndex: newInitiative.length > 0 ? 0 : -1,
-      initiative: newInitiative,
-      battleState: {
-        isActive: true,
-        round: 1,
-        currentTurn: newInitiative.length > 0 ? 0 : -1
-      }
+      initiative: newInitiative
     });
   },
   
@@ -174,24 +105,10 @@ const useBattleStore = create<BattleStore>((set, get) => ({
     isActive: false,
     round: 0,
     currentInitiativeIndex: -1,
-    initiative: [],
-    battleState: {
-      isActive: false,
-      round: 0,
-      currentTurn: -1
-    }
+    initiative: []
   }),
   
-  pauseBattle: () => {
-    const { isActive } = get();
-    set({
-      isActive: !isActive,
-      battleState: {
-        ...get().battleState,
-        isActive: !isActive
-      }
-    });
-  },
+  pauseBattle: () => set(state => ({ isActive: !state.isActive })),
   
   nextTurn: () => {
     const { initiative, currentInitiativeIndex, round } = get();
@@ -220,12 +137,7 @@ const useBattleStore = create<BattleStore>((set, get) => ({
     set({
       initiative: updatedInitiative,
       currentInitiativeIndex: newIndex,
-      round: newRound,
-      battleState: {
-        isActive: true,
-        round: newRound,
-        currentTurn: newIndex
-      }
+      round: newRound
     });
   },
   
@@ -390,49 +302,17 @@ const useBattleStore = create<BattleStore>((set, get) => ({
   updateTokenPosition: (id, x, y) => {
     get().updateToken(id, { x, y });
   },
-
-  updateTokenHP: (id, change) => {
-    const token = get().tokens.find(t => t.id === id);
-    if (token) {
-      const newHP = Math.max(0, Math.min(token.maxHp, token.hp + change));
-      get().updateToken(id, { hp: newHP });
-    }
-  },
-  
-  selectToken: (id) => {
-    set({ selectedTokenId: id });
-  },
   
   setBackgroundImage: (url) => {
-    set({ 
-      backgroundImage: url,
-      mapSettings: {
-        ...get().mapSettings,
-        background: url
-      }
-    });
+    set({ backgroundImage: url });
   },
   
   toggleGrid: () => {
-    const gridVisible = !get().gridVisible;
-    set({ 
-      gridVisible,
-      mapSettings: {
-        ...get().mapSettings,
-        gridVisible
-      }
-    });
+    set(state => ({ gridVisible: !state.gridVisible }));
   },
   
   toggleFogOfWar: () => {
-    const fogOfWar = !get().fogOfWar;
-    set({ 
-      fogOfWar,
-      mapSettings: {
-        ...get().mapSettings,
-        fogOfWar
-      }
-    });
+    set(state => ({ fogOfWar: !state.fogOfWar }));
   },
   
   revealArea: (x, y, radius) => {
@@ -442,13 +322,7 @@ const useBattleStore = create<BattleStore>((set, get) => ({
   },
   
   resetFog: () => {
-    set({ 
-      revealedAreas: [],
-      mapSettings: {
-        ...get().mapSettings,
-        revealedCells: []
-      }
-    });
+    set({ revealedAreas: [] });
   },
   
   revealAllFog: () => {
@@ -459,147 +333,7 @@ const useBattleStore = create<BattleStore>((set, get) => ({
   },
   
   setZoom: (value) => {
-    set({ 
-      zoom: value,
-      mapSettings: {
-        ...get().mapSettings,
-        zoom: value
-      }
-    });
-  },
-  
-  setMapBackground: (url) => {
-    set({
-      mapSettings: {
-        ...get().mapSettings,
-        background: url
-      }
-    });
-  },
-  
-  setFogOfWar: (value) => {
-    set({
-      mapSettings: {
-        ...get().mapSettings,
-        fogOfWar: value
-      }
-    });
-  },
-  
-  revealCell: (row, col) => {
-    set(state => ({
-      mapSettings: {
-        ...state.mapSettings,
-        revealedCells: [...state.mapSettings.revealedCells, { row, col }]
-      }
-    }));
-  },
-  
-  resetFogOfWar: () => {
-    set(state => ({
-      mapSettings: {
-        ...state.mapSettings,
-        revealedCells: []
-      }
-    }));
-  },
-  
-  setGridVisible: (value) => {
-    set(state => ({
-      mapSettings: {
-        ...state.mapSettings,
-        gridVisible: value
-      }
-    }));
-  },
-  
-  setGridOpacity: (value) => {
-    set(state => ({
-      mapSettings: {
-        ...state.mapSettings,
-        gridOpacity: value
-      }
-    }));
-  },
-  
-  setGridSize: (value) => {
-    set(state => ({
-      mapSettings: {
-        ...state.mapSettings,
-        gridSize: value
-      }
-    }));
-  },
-  
-  setRevealRadius: (value) => {
-    set(state => ({
-      mapSettings: {
-        ...state.mapSettings,
-        revealRadius: value
-      }
-    }));
-  },
-  
-  setIsDM: (value) => {
-    set({ isDM: value });
-  },
-  
-  setShowWebcams: (value) => {
-    set({ showWebcams: value });
-  },
-  
-  addLightSource: (light) => {
-    const newLight = {
-      ...light,
-      id: Date.now()
-    };
-    
-    set(state => ({
-      mapSettings: {
-        ...state.mapSettings,
-        lightSources: [...state.mapSettings.lightSources, newLight]
-      }
-    }));
-  },
-  
-  removeLightSource: (id) => {
-    set(state => ({
-      mapSettings: {
-        ...state.mapSettings,
-        lightSources: state.mapSettings.lightSources.filter(light => light.id !== id)
-      }
-    }));
-  },
-  
-  updateLightSource: (id, updates) => {
-    set(state => ({
-      mapSettings: {
-        ...state.mapSettings,
-        lightSources: state.mapSettings.lightSources.map(light => 
-          light.id === id ? { ...light, ...updates } : light
-        )
-      }
-    }));
-  },
-  
-  setDynamicLighting: (value) => {
-    set(state => ({
-      mapSettings: {
-        ...state.mapSettings,
-        isDynamicLighting: value
-      }
-    }));
-  },
-  
-  attachLightToToken: (lightId, tokenId) => {
-    set(state => ({
-      mapSettings: {
-        ...state.mapSettings,
-        lightSources: state.mapSettings.lightSources.map(light => 
-          light.id === lightId ? { ...light, attachedToTokenId: tokenId } : light
-        )
-      }
-    }));
+    set({ zoom: value });
   },
   
   getCurrentCreature: () => {

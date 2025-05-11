@@ -29,30 +29,22 @@ export function normalizeCharacterData(character: Character): Character {
   
   // Проверяем существование объекта stats
   if (!normalized.stats) {
-    normalized.stats = {
-      strength: 10,
-      dexterity: 10,
-      constitution: 10,
-      intelligence: 10,
-      wisdom: 10,
-      charisma: 10
-    };
+    normalized.stats = {};
   }
   
   // Проходим по всем характеристикам
   abilities.forEach(ability => {
     // Если значение установлено напрямую в объекте персонажа, но отсутствует в stats
-    if (normalized[ability] !== undefined && normalized.stats && normalized.stats[ability] === undefined) {
+    if (normalized[ability] !== undefined && normalized.stats[ability] === undefined) {
       normalized.stats[ability] = normalized[ability];
     } 
     // Если значение в stats установлено, но отсутствует в корне объекта
-    else if (normalized.stats && normalized.stats[ability] !== undefined && normalized[ability] === undefined) {
+    else if (normalized.stats[ability] !== undefined && normalized[ability] === undefined) {
       normalized[ability] = normalized.stats[ability];
     }
     
     // Если значения различаются, приоритет у поля stats
-    if (normalized[ability] !== undefined && normalized.stats && normalized.stats[ability] !== undefined && 
-        normalized[ability] !== normalized.stats[ability]) {
+    if (normalized[ability] !== normalized.stats[ability] && normalized.stats[ability] !== undefined) {
       normalized[ability] = normalized.stats[ability];
     }
   });
@@ -61,24 +53,8 @@ export function normalizeCharacterData(character: Character): Character {
   if (!Array.isArray(normalized.equipment)) normalized.equipment = [];
   if (!Array.isArray(normalized.features)) normalized.features = [];
   if (!Array.isArray(normalized.spells)) normalized.spells = [];
-  
-  // Убедимся, что proficiencies существует и инициализирован правильно
-  if (!normalized.proficiencies) {
-    normalized.proficiencies = { 
-      languages: [], 
-      tools: [], 
-      weapons: [], 
-      armor: [], 
-      skills: [] 
-    };
-  } else {
-    // Убедимся, что все массивы в proficiencies инициализированы
-    if (!Array.isArray(normalized.proficiencies.languages)) normalized.proficiencies.languages = [];
-    if (!Array.isArray(normalized.proficiencies.tools)) normalized.proficiencies.tools = [];
-    if (!Array.isArray(normalized.proficiencies.weapons)) normalized.proficiencies.weapons = [];
-    if (!Array.isArray(normalized.proficiencies.armor)) normalized.proficiencies.armor = [];
-    if (!Array.isArray(normalized.proficiencies.skills)) normalized.proficiencies.skills = [];
-  }
+  if (!Array.isArray(normalized.languages)) normalized.languages = [];
+  if (!Array.isArray(normalized.proficiencies)) normalized.proficiencies = [];
   
   // Проверяем наличие userId
   if (!normalized.userId) {

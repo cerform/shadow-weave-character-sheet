@@ -8,44 +8,36 @@ import { level3 } from './level3';
 import { level4 } from './level4';
 import { level4Part2 } from './level4_part2';
 import { level4Part3 } from './level4_part3';
-import { level5 } from './level5';  // импортируем как level5
+import { level5 } from './level5';
 import { level6 } from './level6';
 import { level7 } from './level7';
 import { level8 } from './level8';
 import { level9 } from './level9';
 
-// Add IDs to cantrips and all spell files before processing
-const addIdsToSpells = (spells: any[]): CharacterSpell[] => {
-  return spells.map(spell => ({
-    id: `spell-${(spell.name || '').toLowerCase().replace(/\s+/g, '-')}`,
-    ...spell
-  }));
-};
-
 // Объединяем все заклинания в единый массив
 export const spells: CharacterSpell[] = [
-  ...addIdsToSpells(cantrips),
-  ...addIdsToSpells(level0),
-  ...addIdsToSpells(level1),
-  ...addIdsToSpells(level2),
-  ...addIdsToSpells(level3),
-  ...addIdsToSpells(level4),
-  ...addIdsToSpells(level4Part2),
-  ...addIdsToSpells(level4Part3),
-  ...addIdsToSpells(level5),
-  ...addIdsToSpells(level6),
-  ...addIdsToSpells(level7),
-  ...addIdsToSpells(level8),
-  ...addIdsToSpells(level9)
+  ...cantrips,
+  ...level0,
+  ...level1,
+  ...level2,
+  ...level3,
+  ...level4,
+  ...level4Part2,
+  ...level4Part3,
+  ...level5,
+  ...level6,
+  ...level7,
+  ...level8,
+  ...level9
 ];
 
 // Функция для получения заклинаний по классу
 export const getSpellsByClass = (className: string): CharacterSpell[] => {
   return spells.filter(spell => {
     if (Array.isArray(spell.classes)) {
-      return spell.classes.some(cls => cls.toLowerCase() === className.toLowerCase());
+      return spell.classes.includes(className);
     } else if (typeof spell.classes === 'string') {
-      return spell.classes.toLowerCase() === className.toLowerCase();
+      return spell.classes === className;
     }
     return false;
   });
@@ -71,7 +63,7 @@ export const getSpellByName = (name: string): CharacterSpell | undefined => {
 // Функция для получения заклинаний по школе магии
 export const getSpellsBySchool = (school: string): CharacterSpell[] => {
   return spells.filter(spell => 
-    spell.school?.toLowerCase() === school.toLowerCase()
+    spell.school.toLowerCase() === school.toLowerCase()
   );
 };
 
@@ -96,7 +88,7 @@ export const filterSpells = (options: {
     }
     
     // Фильтр по школе
-    if (options.school && options.school.length > 0 && !options.school.includes(spell.school || '')) {
+    if (options.school && options.school.length > 0 && !options.school.includes(spell.school)) {
       return false;
     }
     
@@ -125,16 +117,4 @@ export const filterSpells = (options: {
     
     return true;
   });
-};
-
-// Add additional utility functions to help fix errors
-export const isSpellAdded = (spellId: string, spells: CharacterSpell[]): boolean => {
-  return spells.some(spell => spell.id === spellId);
-};
-
-export const convertSpellsForState = (spells: CharacterSpell[]): CharacterSpell[] => {
-  return spells.map(spell => ({
-    ...spell,
-    id: spell.id || `spell-${spell.name.toLowerCase().replace(/\s+/g, '-')}`
-  }));
 };

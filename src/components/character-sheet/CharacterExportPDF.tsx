@@ -1,241 +1,226 @@
 
-import React from 'react';
-import { PDFDownloadLink, Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { FileDown } from 'lucide-react';
-import { Character, Item, CharacterSpell } from '@/types/character';
+import { Download } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { Character, Item, CharacterSpell } from '@/types/character';
 
-// Configure PDF.js worker
-// pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.js`;
+interface CharacterExportPDFProps {
+  character: Character;
+}
 
-// Styles for PDF document
-const styles = StyleSheet.create({
-  page: { padding: 30, fontSize: 12 },
-  section: { marginBottom: 10 },
-  header: { fontSize: 18, marginBottom: 10, fontWeight: 'bold' },
-  subheader: { fontSize: 14, marginBottom: 5, fontWeight: 'bold' },
-  row: { flexDirection: 'row', marginBottom: 5 },
-  column: { flex: 1, marginRight: 10 },
-  label: { fontWeight: 'bold', marginRight: 5 },
-  text: { marginBottom: 3 },
-  table: { width: '100%', marginBottom: 10 },
-  tableRow: { flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: '#e2e8f0', paddingBottom: 2, paddingTop: 2 },
-  tableHeader: { fontWeight: 'bold', fontSize: 10 },
-  tableCell: { flex: 1, fontSize: 10 }
-});
-
-// Fix for line 112 and 169 - converting complex objects to strings for display
-
-// For line 112 error - equipment conversion
-const getEquipmentList = (character: Character) => {
-  if (!character.equipment) return [];
-  
-  // Check if equipment is an array of Item objects
-  if (Array.isArray(character.equipment) && character.equipment.length > 0 && typeof character.equipment[0] !== 'string') {
-    // Convert Item[] to string[] for display
-    return (character.equipment as Item[]).map(item => 
-      typeof item === 'string' ? item : `${item.name} (${item.quantity || 1})`
-    );
-  }
-  
-  // Handle old equipment format
-  const equipment = character.equipment as { weapons: string[], armor: string, items: string[] };
-  const weaponsList = equipment.weapons || [];
-  const armorItem = equipment.armor ? [equipment.armor] : [];
-  const itemsList = equipment.items || [];
-  
-  return [...weaponsList, ...armorItem, ...itemsList];
-};
-
-// For line 169 error - spells conversion
-const getSpellsList = (character: Character) => {
-  if (!character.spells) return [];
-  
-  // Convert CharacterSpell[] to string[] for display
-  return character.spells.map(spell => {
-    if (typeof spell === 'string') return spell;
-    return `${spell.name} (${spell.level === 0 ? 'Заговор' : `${spell.level} уровень`})${spell.prepared ? ' ✓' : ''}`;
-  });
-};
-
-// Component for character sheet PDF
-const CharacterPDF = ({ character }: { character: Character }) => {
-  return (
-    <Document>
-      <Page size="A4" style={styles.page}>
-        {/* Header section with basic character info */}
-        <View style={styles.section}>
-          <Text style={styles.header}>{character.name || 'Безымянный персонаж'}</Text>
-          <View style={styles.row}>
-            <View style={styles.column}>
-              <View style={styles.row}>
-                <Text style={styles.label}>Раса:</Text>
-                <Text>{character.race} {character.subrace ? `(${character.subrace})` : ''}</Text>
-              </View>
-              <View style={styles.row}>
-                <Text style={styles.label}>Класс:</Text>
-                <Text>{character.class} {character.subclass ? `(${character.subclass})` : ''}</Text>
-              </View>
-              <View style={styles.row}>
-                <Text style={styles.label}>Предыстория:</Text>
-                <Text>{character.background}</Text>
-              </View>
-            </View>
-            <View style={styles.column}>
-              <View style={styles.row}>
-                <Text style={styles.label}>Уровень:</Text>
-                <Text>{character.level}</Text>
-              </View>
-              <View style={styles.row}>
-                <Text style={styles.label}>Опыт:</Text>
-                <Text>{character.xp}</Text>
-              </View>
-              <View style={styles.row}>
-                <Text style={styles.label}>Мировоззрение:</Text>
-                <Text>{character.alignment}</Text>
-              </View>
-            </View>
-          </View>
-        </View>
-        
-        {/* Ability scores section */}
-        <View style={styles.section}>
-          <Text style={styles.subheader}>Характеристики</Text>
-          <View style={styles.row}>
-            <View style={styles.column}>
-              <Text>Сила: {character.abilities.STR || character.abilities.strength || character.strength || 10}</Text>
-            </View>
-            <View style={styles.column}>
-              <Text>Ловкость: {character.abilities.DEX || character.abilities.dexterity || character.dexterity || 10}</Text>
-            </View>
-            <View style={styles.column}>
-              <Text>Телосложение: {character.abilities.CON || character.abilities.constitution || character.constitution || 10}</Text>
-            </View>
-          </View>
-          <View style={styles.row}>
-            <View style={styles.column}>
-              <Text>Интеллект: {character.abilities.INT || character.abilities.intelligence || character.intelligence || 10}</Text>
-            </View>
-            <View style={styles.column}>
-              <Text>Мудрость: {character.abilities.WIS || character.abilities.wisdom || character.wisdom || 10}</Text>
-            </View>
-            <View style={styles.column}>
-              <Text>Харизма: {character.abilities.CHA || character.abilities.charisma || character.charisma || 10}</Text>
-            </View>
-          </View>
-        </View>
-        
-        {/* Combat stats */}
-        <View style={styles.section}>
-          <Text style={styles.subheader}>Боевые характеристики</Text>
-          <View style={styles.row}>
-            <View style={styles.column}>
-              <Text>КД: {character.ac || character.armorClass || 10}</Text>
-            </View>
-            <View style={styles.column}>
-              <Text>Хиты: {character.hp}/{character.maxHp}</Text>
-            </View>
-            <View style={styles.column}>
-              <Text>Инициатива: {character.initiative}</Text>
-            </View>
-            <View style={styles.column}>
-              <Text>Скорость: {character.speed}</Text>
-            </View>
-          </View>
-        </View>
-        
-        {/* Equipment section */}
-        <View style={styles.section}>
-          <Text style={styles.subheader}>Снаряжение</Text>
-          {getEquipmentList(character).map((item, index) => (
-            <Text key={index} style={styles.text}>{item}</Text>
-          ))}
-        </View>
-        
-        {/* Proficiencies */}
-        <View style={styles.section}>
-          <Text style={styles.subheader}>Владения</Text>
-          <View style={styles.row}>
-            <View style={styles.column}>
-              <Text style={styles.label}>Языки:</Text>
-              <Text>{character.proficiencies.languages.join(', ')}</Text>
-            </View>
-          </View>
-          <View style={styles.row}>
-            <View style={styles.column}>
-              <Text style={styles.label}>Инструменты:</Text>
-              <Text>{character.proficiencies.tools.join(', ')}</Text>
-            </View>
-          </View>
-        </View>
-        
-        {/* Features */}
-        <View style={styles.section}>
-          <Text style={styles.subheader}>Особенности</Text>
-          {character.features.map((feature, index) => (
-            <View key={index} style={{ marginBottom: 5 }}>
-              <Text style={{ fontWeight: 'bold' }}>{feature.name}</Text>
-              <Text>{feature.description}</Text>
-            </View>
-          ))}
-        </View>
-        
-        {/* Spells */}
-        {character.spells && character.spells.length > 0 && (
-          <View style={styles.section}>
-            <Text style={styles.subheader}>Заклинания</Text>
-            <View style={styles.table}>
-              <View style={[styles.tableRow, { backgroundColor: '#f1f5f9' }]}>
-                <Text style={[styles.tableCell, styles.tableHeader]}>Название</Text>
-                <Text style={[styles.tableCell, styles.tableHeader]}>Уровень</Text>
-                <Text style={[styles.tableCell, styles.tableHeader]}>Подготовлено</Text>
-              </View>
-              {getSpellsList(character).map((spellText, index) => (
-                <View key={index} style={styles.tableRow}>
-                  <Text style={styles.tableCell}>{spellText}</Text>
-                </View>
-              ))}
-            </View>
-          </View>
-        )}
-        
-        {/* Notes */}
-        {character.notes && (
-          <View style={styles.section}>
-            <Text style={styles.subheader}>Заметки</Text>
-            <Text>{character.notes}</Text>
-          </View>
-        )}
-      </Page>
-    </Document>
-  );
-};
-
-// Export button component
-export const CharacterExportPDF = ({ character }: { character: Character }) => {
+const CharacterExportPDF: React.FC<CharacterExportPDFProps> = ({ character }) => {
+  const [isExporting, setIsExporting] = useState(false);
   const { toast } = useToast();
-  
-  const fileName = `${character.name || 'character'}-sheet.pdf`;
-  
-  const handleExportClick = () => {
-    toast({
-      title: "Подготовка PDF",
-      description: "Создание PDF документа для скачивания...",
-    });
+
+  const exportToPDF = async () => {
+    if (!character) return;
+    
+    setIsExporting(true);
+    
+    try {
+      // Lazy load jsPDF to reduce initial load time
+      const { default: jsPDF } = await import('jspdf');
+      const { default: autoTable } = await import('jspdf-autotable');
+      
+      const doc = new jsPDF();
+      let yPosition = 55; // Начальная позиция по Y
+      
+      // Add character name as title
+      doc.setFontSize(20);
+      doc.text(character.name || 'Безымянный герой', 14, 22);
+      
+      // Add basic info
+      doc.setFontSize(12);
+      doc.text(`${character.race || ''} ${character.subrace ? `(${character.subrace})` : ''}`, 14, 30);
+      doc.text(`${character.class || ''} ${character.level || 1}`, 14, 36);
+      doc.text(`Предыстория: ${character.background || 'Нет'}`, 14, 42);
+      doc.text(`Мировоззрение: ${character.alignment || 'Нет'}`, 14, 48);
+      
+      // Add stats table
+      autoTable(doc, {
+        startY: yPosition,
+        head: [['СИЛ', 'ЛВК', 'ТЕЛ', 'ИНТ', 'МДР', 'ХАР']],
+        body: [[
+          character.strength || 10,
+          character.dexterity || 10,
+          character.constitution || 10, 
+          character.intelligence || 10,
+          character.wisdom || 10,
+          character.charisma || 10
+        ]],
+      });
+      
+      // Update position after table
+      yPosition = (doc as any).lastAutoTable.finalY + 10;
+      
+      // Add combat stats
+      autoTable(doc, {
+        startY: yPosition,
+        head: [['КД', 'Инициатива', 'Скорость', 'Текущие ХП', 'Макс. ХП']],
+        body: [[
+          character.armorClass || 10,
+          character.initiative !== undefined ? character.initiative : '+0',
+          character.speed || '30 фт',
+          character.currentHp || 0,
+          character.maxHp || 0
+        ]],
+      });
+      
+      // Update position after table
+      yPosition = (doc as any).lastAutoTable.finalY + 10;
+      
+      // Add skills if available
+      if (character.skills && typeof character.skills === 'object' && Object.keys(character.skills).length > 0) {
+        const skillRows = Object.entries(character.skills).map(([name, value]) => {
+          let displayValue = '';
+          
+          if (typeof value === 'number') {
+            displayValue = value >= 0 ? `+${value}` : `${value}`;
+          } else if (typeof value === 'object' && value !== null) {
+            if ('bonus' in value && value.bonus !== undefined) {
+              const bonus = value.bonus;
+              displayValue = typeof bonus === 'number' && bonus >= 0 ? `+${bonus}` : `${bonus}`;
+            } else if ('value' in value && value.value !== undefined) {
+              const val = value.value;
+              displayValue = typeof val === 'number' && val >= 0 ? `+${val}` : `${val}`;
+            }
+          }
+          
+          return [name, displayValue];
+        });
+        
+        if (skillRows.length > 0) {
+          autoTable(doc, {
+            startY: yPosition,
+            head: [['Навык', 'Модификатор']],
+            body: skillRows,
+          });
+          
+          // Update position after table
+          yPosition = (doc as any).lastAutoTable.finalY + 10;
+        }
+      }
+      
+      // Add equipment
+      const processedEquipment: string[] = [];
+      
+      if (character.equipment) {
+        if (Array.isArray(character.equipment)) {
+          if (character.equipment.length > 0) {
+            if (typeof character.equipment[0] === 'string') {
+              processedEquipment.push(...(character.equipment as unknown as string[]));
+            } else {
+              // Если это массив объектов Item
+              processedEquipment.push(...(character.equipment as Item[]).map(item => 
+                `${item.name} (${item.quantity})`
+              ));
+            }
+          }
+        } else {
+          // Если это объект с оружием, броней и предметами
+          const equipment = character.equipment as { weapons?: string[], armor?: string, items?: string[] };
+          if (equipment.weapons && equipment.weapons.length > 0) {
+            processedEquipment.push(`Оружие: ${equipment.weapons.join(', ')}`);
+          }
+          if (equipment.armor) {
+            processedEquipment.push(`Броня: ${equipment.armor}`);
+          }
+          if (equipment.items && equipment.items.length > 0) {
+            processedEquipment.push(`Предметы: ${equipment.items.join(', ')}`);
+          }
+        }
+      }
+      
+      if (processedEquipment.length > 0) {
+        autoTable(doc, {
+          startY: yPosition,
+          head: [['Снаряжение']],
+          body: processedEquipment.map(item => [item]),
+        });
+        
+        // Update position after table
+        yPosition = (doc as any).lastAutoTable.finalY + 10;
+      }
+      
+      // Add features
+      if (character.features && character.features.length > 0) {
+        const featuresArray = Array.isArray(character.features) 
+          ? (typeof character.features[0] === 'string' 
+              ? character.features 
+              : (character.features as any[]).map(f => f.name || f.toString()))
+          : [];
+          
+        autoTable(doc, {
+          startY: yPosition,
+          head: [['Особенности и черты']],
+          body: featuresArray.map(feature => [feature]),
+        });
+        
+        // Update position after table
+        yPosition = (doc as any).lastAutoTable.finalY + 10;
+      }
+      
+      // Add spells
+      if (character.spells && character.spells.length > 0) {
+        const spellsArray = Array.isArray(character.spells)
+          ? (typeof character.spells[0] === 'string'
+              ? character.spells as string[]
+              : (character.spells as CharacterSpell[]).map(s => s.name))
+          : [];
+            
+        autoTable(doc, {
+          startY: yPosition,
+          head: [['Заклинания']],
+          body: spellsArray.map(spell => [spell]),
+        });
+        
+        // Update position after table
+        yPosition = (doc as any).lastAutoTable.finalY + 10;
+      }
+      
+      // Add notes if available
+      if (character.notes) {
+        autoTable(doc, {
+          startY: yPosition,
+          head: [['Заметки']],
+          body: [[character.notes]],
+        });
+      }
+      
+      // Save PDF
+      doc.save(`${character.name || 'character'}.pdf`);
+      
+      toast({
+        title: "PDF создан",
+        description: "Персонаж успешно экспортирован в PDF."
+      });
+      
+    } catch (error) {
+      console.error('Error exporting to PDF:', error);
+      
+      toast({
+        title: "Ошибка экспорта",
+        description: "Не удалось создать PDF. Попробуйте еще раз.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsExporting(false);
+    }
   };
-  
+
   return (
-    <PDFDownloadLink document={<CharacterPDF character={character} />} fileName={fileName}>
-      {({ loading }) => (
-        <Button disabled={loading} onClick={handleExportClick}>
-          <FileDown className="w-4 h-4 mr-2" />
-          {loading ? 'Подготовка PDF...' : 'Экспорт в PDF'}
-        </Button>
-      )}
-    </PDFDownloadLink>
+    <Button
+      onClick={exportToPDF}
+      variant="outline"
+      size="sm"
+      disabled={isExporting}
+      className="flex items-center gap-2"
+    >
+      <Download className="h-4 w-4" />
+      {isExporting ? "Создание PDF..." : "Экспорт в PDF"}
+    </Button>
   );
 };
 
-// Export both named and default export
 export default CharacterExportPDF;

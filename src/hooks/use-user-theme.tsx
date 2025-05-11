@@ -1,78 +1,80 @@
 
-import React, {
-  useState,
-  useEffect,
-  createContext,
-  useContext,
-  ReactNode,
-} from 'react';
+import { useContext, createContext, useState, useEffect, ReactNode } from 'react';
+import { themes } from '@/lib/themes';
 
-import { ThemeType } from '@/hooks/use-theme';
-import { themes, Theme } from '@/lib/themes';
-
-interface UserThemeContextType {
-  activeTheme: ThemeType;
-  setUserTheme: (theme: ThemeType) => void;
-  currentTheme: Theme;
+interface UserThemeContextProps {
+  activeTheme: string;
+  setUserTheme: (theme: string) => void;
 }
 
-const UserThemeContext = createContext<UserThemeContextType | undefined>(undefined);
+const UserThemeContext = createContext<UserThemeContextProps>({
+  activeTheme: 'default',
+  setUserTheme: () => {}
+});
 
-export const UserThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [activeTheme, setActiveTheme] = useState<ThemeType>('default');
-
-  // Инициализация из localStorage
+export const UserThemeProvider = ({ children }: { children: ReactNode }) => {
+  const [activeTheme, setActiveTheme] = useState<string>('default');
+  
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('userTheme') as ThemeType | null;
-      if (saved && themes[saved]) {
-        setActiveTheme(saved);
+    try {
+      // Проверяем несколько возможных мест хранения темы
+      const savedUserTheme = 
+        localStorage.getItem('userTheme') || 
+        localStorage.getItem('dnd-theme') || 
+        localStorage.getItem('theme') || 
+        'default';
+        
+      if (savedUserTheme && themes[savedUserTheme as keyof typeof themes]) {
+        setActiveTheme(savedUserTheme);
+        console.log("Loaded user theme from storage:", savedUserTheme);
+        
+        // Применяем тему к документу
+        document.documentElement.setAttribute('data-theme', savedUserTheme);
+        document.body.className = '';
+        document.body.classList.add(`theme-${savedUserTheme}`);
       }
+    } catch (e) {
+      console.error('Error loading user theme:', e);
     }
   }, []);
-
-  const currentTheme = themes[activeTheme] || themes.default;
-
-  const setUserTheme = (theme: ThemeType) => {
+  
+  const setUserTheme = (theme: string) => {
+    // Проверяем, что тема существует
+    if (!themes[theme as keyof typeof themes]) {
+      console.warn(`Theme "${theme}" does not exist, using default theme instead.`);
+      theme = 'default';
+    }
+    
+    // Сохраняем пользовательскую тему
+    localStorage.setItem('userTheme', theme);
+    localStorage.setItem('dnd-theme', theme);
+    localStorage.setItem('theme', theme);
     setActiveTheme(theme);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('userTheme', theme);
-    }
+    
+    // Применяем тему к документу
+    document.documentElement.setAttribute('data-theme', theme);
+    document.body.className = '';
+    document.body.classList.add(`theme-${theme}`);
+    
+    console.log("User theme set to:", theme);
   };
-
-  useEffect(() => {
-    if (typeof document !== 'undefined') {
-      document.documentElement.setAttribute('data-theme', activeTheme);
-
-      const cssVars = {
-        '--primary': currentTheme.primary,
-        '--secondary': currentTheme.secondary,
-        '--accent': currentTheme.accent,
-        '--background': currentTheme.background,
-        '--foreground': currentTheme.foreground,
-        '--text-color': currentTheme.textColor,
-        '--muted-text': currentTheme.mutedTextColor,
-        '--card-background': currentTheme.cardBackground,
-      };
-
-      Object.entries(cssVars).forEach(([key, value]) => {
-        document.documentElement.style.setProperty(key, value);
-      });
-    }
-  }, [activeTheme, currentTheme]);
-
+  
   return (
-    <UserThemeContext.Provider value={{ activeTheme, setUserTheme, currentTheme }}>
+    <UserThemeContext.Provider value={{ activeTheme, setUserTheme }}>
       {children}
     </UserThemeContext.Provider>
   );
 };
 
-// Кастомный хук
-export const useUserTheme = (): UserThemeContextType => {
+export const useUserTheme = () => {
   const context = useContext(UserThemeContext);
-  if (!context) {
-    throw new Error('useUserTheme must be used within a UserThemeProvider');
+  
+  if (context === undefined) {
+    console.warn('useUserTheme must be used within a UserThemeProvider');
+    return { activeTheme: 'default', setUserTheme: (theme: string) => {} };
   }
+  
   return context;
 };
+
+export default useUserTheme;

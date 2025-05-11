@@ -1,254 +1,469 @@
-
-import { useState, useCallback } from 'react';
-import { Character } from '@/types/character';
-import { useTheme } from '@/hooks/use-theme';
-import { getNumericModifier } from '@/utils/characterUtils';
+import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { getNumericModifier } from '@/utils/characterUtils';
 
-interface UseHitPointsReturn {
+export interface HitPointEvent {
+  id: string;
+  type: 'damage' | 'heal' | 'temp' | 'death-save';
+  amount: number;
+  source?: string;
+  timestamp: Date;
+}
+
+interface DeathSaves {
+  successes: number;
+  failures: number;
+}
+
+export interface UseHitPointsProps {
   currentHp: number;
   maxHp: number;
-  tempHp: number;
-  addDamage: (amount: number) => void;
-  healDamage: (amount: number) => void;
-  addTempHp: (amount: number) => void;
-  setHp: (current: number, max?: number, temp?: number) => void;
-  takeLongRest: () => void;
-  takeShortRest: () => void;
-  rollHitDie: () => void;
-  hitDice: {
-    total: number;
-    used: number;
-    dieType: string;
-    value: string;
-  };
+  temporaryHp?: number;
+  constitution?: number;
+  onHitPointChange?: (hp: number, tempHp: number, deathSaves?: DeathSaves) => void;
 }
 
-// Get hit die type based on class
-function getHitDieType(characterClass: string): string {
-  const classLower = characterClass?.toLowerCase();
-  
-  if (['варвар', 'barbarian'].includes(classLower)) {
-    return 'd12';
-  } else if (['воин', 'fighter', 'паладин', 'paladin', 'рейнджер', 'ranger'].includes(classLower)) {
-    return 'd10';
-  } else if (['бард', 'bard', 'клерик', 'cleric', 'друид', 'druid', 'монах', 'monk', 'жрец'].includes(classLower)) {
-    return 'd8';
-  } else if (['плут', 'rogue', 'чародей', 'sorcerer', 'колдун', 'warlock'].includes(classLower)) {
-    return 'd6';
-  } else {
-    return 'd6'; // default
-  }
-}
-
-// Calculate maximum hit points
-export function calculateMaximumHitPoints(character: Character): number {
-  if (!character || !character.level || !character.class) return 0;
-  
-  const conModifier = getNumericModifier(character.abilities?.constitution || character.constitution || 10);
-  const hitDieValue = getHitDieType(character.class);
-  const hitDieMax = parseInt(hitDieValue.substring(1));
-  
-  // First level gets maximum hit points
-  let maxHp = hitDieMax + conModifier;
-  
-  // Add average hit die + con mod for each level after 1st
-  for (let i = 1; i < character.level; i++) {
-    maxHp += Math.floor(hitDieMax / 2) + 1 + conModifier;
-  }
-  
-  return Math.max(1, maxHp); // Minimum 1 HP
-}
-
-export function useHitPoints(character: Character, onUpdate?: (updates: Partial<Character>) => void): UseHitPointsReturn {
-  const { toast } = useToast();
-  const { themeStyles } = useTheme();
-  
-  // Initialize hit points
-  const calculatedMaxHp = calculateMaximumHitPoints(character);
-  const initialMaxHp = character.maxHp || calculatedMaxHp;
-  const initialCurrentHp = character.currentHp !== undefined ? character.currentHp : initialMaxHp;
-  
+export function useHitPoints({
+  currentHp: initialCurrentHp,
+  maxHp: initialMaxHp,
+  temporaryHp: initialTempHp = 0,
+  constitution = 10,
+  onHitPointChange
+}: UseHitPointsProps) {
   const [currentHp, setCurrentHp] = useState(initialCurrentHp);
   const [maxHp, setMaxHp] = useState(initialMaxHp);
-  const [tempHp, setTempHp] = useState(character.tempHp || 0);
+  const [tempHp, setTempHp] = useState(initialTempHp);
+  const [events, setEvents] = useState<HitPointEvent[]>([]);
+  const [deathSaves, setDeathSaves] = useState<DeathSaves>({ successes: 0, failures: 0 });
+  const [isUnconscious, setIsUnconscious] = useState(initialCurrentHp <= 0);
+  const { toast } = useToast();
   
-  // Hit dice management
-  const dieType = getHitDieType(character.class || '');
-  const totalHitDice = character.level || 1;
-  const initialUsedDice = character.hitDice?.used || 0;
-  const [usedHitDice, setUsedHitDice] = useState(initialUsedDice);
+  // Обновляем состояние, если props изменились
+  useEffect(() => {
+    setCurrentHp(initialCurrentHp);
+    setMaxHp(initialMaxHp);
+    setTempHp(initialTempHp);
+    setIsUnconscious(initialCurrentHp <= 0);
+  }, [initialCurrentHp, initialMaxHp, initialTempHp]);
   
-  const hitDice = {
-    total: totalHitDice,
-    used: usedHitDice,
-    dieType,
-    value: `${totalHitDice - usedHitDice}/${totalHitDice} ${dieType}`
+  // Вызываем callback при изменении здоровья
+  useEffect(() => {
+    if (onHitPointChange) {
+      onHitPointChange(currentHp, tempHp, deathSaves);
+    }
+  }, [currentHp, tempHp, deathSaves, onHitPointChange]);
+  
+  // Генерируем уникальный ID для событий
+  const generateEventId = (): string => {
+    return Math.random().toString(36).substring(2) + Date.now().toString(36);
   };
   
-  // Update character if parent component provides an update function
-  const updateParent = useCallback((updates: Partial<Character>) => {
-    if (onUpdate) {
-      onUpdate(updates);
-    }
-  }, [onUpdate]);
-  
-  // Add damage to character
-  const addDamage = useCallback((amount: number) => {
-    if (isNaN(amount) || amount <= 0) return;
+  // Применяем урон
+  const applyDamage = (amount: number, source?: string) => {
+    if (amount <= 0) return;
     
-    setTempHp(prev => {
-      const newTempHp = Math.max(0, prev - amount);
-      const damageRemaining = amount - (prev - newTempHp);
+    const damageAmount = Math.abs(amount);
+    let remainingDamage = damageAmount;
+    const eventId = generateEventId();
+    const wasUnconscious = currentHp <= 0;
+    let tempEvents: HitPointEvent[] = [];
+    
+    // Если есть временные хиты, они поглощают урон
+    if (tempHp > 0) {
+      const absorbedByTemp = Math.min(tempHp, remainingDamage);
+      const newTempHp = Math.max(0, tempHp - absorbedByTemp);
+      setTempHp(newTempHp);
+      remainingDamage -= absorbedByTemp;
       
-      if (damageRemaining > 0) {
-        setCurrentHp(prevHp => {
-          const newHp = Math.max(0, prevHp - damageRemaining);
-          updateParent({ currentHp: newHp, tempHp: newTempHp });
-          
-          // Show toast notification with damage information
+      if (absorbedByTemp > 0) {
+        tempEvents.push({
+          id: eventId + "-temp",
+          type: 'damage',
+          amount: absorbedByTemp,
+          source: source || "Временное HP",
+          timestamp: new Date()
+        });
+      }
+    }
+    
+    // Если остался урон после временных HP
+    if (remainingDamage > 0) {
+      const newHp = Math.max(0, currentHp - remainingDamage);
+      setCurrentHp(newHp);
+      
+      // Добавляем событие урона
+      tempEvents.push({
+        id: eventId,
+        type: 'damage',
+        amount: remainingDamage,
+        source,
+        timestamp: new Date()
+      });
+      
+      // Обработка бессознательного состояния
+      if (newHp === 0 && currentHp > 0) {
+        setIsUnconscious(true);
+        
+        toast({
+          title: "Персонаж без сознания",
+          description: `HP снизилось до 0${source ? ` от ${source}` : ''}`,
+          variant: "destructive"
+        });
+      }
+      // Проверка мгновенной смерти
+      else if (wasUnconscious && remainingDamage >= maxHp) {
+        setDeathSaves({ successes: 0, failures: 3 }); // Мгновенная смерть
+        
+        toast({
+          title: "Критический урон!",
+          description: "Персонаж получил урон, равный максимальным HP. Мгновенная смерть.",
+          variant: "destructive"
+        });
+        
+        tempEvents.push({
+          id: eventId + "-death",
+          type: 'death-save',
+          amount: 3, // 3 проваленных спасброска = смерть
+          source: "Мгновенная смерть от критического урона",
+          timestamp: new Date()
+        });
+      }
+      // Проваленный спасбросок от урона в бессознательном состоянии
+      else if (wasUnconscious && remainingDamage > 0) {
+        const newFailures = Math.min(deathSaves.failures + 1, 3);
+        setDeathSaves({
+          ...deathSaves,
+          failures: newFailures
+        });
+        
+        tempEvents.push({
+          id: eventId + "-death-save",
+          type: 'death-save',
+          amount: 1,
+          source: "Проваленный спасбросок от урона в бессознательном состоянии",
+          timestamp: new Date()
+        });
+        
+        if (newFailures >= 3) {
           toast({
-            description: `${character.name} получил ${amount} урона (${newHp}/${maxHp} ОЗ)`
+            title: "Персонаж умирает!",
+            description: "Получено 3 провала спасбросков от смерти",
+            variant: "destructive"
           });
-          
-          return newHp;
+        } else {
+          toast({
+            title: "Проваленный спасбросок от смерти",
+            description: `Получено ${newFailures} из 3 провалов`,
+            variant: "destructive"
+          });
+        }
+      }
+      else if (newHp > 0) {
+        toast({
+          title: "Урон получен",
+          description: `${remainingDamage} урона${source ? ` от ${source}` : ''}`,
+          variant: "destructive"
+        });
+      }
+    }
+    
+    // Обновляем список событий
+    setEvents(prev => [...tempEvents, ...prev]);
+  };
+  
+  // Применяем лечение
+  const applyHealing = (amount: number, source?: string) => {
+    if (amount <= 0) return;
+    
+    const healingAmount = Math.abs(amount);
+    const wasUnconscious = currentHp <= 0;
+    
+    // Лечение имеет эффект только если персонаж в бессознательном состоянии или не на максимальном здоровье
+    if (wasUnconscious || currentHp < maxHp) {
+      const newHp = Math.min(maxHp, currentHp + healingAmount);
+      setCurrentHp(newHp);
+      
+      // Если персонаж приходит в сознание
+      if (wasUnconscious && newHp > 0) {
+        setIsUnconscious(false);
+        setDeathSaves({ successes: 0, failures: 0 }); // Сброс спасбросков при приходе в сознание
+        
+        toast({
+          title: "Персонаж пришел в сознание",
+          description: `Восстановлено ${healingAmount} HP${source ? ` от ${source}` : ''}`,
         });
       } else {
-        updateParent({ tempHp: newTempHp });
         toast({
-            description: `${amount} урона поглощено временными ОЗ (${newTempHp} врем. ОЗ осталось)`
+          title: "Лечение получено",
+          description: `Восстановлено ${healingAmount} HP${source ? ` от ${source}` : ''}`,
         });
       }
       
-      return newTempHp;
-    });
-  }, [character.name, maxHp, updateParent, toast]);
+      // Добавляем событие лечения
+      setEvents(prev => [{
+        id: generateEventId(),
+        type: 'heal',
+        amount: healingAmount,
+        source,
+        timestamp: new Date()
+      }, ...prev]);
+    } else {
+      // Если персонаж уже на максимуме здоровья
+      toast({
+        title: "Лечение невозможно",
+        description: "Персонаж уже имеет максимальное количество HP",
+      });
+    }
+  };
   
-  // Heal character
-  const healDamage = useCallback((amount: number) => {
-    if (isNaN(amount) || amount <= 0) return;
+  // Устанавливаем временные хиты
+  const setTemporaryHp = (amount: number, source?: string) => {
+    if (amount < 0) return;
     
-    setCurrentHp(prevHp => {
-      const newHp = Math.min(maxHp, prevHp + amount);
-      updateParent({ currentHp: newHp });
+    // Временные хиты не суммируются, используется наибольшее значение
+    if (amount > tempHp) {
+      setTempHp(amount);
       
       toast({
-          description: `${character.name} исцелён на ${amount} ОЗ (${newHp}/${maxHp} ОЗ)`
+        title: "Временные HP получены",
+        description: `${amount} временных HP${source ? ` от ${source}` : ''}`,
       });
       
-      return newHp;
-    });
-  }, [character.name, maxHp, updateParent, toast]);
+      setEvents(prev => [{
+        id: generateEventId(),
+        type: 'temp',
+        amount,
+        source,
+        timestamp: new Date()
+      }, ...prev]);
+    } else if (amount === tempHp && amount > 0) {
+      toast({
+        title: "Временные HP обновлены",
+        description: `${amount} временных HP${source ? ` от ${source}` : ''}`,
+      });
+    }
+  };
   
-  // Add temporary hit points
-  const addTempHp = useCallback((amount: number) => {
-    if (isNaN(amount) || amount <= 0) return;
+  // Выполняем спасбросок от смерти
+  const rollDeathSave = (result: number) => {
+    const criticalSuccess = result === 20;
+    const criticalFailure = result === 1;
+    const success = result >= 10 || criticalSuccess;
     
-    setTempHp(prevTempHp => {
-      const newTempHp = Math.max(prevTempHp, amount); // Temp HP doesn't stack, take highest
-      updateParent({ tempHp: newTempHp });
+    if (criticalSuccess) {
+      // Критический успех: персонаж приходит в сознание с 1 HP
+      setCurrentHp(1);
+      setIsUnconscious(false);
+      setDeathSaves({ successes: 0, failures: 0 });
       
       toast({
-          description: `${character.name} получает ${newTempHp} временных ОЗ`
+        title: "Критический успех!",
+        description: "Персонаж приходит в сознание с 1 HP",
       });
       
-      return newTempHp;
-    });
-  }, [character.name, updateParent, toast]);
-  
-  // Set HP values directly
-  const setHp = useCallback((current: number, max?: number, temp?: number) => {
-    setCurrentHp(current);
-    if (max !== undefined) setMaxHp(max);
-    if (temp !== undefined) setTempHp(temp);
-    
-    const updates: Partial<Character> = { currentHp: current };
-    if (max !== undefined) updates.maxHp = max;
-    if (temp !== undefined) updates.tempHp = temp;
-    
-    updateParent(updates);
-  }, [updateParent]);
-  
-  // Take a short rest
-  const takeShortRest = useCallback(() => {
-    // Short rest doesn't automatically restore hit points in D&D 5e
-    toast({
-        description: `${character.name} отдыхает короткий отдых. Вы можете потратить Кость Хита для восстановления ОЗ.`
-    });
-  }, [character.name, toast]);
-  
-  // Roll hit die to recover HP during short rest
-  const rollHitDie = useCallback(() => {
-    const availableHitDice = totalHitDice - usedHitDice;
-    
-    if (availableHitDice <= 0) {
-      toast({
-          description: `У вас не осталось Костей Хитов для восстановления ОЗ.`
+      setEvents(prev => [{
+        id: generateEventId(),
+        type: 'heal',
+        amount: 1,
+        source: "Критический успех при спасброске от смерти",
+        timestamp: new Date()
+      }, ...prev]);
+    } else if (criticalFailure) {
+      // Критическая неудача: 2 провала
+      const newFailures = Math.min(deathSaves.failures + 2, 3);
+      setDeathSaves({
+        ...deathSaves,
+        failures: newFailures
       });
-      return;
+      
+      if (newFailures >= 3) {
+        toast({
+          title: "Критическая неудача!",
+          description: "Персонаж умирает. Получено 3 провала спасбросков от смерти",
+          variant: "destructive"
+        });
+      } else {
+        toast({
+          title: "Критическая неудача!",
+          description: `Получено 2 провала (всего ${newFailures} из 3)`,
+          variant: "destructive"
+        });
+      }
+      
+      setEvents(prev => [{
+        id: generateEventId(),
+        type: 'death-save',
+        amount: 2,
+        source: "Критическая неудача при спасброске от смерти",
+        timestamp: new Date()
+      }, ...prev]);
+    } else if (success) {
+      // Обычный успех
+      const newSuccesses = Math.min(deathSaves.successes + 1, 3);
+      setDeathSaves({
+        ...deathSaves,
+        successes: newSuccesses
+      });
+      
+      if (newSuccesses >= 3) {
+        toast({
+          title: "Стабилизация!",
+          description: "Персонаж стабилизирован. Получено 3 успешных спасброска от смерти",
+        });
+      } else {
+        toast({
+          title: "Успешный спасбросок",
+          description: `Получено ${newSuccesses} из 3 успехов`,
+        });
+      }
+      
+      setEvents(prev => [{
+        id: generateEventId(),
+        type: 'death-save',
+        amount: 1,
+        source: "Успешный спасбросок от смерти",
+        timestamp: new Date()
+      }, ...prev]);
+    } else {
+      // Обычная неудача
+      const newFailures = Math.min(deathSaves.failures + 1, 3);
+      setDeathSaves({
+        ...deathSaves,
+        failures: newFailures
+      });
+      
+      if (newFailures >= 3) {
+        toast({
+          title: "Персонаж умирает!",
+          description: "Получено 3 провала спасбросков от смерти",
+          variant: "destructive"
+        });
+      } else {
+        toast({
+          title: "Проваленный спасбросок",
+          description: `Получено ${newFailures} из 3 провалов`,
+          variant: "destructive"
+        });
+      }
+      
+      setEvents(prev => [{
+        id: generateEventId(),
+        type: 'death-save',
+        amount: 1,
+        source: "Проваленный спасбросок от смерти",
+        timestamp: new Date()
+      }, ...prev]);
+    }
+  };
+  
+  // Отменить последнее событие
+  const undoLastEvent = () => {
+    if (events.length === 0) return;
+    
+    const lastEvent = events[0];
+    setEvents(prev => prev.slice(1));
+    
+    switch (lastEvent.type) {
+      case 'damage':
+        setCurrentHp(prev => Math.min(maxHp, prev + lastEvent.amount));
+        break;
+      case 'heal':
+        setCurrentHp(prev => Math.max(0, prev - lastEvent.amount));
+        break;
+      case 'temp':
+        // Находим предыдущее событие с временными хитами
+        const prevTempEvent = events.slice(1).find(e => e.type === 'temp');
+        setTempHp(prevTempEvent?.amount || 0);
+        break;
+      case 'death-save':
+        // Сложнее отменить спасброски, упрощённая логика
+        if (lastEvent.source?.includes("Критический успех")) {
+          setCurrentHp(0);
+          setIsUnconscious(true);
+        }
+        setDeathSaves({ successes: 0, failures: 0 });
+        break;
     }
     
-    // Determine die type and roll
-    const dieMax = parseInt(dieType.substring(1));
-    const roll = Math.floor(Math.random() * dieMax) + 1;
-    const conMod = getNumericModifier(character.abilities?.constitution || character.constitution || 10);
-    const healAmount = Math.max(1, roll + conMod);
-    
-    // Update hit dice used
-    setUsedHitDice(prev => {
-      const newUsed = prev + 1;
-      updateParent({ hitDice: { used: newUsed, total: totalHitDice, dieType } });
-      return newUsed;
+    toast({
+      title: "Отменено последнее событие",
+      description: `${lastEvent.type === 'damage' ? 'Урон' : 
+                    lastEvent.type === 'heal' ? 'Лечение' : 
+                    lastEvent.type === 'temp' ? 'Временные HP' : 
+                    'Спасбросок от смерти'} ${lastEvent.amount}`,
     });
+  };
+  
+  // Восстановление здоровья через Hit Die
+  const rollHitDieHealing = (hitDieValue: number) => {
+    const constitutionMod = getNumericModifier(constitution);
+    const healingAmount = Math.max(1, hitDieValue + constitutionMod);
+    applyHealing(healingAmount, "Hit Die");
     
-    // Apply healing
-    setCurrentHp(prev => {
-      const newHp = Math.min(maxHp, prev + healAmount);
-      updateParent({ currentHp: newHp });
+    return healingAmount;
+  };
+  
+  // Короткий отдых
+  const shortRest = (hitDiceToUse: number = 0) => {
+    if (hitDiceToUse > 0) {
+      const constitutionMod = getNumericModifier(constitution);
+      const averageHitDieValue = 4.5; // Среднее между 1 и 8 (для d8)
+      const estimatedHealingAmount = Math.max(1, Math.floor(hitDiceToUse * (averageHitDieValue + constitutionMod)));
+      
+      applyHealing(estimatedHealingAmount, "Короткий отдых");
       
       toast({
-         description: `${character.name} восстанавливает ${healAmount} ОЗ (${dieType}=${roll} + ${conMod}). Осталось ${availableHitDice-1} КХ.`
+        title: "Короткий отдых завершен",
+        description: `Восстановлено ${hitDiceToUse} Hit Dice и ${estimatedHealingAmount} HP`,
       });
-      
-      return newHp;
-    });
-  }, [character, dieType, maxHp, totalHitDice, usedHitDice, updateParent, toast]);
+    } else {
+      toast({
+        title: "Короткий отдых завершен",
+        description: "Отдых без использования Hit Dice",
+      });
+    }
+  };
   
-  // Take a long rest
-  const takeLongRest = useCallback(() => {
-    // Restore all hit points
+  // Длинный отдых
+  const longRest = () => {
+    const wasUnconscious = currentHp <= 0;
     setCurrentHp(maxHp);
-    setTempHp(0);
+    setTempHp(0); // Временные хиты сбрасываются после отдыха
     
-    // Restore up to half of maximum hit dice (minimum of 1)
-    const restoredDice = Math.max(1, Math.floor(totalHitDice / 2));
-    const newUsed = Math.max(0, usedHitDice - restoredDice);
-    setUsedHitDice(newUsed);
-    
-    updateParent({ 
-      currentHp: maxHp, 
-      tempHp: 0,
-      hitDice: { used: newUsed, total: totalHitDice, dieType }
-    });
+    if (wasUnconscious) {
+      setIsUnconscious(false);
+      setDeathSaves({ successes: 0, failures: 0 });
+    }
     
     toast({
-        description: `${character.name} завершил продолжительный отдых. ОЗ полностью восстановлены и восстановлено ${restoredDice} КХ.`
+      title: "Длинный отдых завершен",
+      description: "HP полностью восстановлены",
     });
-  }, [maxHp, totalHitDice, usedHitDice, character.name, updateParent, dieType, toast]);
+    
+    setEvents(prev => [{
+      id: generateEventId(),
+      type: 'heal',
+      amount: maxHp - currentHp,
+      source: "Длинный отдых",
+      timestamp: new Date()
+    }, ...prev]);
+  };
   
   return {
     currentHp,
     maxHp,
     tempHp,
-    addDamage,
-    healDamage,
-    addTempHp,
-    setHp,
-    takeLongRest,
-    takeShortRest,
-    rollHitDie,
-    hitDice
+    events,
+    isUnconscious,
+    deathSaves,
+    applyDamage,
+    applyHealing,
+    setTemporaryHp,
+    setCurrentHp: (hp: number) => setCurrentHp(Math.max(0, Math.min(maxHp, hp))),
+    undoLastEvent,
+    rollDeathSave,
+    rollHitDieHealing,
+    shortRest,
+    longRest
   };
 }
-
-export default useHitPoints;

@@ -1,7 +1,7 @@
+
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { SpellData } from '@/types/spells';
 import { calculateAvailableSpellsByClassAndLevel, convertSpellsForState } from '@/utils/spellUtils';
-import { safeToString } from '@/utils/stringUtils';
 import { useCharacter } from '@/contexts/CharacterContext';
 import { useSpellbook } from '@/contexts/SpellbookContext';
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -11,7 +11,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
 import { Button } from '@/components/ui/button';
-import { Character, CharacterSpell } from '@/types/character';
+import { Character } from '@/types/character';
 import NavigationButtons from './NavigationButtons';
 import { getAllSpells, getSpellsByClass } from '@/data/spells';
 import { useToast } from '@/hooks/use-toast';
@@ -229,78 +229,14 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
   };
 
   // Проверяем, изучено ли заклинание
-  const isSpellKnown = (spell: SpellData) => {
-    return character.spells && character.spells.some(s => {
+  const isSpellKnown = useCallback((spell: SpellData) => {
+    if (!character.spells || !Array.isArray(character.spells)) return false;
+    
+    return character.spells.some(s => {
       if (typeof s === 'string') return s === spell.name;
-      return String(s.id) === String(spell.id) || s.name === spell.name;
+      return s.id === spell.id || s.name === spell.name;
     });
-  };
-
-  // Fix for line 284 - handling adding spells to character
-  const handleAddSpell = (spell: SpellData) => {
-    // Convert spell to CharacterSpell before adding
-    const characterSpell: CharacterSpell = {
-      id: spell.id,
-      name: spell.name,
-      level: spell.level,
-      school: spell.school,
-      castingTime: spell.castingTime,
-      range: spell.range,
-      components: spell.components,
-      duration: spell.duration,
-      description: spell.description,
-      classes: spell.classes,
-      prepared: true // By default, newly added spells are prepared
-    };
-    
-    // Create a new array of CharacterSpell objects
-    const currentSpells = character.spells || [];
-    const updatedSpells: CharacterSpell[] = [...(Array.isArray(currentSpells) ? 
-      currentSpells.map(s => {
-        if (typeof s === 'string') {
-          return { 
-            id: `spell-${safeToString(s).toLowerCase().replace(/\s+/g, '-')}`, 
-            name: s, 
-            level: 0,
-            school: 'Универсальная'
-          };
-        }
-        return s;
-      }) : 
-      [])];
-      
-    // Add the new spell
-    updatedSpells.push(characterSpell);
-    
-    // Update character with properly typed spells array
-    updateCharacter({ spells: updatedSpells });
-  };
-
-  // Fix for line 303 - handling removing spells from character
-  const handleRemoveSpell = (spellName: string) => {
-    if (!character.spells) return;
-    
-    // Convert any string spells to CharacterSpell objects and filter
-    const updatedSpells: CharacterSpell[] = character.spells
-      .filter(s => {
-        const name = typeof s === 'string' ? s : s.name;
-        return name !== spellName;
-      })
-      .map(s => {
-        if (typeof s === 'string') {
-          return { 
-            id: `spell-${safeToString(s).toLowerCase().replace(/\s+/g, '-')}`, 
-            name: s, 
-            level: 0,
-            school: 'Универсальная'
-          };
-        }
-        return s;
-      });
-      
-    // Update character with properly typed spells array
-    updateCharacter({ spells: updatedSpells });
-  };
+  }, [character.spells]);
 
   // Обработчик добавления/удаления заклинания
   const handleSpellChange = (spell: SpellData, adding: boolean) => {
@@ -333,13 +269,49 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
       addSpell(spell);
       
       // Также добавляем заклинание прямо в персонажа
-      handleAddSpell(spell);
+      const updatedSpells = [...(character.spells || [])];
+      updatedSpells.push({
+        id: spell.id,
+        name: spell.name,
+        level: spell.level,
+        school: spell.school,
+        castingTime: spell.castingTime,
+        range: spell.range,
+        components: spell.components,
+        duration: spell.duration,
+        description: spell.description,
+        classes: spell.classes,
+        prepared: true // По умолчанию заклинания подготовлены
+      });
+      
+      updateCharacter({ spells: updatedSpells });
+      
+      // Обновляем счетчики
+      if (spell.level === 0) {
+        setCantripsKnown(prev => prev + 1);
+      } else {
+        setSpellsKnown(prev => prev + 1);
+      }
     } else {
       // Удаляем заклинание из контекста
       removeSpell(spell.id.toString());
       
       // Также удаляем заклинание из персонажа
-      handleRemoveSpell(spell.name);
+      if (character.spells) {
+        const updatedSpells = character.spells.filter(s => {
+          if (typeof s === 'string') return s !== spell.name;
+          return s.id !== spell.id && s.name !== spell.name;
+        });
+        
+        updateCharacter({ spells: updatedSpells });
+        
+        // Обновляем счетчики
+        if (spell.level === 0) {
+          setCantripsKnown(prev => Math.max(0, prev - 1));
+        } else {
+          setSpellsKnown(prev => Math.max(0, prev - 1));
+        }
+      }
     }
   };
 

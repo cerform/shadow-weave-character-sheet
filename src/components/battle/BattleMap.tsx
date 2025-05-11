@@ -1,17 +1,12 @@
-import React, { useRef, useState, useEffect } from 'react';
-import { Token, InitiativeItem, VisibleArea } from '@/types/battle';
-import TokenComponent from './TokenComponent';
-import TokenHealthBar from './TokenHealthBar';
-import GridOverlay from './GridOverlay';
-import { motion } from 'framer-motion';
-import { Button } from '@/components/ui/button';
-import { Slider } from '@/components/ui/slider';
+import React, { useState, useRef, useEffect } from 'react';
+import { Button } from "@/components/ui/button";
+import { Slider } from "@/components/ui/slider";
+import { Eye, EyeOff, ZoomIn, ZoomOut, Grid, Mouse, Eraser, Lock, Unlock, Upload, ImageIcon } from 'lucide-react';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
-import { 
-  Mouse, Eraser, Grid, Eye, EyeOff, Lock, Unlock,
-  ZoomIn, ZoomOut, Upload, ImageIcon
-} from 'lucide-react';
+import { Token, Initiative } from '@/stores/battleStore'; // Import from store
+import { VisibleArea } from '@/types/battle';
+import { motion } from 'framer-motion';
 
 interface BattleMapProps {
   tokens: Token[];
@@ -22,7 +17,7 @@ interface BattleMapProps {
   onUpdateTokenPosition: (id: number, x: number, y: number) => void;
   onSelectToken: (id: number | null) => void;
   selectedTokenId: number | null;
-  initiative: InitiativeItem[];
+  initiative: Initiative[];
   battleActive: boolean;
 }
 
@@ -94,7 +89,7 @@ const BattleMap: React.FC<BattleMapProps> = ({
     return () => window.removeEventListener('resize', handleResize);
   }, [mapRef.current]);
   
-  // Обновля��м размер токена при его выборе
+  // Обновляем размер токена при его выборе
   useEffect(() => {
     if (selectedTokenId) {
       const token = tokens.find(t => t.id === selectedTokenId);
@@ -292,7 +287,7 @@ const BattleMap: React.FC<BattleMapProps> = ({
     ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
     ctx.fillRect(0, 0, mapRect.width, mapRect.height);
     
-    // Очищаем области ��идимости
+    // Очищаем области видимости
     ctx.globalCompositeOperation = "destination-out" as GlobalCompositeOperation;
     visibleAreas.forEach(area => {
       const scaledX = area.x * zoom + mapOffset.x;
@@ -395,7 +390,7 @@ const BattleMap: React.FC<BattleMapProps> = ({
     };
   }, []);
 
-  // Отрисовка пут�� перетаскивания токена
+  // Отрисовка пути перетаскивания токена
   const renderDragPath = () => {
     if (dragPath.length < 2) return null;
 
@@ -530,7 +525,7 @@ const BattleMap: React.FC<BattleMapProps> = ({
             className="h-8 w-8"
             onClick={() => setMapTool("draw")}
           >
-            <div className="text-xs">✏���</div>
+            <div className="text-xs">✏️</div>
           </Button>
           <Button
             variant={mapTool === "fog" ? "default" : "outline"}
@@ -712,7 +707,7 @@ const BattleMap: React.FC<BattleMapProps> = ({
                   }}
                 >
                   <div className="text-gray-500">
-                    Загрузите карт�� сражения (перетащите изображение или нажмите "Карта")
+                    Загрузите карту сражения (перетащите изображение или нажмите "Карта")
                   </div>
                 </div>
               )}

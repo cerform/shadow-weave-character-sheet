@@ -110,9 +110,6 @@ const CharactersListPage: React.FC = () => {
     );
   }
   
-  // Преобразование объекта Error в строку для ErrorDisplay
-  const errorMessage = error instanceof Error ? error.message : String(error);
-  
   return (
     <ErrorBoundary>
       <OBSLayout
@@ -162,7 +159,7 @@ const CharactersListPage: React.FC = () => {
           {/* Обработка ошибок */}
           {error && !loading && (
             <ErrorDisplay 
-              errorMessage={errorMessage} 
+              errorMessage={error} 
               onRetry={refreshCharacters} 
               technicalDetails={diagnosticResults}
             />

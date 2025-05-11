@@ -1,111 +1,158 @@
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Character } from '@/types/character';
-import { getAbilityModifier } from '@/utils/characterUtils';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card } from '@/components/ui/card';
+import { Switch } from '@/components/ui/switch';
+import { useToast } from '@/hooks/use-toast';
+import { getAbilityModifierValue } from '@/utils/abilityUtils';
 
 interface SkillsPanelProps {
   character: Character;
   onUpdate: (updates: Partial<Character>) => void;
 }
 
-export const SkillsPanel: React.FC<SkillsPanelProps> = ({ character, onUpdate }) => {
-  const [skills, setSkills] = useState(character.skills || {});
-  
-  useEffect(() => {
-    setSkills(character.skills || {});
-  }, [character.skills]);
-  
-  const getAbilityMod = (ability: string): number => {
-    // Make sure to pass character as both the first and second parameters
-    return getAbilityModifier(character, ability);
+const SkillsPanel: React.FC<SkillsPanelProps> = ({ character, onUpdate }) => {
+  const { toast } = useToast();
+
+  // Группировка навыков по характеристикам
+  const skillsByAbility = {
+    strength: ['athletics'],
+    dexterity: ['acrobatics', 'sleight_of_hand', 'stealth'],
+    intelligence: ['arcana', 'history', 'investigation', 'nature', 'religion'],
+    wisdom: ['animal_handling', 'insight', 'medicine', 'perception', 'survival'],
+    charisma: ['deception', 'intimidation', 'performance', 'persuasion']
   };
-  
-  const calculateSkillValue = (skillName: string, proficient: boolean, expertise: boolean): number => {
-    let baseValue = getAbilityMod(skillName.slice(0, 3).toUpperCase());
-    if (proficient) {
-      baseValue += character.proficiencyBonus || 2;
-    }
-    if (expertise) {
-      baseValue += (character.proficiencyBonus || 2) * 2;
-    }
-    return baseValue;
+
+  // Преобразование навыков из snake_case в читаемый формат
+  const getSkillDisplayName = (skillKey: string): string => {
+    const nameMap: Record<string, string> = {
+      athletics: 'Атлетика',
+      acrobatics: 'Акробатика',
+      sleight_of_hand: 'Ловкость рук',
+      stealth: 'Скрытность',
+      arcana: 'Магия',
+      history: 'История',
+      investigation: 'Расследование',
+      nature: 'Природа',
+      religion: 'Религия',
+      animal_handling: 'Уход за животными',
+      insight: 'Проницательность',
+      medicine: 'Медицина',
+      perception: 'Восприятие',
+      survival: 'Выживание',
+      deception: 'Обман',
+      intimidation: 'Запугивание',
+      performance: 'Выступление',
+      persuasion: 'Убеждение'
+    };
+    return nameMap[skillKey] || skillKey;
   };
-  
-  // Normalize skills structure to ensure all skills have the required properties
-  const handleSkillChange = (skillName: string, proficient: boolean, expertise: boolean = false) => {
-    const updatedSkills: Record<string, { proficient: boolean; expertise: boolean; value: number }> = {};
+
+  const toggleProficiency = (skillKey: string) => {
+    // Получаем текущее значение навыка
+    const currentSkills = character.skills || {};
+    const currentSkill = currentSkills[skillKey] || { proficient: false };
     
-    // Copy existing skills and ensure they have all required properties
-    for (const [key, skill] of Object.entries(character.skills || {})) {
-      updatedSkills[key] = {
-        proficient: skill.proficient || false,
-        expertise: 'expertise' in skill ? skill.expertise : false,
-        value: skill.value || 0
-      };
+    // Определяем, к какой характеристике относится навык
+    const ability = Object.entries(skillsByAbility)
+      .find(([_, skills]) => skills.includes(skillKey))?.[0] || 'dexterity';
+    
+    // Получаем модификатор характеристики
+    const abilityScore = character.stats?.[ability as keyof typeof character.stats] || 10;
+    const abilityMod = getAbilityModifierValue(abilityScore);
+    
+    // Вычисляем значение навыка
+    const profBonus = character.proficiencyBonus || 2;
+    let skillValue = abilityMod;
+    
+    if (!currentSkill.proficient) {
+      skillValue += profBonus;
     }
     
-    // Update the specific skill
-    updatedSkills[skillName] = {
-      proficient,
-      expertise,
-      value: calculateSkillValue(skillName, proficient, expertise)
+    // Обновляем состояние навыка
+    const updatedSkills = {
+      ...currentSkills,
+      [skillKey]: {
+        ...currentSkill,
+        proficient: !currentSkill.proficient,
+        value: !currentSkill.proficient ? abilityMod + profBonus : abilityMod,
+        bonus: !currentSkill.proficient ? abilityMod + profBonus : abilityMod
+      }
     };
     
-    onUpdate({ skills: updatedSkills });
+    // Обновляем персонажа
+    let updatedProficiencies = { 
+      ...character.proficiencies
+    };
+    
+    // Проверяем тип proficiencies и обновляем соответственно
+    if (typeof updatedProficiencies === 'object' && !Array.isArray(updatedProficiencies)) {
+      // Создаем массив навыков, если его нет
+      const skillsList = updatedProficiencies.skills || [];
+      
+      if (!currentSkill.proficient) {
+        // Добавляем навык в список владений
+        updatedProficiencies = {
+          ...updatedProficiencies,
+          skills: [...skillsList, skillKey]
+        };
+      } else {
+        // Удаляем навык из списка владений
+        updatedProficiencies = {
+          ...updatedProficiencies,
+          skills: skillsList.filter(skill => skill !== skillKey)
+        };
+      }
+    }
+    
+    onUpdate({
+      skills: updatedSkills,
+      proficiencies: updatedProficiencies
+    });
+    
+    // Показываем уведомление
+    toast({
+      title: `Навык ${getSkillDisplayName(skillKey)}`,
+      description: !currentSkill.proficient 
+        ? "Добавлен в список владений" 
+        : "Удален из списка владений",
+    });
   };
 
-  const skillList = [
-    { name: 'acrobatics', label: 'Акробатика (DEX)', ability: 'DEX' },
-    { name: 'animalHandling', label: 'Уход за животными (WIS)', ability: 'WIS' },
-    { name: 'arcana', label: 'Магия (INT)', ability: 'INT' },
-    { name: 'athletics', label: 'Атлетика (STR)', ability: 'STR' },
-    { name: 'deception', label: 'Обман (CHA)', ability: 'CHA' },
-    { name: 'history', label: 'История (INT)', ability: 'INT' },
-    { name: 'insight', label: 'Проницательность (WIS)', ability: 'WIS' },
-    { name: 'intimidation', label: 'Запугивание (CHA)', ability: 'CHA' },
-    { name: 'investigation', label: 'Анализ (INT)', ability: 'INT' },
-    { name: 'medicine', label: 'Медицина (WIS)', ability: 'WIS' },
-    { name: 'nature', label: 'Природа (INT)', ability: 'INT' },
-    { name: 'perception', label: 'Внимательность (WIS)', ability: 'WIS' },
-    { name: 'performance', label: 'Выступление (CHA)', ability: 'CHA' },
-    { name: 'persuasion', label: 'Убеждение (CHA)', ability: 'CHA' },
-    { name: 'religion', label: 'Религия (INT)', ability: 'INT' },
-    { name: 'sleightOfHand', label: 'Ловкость рук (DEX)', ability: 'DEX' },
-    { name: 'stealth', label: 'Скрытность (DEX)', ability: 'DEX' },
-    { name: 'survival', label: 'Выживание (WIS)', ability: 'WIS' },
-  ];
-
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Навыки</CardTitle>
-      </CardHeader>
-      <CardContent className="grid gap-4">
-        {skillList.map((skill) => (
-          <div key={skill.name} className="flex items-center justify-between">
-            <span>{skill.label}</span>
-            <div className="flex items-center space-x-2">
-              <button
-                className={`px-2 py-1 rounded ${skills[skill.name]?.proficient ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-700'}`}
-                onClick={() => handleSkillChange(skill.name, !skills[skill.name]?.proficient, skills[skill.name]?.expertise || false)}
-              >
-                Владение
-              </button>
-              <button
-                className={`px-2 py-1 rounded ${skills[skill.name]?.expertise ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700'}`}
-                onClick={() => handleSkillChange(skill.name, skills[skill.name]?.proficient || false, !skills[skill.name]?.expertise)}
-                disabled={!skills[skill.name]?.proficient}
-              >
-                Экспертность
-              </button>
-              <span>
-                {calculateSkillValue(skill.name, skills[skill.name]?.proficient || false, skills[skill.name]?.expertise || false)}
-              </span>
-            </div>
+    <Card className="p-4">
+      <h3 className="text-lg font-semibold mb-4">Навыки</h3>
+      
+      <div className="space-y-6">
+        {Object.entries(skillsByAbility).map(([ability, skills]) => (
+          <div key={ability} className="space-y-2">
+            <h4 className="text-md font-medium capitalize">{ability === 'strength' ? 'Сила' 
+              : ability === 'dexterity' ? 'Ловкость'
+              : ability === 'constitution' ? 'Телосложение'
+              : ability === 'intelligence' ? 'Интеллект'
+              : ability === 'wisdom' ? 'Мудрость'
+              : 'Харизма'}</h4>
+            
+            {skills.map(skillKey => {
+              const skillInfo = character.skills?.[skillKey] || { proficient: false };
+              return (
+                <div key={skillKey} className="flex items-center justify-between">
+                  <span>{getSkillDisplayName(skillKey)}</span>
+                  <div className="flex items-center gap-4">
+                    <span>{skillInfo.proficient ? '+' : ''}</span>
+                    <Switch
+                      checked={skillInfo.proficient}
+                      onCheckedChange={() => toggleProficiency(skillKey)}
+                    />
+                  </div>
+                </div>
+              );
+            })}
           </div>
         ))}
-      </CardContent>
+      </div>
     </Card>
   );
 };
+
+export default SkillsPanel;

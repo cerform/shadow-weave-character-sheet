@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
@@ -14,7 +15,7 @@ import AbilityRollingPanel from './AbilityRollingPanel';
 import ManualInputPanel from './ManualInputPanel';
 import NavigationButtons from './NavigationButtons';
 import SectionHeader from "@/components/ui/section-header";
-import { ABILITY_SCORE_CAPS } from '@/types/constants';
+import { ABILITY_SCORE_CAPS } from '@/types/character';
 
 interface CharacterAbilityScoresProps {
   character: CharacterSheet;

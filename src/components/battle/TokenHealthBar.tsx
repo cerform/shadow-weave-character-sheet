@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { Rect } from 'react-konva';
 
 interface TokenHealthBarProps {
   currentHP: number;
@@ -9,37 +8,70 @@ interface TokenHealthBarProps {
   showValue?: boolean;
 }
 
-const TokenHealthBar: React.FC<TokenHealthBarProps> = ({ currentHP, maxHP, width, showValue = false }) => {
-  const healthPercentage = Math.max(0, Math.min(1, currentHP / maxHP));
+const TokenHealthBar: React.FC<TokenHealthBarProps> = ({
+  currentHP,
+  maxHP,
+  width,
+  showValue = false
+}) => {
+  // Процент оставшегося здоровья
+  const healthPercentage = Math.max(0, Math.min(100, (currentHP / maxHP) * 100));
   
-  // Colors for different health ranges
-  const getHealthColor = () => {
-    if (healthPercentage > 0.6) return '#4CAF50';
-    if (healthPercentage > 0.3) return '#FFC107';
-    return '#F44336';
+  // Определяем цвет полосы здоровья
+  let barColor = '#10b981'; // зеленый (> 50%)
+  
+  if (healthPercentage < 25) {
+    barColor = '#ef4444'; // красный (< 25%)
+  } else if (healthPercentage < 50) {
+    barColor = '#f59e0b'; // оранжевый (< 50%)
+  }
+  
+  // Стиль контейнера
+  const containerStyle: React.CSSProperties = {
+    position: 'absolute',
+    top: '-12px',
+    left: '50%',
+    transform: 'translateX(-50%)',
+    width: `${width}px`,
+    height: '4px',
+    backgroundColor: '#374151',
+    borderRadius: '2px',
+    overflow: 'hidden',
+    zIndex: 5
+  };
+  
+  // Стиль полосы здоровья
+  const barStyle: React.CSSProperties = {
+    height: '100%',
+    width: `${healthPercentage}%`,
+    backgroundColor: barColor,
+    transition: 'width 0.3s ease, background-color 0.3s ease'
+  };
+  
+  // Стиль для текста
+  const textStyle: React.CSSProperties = {
+    position: 'absolute',
+    top: '-18px',
+    left: '50%',
+    transform: 'translateX(-50%)',
+    fontSize: '10px',
+    fontWeight: 'bold',
+    color: '#ffffff',
+    textShadow: '0 0 2px rgba(0, 0, 0, 0.8)',
+    whiteSpace: 'nowrap'
   };
   
   return (
     <>
-      {/* Health bar background */}
-      <Rect
-        x={0}
-        y={0}
-        width={width}
-        height={4}
-        fill="rgba(0,0,0,0.5)"
-        cornerRadius={2}
-      />
+      <div style={containerStyle}>
+        <div style={barStyle}></div>
+      </div>
       
-      {/* Health indicator */}
-      <Rect
-        x={0}
-        y={0}
-        width={width * healthPercentage}
-        height={4}
-        fill={getHealthColor()}
-        cornerRadius={2}
-      />
+      {showValue && (
+        <div style={textStyle}>
+          {currentHP}/{maxHP}
+        </div>
+      )}
     </>
   );
 };

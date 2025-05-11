@@ -6,18 +6,9 @@ import ThemeSelector from '@/components/ThemeSelector';
 import NavigationButtons from '@/components/ui/NavigationButtons';
 import FloatingDiceButton from '@/components/dice/FloatingDiceButton';
 import BackgroundWrapper from '@/components/layout/BackgroundWrapper';
-import { useCharacter } from '@/contexts/CharacterContext';
-import { createDefaultCharacter } from '@/utils/characterUtils';
 
 const SpellbookPage: React.FC = () => {
   const { themeStyles } = useTheme();
-  const characterContext = useCharacter();
-  
-  // Ensure we have default properties even if CharacterContext doesn't provide them
-  const characters = characterContext.characters || [];
-  
-  // Use the first character if available, otherwise create a default
-  const character = (characters.length > 0) ? characters[0] : createDefaultCharacter();
 
   return (
     <BackgroundWrapper>
@@ -33,7 +24,7 @@ const SpellbookPage: React.FC = () => {
             </div>
           </header>
           
-          <SpellBookViewer character={character} />
+          <SpellBookViewer />
         </div>
       </div>
       <FloatingDiceButton />

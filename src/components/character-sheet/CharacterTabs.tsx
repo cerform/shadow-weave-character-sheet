@@ -1,14 +1,13 @@
 
-// CharacterTabs.tsx
-import React, { useState } from 'react';
+import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Character } from '@/types/character';
 import AbilitiesTab from './tabs/AbilitiesTab';
-import CombatTab from './tabs/CombatTab';
 import SpellsTab from './tabs/SpellsTab';
-import { EquipmentTab } from './tabs/EquipmentTab';
-import { FeaturesTab } from './tabs/FeaturesTab';
+import InventoryTab from './tabs/InventoryTab';
 import NotesTab from './tabs/NotesTab';
+import BackgroundTab from './tabs/BackgroundTab';
+import FeatsTab from './tabs/FeatsTab';
 
 interface CharacterTabsProps {
   character: Character;
@@ -16,39 +15,37 @@ interface CharacterTabsProps {
 }
 
 const CharacterTabs: React.FC<CharacterTabsProps> = ({ character, onUpdate }) => {
-  const [activeTab, setActiveTab] = useState('abilities');
-
-  // Обработчик изменения вкладки
-  const handleTabChange = (value: string) => {
-    setActiveTab(value);
-  };
-
   return (
-    <Tabs defaultValue="abilities" value={activeTab} onValueChange={handleTabChange} className="w-full">
-      <TabsList className="grid grid-cols-3 md:grid-cols-6 gap-2">
+    <Tabs defaultValue="abilities" className="w-full">
+      <TabsList className="grid grid-cols-6">
         <TabsTrigger value="abilities">Характеристики</TabsTrigger>
-        <TabsTrigger value="combat">Бой</TabsTrigger>
         <TabsTrigger value="spells">Заклинания</TabsTrigger>
-        <TabsTrigger value="equipment">Снаряжение</TabsTrigger>
-        <TabsTrigger value="features">Особенности</TabsTrigger>
+        <TabsTrigger value="inventory">Инвентарь</TabsTrigger>
+        <TabsTrigger value="feats">Умения</TabsTrigger>
+        <TabsTrigger value="background">Предыстория</TabsTrigger>
         <TabsTrigger value="notes">Заметки</TabsTrigger>
       </TabsList>
-
+      
       <TabsContent value="abilities">
         <AbilitiesTab character={character} onUpdate={onUpdate} />
       </TabsContent>
-      <TabsContent value="combat">
-        <CombatTab character={character} onUpdate={onUpdate} />
-      </TabsContent>
+      
       <TabsContent value="spells">
         <SpellsTab character={character} onUpdate={onUpdate} />
       </TabsContent>
-      <TabsContent value="equipment">
-        <EquipmentTab character={character} onUpdate={onUpdate} />
+      
+      <TabsContent value="inventory">
+        <InventoryTab character={character} onUpdate={onUpdate} />
       </TabsContent>
-      <TabsContent value="features">
-        <FeaturesTab character={character} onUpdate={onUpdate} />
+      
+      <TabsContent value="feats">
+        <FeatsTab character={character} onUpdate={onUpdate} />
       </TabsContent>
+      
+      <TabsContent value="background">
+        <BackgroundTab character={character} onUpdate={onUpdate} />
+      </TabsContent>
+      
       <TabsContent value="notes">
         <NotesTab character={character} onUpdate={onUpdate} />
       </TabsContent>

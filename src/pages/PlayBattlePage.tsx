@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import LeftPanelDiceRoller from "@/components/battle/LeftPanelDiceRoller";
 import EnhancedBattleMap from "@/components/battle/EnhancedBattleMap";
-import BattleMapWrapper from "@/components/battle/BattleMapWrapper"; // Import the wrapper
 import RightPanel from "@/components/battle/RightPanel";
 import BottomPanel from "@/components/battle/BottomPanel";
 import TopPanel from "@/components/battle/TopPanel";
@@ -222,16 +221,6 @@ const PlayBattlePage = () => {
     setGridScale(mapSettings.zoom);
   };
 
-  // Properly handle grid size updates
-  const handleGridSizeUpdate = (newSize: number | { rows: number, cols: number }) => {
-    if (typeof newSize === 'number') {
-      setGridSize(newSize);
-    } else {
-      // Assuming square grids, use rows value
-      setGridSize(newSize.rows);
-    }
-  };
-
   // Переключение режима DM/Player
   const toggleDMMode = () => {
     setIsDM(!isDM);
@@ -338,7 +327,7 @@ const PlayBattlePage = () => {
     }
   };
 
-  // Функция добавления источника све����а
+  // Функция добавления источника света
   const handleAddLight = (type: 'torch' | 'lantern' | 'daylight' | 'custom', color?: string, intensity?: number) => {
     if (!isDM) {
       toast({
@@ -402,13 +391,6 @@ const PlayBattlePage = () => {
       description: type === 'daylight' ? 'Карта освещена полностью' : 
                   `Радиус освещения: ${lightRadius} клеток`,
     });
-  };
-
-  // Create a wrapper function to adapt updateToken to match the expected updateTokens signature
-  const handleUpdateToken = (token: Token) => {
-    if (token && token.id) {
-      updateToken(token.id, token);
-    }
   };
 
   // Создаем панель управления картой для правой части
@@ -477,10 +459,7 @@ const PlayBattlePage = () => {
       {/* Верхняя панель - на всю ширину с кнопками управления */}
       <div className="col-span-3 border-b bg-muted/10 z-10">
         <TopPanel
-          battleState={{
-            ...battleState,
-            currentInitiativeIndex: battleState.currentTurn || 0 // Add the missing property
-          }}
+          battleState={battleState}
           onStartBattle={startBattle}
           onPauseBattle={pauseBattle}
           onNextTurn={nextTurn}
@@ -504,9 +483,9 @@ const PlayBattlePage = () => {
       
       {/* Центральная часть - карта боя */}
       <div className="relative overflow-hidden w-full h-full">
-        <BattleMapWrapper
+        <EnhancedBattleMap
           tokens={tokens}
-          updateTokens={handleUpdateToken}
+          setTokens={addToken}
           background={mapSettings.background}
           setBackground={setMapBackground}
           onUpdateTokenPosition={handleUpdateTokenPosition}
@@ -518,16 +497,7 @@ const PlayBattlePage = () => {
           revealedCells={mapSettings.revealedCells}
           onRevealCell={handleRevealCell}
           gridSize={mapSettings.gridSize}
-          setGridSize={setGridSize}
-          showGrid={mapSettings.gridVisible}
-          setShowGrid={setGridVisible}
-          fogEnabled={mapSettings.fogOfWar}
-          setFogEnabled={setFogOfWar}
-          fogData={mapSettings.revealedCells}
-          updateFogData={() => {}}
-          clearAllFog={resetFogOfWar}
-          revealAllFog={() => {}}
-          activePlayer={""}
+          gridVisible={mapSettings.gridVisible}
           gridOpacity={mapSettings.gridOpacity}
           zoom={mapSettings.zoom}
           isDM={isDM}
@@ -559,8 +529,8 @@ const PlayBattlePage = () => {
               onResetFog={resetFogOfWar}
               gridVisible={mapSettings.gridVisible}
               onToggleGrid={() => setGridVisible(!mapSettings.gridVisible)}
-              onUpdateGridSettings={(newSize) => handleGridSizeUpdate(newSize)} // Fix the type mismatch
-              gridSize={{ rows: mapSettings.gridSize, cols: mapSettings.gridSize }} // Fix the type mismatch
+              onUpdateGridSettings={setGridSize}
+              gridSize={mapSettings.gridSize}
               zoom={mapSettings.zoom}
               onZoomChange={setZoom}
               isDM={isDM}
@@ -578,8 +548,8 @@ const PlayBattlePage = () => {
               onAddToken={handleAddToken}
               fogOfWar={mapSettings.fogOfWar}
               setFogOfWar={setFogOfWar}
-              gridSize={{ rows: mapSettings.gridSize, cols: mapSettings.gridSize }} // Fix the type mismatch
-              setGridSize={(size) => handleGridSizeUpdate(size.rows)} // Adapt the size parameter
+              gridSize={mapSettings.gridSize}
+              setGridSize={setGridSize}
               isDM={isDM}
             />
           )}

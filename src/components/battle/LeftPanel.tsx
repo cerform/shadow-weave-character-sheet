@@ -1,5 +1,6 @@
+
 import React, { useState } from "react";
-import { Token, InitiativeItem } from '@/types/battle'; // Импортируем из types/battle
+import { Token, Initiative } from '@/stores/battleStore'; // Import from store
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -9,8 +10,8 @@ import { useToast } from "@/components/ui/use-toast";
 interface LeftPanelProps {
   tokens: Token[];
   setTokens: React.Dispatch<React.SetStateAction<Token[]>>;
-  initiative: InitiativeItem[];
-  setInitiative: React.Dispatch<React.SetStateAction<InitiativeItem[]>>;
+  initiative: Initiative[];
+  setInitiative: React.Dispatch<React.SetStateAction<Initiative[]>>;
   selectedTokenId: number | null;
   onSelectToken: (id: number | null) => void;
   battleState: {
@@ -50,8 +51,8 @@ const LeftPanel: React.FC<LeftPanelProps> = ({
 
     // Add to initiative if battle is active
     if (battleState.isActive) {
-      const roll = Math.floor(Math.random() * 20) + 1 + Math.floor(newToken.initiative || 0);
-      const newInitiativeItem: InitiativeItem = {
+      const roll = Math.floor(Math.random() * 20) + 1 + Math.floor(newToken.initiative);
+      const newInitiative: Initiative = {
         id: Date.now(),
         tokenId: newToken.id,
         name: newToken.name,
@@ -59,7 +60,7 @@ const LeftPanel: React.FC<LeftPanelProps> = ({
         isActive: false,
       };
 
-      const updatedInitiative = [...initiative, newInitiativeItem].sort((a, b) => b.roll - a.roll);
+      const updatedInitiative = [...initiative, newInitiative].sort((a, b) => b.roll - a.roll);
       setInitiative(updatedInitiative);
     }
   };

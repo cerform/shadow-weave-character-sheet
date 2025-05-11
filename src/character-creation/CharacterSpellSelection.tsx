@@ -1,15 +1,14 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { SpellData, convertCharacterSpellToSpellData } from '@/types/spells';
-import { calculateAvailableSpellsByClassAndLevel, filterSpellsByClassAndLevel } from '@/utils/spellUtils';
-import { getSpellcastingAbilityModifier } from '@/utils/spellUtils';
+import { SpellData } from '@/types/spells';
+import { calculateAvailableSpellsByClassAndLevel, getSpellcastingAbilityModifier, filterSpellsByClassAndLevel } from '@/utils/spellUtils';
 import { useCharacter } from '@/contexts/CharacterContext';
 import { useSpellbook } from '@/contexts/SpellbookContext';
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { Card, CardContent } from "@/components/ui/card"
-import { useTheme, ThemeType } from '@/hooks/use-theme';
+import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
 
 interface CharacterSpellSelectionProps {
@@ -30,7 +29,7 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
   const [filteredSpells, setFilteredSpells] = useState<SpellData[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const { theme } = useTheme();
-  const themeKey = (theme || 'default') as ThemeType;
+  const themeKey = (theme || 'default') as keyof typeof themes;
   const currentTheme = themes[themeKey] || themes.default;
 
   // Получаем модификатор способности для заклинаний
@@ -48,7 +47,7 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
     if (!availableSpells) return;
 
     // Фильтруем по классу и уровню
-    let classFiltered = filterSpellsByClassAndLevel(availableSpells, characterClass, maxSpellLevel);
+    let classFiltered = filterSpellsByClassAndLevel(availableSpells, characterClass, level);
     
     // Дополнительно фильтруем по поисковому запросу
     if (searchTerm) {
@@ -56,37 +55,16 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
       classFiltered = classFiltered.filter(spell => {
         return (
           spell.name.toLowerCase().includes(searchLower) ||
-          (spell.school || '').toLowerCase().includes(searchLower) ||
+          spell.school.toLowerCase().includes(searchLower) ||
           (Array.isArray(spell.description) ? 
             spell.description.join(' ').toLowerCase().includes(searchLower) : 
-            String(spell.description || '').toLowerCase().includes(searchLower))
+            String(spell.description).toLowerCase().includes(searchLower))
         );
       });
     }
     
-    // Convert CharacterSpell[] to SpellData[] to fix type issue
-    setFilteredSpells(classFiltered.map(spell => {
-      // Ensure each spell conforms to SpellData interface
-      return {
-        id: spell.id,
-        name: spell.name,
-        level: spell.level,
-        school: spell.school,
-        castingTime: spell.castingTime || '1 действие',
-        range: spell.range || 'На себя',
-        components: spell.components || '',
-        duration: spell.duration || 'Мгновенная',
-        description: spell.description || '',
-        classes: spell.classes,
-        verbal: spell.verbal,
-        somatic: spell.somatic,
-        material: spell.material,
-        ritual: spell.ritual,
-        concentration: spell.concentration,
-        prepared: spell.prepared
-      };
-    }));
-  }, [availableSpells, characterClass, maxSpellLevel, searchTerm]);
+    setFilteredSpells(classFiltered);
+  }, [availableSpells, characterClass, level, searchTerm]);
 
   useEffect(() => {
     filterSpells();
@@ -126,7 +104,7 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
           className="w-full p-2 border rounded"
           onChange={handleSearchChange}
           style={{
-            backgroundColor: currentTheme.background,
+            backgroundColor: currentTheme.cardBackground,
             borderColor: currentTheme.accent,
             color: currentTheme.textColor
           }}
@@ -137,7 +115,7 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
         <div className="space-y-2">
           {filteredSpells.length > 0 ? (
             filteredSpells.map((spell) => (
-              <Card key={spell.id} style={{backgroundColor: currentTheme.background, borderColor: currentTheme.accent}}>
+              <Card key={spell.id} style={{backgroundColor: currentTheme.cardBackground, borderColor: currentTheme.accent}}>
                 <CardContent className="flex items-center justify-between p-3">
                   <div style={{color: currentTheme.textColor}}>
                     {spell.name} ({spell.school}, {spell.level === 0 ? 'Заговор' : spell.level})

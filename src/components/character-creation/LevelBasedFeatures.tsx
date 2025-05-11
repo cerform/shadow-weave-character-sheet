@@ -6,7 +6,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Character } from "@/types/character";
-import useLevelFeatures from "@/hooks/useLevelFeatures";
+import { useLevelFeatures } from "@/hooks/useLevelFeatures";
 import { getNumericModifier } from "@/utils/characterUtils";
 
 // Define a type for proficiencies that allows both string[] and the structured object format

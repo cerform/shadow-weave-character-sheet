@@ -1,26 +1,17 @@
 
-// Add these type definitions to the file
-
 export interface Token {
   id: number;
+  name: string;
+  type: "player" | "monster" | "npc" | "boss";
   x: number;
   y: number;
-  width?: number;
-  height?: number;
-  name: string;
   img: string;
-  isSelected?: boolean;
-  isPlayer?: boolean;
-  currentHP?: number;
-  maxHP?: number;
+  initiative?: number;
   hp?: number;
   maxHp?: number;
-  initiative?: number;
-  tokenType?: string;
-  type?: string;
-  conditions?: string[];
   ac?: number;
-  resources?: Record<string, any>;
+  conditions?: string[];
+  resources?: Record<string, { max: number; used: number }>;
   visible?: boolean;
   size?: number;
 }
@@ -31,4 +22,26 @@ export interface InitiativeItem {
   name: string;
   roll: number;
   isActive: boolean;
+}
+
+export interface BattleState {
+  isActive: boolean;
+  round: number;
+  currentInitiativeIndex: number;
+  initiative: InitiativeItem[];
+  tokens: Token[];
+  fogOfWar: boolean;
+  revealedAreas?: { x: number, y: number, radius: number }[];
+}
+
+export interface LightSource {
+  id: number;
+  type: 'torch' | 'lantern' | 'daylight' | 'custom';
+  x: number;
+  y: number;
+  radius: number;
+  color: string;
+  intensity: number;
+  flickering?: boolean;
+  attachedToTokenId?: number;
 }

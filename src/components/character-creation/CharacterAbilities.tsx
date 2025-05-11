@@ -1,325 +1,310 @@
-import React, { useState, useEffect } from 'react';
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { useToast } from "@/hooks/use-toast";
 
-import type { CharacterSheet } from "@/utils/characterImports";
-import AbilityScoreMethodSelector from './AbilityScoreMethodSelector';
-import PointBuyPanel from './PointBuyPanel';
-import StandardArrayPanel from './StandardArrayPanel';
-import AbilityRollingPanel from './AbilityRollingPanel';
-import ManualInputPanel from './ManualInputPanel';
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Character } from '@/types/character';
 import NavigationButtons from './NavigationButtons';
-import SectionHeader from "@/components/ui/section-header";
-import { ABILITY_SCORE_CAPS } from '@/types/constants';
+import { Button } from '@/components/ui/button';
+import { MinusIcon, PlusIcon } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { ABILITY_SCORE_CAPS } from '@/types/character';
 
 interface CharacterAbilitiesProps {
-  character: CharacterSheet;
-  onUpdate: (updates: Partial<CharacterSheet>) => void;
-  nextStep: () => void;
-  prevStep: () => void;
-  method: "pointbuy" | "standard" | "roll" | "manual";
-  setMethod: (method: "pointbuy" | "standard" | "roll" | "manual") => void;
-  diceResults: number[][];
-  getModifier: (score: number) => string;
-  rollAllAbilities: () => void;
-  rollSingleAbility?: (abilityIndex: number) => { rolls: number[]; total: number };
-  pointsRemaining?: number;
-  rollsHistory?: { ability: string, rolls: number[], total: number }[];
-  maxScore?: number;
+  character: Character;
+  onUpdate: (updates: Partial<Character>) => void;
+  nextStep?: () => void;
+  prevStep?: () => void;
 }
 
 const CharacterAbilities: React.FC<CharacterAbilitiesProps> = ({
   character,
   onUpdate,
-  nextStep,
-  prevStep,
-  method,
-  setMethod,
-  diceResults,
-  getModifier,
-  rollAllAbilities,
-  rollSingleAbility,
-  pointsRemaining = 27,
-  rollsHistory = [],
-  maxScore
+  nextStep = () => {},
+  prevStep = () => {}
 }) => {
   const { toast } = useToast();
-  
-  // Инициализируем stats с безопасной проверкой на существование character.abilities или character.stats
-  const [stats, setStats] = useState({
-    strength: character?.stats?.strength || character?.abilities?.strength || character?.abilities?.STR || 10,
-    dexterity: character?.stats?.dexterity || character?.abilities?.dexterity || character?.abilities?.DEX || 10,
-    constitution: character?.stats?.constitution || character?.abilities?.constitution || character?.abilities?.CON || 10,
-    intelligence: character?.stats?.intelligence || character?.abilities?.intelligence || character?.abilities?.INT || 10,
-    wisdom: character?.stats?.wisdom || character?.abilities?.wisdom || character?.abilities?.WIS || 10,
-    charisma: character?.stats?.charisma || character?.abilities?.charisma || character?.abilities?.CHA || 10,
+  const [abilities, setAbilities] = useState({
+    STR: character?.abilities?.STR || character?.stats?.strength || 10,
+    DEX: character?.abilities?.DEX || character?.stats?.dexterity || 10,
+    CON: character?.abilities?.CON || character?.stats?.constitution || 10,
+    INT: character?.abilities?.INT || character?.stats?.intelligence || 10,
+    WIS: character?.abilities?.WIS || character?.stats?.wisdom || 10,
+    CHA: character?.abilities?.CHA || character?.stats?.charisma || 10
   });
   
-  // Определяем максимальное значение для характеристик на основе уровня персонажа
-  const [maxStatValue, setMaxStatValue] = useState<number>(ABILITY_SCORE_CAPS.BASE_CAP);
-  
-  // Определяем количество очков для распределения в зависимости от уровня
-  const [adjustedPointsLeft, setAdjustedPointsLeft] = useState<number>(pointsRemaining);
-  const [totalPointsAvailable, setTotalPointsAvailable] = useState<number>(pointsRemaining);
-  
-  useEffect(() => {
-    // Устанавливаем максимальное значение в зависимости от уровня
-    if (maxScore) {
-      setMaxStatValue(maxScore);
-    } else if (character.level >= 16) {
-      setMaxStatValue(ABILITY_SCORE_CAPS.LEGENDARY_CAP);
-    } else if (character.level >= 10) {
-      setMaxStatValue(ABILITY_SCORE_CAPS.EPIC_CAP);
-    } else {
-      setMaxStatValue(ABILITY_SCORE_CAPS.BASE_CAP);
-    }
-    
-    // Уведомляем об изменении лимита
-    if (character.level >= 10) {
-      toast({
-        title: "Повышенный лимит характеристик",
-        description: `На уровне ${character.level} максимальное значение характеристики: ${character.level >= 16 ? 24 : 22}`,
-      });
-    }
-    
-    setTotalPointsAvailable(pointsRemaining);
-    setAdjustedPointsLeft(pointsRemaining);
-  }, [character.level, toast, pointsRemaining, maxScore]);
-  
-  // Для отслеживания использованных очков в point buy
-  const [pointsLeft, setPointsLeft] = useState(totalPointsAvailable);
+  const [method, setMethod] = useState<'standard' | 'pointbuy' | 'roll' | 'manual'>('standard');
+  const [pointsLeft, setPointsLeft] = useState(27);
+  const [maxValue, setMaxValue] = useState(ABILITY_SCORE_CAPS.BASE_CAP);
 
-  useEffect(() => {
-    // При изменении метода расчета характеристик обновляем доступные очки
-    if (method === "pointbuy") {
-      setPointsLeft(totalPointsAvailable);
-    }
-  }, [method, totalPointsAvailable]);
-
-  const [assignedDice, setAssignedDice] = useState<{[key: string]: number | null}>({
-    strength: null,
-    dexterity: null,
-    constitution: null,
-    intelligence: null,
-    wisdom: null,
-    charisma: null,
-  });
-  
-  // Константы для расчета Point Buy
-  const POINT_COSTS: {[key: number]: number} = {
+  // Определяем стоимость очков для point buy
+  const pointCost = {
     8: 0, 9: 1, 10: 2, 11: 3, 12: 4, 13: 5, 14: 7, 15: 9
   };
 
+  // Стандартный массив значений
+  const standardArray = [15, 14, 13, 12, 10, 8];
+  
   useEffect(() => {
-    if (method === "standard") {
-      // Стандартный массив: 15, 14, 13, 12, 10, 8
-      setStats({
-        strength: 15,
-        dexterity: 14,
-        constitution: 13,
-        intelligence: 12,
-        wisdom: 10,
-        charisma: 8,
+    // Устанавливаем максимальное значение в зависимости от уровня
+    if (character.level >= 16) {
+      setMaxValue(ABILITY_SCORE_CAPS.LEGENDARY_CAP);
+    } else if (character.level >= 10) {
+      setMaxValue(ABILITY_SCORE_CAPS.EPIC_CAP);
+    } else {
+      setMaxValue(ABILITY_SCORE_CAPS.BASE_CAP);
+    }
+    
+    // Инициализируем метод
+    initializeMethod('standard');
+  }, []);
+  
+  const initializeMethod = (newMethod: 'standard' | 'pointbuy' | 'roll' | 'manual') => {
+    setMethod(newMethod);
+    
+    if (newMethod === 'standard') {
+      // Используем стандартный массив
+      setAbilities({
+        STR: 15,
+        DEX: 14,
+        CON: 13,
+        INT: 12,
+        WIS: 10,
+        CHA: 8
       });
-    } else if (method === "pointbuy") {
-      // Сбрасываем все до 8 и даем очки для распределения
-      setStats({
-        strength: 8,
-        dexterity: 8,
-        constitution: 8,
-        intelligence: 8,
-        wisdom: 8,
-        charisma: 8,
+    } else if (newMethod === 'pointbuy') {
+      // Сбрасываем все значения до 8 для point buy
+      setAbilities({
+        STR: 8,
+        DEX: 8,
+        CON: 8,
+        INT: 8,
+        WIS: 8,
+        CHA: 8
       });
-      setPointsLeft(totalPointsAvailable);
+      setPointsLeft(27);
+    } else if (newMethod === 'roll') {
+      // Для метода бросков генерируем случайные значения
+      const rollAbility = () => {
+        // Бросаем 4d6, отбрасываем наименьший
+        const rolls = Array(4).fill(0).map(() => Math.floor(Math.random() * 6) + 1);
+        rolls.sort((a, b) => b - a);
+        return rolls[0] + rolls[1] + rolls[2];
+      };
       
-      // Уведомляем о доступных очках
+      setAbilities({
+        STR: rollAbility(),
+        DEX: rollAbility(),
+        CON: rollAbility(),
+        INT: rollAbility(),
+        WIS: rollAbility(),
+        CHA: rollAbility()
+      });
+      
       toast({
-        title: "Доступные очки",
-        description: `У вас ${totalPointsAvailable} очков для распределения характеристик на ${character.level} уровне`
-      });
-    } else if (method === "roll") {
-      // При выборе метода бросков сбрасываем назначенные кости
-      setAssignedDice({
-        strength: null,
-        dexterity: null,
-        constitution: null,
-        intelligence: null,
-        wisdom: null,
-        charisma: null,
+        title: "Кости брошены!",
+        description: "Случайные значения характеристик сгенерированы."
       });
     }
-  }, [method, totalPointsAvailable, character.level, toast]);
-
-  // Обработчики для Point Buy
-  const incrementStat = (stat: keyof typeof stats) => {
-    if (stats[stat] < Math.min(15, maxStatValue) && pointsLeft >= getPointCost(stats[stat] + 1)) {
-      const newPointsLeft = pointsLeft - getPointCost(stats[stat] + 1);
-      setPointsLeft(newPointsLeft);
-      setStats({ ...stats, [stat]: stats[stat] + 1 });
-    }
+    // Для manual не меняем текущие значения
   };
-
-  const decrementStat = (stat: keyof typeof stats) => {
-    if (stats[stat] > 8) {
-      const newPointsLeft = pointsLeft + getPointCost(stats[stat]);
-      setPointsLeft(newPointsLeft);
-      setStats({ ...stats, [stat]: stats[stat] - 1 });
-    }
+  
+  // Расчет модификатора характеристики
+  const getModifier = (score: number) => {
+    const mod = Math.floor((score - 10) / 2);
+    return mod >= 0 ? `+${mod}` : `${mod}`;
   };
-
-  const getPointCost = (value: number): number => {
-    return POINT_COSTS[value] - POINT_COSTS[value - 1] || 0;
-  };
-
-  // Обработчик для ручного ввода
-  const updateStat = (stat: keyof typeof stats, value: number) => {
-    if (value >= 1 && value <= maxStatValue) {
-      setStats({ ...stats, [stat]: value });
-    }
-  };
-
-  // Обработчики для метода бросков
-  const assignDiceToStat = (stat: keyof typeof stats, diceIndex: number) => {
-    // Проверяем, что эта кость еще не назначена
-    if (Object.values(assignedDice).includes(diceIndex)) {
-      return;
-    }
-    
-    // Вычисляем значение из кости (4d6, отбрасывая наименьшее)
-    if (diceResults[diceIndex]) {
-      const sorted = [...diceResults[diceIndex]].sort((a, b) => b - a);
-      const total = sorted.slice(0, 3).reduce((a, b) => a + b, 0);
+  
+  // Обработчики для point buy
+  const incrementAbility = (ability: keyof typeof abilities) => {
+    if (abilities[ability] < 15) {
+      const cost = pointCost[abilities[ability] + 1 as keyof typeof pointCost] - pointCost[abilities[ability] as keyof typeof pointCost];
       
-      // Обновляем значение характеристики и помечаем кость как использованную
-      setStats({ ...stats, [stat]: total });
-      setAssignedDice({ ...assignedDice, [stat]: diceIndex });
-    }
-  };
-
-  // Функция для броска одиночной характеристики
-  const handleRollAbility = (stat: string) => {
-    if (rollSingleAbility) {
-      // Определяем индекс характеристики
-      const abilityKeys = ['strength', 'dexterity', 'constitution', 'intelligence', 'wisdom', 'charisma'];
-      const index = abilityKeys.indexOf(stat);
-      
-      if (index !== -1) {
-        const result = rollSingleAbility(index);
-        setStats({ ...stats, [stat]: result.total });
+      if (pointsLeft >= cost) {
+        setAbilities({...abilities, [ability]: abilities[ability] + 1});
+        setPointsLeft(pointsLeft - cost);
+      } else {
+        toast({
+          title: "Недостаточно очков",
+          description: `Нужно ${cost} очков, доступно ${pointsLeft}`,
+          variant: "destructive"
+        });
       }
+    } else {
+      toast({
+        title: "Достигнут максимум",
+        description: "Максимальное значение в point buy - 15",
+        variant: "destructive"
+      });
     }
   };
-
+  
+  const decrementAbility = (ability: keyof typeof abilities) => {
+    if (abilities[ability] > 8) {
+      const refund = pointCost[abilities[ability] as keyof typeof pointCost] - pointCost[abilities[ability] - 1 as keyof typeof pointCost];
+      
+      setAbilities({...abilities, [ability]: abilities[ability] - 1});
+      setPointsLeft(pointsLeft + refund);
+    }
+  };
+  
+  // Обработчики для manual
+  const updateAbility = (ability: keyof typeof abilities, value: number) => {
+    if (value >= 1 && value <= maxValue) {
+      setAbilities({...abilities, [ability]: value});
+    }
+  };
+  
   const handleNext = () => {
-    // Создаем объекты для обоих форматов abilities и stats
-    const abilitiesFormat = {
-      STR: stats.strength,
-      DEX: stats.dexterity,
-      CON: stats.constitution,
-      INT: stats.intelligence,
-      WIS: stats.wisdom,
-      CHA: stats.charisma,
-      // Для обратной совместимости
-      strength: stats.strength,
-      dexterity: stats.dexterity,
-      constitution: stats.constitution,
-      intelligence: stats.intelligence,
-      wisdom: stats.wisdom,
-      charisma: stats.charisma
-    };
-
-    const statsFormat = {
-      strength: stats.strength,
-      dexterity: stats.dexterity,
-      constitution: stats.constitution,
-      intelligence: stats.intelligence,
-      wisdom: stats.wisdom,
-      charisma: stats.charisma
+    // Форматируем abilities для сохранения
+    const abilitiesData = {
+      // Короткие имена для совместимости
+      STR: abilities.STR,
+      DEX: abilities.DEX,
+      CON: abilities.CON,
+      INT: abilities.INT,
+      WIS: abilities.WIS,
+      CHA: abilities.CHA,
+      // Полные имена для удобства
+      strength: abilities.STR,
+      dexterity: abilities.DEX,
+      constitution: abilities.CON,
+      intelligence: abilities.INT,
+      wisdom: abilities.WIS,
+      charisma: abilities.CHA
     };
     
-    // Сохраняем в оба поля abilities и stats для совместимости
-    const updates: Partial<CharacterSheet> = { 
-      abilities: abilitiesFormat,
-      stats: statsFormat
+    const stats = {
+      strength: abilities.STR,
+      dexterity: abilities.DEX,
+      constitution: abilities.CON,
+      intelligence: abilities.INT,
+      wisdom: abilities.WIS,
+      charisma: abilities.CHA
     };
     
-    // Добавляем abilityPointsUsed только если используем метод pointbuy
-    if (method === 'pointbuy') {
-      updates.abilityPointsUsed = totalPointsAvailable - pointsLeft;
-    }
+    // Сохраняем характеристики
+    onUpdate({ 
+      abilities: abilitiesData,
+      stats: stats
+    });
     
-    onUpdate(updates);
+    // Переходим к следующему шагу
     nextStep();
-  };
-
-  // Проверяем, можно ли перейти к следующему шагу
-  const canProceed = () => {
-    if (method === "standard") return true;
-    if (method === "pointbuy") return pointsLeft >= 0;
-    if (method === "roll") return Object.values(stats).every(val => val >= 3);
-    if (method === "manual") return Object.values(stats).every(val => val >= 1 && val <= maxStatValue);
-    return false;
   };
 
   return (
     <div>
-      <h2 className="text-2xl font-bold mb-4 text-foreground">Распределение характеристик</h2>
+      <h2 className="text-2xl font-bold mb-4">Характеристики персонажа</h2>
       
-      <AbilityScoreMethodSelector 
-        selectedMethod={method}
-        onChange={setMethod}
-      />
-      
-      <div className="my-6">
-        {method === "pointbuy" && (
-          <PointBuyPanel 
-            stats={stats}
-            pointsLeft={pointsLeft}
-            incrementStat={incrementStat}
-            decrementStat={decrementStat}
-            getModifier={getModifier}
-            getPointCost={getPointCost}
-            abilityScorePoints={totalPointsAvailable}
-            maxAbilityScore={maxStatValue}
-          />
-        )}
-        
-        {method === "standard" && (
-          <StandardArrayPanel 
-            stats={stats}
-            getModifier={getModifier}
-          />
-        )}
-        
-        {method === "roll" && (
-          <AbilityRollingPanel 
-            diceResults={diceResults}
-            assignedDice={assignedDice}
-            onRollAllAbilities={rollAllAbilities}
-            onAssignDiceToStat={assignDiceToStat}
-            onRollSingleAbility={handleRollAbility}
-            stats={stats}
-            getModifier={getModifier}
-          />
-        )}
-        
-        {method === "manual" && (
-          <ManualInputPanel 
-            abilityScores={stats}
-            setAbilityScores={setStats}
-            maxAbilityScore={maxStatValue}
-            level={character.level}
-          />
-        )}
+      {/* Селектор метода */}
+      <div className="mb-6">
+        <h3 className="font-medium mb-2">Выберите метод определения характеристик:</h3>
+        <div className="flex flex-wrap gap-2">
+          <Button
+            variant={method === 'standard' ? 'default' : 'outline'}
+            onClick={() => initializeMethod('standard')}
+          >
+            Стандартный набор
+          </Button>
+          <Button
+            variant={method === 'pointbuy' ? 'default' : 'outline'}
+            onClick={() => initializeMethod('pointbuy')}
+          >
+            Покупка очков
+          </Button>
+          <Button
+            variant={method === 'roll' ? 'default' : 'outline'}
+            onClick={() => initializeMethod('roll')}
+          >
+            Броски
+          </Button>
+          <Button
+            variant={method === 'manual' ? 'default' : 'outline'}
+            onClick={() => initializeMethod('manual')}
+          >
+            Ручной ввод
+          </Button>
+        </div>
       </div>
-
+      
+      {/* Интерфейс для выбранного метода */}
+      <Card className="mb-6">
+        <CardContent className="pt-6">
+          {method === 'pointbuy' && (
+            <div className="mb-3 flex justify-between items-center">
+              <span>Доступно очков: <strong>{pointsLeft}</strong></span>
+              <span className="text-sm text-muted-foreground">
+                (Стандартные значения: {standardArray.join(', ')})
+              </span>
+            </div>
+          )}
+          
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            {Object.entries(abilities).map(([ability, score]) => (
+              <div key={ability} className="border rounded-lg p-4">
+                <div className="text-center mb-1">
+                  <span className="font-bold">{ability}</span>
+                </div>
+                
+                {method === 'manual' ? (
+                  // Для ручного метода показываем инпут
+                  <input
+                    type="number"
+                    min="1"
+                    max={maxValue}
+                    value={score}
+                    onChange={(e) => updateAbility(ability as keyof typeof abilities, parseInt(e.target.value) || 0)}
+                    className="w-full text-center p-1 border rounded"
+                  />
+                ) : (
+                  // Для других методов показываем значение с кнопками +/-
+                  <div className="flex items-center justify-between">
+                    {method === 'pointbuy' && (
+                      <Button 
+                        size="icon" 
+                        variant="outline"
+                        onClick={() => decrementAbility(ability as keyof typeof abilities)}
+                        disabled={score <= 8}
+                      >
+                        <MinusIcon className="h-4 w-4" />
+                      </Button>
+                    )}
+                    
+                    <div className="flex flex-col items-center">
+                      <span className="text-xl font-bold">{score}</span>
+                      <span className="text-sm text-muted-foreground">
+                        Мод: {getModifier(score)}
+                      </span>
+                    </div>
+                    
+                    {method === 'pointbuy' && (
+                      <Button 
+                        size="icon" 
+                        variant="outline"
+                        onClick={() => incrementAbility(ability as keyof typeof abilities)}
+                        disabled={score >= 15 || pointsLeft <= 0}
+                      >
+                        <PlusIcon className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+          
+          {method === 'roll' && (
+            <Button 
+              className="w-full mt-4" 
+              onClick={() => initializeMethod('roll')}
+            >
+              Перебросить все
+            </Button>
+          )}
+        </CardContent>
+      </Card>
+      
       <NavigationButtons
-        allowNext={canProceed()}
+        allowNext={true}
         nextStep={handleNext}
         prevStep={prevStep}
         isFirstStep={false}

@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Token } from '@/types/battle';
+import { Token } from '@/stores/battleStore';
 import { Button } from '@/components/ui/button';
 import { Trash2 } from 'lucide-react';
 

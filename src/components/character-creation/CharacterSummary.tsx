@@ -1,7 +1,8 @@
+
 import React from 'react';
 import { Character } from '@/types/character';
 import { Card, CardContent } from '@/components/ui/card';
-import { getModifier, getAbilityScore } from '@/utils/abilityUtils';
+import { getAbilityModifierString } from '@/utils/abilityUtils';
 
 interface CharacterSummaryProps {
   character: Character;
@@ -77,30 +78,12 @@ const CharacterSummary: React.FC<CharacterSummaryProps> = ({ character }) => {
             <div>
               <h4 className="font-medium mb-1">Характеристики:</h4>
               <div className="grid grid-cols-2 gap-2 text-sm">
-                <div className="flex justify-between items-center">
-                  <span>Сила (STR)</span>
-                  <span className="font-semibold">{character.abilities?.STR || 10} ({getModifier(getAbilityScore(character, 'STR'))})</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span>Ловкость (DEX)</span>
-                  <span className="font-semibold">{character.abilities?.DEX || 10} ({getModifier(getAbilityScore(character, 'DEX'))})</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span>Телосложение (CON)</span>
-                  <span className="font-semibold">{character.abilities?.CON || 10} ({getModifier(getAbilityScore(character, 'CON'))})</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span>Интеллект (INT)</span>
-                  <span className="font-semibold">{character.abilities?.INT || 10} ({getModifier(getAbilityScore(character, 'INT'))})</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span>Мудрость (WIS)</span>
-                  <span className="font-semibold">{character.abilities?.WIS || 10} ({getModifier(getAbilityScore(character, 'WIS'))})</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span>Харизма (CHA)</span>
-                  <span className="font-semibold">{character.abilities?.CHA || 10} ({getModifier(getAbilityScore(character, 'CHA'))})</span>
-                </div>
+                <div>СИЛ: {character.abilities?.strength || character.strength || '–'} ({getAbilityModifierString(character.abilities?.strength || character.strength)})</div>
+                <div>ЛОВ: {character.abilities?.dexterity || character.dexterity || '–'} ({getAbilityModifierString(character.abilities?.dexterity || character.dexterity)})</div>
+                <div>ТЕЛ: {character.abilities?.constitution || character.constitution || '–'} ({getAbilityModifierString(character.abilities?.constitution || character.constitution)})</div>
+                <div>ИНТ: {character.abilities?.intelligence || character.intelligence || '–'} ({getAbilityModifierString(character.abilities?.intelligence || character.intelligence)})</div>
+                <div>МДР: {character.abilities?.wisdom || character.wisdom || '–'} ({getAbilityModifierString(character.abilities?.wisdom || character.wisdom)})</div>
+                <div>ХАР: {character.abilities?.charisma || character.charisma || '–'} ({getAbilityModifierString(character.abilities?.charisma || character.charisma)})</div>
               </div>
             </div>
             
