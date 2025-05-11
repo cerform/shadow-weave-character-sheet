@@ -38,6 +38,17 @@ const ProfileCard: React.FC<ProfileCardProps> = ({ character }) => {
     name: 'profile'
   };
   
+  // Добавляем проверку на null или undefined перед доступом к свойствам
+  if (!character) {
+    return (
+      <Card className="overflow-hidden border" style={{ borderColor: cardTheme.accent + '60', background: cardTheme.background }}>
+        <div className="p-6 text-center">
+          <p className="text-muted-foreground">Данные персонажа не загружены</p>
+        </div>
+      </Card>
+    );
+  }
+  
   return (
     <Card className="overflow-hidden border" style={{ borderColor: cardTheme.accent + '60', background: cardTheme.background }}>
       <div className="p-6">

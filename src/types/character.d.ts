@@ -42,11 +42,11 @@ export interface CharacterSpell {
 export interface Character {
   id: string;
   name: string;
-  race: string;
+  level?: number | string;
+  className?: string;
+  class?: string;
+  race?: string;
   subrace?: string;
-  class: string;
-  subclass?: string;
-  level: number;
   background?: string;
   alignment?: string;
   experience?: number;
@@ -105,17 +105,19 @@ export interface Character {
   // Personal details
   appearance?: string;
   backstory?: string;
-  personality?: string | {
-    traits?: string;
-    ideals?: string;
-    bonds?: string;
-    flaws?: string;
+  personality?: {   // Добавляем поддержку personality
+    traits?: string[];
+    ideals?: string[];
+    bonds?: string[];
+    flaws?: string[];
   };
   personalityTraits?: string;
   ideals?: string;
   bonds?: string;
   flaws?: string;
   portrait?: string;
+  avatar?: string;  // Добавляем поддержку аватара
+  image?: string;   // Добавляем поддержку изображения персонажа
   
   // Notes
   notes?: string;

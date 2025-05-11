@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -97,10 +96,7 @@ const RecentCharactersPage: React.FC = () => {
       console.error('RecentCharactersPage: Ошибка при загрузке персонажей:', err);
       
       // Исправляем генерацию toast с ошибкой
-      toast({
-        description: err instanceof Error ? err.message : "Неизвестная ошибка",
-        variant: "destructive"
-      });
+      toast.error(err instanceof Error ? err.message : "Неизвестная ошибка");
     } finally {
       setIsRefreshing(false);
     }

@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Save, Camera, Scroll, BookOpen, Shield, Crown, Sword } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -10,7 +9,7 @@ import { useTheme } from "@/hooks/use-theme";
 import { themes } from "@/lib/themes";
 import BackgroundWrapper from "@/components/layout/BackgroundWrapper";
 import { AvatarSelector } from "@/components/character/AvatarSelector";
-import { ProfileCard } from "@/components/character/ProfileCard";
+import { UserProfileCard } from "@/components/character/UserProfileCard";
 import { CharacterInfoCard } from "@/components/character/CharacterInfoCard";
 import { AchievementsCard } from "@/components/character/AchievementsCard";
 
@@ -146,8 +145,8 @@ const ProfilePage = () => {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-            {/* Карточка игрока */}
-            <ProfileCard 
+            {/* Используем новый компонент UserProfileCard вместо ProfileCard */}
+            <UserProfileCard 
               user={currentUser} 
               username={username}
               setUsername={setUsername}
