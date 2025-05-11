@@ -1,4 +1,3 @@
-
 import { Character } from '@/types/character';
 import { Skill, SKILL_LIST, SKILL_MAP } from '@/types/constants';
 
@@ -93,7 +92,6 @@ export const createDefaultCharacter = (): Character => {
       armor: [],
       skills: []
     },
-    inventory: [],
     spells: [],
     features: [],
     notes: '',
@@ -178,7 +176,6 @@ export const convertToCharacter = (partial: Partial<Character>): Character => {
       armor: partial.proficiencies?.armor || [],
       skills: partial.proficiencies?.skills || []
     },
-    inventory: partial.inventory || [],
     spells: partial.spells || [],
     features: partial.features || [],
     notes: partial.notes || '',

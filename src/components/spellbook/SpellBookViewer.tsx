@@ -12,7 +12,7 @@ import { ChevronDown, ChevronUp, Plus, Search, BookOpen } from 'lucide-react';
 import SpellCard from './SpellCard';
 import SpellDetails from './SpellDetails';
 import { normalizeSpells, convertToSpellData } from '@/utils/spellUtils';
-import { ThemeStyles } from '@/lib/themes';
+import type { ThemeStyles } from '@/types/theme';
 
 interface SpellBookViewerProps {
   character: Character;
@@ -89,10 +89,14 @@ const SpellBookViewer: React.FC<SpellBookViewerProps> = ({ character, onAddSpell
     info: '#3b82f6',
     backgroundBrightness: 100,
     backgroundGradient: 'linear-gradient(to bottom, rgba(0,0,0,0.1), rgba(0,0,0,0.3))',
-    decorativeCorners: true
+    decorativeCorners: true,
+    fontFamily: 'system-ui, sans-serif'
   };
 
-  const currentThemeStyle = themeStyles || defaultThemeStyle;
+  // Use the theme provided by context or fallback to default
+  const currentThemeStyle: ThemeStyles = themeStyles 
+    ? { ...defaultThemeStyle, ...themeStyles }  // Merge with defaults to ensure all required props
+    : defaultThemeStyle;
 
   return (
     <div className="flex flex-col h-full">

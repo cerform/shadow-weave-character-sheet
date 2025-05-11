@@ -1,5 +1,6 @@
 
 // Re-export types
+import { Character, CharacterSpell } from '@/types/character';
 export type { Character, CharacterSpell } from '@/types/character';
 export type { SpellData } from '@/types/spells';
 export type { Skill } from '@/types/constants';
