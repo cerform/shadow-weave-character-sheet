@@ -24,7 +24,7 @@ export interface Character {
   maxHp: number;
   currentHp: number;
   tempHp?: number;
-  temporaryHp?: number;  // Added for compatibility
+  temporaryHp?: number;  // Добавлено для совместимости
   armorClass: number;
   proficiencyBonus: number;
   speed: number;
@@ -36,7 +36,7 @@ export interface Character {
     tools: string[];
     weapons: string[];
     armor: string[];
-    skills?: string[];  // Added missing property
+    skills?: string[];
   };
   hitDice?: {
     total: number;
@@ -61,14 +61,14 @@ export interface Character {
   bonds?: string;
   flaws?: string;
   backstory?: string;
-  initiative?: number;  // Added missing property
+  initiative?: number;
   spellSlots?: Record<string, { max: number; used: number }>;
-  resources?: Record<string, { max: number; used: number; recoveryType?: 'short' | 'short-rest' | 'long' | 'long-rest' }>;  // Added missing property with recovery type
-  sorceryPoints?: {     // Added missing property
+  resources?: Record<string, { max: number; used: number; recoveryType?: 'short' | 'short-rest' | 'long' | 'long-rest' }>;
+  sorceryPoints?: {
     max: number;
     current: number;
   };
-  lastDiceRoll?: {      // Added missing property
+  lastDiceRoll?: {
     diceType: string;
     count: number;
     modifier: number;
@@ -77,7 +77,7 @@ export interface Character {
     label: string;
     timestamp: string;
   };
-  notes?: string;       // Added missing property
+  notes?: string;
   spellcasting?: {
     ability: string;
     saveDC: number;
