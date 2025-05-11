@@ -8,19 +8,19 @@ interface ThemeContextType {
   setTheme: (theme: ThemeType) => void;
 }
 
+interface ThemeProviderProps {
+  children: React.ReactNode;
+  defaultTheme?: ThemeType;
+}
+
 const ThemeContext = createContext<ThemeContextType>({
   theme: 'default',
   setTheme: () => {},
 });
 
-interface ThemeProviderProps {
-  defaultTheme?: ThemeType;
-  children: React.ReactNode;
-}
-
 export function ThemeProvider({
-  defaultTheme = 'default',
   children,
+  defaultTheme = 'default',
 }: ThemeProviderProps) {
   // Use localStorage to persist theme between page reloads
   const [theme, setTheme] = useState<ThemeType>(() => {
@@ -62,5 +62,4 @@ export const useTheme = () => {
   return context;
 };
 
-// Экспортируем ThemeProvider по умолчанию для импорта без деструктуризации
 export default ThemeProvider;

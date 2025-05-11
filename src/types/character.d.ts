@@ -105,12 +105,12 @@ export interface Character {
   // Personal details
   appearance?: string;
   backstory?: string;
-  personality?: {
+  personality?: string | {
     traits?: string;
     ideals?: string;
     bonds?: string;
     flaws?: string;
-  } | string;
+  };
   ideals?: string;
   bonds?: string;
   flaws?: string;

@@ -1,44 +1,63 @@
 
 /**
- * Calculates ability modifier based on ability score
- * @param abilityScore The ability score value
- * @returns The modifier as a number
+ * Get a modifier string from an ability score
+ * @param abilityScore The ability score
+ * @returns A formatted string with the modifier (e.g. "+3" or "-1")
  */
-export function getModifier(abilityScore: number): number {
-  return Math.floor((abilityScore - 10) / 2);
-}
-
-/**
- * Formats ability modifier as a string with + or - prefix
- * @param abilityScore The ability score value
- * @returns Formatted modifier string like "+3" or "-1"
- */
-export function getModifierText(abilityScore: number): string {
-  const mod = getModifier(abilityScore);
-  return mod >= 0 ? `+${mod}` : `${mod}`;
-}
-
-/**
- * Returns ability score based on specified method
- * @param method The method for generating ability scores
- * @returns Default ability score based on method
- */
-export function getDefaultAbilityScore(method: "standard" | "pointbuy" | "roll" | "manual"): number {
-  switch (method) {
-    case "standard":
-      return 10;
-    case "pointbuy":
-      return 8;
-    default:
-      return 10;
-  }
-}
-
-/**
- * Formats ability modifier as a string with proper sign
- * @param modifier The ability modifier value
- * @returns Formatted string like "+3" or "-1"
- */
-export function getAbilityModifierString(modifier: number): string {
+export const getModifier = (abilityScore: number): string => {
+  const modifier = Math.floor((abilityScore - 10) / 2);
   return modifier >= 0 ? `+${modifier}` : `${modifier}`;
-}
+};
+
+/**
+ * Get a numeric modifier from an ability score
+ * @param abilityScore The ability score
+ * @returns The numeric modifier
+ */
+export const getModifierValue = (abilityScore: number): number => {
+  return Math.floor((abilityScore - 10) / 2);
+};
+
+/**
+ * Get ability modifier string for a specific ability
+ * @param character The character object
+ * @param abilityName The name of the ability
+ * @returns A formatted string with the modifier
+ */
+export const getAbilityModifierString = (character: any, abilityName: string): string => {
+  const abilityScore = getAbilityScore(character, abilityName);
+  return getModifier(abilityScore);
+};
+
+/**
+ * Get an ability score from a character
+ * @param character The character object
+ * @param abilityName The name of the ability
+ * @returns The ability score value
+ */
+export const getAbilityScore = (character: any, abilityName: string): number => {
+  if (!character) return 10;
+  
+  const nameLower = abilityName.toLowerCase();
+  
+  if (nameLower === 'strength' || nameLower === 'str') {
+    return character.strength || character.abilities?.STR || character.abilities?.strength || 10;
+  }
+  if (nameLower === 'dexterity' || nameLower === 'dex') {
+    return character.dexterity || character.abilities?.DEX || character.abilities?.dexterity || 10;
+  }
+  if (nameLower === 'constitution' || nameLower === 'con') {
+    return character.constitution || character.abilities?.CON || character.abilities?.constitution || 10;
+  }
+  if (nameLower === 'intelligence' || nameLower === 'int') {
+    return character.intelligence || character.abilities?.INT || character.abilities?.intelligence || 10;
+  }
+  if (nameLower === 'wisdom' || nameLower === 'wis') {
+    return character.wisdom || character.abilities?.WIS || character.abilities?.wisdom || 10;
+  }
+  if (nameLower === 'charisma' || nameLower === 'cha') {
+    return character.charisma || character.abilities?.CHA || character.abilities?.charisma || 10;
+  }
+  
+  return 10;
+};
