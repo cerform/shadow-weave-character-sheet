@@ -28,7 +28,7 @@ export const processShortRest = (character: any) => {
     });
   }
   
-  // Fix the comparison to use REST_TYPES.SHORT instead of "shortRest"
+  // Fix the comparison to use REST_TYPES.SHORT
   // Use consistent REST_TYPES for the comparison
   if (REST_TYPES.SHORT) {
     // Process any additional short rest mechanics
@@ -88,7 +88,7 @@ export const processLongRest = (character: any) => {
     });
   }
   
-  // Fix the comparison to use REST_TYPES.LONG instead of "longRest"
+  // Fix the comparison to use REST_TYPES.LONG
   // Use consistent REST_TYPES for the comparison
   if (REST_TYPES.LONG) {
     // Process any additional long rest mechanics

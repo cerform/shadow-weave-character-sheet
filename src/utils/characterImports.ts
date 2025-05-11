@@ -7,6 +7,5 @@ export type { Skill } from '@/types/constants';
 export type CharacterSheet = Character;
 
 // Re-export utility functions
-export { convertToCharacter } from './characterUtils';
+export { convertToCharacter, getModifier, getModifierString, getNumericModifier, getAbilityModifier, getModifierFromAbilityScore, calculateAbilityModifier, calculateInitiative, calculateArmorClass, calculateMaxHP } from './characterUtils';
 export { calculateSpellSaveDC, calculateSpellAttackBonus } from './spellUtils';
-export { getModifierString } from './characterUtils';

@@ -1,7 +1,6 @@
-
 import { Character, CharacterSpell } from '@/types/character';
 import { SpellData } from '@/types/spells';
-import { getNumericModifier } from '@/utils/characterUtils';
+import { getModifier } from '@/utils/characterUtils';
 
 /**
  * Calculate available spells by class and level
@@ -128,18 +127,18 @@ export function getSpellcastingAbilityModifier(character: Character): number {
   
   // Интеллект для волшебников
   if (classLower.includes('волшебник') || classLower.includes('wizard')) {
-    return getNumericModifier(character.abilities?.intelligence || character.intelligence || 10);
+    return getModifier(character.abilities?.intelligence || character.intelligence || 10);
   }
   
   // Мудрость для жрецов, друидов и следопытов
   if (classLower.includes('жрец') || classLower.includes('cleric') || 
       classLower.includes('друид') || classLower.includes('druid') ||
       classLower.includes('следопыт') || classLower.includes('ranger')) {
-    return getNumericModifier(character.abilities?.wisdom || character.wisdom || 10);
+    return getModifier(character.abilities?.wisdom || character.wisdom || 10);
   }
   
   // Харизма для бардов, чародеев, колдунов и паладинов
-  return getNumericModifier(character.abilities?.charisma || character.charisma || 10);
+  return getModifier(character.abilities?.charisma || character.charisma || 10);
 }
 
 /**
@@ -198,12 +197,12 @@ export function getPreparedSpellsLimit(character: Character, className: string):
   
   // Get relevant ability modifier
   if (classLower.includes('волшебник') || classLower.includes('wizard')) {
-    abilityMod = getNumericModifier(character.abilities?.intelligence || character.intelligence || 10);
+    abilityMod = getModifier(character.abilities?.intelligence || character.intelligence || 10);
   } else if (classLower.includes('жрец') || classLower.includes('cleric') || 
             classLower.includes('друид') || classLower.includes('druid')) {
-    abilityMod = getNumericModifier(character.abilities?.wisdom || character.wisdom || 10);
+    abilityMod = getModifier(character.abilities?.wisdom || character.wisdom || 10);
   } else if (classLower.includes('паладин') || classLower.includes('paladin')) {
-    abilityMod = getNumericModifier(character.abilities?.charisma || character.charisma || 10);
+    abilityMod = getModifier(character.abilities?.charisma || character.charisma || 10);
   }
   
   // Calculate prepared spells limit

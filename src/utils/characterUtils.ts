@@ -1,5 +1,63 @@
+
 import { Character } from '@/types/character';
 import { Skill, SKILL_LIST, SKILL_MAP } from '@/types/constants';
+
+// Add missing utility functions for modifiers
+export const getModifier = (abilityScore: number): number => {
+  return Math.floor((abilityScore - 10) / 2);
+};
+
+export const getModifierString = (value: number): string => {
+  const modifier = getModifier(value);
+  return modifier >= 0 ? `+${modifier}` : `${modifier}`;
+};
+
+// Add alias functions that various components are expecting
+export const getNumericModifier = getModifier;
+export const getAbilityModifier = getModifier;
+export const getModifierFromAbilityScore = getModifier;
+export const calculateAbilityModifier = getModifier;
+
+// Create missing calculation functions
+export const calculateInitiative = (character: Partial<Character>): number => {
+  const dexMod = getModifier(character?.abilities?.DEX || character?.dexterity || 10);
+  return dexMod;
+};
+
+export const calculateArmorClass = (character: Partial<Character>): number => {
+  const dexMod = getModifier(character?.abilities?.DEX || character?.dexterity || 10);
+  return 10 + dexMod; // Basic AC calculation
+};
+
+export const calculateMaxHP = (character: Partial<Character>): number => {
+  if (!character || !character.level || !character.class) return 10;
+  
+  const conModifier = getModifier(character?.abilities?.CON || character?.constitution || 10);
+  const classLower = character.class.toLowerCase();
+  
+  // Determine hit die based on class
+  let hitDie = 8; // default
+  if (classLower.includes('варвар') || classLower.includes('barbarian')) {
+    hitDie = 12;
+  } else if (classLower.includes('воин') || classLower.includes('fighter') || 
+             classLower.includes('паладин') || classLower.includes('paladin') ||
+             classLower.includes('рейнджер') || classLower.includes('ranger')) {
+    hitDie = 10;
+  } else if (classLower.includes('чародей') || classLower.includes('sorcerer') || 
+             classLower.includes('волшебник') || classLower.includes('wizard')) {
+    hitDie = 6;
+  }
+  
+  // First level gets maximum hit points
+  let maxHp = hitDie + conModifier;
+  
+  // Add average hit die + con mod for each level after 1st
+  for (let i = 1; i < character.level; i++) {
+    maxHp += Math.floor(hitDie / 2) + 1 + conModifier;
+  }
+  
+  return Math.max(1, maxHp); // Minimum 1 HP
+};
 
 export const createDefaultCharacter = (): Character => {
   // Create a unique ID for the character
@@ -48,8 +106,8 @@ export const createDefaultCharacter = (): Character => {
     inspiration: false,
     spellcasting: {
       ability: '',
-      saveDC: 0,
-      attackBonus: 0
+      dc: 0,
+      attack: 0
     }
   };
 };
@@ -134,19 +192,10 @@ export const convertToCharacter = (partial: Partial<Character>): Character => {
     inspiration: partial.inspiration || false,
     spellcasting: {
       ability: partial.spellcasting?.ability || '',
-      saveDC: partial.spellcasting?.saveDC || 0,
-      attackBonus: partial.spellcasting?.attackBonus || 0
+      dc: partial.spellcasting?.dc || 0,
+      attack: partial.spellcasting?.attack || 0
     }
   };
   
   return character;
-};
-
-export const getModifier = (abilityScore: number): number => {
-  return Math.floor((abilityScore - 10) / 2);
-};
-
-export const getModifierString = (value: number): string => {
-  const modifier = getModifier(value);
-  return modifier >= 0 ? `+${modifier}` : `${modifier}`;
 };

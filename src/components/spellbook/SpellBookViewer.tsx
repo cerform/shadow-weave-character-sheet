@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -64,6 +65,26 @@ const SpellBookViewer: React.FC<SpellBookViewerProps> = ({ character, onAddSpell
   const toggleSpellExpansion = (spellId: string) => {
     setExpandedSpellId(expandedSpellId === spellId ? null : spellId);
   };
+
+  // Create a default theme style if none is provided
+  const defaultThemeStyle = {
+    name: 'default',
+    background: '#ffffff',
+    foreground: '#000000',
+    cardBackground: '#f8f9fa',
+    cardForeground: '#000000',
+    borderColor: '#e2e8f0',
+    primaryColor: '#3b82f6',
+    primaryColorForeground: '#ffffff',
+    accentColor: '#10b981',
+    accentColorForeground: '#ffffff',
+    mutedColor: '#6b7280',
+    mutedColorForeground: '#ffffff',
+    textColor: '#334155',
+    buttonText: '#ffffff'
+  };
+
+  const currentThemeStyle = themeStyles || defaultThemeStyle;
 
   return (
     <div className="flex flex-col h-full">
@@ -162,7 +183,7 @@ const SpellBookViewer: React.FC<SpellBookViewerProps> = ({ character, onAddSpell
                           <CardContent className="pt-0 pb-3">
                             <SpellCard 
                               spell={spell} 
-                              currentTheme={themeStyles || {}}
+                              currentTheme={currentThemeStyle}
                               onClick={() => handleSpellClick(spell.id)}
                             />
                           </CardContent>
