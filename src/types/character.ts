@@ -151,11 +151,14 @@ export interface Character {
   // Добавляем поле для очков колдовства чародея
   sorceryPoints?: {
     max: number;
-    used: number;
+    current: number;
+    used?: number; // Добавляем для совместимости
   };
   // Добавляем поля для навыков
   skillProficiencies?: Record<string, boolean>;
   expertise?: Record<string, boolean>;
+  // Добавляем поле для бонусов навыков
+  skillBonuses?: Record<string, number>;
 }
 
 export interface CharacterSpell {

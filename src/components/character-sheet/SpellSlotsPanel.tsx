@@ -98,7 +98,7 @@ export const SpellSlotsPanel: React.FC<SpellSlotsPanelProps> = ({ character, onU
     // Количество получаемых очков равно уровню ячейки
     const pointsGained = level;
     const maxPoints = character.sorceryPoints.max;
-    const currentPoints = character.sorceryPoints.current;
+    const currentPoints = character.sorceryPoints.current || 0;
     
     if (currentPoints + pointsGained > maxPoints) {
       toast({
@@ -118,7 +118,7 @@ export const SpellSlotsPanel: React.FC<SpellSlotsPanelProps> = ({ character, onU
     
     const updatedSorceryPoints = {
       ...character.sorceryPoints,
-      current: character.sorceryPoints.current + pointsGained
+      current: currentPoints + pointsGained
     };
     
     onUpdate({

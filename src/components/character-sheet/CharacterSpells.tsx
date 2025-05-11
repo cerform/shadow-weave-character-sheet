@@ -4,7 +4,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Character, CharacterSpell } from '@/types/character';
-import { normalizeSpells, convertToSpellData } from '@/utils/spellUtils'; // Обновленный импорт
+import { normalizeSpells, convertToSpellData } from '@/utils/spellHelpers'; 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Book, CheckCircle, Circle } from 'lucide-react';
@@ -37,13 +37,6 @@ const CharacterSpells: React.FC<CharacterSpellsProps> = ({
   // Группируем заклинания по уровням
   const spellsByLevel = useMemo(() => {
     return spells.reduce((acc: Record<number, CharacterSpell[]>, spell) => {
-      if (typeof spell === 'string') {
-        // Если заклинание представлено строкой, считаем его заговором
-        if (!acc[0]) acc[0] = [];
-        acc[0].push({ name: spell, level: 0, prepared: true });
-        return acc;
-      }
-      
       const level = spell.level || 0;
       if (!acc[level]) acc[level] = [];
       acc[level].push(spell);
@@ -53,10 +46,7 @@ const CharacterSpells: React.FC<CharacterSpellsProps> = ({
 
   // Подготовленные заклинания
   const preparedSpells = useMemo(() => {
-    return spells.filter(spell => {
-      if (typeof spell === 'string') return true; // Строковые заклинания всегда считаем подготовленными
-      return spell.prepared;
-    });
+    return spells.filter(spell => spell.prepared);
   }, [spells]);
 
   // Получаем цвет для бейджа уровня заклинания
@@ -81,17 +71,23 @@ const CharacterSpells: React.FC<CharacterSpellsProps> = ({
     if (!onUpdate) return;
 
     const updatedSpells = spells.map(spell => {
-      if (typeof spell === 'string') {
-        return spell; // Возвращаем строковые заклинания как есть
-      }
-      
       if (spell.name === spellName) {
         return { ...spell, prepared: !spell.prepared };
       }
       return spell;
     });
 
-    onUpdate({ spells: updatedSpells });
+    // Convert back to original format (mixed array of strings and objects)
+    const originalFormatSpells = character.spells?.map(origSpell => {
+      if (typeof origSpell === 'string') {
+        return origSpell;
+      } else {
+        const updatedSpell = updatedSpells.find(s => s.name === origSpell.name);
+        return updatedSpell || origSpell;
+      }
+    });
+
+    onUpdate({ spells: originalFormatSpells });
   };
 
   // Обработчик клика по заклинанию с правильным преобразованием типов
@@ -140,15 +136,13 @@ const CharacterSpells: React.FC<CharacterSpellsProps> = ({
               {Object.entries(spellsByLevel)
                 .sort(([a], [b]) => Number(a) - Number(b))
                 .map(([level, spellList]) => {
-                  // Проверяем, является ли spellList массивом перед вызовом map
-                  const spells = Array.isArray(spellList) ? spellList : [];
                   return (
                     <div key={`level-group-${level}`} className="space-y-2">
                       <h3 className="text-lg font-medium" style={{ color: currentTheme.textColor }}>
                         {Number(level) === 0 ? 'Заговоры' : `Заклинания ${level} уровня`}
                       </h3>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                        {spells.map((spell: CharacterSpell, index) => (
+                        {spellList.map((spell, index) => (
                           <div 
                             key={`all-${spell.name}-${index}`} 
                             className="flex items-center justify-between p-2 border rounded-md hover:bg-black/20"
@@ -198,30 +192,25 @@ const CharacterSpells: React.FC<CharacterSpellsProps> = ({
               {preparedSpells.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                   {preparedSpells.map((spell, index) => {
-                    // Преобразуем строку в объект заклинания если нужно
-                    const spellObj = typeof spell === 'string' 
-                      ? { name: spell, level: 0, prepared: true } as CharacterSpell
-                      : spell;
-                      
                     return (
                       <div 
-                        key={`prepared-${spellObj.name}-${index}`} 
+                        key={`prepared-${spell.name}-${index}`} 
                         className="flex items-center justify-between p-2 border rounded-md hover:bg-black/20"
-                        style={{ borderColor: getSpellLevelColor(spellObj.level || 0) }}
+                        style={{ borderColor: getSpellLevelColor(spell.level || 0) }}
                       >
                         <div className="flex items-center gap-2">
                           <Badge 
-                            style={{ backgroundColor: getSpellLevelColor(spellObj.level || 0) }}
+                            style={{ backgroundColor: getSpellLevelColor(spell.level || 0) }}
                             className="text-white"
                           >
-                            {spellObj.level === 0 ? 'Заговор' : spellObj.level}
+                            {spell.level === 0 ? 'Заговор' : spell.level}
                           </Badge>
-                          <span style={{ color: currentTheme.textColor }}>{spellObj.name}</span>
+                          <span style={{ color: currentTheme.textColor }}>{spell.name}</span>
                         </div>
                         <Button 
                           variant="ghost"
                           size="sm"
-                          onClick={() => handleSpellClick(spellObj)}
+                          onClick={() => handleSpellClick(spell)}
                         >
                           <Book className="h-4 w-4" />
                         </Button>
@@ -240,12 +229,10 @@ const CharacterSpells: React.FC<CharacterSpellsProps> = ({
             {Object.entries(spellsByLevel)
               .sort(([a], [b]) => Number(a) - Number(b))
               .map(([level, spellList]) => {
-                // Проверяем, является ли spellList массивом перед вызовом map
-                const spells = Array.isArray(spellList) ? spellList : [];
                 return (
                   <TabsContent key={`level-content-${level}`} value={level} className="space-y-2">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                      {spells.map((spell: CharacterSpell, index) => (
+                      {spellList.map((spell, index) => (
                         <div 
                           key={`level-spell-${spell.name}-${index}`} 
                           className="flex items-center justify-between p-2 border rounded-md hover:bg-black/20"

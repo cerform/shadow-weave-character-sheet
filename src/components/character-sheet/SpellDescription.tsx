@@ -1,143 +1,169 @@
 
-import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import React from 'react';
 import { SpellData } from '@/types/spells';
-import { useTheme } from '@/hooks/use-theme';
-import { themes } from '@/lib/themes';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import { Clock, Target, Box, BookOpen, CheckCircle, AlertCircle } from 'lucide-react';
 
 interface SpellDescriptionProps {
   spell: SpellData;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+  isPrepared?: boolean;
+  isKnown?: boolean;
 }
 
-export const SpellDescription: React.FC<SpellDescriptionProps> = ({ spell, open, onOpenChange }) => {
-  const { theme } = useTheme();
-  const themeKey = (theme || 'default') as keyof typeof themes;
-  const currentTheme = themes[themeKey] || themes.default;
-
-  // Функция для преобразования названий школ магии
-  const getSchoolTranslation = (school: string): string => {
-    const schools: Record<string, string> = {
-      'Abjuration': 'Ограждение',
-      'Conjuration': 'Вызов',
-      'Divination': 'Прорицание',
-      'Enchantment': 'Очарование',
-      'Evocation': 'Воплощение',
-      'Illusion': 'Иллюзия',
-      'Necromancy': 'Некромантия',
-      'Transmutation': 'Преобразование',
-      'Universal': 'Универсальная'
-    };
-    
-    return schools[school] || school;
-  };
-  
-  // Функция для красивого отображения уровня заклинания
-  const formatSpellLevel = (level: number): string => {
+const SpellDescription: React.FC<SpellDescriptionProps> = ({
+  spell,
+  isPrepared = false,
+  isKnown = false
+}) => {
+  // Helper function to format the spell level
+  const getSpellLevelText = (level: number): string => {
     if (level === 0) return 'Заговор';
+    if (level === 1) return '1-й уровень';
+    if (level === 2) return '2-й уровень';
+    if (level === 3) return '3-й уровень';
+    if (level === 4) return '4-й уровень';
+    if (level === 5) return '5-й уровень';
+    if (level === 6) return '6-й уровень';
+    if (level === 7) return '7-й уровень';
+    if (level === 8) return '8-й уровень';
+    if (level === 9) return '9-й уровень';
     return `${level}-й уровень`;
   };
-  
-  // Функция для отображения компонентов заклинания
-  const formatComponents = (components: string): string => {
-    const componentMap: Record<string, string> = {
-      'В': 'Вербальный',
-      'С': 'Соматический',
-      'М': 'Материальный'
-    };
+
+  // Helper function for badge color based on spell school
+  const getSchoolColor = (school: string): string => {
+    const schoolLower = school.toLowerCase();
     
-    return components.split('').map(c => componentMap[c] || c).join(', ');
+    switch (schoolLower) {
+      case 'воплощение':
+      case 'evocation':
+        return '#f44336'; // Red
+      case 'вызов':
+      case 'conjuration':
+        return '#9c27b0'; // Purple
+      case 'иллюзия':
+      case 'illusion':
+        return '#9e9e9e'; // Gray
+      case 'некромантия':
+      case 'necromancy':
+        return '#000000'; // Black
+      case 'ограждение':
+      case 'abjuration':
+        return '#2196f3'; // Blue
+      case 'очарование':
+      case 'enchantment':
+        return '#ff9800'; // Orange
+      case 'преобразование':
+      case 'transmutation':
+        return '#4caf50'; // Green
+      case 'прорицание':
+      case 'divination':
+        return '#ffeb3b'; // Yellow
+      default:
+        return '#607d8b'; // Blue Gray
+    }
   };
-  
+
+  // Render components based on spell data
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent 
-        className="max-w-xl"
-        style={{
-          backgroundColor: `${currentTheme.cardBackground || 'rgba(0, 0, 0, 0.85)'}`,
-          borderColor: currentTheme.accent,
-          color: currentTheme.textColor
-        }}
-      >
-        <DialogHeader>
-          <DialogTitle className="text-2xl" style={{ color: currentTheme.textColor }}>
-            {spell.name}
-          </DialogTitle>
-          <DialogDescription className="flex flex-wrap gap-2 mt-2">
-            <Badge variant="outline" style={{ borderColor: currentTheme.accent, color: currentTheme.textColor }}>
-              {formatSpellLevel(spell.level)}
-            </Badge>
-            <Badge variant="outline" style={{ borderColor: currentTheme.accent, color: currentTheme.textColor }}>
-              {getSchoolTranslation(spell.school)}
-            </Badge>
-            {spell.ritual && (
-              <Badge variant="outline" style={{ borderColor: currentTheme.accent, color: currentTheme.textColor }}>
-                Ритуал
-              </Badge>
-            )}
-            {spell.concentration && (
-              <Badge variant="outline" style={{ borderColor: currentTheme.accent, color: currentTheme.textColor }}>
-                Концентрация
-              </Badge>
-            )}
-          </DialogDescription>
-        </DialogHeader>
-        
-        <div className="grid grid-cols-2 gap-4 mb-4">
-          <div>
-            <p className="text-sm font-medium mb-1" style={{ color: currentTheme.mutedTextColor }}>Время накладывания</p>
-            <p style={{ color: currentTheme.textColor }}>{spell.castingTime}</p>
-          </div>
-          <div>
-            <p className="text-sm font-medium mb-1" style={{ color: currentTheme.mutedTextColor }}>Дистанция</p>
-            <p style={{ color: currentTheme.textColor }}>{spell.range}</p>
-          </div>
-          <div>
-            <p className="text-sm font-medium mb-1" style={{ color: currentTheme.mutedTextColor }}>Компоненты</p>
-            <p style={{ color: currentTheme.textColor }}>{formatComponents(spell.components)}</p>
-          </div>
-          <div>
-            <p className="text-sm font-medium mb-1" style={{ color: currentTheme.mutedTextColor }}>Длительность</p>
-            <p style={{ color: currentTheme.textColor }}>{spell.duration}</p>
-          </div>
+    <div className="space-y-4">
+      {/* Spell header with level, school and status */}
+      <div className="flex justify-between items-center">
+        <div className="space-x-2">
+          <Badge variant="outline">
+            {getSpellLevelText(spell.level)}
+          </Badge>
+          <Badge style={{backgroundColor: getSchoolColor(spell.school), color: 'white'}}>
+            {spell.school}
+          </Badge>
+          {spell.ritual && (
+            <Badge variant="secondary">Ритуал</Badge>
+          )}
+          {spell.concentration && (
+            <Badge variant="secondary">Концентрация</Badge>
+          )}
         </div>
         
-        <div className="pt-4 border-t" style={{ borderColor: `${currentTheme.accent}60` }}>
-          <h3 className="font-medium mb-2" style={{ color: currentTheme.textColor }}>Описание</h3>
-          <p className="text-sm whitespace-pre-line" style={{ color: currentTheme.textColor }}>{spell.description}</p>
-        </div>
-        
-        {spell.higherLevels && (
-          <div className="pt-4 border-t mt-4" style={{ borderColor: `${currentTheme.accent}60` }}>
-            <h3 className="font-medium mb-2" style={{ color: currentTheme.textColor }}>На более высоких уровнях</h3>
-            <p className="text-sm" style={{ color: currentTheme.textColor }}>{spell.higherLevels}</p>
+        {/* Show if spell is prepared or known */}
+        {isPrepared ? (
+          <div className="flex items-center text-xs text-green-600">
+            <CheckCircle className="w-4 h-4 mr-1" /> Подготовлено
           </div>
+        ) : isKnown ? (
+          <div className="flex items-center text-xs text-yellow-600">
+            <BookOpen className="w-4 h-4 mr-1" /> Известно
+          </div>
+        ) : null}
+      </div>
+      
+      <Separator />
+      
+      {/* Spell mechanics */}
+      <div className="grid grid-cols-2 gap-y-2 text-sm">
+        <div className="flex items-center">
+          <Clock className="w-4 h-4 mr-2" />
+          <span className="text-muted-foreground">Время накладывания:</span>
+        </div>
+        <div>{spell.castingTime}</div>
+        
+        <div className="flex items-center">
+          <Target className="w-4 h-4 mr-2" />
+          <span className="text-muted-foreground">Дистанция:</span>
+        </div>
+        <div>{spell.range}</div>
+        
+        <div className="flex items-center">
+          <Box className="w-4 h-4 mr-2" />
+          <span className="text-muted-foreground">Компоненты:</span>
+        </div>
+        <div>{spell.components}</div>
+        
+        <div className="flex items-center">
+          <Clock className="w-4 h-4 mr-2" />
+          <span className="text-muted-foreground">Длительность:</span>
+        </div>
+        <div>
+          {spell.concentration ? 'Концентрация, до ' : ''}{spell.duration}
+        </div>
+      </div>
+      
+      {/* Classes that can use this spell */}
+      {spell.classes && (
+        <div className="text-sm">
+          <span className="text-muted-foreground">Доступно классам: </span>
+          {Array.isArray(spell.classes) ? spell.classes.join(', ') : spell.classes}
+        </div>
+      )}
+      
+      <Separator />
+      
+      {/* Spell description */}
+      <div className="space-y-2">
+        {Array.isArray(spell.description) ? (
+          spell.description.map((paragraph, index) => (
+            <p key={index} className="text-sm">{paragraph}</p>
+          ))
+        ) : (
+          <p className="text-sm">{spell.description}</p>
         )}
-        
-        <div className="mt-4 pt-4 border-t" style={{ borderColor: `${currentTheme.accent}60` }}>
-          <p className="text-sm" style={{ color: currentTheme.mutedTextColor }}>
-            Классы: {Array.isArray(spell.classes) ? spell.classes.join(', ') : spell.classes || 'Не указано'}
-          </p>
+      </div>
+      
+      {/* Higher level effects */}
+      {(spell.higherLevel || spell.higherLevels) && (
+        <div className="mt-4 pt-4 border-t border-gray-200">
+          <h4 className="text-sm font-medium mb-1">На больших уровнях:</h4>
+          <p className="text-sm">{spell.higherLevel || spell.higherLevels}</p>
         </div>
-        
-        <div className="flex justify-end mt-4">
-          <Button 
-            variant="default"
-            onClick={() => onOpenChange(false)}
-            style={{
-              backgroundColor: currentTheme.accent,
-              color: currentTheme.buttonText
-            }}
-          >
-            Закрыть
-          </Button>
+      )}
+      
+      {/* Source information */}
+      {spell.source && (
+        <div className="text-xs text-muted-foreground mt-4">
+          Источник: {spell.source}
         </div>
-      </DialogContent>
-    </Dialog>
+      )}
+    </div>
   );
 };
 

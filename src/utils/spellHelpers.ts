@@ -102,3 +102,23 @@ export const convertCharacterSpellsToSpellData = (character: Character): SpellDa
   // Конвертируем в формат SpellData
   return convertToSpellData(normalizedSpells);
 };
+
+// Import getSpellLevelName from types/spells
+export { getSpellLevelName } from '@/types/spells';
+
+// Helper function to check if a spell is a CharacterSpell object or just a string
+export const isCharacterSpellObject = (spell: string | CharacterSpell): spell is CharacterSpell => {
+  return typeof spell !== 'string';
+};
+
+// Helper function to get spell level safely
+export const getSpellLevel = (spell: string | CharacterSpell): number => {
+  if (typeof spell === 'string') return 0; // Strings are considered cantrips
+  return spell.level || 0;
+};
+
+// Helper function to check if a spell is prepared
+export const isSpellPrepared = (spell: string | CharacterSpell): boolean => {
+  if (typeof spell === 'string') return true; // String spells are always considered prepared
+  return spell.prepared || false;
+};
