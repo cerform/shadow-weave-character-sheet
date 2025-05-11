@@ -15,8 +15,8 @@ import { useTheme } from "@/hooks/use-theme";
 import { themes } from "@/lib/themes";
 import { Switch } from "@/components/ui/switch";
 
-// Импортируем наше хранилище
-import useBattleStore, { Token } from "@/stores/battleStore";
+// Импортируем наше хранилище с правильным синтаксисом
+import { useBattleStore, Token } from "@/stores/battleStore";
 import { LightSource } from "@/types/battle";
 
 // Тип для предустановленных монстров
@@ -69,7 +69,7 @@ const defaultTokenImages = {
 };
 
 const PlayBattlePage = () => {
-  // Используем Zustand store для состояния боя
+  // Используем корректный импорт
   const {
     tokens, addToken, updateToken, removeToken, updateTokenPosition, updateTokenHP,
     initiative, battleState, startBattle, pauseBattle, nextTurn,
@@ -78,7 +78,6 @@ const PlayBattlePage = () => {
     setGridVisible, setGridOpacity, setGridSize, setRevealRadius, setZoom,
     isDM, setIsDM,
     showWebcams, setShowWebcams,
-    // Добавляем новые методы для работы с освещением
     addLightSource, removeLightSource, updateLightSource, setDynamicLighting, attachLightToToken
   } = useBattleStore();
   
@@ -513,10 +512,8 @@ const PlayBattlePage = () => {
         <ScrollArea className="h-full pr-2">
           {selectedTokenId !== null ? (
             <RightPanel
-              tokens={tokens}
               selectedTokenId={selectedTokenId}
               onSelectToken={selectToken}
-              onAddToken={addToken}
               onRemoveToken={removeToken}
               onStartBattle={startBattle}
               onEndBattle={pauseBattle}

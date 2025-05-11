@@ -36,17 +36,17 @@ const useLevelUp = () => {
         const spellsInfo = calculateAvailableSpellsByClassAndLevel(character.class, newLevel);
         console.log('Новые данные о заклинаниях:', spellsInfo);
         
+        // Создаем или обновляем spellcasting объект
+        const currentSpellcasting = character.spellcasting || {};
+        const updatedSpellcasting = {
+          ...currentSpellcasting,
+          preparedSpellsLimit: spellsInfo.knownSpells
+        };
+        
         // Обновляем персонажа с новыми данными о заклинаниях и уровнем
         updateCharacter({
           level: newLevel,
-          // Используем правильные названия полей для Character
-          spellcasting: {
-            // Обновляем информацию о заклинаниях
-            preparedSpellsLimit: spellsInfo.knownSpells
-          },
-          // Если нужно, добавляем другие поля для заклинаний
-          // Этих полей нет в типе Character, поэтому мы не можем их обновить напрямую
-          // maxSpellLevel: spellsInfo.maxLevel
+          spellcasting: updatedSpellcasting
         });
         
         // Сохраняем обновленного персонажа

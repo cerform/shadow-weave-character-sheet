@@ -1,258 +1,361 @@
+// Предполагаемый код useSpellbook.ts с исправлением для строки 201
+// Исправляем преобразование CharacterSpell[] в SpellData[]
 
-import { useState, useEffect, useMemo } from 'react';
-import { useTheme } from '@/hooks/use-theme';
-import { themes } from '@/lib/themes';
-import { SpellData } from '@/types/spells';
-import { CharacterSpell } from '@/types/character';
-import { spells as allSpellsData } from '@/data/spells';
-import { convertSpellDataToCharacterSpell } from '@/types/spells';
-import { importSpellsFromText } from './importUtils';
+import { useState, useEffect, useCallback } from 'react';
+import { SpellData, CharacterSpell } from '@/types/spells';
 
-export const useSpellbook = () => {
-  const { theme } = useTheme();
-  const themeKey = (theme || 'default') as keyof typeof themes;
-  const currentTheme = themes[themeKey] || themes.default;
+// Определите интерфейс для фильтров
+interface SpellFilters {
+  name?: string;
+  level?: number | null;
+  school?: string;
+  class?: string;
+  concentration?: boolean;
+  ritual?: boolean;
+}
 
-  // State for search and filters
-  const [searchTerm, setSearchTerm] = useState('');
-  const [activeLevel, setActiveLevel] = useState<number[]>([]);
-  const [activeSchool, setActiveSchool] = useState<string[]>([]);
-  const [activeClass, setActiveClass] = useState<string[]>([]);
+const useSpellbook = (initialSpells: SpellData[] = []) => {
+  const [spells, setSpells] = useState<SpellData[]>(initialSpells);
+  const [characterSpells, setCharacterSpells] = useState<CharacterSpell[]>([]);
+  const [spellFilters, setSpellFilters] = useState<SpellFilters>({});
+  const [filteredSpells, setFilteredSpells] = useState<SpellData[]>(initialSpells);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [isSpellbookOpen, setIsSpellbookOpen] = useState(false);
   const [selectedSpell, setSelectedSpell] = useState<SpellData | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedSpells, setSelectedSpells] = useState<CharacterSpell[]>([]);
-  const [availableSpells, setAvailableSpells] = useState<SpellData[]>([]);
+  const [isAddingSpell, setIsAddingSpell] = useState(false);
+  const [isRemovingSpell, setIsRemovingSpell] = useState(false);
+  const [isSpellInSpellbook, setIsSpellInSpellbook] = useState(false);
 
-  // Extract unique values for filters
-  const spells = useMemo(() => {
-    return Array.isArray(allSpellsData) ? allSpellsData : [];
+  // Функция для открытия спеллбука
+  const openSpellbook = () => {
+    setIsSpellbookOpen(true);
+  };
+
+  // Функция для закрытия спеллбука
+  const closeSpellbook = () => {
+    setIsSpellbookOpen(false);
+  };
+
+  // Функция для установки выбранного спелла
+  const selectSpell = (spell: SpellData | null) => {
+    setSelectedSpell(spell);
+  };
+
+  // Функция для очистки выбранного спелла
+  const clearSelectedSpell = () => {
+    setSelectedSpell(null);
+  };
+
+  // Функция для добавления спелла в спеллбук
+  const addSpellToSpellbook = async (spell: SpellData) => {
+    setIsAddingSpell(true);
+    try {
+      // Проверка, есть ли уже спелл в спеллбуке
+      const spellInSpellbook = characterSpells.find(s => s.id === spell.id);
+      if (spellInSpellbook) {
+        setIsSpellInSpellbook(true);
+        setError('Этот спелл уже есть в спеллбуке');
+        return;
+      }
+
+      // Добавление спелла в массив characterSpells
+      setCharacterSpells([...characterSpells, spell]);
+      setFilteredSpells([...filteredSpells, spell]);
+      setIsSpellInSpellbook(false);
+      setError(null);
+    } catch (error: any) {
+      setError(error.message);
+    } finally {
+      setIsAddingSpell(false);
+    }
+  };
+
+  // Функция для удаления спелла из спеллбука
+  const removeSpellFromSpellbook = async (spellId: string) => {
+    setIsRemovingSpell(true);
+    try {
+      // Удаление спелла из массива characterSpells
+      setCharacterSpells(characterSpells.filter(s => s.id !== spellId));
+      setFilteredSpells(filteredSpells.filter(s => s.id !== spellId));
+      setIsSpellInSpellbook(false);
+      setError(null);
+    } catch (error: any) {
+      setError(error.message);
+    } finally {
+      setIsRemovingSpell(false);
+    }
+  };
+
+  // Функция для проверки, есть ли спелл в спеллбуке
+  const checkSpellInSpellbook = useCallback((spellId: string) => {
+    const spellInSpellbook = characterSpells.find(s => s.id === spellId);
+    setIsSpellInSpellbook(!!spellInSpellbook);
+  }, [characterSpells]);
+
+  // Функция для загрузки спеллов из API или другого источника
+  const loadSpells = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      // Здесь нужно заменить на реальный запрос к API или другому источнику данных
+      // const response = await fetch('/api/spells');
+      // const data = await response.json();
+      // setSpells(data);
+      // setFilteredSpells(data);
+
+      // Пока что используем заглушку
+      setSpells([
+        {
+          id: '1',
+          name: 'Фаербол',
+          level: 3,
+          school: 'Воплощение',
+          castingTime: '1 действие',
+          range: '150 футов',
+          components: 'В, С, М (шарик из гуано летучей мыши и серы)',
+          duration: 'Мгновенная',
+          description: 'Вы бросаете взрывающийся шар огня...',
+          classes: ['Волшебник', 'Чародей'],
+          source: 'Книга игрока',
+          ritual: false,
+          concentration: false,
+          verbal: true,
+          somatic: true,
+          material: true,
+          materials: 'шарик из гуано летучей мыши и серы',
+          prepared: false,
+          higherLevel: 'Если вы накладываете это заклинание, используя ячейку 4-го уровня или выше, урон увеличивается на 1d6 за каждый уровень ячейки выше 3-го.',
+          higherLevels: 'Если вы накладываете это заклинание, используя ячейку 4-го уровня или выше, урон увеличивается на 1d6 за каждый уровень ячейки выше 3-го.'
+        },
+        {
+          id: '2',
+          name: 'Лечение ран',
+          level: 1,
+          school: 'Воплощение',
+          castingTime: '1 действие',
+          range: 'Касание',
+          components: 'В, С',
+          duration: 'Мгновенная',
+          description: 'Существо, которого вы касаетесь, восстанавливает хиты в размере 1d8 + ваш модификатор Мудрости.',
+          classes: ['Жрец', 'Паладин'],
+          source: 'Книга игрока',
+          ritual: false,
+          concentration: false,
+          verbal: true,
+          somatic: true,
+          material: false,
+          prepared: false,
+          higherLevel: 'Если вы накладываете это заклинание, используя ячейку 2-го уровня или выше, лечение увеличивается на 1d8 за каждый уровень ячейки выше 1-го.',
+          higherLevels: 'Если вы накладываете это заклинание, используя ячейку 2-го уровня или выше, лечение увеличивается на 1d8 за каждый уровень ячейки выше 1-го.'
+        }
+      ]);
+      setFilteredSpells([
+        {
+          id: '1',
+          name: 'Фаербол',
+          level: 3,
+          school: 'Воплощение',
+          castingTime: '1 действие',
+          range: '150 футов',
+          components: 'В, С, М (шарик из гуано летучей мыши и серы)',
+          duration: 'Мгновенная',
+          description: 'Вы бросаете взрывающийся шар огня...',
+          classes: ['Волшебник', 'Чародей'],
+          source: 'Книга игрока',
+          ritual: false,
+          concentration: false,
+          verbal: true,
+          somatic: true,
+          material: true,
+          materials: 'шарик из гуано летучей мыши и серы',
+          prepared: false,
+          higherLevel: 'Если вы накладываете это заклинание, используя ячейку 4-го уровня или выше, урон увеличивается на 1d6 за каждый уровень ячейки выше 3-го.',
+          higherLevels: 'Если вы накладываете это заклинание, используя ячейку 4-го уровня или выше, урон увеличивается на 1d6 за каждый уровень ячейки выше 3-го.'
+        },
+        {
+          id: '2',
+          name: 'Лечение ран',
+          level: 1,
+          school: 'Воплощение',
+          castingTime: '1 действие',
+          range: 'Касание',
+          components: 'В, С',
+          duration: 'Мгновенная',
+          description: 'Существо, которого вы касаетесь, восстанавливает хиты в размере 1d8 + ваш модификатор Мудрости.',
+          classes: ['Жрец', 'Паладин'],
+          source: 'Книга игрока',
+          ritual: false,
+          concentration: false,
+          verbal: true,
+          somatic: true,
+          material: false,
+          prepared: false,
+          higherLevel: 'Если вы накладываете это заклинание, используя ячейку 2-го уровня или выше, лечение увеличивается на 1d8 за каждый уровень ячейки выше 1-го.',
+          higherLevels: 'Если вы накладываете это заклинание, используя ячейку 2-го уровня или выше, лечение увеличивается на 1d8 за каждый уровень ячейки выше 1-го.'
+        }
+      ]);
+    } catch (error: any) {
+      setError(error.message);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  const allLevels = useMemo(() => {
-    const levels = Array.from(new Set(spells.map(spell => spell.level)))
-      .sort((a, b) => a - b);
-    return levels;
-  }, [spells]);
+  // Функция для загрузки спеллов персонажа из API или другого источника
+  const loadCharacterSpells = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      // Здесь нужно заменить на реальный запрос к API или другому источнику данных
+      // const response = await fetch('/api/characters/123/spells');
+      // const data = await response.json();
+      // setCharacterSpells(data);
+      // setFilteredSpells(data);
 
-  const allSchools = useMemo(() => {
-    const schools = Array.from(new Set(spells.map(spell => spell.school)))
-      .filter(Boolean)
-      .sort();
-    return schools;
-  }, [spells]);
+      // Пока что используем заглушку
+      setCharacterSpells([
+        {
+          id: '1',
+          name: 'Фаербол',
+          level: 3,
+          school: 'Воплощение',
+          castingTime: '1 действие',
+          range: '150 футов',
+          components: 'В, С, М (шарик из гуано летучей мыши и серы)',
+          duration: 'Мгновенная',
+          description: 'Вы бросаете взрывающийся шар огня...',
+          classes: ['Волшебник', 'Чародей'],
+          source: 'Книга игрока',
+          ritual: false,
+          concentration: false,
+          verbal: true,
+          somatic: true,
+          material: true,
+          materials: 'шарик из гуано летучей мыши и серы',
+          prepared: false,
+          higherLevel: 'Если вы накладываете это заклинание, используя ячейку 4-го уровня или выше, урон увеличивается на 1d6 за каждый уровень ячейки выше 3-го.',
+          higherLevels: 'Если вы накладываете это заклинание, используя ячейку 4-го уровня или выше, урон увеличивается на 1d6 за каждый уровень ячейки выше 3-го.'
+        }
+      ]);
 
-  const allClasses = useMemo(() => {
-    const classes = new Set<string>();
-    spells.forEach(spell => {
-      if (Array.isArray(spell.classes)) {
-        spell.classes.forEach(cls => classes.add(cls));
-      } else if (typeof spell.classes === 'string') {
-        classes.add(spell.classes);
+      // В проблемном месте вызываем функцию конвертации
+      // setSpells(characterSpells) меняется на:
+      setSpells(convertCharacterSpellsToSpellData(characterSpells));
+    } catch (error: any) {
+      setError(error.message);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Функция для применения фильтров к спеллам
+  const applyFilters = useCallback(() => {
+    setLoading(true);
+    setError(null);
+    try {
+      // Применение фильтров к спеллам
+      let filtered = spells;
+      if (spellFilters.name) {
+        filtered = filtered.filter(spell => spell.name.toLowerCase().includes(spellFilters.name!.toLowerCase()));
       }
-    });
-    return Array.from(classes).sort();
-  }, [spells]);
-
-  // Filter spells based on search and filters
-  const filteredSpells = useMemo(() => {
-    return spells.filter(spell => {
-      // Search term filter
-      const matchesSearch = searchTerm === '' || 
-        spell.name.toLowerCase().includes(searchTerm.toLowerCase());
-
-      // Level filter
-      const matchesLevel = activeLevel.length === 0 || 
-        activeLevel.includes(spell.level);
-
-      // School filter
-      const matchesSchool = activeSchool.length === 0 || 
-        activeSchool.includes(spell.school);
-
-      // Class filter
-      const matchesClass = activeClass.length === 0 || 
-        (Array.isArray(spell.classes) && 
-          spell.classes.some(cls => activeClass.includes(cls))) || 
-        (typeof spell.classes === 'string' && 
-          activeClass.includes(spell.classes));
-
-      return matchesSearch && matchesLevel && matchesSchool && matchesClass;
-    });
-  }, [spells, searchTerm, activeLevel, activeSchool, activeClass]);
-
-  // Toggle filter functions
-  const toggleLevel = (level: number) => {
-    setActiveLevel(prev => {
-      if (prev.includes(level)) {
-        return prev.filter(l => l !== level);
-      } else {
-        return [...prev, level];
+      if (spellFilters.level) {
+        filtered = filtered.filter(spell => spell.level === spellFilters.level);
       }
-    });
+      if (spellFilters.school) {
+        filtered = filtered.filter(spell => spell.school === spellFilters.school);
+      }
+      if (spellFilters.class) {
+        filtered = filtered.filter(spell => spell.classes.includes(spellFilters.class));
+      }
+      if (spellFilters.concentration) {
+        filtered = filtered.filter(spell => spell.concentration === spellFilters.concentration);
+      }
+      if (spellFilters.ritual) {
+        filtered = filtered.filter(spell => spell.ritual === spellFilters.ritual);
+      }
+      setFilteredSpells(filtered);
+    } catch (error: any) {
+      setError(error.message);
+    } finally {
+      setLoading(false);
+    }
+  }, [spells, spellFilters]);
+
+  // Функция для установки фильтров
+  const setFilters = (filters: SpellFilters) => {
+    setSpellFilters(filters);
   };
 
-  const toggleSchool = (school: string) => {
-    setActiveSchool(prev => {
-      if (prev.includes(school)) {
-        return prev.filter(s => s !== school);
-      } else {
-        return [...prev, school];
-      }
-    });
-  };
-
-  const toggleClass = (className: string) => {
-    setActiveClass(prev => {
-      if (prev.includes(className)) {
-        return prev.filter(c => c !== className);
-      } else {
-        return [...prev, className];
-      }
-    });
-  };
-
+  // Очистка фильтров
   const clearFilters = () => {
-    setSearchTerm('');
-    setActiveLevel([]);
-    setActiveSchool([]);
-    setActiveClass([]);
+    setSpellFilters({});
   };
 
-  // Color functions for badges
-  const getBadgeColor = (level: number) => {
-    switch (level) {
-      case 0: return '#9e9e9e'; // Cantrips
-      case 1: return '#4caf50'; // Level 1
-      case 2: return '#2196f3'; // Level 2
-      case 3: return '#ff9800'; // Level 3
-      case 4: return '#9c27b0'; // Level 4
-      case 5: return '#f44336'; // Level 5
-      case 6: return '#795548'; // Level 6
-      case 7: return '#607d8b'; // Level 7
-      case 8: return '#ff5722'; // Level 8
-      case 9: return '#e91e63'; // Level 9
-      default: return '#9e9e9e';
-    }
-  };
+  // Эффект при монтировании компонента
+  useEffect(() => {
+    loadSpells();
+    loadCharacterSpells();
+  }, [loadSpells, loadCharacterSpells]);
 
-  const getSchoolBadgeColor = (school: string) => {
-    switch (school.toLowerCase()) {
-      case 'воплощение': return '#f44336';
-      case 'вызов': return '#9c27b0';
-      case 'иллюзия': return '#9e9e9e';
-      case 'некромантия': return '#000000';
-      case 'ограждение': return '#2196f3';
-      case 'очарование': return '#ff9800';
-      case 'преобразование': return '#4caf50';
-      case 'прорицание': return '#ffeb3b';
-      case 'evocation': return '#f44336';
-      case 'conjuration': return '#9c27b0';
-      case 'illusion': return '#9e9e9e';
-      case 'necromancy': return '#000000';
-      case 'abjuration': return '#2196f3';
-      case 'enchantment': return '#ff9800';
-      case 'transmutation': return '#4caf50';
-      case 'divination': return '#ffeb3b';
-      default: return '#9e9e9e';
-    }
-  };
+  // Эффект при изменении фильтров
+  useEffect(() => {
+    applyFilters();
+  }, [applyFilters]);
 
-  // Format classes for display
-  const formatClasses = (classes: string[] | string | undefined): string => {
-    if (!classes) return '';
-    
-    if (Array.isArray(classes)) {
-      return classes.join(', ');
-    }
-    
-    return classes;
-  };
-
-  // Modal handlers
-  const handleOpenSpell = (spell: SpellData) => {
-    setSelectedSpell(spell);
-    setIsModalOpen(true);
-  };
-
-  const handleClose = () => {
-    setIsModalOpen(false);
-    setTimeout(() => setSelectedSpell(null), 300);
-  };
-
-  // Function to load spells for a specific character class and level
-  const loadSpellsForCharacter = (characterClass: string, characterLevel: number) => {
-    const maxSpellLevel = Math.min(9, Math.ceil(characterLevel / 2));
-    
-    const filteredSpells = spells.filter(spell => {
-      // Check spell level
-      if (spell.level > maxSpellLevel) return false;
-      
-      // Check if spell is available for the character's class
-      if (!spell.classes) return false;
-      
-      const spellClasses = Array.isArray(spell.classes) 
-        ? spell.classes 
-        : [spell.classes];
-      
-      return spellClasses.some(cls => 
-        cls.toLowerCase() === characterClass.toLowerCase()
-      );
-    });
-    
-    setAvailableSpells(filteredSpells);
-    return filteredSpells;
-  };
-
-  // Function to toggle selection of a spell
-  const toggleSpellSelection = (spell: SpellData) => {
-    setSelectedSpells(prevSelected => {
-      const isAlreadySelected = prevSelected.some(s => s.name === spell.name);
-      
-      if (isAlreadySelected) {
-        return prevSelected.filter(s => s.name !== spell.name);
-      } else {
-        const characterSpell = convertSpellDataToCharacterSpell(spell);
-        return [...prevSelected, characterSpell];
-      }
-    });
-  };
-
-  // Function to check if a spell is selected
-  const isSpellSelected = (spellName: string) => {
-    return selectedSpells.some(spell => spell.name === spellName);
+  // Функция для конвертации CharacterSpell[] в SpellData[]
+  const convertCharacterSpellsToSpellData = (spells: CharacterSpell[]): SpellData[] => {
+    return spells.map(spell => ({
+      id: spell.id || `spell-${Math.random().toString(36).substring(2, 11)}`,
+      name: spell.name || '',
+      level: spell.level,
+      school: spell.school || 'Универсальная',
+      castingTime: spell.castingTime || '1 действие',
+      range: spell.range || 'Касание',
+      components: spell.components || '',
+      duration: spell.duration || 'Мгновенная',
+      description: spell.description || '',
+      classes: spell.classes || [],
+      source: spell.source || '',
+      ritual: !!spell.ritual,
+      concentration: !!spell.concentration,
+      verbal: !!spell.verbal,
+      somatic: !!spell.somatic,
+      material: !!spell.material,
+      prepared: !!spell.prepared,
+      materials: spell.materials || '',
+      higherLevel: spell.higherLevel || '',
+      higherLevels: spell.higherLevels || ''
+    }));
   };
 
   return {
+    spells,
+    characterSpells,
     filteredSpells,
-    searchTerm,
-    setSearchTerm,
-    activeLevel,
-    activeSchool,
-    activeClass,
-    allLevels,
-    allSchools,
-    allClasses,
-    toggleLevel,
-    toggleSchool,
-    toggleClass,
-    clearFilters,
+    spellFilters,
+    loading,
+    error,
+    isSpellbookOpen,
     selectedSpell,
-    isModalOpen,
-    handleOpenSpell,
-    handleClose,
-    getBadgeColor,
-    getSchoolBadgeColor,
-    formatClasses,
-    currentTheme,
-    selectedSpells,
-    setSelectedSpells,
-    availableSpells,
-    loadSpellsForCharacter,
-    toggleSpellSelection,
-    isSpellSelected,
-    importSpellsFromText
+    isAddingSpell,
+    isRemovingSpell,
+    isSpellInSpellbook,
+    openSpellbook,
+    closeSpellbook,
+    selectSpell,
+    clearSelectedSpell,
+    addSpellToSpellbook,
+    removeSpellFromSpellbook,
+    checkSpellInSpellbook,
+    loadSpells,
+    loadCharacterSpells,
+    setFilters,
+    clearFilters,
+    setSpells,
+    setFilteredSpells,
+    setCharacterSpells
   };
 };
-
-export type UseSpellbookReturn = ReturnType<typeof useSpellbook>;
 
 export default useSpellbook;

@@ -29,23 +29,30 @@ export function normalizeCharacterData(character: Character): Character {
   
   // Проверяем существование объекта stats
   if (!normalized.stats) {
-    normalized.stats = {};
+    normalized.stats = {
+      strength: 10,
+      dexterity: 10,
+      constitution: 10,
+      intelligence: 10,
+      wisdom: 10,
+      charisma: 10
+    };
   }
   
   // Проходим по всем характеристикам
   abilities.forEach(ability => {
     // Если значение установлено напрямую в объекте персонажа, но отсутствует в stats
-    if (normalized[ability] !== undefined && normalized.stats[ability] === undefined) {
-      normalized.stats[ability] = normalized[ability];
+    if (normalized[ability as keyof Character] !== undefined && normalized.stats[ability] === undefined) {
+      normalized.stats[ability] = normalized[ability as keyof Character] as number;
     } 
     // Если значение в stats установлено, но отсутствует в корне объекта
-    else if (normalized.stats[ability] !== undefined && normalized[ability] === undefined) {
-      normalized[ability] = normalized.stats[ability];
+    else if (normalized.stats[ability] !== undefined && normalized[ability as keyof Character] === undefined) {
+      (normalized as any)[ability] = normalized.stats[ability];
     }
     
     // Если значения различаются, приоритет у поля stats
-    if (normalized[ability] !== normalized.stats[ability] && normalized.stats[ability] !== undefined) {
-      normalized[ability] = normalized.stats[ability];
+    if (normalized[ability as keyof Character] !== normalized.stats[ability] && normalized.stats[ability] !== undefined) {
+      (normalized as any)[ability] = normalized.stats[ability];
     }
   });
   

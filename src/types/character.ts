@@ -8,6 +8,7 @@ export interface Character {
   className?: string;
   subclass?: string;
   background?: string;
+  additionalClasses?: { class: string; level: number; subclass?: string }[];
   level: number;
   experience?: number;
   alignment?: string;
@@ -62,6 +63,7 @@ export interface Character {
     armor?: string[];
     skills?: string[];
   } | string[];
+  languages?: string[];
   equipment?: Item[] | {
     weapons?: string[];
     armor?: string;
@@ -142,7 +144,7 @@ export interface Character {
     dieType: string;
     value: string;
   };
-  resources?: Record<string, { max: number; used: number; recoveryType?: 'short' | 'short-rest' | 'long' | 'long-rest' }>;
+  resources?: Record<string, { max: number; used: number; current?: number; recoveryType?: 'short' | 'short-rest' | 'long' | 'long-rest' }>;
   notes?: string;
   lastDiceRoll?: {
     diceType: string;
@@ -169,6 +171,7 @@ export interface Character {
     ability?: string;
     saveDC?: number;
     attackBonus?: number;
+    preparedSpellsLimit?: number;
   };
 }
 

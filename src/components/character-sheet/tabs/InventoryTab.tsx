@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Character } from '@/types/character';
+import { Character, Item } from '@/types/character';
 
 interface InventoryTabProps {
   character: Character;
@@ -19,7 +19,7 @@ const InventoryTab: React.FC<InventoryTabProps> = ({ character, onUpdate }) => {
           .map(item => typeof item === 'object' ? item.name : item);
       }
       // Если equipment - это массив строк
-      return character.equipment;
+      return character.equipment as string[];
     }
     // Если equipment - это объект со свойствами
     return character.equipment.weapons || [];
@@ -37,7 +37,7 @@ const InventoryTab: React.FC<InventoryTabProps> = ({ character, onUpdate }) => {
       }
       // Если это массив строк, ищем первый элемент, содержащий слово "доспех"
       const armor = character.equipment.find(item => 
-        typeof item === 'string' && item.toLowerCase().includes('доспех')
+        typeof item === 'string' && item && item.includes && item.toLowerCase().includes('доспех')
       );
       return armor || '';
     }
@@ -55,8 +55,8 @@ const InventoryTab: React.FC<InventoryTabProps> = ({ character, onUpdate }) => {
           .map(item => typeof item === 'object' ? item.name : item);
       }
       // Если equipment - это массив строк, возвращаем все, что не попало в доспехи
-      return character.equipment.filter(item => 
-        typeof item === 'string' && !item.toLowerCase().includes('доспех')
+      return (character.equipment as string[]).filter(item => 
+        typeof item === 'string' && item && item.includes && !item.toLowerCase().includes('доспех')
       );
     }
     // Если equipment - это объект со свойствами

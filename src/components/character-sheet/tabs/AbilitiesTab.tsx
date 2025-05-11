@@ -124,12 +124,12 @@ const AbilitiesTab: React.FC<AbilitiesTabProps> = ({ character, onUpdate }) => {
       } else {
         // Преобразуем объект в массив
         currentProficiencies = Object.entries(character.savingThrowProficiencies)
-          .filter(([_, value]) => value)
+          .filter(([_, value]) => Boolean(value))
           .map(([key]) => key);
       }
     }
     
-    const hasAbility = currentProficiencies.includes(ability);
+    const hasAbility = currentProficiencies.indexOf(ability) !== -1;
     
     if (hasAbility) {
       onUpdate({
@@ -153,7 +153,7 @@ const AbilitiesTab: React.FC<AbilitiesTabProps> = ({ character, onUpdate }) => {
       } else {
         // Преобразуем объект в массив
         currentProficiencies = Object.entries(character.skillProficiencies)
-          .filter(([_, value]) => value)
+          .filter(([_, value]) => Boolean(value))
           .map(([key]) => key);
       }
     }
@@ -164,13 +164,13 @@ const AbilitiesTab: React.FC<AbilitiesTabProps> = ({ character, onUpdate }) => {
       } else {
         // Преобразуем объект в массив
         currentExpertise = Object.entries(character.expertise)
-          .filter(([_, value]) => value)
+          .filter(([_, value]) => Boolean(value))
           .map(([key]) => key);
       }
     }
     
-    const hasSkill = currentProficiencies.includes(skill);
-    const hasExpertise = currentExpertise.includes(skill);
+    const hasSkill = currentProficiencies.indexOf(skill) !== -1;
+    const hasExpertise = currentExpertise.indexOf(skill) !== -1;
     
     // Если уже есть экспертиза, удаляем и навык и экспертизу
     if (hasExpertise) {
@@ -236,33 +236,8 @@ const AbilitiesTab: React.FC<AbilitiesTabProps> = ({ character, onUpdate }) => {
 
   // Получаем бонус навыка
   const getSkillBonus = (skill: string): number => {
-    const skillInfo = SKILLS[skill as keyof typeof SKILLS];
-    const abilityModifier = getModifier(skillInfo.ability);
-    let isProficient = false;
-    let isExpert = false;
-    
-    if (character.skillProficiencies) {
-      if (Array.isArray(character.skillProficiencies)) {
-        isProficient = character.skillProficiencies.includes(skill);
-      } else {
-        isProficient = !!character.skillProficiencies[skill];
-      }
-    }
-    
-    if (character.expertise) {
-      if (Array.isArray(character.expertise)) {
-        isExpert = character.expertise.includes(skill);
-      } else {
-        isExpert = !!character.expertise[skill];
-      }
-    }
-    
-    const additionalBonus = character.skillBonuses?.[skill] || 0;
-    
-    return abilityModifier + 
-           (isProficient ? proficiencyBonus : 0) + 
-           (isExpert ? proficiencyBonus : 0) + 
-           additionalBonus;
+    const skillBonuses = character.skillBonuses || {};
+    return skillBonuses[skill] || 0;
   };
 
   // Получаем статус владения навыком
@@ -289,6 +264,45 @@ const AbilitiesTab: React.FC<AbilitiesTabProps> = ({ character, onUpdate }) => {
     if (isExpert) return 'expert';
     if (isProficient) return 'proficient';
     return 'none';
+  };
+
+  // Проверка владения спасброском
+  const hasSavingThrowProficiency = (ability: string): boolean => {
+    if (!character.savingThrowProficiencies) {
+      return false;
+    }
+    
+    if (Array.isArray(character.savingThrowProficiencies)) {
+      return character.savingThrowProficiencies.indexOf(ability) !== -1;
+    }
+    
+    return Boolean(character.savingThrowProficiencies[ability]);
+  };
+  
+  // Проверка владения навыком
+  const hasSkillProficiency = (skill: string): boolean => {
+    if (!character.skillProficiencies) {
+      return false;
+    }
+    
+    if (Array.isArray(character.skillProficiencies)) {
+      return character.skillProficiencies.indexOf(skill) !== -1;
+    }
+    
+    return Boolean(character.skillProficiencies[skill]);
+  };
+  
+  // Проверка экспертизы в навыке
+  const hasSkillExpertise = (skill: string): boolean => {
+    if (!character.expertise) {
+      return false;
+    }
+    
+    if (Array.isArray(character.expertise)) {
+      return character.expertise.indexOf(skill) !== -1;
+    }
+    
+    return Boolean(character.expertise[skill]);
   };
 
   // Форматируем бонус для отображения
