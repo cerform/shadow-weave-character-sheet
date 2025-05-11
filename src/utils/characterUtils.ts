@@ -1,3 +1,4 @@
+
 import { Character } from '@/types/character';
 import { Skill, SKILL_LIST, SKILL_MAP } from '@/types/constants';
 
@@ -73,7 +74,6 @@ export const createDefaultCharacter = (): Character => {
     xp: 0,
     abilities: {
       STR: 10, DEX: 10, CON: 10, INT: 10, WIS: 10, CHA: 10,
-      // Duplicate for backwards compatibility
       strength: 10, dexterity: 10, constitution: 10, intelligence: 10, wisdom: 10, charisma: 10
     },
     hitPoints: {
@@ -85,6 +85,25 @@ export const createDefaultCharacter = (): Character => {
     speed: 30,
     initiative: 0,
     proficiencyBonus: 2,
+    hp: 10,
+    maxHp: 10,
+    temporaryHp: 0,
+    ac: 10,
+    savingThrows: {
+      STR: 0, DEX: 0, CON: 0, INT: 0, WIS: 0, CHA: 0,
+      strength: 0, dexterity: 0, constitution: 0, intelligence: 0, wisdom: 0, charisma: 0
+    },
+    skills: {},
+    hitDice: {
+      total: 1,
+      used: 0,
+      dieType: 'd8'
+    },
+    resources: {},
+    deathSaves: {
+      successes: 0,
+      failures: 0
+    },
     proficiencies: {
       languages: [],
       tools: [],
@@ -105,6 +124,12 @@ export const createDefaultCharacter = (): Character => {
       ability: '',
       dc: 0,
       attack: 0
+    },
+    equipment: {
+      weapons: [],
+      armor: '',
+      items: [],
+      gold: 0
     }
   };
 };
@@ -189,6 +214,32 @@ export const convertToCharacter = (partial: Partial<Character>): Character => {
       ability: partial.spellcasting?.ability || '',
       dc: partial.spellcasting?.dc || 0,
       attack: partial.spellcasting?.attack || 0
+    },
+    
+    // Добавляем обязательные поля из Character типа
+    hp: partial.hp || partial.hitPoints?.current || 10,
+    maxHp: partial.maxHp || partial.hitPoints?.max || 10,
+    temporaryHp: partial.temporaryHp || partial.hitPoints?.temporary || 0,
+    ac: partial.ac || partial.armorClass || 10,
+    savingThrows: {
+      STR: 0, DEX: 0, CON: 0, INT: 0, WIS: 0, CHA: 0,
+      strength: 0, dexterity: 0, constitution: 0, intelligence: 0, wisdom: 0, charisma: 0,
+      ...partial.savingThrows
+    },
+    skills: partial.skills || {},
+    hitDice: {
+      total: partial.level || 1,
+      used: 0,
+      dieType: 'd8',
+      ...partial.hitDice
+    },
+    resources: partial.resources || {},
+    deathSaves: partial.deathSaves || { successes: 0, failures: 0 },
+    equipment: partial.equipment || {
+      weapons: [],
+      armor: '',
+      items: [],
+      gold: 0
     }
   };
   

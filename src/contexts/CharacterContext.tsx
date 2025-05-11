@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { Character } from '@/types/character';
@@ -11,12 +10,17 @@ interface CharacterContextProps {
   updateCharacter: (updates: Partial<Character>) => void;
   resetCharacter: () => void;
   initializeNewCharacter: (characterData?: Partial<Character>) => void;
-  setCharacter: (character: Character) => void;  // Added missing method
-  saveCurrentCharacter: () => Promise<void>;     // Added missing method
-  characters?: Character[];                      // Added for compatibility
-  loading?: boolean;                             // Added for compatibility
-  error?: Error | null;                          // Added for compatibility
-  getUserCharacters?: () => Promise<void>;       // Added for compatibility
+  setCharacter: (character: Character) => void;
+  saveCurrentCharacter: () => Promise<void>;
+  characters?: Character[];
+  loading?: boolean;
+  error?: Error | null;
+  getUserCharacters?: () => Promise<void>;
+  
+  // Добавляем недостающие методы для типового соответствия
+  getCharacterById?: (id: string) => Character | undefined;
+  deleteCharacter?: (id: string) => Promise<void>;
+  refreshCharacters?: () => Promise<void>;
 }
 
 const defaultContext: CharacterContextProps = {
@@ -24,8 +28,15 @@ const defaultContext: CharacterContextProps = {
   updateCharacter: () => {},
   resetCharacter: () => {},
   initializeNewCharacter: () => {},
-  setCharacter: () => {},             // Added missing method
-  saveCurrentCharacter: async () => {} // Added missing method
+  setCharacter: () => {},
+  saveCurrentCharacter: async () => {},
+  characters?: Character[],
+  loading?: boolean,
+  error?: Error | null,
+  getUserCharacters?: () => Promise<void>,
+  getCharacterById?: (id: string) => Character | undefined,
+  deleteCharacter?: (id: string) => Promise<void>,
+  refreshCharacters?: () => Promise<void>,
 };
 
 const CharacterContext = createContext<CharacterContextProps>(defaultContext);
@@ -216,6 +227,23 @@ export const CharacterProvider: React.FC<CharacterProviderProps> = ({ children }
     }
   };
 
+  // Добавляем заглушки для недостающих методов
+  const getCharacterById = (id: string): Character | undefined => {
+    return characters.find(char => char.id === id);
+  };
+
+  const deleteCharacter = async (id: string): Promise<void> => {
+    // Заглушка для функциональности удаления персонажа
+    console.warn('deleteCharacter not fully implemented');
+    setCharacters(prev => prev.filter(char => char.id !== id));
+  };
+
+  const refreshCharacters = async (): Promise<void> => {
+    // Заглушка для обновления списка персонажей
+    console.warn('refreshCharacters not fully implemented');
+    return getUserCharacters?.() || Promise.resolve();
+  };
+
   return (
     <CharacterContext.Provider
       value={{
@@ -223,12 +251,15 @@ export const CharacterProvider: React.FC<CharacterProviderProps> = ({ children }
         updateCharacter,
         resetCharacter,
         initializeNewCharacter,
-        setCharacter,             // Added missing method
-        saveCurrentCharacter,     // Added missing method
-        characters,               // Added for compatibility
-        loading,                  // Added for compatibility
-        error,                    // Added for compatibility
-        getUserCharacters         // Added for compatibility
+        setCharacter,
+        saveCurrentCharacter,
+        characters,
+        loading,
+        error,
+        getUserCharacters,
+        getCharacterById,
+        deleteCharacter,
+        refreshCharacters
       }}
     >
       {children}

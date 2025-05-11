@@ -14,7 +14,10 @@ export const convertToCharacter = (data: any): Character => {
       name: 'Ошибка загрузки',
       race: '',
       class: '',
+      background: '',
+      alignment: '',
       level: 1,
+      xp: 0,
       experience: 0,
       strength: 10,
       dexterity: 10,
@@ -23,7 +26,51 @@ export const convertToCharacter = (data: any): Character => {
       wisdom: 10,
       charisma: 10,
       maxHp: 10,
-      currentHp: 10
+      currentHp: 10,
+      abilities: {
+        STR: 10, DEX: 10, CON: 10, INT: 10, WIS: 10, CHA: 10,
+        strength: 10, dexterity: 10, constitution: 10, intelligence: 10, wisdom: 10, charisma: 10
+      },
+      savingThrows: {
+        STR: 0, DEX: 0, CON: 0, INT: 0, WIS: 0, CHA: 0,
+        strength: 0, dexterity: 0, constitution: 0, intelligence: 0, wisdom: 0, charisma: 0
+      },
+      hp: 10,
+      temporaryHp: 0,
+      ac: 10,
+      skills: {},
+      hitDice: {
+        total: 1,
+        used: 0,
+        dieType: 'd8'
+      },
+      resources: {},
+      deathSaves: {
+        successes: 0,
+        failures: 0
+      },
+      equipment: {
+        weapons: [],
+        armor: '',
+        items: [],
+        gold: 0
+      },
+      proficiencies: {
+        languages: [],
+        tools: [],
+        weapons: [],
+        armor: [],
+        skills: []
+      },
+      spells: [],
+      features: [],
+      spellcasting: {
+        ability: '',
+        dc: 0,
+        attack: 0
+      },
+      notes: '',
+      inspiration: false
     };
   }
   
@@ -91,7 +138,10 @@ export const createEmptyCharacter = (): Character => {
     name: 'Новый персонаж',
     race: '',
     class: '',
+    background: '',
+    alignment: '',
     level: 1,
+    xp: 0,
     experience: 0,
     strength: 10,
     dexterity: 10,
@@ -106,8 +156,50 @@ export const createEmptyCharacter = (): Character => {
     updatedAt: new Date().toISOString(),
     proficiencyBonus: 2,
     armorClass: 10,
+    abilities: {
+      STR: 10, DEX: 10, CON: 10, INT: 10, WIS: 10, CHA: 10,
+      strength: 10, dexterity: 10, constitution: 10, intelligence: 10, wisdom: 10, charisma: 10
+    },
+    savingThrows: {
+      STR: 0, DEX: 0, CON: 0, INT: 0, WIS: 0, CHA: 0,
+      strength: 0, dexterity: 0, constitution: 0, intelligence: 0, wisdom: 0, charisma: 0
+    },
+    hp: 10,
+    temporaryHp: 0,
+    ac: 10,
+    skills: {},
+    hitDice: {
+      total: 1,
+      used: 0,
+      dieType: 'd8'
+    },
+    resources: {},
+    deathSaves: {
+      successes: 0,
+      failures: 0
+    },
+    equipment: {
+      weapons: [],
+      armor: '',
+      items: [],
+      gold: 0
+    },
+    proficiencies: {
+      languages: [],
+      tools: [],
+      weapons: [],
+      armor: [],
+      skills: []
+    },
     spells: [],
-    spellSlots: {}
+    features: [],
+    spellcasting: {
+      ability: '',
+      dc: 0,
+      attack: 0
+    },
+    notes: '',
+    inspiration: false
   };
 };
 

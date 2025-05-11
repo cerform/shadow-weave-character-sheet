@@ -29,7 +29,14 @@ export function normalizeCharacterData(character: Character): Character {
   
   // Проверяем существование объекта stats
   if (!normalized.stats) {
-    normalized.stats = {};
+    normalized.stats = {
+      strength: 10,
+      dexterity: 10,
+      constitution: 10,
+      intelligence: 10,
+      wisdom: 10,
+      charisma: 10
+    };
   }
   
   // Проходим по всем характеристикам
@@ -53,8 +60,11 @@ export function normalizeCharacterData(character: Character): Character {
   if (!Array.isArray(normalized.equipment)) normalized.equipment = [];
   if (!Array.isArray(normalized.features)) normalized.features = [];
   if (!Array.isArray(normalized.spells)) normalized.spells = [];
-  if (!Array.isArray(normalized.languages)) normalized.languages = [];
-  if (!Array.isArray(normalized.proficiencies)) normalized.proficiencies = [];
+  
+  // Убедимся, что proficiencies существует и инициализирован правильно
+  if (!normalized.proficiencies) {
+    normalized.proficiencies = { languages: [], tools: [], weapons: [], armor: [], skills: [] };
+  }
   
   // Проверяем наличие userId
   if (!normalized.userId) {
