@@ -1,6 +1,6 @@
 
 import { Character, CharacterSpell } from '@/types/character';
-import { SpellData } from '@/types/spells';
+import { SpellData, convertCharacterSpellToSpellData } from '@/types/spells';
 
 // Проверяет, может ли персонаж подготовить больше заклинаний
 export const canPrepareMoreSpells = (character: Character): boolean => {
@@ -72,11 +72,11 @@ export const convertToSpellData = (spells: CharacterSpell[]): SpellData[] => {
       id,
       name: spell.name,
       level: spell.level,
-      school: spell.school || '',
-      castingTime: spell.castingTime || '',
-      range: spell.range || '',
+      school: spell.school || 'Универсальная',
+      castingTime: spell.castingTime || '1 действие',
+      range: spell.range || 'Касание',
       components: spell.components || '',
-      duration: spell.duration || '',
+      duration: spell.duration || 'Мгновенная',
       description: spell.description || '',
       classes: spell.classes || [],
       source: spell.source || '',

@@ -1,4 +1,3 @@
-
 export interface Character {
   id?: string;
   name: string;
@@ -54,6 +53,7 @@ export interface Character {
   speed?: number;
   proficiencyBonus?: number;
   savingThrows?: Record<string, boolean>;
+  savingThrowProficiencies?: Record<string, boolean>;
   proficiencies?: {
     languages?: string[];
     tools?: string[];
@@ -148,6 +148,14 @@ export interface Character {
     label: string;
     timestamp: string;
   };
+  // Добавляем поле для очков колдовства чародея
+  sorceryPoints?: {
+    max: number;
+    used: number;
+  };
+  // Добавляем поля для навыков
+  skillProficiencies?: Record<string, boolean>;
+  expertise?: Record<string, boolean>;
 }
 
 export interface CharacterSpell {

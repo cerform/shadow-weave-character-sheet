@@ -15,6 +15,9 @@ export const getAbilityModifier = (abilityScore: number): string => {
   return formatModifier(modifier);
 };
 
+// Добавляем альтернативное имя для совместимости
+export const getAbilityModifierString = getAbilityModifier;
+
 export const getProficiencyBonus = (level: number): number => {
   return Math.floor((level - 1) / 4) + 2;
 };
