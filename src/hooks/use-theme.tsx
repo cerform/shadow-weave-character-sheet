@@ -1,86 +1,43 @@
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 
-export type ThemeType = 'default' | 'dark' | 'light' | 'fantasy' | 'modern' | 'cyberpunk' | 'wizard' | 'warlock' | 'druid' | 'warrior' | 'bard';
+// Определение типа темы
+export type ThemeType = 'light' | 'dark' | 'wizard' | 'warlock' | 'default';
 
+// Контекст темы с начальным значением
 interface ThemeContextType {
   theme: ThemeType;
   setTheme: (theme: ThemeType) => void;
-  currentTheme?: any; // Для совместимости с существующим кодом
-  themeStyles?: any; // Для совместимости с существующим кодом
 }
 
-interface ThemeProviderProps {
-  children: React.ReactNode;
-  defaultTheme?: ThemeType;
-}
-
-const ThemeContext = createContext<ThemeContextType>({
+// Создание контекста с базовыми значениями
+export const ThemeContext = createContext<ThemeContextType>({
   theme: 'default',
-  setTheme: () => {},
+  setTheme: () => {}
 });
 
-export function ThemeProvider({
-  children,
-  defaultTheme = 'default',
-}: ThemeProviderProps) {
-  // Use localStorage to persist theme between page reloads
-  const [theme, setTheme] = useState<ThemeType>(() => {
-    if (typeof window !== 'undefined') {
-      const savedTheme = localStorage.getItem('theme');
-      if (savedTheme && ['default', 'dark', 'light', 'fantasy', 'modern', 'cyberpunk', 'wizard', 'warlock', 'druid', 'warrior', 'bard'].includes(savedTheme)) {
-        return savedTheme as ThemeType;
-      }
-    }
-    return defaultTheme;
-  });
-  
-  // Add state for currentTheme to make it compatible with existing code
-  const [currentTheme, setCurrentTheme] = useState<any>(null);
+// Хук для использования темы в компонентах
+export const useTheme = () => useContext(ThemeContext);
 
+// Провайдер темы для обертки приложения
+export const ThemeProvider: React.FC<{children: React.ReactNode}> = ({ children }) => {
+  // Получаем сохраненную тему из localStorage или используем дефолтную
+  const [theme, setTheme] = useState<ThemeType>(() => {
+    const savedTheme = localStorage.getItem('app-theme') as ThemeType;
+    return savedTheme || 'default';
+  });
+
+  // Обновляем документ и localStorage при изменении темы
   useEffect(() => {
-    const root = window.document.documentElement;
-    
-    // Remove all existing theme classes
-    root.classList.remove('theme-default', 'theme-dark', 'theme-light', 'theme-fantasy', 'theme-modern', 'theme-cyberpunk', 'theme-wizard', 'theme-warlock', 'theme-druid', 'theme-warrior', 'theme-bard');
-    
-    // Add the current theme class
-    root.classList.add(`theme-${theme}`);
-    
-    // Save to localStorage
-    localStorage.setItem('theme', theme);
-    
-    // Import themes dynamically to avoid circular dependencies
-    import('../lib/themes').then(themesModule => {
-      const themeObj = themesModule.themes[theme] || themesModule.themes.default;
-      setCurrentTheme(themeObj);
-      
-      // Apply CSS variables from theme
-      document.documentElement.style.setProperty('--background', themeObj.background);
-      document.documentElement.style.setProperty('--foreground', themeObj.foreground);
-      document.documentElement.style.setProperty('--primary', themeObj.primary);
-      document.documentElement.style.setProperty('--accent', themeObj.accent);
-      document.documentElement.style.setProperty('--text', themeObj.textColor);
-      document.documentElement.style.setProperty('--card-bg', themeObj.cardBackground);
-    });
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('app-theme', theme);
   }, [theme]);
 
-  const value = {
-    theme,
-    setTheme,
-    currentTheme,
-    themeStyles: currentTheme, // For compatibility
-  };
-
-  return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
-}
-
-export const useTheme = () => {
-  const context = useContext(ThemeContext);
-  if (context === undefined) {
-    throw new Error('useTheme must be used within a ThemeProvider');
-  }
-  return context;
+  return (
+    <ThemeContext.Provider value={{ theme, setTheme }}>
+      {children}
+    </ThemeContext.Provider>
+  );
 };
 
 export default useTheme;

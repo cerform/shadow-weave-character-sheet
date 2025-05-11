@@ -2,7 +2,7 @@
 import { slugify } from '@/utils/stringUtils';
 import { CharacterSpell } from '@/types/character';
 
-export const level5Spells: CharacterSpell[] = [
+export const level5: CharacterSpell[] = [
   {
     id: 'spell-communion',
     name: 'Общение',
@@ -257,4 +257,4 @@ export const level5Spells: CharacterSpell[] = [
   }
 ];
 
-export default level5Spells;
+export default level5;

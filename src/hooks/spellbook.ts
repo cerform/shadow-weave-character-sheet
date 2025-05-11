@@ -1,5 +1,4 @@
 
-import { useContext } from 'react';
-import { SpellbookContext } from '@/contexts/SpellbookContext';
-
-export const useSpellbook = () => useContext(SpellbookContext);
+// Re-export everything from the SpellbookContext for easier imports
+import { useSpellbook, SpellbookContext, SpellbookProvider } from '@/contexts/SpellbookContext';
+export { useSpellbook, SpellbookContext, SpellbookProvider };
