@@ -1,10 +1,11 @@
+
 export interface Character {
   id?: string;
   name: string;
   race?: string;
-  subrace?: string;  // Добавляем поле subrace
+  subrace?: string;
   class?: string;
-  className?: string; // Добавляем альтернатив��ое поле className
+  className?: string;
   subclass?: string;
   background?: string;
   level: number;
@@ -48,6 +49,7 @@ export interface Character {
   maxHp?: number;
   currentHp?: number;
   tempHp?: number;
+  temporaryHp?: number;
   armorClass?: number;
   speed?: number;
   proficiencyBonus?: number;
@@ -57,10 +59,11 @@ export interface Character {
     tools?: string[];
     weapons?: string[];
     armor?: string[];
+    skills?: string[];
   } | string[];
   equipment?: Item[];
   features?: string[];
-  spells?: CharacterSpell[];
+  spells?: (CharacterSpell | string)[];
   spellSlots?: Record<number, { max: number; used: number }>;
   money?: {
     cp?: number;
@@ -116,9 +119,9 @@ export interface Character {
   // Added property for character image
   image?: string;
   // Пользовательские поля
-  gender?: string; // Добавляем поле gender
-  userId?: string; // Добавляем поле userId для связи с пользователем
-  abilityPointsUsed?: number; // Добавляем поле для отслеживания использованных очков
+  gender?: string;
+  userId?: string;
+  abilityPointsUsed?: number;
   // Добавляем поля для обратной совместимости
   strength?: number;
   dexterity?: number;
@@ -126,6 +129,25 @@ export interface Character {
   intelligence?: number;
   wisdom?: number;
   charisma?: number;
+  // Добавляем недостающие поля из ошибок
+  initiative?: number;
+  hitDice?: {
+    total: number;
+    used: number;
+    dieType: string;
+    value: string;
+  };
+  resources?: Record<string, { max: number; used: number; recoveryType?: 'short' | 'short-rest' | 'long' | 'long-rest' }>;
+  notes?: string;
+  lastDiceRoll?: {
+    diceType: string;
+    count: number;
+    modifier: number;
+    rolls: number[];
+    total: number;
+    label: string;
+    timestamp: string;
+  };
 }
 
 export interface CharacterSpell {
@@ -136,7 +158,7 @@ export interface CharacterSpell {
   range?: string;
   components?: string;
   duration?: string;
-  description?: string | string[]; // Поддерживает как строку, так и массив строк
+  description?: string | string[];
   classes?: string[] | string;
   source?: string;
   ritual?: boolean;

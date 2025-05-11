@@ -43,5 +43,6 @@ export interface LightSource {
   radius: number;
   color: string;
   intensity: number;
+  flickering?: boolean;
   attachedToTokenId?: number;
 }
