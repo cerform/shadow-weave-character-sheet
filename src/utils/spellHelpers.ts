@@ -1,3 +1,4 @@
+
 import { Character, CharacterSpell } from '@/types/character';
 import { SpellData } from '@/types/spells';
 
@@ -134,4 +135,50 @@ export const convertToSpellData = (spell: CharacterSpell): SpellData => {
     concentration: spell.concentration || false,
     higher_level: spell.higherLevel || spell.higherLevels || '',
   };
+};
+
+/**
+ * Gets a formal name for a spell level
+ * @param level The spell level (0-9)
+ * @returns Formatted level name in Russian
+ */
+export const getSpellLevelName = (level: number): string => {
+  if (level === 0) return 'Заговоры';
+  
+  const levelSuffix = (() => {
+    if (level === 1) return '-го';
+    if (level >= 2 && level <= 4) return '-го';
+    return '-го';
+  })();
+  
+  return `${level}${levelSuffix} уровня`;
+};
+
+/**
+ * Checks if a spell is prepared
+ * @param spell The spell to check
+ * @returns Whether the spell is prepared
+ */
+export const isSpellPrepared = (spell: CharacterSpell | string): boolean => {
+  if (typeof spell === 'string') return false;
+  return !!spell.prepared;
+};
+
+/**
+ * Gets the level of a spell
+ * @param spell The spell to check
+ * @returns The spell level (0 for cantrips)
+ */
+export const getSpellLevel = (spell: CharacterSpell | string): number => {
+  if (typeof spell === 'string') return 0; // Default to cantrip for string-only spells
+  return spell.level || 0;
+};
+
+/**
+ * Checks if a spell object is a CharacterSpell object (not a string)
+ * @param spell The spell to check
+ * @returns Whether the spell is a CharacterSpell object
+ */
+export const isCharacterSpellObject = (spell: CharacterSpell | string): spell is CharacterSpell => {
+  return typeof spell !== 'string';
 };
