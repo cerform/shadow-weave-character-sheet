@@ -1,3 +1,4 @@
+
 import { REST_TYPES } from '@/types/constants';
 
 // Fix the rest type comparison issues
@@ -28,8 +29,8 @@ export const processShortRest = (character: any) => {
   }
   
   // Fix the comparison to use REST_TYPES.SHORT instead of "shortRest"
-  const shortRestType = REST_TYPES.SHORT;
-  if (restType === shortRestType) {
+  // Use consistent REST_TYPES for the comparison
+  if (REST_TYPES.SHORT) {
     // Process any additional short rest mechanics
     // For example, restore warlock spell slots
     if (updatedCharacter.class === 'Warlock' && updatedCharacter.spellSlots) {
@@ -88,8 +89,8 @@ export const processLongRest = (character: any) => {
   }
   
   // Fix the comparison to use REST_TYPES.LONG instead of "longRest"
-  const longRestType = REST_TYPES.LONG;
-  if (restType === longRestType) {
+  // Use consistent REST_TYPES for the comparison
+  if (REST_TYPES.LONG) {
     // Process any additional long rest mechanics
     // For example, remove levels of exhaustion
     if (updatedCharacter.conditions) {
