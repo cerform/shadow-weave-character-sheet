@@ -1,112 +1,167 @@
 
 import { useState, useCallback } from 'react';
 import { Character } from '@/types/character';
-import { getDefaultAbilities } from '@/utils/characterUtils';
+import { v4 as uuidv4 } from 'uuid';
+import { useToast } from './use-toast';
+import { calculateStatBonuses } from '@/utils/characterUtils';
+import { useCharacter } from '@/contexts/CharacterContext';
 
-export const useCharacterCreation = () => {
+export interface UseCharacterCreationOptions {
+  initialStep?: number;
+  onComplete?: (character: Character) => void;
+}
+
+export const useCharacterCreation = (options: UseCharacterCreationOptions = {}) => {
+  const { initialStep = 0, onComplete } = options;
+  const [currentStep, setCurrentStep] = useState(initialStep);
   const [character, setCharacter] = useState<Partial<Character>>({
+    id: uuidv4(),
     name: '',
     race: '',
-    subrace: '',
     class: '',
     level: 1,
-    background: '',
-    alignment: '',
-    experience: 0,
-    ...getDefaultAbilities(),
-    maxHp: 0,
-    currentHp: 0,
-    temporaryHp: 0,
-    equipment: [],
+    abilities: {
+      STR: 10, DEX: 10, CON: 10, INT: 10, WIS: 10, CHA: 10,
+      strength: 10, dexterity: 10, constitution: 10, intelligence: 10, wisdom: 10, charisma: 10
+    },
     spells: [],
-    features: [],
-    proficiencies: {
-      skills: [],
-      tools: [],
-      weapons: [],
-      armor: [],
-      languages: []
-    }
   });
+  const { addCharacter } = useCharacter();
+  const { toast } = useToast();
 
-  // Update character function
+  // Обновить персонажа
   const updateCharacter = useCallback((updates: Partial<Character>) => {
-    setCharacter(prev => ({
-      ...prev,
-      ...updates
-    }));
+    setCharacter(prev => {
+      // Обновляем основные поля
+      const updated = { ...prev, ...updates };
+
+      // Обновляем характеристики если нужно
+      if (updates.abilities) {
+        updated.abilities = { 
+          ...prev.abilities, 
+          ...updates.abilities,
+          // Обеспечиваем дублирование для совместимости
+          STR: updates.abilities.strength ?? updates.abilities.STR ?? prev.abilities?.STR ?? 10,
+          DEX: updates.abilities.dexterity ?? updates.abilities.DEX ?? prev.abilities?.DEX ?? 10,
+          CON: updates.abilities.constitution ?? updates.abilities.CON ?? prev.abilities?.CON ?? 10,
+          INT: updates.abilities.intelligence ?? updates.abilities.INT ?? prev.abilities?.INT ?? 10,
+          WIS: updates.abilities.wisdom ?? updates.abilities.WIS ?? prev.abilities?.WIS ?? 10,
+          CHA: updates.abilities.charisma ?? updates.abilities.CHA ?? prev.abilities?.CHA ?? 10,
+          strength: updates.abilities.STR ?? updates.abilities.strength ?? prev.abilities?.strength ?? 10,
+          dexterity: updates.abilities.DEX ?? updates.abilities.dexterity ?? prev.abilities?.dexterity ?? 10,
+          constitution: updates.abilities.CON ?? updates.abilities.constitution ?? prev.abilities?.constitution ?? 10,
+          intelligence: updates.abilities.INT ?? updates.abilities.intelligence ?? prev.abilities?.intelligence ?? 10,
+          wisdom: updates.abilities.WIS ?? updates.abilities.wisdom ?? prev.abilities?.wisdom ?? 10,
+          charisma: updates.abilities.CHA ?? updates.abilities.charisma ?? prev.abilities?.charisma ?? 10
+        };
+      }
+      
+      // Применяем расовые бонусы если выбрана раса
+      if (prev.race !== updated.race && updated.race) {
+        const racialBonuses = calculateStatBonuses(updated.race);
+        if (racialBonuses) {
+          updated.abilities = {
+            ...updated.abilities!,
+            STR: (updated.abilities?.STR || 10) + (racialBonuses.STR || 0),
+            DEX: (updated.abilities?.DEX || 10) + (racialBonuses.DEX || 0),
+            CON: (updated.abilities?.CON || 10) + (racialBonuses.CON || 0),
+            INT: (updated.abilities?.INT || 10) + (racialBonuses.INT || 0),
+            WIS: (updated.abilities?.WIS || 10) + (racialBonuses.WIS || 0),
+            CHA: (updated.abilities?.CHA || 10) + (racialBonuses.CHA || 0),
+            strength: (updated.abilities?.strength || 10) + (racialBonuses.STR || 0),
+            dexterity: (updated.abilities?.dexterity || 10) + (racialBonuses.DEX || 0),
+            constitution: (updated.abilities?.constitution || 10) + (racialBonuses.CON || 0),
+            intelligence: (updated.abilities?.intelligence || 10) + (racialBonuses.INT || 0),
+            wisdom: (updated.abilities?.wisdom || 10) + (racialBonuses.WIS || 0),
+            charisma: (updated.abilities?.charisma || 10) + (racialBonuses.CHA || 0)
+          };
+        }
+      }
+      
+      return updated;
+    });
   }, []);
 
-  // Function to check if the character's class is a magic user
-  const isMagicClass = useCallback((char: Partial<Character>) => {
-    const magicClasses = [
-      "бард", "волшебник", "жрец", "друид", "чародей", "колдун", 
-      "паладин", "следопыт", "изобретатель"
-    ];
-    
-    if (!char.class) return false;
-    
-    return magicClasses.some(cls => 
-      char.class?.toLowerCase().includes(cls.toLowerCase())
-    );
+  // Перейти к следующему шагу
+  const nextStep = useCallback(() => {
+    if (currentStep === 6) {
+      // Завершаем создание персонажа
+      const finalCharacter = character as Character; // Type assertion as completed character
+      
+      // Adding default values for required fields
+      const completedCharacter: Character = {
+        ...finalCharacter,
+        personalityTraits: finalCharacter.personalityTraits || '',
+        ideals: finalCharacter.ideals || '',
+        bonds: finalCharacter.bonds || '',
+        flaws: finalCharacter.flaws || '',
+        abilities: finalCharacter.abilities || {
+          strength: 10, dexterity: 10, constitution: 10, intelligence: 10, wisdom: 10, charisma: 10,
+          STR: 10, DEX: 10, CON: 10, INT: 10, WIS: 10, CHA: 10
+        },
+        hitDice: finalCharacter.hitDice || {
+          total: finalCharacter.level || 1,
+          used: 0, 
+          dieType: 'd8',
+          value: 'd8',
+          remaining: finalCharacter.level || 1,
+        },
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        lastUsed: new Date().toISOString(),
+      };
+
+      // Save character to context
+      addCharacter(completedCharacter);
+      
+      // Show success notification
+      toast({
+        title: 'Персонаж создан',
+        description: `${completedCharacter.name} готов к приключениям!`,
+      });
+      
+      // Call onComplete callback if provided
+      if (onComplete) {
+        onComplete(completedCharacter);
+      }
+    } else {
+      setCurrentStep(prev => prev + 1);
+    }
+  }, [currentStep, character, addCharacter, toast, onComplete]);
+
+  // Вернуться к предыдущему шагу
+  const prevStep = useCallback(() => {
+    setCurrentStep(prev => Math.max(0, prev - 1));
   }, []);
 
-  // Convert partial character to full Character
-  const convertToCharacter = useCallback((partialCharacter: Partial<Character>): Character => {
-    // Provide defaults for all required fields
-    return {
-      id: partialCharacter.id || '',
-      name: partialCharacter.name || 'Безымянный',
-      race: partialCharacter.race || '',
-      subrace: partialCharacter.subrace || '',
-      class: partialCharacter.class || '',
-      level: partialCharacter.level || 1,
-      background: partialCharacter.background || '',
-      alignment: partialCharacter.alignment || 'Нейтральный',
-      experience: partialCharacter.experience || 0,
-      strength: partialCharacter.strength || 10,
-      dexterity: partialCharacter.dexterity || 10,
-      constitution: partialCharacter.constitution || 10,
-      intelligence: partialCharacter.intelligence || 10,
-      wisdom: partialCharacter.wisdom || 10,
-      charisma: partialCharacter.charisma || 10,
-      maxHp: partialCharacter.maxHp || 0,
-      currentHp: partialCharacter.currentHp || 0,
-      temporaryHp: partialCharacter.temporaryHp || 0,
-      armorClass: partialCharacter.armorClass || 10,
-      initiative: partialCharacter.initiative || 0,
-      speed: partialCharacter.speed || 30,
-      proficiencyBonus: partialCharacter.proficiencyBonus || 2,
-      inspiration: partialCharacter.inspiration || false,
-      equipment: partialCharacter.equipment || [],
-      spells: partialCharacter.spells || [],
-      features: partialCharacter.features || [],
-      proficiencies: partialCharacter.proficiencies || {
-        skills: [],
-        tools: [],
-        weapons: [],
-        armor: [],
-        languages: []
+  // Сбросить всё
+  const resetCharacter = useCallback(() => {
+    setCharacter({
+      id: uuidv4(),
+      name: '',
+      race: '',
+      class: '',
+      level: 1,
+      abilities: {
+        STR: 10, DEX: 10, CON: 10, INT: 10, WIS: 10, CHA: 10,
+        strength: 10, dexterity: 10, constitution: 10, intelligence: 10, wisdom: 10, charisma: 10
       },
-      personality: partialCharacter.personality || '',
-      ideals: partialCharacter.ideals || '',
-      bonds: partialCharacter.bonds || '',
-      flaws: partialCharacter.flaws || '',
-      backstory: partialCharacter.backstory || '',
-      notes: partialCharacter.notes || '',
-      createdAt: partialCharacter.createdAt || new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      userId: partialCharacter.userId || '',
-      portrait: partialCharacter.portrait || '',
-      stats: partialCharacter.stats || {},
-      hitDice: partialCharacter.hitDice || { total: 1, current: 1, value: 'd8' }
-    };
+      spells: [],
+    });
+    setCurrentStep(0);
   }, []);
 
   return {
+    currentStep,
     character,
     updateCharacter,
-    isMagicClass,
-    convertToCharacter
+    nextStep,
+    prevStep,
+    resetCharacter,
+    setCurrentStep,
+    isFirstStep: currentStep === 0,
+    isLastStep: currentStep === 6,
   };
 };
+
+export default useCharacterCreation;

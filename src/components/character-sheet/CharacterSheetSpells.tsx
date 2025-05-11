@@ -65,7 +65,7 @@ const CharacterSheetSpells: React.FC<CharacterSheetSpellsProps> = ({ character: 
         setExpandedLevels([0]);
       }
     }
-  }, [character?.spells]);
+  }, [character?.spells, expandedLevels]);
   
   // Обработчик переключения развернутости уровня заклинаний
   const toggleLevelExpansion = (level: number) => {
@@ -79,7 +79,7 @@ const CharacterSheetSpells: React.FC<CharacterSheetSpellsProps> = ({ character: 
   // Обработчик переключения подготовки заклинания
   const toggleSpellPreparation = (spell: CharacterSpell) => {
     // Проверяем, можно ли подготовить еще заклинаний
-    if (!spell.prepared && !canPrepareMoreSpells(character)) {
+    if (!spell.prepared && !canPrepareMoreSpells(character, character.class || '')) {
       return; // Достигнут лимит подготовленных заклинаний
     }
     
@@ -129,7 +129,7 @@ const CharacterSheetSpells: React.FC<CharacterSheetSpellsProps> = ({ character: 
   }
   
   // Получаем лимит подготовленных заклинаний
-  const preparedLimit = needsPreparation() ? getPreparedSpellsLimit(character) : 0;
+  const preparedLimit = needsPreparation() ? getPreparedSpellsLimit(character, character.class || '') : 0;
   
   // Счетчик текущих подготовленных заклинаний
   const preparedCount = character.spells

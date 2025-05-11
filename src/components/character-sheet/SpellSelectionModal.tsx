@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogFooter, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -8,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
 import { useSpellbook } from '@/contexts/SpellbookContext';
-import { convertSpellsForState, canPrepareMoreSpells } from '@/utils/spellUtils';
+import { canPrepareMoreSpells } from '@/utils/spellUtils';
 import { safeToString } from '@/utils/stringUtils';
 
 export interface SpellSelectionModalProps {
@@ -270,7 +271,7 @@ export const SpellSelectionModal: React.FC<SpellSelectionModalProps> = ({
         </div>
         <DialogFooter>
           <div className="text-sm mr-auto">
-            {canPrepareMoreSpells(character) ? (
+            {canPrepareMoreSpells(character, character.class || '') ? (
               <span style={{ color: currentTheme.success }}>
                 Вы можете подготовить больше заклинаний
               </span>

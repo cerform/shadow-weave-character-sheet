@@ -1,20 +1,20 @@
 
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
 import { themes } from '@/lib/themes';
-import { Theme, ThemeType } from '@/types/theme';
+import { ThemeType, ThemeStyles } from '@/types/theme';
 
 interface ThemeContextType {
   theme: ThemeType;
   setTheme: (theme: ThemeType) => void;
-  currentTheme: Theme;
-  themeStyles: Theme; // Added required property
+  currentTheme: ThemeStyles;
+  themeStyles: ThemeStyles;
 }
 
 const defaultThemeContext: ThemeContextType = {
   theme: 'default',
   setTheme: () => {},
   currentTheme: themes.default,
-  themeStyles: themes.default, // Added required property
+  themeStyles: themes.default,
 };
 
 export const ThemeContext = createContext<ThemeContextType>(defaultThemeContext);
@@ -27,7 +27,7 @@ interface ThemeProviderProps {
 
 export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
   const [theme, setTheme] = useState<ThemeType>('default');
-  const [currentTheme, setCurrentTheme] = useState<Theme>(themes.default);
+  const [currentTheme, setCurrentTheme] = useState<ThemeStyles>(themes.default);
 
   // Загружаем сохраненную тему при инициализации
   useEffect(() => {
@@ -46,13 +46,13 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
   const handleSetTheme = (newTheme: ThemeType) => {
     try {
       setTheme(newTheme);
-      const themeObj = themes[newTheme] || themes.default;
+      const themeObj = themes[newTheme as keyof typeof themes] || themes.default;
       setCurrentTheme(themeObj);
-      localStorage.setItem('theme', newTheme);
+      localStorage.setItem('theme', newTheme as string);
       console.log('Тема изменена на:', newTheme);
       
       // Применяем класс темы к корневому элементу
-      document.documentElement.setAttribute('data-theme', newTheme);
+      document.documentElement.setAttribute('data-theme', newTheme as string);
       document.body.className = '';
       document.body.classList.add(`theme-${newTheme}`);
       
@@ -73,7 +73,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
       theme, 
       setTheme: handleSetTheme,
       currentTheme,
-      themeStyles: currentTheme, // Ensure themeStyles is provided
+      themeStyles: currentTheme,
     }}>
       {children}
     </ThemeContext.Provider>
