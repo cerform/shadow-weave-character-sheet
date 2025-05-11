@@ -1,6 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
-import { Character, AbilityScores, Skill, HitPointEvent } from '@/types/character';
-import { ABILITY_SCORE_CAPS, SKILL_LIST, SKILL_MAP } from '@/types/constants';
+import { Character, AbilityScores, HitPointEvent } from '@/types/character';
+import { ABILITY_SCORE_CAPS, SKILL_LIST, SKILL_MAP, Skill } from '@/types/constants';
 import { calculateProficiencyBonus } from './levelUtils';
 
 /**

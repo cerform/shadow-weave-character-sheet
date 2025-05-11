@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -132,7 +131,7 @@ const SpellBookViewer: React.FC<SpellBookViewerProps> = ({ character, onAddSpell
                             <div className="text-xs">
                               {spell.school}
                               {spell.ritual && ' (Ритуал)'}
-                              {spell.concentration && ' (Концентрация)'}
+                              {spell.concentration && ' (Концентраци��)'}
                             </div>
                           </div>
                           <div className="flex items-center">

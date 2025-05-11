@@ -58,3 +58,53 @@ export const GAME_MECHANICS = {
     WIZARD: 'd6'
   }
 };
+
+// Define skill types and mapping
+export interface Skill {
+  name: string;
+  ability: string;
+}
+
+// List of all available skills in D&D 5e
+export const SKILL_LIST: Skill[] = [
+  { name: 'Акробатика', ability: 'DEX' },
+  { name: 'Анализ', ability: 'INT' },
+  { name: 'Атлетика', ability: 'STR' },
+  { name: 'Внимательность', ability: 'WIS' },
+  { name: 'Выживание', ability: 'WIS' },
+  { name: 'Выступление', ability: 'CHA' },
+  { name: 'Запугивание', ability: 'CHA' },
+  { name: 'История', ability: 'INT' },
+  { name: 'Ловкость рук', ability: 'DEX' },
+  { name: 'Магия', ability: 'INT' },
+  { name: 'Медицина', ability: 'WIS' },
+  { name: 'Обман', ability: 'CHA' },
+  { name: 'Природа', ability: 'INT' },
+  { name: 'Проницательность', ability: 'WIS' },
+  { name: 'Религия', ability: 'INT' },
+  { name: 'Скрытность', ability: 'DEX' },
+  { name: 'Убеждение', ability: 'CHA' },
+  { name: 'Уход за животными', ability: 'WIS' }
+];
+
+// Map skill names to corresponding ability scores
+export const SKILL_MAP: Record<string, string> = {
+  'Акробатика': 'DEX',
+  'Анализ': 'INT',
+  'Атлетика': 'STR',
+  'Внимательность': 'WIS',
+  'Выживание': 'WIS',
+  'Выступление': 'CHA',
+  'Запугивание': 'CHA',
+  'История': 'INT',
+  'Ловкость рук': 'DEX',
+  'Магия': 'INT',
+  'Медицина': 'WIS',
+  'Обман': 'CHA',
+  'Природа': 'INT',
+  'Проницательность': 'WIS',
+  'Религия': 'INT',
+  'Скрытность': 'DEX',
+  'Убеждение': 'CHA',
+  'Уход за животными': 'WIS'
+};
