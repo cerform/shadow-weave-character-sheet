@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Character } from '@/types/character';
 import { getAbilityModifier } from '@/utils/characterUtils';
@@ -17,7 +16,8 @@ export const SkillsPanel: React.FC<SkillsPanelProps> = ({ character, onUpdate })
   }, [character.skills]);
   
   const getAbilityMod = (ability: string): number => {
-    return getAbilityModifier(character?.abilities?.[ability] || 10);
+    // Using character as the second parameter
+    return getAbilityModifier(character, ability);
   };
   
   const calculateSkillValue = (skillName: string, proficient: boolean, expertise: boolean): number => {

@@ -6,12 +6,13 @@ import { Token } from '@/types/battle';
 // This component exists to provide type compatibility with EnhancedBattleMap
 interface BattleMapWrapperProps {
   tokens: Token[];
-  setTokens: (tokens: Token[]) => void; // or updateTokens in some files
+  setTokens?: (tokens: Token[]) => void; 
+  updateTokens?: (token: Token) => void;
   background: string;
   setBackground: (url: string) => void;
   onUpdateTokenPosition: (id: number, x: number, y: number) => void;
-  gridSize: number;
-  setGridSize: (size: number) => void;
+  gridSize: number | { rows: number; cols: number };
+  setGridSize: ((size: number) => void) | ((size: { rows: number; cols: number }) => void);
   showGrid: boolean;
   setShowGrid: (show: boolean) => void;
   fogEnabled: boolean;
@@ -57,8 +58,13 @@ const BattleMapWrapper: React.FC<BattleMapWrapperProps> = ({
   
   const handleGridSizeChange = (size: { rows: number; cols: number }) => {
     if (typeof setGridSize === 'function') {
-      // If setGridSize expects a number, pass the rows (assuming square grid)
-      setGridSize(size.rows);
+      if (typeof gridSize === 'number') {
+        // If setGridSize expects a number, pass the rows (assuming square grid)
+        (setGridSize as (size: number) => void)(size.rows);
+      } else {
+        // If setGridSize expects an object, pass the object
+        (setGridSize as (size: { rows: number; cols: number }) => void)(size);
+      }
     }
   };
   

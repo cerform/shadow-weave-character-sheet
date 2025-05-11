@@ -1,95 +1,92 @@
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { Character } from '@/types/character';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { useTheme } from '@/hooks/use-theme';
-import { themes } from '@/lib/themes';
 import { getAbilityModifier } from '@/utils/characterUtils';
-import { safeToString } from '@/utils/stringUtils';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface SpellCastingPanelProps {
-  character?: Character;
+  character: Character;
+  onUpdate: (updates: Partial<Character>) => void;
 }
 
-const SpellCastingPanel: React.FC<SpellCastingPanelProps> = ({ character }) => {
-  const { theme } = useTheme();
-  const currentTheme = themes[theme as keyof typeof themes] || themes.default;
-  const [dc, setDc] = useState<number>(0);
-  const [attackBonus, setAttackBonus] = useState<number>(0);
+export const SpellCastingPanel: React.FC<SpellCastingPanelProps> = ({ character, onUpdate }) => {
+  const spellcastingAbilities = [
+    { value: 'intelligence', label: 'Интеллект' },
+    { value: 'wisdom', label: 'Мудрость' },
+    { value: 'charisma', label: 'Харизма' }
+  ];
 
-  useEffect(() => {
-    if (!character) return;
+  const handleAbilityChange = (value: string) => {
+    // Update spellcasting ability
+    const ability = value as 'intelligence' | 'wisdom' | 'charisma';
     
-    // Определяем базовую характеристику для заклинаний
-    let abilityMod = 0;
-    const characterClass = character.class || '';
-    
-    // Используем безопасное преобразование к строке для класса
-    const classLower = safeToString(characterClass).toLowerCase();
-    
-    // Интеллект для волшебников, мудрость для жрецов и друидов, харизма для остальных магических классов
-    if (classLower.includes('волшебник') || classLower.includes('wizard')) {
-      abilityMod = getAbilityModifier(character.abilities?.INT || 10);
-    } else if (classLower.includes('жрец') || classLower.includes('cleric') || 
-               classLower.includes('друид') || classLower.includes('druid')) {
-      abilityMod = getAbilityModifier(character.abilities?.WIS || 10);
-    } else {
-      abilityMod = getAbilityModifier(character.abilities?.CHA || 10);
-    }
-    
+    // Calculate spell save DC: 8 + proficiency bonus + ability modifier
+    const abilityKey = ability === 'intelligence' ? 'INT' : 
+                       ability === 'wisdom' ? 'WIS' : 'CHA';
+                       
+    // Use character as second argument for the getAbilityModifier function
+    const abilityModifier = getAbilityModifier(character, abilityKey);
     const profBonus = character.proficiencyBonus || 2;
+    const spellDC = 8 + profBonus + abilityModifier;
     
-    // Устанавливаем сложность спасброска
-    const spellDc = 8 + profBonus + abilityMod;
-    setDc(spellDc);
+    // Calculate spell attack bonus: proficiency bonus + ability modifier
+    const spellAttack = profBonus + abilityModifier;
     
-    // Устанавливаем бонус к атаке заклинанием
-    const spellAttack = profBonus + abilityMod;
-    setAttackBonus(spellAttack);
+    // Calculate prepared spells limit (usually level + ability modifier)
+    const preparedLimit = (character.level || 1) + abilityModifier;
     
-  }, [character]);
-  
-  // Если персонажа нет, не отображаем компонент
-  if (!character) return null;
-  
+    onUpdate({
+      spellcasting: {
+        ability,
+        dc: spellDC,
+        attack: spellAttack,
+        preparedSpellsLimit: preparedLimit
+      }
+    });
+  };
+
   return (
-    <Card className="border-accent/30" style={{ backgroundColor: currentTheme.cardBackground }}>
-      <CardContent className="pt-4">
-        <div className="grid grid-cols-2 gap-4">
-          <div className="flex flex-col items-center justify-center">
-            <span className="text-sm" style={{ color: currentTheme.textColor }}>
-              Сложность спасброска
-            </span>
-            <Badge
-              className="text-lg py-1 px-4 mt-1"
-              style={{ 
-                backgroundColor: currentTheme.accent,
-                color: currentTheme.buttonText
-              }}
-            >
-              {dc}
-            </Badge>
+    <Card>
+      <CardHeader>
+        <CardTitle>Заклинания</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="grid gap-2">
+          <Label htmlFor="spellcasting-ability">Базовая характеристика</Label>
+          <Select 
+            value={character.spellcasting?.ability || 'intelligence'} 
+            onValueChange={handleAbilityChange}
+          >
+            <SelectTrigger id="spellcasting-ability">
+              <SelectValue placeholder="Выберите характеристику" />
+            </SelectTrigger>
+            <SelectContent>
+              {spellcastingAbilities.map(ability => (
+                <SelectItem key={ability.value} value={ability.value}>
+                  {ability.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        
+        <div className="grid grid-cols-3 gap-4">
+          <div className="text-center p-3 border rounded">
+            <div className="text-2xl font-bold">{character.spellcasting?.dc || 10}</div>
+            <div className="text-sm text-muted-foreground">Сложность заклинаний</div>
           </div>
-          <div className="flex flex-col items-center justify-center">
-            <span className="text-sm" style={{ color: currentTheme.textColor }}>
-              Бонус к атаке заклинанием
-            </span>
-            <Badge
-              className="text-lg py-1 px-4 mt-1"
-              style={{ 
-                backgroundColor: currentTheme.accent,
-                color: currentTheme.buttonText
-              }}
-            >
-              +{attackBonus}
-            </Badge>
+          <div className="text-center p-3 border rounded">
+            <div className="text-2xl font-bold">+{character.spellcasting?.attack || 2}</div>
+            <div className="text-sm text-muted-foreground">Бонус атаки</div>
+          </div>
+          <div className="text-center p-3 border rounded">
+            <div className="text-2xl font-bold">{character.spellcasting?.preparedSpellsLimit || 0}</div>
+            <div className="text-sm text-muted-foreground">Макс. подготовлено</div>
           </div>
         </div>
       </CardContent>
     </Card>
   );
 };
-
-export default SpellCastingPanel;

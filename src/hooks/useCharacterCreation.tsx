@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from 'react';
 import { Character } from '@/types/character';
 import { v4 as uuidv4 } from 'uuid';
@@ -20,7 +21,8 @@ export const useCharacterCreation = (options: UseCharacterCreationOptions = {}) 
     class: '',
     level: 1,
     abilities: {
-      strength: 10, dexterity: 10, constitution: 10, intelligence: 10, wisdom: 10, charisma: 10
+      strength: 10, dexterity: 10, constitution: 10, intelligence: 10, wisdom: 10, charisma: 10,
+      STR: 10, DEX: 10, CON: 10, INT: 10, WIS: 10, CHA: 10
     },
     spells: [],
   });
@@ -44,7 +46,14 @@ export const useCharacterCreation = (options: UseCharacterCreationOptions = {}) 
           constitution: updates.abilities.constitution ?? prev.abilities?.constitution ?? 10,
           intelligence: updates.abilities.intelligence ?? prev.abilities?.intelligence ?? 10,
           wisdom: updates.abilities.wisdom ?? prev.abilities?.wisdom ?? 10,
-          charisma: updates.abilities.charisma ?? prev.abilities?.charisma ?? 10
+          charisma: updates.abilities.charisma ?? prev.abilities?.charisma ?? 10,
+          // Дублируем в сокращенном формате
+          STR: updates.abilities.STR ?? updates.abilities.strength ?? prev.abilities?.STR ?? prev.abilities?.strength ?? 10,
+          DEX: updates.abilities.DEX ?? updates.abilities.dexterity ?? prev.abilities?.DEX ?? prev.abilities?.dexterity ?? 10,
+          CON: updates.abilities.CON ?? updates.abilities.constitution ?? prev.abilities?.CON ?? prev.abilities?.constitution ?? 10,
+          INT: updates.abilities.INT ?? updates.abilities.intelligence ?? prev.abilities?.INT ?? prev.abilities?.intelligence ?? 10,
+          WIS: updates.abilities.WIS ?? updates.abilities.wisdom ?? prev.abilities?.WIS ?? prev.abilities?.wisdom ?? 10,
+          CHA: updates.abilities.CHA ?? updates.abilities.charisma ?? prev.abilities?.CHA ?? prev.abilities?.charisma ?? 10
         };
       }
       
@@ -59,7 +68,14 @@ export const useCharacterCreation = (options: UseCharacterCreationOptions = {}) 
             constitution: (updated.abilities?.constitution || 10) + (racialBonuses.abilities.constitution || 0),
             intelligence: (updated.abilities?.intelligence || 10) + (racialBonuses.abilities.intelligence || 0),
             wisdom: (updated.abilities?.wisdom || 10) + (racialBonuses.abilities.wisdom || 0),
-            charisma: (updated.abilities?.charisma || 10) + (racialBonuses.abilities.charisma || 0)
+            charisma: (updated.abilities?.charisma || 10) + (racialBonuses.abilities.charisma || 0),
+            // Дублируем в сокращенном формате
+            STR: (updated.abilities?.STR || 10) + (racialBonuses.abilities.STR || 0),
+            DEX: (updated.abilities?.DEX || 10) + (racialBonuses.abilities.DEX || 0),
+            CON: (updated.abilities?.CON || 10) + (racialBonuses.abilities.CON || 0),
+            INT: (updated.abilities?.INT || 10) + (racialBonuses.abilities.INT || 0),
+            WIS: (updated.abilities?.WIS || 10) + (racialBonuses.abilities.WIS || 0),
+            CHA: (updated.abilities?.CHA || 10) + (racialBonuses.abilities.CHA || 0)
           };
         }
       }
@@ -78,7 +94,24 @@ export const useCharacterCreation = (options: UseCharacterCreationOptions = {}) 
       const mergedCharacter = {
         ...finalCharacter,
         ...character,
-        id: character.id || uuidv4() // Гарантируем, что id всегда существует
+        id: character.id || uuidv4(), // Гарантируем, что id всегда существует
+        abilities: {
+          ...finalCharacter.abilities,
+          ...character.abilities,
+          // Ensure both naming conventions
+          STR: character.abilities?.STR || character.abilities?.strength || 10,
+          DEX: character.abilities?.DEX || character.abilities?.dexterity || 10,
+          CON: character.abilities?.CON || character.abilities?.constitution || 10,
+          INT: character.abilities?.INT || character.abilities?.intelligence || 10,
+          WIS: character.abilities?.WIS || character.abilities?.wisdom || 10,
+          CHA: character.abilities?.CHA || character.abilities?.charisma || 10,
+          strength: character.abilities?.strength || character.abilities?.STR || 10,
+          dexterity: character.abilities?.dexterity || character.abilities?.DEX || 10,
+          constitution: character.abilities?.constitution || character.abilities?.CON || 10,
+          intelligence: character.abilities?.intelligence || character.abilities?.INT || 10,
+          wisdom: character.abilities?.wisdom || character.abilities?.WIS || 10,
+          charisma: character.abilities?.charisma || character.abilities?.CHA || 10
+        }
       } as Character; // Используем явное приведение типа
       
       // Save character to context
@@ -115,7 +148,8 @@ export const useCharacterCreation = (options: UseCharacterCreationOptions = {}) 
       class: '',
       level: 1,
       abilities: {
-        strength: 10, dexterity: 10, constitution: 10, intelligence: 10, wisdom: 10, charisma: 10
+        strength: 10, dexterity: 10, constitution: 10, intelligence: 10, wisdom: 10, charisma: 10,
+        STR: 10, DEX: 10, CON: 10, INT: 10, WIS: 10, CHA: 10
       },
       spells: [],
     });

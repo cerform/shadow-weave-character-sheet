@@ -100,15 +100,27 @@ export const calculateSkillBonus = (abilityScore: number, proficiency: boolean, 
 export const calculateArmorClass = (character: Character): number => {
   let armorClass = 10;
   
-  // Базовый расчет AC
-  if (character.abilities && character.equipment) {
+  // Base AC calculation
+  if (character.abilities) {
     armorClass += getModifier(character.abilities.dexterity || character.dexterity || 10);
     
-    // Если надета броня, учитываем её параметры
-    if (character.equipment.armor) {
-      // Здесь должна быть логика определения типа брони и добавления бонусов
-      // Пример: если броня - кожаная, добавляем 2 к AC
-      armorClass += 2; // Это пример, нужна реальная логика
+    // Check if character has equipment with armor
+    if (character.equipment) {
+      // Handle both object and array formats
+      if (Array.isArray(character.equipment)) {
+        // Check if any item is armor
+        const armorItem = character.equipment.find(item => item.type === 'armor');
+        if (armorItem) {
+          // Here we would add logic to calculate AC based on armor type
+          armorClass += 2; // Example value, should be based on armor type
+        }
+      } else {
+        // Handle object format
+        if (character.equipment.armor) {
+          // Here we would add logic for armor AC bonus
+          armorClass += 2; // Example value, should be based on armor type
+        }
+      }
     }
   }
   
@@ -136,7 +148,7 @@ export const calculateMaxHP = (character: Character): number => {
   
   if (character.abilities) {
     maxHP += getModifier(character.abilities.constitution || character.constitution || 10) + 
-             (character.level || 1) * 5; // Пример: 5 HP за уровень
+             (character.level || 1) * 5; // Example: 5 HP per level
   }
   
   return maxHP;
@@ -146,28 +158,28 @@ export const calculateMaxHP = (character: Character): number => {
  * Calculate carrying capacity
  */
 export const calculateCarryingCapacity = (strengthScore: number): number => {
-  return strengthScore * 15; // Пример: базовая формула
+  return strengthScore * 15; // Example: base formula
 };
 
 /**
  * Calculate encumbered limit
  */
 export const calculateEncumberedLimit = (strengthScore: number): number => {
-  return strengthScore * 5; // Пример: базовая формула
+  return strengthScore * 5; // Example: base formula
 };
 
 /**
  * Calculate heavily encumbered limit
  */
 export const calculateHeavilyEncumberedLimit = (strengthScore: number): number => {
-  return strengthScore * 10; // Пример: базовая формула
+  return strengthScore * 10; // Example: base formula
 };
 
 /**
  * Calculate push, drag, and lift capacity
  */
 export const calculatePushDragLiftCapacity = (strengthScore: number): number => {
-  return strengthScore * 30; // Пример: базовая формула
+  return strengthScore * 30; // Example: base formula
 };
 
 /**

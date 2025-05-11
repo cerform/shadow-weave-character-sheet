@@ -221,6 +221,16 @@ const PlayBattlePage = () => {
     setGridScale(mapSettings.zoom);
   };
 
+  // Properly handle grid size updates
+  const handleGridSizeUpdate = (newSize: number | { rows: number, cols: number }) => {
+    if (typeof newSize === 'number') {
+      setGridSize(newSize);
+    } else {
+      // Assuming square grids, use rows value
+      setGridSize(newSize.rows);
+    }
+  };
+
   // Переключение режима DM/Player
   const toggleDMMode = () => {
     setIsDM(!isDM);
@@ -327,7 +337,7 @@ const PlayBattlePage = () => {
     }
   };
 
-  // Функция добавления источника све��а
+  // Функция добавления источника све����а
   const handleAddLight = (type: 'torch' | 'lantern' | 'daylight' | 'custom', color?: string, intensity?: number) => {
     if (!isDM) {
       toast({
@@ -532,7 +542,7 @@ const PlayBattlePage = () => {
               onResetFog={resetFogOfWar}
               gridVisible={mapSettings.gridVisible}
               onToggleGrid={() => setGridVisible(!mapSettings.gridVisible)}
-              onUpdateGridSettings={(newSize) => setGridSize({ rows: newSize, cols: newSize })} // Fix the type mismatch
+              onUpdateGridSettings={(newSize) => handleGridSizeUpdate(newSize)} // Fix the type mismatch
               gridSize={{ rows: mapSettings.gridSize, cols: mapSettings.gridSize }} // Fix the type mismatch
               zoom={mapSettings.zoom}
               onZoomChange={setZoom}
@@ -552,7 +562,7 @@ const PlayBattlePage = () => {
               fogOfWar={mapSettings.fogOfWar}
               setFogOfWar={setFogOfWar}
               gridSize={{ rows: mapSettings.gridSize, cols: mapSettings.gridSize }} // Fix the type mismatch
-              setGridSize={(size) => setGridSize(size.rows)} // Adapt the size parameter
+              setGridSize={(size) => handleGridSizeUpdate(size.rows)} // Adapt the size parameter
               isDM={isDM}
             />
           )}
