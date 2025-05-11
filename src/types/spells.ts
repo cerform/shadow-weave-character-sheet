@@ -10,63 +10,81 @@ export interface SpellData {
   range: string;
   components: string;
   duration: string;
-  description: string[] | string;
-  classes: string[] | string;
-  ritual: boolean;
-  concentration: boolean;
-  prepared?: boolean;
+  description: string | string[];
+  classes: string | string[];
+  ritual?: boolean;
+  concentration?: boolean;
   verbal?: boolean;
   somatic?: boolean;
   material?: boolean;
-  source?: string;
-  higherLevel?: string;
-  higherLevels?: string;
   materials?: string;
 }
 
+// Функция для преобразования CharacterSpell в SpellData
 export const convertCharacterSpellToSpellData = (spell: CharacterSpell): SpellData => {
-  // Обеспечиваем, что classes всегда будет массивом строк
-  let classesArray: string[] = [];
-  
-  if (!spell.classes) {
-    classesArray = [];
-  } else if (typeof spell.classes === 'string') {
-    classesArray = [spell.classes];
-  } else if (Array.isArray(spell.classes)) {
-    classesArray = spell.classes.map(c => String(c));
+  if (!spell) {
+    console.error("Attempted to convert undefined or null spell");
+    // Возвращаем дефолтное заклинание с минимальной информацией
+    return {
+      id: `default-${Date.now()}`,
+      name: "Неизвестное заклинание",
+      level: 0,
+      school: "Универсальная",
+      castingTime: "1 действие",
+      range: "Касание",
+      components: "",
+      duration: "Мгновенная",
+      description: "",
+      classes: [],
+    };
   }
-
+  
   return {
-    id: spell.id || `spell-${spell.name.replace(/\s+/g, '-').toLowerCase()}`,
+    id: spell.id?.toString() || `spell-${spell.name.replace(/\s+/g, '-').toLowerCase()}`,
     name: spell.name,
-    level: spell.level || 0,
+    level: spell.level,
     school: spell.school || 'Универсальная',
     castingTime: spell.castingTime || '1 действие',
-    range: spell.range || 'На себя',
+    range: spell.range || 'Касание',
     components: spell.components || '',
     duration: spell.duration || 'Мгновенная',
-    description: spell.description ? 
-      Array.isArray(spell.description) ? 
-        spell.description : 
-        [spell.description] : 
-      ['Нет описания'],
-    classes: classesArray,
-    prepared: spell.prepared || false,
+    description: spell.description || '',
+    classes: spell.classes || [],
     ritual: spell.ritual || false,
     concentration: spell.concentration || false,
     verbal: spell.verbal || false,
     somatic: spell.somatic || false,
     material: spell.material || false,
-    materials: spell.materials
+    materials: spell.materials || ''
   };
 };
 
-// Эта функция для преобразования массива заклинаний
+// Функция для преобразования массива CharacterSpell в массив SpellData
 export const convertSpellArray = (spells: CharacterSpell[]): SpellData[] => {
-  return spells.map(spell => convertCharacterSpellToSpellData(spell));
+  if (!spells || !Array.isArray(spells)) return [];
+  
+  return spells.map(spell => {
+    if (typeof spell === 'string') {
+      // Если заклинание представлено строкой, создаем минимальный объект
+      return {
+        id: `spell-${spell.replace(/\s+/g, '-').toLowerCase()}`,
+        name: spell,
+        level: 0,
+        school: 'Универсальная',
+        castingTime: '1 действие',
+        range: 'Касание',
+        components: '',
+        duration: 'Мгновенная',
+        description: '',
+        classes: [],
+      };
+    }
+    
+    return convertCharacterSpellToSpellData(spell);
+  });
 };
 
-// Функция для преобразования SpellData обратно в CharacterSpell
+// Функция для преобразования SpellData в CharacterSpell
 export const convertSpellDataToCharacterSpell = (spell: SpellData): CharacterSpell => {
   return {
     id: spell.id.toString(),
@@ -77,14 +95,14 @@ export const convertSpellDataToCharacterSpell = (spell: SpellData): CharacterSpe
     range: spell.range,
     components: spell.components,
     duration: spell.duration,
-    description: Array.isArray(spell.description) ? spell.description.join('\n') : spell.description,
-    classes: Array.isArray(spell.classes) ? spell.classes.join(', ') : spell.classes,
-    prepared: spell.prepared || false,
-    ritual: spell.ritual || false,
-    concentration: spell.concentration || false,
-    verbal: spell.verbal || false,
-    somatic: spell.somatic || false,
-    material: spell.material || false,
-    materials: spell.materials
+    description: spell.description,
+    classes: spell.classes,
+    ritual: spell.ritual,
+    concentration: spell.concentration,
+    verbal: spell.verbal,
+    somatic: spell.somatic,
+    material: spell.material,
+    materials: spell.materials,
+    prepared: true // По умолчанию заклинания считаются подготовленными
   };
 };

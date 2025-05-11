@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { SpellData, convertCharacterSpellToSpellData, convertSpellArray } from '@/types/spells';
 import { CharacterSpell } from '@/types/character';
@@ -21,6 +20,7 @@ interface SpellbookContextType {
   loadSpellsForCharacter: (characterClass: string, level: number) => void;
 }
 
+// Инициализация контекста с безопасными значениями по умолчанию
 export const SpellbookContext = createContext<SpellbookContextType>({
   selectedSpells: [],
   availableSpells: [],
@@ -52,105 +52,110 @@ export const SpellbookProvider: React.FC<{ children: ReactNode }> = ({ children 
   const loadSpellsForCharacter = (characterClass: string, level: number) => {
     console.log("Loading spells for class:", characterClass, "level:", level);
     
-    const allSpells = getAllSpells();
-    console.log("Total spells found:", allSpells.length);
-    
-    // Получаем максимальный уровень заклинаний
-    const { maxSpellLevel } = calculateAvailableSpellsByClassAndLevel(
-      characterClass, 
-      level || 1,
-      getModifierForClass(character)
-    );
-    
-    console.log("Max spell level calculated:", maxSpellLevel);
-    
-    // Фильтруем заклинания для класса персонажа и уровня
-    const classSpells = allSpells.filter(spell => {
-      if (!spell.classes) return false;
+    try {
+      const allSpells = getAllSpells();
+      console.log("Total spells found:", allSpells.length);
       
-      // Преобразуем classes к массиву, если строка
-      const spellClasses = typeof spell.classes === 'string' 
-        ? [spell.classes.toLowerCase()] 
-        : (spell.classes || []).map((cls: string) => cls.toLowerCase());
+      // Получаем максимальный уровень заклинаний
+      const { maxSpellLevel } = calculateAvailableSpellsByClassAndLevel(
+        characterClass, 
+        level || 1,
+        getModifierForClass(character)
+      );
+      
+      console.log("Max spell level calculated:", maxSpellLevel);
+      
+      // Фильтруем заклинания для класса персонажа и уровня
+      const classSpells = allSpells.filter(spell => {
+        if (!spell.classes) return false;
         
-      // Проверяем соответствие класса персонажа
-      const isForClass = spellClasses.some(cls => {
-        const characterClassLower = characterClass.toLowerCase();
+        // Преобразуем classes к массиву, если строка
+        const spellClasses = typeof spell.classes === 'string' 
+          ? [spell.classes.toLowerCase()] 
+          : (spell.classes || []).map((cls: string) => cls.toLowerCase());
+          
+        // Проверяем соответствие класса персонажа
+        const isForClass = spellClasses.some(cls => {
+          const characterClassLower = characterClass.toLowerCase();
+          
+          // Проверяем как русские, так и английские названия классов
+          return cls === characterClassLower || 
+            (characterClassLower === 'жрец' && cls === 'cleric') ||
+            (characterClassLower === 'волшебник' && cls === 'wizard') ||
+            (characterClassLower === 'друид' && cls === 'druid') ||
+            (characterClassLower === 'бард' && cls === 'bard') ||
+            (characterClassLower === 'колдун' && cls === 'warlock') ||
+            (characterClassLower === 'чародей' && cls === 'sorcerer') ||
+            (characterClassLower === 'паладин' && cls === 'paladin');
+        });
         
-        // Проверяем как русские, так и английские названия классов
-        return cls === characterClassLower || 
-          (characterClassLower === 'жрец' && cls === 'cleric') ||
-          (characterClassLower === 'волшебник' && cls === 'wizard') ||
-          (characterClassLower === 'друид' && cls === 'druid') ||
-          (characterClassLower === 'бард' && cls === 'bard') ||
-          (characterClassLower === 'колдун' && cls === 'warlock') ||
-          (characterClassLower === 'чародей' && cls === 'sorcerer') ||
-          (characterClassLower === 'паладин' && cls === 'paladin');
+        // Проверяем соответствие уровня заклинания
+        const isLevelAvailable = spell.level <= maxSpellLevel;
+        
+        return isForClass && isLevelAvailable;
       });
       
-      // Проверяем соответствие уровня заклинания
-      const isLevelAvailable = spell.level <= maxSpellLevel;
+      console.log(`Found ${classSpells.length} spells for ${characterClass}`);
       
-      return isForClass && isLevelAvailable;
-    });
-    
-    console.log(`Found ${classSpells.length} spells for ${characterClass}`);
-    
-    // Преобразуем заклинания в формат SpellData
-    const spellDataArray = classSpells.map(spell => {
-      return {
-        id: spell.id || `spell-${spell.name.replace(/\s+/g, '-').toLowerCase()}`,
-        name: spell.name,
-        level: spell.level,
-        school: spell.school || 'Универсальная',
-        castingTime: spell.castingTime || '1 действие',
-        range: spell.range || 'Касание',
-        components: spell.components || '',
-        duration: spell.duration || 'Мгновенная',
-        description: spell.description || '',
-        classes: spell.classes || [],
-        ritual: spell.ritual || false,
-        concentration: spell.concentration || false
-      } as SpellData;
-    });
-    
-    setAvailableSpells(spellDataArray);
-    
-    // Если у персонажа уже есть заклинания, загружаем их
-    if (character && character.spells && character.spells.length > 0) {
-      // Преобразуем CharacterSpell[] в SpellData[]
-      const characterSpellData = Array.isArray(character.spells) 
-        ? character.spells.map(spell => {
-            if (typeof spell === 'string') {
-              // Если заклинание представлено строкой, ищем полные данные
-              const foundSpell = allSpells.find(s => s.name === spell);
-              if (foundSpell) {
-                return convertCharacterSpellToSpellData(foundSpell as CharacterSpell);
+      // Преобразуем заклинания в формат SpellData
+      const spellDataArray = classSpells.map(spell => {
+        return {
+          id: spell.id || `spell-${spell.name.replace(/\s+/g, '-').toLowerCase()}`,
+          name: spell.name,
+          level: spell.level,
+          school: spell.school || 'Универсальная',
+          castingTime: spell.castingTime || '1 действие',
+          range: spell.range || 'Касание',
+          components: spell.components || '',
+          duration: spell.duration || 'Мгновенная',
+          description: spell.description || '',
+          classes: spell.classes || [],
+          ritual: spell.ritual || false,
+          concentration: spell.concentration || false
+        } as SpellData;
+      });
+      
+      setAvailableSpells(spellDataArray);
+      
+      // Если у персонажа уже есть заклинания, загружаем их
+      if (character && character.spells && character.spells.length > 0) {
+        // Преобразуем CharacterSpell[] в SpellData[]
+        const characterSpellData = Array.isArray(character.spells) 
+          ? character.spells.map(spell => {
+              if (typeof spell === 'string') {
+                // Если заклинание представлено строкой, ищем полные данные
+                const foundSpell = allSpells.find(s => s.name === spell);
+                if (foundSpell) {
+                  return convertCharacterSpellToSpellData(foundSpell as CharacterSpell);
+                } else {
+                  // Создаем минимальный объект заклинания
+                  return {
+                    id: `spell-${spell.replace(/\s+/g, '-').toLowerCase()}`,
+                    name: spell,
+                    level: 0,
+                    school: 'Универсальная',
+                    castingTime: '1 действие',
+                    range: 'Касание',
+                    components: '',
+                    duration: 'Мгновенная',
+                    description: [''],
+                    classes: characterClass,
+                    ritual: false,
+                    concentration: false
+                  } as SpellData;
+                }
               } else {
-                // Создаем минимальный объект заклинания
-                return {
-                  id: `spell-${spell.replace(/\s+/g, '-').toLowerCase()}`,
-                  name: spell,
-                  level: 0,
-                  school: 'Универсальная',
-                  castingTime: '1 действие',
-                  range: 'Касание',
-                  components: '',
-                  duration: 'Мгновенная',
-                  description: [''],
-                  classes: characterClass,
-                  ritual: false,
-                  concentration: false
-                } as SpellData;
+                // Если это уже объект заклинания
+                return convertCharacterSpellToSpellData(spell);
               }
-            } else {
-              // Если это уже объект заклинания
-              return convertCharacterSpellToSpellData(spell);
-            }
-          })
-        : [];
-      
-      setSelectedSpells(characterSpellData);
+            })
+          : [];
+        
+        setSelectedSpells(characterSpellData);
+      }
+    } catch (error) {
+      console.error("Error loading spells:", error);
+      setAvailableSpells([]); // Устанавливаем пустой массив в случае ошибки
     }
   };
 
@@ -160,15 +165,15 @@ export const SpellbookProvider: React.FC<{ children: ReactNode }> = ({ children 
     
     const classLower = character?.class?.toLowerCase() || '';
     
-    if (['жрец', 'друид'].includes(classLower)) {
+    if (['жрец', 'друид', 'cleric', 'druid'].includes(classLower)) {
       // Мудрость
-      return Math.floor((character.abilities?.wisdom || character.wisdom || 10) - 10) / 2;
-    } else if (['волшебник', 'маг'].includes(classLower)) {
+      return Math.floor((character.abilities?.wisdom || character.abilities?.WIS || character.wisdom || 10) - 10) / 2;
+    } else if (['волшебник', 'маг', 'wizard'].includes(classLower)) {
       // Интеллект
-      return Math.floor((character.abilities?.intelligence || character.intelligence || 10) - 10) / 2;
+      return Math.floor((character.abilities?.intelligence || character.abilities?.INT || character.intelligence || 10) - 10) / 2;
     } else {
       // Харизма (бард, колдун, чародей, паладин)
-      return Math.floor((character.abilities?.charisma || character.charisma || 10) - 10) / 2;
+      return Math.floor((character.abilities?.charisma || character.abilities?.CHA || character.charisma || 10) - 10) / 2;
     }
   };
 
