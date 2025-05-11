@@ -10,6 +10,7 @@ export interface ThemeStyles {
   shadowColor: string;
   mutedTextColor?: string;
   fontFamily?: string;
+  primary?: string; // Added for PointBuyPanel
 }
 
 export type ThemeType = 'light' | 'dark' | 'warlock' | 'wizard' | 'bard' | 'druid' | 'cleric' | 'paladin' | 'rogue' | 'ranger' | 'barbarian' | 'monk' | 'fighter' | 'sorcerer';
@@ -25,7 +26,8 @@ export const themes: Record<ThemeType, ThemeStyles> = {
     borderColor: '#e2e8f0',
     accent: '#6366f1',
     shadowColor: 'rgba(0, 0, 0, 0.1)',
-    fontFamily: 'system-ui, sans-serif'
+    fontFamily: 'system-ui, sans-serif',
+    primary: '#6366f1'
   },
   dark: {
     background: '#0f172a',
@@ -36,7 +38,8 @@ export const themes: Record<ThemeType, ThemeStyles> = {
     borderColor: '#334155',
     accent: '#818cf8',
     shadowColor: 'rgba(0, 0, 0, 0.5)',
-    fontFamily: 'system-ui, sans-serif'
+    fontFamily: 'system-ui, sans-serif',
+    primary: '#818cf8'
   },
   warlock: {
     background: '#18181b',
@@ -47,7 +50,8 @@ export const themes: Record<ThemeType, ThemeStyles> = {
     borderColor: '#3f3f46',
     accent: '#d946ef',
     shadowColor: 'rgba(217, 70, 239, 0.3)',
-    fontFamily: '"Cinzel", serif'
+    fontFamily: '"Cinzel", serif',
+    primary: '#d946ef'
   },
   wizard: {
     background: '#0c0a20',
@@ -58,7 +62,8 @@ export const themes: Record<ThemeType, ThemeStyles> = {
     borderColor: '#2d2b42',
     accent: '#60a5fa',
     shadowColor: 'rgba(96, 165, 250, 0.3)',
-    fontFamily: '"Lora", serif'
+    fontFamily: '"Lora", serif',
+    primary: '#60a5fa'
   },
   // ... add the rest of the themes with all required properties
   bard: {
@@ -70,7 +75,8 @@ export const themes: Record<ThemeType, ThemeStyles> = {
     borderColor: '#583168',
     accent: '#f9a8d4',
     shadowColor: 'rgba(249, 168, 212, 0.3)',
-    fontFamily: '"Dancing Script", cursive'
+    fontFamily: '"Dancing Script", cursive',
+    primary: '#f9a8d4'
   },
   druid: {
     background: '#064e3b',
@@ -81,7 +87,8 @@ export const themes: Record<ThemeType, ThemeStyles> = {
     borderColor: '#0f766e',
     accent: '#6ee7b7',
     shadowColor: 'rgba(110, 231, 183, 0.3)',
-    fontFamily: '"Fauna One", serif'
+    fontFamily: '"Fauna One", serif',
+    primary: '#6ee7b7'
   },
   cleric: {
     background: '#3f3f46',
@@ -92,7 +99,8 @@ export const themes: Record<ThemeType, ThemeStyles> = {
     borderColor: '#71717a',
     accent: '#e4e4e7',
     shadowColor: 'rgba(228, 228, 231, 0.3)',
-    fontFamily: '"Cormorant Garamond", serif'
+    fontFamily: '"Cormorant Garamond", serif',
+    primary: '#e4e4e7'
   },
   paladin: {
     background: '#172554',
@@ -103,7 +111,8 @@ export const themes: Record<ThemeType, ThemeStyles> = {
     borderColor: '#1e40af',
     accent: '#fcd34d',
     shadowColor: 'rgba(252, 211, 77, 0.3)',
-    fontFamily: '"Cinzel", serif'
+    fontFamily: '"Cinzel", serif',
+    primary: '#fcd34d'
   },
   rogue: {
     background: '#18181b',
@@ -114,7 +123,8 @@ export const themes: Record<ThemeType, ThemeStyles> = {
     borderColor: '#3f3f46',
     accent: '#9f1239',
     shadowColor: 'rgba(159, 18, 57, 0.3)',
-    fontFamily: '"Roboto Condensed", sans-serif'
+    fontFamily: '"Roboto Condensed", sans-serif',
+    primary: '#9f1239'
   },
   ranger: {
     background: '#1c1917',
@@ -125,7 +135,8 @@ export const themes: Record<ThemeType, ThemeStyles> = {
     borderColor: '#44403c',
     accent: '#84cc16',
     shadowColor: 'rgba(132, 204, 22, 0.3)',
-    fontFamily: '"Roboto Slab", serif'
+    fontFamily: '"Roboto Slab", serif',
+    primary: '#84cc16'
   },
   barbarian: {
     background: '#7f1d1d',
@@ -136,7 +147,8 @@ export const themes: Record<ThemeType, ThemeStyles> = {
     borderColor: '#b91c1c',
     accent: '#fbbf24',
     shadowColor: 'rgba(251, 191, 36, 0.3)',
-    fontFamily: '"Fjalla One", sans-serif'
+    fontFamily: '"Fjalla One", sans-serif',
+    primary: '#fbbf24'
   },
   monk: {
     background: '#1e293b',
@@ -147,7 +159,8 @@ export const themes: Record<ThemeType, ThemeStyles> = {
     borderColor: '#475569',
     accent: '#c084fc',
     shadowColor: 'rgba(192, 132, 252, 0.3)',
-    fontFamily: '"Noto Sans", sans-serif'
+    fontFamily: '"Noto Sans", sans-serif',
+    primary: '#c084fc'
   },
   fighter: {
     background: '#374151',
@@ -158,7 +171,8 @@ export const themes: Record<ThemeType, ThemeStyles> = {
     borderColor: '#6b7280',
     accent: '#f97316',
     shadowColor: 'rgba(249, 115, 22, 0.3)',
-    fontFamily: '"Roboto", sans-serif'
+    fontFamily: '"Roboto", sans-serif',
+    primary: '#f97316'
   },
   sorcerer: {
     background: '#4c1d95',
@@ -169,11 +183,15 @@ export const themes: Record<ThemeType, ThemeStyles> = {
     borderColor: '#7e22ce',
     accent: '#fb7185',
     shadowColor: 'rgba(251, 113, 133, 0.3)',
-    fontFamily: '"Alegreya", serif'
+    fontFamily: '"Alegreya", serif',
+    primary: '#fb7185'
   }
 };
 
 // Export the default theme for backward compatibility
 export const defaultTheme = themes.dark;
+
+// Export Theme type for components that use it
+export type Theme = ThemeStyles;
 
 export default themes;

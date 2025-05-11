@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -18,6 +19,9 @@ export const SpellSlotsPanel: React.FC<SpellSlotsPanelProps> = ({ className }) =
     return null;
   }
 
+  // Ensure character has a properly structured spellSlots property
+  const spellSlots = character.spellSlots || {};
+
   const handleSpellSlotsChange = (level: number, newSlots: number) => {
     if (!character || !updateCharacter) return;
 
@@ -37,6 +41,7 @@ export const SpellSlotsPanel: React.FC<SpellSlotsPanelProps> = ({ className }) =
           const level = i + 1;
           const spellCount = getSelectedSpellCount(level);
           const hasSpells = spellCount > 0;
+          const currentSlots = typeof spellSlots[level] === 'number' ? spellSlots[level] : 0;
 
           return (
             <div key={level} className="flex items-center justify-between">
@@ -46,7 +51,8 @@ export const SpellSlotsPanel: React.FC<SpellSlotsPanelProps> = ({ className }) =
               </div>
               <SpellSlotsPopover
                 level={level}
-                slots={character.spellSlots?.[level] || 0}
+                currentSlots={currentSlots}
+                maxSlots={4} // Default max, can be calculated based on class and level
                 onSlotsChange={(newSlots) => handleSpellSlotsChange(level, newSlots)}
                 disabled={!hasSpells}
               />

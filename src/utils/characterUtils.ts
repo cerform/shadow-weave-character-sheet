@@ -36,6 +36,121 @@ export function getModifierFromAbilityScore(score: number): number {
 }
 
 /**
+ * Calculate racial ability score bonuses based on race
+ */
+export function calculateStatBonuses(race: string): {
+  STR?: number;
+  DEX?: number;
+  CON?: number;
+  INT?: number;
+  WIS?: number;
+  CHA?: number;
+} {
+  switch (race.toLowerCase()) {
+    case 'дварф':
+    case 'dwarf':
+      return { CON: 2 };
+    case 'горный дварф':
+    case 'mountain dwarf':
+      return { STR: 2, CON: 2 };
+    case 'холмовой дварф':
+    case 'hill dwarf':
+      return { CON: 2, WIS: 1 };
+    case 'эльф':
+    case 'elf':
+      return { DEX: 2 };
+    case 'высший эльф':
+    case 'high elf':
+      return { DEX: 2, INT: 1 };
+    case 'лесной эльф':
+    case 'wood elf':
+      return { DEX: 2, WIS: 1 };
+    case 'дроу':
+    case 'тёмный эльф':
+    case 'drow':
+      return { DEX: 2, CHA: 1 };
+    case 'полурослик':
+    case 'halfling':
+      return { DEX: 2 };
+    case 'легконогий':
+    case 'lightfoot':
+      return { DEX: 2, CHA: 1 };
+    case 'коренастый':
+    case 'stout':
+      return { DEX: 2, CON: 1 };
+    case 'человек':
+    case 'human':
+      return { STR: 1, DEX: 1, CON: 1, INT: 1, WIS: 1, CHA: 1 };
+    case 'драконорождённый':
+    case 'dragonborn':
+      return { STR: 2, CHA: 1 };
+    case 'гном':
+    case 'gnome':
+      return { INT: 2 };
+    case 'лесной гном':
+    case 'forest gnome':
+      return { INT: 2, DEX: 1 };
+    case 'скальный гном':
+    case 'rock gnome':
+      return { INT: 2, CON: 1 };
+    case 'полуэльф':
+    case 'half-elf':
+      return { CHA: 2 }; // +2 CHA and +1 to two others of player's choice
+    case 'полуорк':
+    case 'half-orc':
+      return { STR: 2, CON: 1 };
+    case 'тифлинг':
+    case 'tiefling':
+      return { CHA: 2, INT: 1 };
+    default:
+      return {};
+  }
+}
+
+/**
+ * Convert a partial character to a complete character object
+ */
+export function convertToCharacter(partialCharacter: Partial<any>): any {
+  // Start with a default character
+  const completeCharacter = createDefaultCharacter();
+  
+  // Merge the partial character with the default
+  return {
+    ...completeCharacter,
+    ...partialCharacter,
+    // Ensure nested objects are properly merged
+    abilities: {
+      ...completeCharacter.abilities,
+      ...(partialCharacter.abilities || {}),
+    },
+    abilityScores: {
+      ...completeCharacter.abilityScores,
+      ...(partialCharacter.abilityScores || {}),
+    },
+    hitPoints: {
+      ...completeCharacter.hitPoints,
+      ...(partialCharacter.hitPoints || {}),
+    },
+    deathSaves: {
+      ...completeCharacter.deathSaves,
+      ...(partialCharacter.deathSaves || {}),
+    },
+    savingThrows: {
+      ...completeCharacter.savingThrows,
+      ...(partialCharacter.savingThrows || {}),
+    },
+    traits: {
+      ...completeCharacter.traits,
+      ...(partialCharacter.traits || {}),
+    },
+    appearance: {
+      ...completeCharacter.appearance,
+      ...(partialCharacter.appearance || {}),
+    }
+  };
+}
+
+/**
  * Create a default character template
  */
 export function createDefaultCharacter() {
@@ -96,6 +211,26 @@ export function createDefaultCharacter() {
       skin: "",
       hair: ""
     },
-    backstory: ""
+    backstory: "",
+    // For compatibility with older code
+    abilities: {
+      STR: 10,
+      DEX: 10,
+      CON: 10,
+      INT: 10,
+      WIS: 10,
+      CHA: 10,
+      strength: 10,
+      dexterity: 10,
+      constitution: 10,
+      intelligence: 10,
+      wisdom: 10,
+      charisma: 10
+    },
+    hp: 0,
+    maxHp: 0,
+    tempHp: 0,
+    xp: 0,
+    spellSlots: {},
   };
 }
