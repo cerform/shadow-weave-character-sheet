@@ -1,10 +1,12 @@
+
 import { collection, doc, getDocs, query, where, getDoc, addDoc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Character } from '@/types/character';
 import { getCurrentUid } from '@/utils/authHelpers';
 import { auth } from '@/lib/firebase';
 import { convertToCharacter } from '@/utils/characterConverter';
-import { supabase } from '@/lib/supabase';
+// Удаляем импорт supabase, так как он не существует
+// import { supabase } from '@/lib/supabase';
 
 /**
  * Получение всех персонажей
@@ -232,106 +234,104 @@ export const deleteCharacter = async (id: string): Promise<void> => {
   }
 };
 
-// В методе storeCharacter или другом проблемном месте:
-// Преобразуем Character в объект с строковыми ключами для Supabase
-const characterDataForStorage: Record<string, any> = { ...character };
+// Удаляем проблемный код с top-level return и Supabase
+// Вместо этого добавим полезную функцию генерации ID
+export const generateId = () => {
+  return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+};
 
-// Добавляем суффикс .data для сложных объектов
-Object.keys(characterDataForStorage).forEach(key => {
-  const value = characterDataForStorage[key];
-  if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
-    characterDataForStorage[key + '.data'] = JSON.stringify(value);
-    delete characterDataForStorage[key];
-  }
-});
-
-// Используем модифицированный объект вместо оригинального Character
-const { data, error } = await supabase.from('characters').insert(characterDataForStorage);
-
-// Исправляем возвращаемый тип, добавив недостающие обязательные поля
-return {
-  id: character.id || (character as any).id || generateId(),
-  name: character.name || (character as any).name || 'Новый персонаж',
-  class: character.class || '',
-  className: character.className || character.class || '',
-  race: character.race || '',
-  level: character.level || 1,
-  experience: character.xp || character.experience || 0,
-  xp: character.xp || character.experience || 0, // добавляем xp
-  strength: character.strength || (character.stats?.strength || 10),
-  dexterity: character.dexterity || (character.stats?.dexterity || 10),
-  constitution: character.constitution || (character.stats?.constitution || 10),
-  intelligence: character.intelligence || (character.stats?.intelligence || 10),
-  wisdom: character.wisdom || (character.stats?.wisdom || 10),
-  charisma: character.charisma || (character.stats?.charisma || 10),
-  stats: character.stats || {
-    strength: character.strength || 10,
-    dexterity: character.dexterity || 10, 
-    constitution: character.constitution || 10,
-    intelligence: character.intelligence || 10,
-    wisdom: character.wisdom || 10,
-    charisma: character.charisma || 10
-  },
-  // Добавляем обязательные поля Character
-  background: character.background || '',
-  alignment: character.alignment || '',
-  abilities: character.abilities || {
-    STR: character.strength || 10,
-    DEX: character.dexterity || 10,
-    CON: character.constitution || 10,
-    INT: character.intelligence || 10,
-    WIS: character.wisdom || 10,
-    CHA: character.charisma || 10,
-    strength: character.strength || 10,
-    dexterity: character.dexterity || 10,
-    constitution: character.constitution || 10,
-    intelligence: character.intelligence || 10,
-    wisdom: character.wisdom || 10,
-    charisma: character.charisma || 10
-  },
-  savingThrows: character.savingThrows || {
-    STR: 0, DEX: 0, CON: 0, INT: 0, WIS: 0, CHA: 0,
-    strength: 0, dexterity: 0, constitution: 0, intelligence: 0, wisdom: 0, charisma: 0
-  },
-  skills: character.skills || {},
-  hp: character.hp || 10,
-  maxHp: character.maxHp || 10,
-  temporaryHp: character.temporaryHp || 0,
-  ac: character.ac || 10,
-  proficiencyBonus: character.proficiencyBonus || 2,
-  speed: character.speed || 30,
-  initiative: character.initiative || 0,
-  inspiration: character.inspiration || false,
-  hitDice: character.hitDice || {
-    total: character.level || 1,
-    used: 0,
-    dieType: 'd8'
-  },
-  resources: character.resources || {},
-  deathSaves: character.deathSaves || {
-    successes: 0,
-    failures: 0
-  },
-  spellcasting: character.spellcasting || {
-    ability: '',
-    dc: 0,
-    attack: 0
-  },
-  spellSlots: character.spellSlots || {},
-  spells: character.spells || [],
-  equipment: character.equipment || {
-    weapons: [],
-    armor: '',
-    items: [],
-    gold: 0
-  },
-  proficiencies: character.proficiencies || {
-    languages: [],
-    tools: [],
-    weapons: [],
-    armor: [],
-    skills: []
-  },
-  features: character.features || [],
-  notes: character.notes || ''
+// Вместо прежнего кода Supabase, создадим функцию для создания полного объекта персонажа
+export const createFullCharacter = (characterData: Partial<Character>): Character => {
+  return {
+    id: characterData.id || generateId(),
+    name: characterData.name || 'Новый персонаж',
+    class: characterData.class || '',
+    className: characterData.className || characterData.class || '',
+    race: characterData.race || '',
+    level: characterData.level || 1,
+    experience: characterData.xp || characterData.experience || 0,
+    xp: characterData.xp || characterData.experience || 0,
+    strength: characterData.strength || (characterData.stats?.strength || 10),
+    dexterity: characterData.dexterity || (characterData.stats?.dexterity || 10),
+    constitution: characterData.constitution || (characterData.stats?.constitution || 10),
+    intelligence: characterData.intelligence || (characterData.stats?.intelligence || 10),
+    wisdom: characterData.wisdom || (characterData.stats?.wisdom || 10),
+    charisma: characterData.charisma || (characterData.stats?.charisma || 10),
+    stats: characterData.stats || {
+      strength: characterData.strength || 10,
+      dexterity: characterData.dexterity || 10, 
+      constitution: characterData.constitution || 10,
+      intelligence: characterData.intelligence || 10,
+      wisdom: characterData.wisdom || 10,
+      charisma: characterData.charisma || 10
+    },
+    // Добавляем обязательные поля Character
+    background: characterData.background || '',
+    alignment: characterData.alignment || '',
+    abilities: characterData.abilities || {
+      STR: characterData.strength || 10,
+      DEX: characterData.dexterity || 10,
+      CON: characterData.constitution || 10,
+      INT: characterData.intelligence || 10,
+      WIS: characterData.wisdom || 10,
+      CHA: characterData.charisma || 10,
+      strength: characterData.strength || 10,
+      dexterity: characterData.dexterity || 10,
+      constitution: characterData.constitution || 10,
+      intelligence: characterData.intelligence || 10,
+      wisdom: characterData.wisdom || 10,
+      charisma: characterData.charisma || 10
+    },
+    savingThrows: characterData.savingThrows || {
+      STR: 0, DEX: 0, CON: 0, INT: 0, WIS: 0, CHA: 0,
+      strength: 0, dexterity: 0, constitution: 0, intelligence: 0, wisdom: 0, charisma: 0
+    },
+    skills: characterData.skills || {},
+    hp: characterData.hp || 10,
+    maxHp: characterData.maxHp || 10,
+    temporaryHp: characterData.temporaryHp || 0,
+    ac: characterData.ac || 10,
+    proficiencyBonus: characterData.proficiencyBonus || 2,
+    speed: characterData.speed || 30,
+    initiative: characterData.initiative || 0,
+    inspiration: characterData.inspiration || false,
+    hitDice: characterData.hitDice || {
+      total: characterData.level || 1,
+      used: 0,
+      dieType: 'd8'
+    },
+    resources: characterData.resources || {},
+    deathSaves: characterData.deathSaves || {
+      successes: 0,
+      failures: 0
+    },
+    spellcasting: characterData.spellcasting || {
+      ability: '',
+      dc: 0,
+      attack: 0
+    },
+    spellSlots: characterData.spellSlots || {},
+    spells: characterData.spells || [],
+    equipment: characterData.equipment || {
+      weapons: [],
+      armor: '',
+      items: [],
+      gold: 0
+    },
+    proficiencies: characterData.proficiencies || {
+      languages: [],
+      tools: [],
+      weapons: [],
+      armor: [],
+      skills: []
+    },
+    features: characterData.features || [],
+    notes: characterData.notes || '',
+    personality: characterData.personality || {
+      traits: '',
+      ideals: '',
+      bonds: '',
+      flaws: ''
+    }
+  };
 };

@@ -76,6 +76,14 @@ export interface LevelFeature {
   required?: boolean; // Added for backward compatibility
 }
 
+// Добавляем интерфейс для personality
+export interface CharacterPersonality {
+  traits: string;
+  ideals: string;
+  bonds: string;
+  flaws: string;
+}
+
 export interface Character {
   id: string;
   name: string;
@@ -159,6 +167,9 @@ export interface Character {
     rolls?: number[];
     label?: string;
   };
+  
+  // Добавляем personality
+  personality?: CharacterPersonality;
   
   // Additional properties needed
   currentHp?: number;

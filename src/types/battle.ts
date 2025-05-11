@@ -54,7 +54,7 @@ export interface EnhancedBattleMapProps {
   fogOfWar: boolean;
   revealedCells?: {row: number, col: number}[];
   onRevealCell?: (row: number, col: number) => void;
-  gridSize?: number;
+  gridSize?: {rows: number, cols: number};  // Изменяем тип gridSize на объект
   gridVisible?: boolean;
   gridOpacity?: number;
   zoom?: number;
@@ -63,4 +63,66 @@ export interface EnhancedBattleMapProps {
   isDynamicLighting?: boolean;
   className?: string;
   showPlayerView?: boolean;
+}
+
+// Добавляем интерфейс BattleState
+export interface BattleState {
+  isActive: boolean;
+  round: number;
+  currentTurn: number;
+  currentInitiativeIndex: number;  // Добавляем отсутствующее свойство
+}
+
+// Добавляем расширенный интерфейс для BattleStore
+export interface BattleStore {
+  tokens: Token[];
+  addToken: (token: Token) => void;
+  updateToken: (id: number, updates: Partial<Token>) => void;
+  removeToken: (id: number) => void;
+  updateTokenPosition: (id: number, x: number, y: number) => void;
+  updateTokenHP: (id: number, hp: number) => void;
+  
+  initiative: InitiativeItem[];
+  battleState: BattleState;
+  startBattle: () => void;
+  pauseBattle: () => void;
+  nextTurn: () => void;
+  
+  selectedTokenId: number | null;
+  selectToken: (id: number | null) => void;
+  
+  mapSettings: {
+    background: string | null;
+    fogOfWar: boolean;
+    revealedCells: {row: number, col: number}[];
+    gridVisible: boolean;
+    gridOpacity: number;
+    gridSize: {rows: number, cols: number};
+    revealRadius: number;
+    zoom: number;
+    isDynamicLighting: boolean;
+    lightSources: LightSource[];
+  };
+  
+  setMapBackground: (url: string) => void;
+  setFogOfWar: (enabled: boolean) => void;
+  revealCell: (row: number, col: number) => void;
+  resetFogOfWar: () => void;
+  setGridVisible: (visible: boolean) => void;
+  setGridOpacity: (opacity: number) => void;
+  setGridSize: (size: {rows: number, cols: number}) => void;
+  setRevealRadius: (radius: number) => void;
+  setZoom: (zoom: number) => void;
+  
+  isDM: boolean;
+  setIsDM: (isDM: boolean) => void;
+  
+  showWebcams: boolean;
+  setShowWebcams: (show: boolean) => void;
+  
+  addLightSource: (source: Omit<LightSource, "id">) => void;
+  removeLightSource: (id: number) => void;
+  updateLightSource: (id: number, updates: Partial<LightSource>) => void;
+  setDynamicLighting: (enabled: boolean) => void;
+  attachLightToToken: (lightId: number, tokenId: number) => void;
 }

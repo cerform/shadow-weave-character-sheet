@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -94,8 +95,8 @@ const RecentCharactersPage: React.FC = () => {
       
     } catch (err) {
       console.error('RecentCharactersPage: Ошибка при загрузке персонажей:', err);
+      // Исправляем генерацию toast с ошибкой, убирая свойство title
       toast({
-        title: "Ошибка загрузки персонажей",
         description: error instanceof Error ? error.message : "Неизвестная ошибка",
         variant: "destructive"
       });
@@ -183,7 +184,6 @@ const RecentCharactersPage: React.FC = () => {
           {isAuthenticated && !error && !loading && characters.length === 0 && (
             <InfoMessage
               variant="info"
-              title="Информация о загрузке"
               message="В системе не найдено персонажей. Создайте нового персонажа, чтобы он появился здесь."
               className="mb-6"
             />
@@ -201,7 +201,7 @@ const RecentCharactersPage: React.FC = () => {
           {/* Ошибка */}
           {error && !loading && (
             <ErrorDisplay 
-              errorMessage={error}
+              errorMessage={error instanceof Error ? error.message : String(error)}
               onRetry={loadCharacters}
             />
           )}
