@@ -43,6 +43,7 @@ const SpellBookViewer: React.FC<SpellBookViewerProps> = ({ character, onAddSpell
     const matchesTab = activeTab === 'all' || 
                        (activeTab === 'cantrips' && spell.level === 0) || 
                        (activeTab === 'prepared' && spell.prepared) ||
+                       (activeTab === 'ritual' && spell.ritual) ||
                        (activeTab === String(spell.level));
     return matchesSearch && matchesTab;
   });
@@ -162,7 +163,7 @@ const SpellBookViewer: React.FC<SpellBookViewerProps> = ({ character, onAddSpell
                           <CardContent className="pt-0 pb-3">
                             <SpellCard 
                               spell={spell} 
-                              currentTheme={typeof theme === 'string' ? theme : 'default'}
+                              currentTheme={theme || 'default'}
                               onClick={() => handleSpellClick(spell.id)}
                             />
                           </CardContent>
