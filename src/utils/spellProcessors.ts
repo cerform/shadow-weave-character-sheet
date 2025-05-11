@@ -1,3 +1,4 @@
+
 // Конвертирует компоненты заклинания в строку
 export function componentsToString({
   verbal = false,

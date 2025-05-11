@@ -6,5 +6,7 @@ import { useSpellbook } from './useSpellbook';
 export default useSpellbook;
 
 // Экспортируем вспомогательные функции из типов
-export { convertCharacterSpellToSpellData, convertSpellDataToCharacterSpell } from '@/types/spells';
-
+export { 
+  convertCharacterSpellToSpellData, 
+  convertSpellDataToCharacterSpell 
+} from '@/types/spells';

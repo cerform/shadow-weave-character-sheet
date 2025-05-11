@@ -1,3 +1,4 @@
+
 // Define essential types
 export interface AbilityScores {
   STR: number;
@@ -70,6 +71,9 @@ export interface LevelFeature {
   description: string;
   options?: string[];
   id: string; // Made ID property required for compatibility
+  name?: string; // Added for backward compatibility
+  type?: string; // Added for backward compatibility
+  required?: boolean; // Added for backward compatibility
 }
 
 export interface Character {
@@ -101,6 +105,8 @@ export interface Character {
     total: number;
     used: number;
     dieType: string;
+    current?: number; // Added for backward compatibility
+    value?: string; // Added for backward compatibility
   };
   resources: Record<string, {
     max: number;
@@ -158,6 +164,8 @@ export interface Character {
   currentHp?: number;
   gender?: string;
   avatar?: string;
+  portrait?: string; // Added for backward compatibility
+  personality?: string; // Added for backward compatibility
   currency?: {
     cp: number;
     sp: number;

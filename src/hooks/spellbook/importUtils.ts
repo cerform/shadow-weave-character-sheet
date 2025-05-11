@@ -1,124 +1,120 @@
 
-import { CharacterSpell } from '@/types/character';
-import { parseComponents } from '@/utils/spellProcessors';
+import { SpellData } from "@/types/spells";
+import { CharacterSpell } from "@/types/character";
+import { parseComponents } from "@/utils/spellProcessors";
+import { generateSpellId } from "@/utils/spellHelpers";
 
-/**
- * Парсит запись заклинания из текстового формата
- * Формат: [уровень] название компоненты
- * Пример: [3] Молния ВСМ
- */
-export function parseSpellEntry(entry: string): {
-  name: string;
-  level: number;
-  components: string;
-  verbal: boolean;
-  somatic: boolean;
-  material: boolean;
-  ritual: boolean;
-  concentration: boolean;
-} | null {
-  // Соответствие шаблону [3] Название ВСМ
-  const match = entry.match(/\[(\d+)\]\s+(.+?)\s+([\wКВСМР\.]*)$/);
-  
-  if (!match) return null;
-  
-  const level = parseInt(match[1], 10);
-  const name = match[2].trim();
-  const componentCode = match[3] || '';
-  
-  // Используем обновленную функцию parseComponents, которая теперь поддерживает concentration
-  const parsedComponents = parseComponents(componentCode);
-  
-  return {
-    name,
-    level,
-    components: componentCode,
-    verbal: parsedComponents.verbal,
-    somatic: parsedComponents.somatic,
-    material: parsedComponents.material,
-    ritual: parsedComponents.ritual,
-    concentration: parsedComponents.concentration
-  };
-}
+// Function to fix character sheet spell data
+export const fixSpellDataImport = (data: any[]): CharacterSpell[] => {
+  if (!data || !Array.isArray(data)) return [];
 
-/**
- * Обрабатывает блок текста с заклинаниями
- */
-export function processSpellBatch(text: string): Array<{
-  name: string;
-  level: number;
-  components: string;
-  verbal: boolean;
-  somatic: boolean;
-  material: boolean;
-  ritual: boolean;
-  concentration: boolean;
-}> {
-  const lines = text.split('\n').filter(line => line.trim().length > 0);
-  const results = [];
-  
-  for (const line of lines) {
-    const parsed = parseSpellEntry(line);
-    if (parsed) {
-      results.push(parsed);
-    }
+  return data.map(spell => {
+    // Convert to the proper format
+    return {
+      id: spell.id || generateSpellId(spell),
+      name: spell.name || "Unnamed Spell",
+      level: typeof spell.level === 'number' ? spell.level : 0,
+      school: spell.school || "Universal",
+      castingTime: spell.castingTime || spell.casting_time || "1 action",
+      range: spell.range || "Self",
+      components: spell.components || "",
+      duration: spell.duration || "Instantaneous",
+      description: spell.description || "",
+      prepared: !!spell.prepared,
+      verbal: !!spell.verbal,
+      somatic: !!spell.somatic,
+      material: !!spell.material,
+      ritual: !!spell.ritual,
+      concentration: !!spell.concentration,
+      classes: spell.classes || [],
+      source: spell.source || "PHB"
+    };
+  });
+};
+
+// Function to normalize spell data from various sources
+export const normalizeSpellData = (spell: any): SpellData => {
+  // Extract components
+  let verbal = false,
+      somatic = false,
+      material = false,
+      ritual = false,
+      concentration = false;
+
+  // Check for component flags
+  if (typeof spell.verbal === 'boolean') verbal = spell.verbal;
+  if (typeof spell.somatic === 'boolean') somatic = spell.somatic;
+  if (typeof spell.material === 'boolean') material = spell.material;
+  if (typeof spell.ritual === 'boolean') ritual = spell.ritual;
+  if (typeof spell.concentration === 'boolean') concentration = spell.concentration;
+
+  // Parse components string if available
+  if (typeof spell.components === 'string' && spell.components) {
+    const parsed = parseComponents(spell.components);
+    verbal = parsed.verbal || verbal;
+    somatic = parsed.somatic || somatic;
+    material = parsed.material || material;
+    ritual = parsed.ritual || ritual;
+    concentration = parsed.concentration || concentration;
   }
-  
-  return results;
-}
 
-/**
- * Импортирует заклинания из текста в существующий список
- */
-export function importSpellsFromText(text: string, existingSpells: CharacterSpell[]): CharacterSpell[] {
-  const parsedSpells = processSpellBatch(text);
-  const updatedSpells = [...existingSpells];
+  // Parse classes
+  let classes: string[] = [];
+  if (Array.isArray(spell.classes)) {
+    classes = spell.classes;
+  } else if (typeof spell.classes === 'string') {
+    classes = spell.classes.split(',').map(c => c.trim());
+  }
+
+  // Create normalized spell data
+  const normalizedSpell: SpellData = {
+    id: spell.id || generateSpellId(spell),
+    name: spell.name,
+    level: typeof spell.level === 'number' ? spell.level : 0,
+    school: spell.school || "Universal",
+    castingTime: spell.castingTime || spell.casting_time || "1 action",
+    range: spell.range || "Self",
+    components: spell.components || "",
+    duration: spell.duration || "Instantaneous",
+    description: spell.description || "",
+    classes,
+    verbal,
+    somatic,
+    material,
+    ritual,
+    concentration,
+    prepared: !!spell.prepared
+  };
+
+  return normalizedSpell;
+};
+
+// Function to convert DnD Beyond spell data to our format
+export const convertDndBeyondSpell = (spell: any): CharacterSpell => {
+  // Create a spell ID
+  const spellId = generateSpellId(spell);
   
-  // Создаем объект для быстрого поиска
-  const existingSpellsMap = new Map<string, number>();
-  existingSpells.forEach((spell, index) => {
-    const key = `${spell.name}-${spell.level}`;
-    existingSpellsMap.set(key, index);
-  });
-  
-  parsedSpells.forEach(parsed => {
-    const key = `${parsed.name}-${parsed.level}`;
-    const existingIndex = existingSpellsMap.get(key);
-    
-    if (existingIndex !== undefined) {
-      // Обновляем существующее заклинание
-      updatedSpells[existingIndex] = {
-        ...updatedSpells[existingIndex],
-        components: parsed.components,
-        verbal: parsed.verbal,
-        somatic: parsed.somatic,
-        material: parsed.material,
-        ritual: parsed.ritual,
-        concentration: parsed.concentration
-      };
-    } else {
-      // Добавляем новое заклинание с базовыми параметрами
-      const newSpell: CharacterSpell = {
-        id: `spell-${parsed.name.toLowerCase().replace(/\s+/g, '-')}`,
-        name: parsed.name,
-        level: parsed.level,
-        school: "Прорицание", // Школа по умолчанию
-        castingTime: "1 действие",
-        range: "На себя",
-        components: parsed.components,
-        duration: parsed.concentration ? "Концентрация, вплоть до 1 минуты" : "Мгновенная",
-        description: "Нет описания",
-        classes: ["Волшебник"], // Класс по умолчанию
-        verbal: parsed.verbal,
-        somatic: parsed.somatic,
-        material: parsed.material,
-        ritual: parsed.ritual,
-        concentration: parsed.concentration
-      };
-      
-      updatedSpells.push(newSpell);
-    }
-  });
-  
-  return updatedSpells;
-}
+  // Convert class list
+  let classes: string[] = [];
+  if (spell.classes && Array.isArray(spell.classes.fromClassList)) {
+    classes = spell.classes.fromClassList.map((c: any) => c.name);
+  }
+
+  return {
+    id: spellId,
+    name: spell.name,
+    level: spell.level,
+    school: spell.school || "",
+    castingTime: spell.castingTime || "",
+    range: spell.range || "",
+    components: spell.components || "",
+    duration: spell.duration || "",
+    description: spell.description || "",
+    classes,
+    verbal: spell.componentsVerbal || false,
+    somatic: spell.componentsSomatic || false,
+    material: spell.componentsMaterial || false,
+    ritual: spell.ritual || false,
+    concentration: spell.concentration || false
+  };
+};
