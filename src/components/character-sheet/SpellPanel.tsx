@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -34,7 +33,7 @@ const SpellPanel: React.FC<SpellPanelProps> = ({ character, onUpdate, onSpellCli
   };
 
   // Получаем нормализованные заклинания
-  const normalizedSpells = normalizeSpells(character);
+  const normalizedSpells = normalizeSpells(character.spells || []);
 
   // Группируем заклинания по уровням
   const spellsByLevel = normalizedSpells.reduce((acc: Record<number, CharacterSpell[]>, spell) => {

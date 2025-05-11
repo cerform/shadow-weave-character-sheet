@@ -1,227 +1,269 @@
-
-import React from 'react';
+import React, { useState } from 'react';
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useCharacter } from '@/contexts/CharacterContext';
 import { Character } from '@/types/character';
-import CharacterRace from './CharacterRace';
-import CharacterClass from './CharacterClass';
-import CharacterBackground from './CharacterBackground';
-import CharacterAbilities from './CharacterAbilities';
-import CharacterEquipment from './CharacterEquipment';
-import CharacterSpells from './CharacterSpells';
-import CharacterReview from './CharacterReview';
-import CharacterLevelSelection from './CharacterLevelSelection';
-import { backgrounds } from '@/data/backgrounds';
-import { classes } from '@/data/classes';
-import { races } from '@/data/races';
+import { toast } from 'sonner';
 
 interface CharacterCreationContentProps {
-  currentStep: number;
-  character: Partial<Character>;
-  updateCharacter: (updates: Partial<Character>) => void;
-  nextStep: () => void;
-  prevStep: () => void;
-  abilitiesMethod: "pointbuy" | "standard" | "roll" | "manual";
-  setAbilitiesMethod: React.Dispatch<React.SetStateAction<"pointbuy" | "standard" | "roll" | "manual">>;
-  diceResults: number[][];
-  getModifier: (abilityScore: number) => string;
-  rollAllAbilities: () => void;
-  rollSingleAbility: (index: number) => { rolls: number[]; total: number };
-  abilityScorePoints: number;
-  isMagicClass: boolean;
-  rollsHistory: { ability: string; rolls: number[]; total: number }[];
-  onLevelChange: (level: number) => void;
-  maxAbilityScore: number;
-  setCurrentStep: React.Dispatch<React.SetStateAction<number>>;
+  onNext: () => void;
+  onPrev: () => void;
 }
 
-const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
-  currentStep,
-  character,
-  updateCharacter,
-  nextStep,
-  prevStep,
-  abilitiesMethod,
-  setAbilitiesMethod,
-  diceResults,
-  getModifier,
-  rollAllAbilities,
-  rollSingleAbility,
-  abilityScorePoints,
-  isMagicClass,
-  rollsHistory,
-  onLevelChange,
-  maxAbilityScore,
-  setCurrentStep
-}) => {
-  // Handle level change
-  const handleLevelChange = (level: number) => {
-    onLevelChange(level);
+const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({ onNext, onPrev }) => {
+  const { character, updateCharacter } = useCharacter();
+  const [activeStep, setActiveStep] = useState(0);
+
+  const handleBasicInfoSubmit = (basicInfo: Partial<Character>) => {
+    updateCharacter(basicInfo);
+    setActiveStep(activeStep + 1);
   };
 
-  // Создаем типобезопасную обертку для character с правильными дефолтными значениями
-  const safeCharacter: Character = {
-    id: character.id || '',
-    name: character.name || '',
-    race: character.race || '',
-    subrace: character.subrace || '',
-    class: character.class || '',
-    level: character.level || 1,
-    background: character.background || '',
-    alignment: character.alignment || '',
-    experience: character.experience || 0,
-    strength: character.strength || 10,
-    dexterity: character.dexterity || 10, 
-    constitution: character.constitution || 10,
-    intelligence: character.intelligence || 10,
-    wisdom: character.wisdom || 10,
-    charisma: character.charisma || 10,
-    maxHp: character.maxHp || 0,
-    currentHp: character.currentHp || 0,
-    temporaryHp: character.temporaryHp || 0,
-    armorClass: character.armorClass || 10,
-    initiative: character.initiative || 0,
-    speed: character.speed || 30,
-    proficiencyBonus: character.proficiencyBonus || 2,
-    inspiration: character.inspiration || false,
-    equipment: character.equipment || [],
-    spells: character.spells || [],
-    features: character.features || [],
-    proficiencies: character.proficiencies || {
-      skills: [],
-      tools: [],
-      weapons: [],
-      armor: [],
-      languages: []
-    },
-    personality: character.personality || '',
-    ideals: character.ideals || '',
-    bonds: character.bonds || '',
-    flaws: character.flaws || '',
-    backstory: character.backstory || '',
-    notes: character.notes || '',
-    createdAt: character.createdAt || new Date().toISOString(),
-    updatedAt: character.updatedAt || new Date().toISOString(),
-    userId: character.userId || '',
-    portrait: character.portrait || '',
-    stats: character.stats || {
-      strength: 10,
-      dexterity: 10,
-      constitution: 10,
-      intelligence: 10,
-      wisdom: 10,
-      charisma: 10
-    },
-    hitDice: character.hitDice || { total: 1, used: 0, dieType: 'd8' }
+  const handleAbilityScoresSubmit = (abilityScores: any) => {
+    updateCharacter({ abilities: abilityScores });
+    setActiveStep(activeStep + 1);
   };
 
-  // Get the race, class, background arrays from props or data
-  const allRaces = races;
-  const allClasses = classes;
-  const allBackgrounds = backgrounds;
+  const handlePersonalDetailsSubmit = (details: any) => {
+    updateCharacter({
+      ...details,
+      personalityTraits: details.personality,  // Map personality to personalityTraits
+      appearance: details.portrait             // Map portrait to appearance
+    });
+    setActiveStep(activeStep + 1);
+  };
 
-  // Modified to use correct props
-  switch (currentStep) {
-    case 0:
-      return (
-        <CharacterRace
-          character={safeCharacter}
-          onUpdate={updateCharacter}
-          nextStep={nextStep}
-          prevStep={prevStep}
-          races={allRaces}
-        />
-      );
-    case 2:
-      return (
-        <CharacterClass
-          character={safeCharacter}
-          onUpdate={updateCharacter}
-          nextStep={nextStep}
-          prevStep={prevStep}
-          classes={allClasses}
-        />
-      );
-    case 3:
-      return (
-        <CharacterLevelSelection
-          character={safeCharacter}
-          onUpdate={updateCharacter}
-          onLevelChange={handleLevelChange}
-          nextStep={nextStep}
-          prevStep={prevStep}
-        />
-      );
-    case 4:
-      return (
-        <CharacterAbilities
-          character={safeCharacter}
-          onUpdate={updateCharacter}
-          nextStep={nextStep}
-          prevStep={prevStep}
-          method={abilitiesMethod}
-          setMethod={setAbilitiesMethod}
-          diceResults={diceResults}
-          getModifier={getModifier}
-          rollAllAbilities={rollAllAbilities}
-          rollSingleAbility={rollSingleAbility}
-          pointsRemaining={abilityScorePoints}
-          rollsHistory={rollsHistory}
-          maxScore={maxAbilityScore}
-        />
-      );
-    case 5:
-      return (
-        <CharacterBackground
-          character={safeCharacter}
-          onUpdate={updateCharacter}
-          nextStep={nextStep}
-          prevStep={prevStep}
-          backgrounds={allBackgrounds}
-        />
-      );
-    case 9:
-      return (
-        <CharacterSpells
-          character={safeCharacter}
-          onUpdate={updateCharacter}
-          nextStep={nextStep}
-          prevStep={prevStep}
-        />
-      );
-    case 10:
-      return (
-        <CharacterReview
-          character={safeCharacter}
-          updateCharacter={updateCharacter}
-          nextStep={nextStep}
-          prevStep={prevStep}
-        />
-      );
-    // Add more cases for other steps
-    default:
-      // For now, show a placeholder for other steps
-      return (
-        <div className="space-y-6">
-          <h2 className="text-2xl font-semibold">Шаг {currentStep + 1}</h2>
-          <p className="text-muted-foreground">
-            Этот раздел находится в разработке.
-          </p>
-          <div className="flex justify-between mt-8">
-            <button 
-              className="px-4 py-2 bg-gray-700 rounded"
-              onClick={prevStep}
-            >
-              Назад
-            </button>
-            <button 
-              className="px-4 py-2 bg-blue-600 rounded"
-              onClick={nextStep}
-            >
-              Далее
-            </button>
+  const renderStepContent = () => {
+    switch (activeStep) {
+      case 0:
+        return (
+          <div>
+            <h2 className="text-xl font-semibold mb-4">Основная информация</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="name">Имя персонажа</Label>
+                <Input
+                  type="text"
+                  id="name"
+                  value={character?.name || ''}
+                  onChange={(e) => updateCharacter({ name: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label htmlFor="race">Раса</Label>
+                <Input
+                  type="text"
+                  id="race"
+                  value={character?.race || ''}
+                  onChange={(e) => updateCharacter({ race: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label htmlFor="class">Класс</Label>
+                <Input
+                  type="text"
+                  id="class"
+                  value={character?.class || ''}
+                  onChange={(e) => updateCharacter({ class: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label htmlFor="level">Уровень</Label>
+                <Input
+                  type="number"
+                  id="level"
+                  value={character?.level?.toString() || '1'}
+                  onChange={(e) => updateCharacter({ level: parseInt(e.target.value) })}
+                />
+              </div>
+              <div>
+                <Label htmlFor="background">Предыстория</Label>
+                <Input
+                  type="text"
+                  id="background"
+                  value={character?.background || ''}
+                  onChange={(e) => updateCharacter({ background: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label htmlFor="alignment">Мировоззрение</Label>
+                <Input
+                  type="text"
+                  id="alignment"
+                  value={character?.alignment || ''}
+                  onChange={(e) => updateCharacter({ alignment: e.target.value })}
+                />
+              </div>
+            </div>
+            <Button onClick={() => handleBasicInfoSubmit({
+              name: character?.name,
+              race: character?.race,
+              class: character?.class,
+              level: character?.level,
+              background: character?.background,
+              alignment: character?.alignment
+            })} className="mt-4">Далее</Button>
           </div>
-        </div>
-      );
-  }
+        );
+      case 1:
+        return (
+          <div>
+            <h2 className="text-xl font-semibold mb-4">Характеристики</h2>
+            <div className="grid grid-cols-3 md:grid-cols-3 gap-4">
+              <div>
+                <Label htmlFor="strength">Сила (STR)</Label>
+                <Input
+                  type="number"
+                  id="strength"
+                  value={character?.abilities?.STR?.toString() || '10'}
+                  onChange={(e) => updateCharacter({ abilities: { ...character.abilities, STR: parseInt(e.target.value) } })}
+                />
+              </div>
+              <div>
+                <Label htmlFor="dexterity">Ловкость (DEX)</Label>
+                <Input
+                  type="number"
+                  id="dexterity"
+                  value={character?.abilities?.DEX?.toString() || '10'}
+                  onChange={(e) => updateCharacter({ abilities: { ...character.abilities, DEX: parseInt(e.target.value) } })}
+                />
+              </div>
+              <div>
+                <Label htmlFor="constitution">Телосложение (CON)</Label>
+                <Input
+                  type="number"
+                  id="constitution"
+                  value={character?.abilities?.CON?.toString() || '10'}
+                  onChange={(e) => updateCharacter({ abilities: { ...character.abilities, CON: parseInt(e.target.value) } })}
+                />
+              </div>
+              <div>
+                <Label htmlFor="intelligence">Интеллект (INT)</Label>
+                <Input
+                  type="number"
+                  id="intelligence"
+                  value={character?.abilities?.INT?.toString() || '10'}
+                  onChange={(e) => updateCharacter({ abilities: { ...character.abilities, INT: parseInt(e.target.value) } })}
+                />
+              </div>
+              <div>
+                <Label htmlFor="wisdom">Мудрость (WIS)</Label>
+                <Input
+                  type="number"
+                  id="wisdom"
+                  value={character?.abilities?.WIS?.toString() || '10'}
+                  onChange={(e) => updateCharacter({ abilities: { ...character.abilities, WIS: parseInt(e.target.value) } })}
+                />
+              </div>
+              <div>
+                <Label htmlFor="charisma">Харизма (CHA)</Label>
+                <Input
+                  type="number"
+                  id="charisma"
+                  value={character?.abilities?.CHA?.toString() || '10'}
+                  onChange={(e) => updateCharacter({ abilities: { ...character.abilities, CHA: parseInt(e.target.value) } })}
+                />
+              </div>
+            </div>
+            <div className="flex justify-between mt-4">
+              <Button variant="outline" onClick={() => setActiveStep(activeStep - 1)}>Назад</Button>
+              <Button onClick={() => handleAbilityScoresSubmit({
+                STR: character?.abilities?.STR,
+                DEX: character?.abilities?.DEX,
+                CON: character?.abilities?.CON,
+                INT: character?.abilities?.INT,
+                WIS: character?.abilities?.WIS,
+                CHA: character?.abilities?.CHA
+              })}>Далее</Button>
+            </div>
+          </div>
+        );
+      case 2:
+        return (
+          <div>
+            <h2 className="text-xl font-semibold mb-4">Личные детали</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="personality">Личность</Label>
+                <Textarea
+                  id="personality"
+                  placeholder="Опишите личность вашего персонажа"
+                  value={character?.personalityTraits || ''}
+                  onChange={(e) => updateCharacter({ personalityTraits: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label htmlFor="ideals">Идеалы</Label>
+                <Textarea
+                  id="ideals"
+                  placeholder="Опишите идеалы вашего персонажа"
+                  value={character?.ideals || ''}
+                  onChange={(e) => updateCharacter({ ideals: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label htmlFor="bonds">Привязанности</Label>
+                <Textarea
+                  id="bonds"
+                  placeholder="Опишите привязанности вашего персонажа"
+                  value={character?.bonds || ''}
+                  onChange={(e) => updateCharacter({ bonds: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label htmlFor="flaws">Слабости</Label>
+                <Textarea
+                  id="flaws"
+                  placeholder="Опишите слабости вашего персонажа"
+                  value={character?.flaws || ''}
+                  onChange={(e) => updateCharacter({ flaws: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label htmlFor="portrait">Внешность</Label>
+                <Textarea
+                  id="portrait"
+                  placeholder="Опишите внешность вашего персонажа"
+                  value={character?.appearance || ''}
+                  onChange={(e) => updateCharacter({ appearance: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label htmlFor="backstory">Предыстория</Label>
+                <Textarea
+                  id="backstory"
+                  placeholder="Опишите предысторию вашего персонажа"
+                  value={character?.backstory || ''}
+                  onChange={(e) => updateCharacter({ backstory: e.target.value })}
+                />
+              </div>
+            </div>
+            <div className="flex justify-between mt-4">
+              <Button variant="outline" onClick={() => setActiveStep(activeStep - 1)}>Назад</Button>
+              <Button onClick={() => handlePersonalDetailsSubmit({
+                personality: character?.personalityTraits,
+                ideals: character?.ideals,
+                bonds: character?.bonds,
+                flaws: character?.flaws,
+                portrait: character?.appearance,
+                backstory: character?.backstory
+              })}>Далее</Button>
+            </div>
+          </div>
+        );
+      default:
+        return <div>Завершено!</div>;
+    }
+  };
+
+  return (
+    <div>
+      {renderStepContent()}
+    </div>
+  );
 };
 
 export default CharacterCreationContent;

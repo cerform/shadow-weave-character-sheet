@@ -19,8 +19,12 @@ export const convertToSpellData = (spell: CharacterSpell): SpellData => {
 };
 
 // Normalize spells array to ensure consistent format
-export const normalizeSpells = (spells: (CharacterSpell | string)[]): CharacterSpell[] => {
-  return spells.map(spell => {
+export const normalizeSpells = (character: any): CharacterSpell[] => {
+  if (!character || !character.spells || !Array.isArray(character.spells)) {
+    return [];
+  }
+
+  return character.spells.map(spell => {
     if (typeof spell === 'string') {
       return {
         id: `spell-${spell.toLowerCase().replace(/\s+/g, '-')}`,
@@ -138,6 +142,21 @@ export const getSpellcastingAbilityModifier = (character: any): number => {
   return Math.floor((abilityScore - 10) / 2);
 };
 
+// Get default casting ability for a class
+export const getDefaultCastingAbility = (characterClass: string | undefined): string => {
+  if (!characterClass) return "charisma";
+  
+  const classLower = characterClass.toLowerCase();
+  if (['волшебник', 'маг', 'wizard', 'artificer', 'изобретатель'].includes(classLower)) {
+    return "intelligence";
+  } else if (['жрец', 'друид', 'cleric', 'druid', 'ranger', 'следопыт'].includes(classLower)) {
+    return "wisdom";
+  }
+  
+  // Default for bard, sorcerer, paladin, warlock
+  return "charisma";
+};
+
 // Utility function for applying spell modifiers
 export const calculateSpellSaveDC = (proficiencyBonus: number, abilityModifier: number): number => {
   return 8 + proficiencyBonus + abilityModifier;
@@ -146,4 +165,46 @@ export const calculateSpellSaveDC = (proficiencyBonus: number, abilityModifier: 
 // Calculate spell attack bonus
 export const calculateSpellAttackBonus = (proficiencyBonus: number, abilityModifier: number): number => {
   return proficiencyBonus + abilityModifier;
+};
+
+// Calculate spell save DC from character
+export const calculateSpellcastingDC = (character: any): number => {
+  if (!character) return 8;
+  
+  const abilityMod = getSpellcastingAbilityModifier(character);
+  const profBonus = character.proficiencyBonus || Math.floor(1 + (character.level || 1) / 4);
+  
+  return calculateSpellSaveDC(profBonus, abilityMod);
+};
+
+// Check if a character can prepare more spells
+export const canPrepareMoreSpells = (character: any): boolean => {
+  if (!character) return false;
+  
+  const preparedSpells = normalizeSpells(character)
+    .filter(spell => spell.prepared && spell.level > 0)
+    .length;
+  
+  return preparedSpells < getPreparedSpellsLimit(character);
+};
+
+// Get the limit of prepared spells a character can have
+export const getPreparedSpellsLimit = (character: any): number => {
+  if (!character || !character.class) return 0;
+  
+  const classLower = character.class.toLowerCase();
+  
+  // Only some classes need to prepare spells
+  if (!['жрец', 'друид', 'волшебник', 'маг', 'паладин', 'следопыт', 'cleric', 'druid', 'wizard', 'paladin', 'ranger'].includes(classLower)) {
+    return 999; // No practical limit
+  }
+  
+  const level = character.level || 1;
+  const abilityMod = getSpellcastingAbilityModifier(character);
+  
+  if (['паладин', 'следопыт', 'paladin', 'ranger'].includes(classLower)) {
+    return Math.floor(level / 2) + Math.max(1, abilityMod);
+  }
+  
+  return level + Math.max(1, abilityMod);
 };

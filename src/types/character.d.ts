@@ -111,6 +111,7 @@ export interface Character {
     bonds?: string;
     flaws?: string;
   };
+  personalityTraits?: string;
   ideals?: string;
   bonds?: string;
   flaws?: string;

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogFooter, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -9,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
 import { useSpellbook } from '@/contexts/SpellbookContext';
-import { canPrepareMoreSpells, convertSpellsForState } from '@/utils/spellUtils';
+import { convertSpellsForState, canPrepareMoreSpells } from '@/utils/spellUtils';
 import { safeToString } from '@/utils/stringUtils';
 
 export interface SpellSelectionModalProps {

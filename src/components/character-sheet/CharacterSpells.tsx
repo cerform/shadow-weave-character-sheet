@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useCharacter } from '@/contexts/CharacterContext';
 import { CharacterSpell } from '@/types/character';
@@ -22,7 +21,7 @@ export function CharacterSpells({ className }: SpellsProps) {
     if (!character) return;
 
     // Use the normalizeSpells utility function to ensure all spells have correct types
-    const normalizedSpells = normalizeSpells(character);
+    const normalizedSpells = normalizeSpells(character.spells || []);
     
     // Convert CharacterSpell[] to SpellData[] for consistency
     const spellDataList = normalizedSpells.map(spell => convertToSpellData(spell));

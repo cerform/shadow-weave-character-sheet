@@ -1,52 +1,43 @@
-import { Character, AbilityScores } from '@/types/character';
 
-// Создание персонажа по умолчанию
+import { Character, AbilityScores } from '@/types/character';
+import { v4 as uuidv4 } from 'uuid';
+
+// Get default ability scores
+export const getDefaultAbilities = (): AbilityScores => {
+  return {
+    STR: 10,
+    DEX: 10,
+    CON: 10,
+    INT: 10,
+    WIS: 10,
+    CHA: 10,
+    strength: 10,
+    dexterity: 10,
+    constitution: 10,
+    intelligence: 10,
+    wisdom: 10,
+    charisma: 10
+  };
+};
+
+// Create a default character
 export const createDefaultCharacter = (): Character => {
-  const id = `char_${Date.now()}_${Math.floor(Math.random() * 10000)}`;
+  const defaultAbilities = getDefaultAbilities();
   
   return {
-    id,
+    id: uuidv4(),
     name: 'Новый персонаж',
-    race: 'Человек',
-    class: 'Воин',
-    background: 'Солдат',
-    alignment: 'Нейтральный',
+    race: '',
+    class: '',
     level: 1,
-    xp: 0,
-    abilities: {
-      STR: 10,
-      DEX: 10,
-      CON: 10,
-      INT: 10,
-      WIS: 10,
-      CHA: 10,
-      strength: 10,
-      dexterity: 10,
-      constitution: 10, 
-      intelligence: 10,
-      wisdom: 10,
-      charisma: 10
-    },
-    savingThrows: {
-      STR: 0,
-      DEX: 0,
-      CON: 0,
-      INT: 0,
-      WIS: 0,
-      CHA: 0,
-      strength: 0,
-      dexterity: 0,
-      constitution: 0,
-      intelligence: 0,
-      wisdom: 0,
-      charisma: 0
-    },
-    skills: {},
+    background: '',
+    alignment: '',
+    abilities: defaultAbilities,
+    proficiencyBonus: 2,
     hp: 10,
     maxHp: 10,
     temporaryHp: 0,
     ac: 10,
-    proficiencyBonus: 2,
     speed: 30,
     initiative: 0,
     inspiration: false,
@@ -63,7 +54,7 @@ export const createDefaultCharacter = (): Character => {
     spellcasting: {
       ability: 'intelligence',
       dc: 10,
-      attack: 2,
+      attack: 0
     },
     spellSlots: {},
     spells: [],
@@ -74,98 +65,45 @@ export const createDefaultCharacter = (): Character => {
       gold: 0
     },
     proficiencies: {
-      languages: ['Общий'],
-      tools: [],
-      weapons: [],
-      armor: [],
-      skills: []
+      languages: [],
+      tools: []
     },
     features: [],
+    savingThrows: defaultAbilities,
+    skills: {},
     notes: '',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
+    xp: 0
   };
 };
 
-// Расчет модификатора характеристики
-export const calculateAbilityModifier = (abilityScore: number): number => {
-  return Math.floor((abilityScore - 10) / 2);
+// Calculate proficiency bonus based on level
+export const calculateProficiencyBonus = (level: number): number => {
+  return Math.floor(2 + (level - 1) / 4);
 };
 
-// Add the missing getModifierFromAbilityScore function
-export const getModifierFromAbilityScore = (abilityScore: number): number => {
-  return Math.floor((abilityScore - 10) / 2);
-};
-
-// Получение числового модификатора из значения характеристики
-export const getNumericModifier = (value: number): number => {
-  return Math.floor((value - 10) / 2);
-};
-
-// Получение строкового представления модификатора
-export const getModifierString = (value: number): string => {
-  const mod = getNumericModifier(value);
-  return mod >= 0 ? `+${mod}` : `${mod}`;
-};
-
-// Получение модификатора из характеристик персонажа
-export const getAbilityModifier = (character: Character, ability: string): number => {
-  if (!character || !character.abilities) return 0;
+// Get default hit dice for a class
+export const getHitDiceForClass = (className: string): string => {
+  const classLower = className.toLowerCase();
   
-  const abilityLower = ability.toLowerCase();
-  let score = 10;
-  
-  if (abilityLower === 'strength' || abilityLower === 'str') {
-    score = character.abilities.STR || character.abilities.strength || 10;
-  } 
-  else if (abilityLower === 'dexterity' || abilityLower === 'dex') {
-    score = character.abilities.DEX || character.abilities.dexterity || 10;
-  } 
-  else if (abilityLower === 'constitution' || abilityLower === 'con') {
-    score = character.abilities.CON || character.abilities.constitution || 10;
-  } 
-  else if (abilityLower === 'intelligence' || abilityLower === 'int') {
-    score = character.abilities.INT || character.abilities.intelligence || 10;
-  } 
-  else if (abilityLower === 'wisdom' || abilityLower === 'wis') {
-    score = character.abilities.WIS || character.abilities.wisdom || 10;
-  } 
-  else if (abilityLower === 'charisma' || abilityLower === 'cha') {
-    score = character.abilities.CHA || character.abilities.charisma || 10;
+  if (['варвар', 'barbarian'].includes(classLower)) {
+    return 'd12';
+  } else if (['воин', 'паладин', 'следопыт', 'fighter', 'paladin', 'ranger'].includes(classLower)) {
+    return 'd10';
+  } else if (['бард', 'клерик', 'друид', 'монах', 'плут', 'жрец', 'bard', 'cleric', 'druid', 'monk', 'rogue'].includes(classLower)) {
+    return 'd8';
+  } else if (['волшебник', 'чародей', 'колдун', 'wizard', 'sorcerer', 'warlock'].includes(classLower)) {
+    return 'd6';
   }
   
-  return calculateAbilityModifier(score);
+  return 'd8'; // Default
 };
 
-// Add the missing hasValue function
-export const hasValue = (value: any): boolean => {
-  return value !== undefined && value !== null;
-};
-
-// Default ability scores for type safety
-export const defaultAbilityScores: AbilityScores = {
-  STR: 10,
-  DEX: 10,
-  CON: 10,
-  INT: 10,
-  WIS: 10,
-  CHA: 10,
-  strength: 10,
-  dexterity: 10,
-  constitution: 10,
-  intelligence: 10,
-  wisdom: 10,
-  charisma: 10
-};
-
-// Добавляем отсутствующую функцию getDefaultAbilities
-export const getDefaultAbilities = () => {
-  return {
-    strength: 10,
-    dexterity: 10,
-    constitution: 10,
-    intelligence: 10,
-    wisdom: 10,
-    charisma: 10
-  };
+// Calculate starting hit points for a character
+export const calculateStartingHP = (className: string, constitutionMod: number): number => {
+  const hitDie = getHitDiceForClass(className);
+  const baseHP = hitDie === 'd12' ? 12 : 
+                hitDie === 'd10' ? 10 : 
+                hitDie === 'd8' ? 8 : 6;
+                
+  return baseHP + constitutionMod;
 };

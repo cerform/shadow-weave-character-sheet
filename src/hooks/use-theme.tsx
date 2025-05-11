@@ -62,4 +62,5 @@ export const useTheme = () => {
   return context;
 };
 
+// Export ThemeProvider as default and also as named export
 export default ThemeProvider;

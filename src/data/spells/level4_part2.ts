@@ -1,3 +1,4 @@
+
 import { CharacterSpell } from '@/types/character';
 import { slugify } from '@/utils/stringUtils';
 
@@ -55,7 +56,7 @@ export const level4_part2: CharacterSpell[] = [
   }
 ];
 
-// Fix the export name to match what's being imported
+// Export as both level4_part2 and level4Part2 for compatibility
 export { level4_part2 as level4Part2 };
 
 export default level4_part2;

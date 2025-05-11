@@ -22,13 +22,33 @@ interface AbilitiesTabProps {
 }
 
 const AbilitiesTab: React.FC<AbilitiesTabProps> = ({ character, onUpdate }) => {
+  // Convert ability scores to numbers before passing them
+  const abilities = {
+    strength: Number(character.abilities?.STR || character.strength || 10),
+    dexterity: Number(character.abilities?.DEX || character.dexterity || 10),
+    constitution: Number(character.abilities?.CON || character.constitution || 10),
+    intelligence: Number(character.abilities?.INT || character.intelligence || 10),
+    wisdom: Number(character.abilities?.WIS || character.wisdom || 10),
+    charisma: Number(character.abilities?.CHA || character.charisma || 10),
+  };
+
+  // Make sure modifiers are calculated on numbers, not strings
+  const modifiers = {
+    strength: Math.floor((Number(abilities.strength) - 10) / 2),
+    dexterity: Math.floor((Number(abilities.dexterity) - 10) / 2),
+    constitution: Math.floor((Number(abilities.constitution) - 10) / 2),
+    intelligence: Math.floor((Number(abilities.intelligence) - 10) / 2),
+    wisdom: Math.floor((Number(abilities.wisdom) - 10) / 2),
+    charisma: Math.floor((Number(abilities.charisma) - 10) / 2),
+  };
+
   // Получаем модификаторы характеристик
-  const strMod = getModifier(character.strength || 10);
-  const dexMod = getModifier(character.dexterity || 10);
-  const conMod = getModifier(character.constitution || 10);
-  const intMod = getModifier(character.intelligence || 10);
-  const wisMod = getModifier(character.wisdom || 10);
-  const chaMod = getModifier(character.charisma || 10);
+  const strMod = modifiers.strength;
+  const dexMod = modifiers.dexterity;
+  const conMod = modifiers.constitution;
+  const intMod = modifiers.intelligence;
+  const wisMod = modifiers.wisdom;
+  const chaMod = modifiers.charisma;
   
   // Заготовка для спасбросков (будет реализована позже)
   const savingThrows: Record<string, SavingThrow> = {
