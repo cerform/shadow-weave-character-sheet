@@ -26,10 +26,17 @@ export const parseSpellEntry = (entry: string): {
   const name = match[2].trim();
   const componentCode = match[3] || '';
   
+  // Ensure all required properties are set to boolean values
+  const components = parseComponents(componentCode);
   return {
     name,
     level,
-    components: parseComponents(componentCode)
+    components: {
+      verbal: Boolean(components.verbal),
+      somatic: Boolean(components.somatic),
+      material: Boolean(components.material),
+      ritual: Boolean(components.ritual)
+    }
   };
 };
 

@@ -31,7 +31,7 @@ export const createDefaultCharacter = (): Character => ({
     CHA: 10,
   },
   hitPoints: {
-    maxHp: 10,
+    max: 10, // Changed from maxHp to max
     currentHp: 10,
     tempHp: 0,
     hitDice: {
@@ -51,9 +51,9 @@ export const createDefaultCharacter = (): Character => ({
     armor: [],
     weapons: [],
     tools: [],
-    savingThrows: [],
-    skills: [],
-    languages: [],
+    skills: [], // Keep skills array
+    languages: [], // Add languages array
+    // Remove savingThrows as it's not in the expected type
   },
   equipment: {
     armor: [],
@@ -82,7 +82,7 @@ export const createDefaultCharacter = (): Character => ({
   flaws: '',
   appearance: '',
   backstory: '',
-  image: '',
+  image: '', // Add image property
   stats: {
     strength: 10,
     dexterity: 10,
@@ -255,7 +255,10 @@ export const isSkillProficient = (character: Character, skill: Skill): boolean =
  * @returns {boolean} Whether the character is proficient in the saving throw.
  */
 export const isSavingThrowProficient = (character: Character, ability: string): boolean => {
-  return character.proficiencies.savingThrows.includes(ability);
+  // Use optional chaining and nullish coalescing to safely access the property
+  // If character.proficiencies.savingThrows doesn't exist, default to an empty array
+  const savingThrows = (character.proficiencies as any)?.savingThrows || [];
+  return savingThrows.includes(ability);
 };
 
 /**

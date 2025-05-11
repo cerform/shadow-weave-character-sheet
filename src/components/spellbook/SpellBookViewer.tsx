@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -131,7 +132,7 @@ const SpellBookViewer: React.FC<SpellBookViewerProps> = ({ character, onAddSpell
                             <div className="text-xs">
                               {spell.school}
                               {spell.ritual && ' (Ритуал)'}
-                              {spell.concentration && ' (Концентраци��)'}
+                              {spell.concentration && ' (Концентрация)'}
                             </div>
                           </div>
                           <div className="flex items-center">
@@ -162,7 +163,7 @@ const SpellBookViewer: React.FC<SpellBookViewerProps> = ({ character, onAddSpell
                           <CardContent className="pt-0 pb-3">
                             <SpellCard 
                               spell={spell} 
-                              currentTheme={theme || 'default'}
+                              currentTheme={themeStyles || {}}
                               onClick={() => handleSpellClick(spell.id)}
                             />
                           </CardContent>
