@@ -1,5 +1,6 @@
 
-import { SpellData, CharacterSpell } from "@/types/spells";
+import { Character, CharacterSpell } from "@/types/character";
+import { SpellData } from "@/types/spells";
 
 // Нормализует массив заклинаний в единый формат
 export const normalizeSpells = (spells: any[] | null | undefined): CharacterSpell[] => {
@@ -131,4 +132,125 @@ export const getSpellcastingAbility = (characterClass: string): string => {
   }
   
   return 'intelligence'; // По умолчанию
+};
+
+// Новые функции, необходимые для импорта
+export const canPrepareMoreSpells = (character: Character): boolean => {
+  if (!character) return false;
+  
+  const preparedLimit = getPreparedSpellsLimit(character);
+  if (preparedLimit === 0) return true; // Если нет ограничений на подготовку
+  
+  // Подсчитываем количество уже подготовленных заклинаний
+  const preparedCount = character.spells?.filter(spell => {
+    if (typeof spell === 'string') return false;
+    return spell.prepared && spell.level > 0; // Заговоры не учитываются
+  }).length || 0;
+  
+  return preparedCount < preparedLimit;
+};
+
+// Получение максимально возможного количества подготовленных заклинаний
+export const getPreparedSpellsLimit = (character: Character): number => {
+  if (!character) return 0;
+  
+  const className = (character.class || '').toLowerCase();
+  
+  // Классы, которые должны готовить заклинания
+  if (
+    className === 'жрец' || 
+    className === 'cleric' || 
+    className === 'друид' || 
+    className === 'druid'
+  ) {
+    // Модификатор мудрости + уровень класса
+    const wisdomMod = Math.floor((character.wisdom || character.stats?.wisdom || 10) - 10) / 2;
+    return Math.max(1, Math.floor(character.level) + Math.floor(wisdomMod));
+  } else if (
+    className === 'волшебник' || 
+    className === 'wizard'
+  ) {
+    // Модификатор интеллекта + уровень класса
+    const intMod = Math.floor((character.intelligence || character.stats?.intelligence || 10) - 10) / 2;
+    return Math.max(1, Math.floor(character.level) + Math.floor(intMod));
+  } else if (
+    className === 'паладин' || 
+    className === 'paladin'
+  ) {
+    // Модификатор харизмы + половина уровня паладина (округленная вверх)
+    const charMod = Math.floor((character.charisma || character.stats?.charisma || 10) - 10) / 2;
+    return Math.max(1, Math.floor(character.level / 2) + Math.floor(charMod));
+  } else if (
+    className === 'следопыт' || 
+    className === 'ranger'
+  ) {
+    // Модификатор мудрости + половина уровня следопыта (округленная вверх)
+    const wisMod = Math.floor((character.wisdom || character.stats?.wisdom || 10) - 10) / 2;
+    return Math.max(1, Math.floor(character.level / 2) + Math.floor(wisMod));
+  }
+  
+  // Другие классы не готовят заклинания
+  return 0;
+};
+
+// Преобразование объектов заклинаний между форматами
+export const convertToSpellData = (spell: any): SpellData => {
+  return {
+    id: spell.id || `spell-${Math.random().toString(36).substring(2, 11)}`,
+    name: spell.name || "Неизвестное заклинание",
+    level: spell.level || 0,
+    school: spell.school || 'Универсальная',
+    castingTime: spell.castingTime || '1 действие',
+    range: spell.range || 'На себя',
+    components: spell.components || '',
+    duration: spell.duration || 'Мгновенная',
+    description: spell.description || '',
+    classes: Array.isArray(spell.classes) ? spell.classes : [spell.classes || ''],
+    ritual: Boolean(spell.ritual),
+    concentration: Boolean(spell.concentration),
+    verbal: Boolean(spell.verbal),
+    somatic: Boolean(spell.somatic),
+    material: Boolean(spell.material),
+    materials: spell.materials || '',
+    prepared: Boolean(spell.prepared),
+    higherLevel: spell.higherLevel || spell.higherLevels || '',
+    higherLevels: spell.higherLevels || spell.higherLevel || '',
+    source: spell.source || ''
+  };
+};
+
+// Преобразование массива заклинаний персонажа в формат SpellData
+export const convertCharacterSpellsToSpellData = (characterSpells: CharacterSpell[]): SpellData[] => {
+  if (!characterSpells || !Array.isArray(characterSpells)) return [];
+  
+  return characterSpells.map(spell => {
+    if (typeof spell === 'string') {
+      // Если заклинание представлено строкой, создаем минимальный объект
+      return {
+        id: `spell-${spell.replace(/\s+/g, '-').toLowerCase()}`,
+        name: spell,
+        level: 0,
+        school: 'Универсальная',
+        castingTime: '1 действие',
+        range: 'На себя',
+        components: '',
+        duration: 'Мгновенная',
+        description: '',
+        classes: [],
+        ritual: false,
+        concentration: false,
+        verbal: false,
+        somatic: false,
+        material: false,
+        materials: '',
+        prepared: true,
+        higherLevel: '',
+        higherLevels: '',
+        source: ''
+      };
+    } else {
+      // Если это объект заклинания, преобразуем его в формат SpellData
+      return convertToSpellData(spell);
+    }
+  });
 };

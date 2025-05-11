@@ -6,7 +6,11 @@ import {
   getPreparedSpellsLimit,
   normalizeSpells,
   convertToSpellData,
-  convertCharacterSpellsToSpellData 
+  convertCharacterSpellsToSpellData,
+  getSpellLevelName,
+  groupSpellsByLevel,
+  getPreparedSpells,
+  getSpellcastingAbility
 } from './spellHelpers';
 
 // Re-export functions from spellHelpers.ts to maintain backward compatibility
@@ -15,7 +19,11 @@ export {
   getPreparedSpellsLimit,
   normalizeSpells,
   convertToSpellData,
-  convertCharacterSpellsToSpellData
+  convertCharacterSpellsToSpellData,
+  getSpellLevelName,
+  groupSpellsByLevel,
+  getPreparedSpells,
+  getSpellcastingAbility
 };
 
 // Получение модификатора характеристики для заклинаний
@@ -143,6 +151,3 @@ export const filterSpellsByClassAndLevel = (
     return false;
   });
 };
-
-// Вспомогательные функции для работы с заклинаниями импортированы из spellHelpers.ts
-// и реэкспортированы выше

@@ -1,7 +1,7 @@
 
-// Fixed SpellBookViewer.tsx with corrected type usage
+// Fixed SpellBookViewer.tsx with corrected type usage and exports
 import React from 'react';
-import { SpellData, CharacterSpell } from '@/types/spells';
+import { SpellData, CharacterSpell, convertCharacterSpellToSpellData } from '@/types/spells';
 
 interface SpellBookViewerProps {
   spells: SpellData[];
@@ -32,28 +32,9 @@ const SpellCard: React.FC<SpellCardProps> = ({ spell, onAddSpell }) => {
 
 export const SpellBookViewer: React.FC<SpellBookViewerProps> = ({ spells, onClose, onAddSpell, characterSpells }) => {
   // Преобразуем CharacterSpell[] в SpellData[]
-  const spellsData: SpellData[] = characterSpells.map(spell => ({
-    id: spell.id || `spell-${Math.random().toString(36).substring(2, 11)}`,
-    name: spell.name,
-    level: spell.level,
-    school: spell.school || 'Универсальная',
-    castingTime: spell.castingTime || '1 действие',
-    range: spell.range || 'Касание',
-    components: spell.components || '',
-    duration: spell.duration || 'Мгновенная',
-    description: spell.description || '',
-    classes: spell.classes || [],
-    ritual: !!spell.ritual,
-    concentration: !!spell.concentration,
-    verbal: !!spell.verbal,
-    somatic: !!spell.somatic,
-    material: !!spell.material,
-    prepared: !!spell.prepared,
-    materials: spell.materials || '',
-    higherLevel: spell.higherLevel || '',
-    higherLevels: spell.higherLevels || '',
-    source: spell.source || ''
-  }));
+  const spellsData: SpellData[] = characterSpells.map(spell => 
+    convertCharacterSpellToSpellData(spell)
+  );
   
   return (
     <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full">
@@ -80,3 +61,6 @@ export const SpellBookViewer: React.FC<SpellBookViewerProps> = ({ spells, onClos
     </div>
   );
 };
+
+// Default export for backward compatibility
+export default SpellBookViewer;
