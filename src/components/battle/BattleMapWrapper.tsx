@@ -85,7 +85,7 @@ const BattleMapWrapper: React.FC<BattleMapWrapperProps> = ({
     <EnhancedBattleMap
       tokens={tokens}
       background={background}
-      onUpdateTokenPosition={onUpdateTokenPosition}
+      updateTokenPosition={onUpdateTokenPosition}  // Changed from onUpdateTokenPosition to updateTokenPosition
       gridSize={gridObject.rows} // Pass only the number as required by EnhancedBattleMap
       selectedTokenId={rest.selectedTokenId}
       onSelectToken={rest.onSelectToken}
