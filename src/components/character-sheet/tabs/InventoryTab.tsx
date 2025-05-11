@@ -9,58 +9,76 @@ interface InventoryTabProps {
 
 const InventoryTab: React.FC<InventoryTabProps> = ({ character, onUpdate }) => {
   // Проверяем тип equipment и делаем правильное обращение
-  const getWeapons = () => {
+  const getWeapons = (): string[] => {
     if (!character.equipment) return [];
+    
     if (Array.isArray(character.equipment)) {
       // Если equipment - это массив объектов Item
       if (character.equipment.length > 0 && typeof character.equipment[0] === 'object') {
-        return character.equipment
-          .filter(item => typeof item === 'object' && item.type === 'weapon')
-          .map(item => typeof item === 'object' ? item.name : item);
+        return (character.equipment as Item[])
+          .filter(item => item.type === 'weapon')
+          .map(item => item.name);
       }
       // Если equipment - это массив строк
       return character.equipment as string[];
     }
+    
     // Если equipment - это объект со свойствами
-    return character.equipment.weapons || [];
+    if (typeof character.equipment === 'object' && character.equipment !== null) {
+      return (character.equipment as any).weapons || [];
+    }
+    
+    return [];
   };
 
-  const getArmor = () => {
+  const getArmor = (): string => {
     if (!character.equipment) return '';
+    
     if (Array.isArray(character.equipment)) {
       // Если equipment - это массив объектов Item
       if (character.equipment.length > 0 && typeof character.equipment[0] === 'object') {
-        const armor = character.equipment.find(item => 
-          typeof item === 'object' && item.type === 'armor'
-        );
-        return armor && typeof armor === 'object' ? armor.name : '';
+        const armor = (character.equipment as Item[]).find(item => item.type === 'armor');
+        return armor ? armor.name : '';
       }
+      
       // Если это массив строк, ищем первый элемент, содержащий слово "доспех"
-      const armor = character.equipment.find(item => 
-        typeof item === 'string' && item && item.includes && item.toLowerCase().includes('доспех')
+      const armor = (character.equipment as string[]).find(item => 
+        typeof item === 'string' && item && item.toLowerCase().includes('доспех')
       );
       return armor || '';
     }
+    
     // Если equipment - это объект со свойствами
-    return character.equipment.armor || '';
+    if (typeof character.equipment === 'object' && character.equipment !== null) {
+      return (character.equipment as any).armor || '';
+    }
+    
+    return '';
   };
 
-  const getItems = () => {
+  const getItems = (): string[] => {
     if (!character.equipment) return [];
+    
     if (Array.isArray(character.equipment)) {
       // Если equipment - это массив объектов Item
       if (character.equipment.length > 0 && typeof character.equipment[0] === 'object') {
-        return character.equipment
-          .filter(item => typeof item === 'object' && item.type !== 'weapon' && item.type !== 'armor')
-          .map(item => typeof item === 'object' ? item.name : item);
+        return (character.equipment as Item[])
+          .filter(item => item.type !== 'weapon' && item.type !== 'armor')
+          .map(item => item.name);
       }
+      
       // Если equipment - это массив строк, возвращаем все, что не попало в доспехи
       return (character.equipment as string[]).filter(item => 
-        typeof item === 'string' && item && item.includes && !item.toLowerCase().includes('доспех')
+        typeof item === 'string' && item && !item.toLowerCase().includes('доспех')
       );
     }
+    
     // Если equipment - это объект со свойствами
-    return character.equipment.items || [];
+    if (typeof character.equipment === 'object' && character.equipment !== null) {
+      return (character.equipment as any).items || [];
+    }
+    
+    return [];
   };
 
   return (

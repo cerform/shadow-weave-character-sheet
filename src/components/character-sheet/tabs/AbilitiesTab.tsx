@@ -143,54 +143,28 @@ const AbilitiesTab: React.FC<AbilitiesTabProps> = ({ character, onUpdate }) => {
   };
 
   // Обработчик переключения владения навыком
-  const toggleSkillProficiency = (skill: string) => {
-    let currentProficiencies: string[] = [];
-    let currentExpertise: string[] = [];
+  const handleToggleSkillProficiency = (skillName: string) => {
+    // Get current character proficiencies
+    const currentProficiencies = character.proficiencies || [];
     
-    if (character.skillProficiencies) {
-      if (Array.isArray(character.skillProficiencies)) {
-        currentProficiencies = [...character.skillProficiencies];
-      } else {
-        // Преобразуем объект в массив
-        currentProficiencies = Object.entries(character.skillProficiencies)
-          .filter(([_, value]) => Boolean(value))
-          .map(([key]) => key);
-      }
-    }
+    // Check if skill is already in proficiencies
+    const hasSkill = Array.isArray(currentProficiencies) && 
+                    currentProficiencies.some(prof => 
+                      typeof prof === 'string' && prof === skillName);
     
-    if (character.expertise) {
-      if (Array.isArray(character.expertise)) {
-        currentExpertise = [...character.expertise];
-      } else {
-        // Преобразуем объект в массив
-        currentExpertise = Object.entries(character.expertise)
-          .filter(([_, value]) => Boolean(value))
-          .map(([key]) => key);
-      }
+    // Update proficiencies based on current state
+    let updatedProficiencies;
+    if (hasSkill) {
+      // Remove skill from proficiencies
+      updatedProficiencies = currentProficiencies.filter(prof => 
+        typeof prof === 'string' && prof !== skillName);
+    } else {
+      // Add skill to proficiencies
+      updatedProficiencies = [...currentProficiencies, skillName];
     }
     
-    const hasSkill = currentProficiencies.indexOf(skill) !== -1;
-    const hasExpertise = currentExpertise.indexOf(skill) !== -1;
-    
-    // Если уже есть экспертиза, удаляем и навык и экспертизу
-    if (hasExpertise) {
-      onUpdate({
-        skillProficiencies: currentProficiencies.filter(s => s !== skill),
-        expertise: currentExpertise.filter(s => s !== skill)
-      });
-    }
-    // Если есть владение, но нет экспертизы, добавляем экспертизу
-    else if (hasSkill) {
-      onUpdate({
-        expertise: [...currentExpertise, skill]
-      });
-    }
-    // Если нет ни владения, ни экспертизы, добавляем владение
-    else {
-      onUpdate({
-        skillProficiencies: [...currentProficiencies, skill]
-      });
-    }
+    // Update character
+    onUpdate({ proficiencies: updatedProficiencies });
   };
 
   // Обработчик добавления бонуса к навыку
@@ -488,7 +462,7 @@ const AbilitiesTab: React.FC<AbilitiesTabProps> = ({ character, onUpdate }) => {
                             profStatus === 'proficient' ? "bg-accent text-accent-foreground" : 
                             "border"
                           )}
-                          onClick={() => toggleSkillProficiency(skillKey)}
+                          onClick={() => handleToggleSkillProficiency(skillKey)}
                           style={{ cursor: 'pointer' }}
                         >
                           {profStatus !== 'none' && <Check className="h-4 w-4" />}

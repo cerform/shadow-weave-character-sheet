@@ -1,8 +1,6 @@
-// Предполагаемый код useSpellbook.ts с исправлением для строки 201
-// Исправляем преобразование CharacterSpell[] в SpellData[]
 
 import { useState, useEffect, useCallback } from 'react';
-import { SpellData, CharacterSpell } from '@/types/spells';
+import { SpellData, CharacterSpell, convertCharacterSpellToSpellData } from '@/types/spells';
 
 // Определите интерфейс для фильтров
 interface SpellFilters {
@@ -14,7 +12,7 @@ interface SpellFilters {
   ritual?: boolean;
 }
 
-const useSpellbook = (initialSpells: SpellData[] = []) => {
+export const useSpellbook = (initialSpells: SpellData[] = []) => {
   const [spells, setSpells] = useState<SpellData[]>(initialSpells);
   const [characterSpells, setCharacterSpells] = useState<CharacterSpell[]>([]);
   const [spellFilters, setSpellFilters] = useState<SpellFilters>({});
@@ -99,11 +97,6 @@ const useSpellbook = (initialSpells: SpellData[] = []) => {
     setError(null);
     try {
       // Здесь нужно заменить на реальный запрос к API или другому источнику данных
-      // const response = await fetch('/api/spells');
-      // const data = await response.json();
-      // setSpells(data);
-      // setFilteredSpells(data);
-
       // Пока что используем заглушку
       setSpells([
         {
@@ -207,14 +200,8 @@ const useSpellbook = (initialSpells: SpellData[] = []) => {
     setLoading(true);
     setError(null);
     try {
-      // Здесь нужно заменить на реальный запрос к API или другому источнику данных
-      // const response = await fetch('/api/characters/123/spells');
-      // const data = await response.json();
-      // setCharacterSpells(data);
-      // setFilteredSpells(data);
-
       // Пока что используем заглушку
-      setCharacterSpells([
+      const charSpells: CharacterSpell[] = [
         {
           id: '1',
           name: 'Фаербол',
@@ -237,11 +224,12 @@ const useSpellbook = (initialSpells: SpellData[] = []) => {
           higherLevel: 'Если вы накладываете это заклинание, используя ячейку 4-го уровня или выше, урон увеличивается на 1d6 за каждый уровень ячейки выше 3-го.',
           higherLevels: 'Если вы накладываете это заклинание, используя ячейку 4-го уровня или выше, урон увеличивается на 1d6 за каждый уровень ячейки выше 3-го.'
         }
-      ]);
-
-      // В проблемном месте вызываем функцию конвертации
-      // setSpells(characterSpells) меняется на:
-      setSpells(convertCharacterSpellsToSpellData(characterSpells));
+      ];
+      
+      setCharacterSpells(charSpells);
+      // Преобразуем CharacterSpell[] в SpellData[]
+      const convertedSpells = charSpells.map(convertCharacterSpellToSpellData);
+      setSpells(convertedSpells);
     } catch (error: any) {
       setError(error.message);
     } finally {
@@ -350,11 +338,9 @@ const useSpellbook = (initialSpells: SpellData[] = []) => {
     checkSpellInSpellbook,
     loadSpells,
     loadCharacterSpells,
+    applyFilters,
     setFilters,
-    clearFilters,
-    setSpells,
-    setFilteredSpells,
-    setCharacterSpells
+    clearFilters
   };
 };
 

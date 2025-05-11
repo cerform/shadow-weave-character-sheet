@@ -1,6 +1,5 @@
-// Начало файла restUtils.ts (предполагаю наличие импортов Character и прочего)
-// Исправляем проверки типов в функциях для короткого и длинного отдыха
 
+// Fixed restUtils.ts to correct string comparison issues
 import { Character } from '@/types/character';
 
 // Функция для короткого отдыха
@@ -15,8 +14,12 @@ export function takeShortRest(character: Character): Character {
       const resource = updatedCharacter.resources?.[resourceKey];
       
       // Проверяем, что ресурс восстанавливается после короткого отдыха
-      // Исправлено сравнение строк
-      if (resource && (resource.recoveryType === 'short' || resource.recoveryType === 'short-rest')) {
+      // Исправлено сравнение строк - добавляем все возможные варианты написания
+      if (resource && (
+        resource.recoveryType === 'short' || 
+        resource.recoveryType === 'short-rest' || 
+        resource.recoveryType === 'shortRest'
+      )) {
         updatedCharacter.resources = {
           ...updatedCharacter.resources,
           [resourceKey]: {
@@ -67,11 +70,14 @@ export function takeLongRest(character: Character): Character {
       const resource = updatedCharacter.resources?.[resourceKey];
       
       // Исправлено сравнение строк для всех типов ресурсов
+      // Добавляем все возможные варианты написания
       if (resource && (
         resource.recoveryType === 'long' || 
         resource.recoveryType === 'long-rest' || 
+        resource.recoveryType === 'longRest' || 
         resource.recoveryType === 'short' || 
-        resource.recoveryType === 'short-rest'
+        resource.recoveryType === 'short-rest' || 
+        resource.recoveryType === 'shortRest'
       )) {
         updatedCharacter.resources = {
           ...updatedCharacter.resources,

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
@@ -5,9 +6,46 @@ import { Character, Item } from '@/types/character';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Search } from 'lucide-react';
+import { Search, Package, Plus, X, Separator } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
-import NavigationButtons from './NavigationButtons';
+import { Badge } from "@/components/ui/badge";
+
+// Define class data object for equipment generation
+const classData: Record<string, { 
+  weaponProficiencies: string[], 
+  armorProficiencies: string[], 
+  toolProficiencies: string[],
+  spellcasting?: boolean
+}> = {
+  воин: {
+    weaponProficiencies: ['simple', 'martial'],
+    armorProficiencies: ['light', 'medium', 'heavy', 'shields'],
+    toolProficiencies: []
+  },
+  волшебник: {
+    weaponProficiencies: ['dagger', 'dart', 'sling', 'quarterstaff', 'light crossbow'],
+    armorProficiencies: [],
+    toolProficiencies: [],
+    spellcasting: true
+  },
+  жрец: {
+    weaponProficiencies: ['simple'],
+    armorProficiencies: ['light', 'medium', 'shields'],
+    toolProficiencies: [],
+    spellcasting: true
+  },
+  плут: {
+    weaponProficiencies: ['simple', 'hand crossbow', 'longsword', 'rapier', 'shortsword'],
+    armorProficiencies: ['light'],
+    toolProficiencies: ['thieves tools']
+  },
+  бард: {
+    weaponProficiencies: ['simple', 'hand crossbow', 'longsword', 'rapier', 'shortsword'],
+    armorProficiencies: ['light'],
+    toolProficiencies: ['musical instrument'],
+    spellcasting: true
+  }
+};
 
 interface EquipmentTabProps {
   character: Character;
@@ -111,8 +149,8 @@ export const EquipmentTab: React.FC<EquipmentTabProps> = ({ character, equipment
     if (Array.isArray(character.equipment)) {
       // Если equipment - это массив Item[]
       if (character.equipment.length > 0 && typeof character.equipment[0] === 'object') {
-        const newItemObj: Item = { name: newItem, quantity: 1 };
-        updatedEquipment = [...character.equipment, newItemObj];
+        const newItemObj: Item = { name: newItem, quantity: 1, type: 'misc' };
+        updatedEquipment = [...character.equipment as Item[], newItemObj];
       }
       // Если equipment - это массив строк
       else {
@@ -121,9 +159,9 @@ export const EquipmentTab: React.FC<EquipmentTabProps> = ({ character, equipment
     } else if (typeof character.equipment === 'object' && character.equipment) {
       // Создаем новый объект с тем же форматом
       updatedEquipment = {
-        weapons: [...(character.equipment.weapons || [])],
-        armor: character.equipment.armor || "",
-        items: [...(character.equipment.items || []), newItem]
+        weapons: [...((character.equipment as any).weapons || [])],
+        armor: (character.equipment as any).armor || "",
+        items: [...((character.equipment as any).items || []), newItem]
       };
     } else {
       updatedEquipment = [newItem];
@@ -143,8 +181,8 @@ export const EquipmentTab: React.FC<EquipmentTabProps> = ({ character, equipment
     if (Array.isArray(character.equipment)) {
       // Если equipment - это массив Item[]
       if (character.equipment.length > 0 && typeof character.equipment[0] === 'object') {
-        const newItemObj: Item = { name: item, quantity: 1 };
-        updatedEquipment = [...character.equipment, newItemObj];
+        const newItemObj: Item = { name: item, quantity: 1, type: 'misc' };
+        updatedEquipment = [...character.equipment as Item[], newItemObj];
       }
       // Если equipment - это массив строк
       else {
@@ -153,9 +191,9 @@ export const EquipmentTab: React.FC<EquipmentTabProps> = ({ character, equipment
     } else if (typeof character.equipment === 'object' && character.equipment) {
       // Создаем новый объект с тем же форматом
       updatedEquipment = {
-        weapons: [...(character.equipment.weapons || [])],
-        armor: character.equipment.armor || "",
-        items: [...(character.equipment.items || []), item]
+        weapons: [...((character.equipment as any).weapons || [])],
+        armor: (character.equipment as any).armor || "",
+        items: [...((character.equipment as any).items || []), item]
       };
     } else {
       updatedEquipment = [item];
@@ -166,13 +204,13 @@ export const EquipmentTab: React.FC<EquipmentTabProps> = ({ character, equipment
   
   // Удаление предмета
   const removeItem = (index: number) => {
-    let currentEquipment: string[] = [];
+    let currentEquipment: string[] | Item[] = [];
     
     if (Array.isArray(character.equipment)) {
       // Если equipment - это массив Item[]
       if (character.equipment.length > 0 && typeof character.equipment[0] === 'object') {
         // Создаем новый массив без удаляемого элемента
-        const updatedEquipment = [...character.equipment];
+        const updatedEquipment = [...character.equipment as Item[]];
         updatedEquipment.splice(index, 1);
         onUpdate({ equipment: updatedEquipment });
         return;
@@ -181,9 +219,9 @@ export const EquipmentTab: React.FC<EquipmentTabProps> = ({ character, equipment
       currentEquipment = character.equipment as string[];
     } else if (typeof character.equipment === 'object' && character.equipment) {
       const items: string[] = [];
-      if (character.equipment.weapons) items.push(...character.equipment.weapons);
-      if (character.equipment.armor) items.push(character.equipment.armor);
-      if (character.equipment.items) items.push(...character.equipment.items);
+      if ((character.equipment as any).weapons) items.push(...(character.equipment as any).weapons);
+      if ((character.equipment as any).armor) items.push((character.equipment as any).armor);
+      if ((character.equipment as any).items) items.push(...(character.equipment as any).items);
       
       // Удаляем элемент
       const updatedItems = [...items];
@@ -220,9 +258,9 @@ export const EquipmentTab: React.FC<EquipmentTabProps> = ({ character, equipment
     
     if (typeof character.equipment === 'object' && character.equipment) {
       const items: string[] = [];
-      if (character.equipment.weapons) items.push(...character.equipment.weapons);
-      if (character.equipment.armor) items.push(character.equipment.armor);
-      if (character.equipment.items) items.push(...character.equipment.items);
+      if ((character.equipment as any).weapons) items.push(...(character.equipment as any).weapons);
+      if ((character.equipment as any).armor) items.push((character.equipment as any).armor);
+      if ((character.equipment as any).items) items.push(...(character.equipment as any).items);
       return items;
     }
     
@@ -263,7 +301,7 @@ export const EquipmentTab: React.FC<EquipmentTabProps> = ({ character, equipment
               <div className="space-y-2">
                 {equipmentList.length === 0 ? (
                   <p className="text-center text-muted-foreground py-4">
-                    У пер��онажа нет снаряжения
+                    У персонажа нет снаряжения
                   </p>
                 ) : (
                   equipmentList.map((item, index) => (
@@ -317,7 +355,7 @@ export const EquipmentTab: React.FC<EquipmentTabProps> = ({ character, equipment
           </TabsContent>
         </Tabs>
         
-        <Separator className="my-4" />
+        <div className="my-4 border-t"></div>
         
         <div className="text-sm text-muted-foreground">
           <p>* Нажмите на предмет из доступного снаряжения, чтобы добавить его в свой инвентарь</p>

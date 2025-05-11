@@ -1,13 +1,13 @@
-// Предполагаемый код SpellBookViewer.tsx с исправлением типа
-// Исправляем вызов convertSpellArray на строке 52, где ожидается Character, но передается CharacterSpell[]
 
+// Fixed SpellBookViewer.tsx with corrected type usage
 import React from 'react';
-import { SpellData, CharacterSpell, convertSpellArray } from '@/types/spells';
+import { SpellData, CharacterSpell } from '@/types/spells';
 
 interface SpellBookViewerProps {
   spells: SpellData[];
   onClose: () => void;
   onAddSpell: (spell: SpellData) => void;
+  characterSpells: CharacterSpell[];
 }
 
 interface SpellCardProps {
@@ -30,16 +30,8 @@ const SpellCard: React.FC<SpellCardProps> = ({ spell, onAddSpell }) => {
   );
 };
 
-interface SpellBookViewerProps {
-  spells: SpellData[];
-  onClose: () => void;
-  onAddSpell: (spell: SpellData) => void;
-  characterSpells: CharacterSpell[];
-}
-
 export const SpellBookViewer: React.FC<SpellBookViewerProps> = ({ spells, onClose, onAddSpell, characterSpells }) => {
-  // Исправление: передаем правильный тип данных для конвертации заклинаний
-  // Где был проблемный код: convertSpellArray(characterSpells)
+  // Преобразуем CharacterSpell[] в SpellData[]
   const spellsData: SpellData[] = characterSpells.map(spell => ({
     id: spell.id || `spell-${Math.random().toString(36).substring(2, 11)}`,
     name: spell.name,
