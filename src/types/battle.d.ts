@@ -13,7 +13,12 @@ export interface Token {
   conditions?: string[];
   resources?: Record<string, { max: number; used: number }>;
   visible?: boolean;
-  size?: number;
+  isVisible?: boolean;
+  size?: 'tiny' | 'small' | 'medium' | 'large' | 'huge' | 'gargantuan' | number;
+  scale?: number;
+  rotation?: number;
+  characterId?: string;
+  tokenColor?: string;
 }
 
 export interface InitiativeItem {

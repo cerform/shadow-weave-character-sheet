@@ -19,7 +19,7 @@ export interface Token {
   conditions?: string[];
   characterId?: string;
   tokenColor?: string;
-  size?: 'tiny' | 'small' | 'medium' | 'large' | 'huge' | 'gargantuan';
+  size?: 'tiny' | 'small' | 'medium' | 'large' | 'huge' | 'gargantuan' | number;
 }
 
 export interface Initiative {
