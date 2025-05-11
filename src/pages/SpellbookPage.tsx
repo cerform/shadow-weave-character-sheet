@@ -15,11 +15,9 @@ const SpellbookPage: React.FC = () => {
   
   // Ensure we have default properties even if CharacterContext doesn't provide them
   const characters = characterContext.characters || [];
-  const activeCharacter = characterContext.activeCharacter || null;
   
-  // If there's an active character, use it. Otherwise, use the first character or create a default
-  const character = activeCharacter || 
-                    (characters.length > 0 ? characters[0] : createDefaultCharacter());
+  // Use the first character if available, otherwise create a default
+  const character = (characters.length > 0) ? characters[0] : createDefaultCharacter();
 
   return (
     <BackgroundWrapper>

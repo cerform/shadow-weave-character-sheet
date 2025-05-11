@@ -97,17 +97,17 @@ export const createDefaultCharacter = (): Character => ({
 
 /**
  * Calculate ability modifier from score
+ * @param {number} abilityScore - The ability score value
+ * @returns {number} The modifier value as a number
  */
 export function getNumericModifier(abilityScore: number): number {
   return Math.floor((abilityScore - 10) / 2);
 }
 
-// Alias for backwards compatibility
-export const getAbilityModifier = getNumericModifier;
-export const getModifierFromAbilityScore = getNumericModifier;
-
 /**
  * Calculate ability modifier from score
+ * @param {number} abilityScore - The ability score value
+ * @returns {number} The calculated ability modifier
  */
 export const calculateAbilityModifier = (abilityScore: number): number => {
   return Math.floor((abilityScore - 10) / 2);
@@ -115,11 +115,17 @@ export const calculateAbilityModifier = (abilityScore: number): number => {
 
 /**
  * Get ability modifier with + sign for display
+ * @param {number} abilityScore - The ability score value
+ * @returns {string} The modifier with + or - sign as string
  */
-export const getModifierFromAbilityScore = (abilityScore: number): string => {
+export const getModifierString = (abilityScore: number): string => {
   const modifier = calculateAbilityModifier(abilityScore);
   return modifier >= 0 ? `+${modifier}` : `${modifier}`;
 };
+
+// Aliases for backward compatibility
+export const getAbilityModifier = getNumericModifier;
+export const getModifierFromAbilityScore = getModifierString;
 
 /**
  * Calculates the saving throw bonus for a given ability.
@@ -424,19 +430,4 @@ export const convertToCharacter = (partialCharacter: Partial<Character>): Charac
       ...(partialCharacter.spellcasting || {})
     }
   };
-};
-
-/**
- * Calculate ability modifier from score
- */
-export const getAbilityModifier = (abilityScore: number): number => {
-  return Math.floor((abilityScore - 10) / 2);
-};
-
-/**
- * Get ability modifier with + sign for display
- */
-export const getModifierFromAbilityScore = (abilityScore: number): string => {
-  const modifier = getAbilityModifier(abilityScore);
-  return modifier >= 0 ? `+${modifier}` : `${modifier}`;
 };

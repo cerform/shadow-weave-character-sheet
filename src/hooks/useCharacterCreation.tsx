@@ -1,8 +1,9 @@
+
 import { useState, useCallback } from 'react';
 import { Character } from '@/types/character';
 import { v4 as uuidv4 } from 'uuid';
 import { useToast } from './use-toast';
-import { calculateStatBonuses, createDefaultCharacter } from '@/utils/characterUtils';
+import { calculateStatBonuses, createDefaultCharacter, convertToCharacter } from '@/utils/characterUtils';
 import { useCharacter } from '@/contexts/CharacterContext';
 
 export interface UseCharacterCreationOptions {
@@ -25,7 +26,7 @@ export const useCharacterCreation = (options: UseCharacterCreationOptions = {}) 
     },
     spells: [],
   });
-  const { addCharacter } = useCharacter() as any; // Temporary type assertion
+  const { addCharacter } = useCharacter() as any; // Временный тип
   const { toast } = useToast();
 
   // Обновить персонажа
@@ -141,9 +142,7 @@ export const useCharacterCreation = (options: UseCharacterCreationOptions = {}) 
 
   // Using a helper to create a full character from partial data
   const convertToFullCharacter = useCallback((partialChar: Partial<Character>): Character => {
-    // Create a default character and merge with provided partial
-    const fullCharacter = createDefaultCharacter();
-    return { ...fullCharacter, ...partialChar };
+    return convertToCharacter(partialChar);
   }, []);
 
   return {

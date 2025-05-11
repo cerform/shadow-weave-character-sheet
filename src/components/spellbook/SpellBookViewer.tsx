@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -24,9 +25,8 @@ const SpellBookViewer: React.FC<SpellBookViewerProps> = ({ character, onAddSpell
   const [selectedSpellId, setSelectedSpellId] = useState<string | null>(null);
   const [expandedSpellId, setExpandedSpellId] = useState<string | null>(null);
   const [spells, setSpells] = useState<SpellData[]>([]);
-  const { theme } = useTheme();
-  const currentTheme = theme as keyof typeof import('@/lib/themes').themes;
-
+  const { theme, themeStyles } = useTheme();
+  
   // Convert character spells to SpellData format for display
   useEffect(() => {
     if (character.spells) {
@@ -163,7 +163,7 @@ const SpellBookViewer: React.FC<SpellBookViewerProps> = ({ character, onAddSpell
                           <CardContent className="pt-0 pb-3">
                             <SpellCard 
                               spell={spell} 
-                              currentTheme={currentTheme} 
+                              currentTheme={theme}
                               onClick={() => handleSpellClick(spell.id)}
                             />
                           </CardContent>

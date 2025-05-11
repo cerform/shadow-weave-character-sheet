@@ -27,5 +27,5 @@ export interface ThemeStyles {
   primaryColor?: string;
 }
 
-// Add this line to export Theme as ThemeStyles
+// Export Theme as ThemeStyles for backward compatibility
 export type Theme = ThemeStyles;
