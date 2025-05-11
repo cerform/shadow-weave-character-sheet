@@ -2,10 +2,11 @@
 import { Character } from '@/types/character';
 import { SpellData } from '@/types/spells';
 import { 
-  canPrepareMoreSpells as canPrepareMore, 
-  getPreparedSpellsLimit as getPreparedLimit,
-  normalizeSpells as normalizeSpellArray,
-  convertToSpellData as convertToSpellDataHelper
+  canPrepareMoreSpells, 
+  getPreparedSpellsLimit,
+  normalizeSpells,
+  convertToSpellData,
+  convertCharacterSpellsToSpellData 
 } from './spellHelpers';
 
 // Re-export functions from spellHelpers.ts to maintain backward compatibility
@@ -13,8 +14,9 @@ export {
   canPrepareMoreSpells, 
   getPreparedSpellsLimit,
   normalizeSpells,
-  convertToSpellData
-} from './spellHelpers';
+  convertToSpellData,
+  convertCharacterSpellsToSpellData
+};
 
 // Получение модификатора характеристики для заклинаний
 export const getSpellcastingAbilityModifier = (character: Character): number => {
