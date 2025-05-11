@@ -1,7 +1,6 @@
 
 import React from 'react';
-import { useTheme } from '@/hooks/use-theme';
-import { ThemeType } from '@/hooks/use-theme';
+import { useTheme, ThemeType } from '@/hooks/use-theme';
 import { Button } from './ui/button';
 import { Moon, Sun, Palette, Wand } from 'lucide-react';
 

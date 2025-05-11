@@ -11,7 +11,7 @@ export interface ThemeContextType {
   activeTheme?: ThemeType;
   setUserTheme?: (theme: ThemeType) => void;
   currentTheme?: Theme;
-  themeStyles: Theme; // Changed from optional to required
+  themeStyles: Theme; // Required property
 }
 
 export type { Theme };

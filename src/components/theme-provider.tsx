@@ -9,8 +9,8 @@ import { useUserTheme } from '@/hooks/use-user-theme'
 import { ThemeType } from '@/types/theme'
 
 export interface ThemeContextType {
-  theme: string;
-  setTheme: (theme: string) => void;
+  theme: ThemeType;
+  setTheme: (theme: ThemeType) => void;
   themeStyles?: typeof themes.default;
   effectiveTheme?: string;
 }
@@ -23,12 +23,12 @@ export const ThemeProviderContext = React.createContext<ThemeContextType>({
 
 export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
   const { activeTheme, setUserTheme } = useUserTheme();
-  const [theme, setTheme] = React.useState<ThemeType>(activeTheme || 'default');
+  const [theme, setTheme] = React.useState<ThemeType>(activeTheme as ThemeType || 'default');
 
   // Синхронизируем с UserTheme при изменении activeTheme
   React.useEffect(() => {
     if (activeTheme && activeTheme !== theme) {
-      setTheme(activeTheme);
+      setTheme(activeTheme as ThemeType);
     }
   }, [activeTheme, theme]);
 

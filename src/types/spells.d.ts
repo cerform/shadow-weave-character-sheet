@@ -37,6 +37,12 @@ export const convertCharacterSpellToSpellData = (spell: CharacterSpell): SpellDa
     duration: spell.duration || 'Мгновенная',
     description: spell.description || '',
     classes: spell.classes || [],
+    verbal: spell.verbal,
+    somatic: spell.somatic,
+    material: spell.material,
+    ritual: spell.ritual,
+    concentration: spell.concentration,
+    prepared: spell.prepared
   };
 };
 
@@ -52,6 +58,12 @@ export const convertSpellDataToCharacterSpell = (spell: SpellData): CharacterSpe
     duration: spell.duration,
     description: spell.description,
     classes: spell.classes,
+    verbal: spell.verbal,
+    somatic: spell.somatic,
+    material: spell.material,
+    ritual: spell.ritual,
+    concentration: spell.concentration,
+    prepared: spell.prepared
   };
 };
 
