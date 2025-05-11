@@ -2,7 +2,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { createToken } from '@/utils/tokenHelpers';
-import { Token } from '@/types/battle';
+import { Token } from '@/types/battle.d';
 
 interface LeftPanelProps {
   // Добавьте здесь нужные пропсы

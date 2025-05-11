@@ -1,5 +1,4 @@
 
-
 export interface Character {
   name: string;
   class: string;
@@ -108,4 +107,3 @@ export interface CharacterSpell {
   higherLevel?: string;
   higherLevels?: string;
 }
-

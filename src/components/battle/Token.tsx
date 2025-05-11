@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Token as TokenType } from '@/types/battle';
+import { Token as TokenType } from '@/types/battle.d';
 import TokenHealthBar from './TokenHealthBar';
 import { getSizeMultiplier } from '@/utils/tokenHelpers';
 
@@ -75,7 +75,8 @@ const Token: React.FC<TokenProps> = ({
   };
   
   // Размер токена с учетом масштаба - используем getSizeMultiplier для корректной обработки size
-  const tokenSize = 30 * getSizeMultiplier(token.size);
+  const sizeMultiplier = getSizeMultiplier(token.size);
+  const tokenSize = 30 * sizeMultiplier;
   
   // Стиль для токена
   const tokenStyle: React.CSSProperties = {

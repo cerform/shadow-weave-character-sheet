@@ -1,5 +1,6 @@
 
 import { CharacterSpell } from '@/types/character';
+import { SpellData } from '@/types/spells';
 
 /**
  * Проверяет, является ли заклинание подготовленным
@@ -49,4 +50,37 @@ export const getSpellLevelName = (level: number): string => {
     case 9: return '9-й уровень';
     default: return `Уровень ${level}`;
   }
+};
+
+/**
+ * Преобразует массив CharacterSpell в массив SpellData
+ * @param spells Массив заклинаний
+ * @returns Массив объектов SpellData
+ */
+export const convertCharacterSpellsToSpellData = (spells: any[]): SpellData[] => {
+  if (!spells || !Array.isArray(spells)) return [];
+  
+  return spells.map(spell => {
+    if (typeof spell === 'string') {
+      // Если заклинание представлено строкой, создаем минимальный объект
+      return {
+        id: `spell-${spell.replace(/\s+/g, '-').toLowerCase()}`,
+        name: spell,
+        level: 0,
+        school: 'Универсальная',
+        castingTime: '1 действие',
+        range: 'Касание',
+        components: '',
+        duration: 'Мгновенная',
+        description: '',
+        classes: [],
+      };
+    } else {
+      // Если это объект заклинания, убеждаемся что у него есть id
+      return {
+        ...spell,
+        id: spell.id || `spell-${spell.name.replace(/\s+/g, '-').toLowerCase()}`
+      };
+    }
+  });
 };
