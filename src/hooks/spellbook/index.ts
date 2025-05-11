@@ -3,6 +3,7 @@
 export * from './useSpellbook';
 export * from './filterUtils';
 import { useSpellbook } from './useSpellbook';
+export { useSpellbook };
 export default useSpellbook;
 
 // Экспортируем вспомогательные функции из типов

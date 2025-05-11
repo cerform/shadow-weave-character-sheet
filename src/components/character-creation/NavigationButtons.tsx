@@ -10,6 +10,8 @@ export interface NavigationButtonsProps {
   disablePrev?: boolean;
   nextText?: string;
   prevText?: string;
+  allowNext?: boolean;  // Обратная совместимость с disableNext
+  isFirstStep?: boolean; // Обратная совместимость с disablePrev
 }
 
 const NavigationButtons: React.FC<NavigationButtonsProps> = ({
@@ -18,15 +20,23 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
   disableNext = false,
   disablePrev = false,
   nextText = "Далее",
-  prevText = "Назад"
+  prevText = "Назад",
+  allowNext,
+  isFirstStep
 }) => {
+  // Используем allowNext если предоставлен, иначе используем !disableNext
+  const shouldEnableNext = allowNext !== undefined ? allowNext : !disableNext;
+  
+  // Используем !isFirstStep если предоставлен, иначе используем !disablePrev
+  const shouldEnablePrev = isFirstStep !== undefined ? !isFirstStep : !disablePrev;
+  
   return (
     <div className="flex justify-between mt-6">
       {prevStep ? (
         <Button
           variant="outline"
           onClick={prevStep}
-          disabled={disablePrev}
+          disabled={!shouldEnablePrev}
           className="flex items-center gap-2"
         >
           <ArrowLeft className="h-4 w-4" />
@@ -39,7 +49,7 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
       {nextStep && (
         <Button
           onClick={nextStep}
-          disabled={disableNext}
+          disabled={!shouldEnableNext}
           className="flex items-center gap-2"
         >
           {nextText}

@@ -1,8 +1,7 @@
 
-import { Character } from '@/types/character';
 import { SpellData } from '@/types/spells';
+import { Character } from '@/types/character';
 
-// Получение модификатора характеристики для заклинаний
 export const getSpellcastingAbilityModifier = (character: Character): number => {
   if (!character || !character.abilities) return 0;
   
@@ -23,7 +22,6 @@ export const getSpellcastingAbilityModifier = (character: Character): number => 
   }
 };
 
-// Вычисление доступных заклинаний для класса и уровня
 export const calculateAvailableSpellsByClassAndLevel = (
   characterClass: string,
   characterLevel: number,
@@ -76,7 +74,6 @@ export const calculateAvailableSpellsByClassAndLevel = (
   return { cantripsCount, knownSpells, maxSpellLevel };
 };
 
-// Получение максимального уровня заклинаний для класса и уровня
 export const getMaxSpellLevel = (characterClass: string, characterLevel: number): number => {
   const classLower = characterClass.toLowerCase();
   
@@ -91,7 +88,6 @@ export const getMaxSpellLevel = (characterClass: string, characterLevel: number)
   return 0;
 };
 
-// Фильтрация заклинаний по классу и уровню
 export const filterSpellsByClassAndLevel = (
   spells: SpellData[], 
   characterClass: string, 
@@ -125,34 +121,5 @@ export const filterSpellsByClassAndLevel = (
     }
     
     return false;
-  });
-};
-
-// Вспомогательные функции для работы с заклинаниями
-export const convertCharacterSpellsToSpellData = (spells: any[]): SpellData[] => {
-  if (!spells || !Array.isArray(spells)) return [];
-  
-  return spells.map(spell => {
-    if (typeof spell === 'string') {
-      // Если заклинание представлено строкой, создаем минимальный объект
-      return {
-        id: `spell-${spell.replace(/\s+/g, '-').toLowerCase()}`,
-        name: spell,
-        level: 0,
-        school: 'Универсальная',
-        castingTime: '1 действие',
-        range: 'Касание',
-        components: '',
-        duration: 'Мгновенная',
-        description: '',
-        classes: [],
-      };
-    } else {
-      // Если это объект заклинания, убеждаемся что у него есть id
-      return {
-        ...spell,
-        id: spell.id || `spell-${spell.name.replace(/\s+/g, '-').toLowerCase()}`
-      };
-    }
   });
 };

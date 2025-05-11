@@ -38,7 +38,7 @@ const TokensPanel: React.FC<TokensPanelProps> = ({
             <div 
               className="w-8 h-8 rounded-full bg-center bg-cover"
               style={{ 
-                backgroundImage: `url(${token.img})`,
+                backgroundImage: token.img ? `url(${token.img})` : undefined,
                 border: `1px solid ${
                   token.type === "boss" 
                     ? "#ff5555" 
