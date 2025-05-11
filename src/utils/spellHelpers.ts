@@ -1,122 +1,82 @@
 
 import { CharacterSpell } from '@/types/character';
-import { SpellData, convertCharacterSpellToSpellData } from '@/types/spells';
 
-/**
- * Конвертирует массив CharacterSpell в массив SpellData
- */
-export const convertCharacterSpellsToSpellData = (spells: CharacterSpell[]): SpellData[] => {
-  return spells.map(spell => convertCharacterSpellToSpellData(spell));
-};
-
-/**
- * Преобразует строковое представление компонентов в отдельные флаги
- * @param components Строка с компонентами (например "ВСМ")
- */
-export const parseSpellComponents = (components: string) => {
-  if (!components) return { verbal: false, somatic: false, material: false };
-  
-  return {
-    verbal: components.includes('В'),
-    somatic: components.includes('С'),
-    material: components.includes('М'),
-  };
-};
-
-/**
- * Форматирует классы заклинаний для отображения
- */
-export const formatSpellClasses = (classes: string[] | string): string => {
-  if (!classes) return '';
-  
-  if (Array.isArray(classes)) {
-    return classes.join(', ');
-  }
-  
-  return classes;
-};
-
-/**
- * Проверяет, является ли заклинание объектом типа CharacterSpell
- */
-export const isCharacterSpellObject = (spell: any): spell is CharacterSpell => {
-  return typeof spell === 'object' && 'name' in spell && 'level' in spell;
-};
-
-/**
- * Проверяет, подготовлено ли заклинание
- */
-export const isSpellPrepared = (spell: CharacterSpell | string): boolean => {
-  if (typeof spell === 'string') return false;
-  return !!spell.prepared;
-};
-
-/**
- * Получает уровень заклинания
- */
+// Получение уровня заклинания
 export const getSpellLevel = (spell: CharacterSpell | string): number => {
-  if (typeof spell === 'string') return 0; // По умолчанию заговор
+  if (typeof spell === 'string') {
+    // По умолчанию считаем строковые заклинания заговорами
+    return 0;
+  }
   return spell.level;
 };
 
-/**
- * Преобразует CharacterSpell к SpellData
- */
-export const convertCharacterSpellToSpellDataHelper = (spell: CharacterSpell): SpellData => {
+// Получение названия уровня заклинания
+export const getSpellLevelName = (level: number): string => {
+  switch (level) {
+    case 0: return 'Заговоры';
+    case 1: return '1 уровень';
+    case 2: return '2 уровень';
+    case 3: return '3 уровень';
+    case 4: return '4 уровень';
+    case 5: return '5 уровень';
+    case 6: return '6 уровень';
+    case 7: return '7 уровень';
+    case 8: return '8 уровень';
+    case 9: return '9 уровень';
+    default: return `${level} уровень`;
+  }
+};
+
+// Проверка, подготовлено ли заклинание
+export const isSpellPrepared = (spell: CharacterSpell | string): boolean => {
+  if (typeof spell === 'string') {
+    // Строковые заклинания считаем всегда подготовленными
+    return true;
+  }
+  return spell.prepared ?? false;
+};
+
+// Проверка, является ли заклинание объектом CharacterSpell
+export const isCharacterSpellObject = (spell: CharacterSpell | string): spell is CharacterSpell => {
+  return typeof spell !== 'string';
+};
+
+// Преобразование строкового заклинания в объект
+export const convertStringToCharacterSpell = (spellName: string, level: number = 0): CharacterSpell => {
   return {
-    id: spell.id || `spell-${spell.name.replace(/\s+/g, '-').toLowerCase()}`,
-    name: spell.name,
-    level: spell.level || 0,
-    school: spell.school || 'Универсальная',
-    castingTime: spell.castingTime || '1 действие',
-    range: spell.range || 'На себя',
-    components: spell.components || '',
-    duration: spell.duration || 'Мгновенная',
-    description: Array.isArray(spell.description) ? spell.description : [spell.description || 'Нет описания'],
-    classes: spell.classes || [],
-    prepared: spell.prepared || false,
-    ritual: spell.ritual || false,
-    concentration: spell.concentration || false
+    name: spellName,
+    level,
+    prepared: true
   };
 };
 
-/**
- * Получает название уровня заклинания (для отображения)
- */
-export const getSpellLevelName = (level: number): string => {
-  if (level === 0) return "Заговор";
-  if (level === 1) return "1-й уровень";
-  if (level === 2) return "2-й уровень";
-  if (level === 3) return "3-й уровень";
-  if (level >= 4) return `${level}-й уровень`;
-  return `${level} уровень`;
+// Получение списка заклинаний определенного уровня
+export const getSpellsByLevel = (
+  spells: (CharacterSpell | string)[] | undefined,
+  level: number
+): (CharacterSpell | string)[] => {
+  if (!spells || !Array.isArray(spells)) return [];
+  
+  return spells.filter(spell => {
+    if (typeof spell === 'string') {
+      // Строковые заклинания считаем заговорами
+      return level === 0;
+    }
+    return spell.level === level;
+  });
 };
 
-/**
- * Проверяет, соответствует ли заклинание классу персонажа
- */
-export const isSpellAvailableForClass = (spell: SpellData, characterClass: string): boolean => {
-  if (!characterClass || !spell.classes) return false;
+// Получение списка подготовленных заклинаний
+export const getPreparedSpells = (
+  spells: (CharacterSpell | string)[] | undefined
+): (CharacterSpell | string)[] => {
+  if (!spells || !Array.isArray(spells)) return [];
   
-  const characterClassLower = characterClass.toLowerCase();
-  
-  let spellClasses: string[] = [];
-  if (typeof spell.classes === 'string') {
-    spellClasses = [spell.classes.toLowerCase()];
-  } else if (Array.isArray(spell.classes)) {
-    spellClasses = spell.classes.map(c => c.toLowerCase());
-  }
-  
-  // Проверяем соответствие класса
-  return spellClasses.some(cls => 
-    cls === characterClassLower ||
-    (characterClassLower === 'жрец' && cls === 'cleric') ||
-    (characterClassLower === 'волшебник' && cls === 'wizard') ||
-    (characterClassLower === 'друид' && cls === 'druid') ||
-    (characterClassLower === 'бард' && cls === 'bard') ||
-    (characterClassLower === 'колдун' && cls === 'warlock') ||
-    (characterClassLower === 'чародей' && cls === 'sorcerer') ||
-    (characterClassLower === 'паладин' && cls === 'paladin') ||
-    (characterClassLower === 'следопыт' && cls === 'ranger')
-  );
+  return spells.filter(spell => {
+    if (typeof spell === 'string') {
+      // Строковые заклинания считаем всегда подготовленными
+      return true;
+    }
+    return spell.prepared === true;
+  });
 };

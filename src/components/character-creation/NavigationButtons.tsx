@@ -4,59 +4,46 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
 
 export interface NavigationButtonsProps {
-  onPrev?: () => void;
-  onNext?: () => void;
   prevStep?: () => void;
   nextStep?: () => void;
-  prevLabel?: string;
-  nextLabel?: string;
-  disablePrev?: boolean;
   disableNext?: boolean;
-  allowNext?: boolean;
-  isFirstStep?: boolean;
+  disablePrev?: boolean;
+  nextText?: string;
+  prevText?: string;
 }
 
 const NavigationButtons: React.FC<NavigationButtonsProps> = ({
-  onPrev,
-  onNext,
   prevStep,
   nextStep,
-  prevLabel = 'Назад',
-  nextLabel = 'Далее',
-  disablePrev = false,
   disableNext = false,
-  allowNext = true
+  disablePrev = false,
+  nextText = "Далее",
+  prevText = "Назад"
 }) => {
-  // Используем onPrev или prevStep, в зависимости от того, что передано
-  const handlePrev = onPrev || prevStep;
-  // Используем onNext или nextStep, в зависимости от того, что передано
-  const handleNext = onNext || nextStep;
-  
-  // Определяем отключение кнопки "Далее" на основе disableNext или !allowNext
-  const isNextDisabled = disableNext || !allowNext;
-
   return (
-    <div className="flex justify-between gap-4">
-      {handlePrev && (
+    <div className="flex justify-between mt-6">
+      {prevStep ? (
         <Button
           variant="outline"
-          onClick={handlePrev}
+          onClick={prevStep}
           disabled={disablePrev}
-          className="flex items-center"
+          className="flex items-center gap-2"
         >
-          <ArrowLeft className="h-4 w-4 mr-1" />
-          {prevLabel}
+          <ArrowLeft className="h-4 w-4" />
+          {prevText}
         </Button>
+      ) : (
+        <div></div>
       )}
-      
-      {handleNext && (
+
+      {nextStep && (
         <Button
-          onClick={handleNext}
-          disabled={isNextDisabled}
-          className="flex items-center ml-auto"
+          onClick={nextStep}
+          disabled={disableNext}
+          className="flex items-center gap-2"
         >
-          {nextLabel}
-          <ArrowRight className="h-4 w-4 ml-1" />
+          {nextText}
+          <ArrowRight className="h-4 w-4" />
         </Button>
       )}
     </div>

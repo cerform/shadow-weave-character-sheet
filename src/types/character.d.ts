@@ -146,6 +146,11 @@ export interface Character {
     max: number;
     current: number;
   };
+  spellcasting?: {
+    ability?: string;
+    saveDC?: number;
+    attackBonus?: number;
+  };
 }
 
 export interface CharacterSpell {

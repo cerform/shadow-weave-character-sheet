@@ -1,351 +1,129 @@
 
 import { create } from 'zustand';
-import { InitiativeItem, Token } from '@/types/battle';
+import { devtools } from 'zustand/middleware';
 
-interface BattleStore {
-  // Состояние боя
-  isActive: boolean;
-  round: number;
-  currentInitiativeIndex: number;
-  initiative: InitiativeItem[];
-  tokens: Token[];
-  
-  // Состояние карты
-  backgroundImage: string | null;
-  gridVisible: boolean;
-  fogOfWar: boolean;
-  revealedAreas: { x: number, y: number, radius: number }[];
-  zoom: number;
-  
-  // Действия для управления боем
-  startBattle: () => void;
-  endBattle: () => void;
-  pauseBattle: () => void;
-  nextTurn: () => void;
-  prevTurn: () => void;
-  
-  // Действия для управления инициативой
-  rollInitiative: () => void;
-  setInitiative: (tokenId: number, value: number) => void;
-  setCurrentTurn: (index: number) => void;
-  
-  // Действия для управления токенами
-  addToken: (token: Token) => void;
-  removeToken: (id: number) => void;
-  updateToken: (id: number, updates: Partial<Token>) => void;
-  updateTokenPosition: (id: number, x: number, y: number) => void;
-  
-  // Действия для управления картой
-  setBackgroundImage: (url: string | null) => void;
-  toggleGrid: () => void;
-  toggleFogOfWar: () => void;
-  revealArea: (x: number, y: number, radius: number) => void;
-  resetFog: () => void;
-  revealAllFog: () => void;
-  setZoom: (value: number) => void;
-  
-  // Получить текущее активное существо
-  getCurrentCreature: () => Token | null;
+// Define Initiative interface (export separately from store)
+export interface Initiative {
+  id: number;
+  name: string;
+  value: number;
+  order: number;
 }
 
-export type { Token }; // Экспортируем тип для повторного использования
+export interface Token {
+  id: number;
+  name: string;
+  type: "player" | "monster" | "boss" | "npc";
+  x: number;
+  y: number;
+  size: number;
+  hp: number;
+  maxHp: number;
+  armorClass?: number;
+  conditions?: string[];
+  image?: string;
+  initiative?: number;
+  color?: string;
+  isVisible?: boolean;
+  isActive?: boolean;
+}
 
-const useBattleStore = create<BattleStore>((set, get) => ({
-  // Начальное состояние
-  isActive: false,
-  round: 0,
-  currentInitiativeIndex: -1,
-  initiative: [],
-  tokens: [],
+export interface BattleState {
+  tokens: Token[];
+  initiative: Initiative[];
+  gridSize: number;
+  background: string;
+  tokenIdCounter: number;
+  battleActive: boolean;
+  currentTurn: number;
   
-  backgroundImage: null,
-  gridVisible: true,
-  fogOfWar: false,
-  revealedAreas: [],
-  zoom: 1.0,
-  
-  // Методы для управления боем
-  startBattle: () => {
-    const { tokens } = get();
+  // Actions
+  addToken: (token: Token) => void;
+  removeToken: (id: number) => void;
+  updateTokenPosition: (id: number, x: number, y: number) => void;
+  updateTokenHP: (id: number, change: number) => void;
+  setBackground: (url: string) => void;
+  setGridSize: (size: number) => void;
+  setInitiative: (initiatives: Initiative[]) => void;
+  setBattleActive: (active: boolean) => void;
+  nextTurn: () => void;
+  resetTurn: () => void;
+}
+
+// Main store creation
+export const useBattleStore = create<BattleState>()(
+  devtools((set) => ({
+    tokens: [],
+    initiative: [],
+    gridSize: 50,
+    background: '',
+    tokenIdCounter: 1,
+    battleActive: false,
+    currentTurn: 0,
     
-    // Подготавливаем список инициативы
-    const newInitiative: InitiativeItem[] = [];
-    let id = 1;
-    
-    tokens.forEach(token => {
-      // Генерируем случайную инициативу для токенов без заданного значения
-      const roll = token.initiative ?? Math.floor(Math.random() * 20) + 1;
+    addToken: (token) => set((state) => {
+      // Make sure token has an id
+      const newToken = {
+        ...token,
+        id: token.id || state.tokenIdCounter
+      };
       
-      newInitiative.push({
-        id: id++,
-        tokenId: token.id,
-        name: token.name,
-        roll,
-        isActive: false
-      });
-    });
+      return {
+        tokens: [...state.tokens, newToken],
+        tokenIdCounter: state.tokenIdCounter + 1
+      };
+    }),
     
-    // Сортируем по убыванию броска инициативы
-    newInitiative.sort((a, b) => b.roll - a.roll);
+    removeToken: (id) => set((state) => ({
+      tokens: state.tokens.filter((token) => token.id !== id),
+      initiative: state.initiative.filter((init) => init.id !== id)
+    })),
     
-    // Отмечаем первого в списке как активного
-    if (newInitiative.length > 0) {
-      newInitiative[0].isActive = true;
-    }
+    updateTokenPosition: (id, x, y) => set((state) => ({
+      tokens: state.tokens.map((token) =>
+        token.id === id ? { ...token, x, y } : token
+      )
+    })),
     
-    set({
-      isActive: true,
-      round: 1,
-      currentInitiativeIndex: newInitiative.length > 0 ? 0 : -1,
-      initiative: newInitiative
-    });
-  },
-  
-  endBattle: () => set({
-    isActive: false,
-    round: 0,
-    currentInitiativeIndex: -1,
-    initiative: []
-  }),
-  
-  pauseBattle: () => set(state => ({ isActive: !state.isActive })),
-  
-  nextTurn: () => {
-    const { initiative, currentInitiativeIndex, round } = get();
+    updateTokenHP: (id, change) => set((state) => ({
+      tokens: state.tokens.map((token) =>
+        token.id === id
+          ? { ...token, hp: Math.max(0, Math.min(token.maxHp, token.hp + change)) }
+          : token
+      )
+    })),
     
-    if (initiative.length === 0) return;
+    setBackground: (url) => set({ background: url }),
     
-    // Снимаем флаг активности с текущего участника
-    const updatedInitiative = [...initiative];
-    if (currentInitiativeIndex >= 0) {
-      updatedInitiative[currentInitiativeIndex].isActive = false;
-    }
+    setGridSize: (size) => set({ gridSize: size }),
     
-    // Вычисляем следующий индекс
-    let newIndex = currentInitiativeIndex + 1;
-    let newRound = round;
+    setInitiative: (initiatives) => set({ initiative: initiatives }),
     
-    // Если мы достигли конца списка, начинаем новый раунд
-    if (newIndex >= initiative.length) {
-      newIndex = 0;
-      newRound++;
-    }
+    setBattleActive: (active) => set({ battleActive: active }),
     
-    // Устанавливаем флаг активности для следующего участника
-    updatedInitiative[newIndex].isActive = true;
-    
-    set({
-      initiative: updatedInitiative,
-      currentInitiativeIndex: newIndex,
-      round: newRound
-    });
-  },
-  
-  prevTurn: () => {
-    const { initiative, currentInitiativeIndex, round } = get();
-    
-    if (initiative.length === 0) return;
-    
-    // Снимаем флаг активности с текущего участника
-    const updatedInitiative = [...initiative];
-    if (currentInitiativeIndex >= 0) {
-      updatedInitiative[currentInitiativeIndex].isActive = false;
-    }
-    
-    // Вычисляем предыдущий индекс
-    let newIndex = currentInitiativeIndex - 1;
-    let newRound = round;
-    
-    // Если мы достигли начала списка
-    if (newIndex < 0) {
-      newIndex = initiative.length - 1;
-      newRound = Math.max(1, round - 1);
-    }
-    
-    // Устанавливаем флаг активности для предыдущего участника
-    updatedInitiative[newIndex].isActive = true;
-    
-    set({
-      initiative: updatedInitiative,
-      currentInitiativeIndex: newIndex,
-      round: newRound
-    });
-  },
-  
-  rollInitiative: () => {
-    const { tokens, isActive } = get();
-    
-    // Подготавливаем новый список инициативы
-    const newInitiative: InitiativeItem[] = [];
-    let id = 1;
-    
-    tokens.forEach(token => {
-      // Генерируем случайную инициативу
-      const roll = Math.floor(Math.random() * 20) + 1;
+    nextTurn: () => set((state) => {
+      if (!state.battleActive || state.initiative.length === 0) {
+        return { currentTurn: 0 };
+      }
       
-      // Обновляем значение инициативы токена
-      get().updateToken(token.id, { initiative: roll });
-      
-      newInitiative.push({
-        id: id++,
-        tokenId: token.id,
-        name: token.name,
-        roll,
-        isActive: false
-      });
-    });
+      const nextTurn = (state.currentTurn + 1) % state.initiative.length;
+      return { currentTurn: nextTurn };
+    }),
     
-    // Сортируем по убыванию броска инициативы
-    newInitiative.sort((a, b) => b.roll - a.roll);
-    
-    // Отмечаем первого в списке как активного
-    if (newInitiative.length > 0) {
-      newInitiative[0].isActive = true;
-    }
-    
-    set({
-      initiative: newInitiative,
-      currentInitiativeIndex: newInitiative.length > 0 ? 0 : -1,
-      round: isActive ? 1 : 0
-    });
-  },
-  
-  setInitiative: (tokenId, value) => {
-    const { initiative } = get();
-    
-    // Обновляем значение инициативы для токена
-    get().updateToken(tokenId, { initiative: value });
-    
-    // Обновляем значение в списке инициативы
-    const updatedInitiative = initiative.map(item => 
-      item.tokenId === tokenId ? { ...item, roll: value } : item
-    );
-    
-    // Пересортировываем список
-    updatedInitiative.sort((a, b) => b.roll - a.roll);
-    
-    set({ initiative: updatedInitiative });
-    
-    // Обновляем индекс текущего активного участника
-    const activeIndex = updatedInitiative.findIndex(item => item.isActive);
-    if (activeIndex !== -1) {
-      set({ currentInitiativeIndex: activeIndex });
-    }
-  },
-  
-  setCurrentTurn: (index) => {
-    const { initiative } = get();
-    
-    if (index < 0 || index >= initiative.length) return;
-    
-    // Обновляем флаги активности
-    const updatedInitiative = initiative.map((item, idx) => ({
-      ...item,
-      isActive: idx === index
-    }));
-    
-    set({
-      initiative: updatedInitiative,
-      currentInitiativeIndex: index
-    });
-  },
-  
-  addToken: (token) => {
-    set(state => ({
-      tokens: [...state.tokens, token]
-    }));
-  },
-  
-  removeToken: (id) => {
-    const { tokens, initiative } = get();
-    
-    // Удаляем токен из списка токенов
-    const updatedTokens = tokens.filter(t => t.id !== id);
-    
-    // Удаляем связанные записи из списка инициативы
-    const updatedInitiative = initiative.filter(item => item.tokenId !== id);
-    
-    set({
-      tokens: updatedTokens,
-      initiative: updatedInitiative
-    });
-    
-    // Обновляем индекс текущего активного участника
-    const activeIndex = updatedInitiative.findIndex(item => item.isActive);
-    if (activeIndex !== -1) {
-      set({ currentInitiativeIndex: activeIndex });
-    } else if (updatedInitiative.length > 0) {
-      // Если нет активного элемента, устанавливаем первый
-      const newInitiative = [...updatedInitiative];
-      newInitiative[0].isActive = true;
-      set({
-        initiative: newInitiative,
-        currentInitiativeIndex: 0
-      });
-    } else {
-      // Если список пуст
-      set({ currentInitiativeIndex: -1 });
-    }
-  },
-  
-  updateToken: (id, updates) => {
-    const { tokens } = get();
-    
-    // Обновляем указанный токен
-    const updatedTokens = tokens.map(token => 
-      token.id === id ? { ...token, ...updates } : token
-    );
-    
-    set({ tokens: updatedTokens });
-  },
-  
-  updateTokenPosition: (id, x, y) => {
-    get().updateToken(id, { x, y });
-  },
-  
-  setBackgroundImage: (url) => {
-    set({ backgroundImage: url });
-  },
-  
-  toggleGrid: () => {
-    set(state => ({ gridVisible: !state.gridVisible }));
-  },
-  
-  toggleFogOfWar: () => {
-    set(state => ({ fogOfWar: !state.fogOfWar }));
-  },
-  
-  revealArea: (x, y, radius) => {
-    set(state => ({
-      revealedAreas: [...state.revealedAreas, { x, y, radius }]
-    }));
-  },
-  
-  resetFog: () => {
-    set({ revealedAreas: [] });
-  },
-  
-  revealAllFog: () => {
-    // Создаём один большой открытый регион, который покрывает всю карту
-    set({
-      revealedAreas: [{ x: 0, y: 0, radius: 10000 }]
-    });
-  },
-  
-  setZoom: (value) => {
-    set({ zoom: value });
-  },
-  
-  getCurrentCreature: () => {
-    const { currentInitiativeIndex, initiative, tokens } = get();
-    
-    if (currentInitiativeIndex < 0 || initiative.length === 0) {
-      return null;
-    }
-    
-    const currentItem = initiative[currentInitiativeIndex];
-    return tokens.find(t => t.id === currentItem.tokenId) || null;
+    resetTurn: () => set({ currentTurn: 0 }),
+  }))
+);
+
+// Helper function to get the current active token
+export const getCurrentActiveToken = (state: BattleState): Token | undefined => {
+  if (!state.battleActive || state.initiative.length === 0) {
+    return undefined;
   }
-}));
-
-export default useBattleStore;
+  
+  const currentInitiative = state.initiative[state.currentTurn];
+  if (!currentInitiative) {
+    return undefined;
+  }
+  
+  return state.tokens.find((token) => token.id === currentInitiative.id);
+};
