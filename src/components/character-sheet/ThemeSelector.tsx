@@ -1,19 +1,23 @@
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useTheme, ThemeType } from '@/hooks/use-theme';
-import { Button } from '@/components/ui/button';
-import { Moon, Sun, Palette, Wand } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { themes } from '@/lib/themes';
 
 const ThemeSelector = () => {
   const { theme, setTheme } = useTheme();
-
-  const themes: { id: ThemeType; name: string; icon: React.ReactNode }[] = [
-    { id: 'light', name: 'Светлая', icon: <Sun className="h-4 w-4" /> },
-    { id: 'dark', name: 'Тёмная', icon: <Moon className="h-4 w-4" /> },
-    { id: 'wizard', name: 'Волшебник', icon: <Wand className="h-4 w-4" /> },
-    { id: 'warlock', name: 'Колдун', icon: <Palette className="h-4 w-4" /> },
-  ];
-
+  
+  const themeOptions = useMemo(() => {
+    return Object.keys(themes).map((key) => {
+      const themeKey = key as keyof typeof themes;
+      const themeName = themes[themeKey]?.name || key;
+      return { 
+        id: key as ThemeType,
+        name: themeName
+      };
+    });
+  }, []);
+  
   const handleThemeChange = (newTheme: ThemeType) => {
     console.log('Changing theme to:', newTheme);
     setTheme(newTheme);
@@ -22,20 +26,18 @@ const ThemeSelector = () => {
   return (
     <div className="space-y-2">
       <h3 className="text-sm font-medium">Тема оформления</h3>
-      <div className="flex flex-wrap gap-2">
-        {themes.map((t) => (
-          <Button
-            key={t.id}
-            size="sm"
-            variant={theme === t.id ? 'default' : 'outline'}
-            className="flex items-center gap-1"
-            onClick={() => handleThemeChange(t.id)}
-          >
-            {t.icon}
-            <span>{t.name}</span>
-          </Button>
-        ))}
-      </div>
+      <Select value={theme} onValueChange={(value) => handleThemeChange(value as ThemeType)}>
+        <SelectTrigger className="w-full">
+          <SelectValue placeholder="Выберите тему" />
+        </SelectTrigger>
+        <SelectContent>
+          {themeOptions.map((t) => (
+            <SelectItem key={t.id} value={t.id}>
+              {t.name}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
     </div>
   );
 };

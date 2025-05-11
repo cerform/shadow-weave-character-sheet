@@ -25,7 +25,9 @@ const IconOnlyNavigation: React.FC<IconOnlyNavigationProps> = ({ includeThemeSel
       <NavigationButtons />
       
       {includeThemeSelector && (
-        <ThemeSelector />
+        <div className="px-1">
+          <ThemeSelector />
+        </div>
       )}
     </div>
   );

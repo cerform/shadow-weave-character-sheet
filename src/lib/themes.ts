@@ -31,7 +31,7 @@ export type ThemeType = 'light' | 'dark' | 'warlock' | 'wizard' | 'bard' | 'drui
 const addRequiredProps = (theme: Partial<ThemeStyles>, themeName: string): ThemeStyles => {
   return {
     ...theme,
-    name: themeName,
+    name: theme.name || themeName,
     mutedTextColor: theme.mutedTextColor || '#6c757d',
     success: theme.success || '#10b981',
     warning: theme.warning || '#f59e0b',
@@ -59,6 +59,7 @@ const addRequiredProps = (theme: Partial<ThemeStyles>, themeName: string): Theme
 // Определение базовых тем
 const baseThemes: Record<ThemeType, Partial<ThemeStyles>> = {
   light: {
+    name: "Светлая",
     background: '#f8f9fa',
     cardBackground: '#ffffff',
     textColor: '#222222',
@@ -73,6 +74,7 @@ const baseThemes: Record<ThemeType, Partial<ThemeStyles>> = {
     secondary: '#e2e8f0',
   },
   dark: {
+    name: "Тёмная",
     background: '#0f172a',
     cardBackground: '#1e293b',
     textColor: '#e2e8f0',
@@ -87,6 +89,7 @@ const baseThemes: Record<ThemeType, Partial<ThemeStyles>> = {
     secondary: '#334155',
   },
   default: {
+    name: "По умолчанию",
     background: '#0f172a',
     cardBackground: '#1e293b',
     textColor: '#e2e8f0',
@@ -101,6 +104,7 @@ const baseThemes: Record<ThemeType, Partial<ThemeStyles>> = {
     secondary: '#334155',
   },
   warlock: {
+    name: "Колдун",
     background: '#18181b',
     cardBackground: '#27272a',
     textColor: '#fafafa',
@@ -115,6 +119,7 @@ const baseThemes: Record<ThemeType, Partial<ThemeStyles>> = {
     secondary: '#3f3f46',
   },
   wizard: {
+    name: "Волшебник",
     background: '#0c0a20',
     cardBackground: '#1a1a3a',
     textColor: '#e2e8f0',
@@ -129,6 +134,7 @@ const baseThemes: Record<ThemeType, Partial<ThemeStyles>> = {
     secondary: '#2d2b42',
   },
   bard: {
+    name: "Бард",
     background: '#2d1b36',
     cardBackground: '#432352',
     textColor: '#fdf6fd',
@@ -143,6 +149,7 @@ const baseThemes: Record<ThemeType, Partial<ThemeStyles>> = {
     secondary: '#583168',
   },
   druid: {
+    name: "Друид",
     background: '#064e3b',
     cardBackground: '#115e59',
     textColor: '#ecfdf5',
@@ -157,6 +164,7 @@ const baseThemes: Record<ThemeType, Partial<ThemeStyles>> = {
     secondary: '#0f766e',
   },
   cleric: {
+    name: "Жрец",
     background: '#3f3f46',
     cardBackground: '#52525b',
     textColor: '#fafafa',
@@ -171,6 +179,7 @@ const baseThemes: Record<ThemeType, Partial<ThemeStyles>> = {
     secondary: '#71717a',
   },
   paladin: {
+    name: "Паладин",
     background: '#172554',
     cardBackground: '#1e3a8a',
     textColor: '#f8fafc',
@@ -185,6 +194,7 @@ const baseThemes: Record<ThemeType, Partial<ThemeStyles>> = {
     secondary: '#1e40af',
   },
   rogue: {
+    name: "Плут",
     background: '#18181b',
     cardBackground: '#27272a',
     textColor: '#d4d4d8',
@@ -199,6 +209,7 @@ const baseThemes: Record<ThemeType, Partial<ThemeStyles>> = {
     secondary: '#3f3f46',
   },
   ranger: {
+    name: "Следопыт",
     background: '#1c1917',
     cardBackground: '#292524',
     textColor: '#e7e5e4',
@@ -213,6 +224,7 @@ const baseThemes: Record<ThemeType, Partial<ThemeStyles>> = {
     secondary: '#44403c',
   },
   barbarian: {
+    name: "Варвар",
     background: '#7f1d1d',
     cardBackground: '#991b1b',
     textColor: '#fef2f2',
@@ -227,6 +239,7 @@ const baseThemes: Record<ThemeType, Partial<ThemeStyles>> = {
     secondary: '#b91c1c',
   },
   monk: {
+    name: "Монах",
     background: '#1e293b',
     cardBackground: '#334155',
     textColor: '#f1f5f9',
@@ -241,6 +254,7 @@ const baseThemes: Record<ThemeType, Partial<ThemeStyles>> = {
     secondary: '#475569',
   },
   fighter: {
+    name: "Воин",
     background: '#374151',
     cardBackground: '#4b5563',
     textColor: '#f3f4f6',
@@ -255,6 +269,7 @@ const baseThemes: Record<ThemeType, Partial<ThemeStyles>> = {
     secondary: '#6b7280',
   },
   sorcerer: {
+    name: "Чародей",
     background: '#4c1d95',
     cardBackground: '#581c87',
     textColor: '#f5f3ff',

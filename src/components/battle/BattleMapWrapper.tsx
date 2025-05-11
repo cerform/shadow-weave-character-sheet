@@ -90,6 +90,12 @@ const BattleMapWrapper: React.FC<BattleMapWrapperProps> = ({
       width={rest.width || 800}
       height={rest.height || 600}
       initiative={rest.initiative || []}
+      selectedTokenId={rest.selectedTokenId}
+      onSelectToken={rest.onSelectToken}
+      battleActive={rest.battleActive}
+      fogOfWar={fogEnabled}
+      gridVisible={showGrid}
+      showPlayerView={showPlayerView}
     />
   );
 };
