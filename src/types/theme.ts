@@ -4,9 +4,9 @@ export type ThemeType = 'default' | 'dark' | 'light' | 'fantasy' | 'magical' | '
 export interface ThemeStyles {
   name: string;
   background: string;
-  foreground: string;  // Making this required
+  foreground: string;  // Required
   cardBackground: string;
-  primary: string;
+  primary: string;     // Required
   secondary: string;
   accent: string;
   textColor: string;

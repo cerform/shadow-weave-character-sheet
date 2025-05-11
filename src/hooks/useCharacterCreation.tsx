@@ -1,9 +1,8 @@
-
 import { useState, useCallback } from 'react';
 import { Character } from '@/types/character';
 import { v4 as uuidv4 } from 'uuid';
 import { useToast } from './use-toast';
-import { calculateStatBonuses, createDefaultCharacter } from '@/utils/characterUtils';
+import { calculateStatBonuses, createDefaultCharacter, convertToCharacter } from '@/utils/characterUtils';
 import { useCharacter } from '@/contexts/CharacterContext';
 
 export interface UseCharacterCreationOptions {
@@ -140,10 +139,9 @@ export const useCharacterCreation = (options: UseCharacterCreationOptions = {}) 
     return character.class ? magicClasses.includes(character.class) : false;
   }, [character.class]);
 
-  // Using our own helper to create a complete character from partial data
-  const convertToCharacter = useCallback((partialChar: Partial<Character>): Character => {
-    const defaultChar = createDefaultCharacter();
-    return { ...defaultChar, ...partialChar };
+  // Using the imported helper to create a complete character from partial data
+  const convertToFullCharacter = useCallback((partialChar: Partial<Character>): Character => {
+    return convertToCharacter(partialChar);
   }, []);
 
   return {
@@ -157,7 +155,7 @@ export const useCharacterCreation = (options: UseCharacterCreationOptions = {}) 
     isFirstStep: currentStep === 0,
     isLastStep: currentStep === 6,
     isMagicClass,
-    convertToCharacter
+    convertToCharacter: convertToFullCharacter
   };
 };
 

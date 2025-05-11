@@ -3,28 +3,57 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useCharacter } from '@/contexts/CharacterContext';
 import { Character } from '@/types/character';
-import { toast } from 'sonner';
+import { Dispatch, SetStateAction } from 'react';
 
-interface CharacterCreationContentProps {
-  onNext: () => void;
-  onPrev: () => void;
+export interface CharacterCreationContentProps {
+  currentStep: number;
+  character: Partial<Character>;
+  updateCharacter: (updates: Partial<Character>) => void;
+  nextStep: () => void;
+  prevStep: () => void;
+  abilitiesMethod: "pointbuy" | "standard" | "roll" | "manual";
+  setAbilitiesMethod: React.Dispatch<React.SetStateAction<"pointbuy" | "standard" | "roll" | "manual">>;
+  diceResults: number[][];
+  getModifier: (score: number) => string;
+  rollAllAbilities: () => void;
+  rollSingleAbility: (index: number) => {rolls: number[], total: number};
+  abilityScorePoints: number;
+  isMagicClass: boolean;
+  rollsHistory: {ability: string, rolls: number[], total: number}[];
+  onLevelChange: (level: number) => void;
+  maxAbilityScore: number;
+  setCurrentStep: Dispatch<SetStateAction<number>>;
 }
 
-const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({ onNext, onPrev }) => {
-  const { character, updateCharacter } = useCharacter();
-  const [activeStep, setActiveStep] = useState(0);
-
+const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({ 
+  currentStep, 
+  character, 
+  updateCharacter,
+  nextStep,
+  prevStep,
+  abilitiesMethod,
+  setAbilitiesMethod,
+  diceResults,
+  getModifier,
+  rollAllAbilities,
+  rollSingleAbility,
+  abilityScorePoints,
+  isMagicClass,
+  rollsHistory,
+  onLevelChange,
+  maxAbilityScore,
+  setCurrentStep
+}) => {
+  // Using the currentStep prop instead of internal state
   const handleBasicInfoSubmit = (basicInfo: Partial<Character>) => {
     updateCharacter(basicInfo);
-    setActiveStep(activeStep + 1);
+    nextStep();
   };
 
   const handleAbilityScoresSubmit = (abilityScores: any) => {
     updateCharacter({ abilities: abilityScores });
-    setActiveStep(activeStep + 1);
+    nextStep();
   };
 
   const handlePersonalDetailsSubmit = (details: any) => {
@@ -33,11 +62,11 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({ onN
       personalityTraits: details.personality,  // Map personality to personalityTraits
       appearance: details.portrait             // Map portrait to appearance
     });
-    setActiveStep(activeStep + 1);
+    nextStep();
   };
 
   const renderStepContent = () => {
-    switch (activeStep) {
+    switch (currentStep) {
       case 0:
         return (
           <div>
@@ -169,7 +198,7 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({ onN
               </div>
             </div>
             <div className="flex justify-between mt-4">
-              <Button variant="outline" onClick={() => setActiveStep(activeStep - 1)}>Назад</Button>
+              <Button variant="outline" onClick={() => prevStep()}>Назад</Button>
               <Button onClick={() => handleAbilityScoresSubmit({
                 STR: character?.abilities?.STR,
                 DEX: character?.abilities?.DEX,
@@ -242,7 +271,7 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({ onN
               </div>
             </div>
             <div className="flex justify-between mt-4">
-              <Button variant="outline" onClick={() => setActiveStep(activeStep - 1)}>Назад</Button>
+              <Button variant="outline" onClick={() => prevStep()}>Назад</Button>
               <Button onClick={() => handlePersonalDetailsSubmit({
                 personality: character?.personalityTraits,
                 ideals: character?.ideals,
@@ -255,7 +284,7 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({ onN
           </div>
         );
       default:
-        return <div>Завершено!</div>;
+        return <div>Шаг не найден.</div>;
     }
   };
 

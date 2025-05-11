@@ -8,16 +8,6 @@ import { calculateAbilityModifier } from './characterUtils';
 export type CharacterSheet = Character;
 
 // Re-export other common character-related types
-export { 
-  Character, 
-  CharacterSpell, 
-  Feature,
-  AbilityScores,
-  Item,
-  HitPointEvent,
-  ABILITY_SCORE_CAPS,
-  REST_TYPES,
-  SPELL_SOURCES,
-  GAME_MECHANICS,
-  calculateAbilityModifier
-};
+export { Character };
+export type { CharacterSpell, Feature, AbilityScores, Item, HitPointEvent };
+export { ABILITY_SCORE_CAPS, REST_TYPES, SPELL_SOURCES, GAME_MECHANICS, calculateAbilityModifier };

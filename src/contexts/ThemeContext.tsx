@@ -14,9 +14,9 @@ interface ThemeContextType {
 const defaultTheme: ThemeStyles = {
   name: 'default',
   background: '#f8f9fa',
-  foreground: '#1e293b', // Added foreground as required
+  foreground: '#1e293b', // Required
   cardBackground: '#ffffff',
-  primary: '#818cf8',
+  primary: '#818cf8',   // Required
   secondary: '#f3f4f6',
   accent: '#6b21a8',
   textColor: '#333333',
@@ -64,6 +64,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
           ...(themes[savedTheme as keyof typeof themes] || themes.default),
           name: savedTheme || 'default',
           foreground: themes[savedTheme as keyof typeof themes]?.foreground || '#1e293b',
+          primary: themes[savedTheme as keyof typeof themes]?.primary || '#818cf8',
           mutedTextColor: themes[savedTheme as keyof typeof themes]?.mutedTextColor || '#6c757d',
           borderColor: themes[savedTheme as keyof typeof themes]?.borderColor || 'rgba(107, 33, 168, 0.3)',
           shadowColor: themes[savedTheme as keyof typeof themes]?.shadowColor || 'rgba(107, 33, 168, 0.2)',
@@ -92,6 +93,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
         ...(themes[newTheme as keyof typeof themes] || themes.default),
         name: newTheme || 'default',
         foreground: themes[newTheme as keyof typeof themes]?.foreground || '#1e293b',
+        primary: themes[newTheme as keyof typeof themes]?.primary || '#818cf8',
         mutedTextColor: themes[newTheme as keyof typeof themes]?.mutedTextColor || '#6c757d',
         borderColor: themes[newTheme as keyof typeof themes]?.borderColor || 'rgba(107, 33, 168, 0.3)',
         shadowColor: themes[newTheme as keyof typeof themes]?.shadowColor || 'rgba(107, 33, 168, 0.2)',

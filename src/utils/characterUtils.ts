@@ -1,4 +1,3 @@
-
 import { v4 as uuidv4 } from 'uuid';
 import type { Character, AbilityScores } from '@/types/character';
 
@@ -116,7 +115,7 @@ export function calculateStatBonuses(character: Partial<Character> | string): Re
     case 'half-elf':
       bonuses.charisma += 2;
       bonuses.CHA += 2;
-      // Полуэльфы могут выбрать еще 2 характеристики для +1, но тут упрощаем
+      // Пол��эльфы могут выбрать еще 2 характеристики для +1, но тут упрощаем
       bonuses.dexterity += 1;
       bonuses.constitution += 1;
       bonuses.DEX += 1;
