@@ -15,11 +15,12 @@ export interface CharacterCreationContentProps {
   setAbilitiesMethod: React.Dispatch<React.SetStateAction<"pointbuy" | "standard" | "roll" | "manual">>;
   diceResults: number[][];
   getModifier: (score: number) => string;
+  rollAbility: () => number;
   rollAllAbilities: () => void;
-  rollSingleAbility: (index: number) => {rolls: number[], total: number};
+  rollSingleAbility: (index: number) => { rolls: number[], total: number };
   abilityScorePoints: number;
   isMagicClass: boolean;
-  rollsHistory: {ability: string, rolls: number[], total: number}[];
+  rollsHistory: { ability: string, rolls: number[], total: number }[];
   onLevelChange: (level: number) => void;
   maxAbilityScore: number;
   currentStep: number;
@@ -36,6 +37,7 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
   setAbilitiesMethod,
   diceResults,
   getModifier,
+  rollAbility,
   rollAllAbilities,
   rollSingleAbility,
   abilityScorePoints,
@@ -67,7 +69,7 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
 
   const renderStepContent = () => {
     switch (currentStep) {
-      case 0:
+      case 1:
         return (
           <div>
             <h2 className="text-xl font-semibold mb-4">Основная информация</h2>
@@ -137,7 +139,7 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
             })} className="mt-4">Далее</Button>
           </div>
         );
-      case 1:
+      case 2:
         return (
           <div>
             <h2 className="text-xl font-semibold mb-4">Характеристики</h2>
@@ -148,7 +150,13 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
                   type="number"
                   id="strength"
                   value={character?.abilities?.STR?.toString() || '10'}
-                  onChange={(e) => updateCharacter({ abilities: { ...character.abilities, STR: parseInt(e.target.value) } })}
+                  onChange={(e) => updateCharacter({ 
+                    abilities: { 
+                      ...character.abilities, 
+                      STR: parseInt(e.target.value),
+                      strength: parseInt(e.target.value)
+                    } 
+                  })}
                 />
               </div>
               <div>
@@ -157,7 +165,13 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
                   type="number"
                   id="dexterity"
                   value={character?.abilities?.DEX?.toString() || '10'}
-                  onChange={(e) => updateCharacter({ abilities: { ...character.abilities, DEX: parseInt(e.target.value) } })}
+                  onChange={(e) => updateCharacter({ 
+                    abilities: { 
+                      ...character.abilities, 
+                      DEX: parseInt(e.target.value),
+                      dexterity: parseInt(e.target.value)
+                    } 
+                  })}
                 />
               </div>
               <div>
@@ -166,7 +180,13 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
                   type="number"
                   id="constitution"
                   value={character?.abilities?.CON?.toString() || '10'}
-                  onChange={(e) => updateCharacter({ abilities: { ...character.abilities, CON: parseInt(e.target.value) } })}
+                  onChange={(e) => updateCharacter({ 
+                    abilities: { 
+                      ...character.abilities, 
+                      CON: parseInt(e.target.value),
+                      constitution: parseInt(e.target.value)
+                    } 
+                  })}
                 />
               </div>
               <div>
@@ -175,7 +195,13 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
                   type="number"
                   id="intelligence"
                   value={character?.abilities?.INT?.toString() || '10'}
-                  onChange={(e) => updateCharacter({ abilities: { ...character.abilities, INT: parseInt(e.target.value) } })}
+                  onChange={(e) => updateCharacter({ 
+                    abilities: { 
+                      ...character.abilities, 
+                      INT: parseInt(e.target.value),
+                      intelligence: parseInt(e.target.value)
+                    } 
+                  })}
                 />
               </div>
               <div>
@@ -184,7 +210,13 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
                   type="number"
                   id="wisdom"
                   value={character?.abilities?.WIS?.toString() || '10'}
-                  onChange={(e) => updateCharacter({ abilities: { ...character.abilities, WIS: parseInt(e.target.value) } })}
+                  onChange={(e) => updateCharacter({ 
+                    abilities: { 
+                      ...character.abilities, 
+                      WIS: parseInt(e.target.value),
+                      wisdom: parseInt(e.target.value)
+                    } 
+                  })}
                 />
               </div>
               <div>
@@ -193,7 +225,13 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
                   type="number"
                   id="charisma"
                   value={character?.abilities?.CHA?.toString() || '10'}
-                  onChange={(e) => updateCharacter({ abilities: { ...character.abilities, CHA: parseInt(e.target.value) } })}
+                  onChange={(e) => updateCharacter({ 
+                    abilities: { 
+                      ...character.abilities, 
+                      CHA: parseInt(e.target.value),
+                      charisma: parseInt(e.target.value)
+                    } 
+                  })}
                 />
               </div>
             </div>
@@ -205,12 +243,18 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
                 CON: character?.abilities?.CON,
                 INT: character?.abilities?.INT,
                 WIS: character?.abilities?.WIS,
-                CHA: character?.abilities?.CHA
+                CHA: character?.abilities?.CHA,
+                strength: character?.abilities?.STR,
+                dexterity: character?.abilities?.DEX,
+                constitution: character?.abilities?.CON,
+                intelligence: character?.abilities?.INT,
+                wisdom: character?.abilities?.WIS,
+                charisma: character?.abilities?.CHA
               })}>Далее</Button>
             </div>
           </div>
         );
-      case 2:
+      case 3:
         return (
           <div>
             <h2 className="text-xl font-semibold mb-4">Личные детали</h2>

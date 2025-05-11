@@ -14,6 +14,9 @@ export interface NavigationButtonsProps {
   disableNext?: boolean;
   allowNext?: boolean;
   isFirstStep?: boolean;
+  currentStep?: number;
+  totalSteps?: number;
+  saveCharacter?: () => void;
 }
 
 const NavigationButtons: React.FC<NavigationButtonsProps> = ({
@@ -25,7 +28,10 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
   nextLabel = 'Далее',
   disablePrev = false,
   disableNext = false,
-  allowNext = true
+  allowNext = true,
+  currentStep,
+  totalSteps,
+  saveCharacter
 }) => {
   // Используем onPrev или prevStep, в зависимости от того, что передано
   const handlePrev = onPrev || prevStep;
@@ -57,6 +63,15 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
         >
           {nextLabel}
           <ArrowRight className="h-4 w-4 ml-1" />
+        </Button>
+      )}
+      
+      {saveCharacter && currentStep === totalSteps && (
+        <Button
+          onClick={saveCharacter}
+          className="flex items-center ml-2"
+        >
+          Сохранить персонажа
         </Button>
       )}
     </div>

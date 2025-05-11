@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent } from "@/components/ui/card";
@@ -10,9 +11,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/components/ui/use-toast";
 import { useTheme } from "@/hooks/use-theme";
-import { Character } from '@/types/character';
+import { Character, AbilityScores } from '@/types/character';
 import { createDefaultCharacter } from '@/utils/characterUtils';
-import { CharacterContext } from '@/contexts/CharacterContext';
+import CharacterContext from '@/contexts/CharacterContext';
 import { useCharacter } from '@/contexts/CharacterContext';
 import { calculateAbilityModifier } from '@/utils/characterUtils';
 import { v4 as uuidv4 } from 'uuid';
@@ -25,15 +26,27 @@ import {
 import CharacterCreationContent from '@/components/character-creation/CharacterCreationContent';
 import NavigationButtons from '@/components/character-creation/NavigationButtons';
 
+// Interface for roll history records
+interface RollHistoryItem {
+  ability: string;
+  rolls: number[];
+  total: number;
+}
+
 const CharacterCreationPage: React.FC = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [character, setCharacter] = useState<Character>(createDefaultCharacter());
   const [abilityScorePoints, setAbilityScorePoints] = useState(27);
   const [maxAbilityScore, setMaxAbilityScore] = useState(15);
-  const [rollsHistory, setRollsHistory] = useState<number[][]>([]);
+  const [rollsHistory, setRollsHistory] = useState<RollHistoryItem[]>([]);
+  const [diceResults, setDiceResults] = useState<number[][]>([]);
+  const [abilitiesMethod, setAbilitiesMethod] = useState<"pointbuy" | "standard" | "roll" | "manual">("pointbuy");
   const navigate = useNavigate();
   const { themeStyles } = useTheme();
-  const { addCharacter, updateCharacter: updateCharacterContext } = useCharacter();
+  const { addCharacter, updateCharacter: updateCharacterContext } = useCharacter() as { 
+    addCharacter: (character: Character) => void, 
+    updateCharacter: (character: Character) => void 
+  };
   const { toast } = useToast();
   
   // Функция для обновления состояния персонажа
@@ -42,10 +55,10 @@ const CharacterCreationPage: React.FC = () => {
   };
   
   // Функция, которая определяет, является ли класс магическим
-  const isMagicClass = () => {
+  const isMagicClass = useCallback(() => {
     const magicClasses = ['Волшебник', 'Жрец', 'Друид', 'Бард', 'Колдун', 'Чародей', 'Паладин', 'Следопыт'];
     return magicClasses.includes(character.class);
-  };
+  }, [character.class]);
   
   // Функция для генерации случайного числа в диапазоне
   const getRandomNumber = (min: number, max: number): number => {
@@ -62,27 +75,65 @@ const CharacterCreationPage: React.FC = () => {
   
   // Функция для броска всех характеристик
   const rollAllAbilities = () => {
-    const newRolls = {
+    const newDiceResults = Array.from({ length: 6 }, () => 
+      Array.from({ length: 4 }, () => getRandomNumber(1, 6))
+    );
+    setDiceResults(newDiceResults);
+    
+    const newAbilities: AbilityScores = {
+      STR: rollAbility(),
+      DEX: rollAbility(),
+      CON: rollAbility(),
+      INT: rollAbility(),
+      WIS: rollAbility(),
+      CHA: rollAbility(),
       strength: rollAbility(),
       dexterity: rollAbility(),
       constitution: rollAbility(),
       intelligence: rollAbility(),
       wisdom: rollAbility(),
-      charisma: rollAbility(),
+      charisma: rollAbility()
     };
-    updateCharacter({ abilities: newRolls });
+    
+    updateCharacter({ abilities: newAbilities });
   };
   
   // Функция для броска одной характеристики
-  const rollSingleAbility = (ability: string) => {
-    const newRoll = rollAbility();
-    updateCharacter(prevState => ({
+  const rollSingleAbility = (ability: string): { rolls: number[], total: number } => {
+    const rolls = Array.from({ length: 4 }, () => getRandomNumber(1, 6));
+    rolls.sort((a, b) => b - a);
+    const total = rolls.slice(0, 3).reduce((sum, roll) => sum + roll, 0);
+    
+    const newRollHistory: RollHistoryItem = {
+      ability,
+      rolls,
+      total
+    };
+    
+    setRollsHistory(prev => [...prev, newRollHistory]);
+    
+    setCharacter(prevState => ({
       ...prevState,
       abilities: {
-        ...prevState.abilities,
-        [ability]: newRoll,
+        ...prevState.abilities!,
+        [ability]: total,
+        // Обновляем оба формата свойств для совместимости
+        ...(ability === 'strength' ? { STR: total } : {}),
+        ...(ability === 'dexterity' ? { DEX: total } : {}),
+        ...(ability === 'constitution' ? { CON: total } : {}),
+        ...(ability === 'intelligence' ? { INT: total } : {}),
+        ...(ability === 'wisdom' ? { WIS: total } : {}),
+        ...(ability === 'charisma' ? { CHA: total } : {})
       },
     }));
+    
+    return { rolls, total };
+  };
+  
+  // Получить модификатор для отображения с + знаком
+  const getModifier = (score: number): string => {
+    const modifier = calculateAbilityModifier(score);
+    return modifier >= 0 ? `+${modifier}` : `${modifier}`;
   };
   
   // Обработчик изменения уровня
@@ -137,11 +188,18 @@ const CharacterCreationPage: React.FC = () => {
                 updateCharacter={updateCharacter}
                 nextStep={nextStep}
                 prevStep={prevStep}
+                abilitiesMethod={abilitiesMethod}
+                setAbilitiesMethod={setAbilitiesMethod}
+                diceResults={diceResults}
+                getModifier={getModifier}
                 rollAbility={rollAbility}
                 rollAllAbilities={rollAllAbilities}
-                rollSingleAbility={rollSingleAbility}
+                rollSingleAbility={(index: number) => {
+                  const abilities = ['strength', 'dexterity', 'constitution', 'intelligence', 'wisdom', 'charisma'];
+                  return rollSingleAbility(abilities[index]);
+                }}
                 abilityScorePoints={abilityScorePoints}
-                isMagicClass={isMagicClass}
+                isMagicClass={isMagicClass()}
                 rollsHistory={rollsHistory}
                 onLevelChange={handleLevelChange}
                 maxAbilityScore={maxAbilityScore}
@@ -160,11 +218,18 @@ const CharacterCreationPage: React.FC = () => {
                 updateCharacter={updateCharacter}
                 nextStep={nextStep}
                 prevStep={prevStep}
+                abilitiesMethod={abilitiesMethod}
+                setAbilitiesMethod={setAbilitiesMethod}
+                diceResults={diceResults}
+                getModifier={getModifier}
                 rollAbility={rollAbility}
                 rollAllAbilities={rollAllAbilities}
-                rollSingleAbility={rollSingleAbility}
+                rollSingleAbility={(index: number) => {
+                  const abilities = ['strength', 'dexterity', 'constitution', 'intelligence', 'wisdom', 'charisma'];
+                  return rollSingleAbility(abilities[index]);
+                }}
                 abilityScorePoints={abilityScorePoints}
-                isMagicClass={isMagicClass} // Убираем передаваемый аргумент character
+                isMagicClass={isMagicClass()}
                 rollsHistory={rollsHistory}
                 onLevelChange={handleLevelChange}
                 maxAbilityScore={maxAbilityScore}
@@ -183,11 +248,18 @@ const CharacterCreationPage: React.FC = () => {
                 updateCharacter={updateCharacter}
                 nextStep={nextStep}
                 prevStep={prevStep}
+                abilitiesMethod={abilitiesMethod}
+                setAbilitiesMethod={setAbilitiesMethod}
+                diceResults={diceResults}
+                getModifier={getModifier}
                 rollAbility={rollAbility}
                 rollAllAbilities={rollAllAbilities}
-                rollSingleAbility={rollSingleAbility}
+                rollSingleAbility={(index: number) => {
+                  const abilities = ['strength', 'dexterity', 'constitution', 'intelligence', 'wisdom', 'charisma'];
+                  return rollSingleAbility(abilities[index]);
+                }}
                 abilityScorePoints={abilityScorePoints}
-                isMagicClass={isMagicClass}
+                isMagicClass={isMagicClass()}
                 rollsHistory={rollsHistory}
                 onLevelChange={handleLevelChange}
                 maxAbilityScore={maxAbilityScore}
@@ -206,11 +278,18 @@ const CharacterCreationPage: React.FC = () => {
                 updateCharacter={updateCharacter}
                 nextStep={nextStep}
                 prevStep={prevStep}
+                abilitiesMethod={abilitiesMethod}
+                setAbilitiesMethod={setAbilitiesMethod}
+                diceResults={diceResults}
+                getModifier={getModifier}
                 rollAbility={rollAbility}
                 rollAllAbilities={rollAllAbilities}
-                rollSingleAbility={rollSingleAbility}
+                rollSingleAbility={(index: number) => {
+                  const abilities = ['strength', 'dexterity', 'constitution', 'intelligence', 'wisdom', 'charisma'];
+                  return rollSingleAbility(abilities[index]);
+                }}
                 abilityScorePoints={abilityScorePoints}
-                isMagicClass={isMagicClass}
+                isMagicClass={isMagicClass()}
                 rollsHistory={rollsHistory}
                 onLevelChange={handleLevelChange}
                 maxAbilityScore={maxAbilityScore}
@@ -230,11 +309,11 @@ const CharacterCreationPage: React.FC = () => {
       {renderCreationStepContent()}
       
       <NavigationButtons
-        currentStep={currentStep}
-        totalSteps={4}
-        prevStep={prevStep}
-        nextStep={nextStep}
-        saveCharacter={saveCharacter}
+        onPrev={prevStep}
+        onNext={nextStep}
+        disablePrev={currentStep === 1}
+        disableNext={false}
+        nextLabel={currentStep === 4 ? "Сохранить" : "Далее"}
       />
     </div>
   );
