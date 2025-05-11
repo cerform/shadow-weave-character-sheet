@@ -63,7 +63,20 @@ export function normalizeCharacterData(character: Character): Character {
   
   // Убедимся, что proficiencies существует и инициализирован правильно
   if (!normalized.proficiencies) {
-    normalized.proficiencies = { languages: [], tools: [], weapons: [], armor: [], skills: [] };
+    normalized.proficiencies = { 
+      languages: [], 
+      tools: [], 
+      weapons: [], 
+      armor: [], 
+      skills: [] 
+    };
+  } else {
+    // Убедимся, что все массивы в proficiencies инициализированы
+    if (!Array.isArray(normalized.proficiencies.languages)) normalized.proficiencies.languages = [];
+    if (!Array.isArray(normalized.proficiencies.tools)) normalized.proficiencies.tools = [];
+    if (!Array.isArray(normalized.proficiencies.weapons)) normalized.proficiencies.weapons = [];
+    if (!Array.isArray(normalized.proficiencies.armor)) normalized.proficiencies.armor = [];
+    if (!Array.isArray(normalized.proficiencies.skills)) normalized.proficiencies.skills = [];
   }
   
   // Проверяем наличие userId

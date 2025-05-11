@@ -240,7 +240,13 @@ export const convertToCharacter = (partial: Partial<Character>): Character => {
       armor: '',
       items: [],
       gold: 0
-    }
+    },
+    // Добавляем все недостающие поля
+    savingThrowProficiencies: partial.savingThrowProficiencies || [],
+    skillProficiencies: partial.skillProficiencies || [],
+    expertise: partial.expertise || [],
+    skillBonuses: partial.skillBonuses || {},
+    spellSlots: partial.spellSlots || {}
   };
   
   return character;

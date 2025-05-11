@@ -18,15 +18,6 @@ export const convertToCharacter = (data: any): Character => {
       alignment: '',
       level: 1,
       xp: 0,
-      experience: 0,
-      strength: 10,
-      dexterity: 10,
-      constitution: 10,
-      intelligence: 10,
-      wisdom: 10,
-      charisma: 10,
-      maxHp: 10,
-      currentHp: 10,
       abilities: {
         STR: 10, DEX: 10, CON: 10, INT: 10, WIS: 10, CHA: 10,
         strength: 10, dexterity: 10, constitution: 10, intelligence: 10, wisdom: 10, charisma: 10
@@ -37,6 +28,7 @@ export const convertToCharacter = (data: any): Character => {
       },
       hp: 10,
       temporaryHp: 0,
+      maxHp: 10,
       ac: 10,
       skills: {},
       hitDice: {
@@ -70,7 +62,16 @@ export const convertToCharacter = (data: any): Character => {
         attack: 0
       },
       notes: '',
-      inspiration: false
+      inspiration: false,
+      // Добавляем обязательные поля
+      savingThrowProficiencies: [],
+      skillProficiencies: [],
+      expertise: [],
+      skillBonuses: {},
+      spellSlots: {},
+      speed: 30,
+      initiative: 0,
+      proficiencyBonus: 2
     };
   }
   
@@ -84,20 +85,41 @@ export const convertToCharacter = (data: any): Character => {
   character.name = character.name || 'Безымянный герой';
   character.race = character.race || '';
   character.class = character.class || character.className || '';
+  character.background = character.background || '';
+  character.alignment = character.alignment || '';
   character.level = character.level || 1;
-  character.experience = character.experience || 0;
+  character.xp = character.xp || character.experience || 0;
   
   // Исправляем базовые характеристики
-  character.strength = character.strength || character.stats?.strength || 10;
-  character.dexterity = character.dexterity || character.stats?.dexterity || 10;
-  character.constitution = character.constitution || character.stats?.constitution || 10;
-  character.intelligence = character.intelligence || character.stats?.intelligence || 10;
-  character.wisdom = character.wisdom || character.stats?.wisdom || 10;
-  character.charisma = character.charisma || character.stats?.charisma || 10;
+  if (!character.abilities) {
+    character.abilities = {
+      STR: character.strength || character.stats?.strength || 10, 
+      DEX: character.dexterity || character.stats?.dexterity || 10, 
+      CON: character.constitution || character.stats?.constitution || 10, 
+      INT: character.intelligence || character.stats?.intelligence || 10, 
+      WIS: character.wisdom || character.stats?.wisdom || 10, 
+      CHA: character.charisma || character.stats?.charisma || 10,
+      strength: character.strength || character.stats?.strength || 10,
+      dexterity: character.dexterity || character.stats?.dexterity || 10,
+      constitution: character.constitution || character.stats?.constitution || 10,
+      intelligence: character.intelligence || character.stats?.intelligence || 10,
+      wisdom: character.wisdom || character.stats?.wisdom || 10,
+      charisma: character.charisma || character.stats?.charisma || 10
+    };
+  }
+  
+  // Исправляем савинг троу
+  if (!character.savingThrows) {
+    character.savingThrows = {
+      STR: 0, DEX: 0, CON: 0, INT: 0, WIS: 0, CHA: 0,
+      strength: 0, dexterity: 0, constitution: 0, intelligence: 0, wisdom: 0, charisma: 0
+    };
+  }
   
   // Исправляем HP
-  character.maxHp = character.maxHp || 10;
-  character.currentHp = character.currentHp !== undefined ? character.currentHp : character.maxHp;
+  character.maxHp = character.maxHp || character.hitPoints?.max || 10;
+  character.hp = character.hp || character.currentHp || character.hitPoints?.current || character.maxHp;
+  character.temporaryHp = character.temporaryHp || character.tempHp || character.hitPoints?.temporary || 0;
   
   // Восстанавливаем дополнительные поля, если они отсутствуют
   character.backstory = character.backstory || '';
@@ -109,11 +131,16 @@ export const convertToCharacter = (data: any): Character => {
   character.proficiencyBonus = character.proficiencyBonus || Math.ceil(1 + (character.level / 4));
   
   // Добавляем класс брони, если отсутствует
-  character.armorClass = character.armorClass || 10 + Math.floor((character.dexterity - 10) / 2);
+  character.ac = character.ac || character.armorClass || 10 + Math.floor((character.dexterity - 10) / 2);
   
   // Обрабатываем заклинания
   if (!character.spells) {
     character.spells = [];
+  }
+  
+  // Инициализируем скиллы, если они отсутствуют
+  if (!character.skills) {
+    character.skills = {};
   }
   
   // Инициализируем ячейки заклинаний, если они отсутствуют
@@ -125,6 +152,72 @@ export const convertToCharacter = (data: any): Character => {
   if (!character.spellcasting) {
     character.spellcasting = calculateSpellcastingParams(character);
   }
+  
+  // Инициализируем бросок хит-дайсов
+  if (!character.hitDice) {
+    character.hitDice = {
+      total: character.level || 1,
+      used: 0,
+      dieType: 'd8'
+    };
+  }
+  
+  // Инициализируем ресурсы
+  if (!character.resources) {
+    character.resources = {};
+  }
+  
+  // Инициализируем броски на смерть
+  if (!character.deathSaves) {
+    character.deathSaves = {
+      successes: 0,
+      failures: 0
+    };
+  }
+  
+  // Инициализируем экипировку
+  if (!character.equipment) {
+    character.equipment = {
+      weapons: [],
+      armor: '',
+      items: [],
+      gold: 0
+    };
+  }
+  
+  // Инициализируем владения
+  if (!character.proficiencies) {
+    character.proficiencies = {
+      languages: [],
+      tools: [],
+      weapons: [],
+      armor: [],
+      skills: []
+    };
+  }
+  
+  // Инициализируем особенности
+  if (!character.features) {
+    character.features = [];
+  }
+  
+  // Инициализируем заметки
+  character.notes = character.notes || '';
+  
+  // Инициализируем вдохновение
+  character.inspiration = character.inspiration || false;
+  
+  // Инициализируем значение скорости
+  character.speed = character.speed || 30;
+  
+  // Инициализируем значение инициативы
+  character.initiative = character.initiative || 0;
+  
+  // Дополнительные поля для соответствия типу Character
+  character.savingThrowProficiencies = character.savingThrowProficiencies || [];
+  character.skillProficiencies = character.skillProficiencies || [];
+  character.expertise = character.expertise || [];
+  character.skillBonuses = character.skillBonuses || {};
   
   return character as Character;
 };
@@ -142,20 +235,6 @@ export const createEmptyCharacter = (): Character => {
     alignment: '',
     level: 1,
     xp: 0,
-    experience: 0,
-    strength: 10,
-    dexterity: 10,
-    constitution: 10,
-    intelligence: 10,
-    wisdom: 10,
-    charisma: 10,
-    maxHp: 10,
-    currentHp: 10,
-    backstory: '',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-    proficiencyBonus: 2,
-    armorClass: 10,
     abilities: {
       STR: 10, DEX: 10, CON: 10, INT: 10, WIS: 10, CHA: 10,
       strength: 10, dexterity: 10, constitution: 10, intelligence: 10, wisdom: 10, charisma: 10
@@ -164,8 +243,13 @@ export const createEmptyCharacter = (): Character => {
       STR: 0, DEX: 0, CON: 0, INT: 0, WIS: 0, CHA: 0,
       strength: 0, dexterity: 0, constitution: 0, intelligence: 0, wisdom: 0, charisma: 0
     },
+    maxHp: 10,
     hp: 10,
     temporaryHp: 0,
+    backstory: '',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    proficiencyBonus: 2,
     ac: 10,
     skills: {},
     hitDice: {
@@ -199,7 +283,15 @@ export const createEmptyCharacter = (): Character => {
       attack: 0
     },
     notes: '',
-    inspiration: false
+    inspiration: false,
+    // Дополнительные поля для соответствия типу Character
+    savingThrowProficiencies: [],
+    skillProficiencies: [],
+    expertise: [],
+    skillBonuses: {},
+    spellSlots: {},
+    speed: 30,
+    initiative: 0
   };
 };
 
@@ -294,9 +386,9 @@ function calculateSpellcastingParams(character: any) {
   
   // Получаем значение характеристики
   let abilityScore = 10;
-  if (spellAbility === 'INT') abilityScore = character.intelligence || 10;
-  else if (spellAbility === 'WIS') abilityScore = character.wisdom || 10;
-  else if (spellAbility === 'CHA') abilityScore = character.charisma || 10;
+  if (spellAbility === 'INT') abilityScore = character.intelligence || character.abilities?.INT || 10;
+  else if (spellAbility === 'WIS') abilityScore = character.wisdom || character.abilities?.WIS || 10;
+  else if (spellAbility === 'CHA') abilityScore = character.charisma || character.abilities?.CHA || 10;
   
   // Вычисляем модификатор
   const abilityMod = Math.floor((abilityScore - 10) / 2);

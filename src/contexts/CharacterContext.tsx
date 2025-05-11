@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { Character } from '@/types/character';
@@ -29,14 +30,7 @@ const defaultContext: CharacterContextProps = {
   resetCharacter: () => {},
   initializeNewCharacter: () => {},
   setCharacter: () => {},
-  saveCurrentCharacter: async () => {},
-  characters?: Character[],
-  loading?: boolean,
-  error?: Error | null,
-  getUserCharacters?: () => Promise<void>,
-  getCharacterById?: (id: string) => Character | undefined,
-  deleteCharacter?: (id: string) => Promise<void>,
-  refreshCharacters?: () => Promise<void>,
+  saveCurrentCharacter: async () => {}
 };
 
 const CharacterContext = createContext<CharacterContextProps>(defaultContext);
@@ -227,7 +221,7 @@ export const CharacterProvider: React.FC<CharacterProviderProps> = ({ children }
     }
   };
 
-  // Добавляем заглушки для недостающих методов
+  // Добавляем реализацию для недостающих методов
   const getCharacterById = (id: string): Character | undefined => {
     return characters.find(char => char.id === id);
   };
@@ -241,7 +235,7 @@ export const CharacterProvider: React.FC<CharacterProviderProps> = ({ children }
   const refreshCharacters = async (): Promise<void> => {
     // Заглушка для обновления списка персонажей
     console.warn('refreshCharacters not fully implemented');
-    return getUserCharacters?.() || Promise.resolve();
+    return getUserCharacters();
   };
 
   return (
