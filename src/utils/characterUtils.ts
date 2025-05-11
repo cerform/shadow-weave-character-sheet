@@ -86,7 +86,6 @@ export const createDefaultCharacter = (): Character => {
     speed: 30,
     initiative: 0,
     proficiencyBonus: 2,
-    conditions: [],
     proficiencies: {
       languages: [],
       tools: [],
@@ -172,7 +171,6 @@ export const convertToCharacter = (partial: Partial<Character>): Character => {
     speed: partial.speed || 30,
     initiative: partial.initiative || 0,
     proficiencyBonus: partial.proficiencyBonus || 2,
-    conditions: partial.conditions || [],
     proficiencies: {
       languages: partial.proficiencies?.languages || [],
       tools: partial.proficiencies?.tools || [],

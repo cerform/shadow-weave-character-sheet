@@ -12,6 +12,7 @@ import { ChevronDown, ChevronUp, Plus, Search, BookOpen } from 'lucide-react';
 import SpellCard from './SpellCard';
 import SpellDetails from './SpellDetails';
 import { normalizeSpells, convertToSpellData } from '@/utils/spellUtils';
+import { ThemeStyles } from '@/lib/themes';
 
 interface SpellBookViewerProps {
   character: Character;
@@ -66,22 +67,29 @@ const SpellBookViewer: React.FC<SpellBookViewerProps> = ({ character, onAddSpell
     setExpandedSpellId(expandedSpellId === spellId ? null : spellId);
   };
 
-  // Create a default theme style if none is provided
-  const defaultThemeStyle = {
+  // Create a default theme style that matches the ThemeStyles interface
+  const defaultThemeStyle: ThemeStyles = {
     name: 'default',
     background: '#ffffff',
-    foreground: '#000000',
     cardBackground: '#f8f9fa',
-    cardForeground: '#000000',
-    borderColor: '#e2e8f0',
-    primaryColor: '#3b82f6',
-    primaryColorForeground: '#ffffff',
-    accentColor: '#10b981',
-    accentColorForeground: '#ffffff',
-    mutedColor: '#6b7280',
-    mutedColorForeground: '#ffffff',
     textColor: '#334155',
-    buttonText: '#ffffff'
+    accentTextColor: '#3b82f6',
+    buttonText: '#ffffff',
+    borderColor: '#e2e8f0',
+    accent: '#3b82f6',
+    shadowColor: 'rgba(0, 0, 0, 0.1)',
+    mutedTextColor: '#6b7280',
+    primary: '#3b82f6',
+    foreground: '#000000',
+    secondary: '#e2e8f0',
+    primaryColor: '#3b82f6', // for backward compatibility
+    success: '#10b981',
+    warning: '#f59e0b',
+    danger: '#ef4444',
+    info: '#3b82f6',
+    backgroundBrightness: 100,
+    backgroundGradient: 'linear-gradient(to bottom, rgba(0,0,0,0.1), rgba(0,0,0,0.3))',
+    decorativeCorners: true
   };
 
   const currentThemeStyle = themeStyles || defaultThemeStyle;
