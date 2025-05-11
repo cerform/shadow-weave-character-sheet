@@ -1,286 +1,431 @@
 import { v4 as uuidv4 } from 'uuid';
-import type { Character, AbilityScores } from '@/types/character';
+import { Character, AbilityScores, Skill, HitPointEvent } from '@/types/character';
+import { ABILITY_SCORE_CAPS, SKILL_LIST, SKILL_MAP } from '@/types/constants';
+import { calculateProficiencyBonus } from './levelUtils';
 
 /**
- * Вычисляет модификатор характеристики на основе значения
- * @param score значение характеристики
- * @returns модификатор характеристики
+ * Creates a default character with initial values.
+ * @returns {Character} A default character object.
  */
-export function calculateAbilityModifier(score: number): number {
-  return Math.floor((score - 10) / 2);
-}
-
-/**
- * То же что и calculateAbilityModifier, но для совместимости с другими частями приложения
- */
-export function getAbilityModifier(score: number): number {
-  return calculateAbilityModifier(score);
-}
-
-/**
- * То же что и calculateAbilityModifier, но для совместимости с DicePanel
- */
-export function getModifierFromAbilityScore(score: number): number {
-  return calculateAbilityModifier(score);
-}
-
-/**
- * Вычисляет числовой модификатор для характеристики (с учетом плюса/минуса)
- * @param score значение характеристики
- * @returns строка с модификатором (например, "+2" или "-1")
- */
-export function getNumericModifier(score: number): number {
-  return Math.floor((score - 10) / 2);
-}
-
-/**
- * Генерирует строковое представление модификатора характеристики с плюсом или минусом
- * @param score значение характеристики
- * @returns строка с модификатором (например, "+2" или "-1")
- */
-export function getModifierString(score: number): string {
-  const modifier = getNumericModifier(score);
-  return modifier >= 0 ? `+${modifier}` : `${modifier}`;
-}
-
-/**
- * Вычисляет бонусы для характеристик персонажа на основе его расы, класса и других факторов
- */
-export function calculateStatBonuses(character: Partial<Character> | string): Record<string, number> {
-  const bonuses: Record<string, number> = {
-    strength: 0,
-    dexterity: 0,
-    constitution: 0,
-    intelligence: 0, 
-    wisdom: 0,
-    charisma: 0,
-    STR: 0,
-    DEX: 0,
-    CON: 0,
-    INT: 0,
-    WIS: 0,
-    CHA: 0
-  };
-  
-  // Если передана строка, используем её как название расы
-  const raceName = typeof character === 'string' ? character : character?.race;
-  
-  if (!raceName) return bonuses;
-  
-  // Базовые бонусы от расы
-  switch(raceName.toLowerCase()) {
-    case 'дварф':
-    case 'dwarf':
-      bonuses.constitution += 2;
-      bonuses.CON += 2;
-      break;
-    case 'эльф':
-    case 'elf':
-      bonuses.dexterity += 2;
-      bonuses.DEX += 2;
-      break;
-    case 'полурослик':
-    case 'halfling':
-      bonuses.dexterity += 2;
-      bonuses.DEX += 2;
-      break;
-    case 'человек':
-    case 'human':
-      bonuses.strength += 1;
-      bonuses.dexterity += 1;
-      bonuses.constitution += 1;
-      bonuses.intelligence += 1;
-      bonuses.wisdom += 1;
-      bonuses.charisma += 1;
-      bonuses.STR += 1;
-      bonuses.DEX += 1;
-      bonuses.CON += 1;
-      bonuses.INT += 1;
-      bonuses.WIS += 1;
-      bonuses.CHA += 1;
-      break;
-    case 'драконорожденный':
-    case 'dragonborn':
-      bonuses.strength += 2;
-      bonuses.charisma += 1;
-      bonuses.STR += 2;
-      bonuses.CHA += 1;
-      break;
-    case 'гном':
-    case 'gnome':
-      bonuses.intelligence += 2;
-      bonuses.INT += 2;
-      break;
-    case 'полуэльф':
-    case 'half-elf':
-      bonuses.charisma += 2;
-      bonuses.CHA += 2;
-      // Пол��эльфы могут выбрать еще 2 характеристики для +1, но тут упрощаем
-      bonuses.dexterity += 1;
-      bonuses.constitution += 1;
-      bonuses.DEX += 1;
-      bonuses.CON += 1;
-      break;
-    case 'полуорк':
-    case 'half-orc':
-      bonuses.strength += 2;
-      bonuses.constitution += 1;
-      bonuses.STR += 2;
-      bonuses.CON += 1;
-      break;
-    case 'тифлинг':
-    case 'tiefling':
-      bonuses.charisma += 2;
-      bonuses.intelligence += 1;
-      bonuses.CHA += 2;
-      bonuses.INT += 1;
-      break;
-  }
-  
-  return bonuses;
-}
-
-/**
- * Создает персонажа с значениями по умолчанию
- * @returns объект персонажа со значениями по умолчанию
- */
-export function createDefaultCharacter(): Character {
-  const defaultCharacter: Character = {
-    id: uuidv4(),
-    name: '',
-    race: '',
-    class: '',
-    subclass: '',
-    background: '',
-    alignment: 'Нейтральный',
-    level: 1,
-    xp: 0,
-    experience: 0,
-    abilities: {
-      STR: 10,
-      DEX: 10,
-      CON: 10,
-      INT: 10,
-      WIS: 10,
-      CHA: 10,
-      strength: 10,
-      dexterity: 10,
-      constitution: 10,
-      intelligence: 10,
-      wisdom: 10,
-      charisma: 10,
-    },
+export const createDefaultCharacter = (): Character => ({
+  id: uuidv4(),
+  name: 'Новый персонаж',
+  race: 'Человек',
+  class: 'Воин',
+  level: 1,
+  background: 'Герой',
+  alignment: 'Законопослушный Добрый',
+  experience: 0,
+  abilities: {
     strength: 10,
     dexterity: 10,
     constitution: 10,
     intelligence: 10,
     wisdom: 10,
     charisma: 10,
-    savingThrows: {
-      STR: 0,
-      DEX: 0,
-      CON: 0,
-      INT: 0,
-      WIS: 0,
-      CHA: 0,
-      strength: 0,
-      dexterity: 0,
-      constitution: 0,
-      intelligence: 0,
-      wisdom: 0,
-      charisma: 0,
-    },
-    skills: {},
-    hp: 10,
+    STR: 10,
+    DEX: 10,
+    CON: 10,
+    INT: 10,
+    WIS: 10,
+    CHA: 10,
+  },
+  hitPoints: {
     maxHp: 10,
     currentHp: 10,
-    temporaryHp: 0,
     tempHp: 0,
-    ac: 10,
-    armorClass: 10,
-    proficiencyBonus: 2,
-    speed: 30,
-    initiative: 0,
-    inspiration: false,
     hitDice: {
       total: 1,
-      used: 0,
-      dieType: 'd8',
-      current: 1,
-      value: '1d8',
-      remaining: 1
+      remaining: 1,
+      dieType: 'd10',
     },
-    resources: {},
     deathSaves: {
       successes: 0,
       failures: 0,
     },
-    spellcasting: {
-      ability: 'intelligence',
-      dc: 10,
-      attack: 0,
-      saveDC: 10,
-      attackBonus: 0,
+  },
+  armorClass: 10,
+  initiative: 0,
+  speed: 30,
+  proficiencies: {
+    armor: [],
+    weapons: [],
+    tools: [],
+    savingThrows: [],
+    skills: [],
+    languages: [],
+  },
+  equipment: {
+    armor: [],
+    weapons: [],
+    tools: [],
+    gear: [],
+    money: {
+      cp: 0,
+      sp: 0,
+      ep: 0,
+      gp: 0,
+      pp: 0,
     },
-    spellSlots: {},
-    spells: [],
-    equipment: {
-      weapons: [],
-      armor: '',
-      items: [],
-      gold: 0,
-    },
-    proficiencies: {
-      languages: ['Common'],
-      tools: [],
-      weapons: [],
-      armor: [],
-      skills: []
-    },
-    features: [],
-    notes: '',
-    savingThrowProficiencies: [],
-    skillProficiencies: [],
-    expertise: [],
-    skillBonuses: {},
-    userId: ''
-  };
-
-  return defaultCharacter;
-}
+  },
+  features: [],
+  spells: [],
+  spellcasting: {
+    ability: 'intelligence',
+    dc: 10,
+    attack: 0,
+    preparedSpellsLimit: 0,
+  },
+  personalityTraits: '',
+  ideals: '',
+  bonds: '',
+  flaws: '',
+  appearance: '',
+  backstory: '',
+  image: '',
+  stats: {
+    strength: 10,
+    dexterity: 10,
+    constitution: 10,
+    intelligence: 10,
+    wisdom: 10,
+    charisma: 10,
+  },
+  xp: 0,
+  spellSlots: {},
+});
 
 /**
- * Конвертирует частичного персонажа в полного
- * @param partialCharacter частичный объект персонажа
- * @returns полный объект персонажа
+ * Calculate ability modifier from score
  */
-export function convertToCharacter(partialCharacter: Partial<Character>): Character {
+export const calculateAbilityModifier = (abilityScore: number): number => {
+  return Math.floor((abilityScore - 10) / 2);
+};
+
+/**
+ * Get ability modifier with + sign for display
+ */
+export const getModifierFromAbilityScore = (abilityScore: number): string => {
+  const modifier = calculateAbilityModifier(abilityScore);
+  return modifier >= 0 ? `+${modifier}` : `${modifier}`;
+};
+
+/**
+ * Calculates the saving throw bonus for a given ability.
+ * @param {number} abilityScore - The ability score.
+ * @param {boolean} isProficient - Whether the character is proficient in the saving throw.
+ * @param {number} proficiencyBonus - The character's proficiency bonus.
+ * @returns {number} The saving throw bonus.
+ */
+export const calculateSavingThrowBonus = (
+  abilityScore: number,
+  isProficient: boolean,
+  proficiencyBonus: number
+): number => {
+  const abilityModifier = calculateAbilityModifier(abilityScore);
+  return abilityModifier + (isProficient ? proficiencyBonus : 0);
+};
+
+/**
+ * Calculates the skill check bonus for a given skill.
+ * @param {number} abilityScore - The ability score.
+ * @param {boolean} isProficient - Whether the character is proficient in the skill.
+ * @param {number} proficiencyBonus - The character's proficiency bonus.
+ * @param {boolean} hasExpertise - Whether the character has expertise in the skill.
+ * @returns {number} The skill check bonus.
+ */
+export const calculateSkillCheckBonus = (
+  abilityScore: number,
+  isProficient: boolean,
+  proficiencyBonus: number,
+  hasExpertise: boolean
+): number => {
+  const abilityModifier = calculateAbilityModifier(abilityScore);
+  let bonus = abilityModifier;
+
+  if (isProficient) {
+    bonus += proficiencyBonus;
+  }
+
+  if (hasExpertise) {
+    bonus += proficiencyBonus; // Expertise doubles the proficiency bonus
+  }
+
+  return bonus;
+};
+
+/**
+ * Calculates the stat bonuses based on the character's race.
+ * @param {Partial<Character>} character - The character object.
+ * @returns {Partial<AbilityScores> | null} The stat bonuses based on the character's race.
+ */
+export const calculateStatBonuses = (character: Partial<Character>): Partial<AbilityScores> | null => {
+  switch (character.race) {
+    case 'Человек':
+      return {
+        strength: 1,
+        dexterity: 1,
+        constitution: 1,
+        intelligence: 1,
+        wisdom: 1,
+        charisma: 1,
+        STR: 1,
+        DEX: 1,
+        CON: 1,
+        INT: 1,
+        WIS: 1,
+        CHA: 1,
+      };
+    case 'Эльф':
+      return {
+        dexterity: 2,
+        DEX: 2,
+      };
+    case 'Дварф':
+      return {
+        constitution: 2,
+        CON: 2,
+      };
+    // Add more races here
+    default:
+      return null;
+  }
+};
+
+/**
+ * Calculates the initiative bonus for a given character.
+ * @param {Character} character - The character object.
+ * @returns {number} The initiative bonus.
+ */
+export const calculateInitiative = (character: Character): number => {
+  return calculateAbilityModifier(character.abilities.dexterity);
+};
+
+/**
+ * Calculates the armor class for a given character.
+ * @param {Character} character - The character object.
+ * @returns {number} The armor class.
+ */
+export const calculateArmorClass = (character: Character): number => {
+  // This is a placeholder, implement the actual calculation based on armor, shield, and other modifiers
+  return 10 + calculateAbilityModifier(character.abilities.dexterity);
+};
+
+/**
+ * Calculates the maximum hit points for a given character.
+ * @param {Character} character - The character object.
+ * @returns {number} The maximum hit points.
+ */
+export const calculateMaxHP = (character: Character): number => {
+  // This is a placeholder, implement the actual calculation based on class and level
+  return 10 + calculateAbilityModifier(character.abilities.constitution) * character.level;
+};
+
+/**
+ * Calculates the skill proficiency for a given character.
+ * @param {Character} character - The character object.
+ * @param {Skill} skill - The skill object.
+ * @returns {boolean} Whether the character is proficient in the skill.
+ */
+export const isSkillProficient = (character: Character, skill: Skill): boolean => {
+  return character.proficiencies.skills.includes(skill.name);
+};
+
+/**
+ * Calculates the saving throw proficiency for a given character.
+ * @param {Character} character - The character object.
+ * @param {string} ability - The ability name.
+ * @returns {boolean} Whether the character is proficient in the saving throw.
+ */
+export const isSavingThrowProficient = (character: Character, ability: string): boolean => {
+  return character.proficiencies.savingThrows.includes(ability);
+};
+
+/**
+ * Adds a hit point event to the character's hit point history.
+ * @param {Character} character - The character object.
+ * @param {HitPointEvent} event - The hit point event.
+ * @returns {Character} The updated character object.
+ */
+export const addHitPointEvent = (character: Character, event: HitPointEvent): Character => {
+  // This is a placeholder, implement the actual logic to add the event to the character's hit point history
+  return character;
+};
+
+/**
+ * Removes a hit point event from the character's hit point history.
+ * @param {Character} character - The character object.
+ * @param {string} eventId - The ID of the hit point event to remove.
+ * @returns {Character} The updated character object.
+ */
+export const removeHitPointEvent = (character: Character, eventId: string): Character => {
+  // This is a placeholder, implement the actual logic to remove the event from the character's hit point history
+  return character;
+};
+
+/**
+ * Updates a hit point event in the character's hit point history.
+ * @param {Character} character - The character object.
+ * @param {HitPointEvent} event - The updated hit point event.
+ * @returns {Character} The updated character object.
+ */
+export const updateHitPointEvent = (character: Character, event: HitPointEvent): Character => {
+  // This is a placeholder, implement the actual logic to update the event in the character's hit point history
+  return character;
+};
+
+/**
+ * Calculates the total weight of the items in the character's inventory.
+ * @param {Character} character - The character object.
+ * @returns {number} The total weight of the items in the character's inventory.
+ */
+export const calculateInventoryWeight = (character: Character): number => {
+  // This is a placeholder, implement the actual calculation based on the weight of each item in the character's inventory
+  return 0;
+};
+
+/**
+ * Calculates the carrying capacity of the character.
+ * @param {Character} character - The character object.
+ * @returns {number} The carrying capacity of the character.
+ */
+export const calculateCarryingCapacity = (character: Character): number => {
+  return character.abilities.strength * 15; // Base carrying capacity
+};
+
+/**
+ * Checks if the character is encumbered.
+ * @param {Character} character - The character object.
+ * @returns {boolean} Whether the character is encumbered.
+ */
+export const isEncumbered = (character: Character): boolean => {
+  const inventoryWeight = calculateInventoryWeight(character);
+  const carryingCapacity = calculateCarryingCapacity(character);
+  return inventoryWeight > carryingCapacity;
+};
+
+/**
+ * Checks if the character is heavily encumbered.
+ * @param {Character} character - The character object.
+ * @returns {boolean} Whether the character is heavily encumbered.
+ */
+export const isHeavilyEncumbered = (character: Character): boolean => {
+  const inventoryWeight = calculateInventoryWeight(character);
+  const carryingCapacity = calculateCarryingCapacity(character);
+  return inventoryWeight > (carryingCapacity * 2);
+};
+
+/**
+ * Checks if the character is over their maximum carrying capacity.
+ * @param {Character} character - The character object.
+ * @returns {boolean} Whether the character is over their maximum carrying capacity.
+ */
+export const isOverMaximumCapacity = (character: Character): boolean => {
+  const inventoryWeight = calculateInventoryWeight(character);
+  const carryingCapacity = calculateCarryingCapacity(character);
+  return inventoryWeight > (carryingCapacity * 3);
+};
+
+/**
+ * Gets the skill object from the skill name.
+ * @param {string} skillName - The name of the skill.
+ * @returns {Skill | undefined} The skill object.
+ */
+export const getSkill = (skillName: string): Skill | undefined => {
+  return SKILL_LIST.find((skill) => skill.name === skillName);
+};
+
+/**
+ * Gets the ability name from the skill name.
+ * @param {string} skillName - The name of the skill.
+ * @returns {string | undefined} The ability name.
+ */
+export const getAbilityForSkill = (skillName: string): string | undefined => {
+  return SKILL_MAP[skillName];
+};
+
+/**
+ * Calculates the passive perception for a given character.
+ * @param {Character} character - The character object.
+ * @returns {number} The passive perception.
+ */
+export const calculatePassivePerception = (character: Character): number => {
+  const wisdomModifier = calculateAbilityModifier(character.abilities.wisdom);
+  const perceptionSkill = getSkill('Внимательность');
+  const proficiencyBonus = calculateProficiencyBonus(character.level);
+  let passivePerception = 10 + wisdomModifier;
+
+  if (perceptionSkill) {
+    const isProficient = isSkillProficient(character, perceptionSkill);
+    passivePerception += isProficient ? proficiencyBonus : 0;
+  }
+
+  return passivePerception;
+};
+
+/**
+ * Convert a partial character object to a full character with all required properties
+ */
+export const convertToCharacter = (partialCharacter: Partial<Character>): Character => {
+  // Start with a default character
   const defaultChar = createDefaultCharacter();
+  
+  // Merge the partial character with the default one
   return {
     ...defaultChar,
     ...partialCharacter,
-    id: partialCharacter.id || defaultChar.id,
+    // Ensure nested objects are properly merged
     abilities: {
       ...defaultChar.abilities,
       ...(partialCharacter.abilities || {}),
-      STR: partialCharacter.strength || partialCharacter.abilities?.STR || 10,
-      DEX: partialCharacter.dexterity || partialCharacter.abilities?.DEX || 10,
-      CON: partialCharacter.constitution || partialCharacter.abilities?.CON || 10,
-      INT: partialCharacter.intelligence || partialCharacter.abilities?.INT || 10,
-      WIS: partialCharacter.wisdom || partialCharacter.abilities?.WIS || 10,
-      CHA: partialCharacter.charisma || partialCharacter.abilities?.CHA || 10,
-      strength: partialCharacter.strength || partialCharacter.abilities?.strength || 10,
-      dexterity: partialCharacter.dexterity || partialCharacter.abilities?.dexterity || 10,
-      constitution: partialCharacter.constitution || partialCharacter.abilities?.constitution || 10,
-      intelligence: partialCharacter.intelligence || partialCharacter.abilities?.intelligence || 10,
-      wisdom: partialCharacter.wisdom || partialCharacter.abilities?.wisdom || 10,
-      charisma: partialCharacter.charisma || partialCharacter.abilities?.charisma || 10,
+      // Ensure both naming conventions are maintained
+      STR: partialCharacter.abilities?.STR || partialCharacter.abilities?.strength || defaultChar.abilities.STR,
+      DEX: partialCharacter.abilities?.DEX || partialCharacter.abilities?.dexterity || defaultChar.abilities.DEX,
+      CON: partialCharacter.abilities?.CON || partialCharacter.abilities?.constitution || defaultChar.abilities.CON,
+      INT: partialCharacter.abilities?.INT || partialCharacter.abilities?.intelligence || defaultChar.abilities.INT,
+      WIS: partialCharacter.abilities?.WIS || partialCharacter.abilities?.wisdom || defaultChar.abilities.WIS,
+      CHA: partialCharacter.abilities?.CHA || partialCharacter.abilities?.charisma || defaultChar.abilities.CHA,
+      strength: partialCharacter.abilities?.STR || partialCharacter.abilities?.strength || defaultChar.abilities.strength,
+      dexterity: partialCharacter.abilities?.DEX || partialCharacter.abilities?.dexterity || defaultChar.abilities.dexterity,
+      constitution: partialCharacter.abilities?.CON || partialCharacter.abilities?.constitution || defaultChar.abilities.constitution,
+      intelligence: partialCharacter.abilities?.INT || partialCharacter.abilities?.intelligence || defaultChar.abilities.intelligence,
+      wisdom: partialCharacter.abilities?.WIS || partialCharacter.abilities?.wisdom || defaultChar.abilities.wisdom,
+      charisma: partialCharacter.abilities?.CHA || partialCharacter.abilities?.charisma || defaultChar.abilities.charisma
     },
-    maxHp: partialCharacter.maxHp || partialCharacter.hp || defaultChar.maxHp,
-    currentHp: partialCharacter.currentHp || partialCharacter.hp || defaultChar.currentHp,
-    xp: partialCharacter.xp || partialCharacter.experience || 0,
-    experience: partialCharacter.experience || partialCharacter.xp || 0,
+    hitPoints: {
+      ...defaultChar.hitPoints,
+      ...(partialCharacter.hitPoints || {})
+    },
+    proficiencies: {
+      ...defaultChar.proficiencies,
+      ...(partialCharacter.proficiencies || {})
+    },
+    equipment: {
+      ...defaultChar.equipment,
+      ...(partialCharacter.equipment || {})
+    },
+    features: [
+      ...defaultChar.features,
+      ...(partialCharacter.features || [])
+    ],
+    spellcasting: {
+      ...defaultChar.spellcasting,
+      ...(partialCharacter.spellcasting || {})
+    }
   };
-}
+};
 
-// Другие функции для работы с персонажами
+/**
+ * Calculate ability modifier from score
+ */
+export const getAbilityModifier = (abilityScore: number): number => {
+  return Math.floor((abilityScore - 10) / 2);
+};
+
+/**
+ * Get ability modifier with + sign for display
+ */
+export const getModifierFromAbilityScore = (abilityScore: number): string => {
+  const modifier = getAbilityModifier(abilityScore);
+  return modifier >= 0 ? `+${modifier}` : `${modifier}`;
+};

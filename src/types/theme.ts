@@ -7,7 +7,7 @@ export interface ThemeStyles {
   foreground: string;  // Required
   cardBackground: string;
   primary: string;     // Required
-  secondary: string;
+  secondary: string;   // Required
   accent: string;
   textColor: string;
   mutedTextColor: string;
@@ -15,6 +15,7 @@ export interface ThemeStyles {
   shadowColor: string;
   fontFamily: string;
   buttonText: string;
+  accentTextColor?: string;
   // Optional properties
   success?: string;
   warning?: string;
@@ -24,5 +25,4 @@ export interface ThemeStyles {
   backgroundGradient?: string;
   decorativeCorners?: boolean;
   primaryColor?: string;
-  accentTextColor?: string;
 }

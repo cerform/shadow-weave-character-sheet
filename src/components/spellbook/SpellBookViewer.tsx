@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Character } from '@/types/character';
 import { SpellData } from '@/types/spells';
 import { useTheme } from '@/hooks/use-theme';
-import { themes } from '@/lib/themes';
+import { Theme } from '@/types/theme';
 import { ChevronDown, ChevronUp, Plus, Search, BookOpen } from 'lucide-react';
 import SpellCard from './SpellCard';
 import SpellDetails from './SpellDetails';
@@ -26,7 +25,7 @@ const SpellBookViewer: React.FC<SpellBookViewerProps> = ({ character, onAddSpell
   const [expandedSpellId, setExpandedSpellId] = useState<string | null>(null);
   const [spells, setSpells] = useState<SpellData[]>([]);
   const { theme } = useTheme();
-  const currentTheme = themes[theme as keyof typeof themes] || themes.default;
+  const currentTheme = theme as Theme;
 
   // Convert character spells to SpellData format for display
   useEffect(() => {

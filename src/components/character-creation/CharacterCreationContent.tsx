@@ -4,10 +4,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Character } from '@/types/character';
-import { Dispatch, SetStateAction } from 'react';
 
 export interface CharacterCreationContentProps {
-  currentStep: number;
   character: Partial<Character>;
   updateCharacter: (updates: Partial<Character>) => void;
   nextStep: () => void;
@@ -23,7 +21,7 @@ export interface CharacterCreationContentProps {
   rollsHistory: {ability: string, rolls: number[], total: number}[];
   onLevelChange: (level: number) => void;
   maxAbilityScore: number;
-  setCurrentStep: Dispatch<SetStateAction<number>>;
+  currentStep: number;
 }
 
 const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({ 
@@ -42,8 +40,7 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
   isMagicClass,
   rollsHistory,
   onLevelChange,
-  maxAbilityScore,
-  setCurrentStep
+  maxAbilityScore
 }) => {
   // Using the currentStep prop instead of internal state
   const handleBasicInfoSubmit = (basicInfo: Partial<Character>) => {

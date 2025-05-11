@@ -17,7 +17,7 @@ const defaultTheme: ThemeStyles = {
   foreground: '#1e293b', // Required
   cardBackground: '#ffffff',
   primary: '#818cf8',   // Required
-  secondary: '#f3f4f6',
+  secondary: '#f3f4f6', // Required
   accent: '#6b21a8',
   textColor: '#333333',
   mutedTextColor: '#6c757d',
@@ -65,6 +65,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
           name: savedTheme || 'default',
           foreground: themes[savedTheme as keyof typeof themes]?.foreground || '#1e293b',
           primary: themes[savedTheme as keyof typeof themes]?.primary || '#818cf8',
+          secondary: themes[savedTheme as keyof typeof themes]?.secondary || '#f3f4f6',
           mutedTextColor: themes[savedTheme as keyof typeof themes]?.mutedTextColor || '#6c757d',
           borderColor: themes[savedTheme as keyof typeof themes]?.borderColor || 'rgba(107, 33, 168, 0.3)',
           shadowColor: themes[savedTheme as keyof typeof themes]?.shadowColor || 'rgba(107, 33, 168, 0.2)',
@@ -94,6 +95,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
         name: newTheme || 'default',
         foreground: themes[newTheme as keyof typeof themes]?.foreground || '#1e293b',
         primary: themes[newTheme as keyof typeof themes]?.primary || '#818cf8',
+        secondary: themes[newTheme as keyof typeof themes]?.secondary || '#f3f4f6',
         mutedTextColor: themes[newTheme as keyof typeof themes]?.mutedTextColor || '#6c757d',
         borderColor: themes[newTheme as keyof typeof themes]?.borderColor || 'rgba(107, 33, 168, 0.3)',
         shadowColor: themes[newTheme as keyof typeof themes]?.shadowColor || 'rgba(107, 33, 168, 0.2)',
@@ -119,6 +121,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
       document.documentElement.style.setProperty('--background', themeObj.background);
       document.documentElement.style.setProperty('--foreground', themeObj.foreground || '#1e293b');
       document.documentElement.style.setProperty('--primary', themeObj.primary || '#818cf8');
+      document.documentElement.style.setProperty('--secondary', themeObj.secondary || '#f3f4f6');
       document.documentElement.style.setProperty('--accent', themeObj.accent);
       document.documentElement.style.setProperty('--text', themeObj.textColor);
       document.documentElement.style.setProperty('--card-bg', themeObj.cardBackground);
