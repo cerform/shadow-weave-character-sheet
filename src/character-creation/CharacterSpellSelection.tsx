@@ -64,7 +64,28 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
       });
     }
     
-    setFilteredSpells(classFiltered);
+    // Convert CharacterSpell[] to SpellData[] to fix type issue
+    setFilteredSpells(classFiltered.map(spell => {
+      // Ensure each spell conforms to SpellData interface
+      return {
+        id: spell.id,
+        name: spell.name,
+        level: spell.level,
+        school: spell.school,
+        castingTime: spell.castingTime || '1 действие',
+        range: spell.range || 'На себя',
+        components: spell.components || '',
+        duration: spell.duration || 'Мгновенная',
+        description: spell.description || '',
+        classes: spell.classes,
+        verbal: spell.verbal,
+        somatic: spell.somatic,
+        material: spell.material,
+        ritual: spell.ritual,
+        concentration: spell.concentration,
+        prepared: spell.prepared
+      };
+    }));
   }, [availableSpells, characterClass, maxSpellLevel, searchTerm]);
 
   useEffect(() => {

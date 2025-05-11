@@ -99,6 +99,7 @@ export function importSpellsFromText(text: string, existingSpells: CharacterSpel
     } else {
       // Добавляем новое заклинание с базовыми параметрами
       const newSpell: CharacterSpell = {
+        id: `spell-${parsed.name.toLowerCase().replace(/\s+/g, '-')}`,
         name: parsed.name,
         level: parsed.level,
         school: "Прорицание", // Школа по умолчанию

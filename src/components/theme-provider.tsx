@@ -11,7 +11,7 @@ import { ThemeType } from '@/types/theme'
 export interface ThemeContextType {
   theme: ThemeType;
   setTheme: (theme: ThemeType) => void;
-  themeStyles?: typeof themes.default;
+  themeStyles: typeof themes.default;
   effectiveTheme?: ThemeType;
 }
 
@@ -51,7 +51,7 @@ export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
   // Обработчик для установки темы с синхронизацией между контекстами
   const handleSetTheme = (newTheme: ThemeType) => {
     setTheme(newTheme);
-    setUserTheme(newTheme as ThemeType);
+    setUserTheme(newTheme);
     
     // Сохраняем тему в localStorage
     localStorage.setItem('theme', newTheme);

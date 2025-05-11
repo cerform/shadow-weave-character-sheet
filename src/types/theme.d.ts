@@ -10,7 +10,6 @@ export interface ThemeContextType {
   setTheme: (theme: ThemeType) => void;
   activeTheme?: ThemeType;
   setUserTheme?: (theme: ThemeType) => void;
-  currentTheme?: Theme;
   themeStyles: Theme; // Required property
 }
 

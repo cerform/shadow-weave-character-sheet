@@ -27,6 +27,23 @@ export function componentsToString({
   return result;
 }
 
+// Парсит компоненты заклинания из строки
+export function parseComponents(componentString: string): {
+  verbal: boolean;
+  somatic: boolean;
+  material: boolean;
+  ritual: boolean;
+  concentration: boolean;
+} {
+  return {
+    verbal: componentString.includes('В'),
+    somatic: componentString.includes('С'),
+    material: componentString.includes('М'),
+    ritual: componentString.includes('Р') || componentString.includes('ритуал'),
+    concentration: componentString.includes('К') || componentString.includes('концентрация')
+  };
+}
+
 // Получает имя заклинания на выбранном языке
 export function getSpellName(spell: any, language = 'ru'): string {
   if (!spell) return '';
