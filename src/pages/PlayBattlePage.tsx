@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import LeftPanelDiceRoller from "@/components/battle/LeftPanelDiceRoller";
 import EnhancedBattleMap from "@/components/battle/EnhancedBattleMap";
+import BattleMapWrapper from "@/components/battle/BattleMapWrapper"; // Import the wrapper
 import RightPanel from "@/components/battle/RightPanel";
 import BottomPanel from "@/components/battle/BottomPanel";
 import TopPanel from "@/components/battle/TopPanel";
@@ -496,9 +497,9 @@ const PlayBattlePage = () => {
       
       {/* Центральная часть - карта боя */}
       <div className="relative overflow-hidden w-full h-full">
-        <EnhancedBattleMap
+        <BattleMapWrapper
           tokens={tokens}
-          updateTokens={addToken} // Replace 'setTokens' with something compatible like 'updateTokens'
+          updateTokens={updateToken}
           background={mapSettings.background}
           setBackground={setMapBackground}
           onUpdateTokenPosition={handleUpdateTokenPosition}
@@ -510,7 +511,16 @@ const PlayBattlePage = () => {
           revealedCells={mapSettings.revealedCells}
           onRevealCell={handleRevealCell}
           gridSize={mapSettings.gridSize}
-          gridVisible={mapSettings.gridVisible}
+          setGridSize={setGridSize}
+          showGrid={mapSettings.gridVisible}
+          setShowGrid={setGridVisible}
+          fogEnabled={mapSettings.fogOfWar}
+          setFogEnabled={setFogOfWar}
+          fogData={mapSettings.revealedCells}
+          updateFogData={() => {}}
+          clearAllFog={resetFogOfWar}
+          revealAllFog={() => {}}
+          activePlayer={""}
           gridOpacity={mapSettings.gridOpacity}
           zoom={mapSettings.zoom}
           isDM={isDM}

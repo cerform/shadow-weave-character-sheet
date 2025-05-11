@@ -80,13 +80,15 @@ const BattleMapWrapper: React.FC<BattleMapWrapperProps> = ({
     }
   };
 
+  // Make sure to pass a proper gridSize compatible with EnhancedBattleMap props
+  // EnhancedBattleMap may require a specific format for gridSize
   return (
     <EnhancedBattleMap
       tokens={tokens}
       background={background}
       setBackground={setBackground}
       onUpdateTokenPosition={onUpdateTokenPosition}
-      gridSize={gridObject}
+      gridSize={gridObject.rows} // Pass only the number as required by EnhancedBattleMap
       setGridSize={handleGridSizeChange}
       showGrid={showGrid}
       setShowGrid={setShowGrid}

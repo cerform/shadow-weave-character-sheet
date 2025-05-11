@@ -10,7 +10,7 @@ import { canPrepareMoreSpells, getPreparedSpellsLimit } from '@/utils/spellUtils
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
 import { ChevronDown, ChevronUp, BookOpen, Star } from 'lucide-react';
-import SpellCastingPanel from './SpellCastingPanel';
+import { SpellCastingPanel } from './SpellCastingPanel'; // Fix import to use named export
 import SpellSlotManager from './SpellSlotManager';
 import { safeToString } from '@/utils/stringUtils';
 

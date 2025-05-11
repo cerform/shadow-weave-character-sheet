@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from 'react';
 import { Character } from '@/types/character';
 import { v4 as uuidv4 } from 'uuid';
@@ -139,7 +138,7 @@ export const useCharacterCreation = (options: UseCharacterCreationOptions = {}) 
     setCurrentStep(prev => Math.max(0, prev - 1));
   }, []);
 
-  // Сбросить всё
+  // Функция для сброса персонажа
   const resetCharacter = useCallback(() => {
     setCharacter({
       id: uuidv4(),

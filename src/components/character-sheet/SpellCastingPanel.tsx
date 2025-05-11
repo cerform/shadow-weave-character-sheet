@@ -26,7 +26,7 @@ export const SpellCastingPanel: React.FC<SpellCastingPanelProps> = ({ character,
     const abilityKey = ability === 'intelligence' ? 'INT' : 
                        ability === 'wisdom' ? 'WIS' : 'CHA';
                        
-    // Use character as second argument for the getAbilityModifier function
+    // Make sure to pass character as both the first and second arguments
     const abilityModifier = getAbilityModifier(character, abilityKey);
     const profBonus = character.proficiencyBonus || 2;
     const spellDC = 8 + profBonus + abilityModifier;
