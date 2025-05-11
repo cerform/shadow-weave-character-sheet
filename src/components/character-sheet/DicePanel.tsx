@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -97,7 +96,7 @@ const DicePanel: React.FC<DicePanelProps> = ({
     const rolls = character.lastDiceRoll.rolls || 
                  (Array.isArray(character.lastDiceRoll.result) ? character.lastDiceRoll.result : [character.lastDiceRoll.result]);
     const count = character.lastDiceRoll.count || rolls.length;
-    const modifier = character.lastDiceRoll.modifier;
+    const modifier = character.lastDiceRoll.modifier || 0; // Ensure modifier is a number
     const total = character.lastDiceRoll.total;
     const label = character.lastDiceRoll.label || character.lastDiceRoll.type;
     

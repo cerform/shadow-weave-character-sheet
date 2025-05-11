@@ -98,6 +98,17 @@ export const createDefaultCharacter = (): Character => ({
 /**
  * Calculate ability modifier from score
  */
+export function getNumericModifier(abilityScore: number): number {
+  return Math.floor((abilityScore - 10) / 2);
+}
+
+// Alias for backwards compatibility
+export const getAbilityModifier = getNumericModifier;
+export const getModifierFromAbilityScore = getNumericModifier;
+
+/**
+ * Calculate ability modifier from score
+ */
 export const calculateAbilityModifier = (abilityScore: number): number => {
   return Math.floor((abilityScore - 10) / 2);
 };

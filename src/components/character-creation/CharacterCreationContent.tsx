@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,6 +23,7 @@ export interface CharacterCreationContentProps {
   onLevelChange: (level: number) => void;
   maxAbilityScore: number;
   currentStep: number;
+  setCurrentStep?: React.Dispatch<React.SetStateAction<number>>; // Add this line
 }
 
 const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({ 
@@ -40,7 +42,8 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
   isMagicClass,
   rollsHistory,
   onLevelChange,
-  maxAbilityScore
+  maxAbilityScore,
+  setCurrentStep
 }) => {
   // Using the currentStep prop instead of internal state
   const handleBasicInfoSubmit = (basicInfo: Partial<Character>) => {

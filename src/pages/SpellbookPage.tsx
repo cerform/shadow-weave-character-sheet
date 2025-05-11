@@ -11,11 +11,15 @@ import { createDefaultCharacter } from '@/utils/characterUtils';
 
 const SpellbookPage: React.FC = () => {
   const { themeStyles } = useTheme();
-  const { characters, activeCharacter } = useCharacter();
+  const characterContext = useCharacter();
   
-  // If there's an active character, use it. Otherwise, create a default one
+  // Ensure we have default properties even if CharacterContext doesn't provide them
+  const characters = characterContext.characters || [];
+  const activeCharacter = characterContext.activeCharacter || null;
+  
+  // If there's an active character, use it. Otherwise, use the first character or create a default
   const character = activeCharacter || 
-                    (characters && characters.length > 0 ? characters[0] : createDefaultCharacter());
+                    (characters.length > 0 ? characters[0] : createDefaultCharacter());
 
   return (
     <BackgroundWrapper>

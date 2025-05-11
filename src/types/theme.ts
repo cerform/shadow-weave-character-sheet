@@ -26,3 +26,6 @@ export interface ThemeStyles {
   decorativeCorners?: boolean;
   primaryColor?: string;
 }
+
+// Add this line to export Theme as ThemeStyles
+export type Theme = ThemeStyles;
