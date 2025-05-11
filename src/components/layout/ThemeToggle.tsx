@@ -2,8 +2,7 @@
 import React from "react";
 import { Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useTheme } from "@/hooks/use-theme";
-import { ThemeType } from "@/types/theme";
+import { useTheme, ThemeType } from "@/hooks/use-theme";
 
 const ThemeToggle = () => {
   // Получаем тему и функцию для ее изменения из контекста
