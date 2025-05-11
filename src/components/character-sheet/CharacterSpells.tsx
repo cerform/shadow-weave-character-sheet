@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -30,12 +31,19 @@ const CharacterSpells: React.FC<CharacterSpellsProps> = ({
   // Нормализуем заклинания персонажа
   const spells = useMemo(() => {
     if (!character.spells || !Array.isArray(character.spells)) return [];
-    return normalizeSpells(character);
+    return normalizeSpells(character.spells);
   }, [character.spells]);
 
   // Группируем заклинания по уровням
   const spellsByLevel = useMemo(() => {
     return spells.reduce((acc: Record<number, CharacterSpell[]>, spell) => {
+      if (typeof spell === 'string') {
+        // Если заклинание представлено строкой, считаем его заговором
+        if (!acc[0]) acc[0] = [];
+        acc[0].push({ name: spell, level: 0, prepared: true });
+        return acc;
+      }
+      
       const level = spell.level || 0;
       if (!acc[level]) acc[level] = [];
       acc[level].push(spell);
@@ -45,7 +53,10 @@ const CharacterSpells: React.FC<CharacterSpellsProps> = ({
 
   // Подготовленные заклинания
   const preparedSpells = useMemo(() => {
-    return spells.filter(spell => spell.prepared);
+    return spells.filter(spell => {
+      if (typeof spell === 'string') return true; // Строковые заклинания всегда считаем подготовленными
+      return spell.prepared;
+    });
   }, [spells]);
 
   // Получаем цвет для бейджа уровня заклинания
@@ -70,6 +81,10 @@ const CharacterSpells: React.FC<CharacterSpellsProps> = ({
     if (!onUpdate) return;
 
     const updatedSpells = spells.map(spell => {
+      if (typeof spell === 'string') {
+        return spell; // Возвращаем строковые заклинания как есть
+      }
+      
       if (spell.name === spellName) {
         return { ...spell, prepared: !spell.prepared };
       }
@@ -83,7 +98,7 @@ const CharacterSpells: React.FC<CharacterSpellsProps> = ({
   const handleSpellClick = (spell: CharacterSpell) => {
     if (onSpellClick) {
       // Преобразуем CharacterSpell в SpellData с дефолтными значениями для обязательных полей
-      const spellData: SpellData = convertToSpellData(spell);
+      const spellData = convertToSpellData([spell])[0];
       onSpellClick(spellData);
     }
   };
@@ -133,9 +148,9 @@ const CharacterSpells: React.FC<CharacterSpellsProps> = ({
                         {Number(level) === 0 ? 'Заговоры' : `Заклинания ${level} уровня`}
                       </h3>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                        {spells.map((spell: CharacterSpell) => (
+                        {spells.map((spell: CharacterSpell, index) => (
                           <div 
-                            key={`all-${spell.name}`} 
+                            key={`all-${spell.name}-${index}`} 
                             className="flex items-center justify-between p-2 border rounded-md hover:bg-black/20"
                             style={{ borderColor: spell.prepared ? getSpellLevelColor(spell.level || 0) : 'inherit' }}
                           >
@@ -182,30 +197,37 @@ const CharacterSpells: React.FC<CharacterSpellsProps> = ({
             <TabsContent value="prepared" className="space-y-2">
               {preparedSpells.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                  {preparedSpells.map(spell => (
-                    <div 
-                      key={`prepared-${spell.name}`} 
-                      className="flex items-center justify-between p-2 border rounded-md hover:bg-black/20"
-                      style={{ borderColor: getSpellLevelColor(spell.level || 0) }}
-                    >
-                      <div className="flex items-center gap-2">
-                        <Badge 
-                          style={{ backgroundColor: getSpellLevelColor(spell.level || 0) }}
-                          className="text-white"
-                        >
-                          {spell.level === 0 ? 'Заговор' : spell.level}
-                        </Badge>
-                        <span style={{ color: currentTheme.textColor }}>{spell.name}</span>
-                      </div>
-                      <Button 
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleSpellClick(spell)}
+                  {preparedSpells.map((spell, index) => {
+                    // Преобразуем строку в объект заклинания если нужно
+                    const spellObj = typeof spell === 'string' 
+                      ? { name: spell, level: 0, prepared: true } as CharacterSpell
+                      : spell;
+                      
+                    return (
+                      <div 
+                        key={`prepared-${spellObj.name}-${index}`} 
+                        className="flex items-center justify-between p-2 border rounded-md hover:bg-black/20"
+                        style={{ borderColor: getSpellLevelColor(spellObj.level || 0) }}
                       >
-                        <Book className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  ))}
+                        <div className="flex items-center gap-2">
+                          <Badge 
+                            style={{ backgroundColor: getSpellLevelColor(spellObj.level || 0) }}
+                            className="text-white"
+                          >
+                            {spellObj.level === 0 ? 'Заговор' : spellObj.level}
+                          </Badge>
+                          <span style={{ color: currentTheme.textColor }}>{spellObj.name}</span>
+                        </div>
+                        <Button 
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleSpellClick(spellObj)}
+                        >
+                          <Book className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    );
+                  })}
                 </div>
               ) : (
                 <div className="text-center text-muted-foreground py-4">
@@ -223,9 +245,9 @@ const CharacterSpells: React.FC<CharacterSpellsProps> = ({
                 return (
                   <TabsContent key={`level-content-${level}`} value={level} className="space-y-2">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                      {spells.map((spell: CharacterSpell) => (
+                      {spells.map((spell: CharacterSpell, index) => (
                         <div 
-                          key={`level-spell-${spell.name}`} 
+                          key={`level-spell-${spell.name}-${index}`} 
                           className="flex items-center justify-between p-2 border rounded-md hover:bg-black/20"
                           style={{ borderColor: spell.prepared ? getSpellLevelColor(Number(level)) : 'inherit' }}
                         >

@@ -144,31 +144,5 @@ export const filterSpellsByClassAndLevel = (
   });
 };
 
-// Вспомогательные функции для работы с заклинаниями - now imported from spellHelpers
-export const convertCharacterSpellsToSpellData = (spells: any[]): SpellData[] => {
-  if (!spells || !Array.isArray(spells)) return [];
-  
-  return spells.map(spell => {
-    if (typeof spell === 'string') {
-      // Если заклинание представлено строкой, создаем минимальный объект
-      return {
-        id: `spell-${spell.replace(/\s+/g, '-').toLowerCase()}`,
-        name: spell,
-        level: 0,
-        school: 'Универсальная',
-        castingTime: '1 действие',
-        range: 'Касание',
-        components: '',
-        duration: 'Мгновенная',
-        description: '',
-        classes: [],
-      };
-    } else {
-      // Если это объект заклинания, убеждаемся что у него есть id
-      return {
-        ...spell,
-        id: spell.id || `spell-${spell.name.replace(/\s+/g, '-').toLowerCase()}`
-      };
-    }
-  });
-};
+// Вспомогательные функции для работы с заклинаниями импортированы из spellHelpers.ts
+// и реэкспортированы выше
