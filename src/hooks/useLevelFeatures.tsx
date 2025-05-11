@@ -46,6 +46,7 @@ export const useLevelFeatures = (character: Character) => {
       features.push({
         id: `subclass-${character.class}-${level}`,
         level: getSubclassLevel(character.class),
+        title: 'Архетип',
         name: 'Архетип',
         description: `Выберите архетип для ${character.class}`,
         type: 'subclass',
@@ -61,6 +62,7 @@ export const useLevelFeatures = (character: Character) => {
         features.push({
           id: `ability-increase-${abiLevel}`,
           level: abiLevel,
+          title: 'Увеличение характеристик',
           name: 'Увеличение характеристик',
           description: 'Увеличьте одну характеристику на 2 очка или две характеристики на 1 очко каждая',
           type: 'ability_increase'
@@ -73,6 +75,7 @@ export const useLevelFeatures = (character: Character) => {
       features.push({
         id: `extra-attack-${character.class}-5`,
         level: 5,
+        title: 'Дополнительная атака',
         name: 'Дополнительная атака',
         description: 'Вы можете атаковать дважды вместо одного раза, когда в свой ход совершаете действие Атака',
         type: 'extra_attack'
@@ -87,6 +90,7 @@ export const useLevelFeatures = (character: Character) => {
           features.push({
             id: `spell-level-${spellLevel}`,
             level: charLevel,
+            title: `Заклинания ${spellLevel} уровня`,
             name: `Заклинания ${spellLevel} уровня`,
             description: `Вы получаете доступ к заклинаниям ${spellLevel} уровня`,
             type: 'spell_level'

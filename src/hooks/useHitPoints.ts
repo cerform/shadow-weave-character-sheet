@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import type { Character, HitPointEvent } from '@/types/character';
 import { getNumericModifier } from '@/utils/characterUtils';
@@ -66,7 +65,6 @@ export const useHitPoints = ({ character, onUpdate }: UseHitPointsProps) => {
     // Check for unconsciousness
     if (newHP === 0) {
       toast({
-        title: "Персонаж без сознания!",
         description: "HP достигло 0, персонаж без сознания.",
         variant: "destructive",
       });
@@ -176,8 +174,7 @@ export const useHitPoints = ({ character, onUpdate }: UseHitPointsProps) => {
       // Check for stabilization
       if (updatedDeathSaves.successes >= 3) {
         toast({
-          title: "Персонаж стабилизирован",
-          description: "Персонаж стабилизировался и больше не совершает спасброски от смерти.",
+          description: "Персонаж стабилизирован",
         });
       }
     } else {
@@ -186,8 +183,7 @@ export const useHitPoints = ({ character, onUpdate }: UseHitPointsProps) => {
       // Check for death
       if (updatedDeathSaves.failures >= 3) {
         toast({
-          title: "Персонаж умер",
-          description: "Персонаж не выдержал спасброски от смерти и умер.",
+          description: "Персонаж умер",
           variant: "destructive",
         });
       }
@@ -233,7 +229,6 @@ export const useHitPoints = ({ character, onUpdate }: UseHitPointsProps) => {
     });
     
     toast({
-      title: "Длительный отдых",
       description: `HP восстановлены до максимума (${maxHP}). Восстановлено ${regain} костей хитов.`,
     });
   };
@@ -246,8 +241,7 @@ export const useHitPoints = ({ character, onUpdate }: UseHitPointsProps) => {
     
     if (hitDiceToUse <= 0) {
       toast({
-        title: "Нет доступных костей хитов",
-        description: "У персонажа не осталось костей хитов для восстановления здоровья.",
+        description: "Нет доступных костей хитов",
       });
       return;
     }
@@ -275,7 +269,6 @@ export const useHitPoints = ({ character, onUpdate }: UseHitPointsProps) => {
     });
     
     toast({
-      title: "Короткий отдых",
       description: `Использовано костей хитов: ${hitDiceToUse}. Восстановлено ${totalHealing} HP.`,
     });
   };

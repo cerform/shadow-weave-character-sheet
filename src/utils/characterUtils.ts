@@ -1,164 +1,177 @@
 
-import { Character, AbilityScores } from '@/types/character';
-import { v4 as uuidv4 } from 'uuid';
+import { Character } from '@/types/character';
 
 /**
- * Get numeric modifier from an ability score
- */
-export function getNumericModifier(score: number): number {
-  return Math.floor((score - 10) / 2);
-}
-
-/**
- * Get modifier string (e.g., "+2", "-1") from an ability score
- */
-export function getModifierFromAbilityScore(score: number): string {
-  const mod = getNumericModifier(score);
-  return mod >= 0 ? `+${mod}` : `${mod}`;
-}
-
-/**
- * Alias for getNumericModifier for backward compatibility
- */
-export function getAbilityModifier(score: number): number {
-  return getNumericModifier(score);
-}
-
-/**
- * Create a default character with minimal required properties
+ * Creates a default character object with basic properties
  */
 export function createDefaultCharacter(): Character {
-  const now = new Date().toISOString();
   return {
-    id: uuidv4(),
-    name: 'Новый персонаж',
+    id: crypto.randomUUID(),
+    name: '',
     race: '',
     class: '',
-    background: '',
-    alignment: 'Нейтральный',
     level: 1,
-    xp: 0,
+    experience: 0,
+    alignment: 'Нейтральный',
+    background: '',
+    strength: 10,
+    dexterity: 10,
+    constitution: 10,
+    intelligence: 10,
+    wisdom: 10,
+    charisma: 10,
     abilities: {
       STR: 10, DEX: 10, CON: 10, INT: 10, WIS: 10, CHA: 10,
       strength: 10, dexterity: 10, constitution: 10, intelligence: 10, wisdom: 10, charisma: 10
     },
-    savingThrows: {
-      STR: 0, DEX: 0, CON: 0, INT: 0, WIS: 0, CHA: 0,
-      strength: 0, dexterity: 0, constitution: 0, intelligence: 0, wisdom: 0, charisma: 0
-    },
-    skills: {},
-    hp: 0,
-    maxHp: 0,
-    temporaryHp: 0,
-    ac: 10,
-    proficiencyBonus: 2,
-    speed: 30,
-    initiative: 0,
-    inspiration: false,
     hitDice: {
       total: 1,
       used: 0,
       dieType: 'd8',
-      value: 'd8',
-      remaining: 1
+      value: '1d8'
     },
-    resources: {},
-    deathSaves: {
-      successes: 0,
-      failures: 0
-    },
-    spellcasting: {
-      ability: '',
-      dc: 0,
-      attack: 0
-    },
-    spellSlots: {},
+    maxHp: 10,
+    currentHp: 10,
+    temporaryHp: 0,
+    armorClass: 10,
+    initiative: 0,
+    speed: 30,
     spells: [],
-    equipment: {
-      weapons: [],
-      armor: '',
-      items: [],
-      gold: 0
-    },
-    proficiencies: {
-      languages: [],
-      tools: [],
-      weapons: [],
-      armor: [],
-      skills: []
-    },
+    equipment: [],
     features: [],
-    notes: '',
-    createdAt: now,
-    updatedAt: now,
-    lastUsed: now
+    proficiencies: [],
+    proficiencyBonus: 2,
+    description: '',
+    personality: '',
+    ideals: '',
+    bonds: '',
+    flaws: ''
   };
 }
 
 /**
- * Calculate racial stat bonuses based on race
+ * Calculate racial stat bonuses
  */
-export function calculateStatBonuses(race: string): Partial<AbilityScores> {
-  const raceBonuses: Record<string, Partial<AbilityScores>> = {
-    'Человек': { STR: 1, DEX: 1, CON: 1, INT: 1, WIS: 1, CHA: 1 },
-    'Эльф': { DEX: 2 },
-    'Дроу': { DEX: 2, CHA: 1 },
-    'Высший эльф': { DEX: 2, INT: 1 },
-    'Лесной эльф': { DEX: 2, WIS: 1 },
-    'Полуэльф': { CHA: 2 }, // +1 to two other ability scores of your choice
-    'Дварф': { CON: 2 },
-    'Горный дварф': { CON: 2, STR: 2 },
-    'Холмовой дварф': { CON: 2, WIS: 1 },
-    'Полуорк': { STR: 2, CON: 1 },
-    'Гном': { INT: 2 },
-    'Лесной гном': { INT: 2, DEX: 1 },
-    'Скальный гном': { INT: 2, CON: 1 },
-    'Полурослик': { DEX: 2 },
-    'Коренастый': { DEX: 2, CON: 1 },
-    'Легконогий': { DEX: 2, CHA: 1 },
-    'Тифлинг': { CHA: 2, INT: 1 },
-    'Драконорожденный': { STR: 2, CHA: 1 }
+export function calculateStatBonuses(race: string): Record<string, number> {
+  const bonuses: Record<string, number> = {
+    STR: 0, DEX: 0, CON: 0, INT: 0, WIS: 0, CHA: 0
   };
-  
-  return raceBonuses[race] || {};
+
+  switch (race.toLowerCase()) {
+    case 'дварф':
+    case 'dwarf':
+      bonuses.CON = 2;
+      break;
+    case 'эльф':
+    case 'elf':
+      bonuses.DEX = 2;
+      break;
+    case 'полурослик':
+    case 'halfling':
+      bonuses.DEX = 2;
+      break;
+    case 'человек':
+    case 'human':
+      bonuses.STR = 1;
+      bonuses.DEX = 1;
+      bonuses.CON = 1;
+      bonuses.INT = 1;
+      bonuses.WIS = 1;
+      bonuses.CHA = 1;
+      break;
+    case 'драконорожденный':
+    case 'dragonborn':
+      bonuses.STR = 2;
+      bonuses.CHA = 1;
+      break;
+    case 'гном':
+    case 'gnome':
+      bonuses.INT = 2;
+      break;
+    case 'полуэльф':
+    case 'half-elf':
+      bonuses.CHA = 2;
+      // Полуэльфы получают +1 к двум другим характеристикам на выбор
+      break;
+    case 'полуорк':
+    case 'half-orc':
+      bonuses.STR = 2;
+      bonuses.CON = 1;
+      break;
+    case 'тифлинг':
+    case 'tiefling':
+      bonuses.INT = 1;
+      bonuses.CHA = 2;
+      break;
+    default:
+      break;
+  }
+
+  return bonuses;
 }
 
 /**
- * Convert a partial character to a full character with defaults
+ * Convert Partial<Character> to Character
  */
-export function convertToCharacter(partial: Partial<Character>): Character {
+export function convertToCharacter(partialChar: Partial<Character>): Character {
   const defaultChar = createDefaultCharacter();
-  
-  // Merge the partial character with the default character
-  return {
-    ...defaultChar,
-    ...partial,
-    // Ensure abilities and other nested objects are merged correctly
-    abilities: {
-      ...defaultChar.abilities,
-      ...(partial.abilities || {})
-    },
-    hitDice: {
-      ...defaultChar.hitDice,
-      ...(partial.hitDice || {})
-    },
-    proficiencies: {
-      ...defaultChar.proficiencies,
-      ...(partial.proficiencies || {})
-    },
-    spellcasting: {
-      ...defaultChar.spellcasting,
-      ...(partial.spellcasting || {})
-    }
-  };
+  return { ...defaultChar, ...partialChar };
 }
 
-export function isMagicClass(className: string): boolean {
-  const magicClasses = [
-    'Бард', 'Жрец', 'Друид', 'Волшебник', 'Колдун', 
-    'Чародей', 'Паладин', 'Следопыт'
-  ];
-  
-  return magicClasses.includes(className);
+/**
+ * Calculate ability modifier from score
+ */
+export function getNumericModifier(abilityScore: number): number {
+  return Math.floor((abilityScore - 10) / 2);
 }
 
+/**
+ * Calculate ability modifier with sign
+ */
+export function calculateAbilityModifier(abilityScore: number): string {
+  const modifier = getNumericModifier(abilityScore);
+  return modifier >= 0 ? `+${modifier}` : `${modifier}`;
+}
+
+/**
+ * Get modifier from ability score
+ */
+export function getModifierFromAbilityScore(abilityScore: number): number {
+  return Math.floor((abilityScore - 10) / 2);
+}
+
+/**
+ * Get ability modifier for a specific ability 
+ */
+export function getAbilityModifier(character: Character, ability: string): number {
+  let score = 10;
+  
+  switch (ability.toLowerCase()) {
+    case 'strength':
+    case 'str':
+      score = character.abilities?.strength || character.strength || 10;
+      break;
+    case 'dexterity':
+    case 'dex':
+      score = character.abilities?.dexterity || character.dexterity || 10;
+      break;
+    case 'constitution':
+    case 'con':
+      score = character.abilities?.constitution || character.constitution || 10;
+      break;
+    case 'intelligence':
+    case 'int':
+      score = character.abilities?.intelligence || character.intelligence || 10;
+      break;
+    case 'wisdom':
+    case 'wis':
+      score = character.abilities?.wisdom || character.wisdom || 10;
+      break;
+    case 'charisma':
+    case 'cha':
+      score = character.abilities?.charisma || character.charisma || 10;
+      break;
+  }
+  
+  return getNumericModifier(score);
+}

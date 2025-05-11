@@ -1,4 +1,3 @@
-
 export interface Step {
   id: string;
   title: string;
@@ -74,4 +73,3 @@ export interface UseLevelFeaturesResult {
 
 // Импортируем необходимые типы
 import { Character, Item } from './character';
-

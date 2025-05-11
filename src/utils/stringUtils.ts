@@ -1,32 +1,21 @@
 
 /**
- * Safely converts any value to a string
+ * Safely converts a value to string
  */
 export function safeToString(value: any): string {
-  if (value === null || value === undefined) {
-    return '';
-  }
-  
-  if (typeof value === 'string') {
-    return value;
-  }
-  
-  try {
-    return String(value);
-  } catch (e) {
-    return '';
-  }
+  if (value === null || value === undefined) return '';
+  return String(value);
 }
 
 /**
- * Converts a string to a URL-safe slug
+ * Creates a slug (URL-friendly string) from a given string
  */
-export function slugify(str: string): string {
-  return str
+export function slugify(text: string): string {
+  return text
+    .toString()
     .toLowerCase()
-    .replace(/[\s_]+/g, '-')
+    .trim()
+    .replace(/\s+/g, '-')
     .replace(/[^\w\-]+/g, '')
-    .replace(/\-\-+/g, '-')
-    .replace(/^-+/, '')
-    .replace(/-+$/, '');
+    .replace(/\-\-+/g, '-');
 }

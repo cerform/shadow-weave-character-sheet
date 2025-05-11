@@ -1,109 +1,64 @@
 
 import { CharacterSpell } from '@/types/character';
+import { extractSpellDetailsFromText, generateSpellId } from './spellHelpers';
 
 /**
- * Парсит строку с заклинанием из формата [уровень] Название заклинания ВСМ
+ * Import spells from text
+ * Format should be blocks of text separated by double newlines
  */
-export const parseSpellEntry = (entry: string): {
-  name: string;
-  level: number;
-  components: {
-    verbal: boolean;
-    somatic: boolean;
-    material: boolean;
-    ritual: boolean;
-    concentration: boolean;
-  };
-} | null => {
-  // Формат: [0] Название ВСМ или [1] Название ВСР
-  const match = entry.match(/\[(\d+)\]\s+(.+?)\s+([ВСМРК\.]*)$/);
+export function importSpellsFromText(rawText: string, existingSpells: CharacterSpell[] = []): CharacterSpell[] {
+  // Split text by double newline to separate spell entries
+  const spellBlocks = rawText.split(/\n\s*\n/)
+    .filter(block => block.trim().length > 0);
   
-  if (!match) return null;
-  
-  const level = parseInt(match[1], 10);
-  const name = match[2].trim();
-  const componentCode = match[3] || '';
-  
-  return {
-    name,
-    level,
-    components: {
-      verbal: componentCode.includes('В'),
-      somatic: componentCode.includes('С'),
-      material: componentCode.includes('М'),
-      ritual: componentCode.includes('Р'),
-      concentration: componentCode.includes('К')
-    }
-  };
-};
-
-/**
- * Обрабатывает пакет заклинаний из текста
- */
-export const processSpellBatch = (rawText: string): any[] => {
-  const lines = rawText.split('\n').filter(line => line.trim().length > 0);
-  const results = [];
-  
-  for (const line of lines) {
-    const parsed = parseSpellEntry(line);
-    if (parsed) {
-      results.push({
-        name: parsed.name,
-        level: parsed.level,
-        components: parsed.components
-      });
-    }
+  if (spellBlocks.length === 0) {
+    return existingSpells;
   }
   
-  return results;
-};
-
-/**
- * Импортирует заклинания из текста и добавляет их к существующим
- */
-export const importSpellsFromText = (
-  rawText: string, 
-  existingSpells: CharacterSpell[]
-): CharacterSpell[] => {
-  if (!rawText.trim()) return existingSpells;
+  const existingNames = new Set(existingSpells.map(spell => 
+    typeof spell === 'string' ? spell : spell.name.toLowerCase()
+  ));
   
-  const parsed = processSpellBatch(rawText);
-  const updatedSpells = [...existingSpells];
+  const newSpells: CharacterSpell[] = [];
   
-  parsed.forEach(spell => {
-    const existingIndex = updatedSpells.findIndex(s => 
-      s.name === spell.name && s.level === spell.level
-    );
+  // Process each spell block
+  spellBlocks.forEach(block => {
+    const spellDetails = extractSpellDetailsFromText(block);
     
-    if (existingIndex >= 0) {
-      // Обновляем существующее заклинание
-      updatedSpells[existingIndex] = {
-        ...updatedSpells[existingIndex],
-        verbal: spell.components.verbal,
-        somatic: spell.components.somatic,
-        material: spell.components.material,
-        ritual: spell.components.ritual,
-        concentration: spell.components.concentration
+    // Skip if this spell already exists
+    if (spellDetails.name && !existingNames.has(spellDetails.name.toLowerCase())) {
+      // Create a valid CharacterSpell object
+      const spell: CharacterSpell = {
+        id: generateSpellId(spellDetails.name),
+        name: spellDetails.name,
+        level: spellDetails.level || 0,
+        school: spellDetails.school || 'Универсальная',
+        castingTime: spellDetails.castingTime || '1 действие',
+        range: spellDetails.range || 'На себя',
+        components: spellDetails.components || '',
+        duration: spellDetails.duration || 'Мгновенная',
+        description: spellDetails.description || '',
+        prepared: false
       };
-    } else {
-      // Добавляем новое заклинание
-      updatedSpells.push({
-        name: spell.name,
-        level: spell.level,
-        verbal: spell.components.verbal,
-        somatic: spell.components.somatic,
-        material: spell.components.material,
-        ritual: spell.components.ritual,
-        concentration: spell.components.concentration,
-        school: "Не указано",
-        castingTime: "1 действие",
-        range: "Не указано",
-        components: "",
-        duration: "Мгновенная",
-        description: "Нет описания"
-      });
+      
+      newSpells.push(spell);
+      existingNames.add(spell.name.toLowerCase());
     }
   });
   
-  return updatedSpells;
-};
+  // Combine existing spells with new ones
+  const combinedSpells = [...existingSpells, ...newSpells];
+  
+  // Sort by level and then by name
+  return combinedSpells.sort((a, b) => {
+    const levelA = typeof a === 'string' ? 0 : a.level || 0;
+    const levelB = typeof b === 'string' ? 0 : b.level || 0;
+    
+    if (levelA !== levelB) return levelA - levelB;
+    
+    const nameA = typeof a === 'string' ? a : a.name;
+    const nameB = typeof b === 'string' ? b : b.name;
+    
+    return nameA.localeCompare(nameB);
+  });
+}

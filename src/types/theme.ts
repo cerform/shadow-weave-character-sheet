@@ -25,4 +25,3 @@ export interface ThemeStyles {
   decorativeCorners?: boolean;
   primaryColor?: string;
 }
-

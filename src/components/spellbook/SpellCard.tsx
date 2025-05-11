@@ -1,58 +1,64 @@
 
 import React from 'react';
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { SpellData } from '@/types/spells';
 import { ThemeStyles } from '@/types/theme';
+import { Badge } from '@/components/ui/badge';
 
 export interface SpellCardProps {
   spell: SpellData;
-  onClick?: () => void;
   currentTheme: ThemeStyles;
+  onClick?: () => void;
 }
 
-const SpellCard: React.FC<SpellCardProps> = ({ spell, onClick, currentTheme }) => {
-  const handleClick = () => {
-    if (onClick) onClick();
-  };
-
-  const getComponentsString = () => {
-    const components = [];
-    if (spell.verbal) components.push('В');
-    if (spell.somatic) components.push('С');
-    if (spell.material) components.push('М');
-    return components.join(', ');
-  };
-
+const SpellCard: React.FC<SpellCardProps> = ({ spell, currentTheme, onClick }) => {
   return (
-    <Card 
-      className="cursor-pointer hover:bg-accent/5"
-      onClick={handleClick}
-      style={{
-        backgroundColor: currentTheme.cardBackground,
-        borderColor: currentTheme.accent,
-        color: currentTheme.textColor
-      }}
+    <div 
+      className="p-2 text-sm cursor-pointer"
+      onClick={onClick}
+      style={{ color: currentTheme.textColor }}
     >
-      <CardContent className="p-3">
-        <div className="flex flex-col space-y-2">
-          <div className="flex justify-between items-start">
-            <span className="font-medium">{spell.name}</span>
-            <Badge variant="outline">{spell.level === 0 ? 'Заговор' : `${spell.level} ур.`}</Badge>
-          </div>
-          
-          <div className="text-xs" style={{ color: currentTheme.mutedTextColor }}>
-            <div>{spell.school}</div>
-            <div>
-              <span>{spell.castingTime || '1 действие'}</span>
-              {spell.concentration && <span> • Концентрация</span>}
-              {spell.ritual && <span> • Ритуал</span>}
-            </div>
-            <div>Компоненты: {getComponentsString() || 'Нет'}</div>
-          </div>
+      {spell.castingTime && (
+        <div className="flex justify-between mb-1">
+          <span className="font-medium">Время накладывания:</span>
+          <span>{spell.castingTime}</span>
         </div>
-      </CardContent>
-    </Card>
+      )}
+      
+      {spell.range && (
+        <div className="flex justify-between mb-1">
+          <span className="font-medium">Дистанция:</span>
+          <span>{spell.range}</span>
+        </div>
+      )}
+      
+      <div className="flex justify-between mb-1">
+        <span className="font-medium">Компоненты:</span>
+        <div>
+          {spell.verbal && <Badge variant="outline" className="mr-1">В</Badge>}
+          {spell.somatic && <Badge variant="outline" className="mr-1">С</Badge>}
+          {spell.material && <Badge variant="outline">М</Badge>}
+        </div>
+      </div>
+      
+      {spell.duration && (
+        <div className="flex justify-between mb-1">
+          <span className="font-medium">Длительность:</span>
+          <span>{spell.duration}</span>
+        </div>
+      )}
+      
+      {spell.description && (
+        <div className="mt-2 text-sm border-t pt-2" style={{ borderColor: `${currentTheme.borderColor}40` }}>
+          {typeof spell.description === 'string' ? (
+            <p>{spell.description}</p>
+          ) : Array.isArray(spell.description) ? (
+            spell.description.map((paragraph, i) => (
+              <p key={i} className={i > 0 ? 'mt-1' : ''}>{paragraph}</p>
+            ))
+          ) : null}
+        </div>
+      )}
+    </div>
   );
 };
 
