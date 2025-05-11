@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -68,6 +67,11 @@ const SpellPanel: React.FC<SpellPanelProps> = ({ character, onUpdate, onSpellCli
       used = slotInfo.used;
     }
     
+    // Ensure we're passing the proper structure to SpellSlotsPopover
+    const slotObject = typeof slotInfo === 'number' 
+      ? { max, used } // Convert number to object structure
+      : slotInfo;
+    
     return (
       <div key={`spell-slots-${level}`} className="flex items-center justify-between">
         <span style={{ color: currentTheme.textColor }}>{level}-й уровень:</span>
@@ -82,14 +86,11 @@ const SpellPanel: React.FC<SpellPanelProps> = ({ character, onUpdate, onSpellCli
             onSlotsChange={(newSlots) => {
               const updatedSpellSlots = { ...character.spellSlots };
               
-              if (typeof updatedSpellSlots[level] === 'number') {
-                updatedSpellSlots[level] = newSlots;
-              } else {
-                updatedSpellSlots[level] = {
-                  max: max,
-                  used: max - newSlots
-                };
-              }
+              // Create or update the slot object
+              updatedSpellSlots[level] = {
+                max: max,
+                used: max - newSlots
+              };
               
               onUpdate({ spellSlots: updatedSpellSlots });
             }}
@@ -182,42 +183,63 @@ const SpellPanel: React.FC<SpellPanelProps> = ({ character, onUpdate, onSpellCli
       </CardHeader>
       <CardContent className="pl-2 pr-2">
         <ScrollArea className="h-[200px] w-full">
-          {Object.entries(spellsByLevel).sort(([levelA], [levelB]) => 
-            parseInt(levelA) - parseInt(levelB)
-          ).map(([level, spells]) => (
-            <div key={`level-${level}`} className="mb-4">
-              <h3 className="text-sm font-medium mb-2" style={{ color: currentTheme.textColor }}>
-                {level === "0" ? "Заговоры" : `${level}-й уровень`}
-              </h3>
-              <div className="flex flex-col space-y-1">
-                {Array.isArray(spells) && spells.map((spell) => (
-                  <TooltipProvider key={`spell-${spell.id || spell.name}-${Math.random()}`}>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="w-full justify-start text-left h-auto py-1"
-                          onClick={() => onSpellClick && onSpellClick(convertToSpellData(spell))}
-                          style={{ color: currentTheme.textColor }}
-                        >
-                          {spell.name}
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <div className="max-w-xs">
-                          <div className="font-medium">{spell.name}</div>
-                          <div className="text-xs opacity-80">
-                            {spell.school} {spell.level === 0 ? "Заговор" : `${spell.level}-й уровень`}
-                          </div>
-                        </div>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                ))}
-              </div>
+          {searchTerm ? (
+            <div className="flex flex-col space-y-2">
+              {filteredSpells.map((spell) => (
+                <Button
+                  key={`spell-${spell.id || spell.name}-${Math.random()}`}
+                  variant="secondary"
+                  className="w-full justify-start"
+                  onClick={() => onSpellClick && onSpellClick(convertToSpellData(spell))}
+                  style={{ color: currentTheme.textColor }}
+                >
+                  {spell.name} {spell.level === 0 ? "(Заговор)" : `(Ур. ${spell.level})`}
+                </Button>
+              ))}
+              {filteredSpells.length === 0 && (
+                <div className="text-center py-4 text-muted-foreground">
+                  Заклинания не найдены
+                </div>
+              )}
             </div>
-          ))}
+          ) : (
+            Object.entries(spellsByLevel).sort(([levelA], [levelB]) => 
+              parseInt(levelA) - parseInt(levelB)
+            ).map(([level, spells]) => (
+              <div key={`level-${level}`} className="mb-4">
+                <h3 className="text-sm font-medium mb-2" style={{ color: currentTheme.textColor }}>
+                  {level === "0" ? "Заговоры" : `${level}-й уровень`}
+                </h3>
+                <div className="flex flex-col space-y-1">
+                  {Array.isArray(spells) && spells.map((spell) => (
+                    <TooltipProvider key={`spell-${spell.id || spell.name}-${Math.random()}`}>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="w-full justify-start text-left h-auto py-1"
+                            onClick={() => onSpellClick && onSpellClick(convertToSpellData(spell))}
+                            style={{ color: currentTheme.textColor }}
+                          >
+                            {spell.name}
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <div className="max-w-xs">
+                            <div className="font-medium">{spell.name}</div>
+                            <div className="text-xs opacity-80">
+                              {spell.school} {spell.level === 0 ? "Заговор" : `${spell.level}-й уровень`}
+                            </div>
+                          </div>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  ))}
+                </div>
+              </div>
+            ))
+          )}
         </ScrollArea>
       </CardContent>
       <CardFooter className="flex flex-col space-y-2">

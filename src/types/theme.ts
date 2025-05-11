@@ -4,7 +4,7 @@ export type ThemeType = 'default' | 'dark' | 'light' | 'fantasy' | 'magical' | '
 export interface ThemeStyles {
   name: string;
   background: string;
-  foreground: string;
+  foreground: string;  // Making this required
   cardBackground: string;
   primary: string;
   secondary: string;
@@ -15,7 +15,7 @@ export interface ThemeStyles {
   shadowColor: string;
   fontFamily: string;
   buttonText: string;
-  // Добавляем дополнительные свойства, которые используются в различных компонентах
+  // Optional properties
   success?: string;
   warning?: string;
   danger?: string;

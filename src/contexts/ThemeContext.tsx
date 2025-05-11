@@ -10,14 +10,27 @@ interface ThemeContextType {
   themeStyles: ThemeStyles;
 }
 
-// Add missing properties to match ThemeStyles interface
+// Add all required properties to match ThemeStyles interface
 const defaultTheme: ThemeStyles = {
-  ...themes.default,
-  name: 'default', // Добавляем name, так как он обязателен в ThemeStyles
-  mutedTextColor: '#6c757d', // Добавляем обязательное свойство
+  name: 'default',
+  background: '#f8f9fa',
+  foreground: '#1e293b', // Added foreground as required
+  cardBackground: '#ffffff',
+  primary: '#818cf8',
+  secondary: '#f3f4f6',
+  accent: '#6b21a8',
+  textColor: '#333333',
+  mutedTextColor: '#6c757d',
   borderColor: 'rgba(107, 33, 168, 0.3)',
   shadowColor: 'rgba(107, 33, 168, 0.2)',
   fontFamily: 'system-ui, sans-serif',
+  buttonText: '#ffffff',
+  success: '#10b981',
+  warning: '#f59e0b',
+  danger: '#ef4444',
+  backgroundBrightness: 1.0,
+  backgroundGradient: 'linear-gradient(to bottom, #f8f9fa, #e9ecef)',
+  decorativeCorners: false,
 };
 
 const defaultThemeContext: ThemeContextType = {
@@ -49,11 +62,18 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
         // Add missing properties to match ThemeStyles interface
         const themeWithAllProps: ThemeStyles = {
           ...(themes[savedTheme as keyof typeof themes] || themes.default),
-          name: savedTheme || 'default', // Добавляем name, так как он обязателен
+          name: savedTheme || 'default',
+          foreground: themes[savedTheme as keyof typeof themes]?.foreground || '#1e293b',
           mutedTextColor: themes[savedTheme as keyof typeof themes]?.mutedTextColor || '#6c757d',
-          borderColor: 'rgba(107, 33, 168, 0.3)',
-          shadowColor: 'rgba(107, 33, 168, 0.2)',
-          fontFamily: 'system-ui, sans-serif',
+          borderColor: themes[savedTheme as keyof typeof themes]?.borderColor || 'rgba(107, 33, 168, 0.3)',
+          shadowColor: themes[savedTheme as keyof typeof themes]?.shadowColor || 'rgba(107, 33, 168, 0.2)',
+          fontFamily: themes[savedTheme as keyof typeof themes]?.fontFamily || 'system-ui, sans-serif',
+          success: themes[savedTheme as keyof typeof themes]?.success || '#10b981',
+          warning: themes[savedTheme as keyof typeof themes]?.warning || '#f59e0b',
+          danger: themes[savedTheme as keyof typeof themes]?.danger || '#ef4444',
+          backgroundBrightness: themes[savedTheme as keyof typeof themes]?.backgroundBrightness || 1.0,
+          backgroundGradient: themes[savedTheme as keyof typeof themes]?.backgroundGradient,
+          decorativeCorners: themes[savedTheme as keyof typeof themes]?.decorativeCorners || false,
         };
         setCurrentTheme(themeWithAllProps);
       }
@@ -70,11 +90,18 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
       // Add missing properties to match ThemeStyles interface
       const themeWithAllProps: ThemeStyles = {
         ...(themes[newTheme as keyof typeof themes] || themes.default),
-        name: newTheme || 'default', // Добавляем name, так как он обязателен
+        name: newTheme || 'default',
+        foreground: themes[newTheme as keyof typeof themes]?.foreground || '#1e293b',
         mutedTextColor: themes[newTheme as keyof typeof themes]?.mutedTextColor || '#6c757d',
-        borderColor: 'rgba(107, 33, 168, 0.3)',
-        shadowColor: 'rgba(107, 33, 168, 0.2)',
-        fontFamily: 'system-ui, sans-serif',
+        borderColor: themes[newTheme as keyof typeof themes]?.borderColor || 'rgba(107, 33, 168, 0.3)',
+        shadowColor: themes[newTheme as keyof typeof themes]?.shadowColor || 'rgba(107, 33, 168, 0.2)',
+        fontFamily: themes[newTheme as keyof typeof themes]?.fontFamily || 'system-ui, sans-serif',
+        success: themes[newTheme as keyof typeof themes]?.success || '#10b981',
+        warning: themes[newTheme as keyof typeof themes]?.warning || '#f59e0b',
+        danger: themes[newTheme as keyof typeof themes]?.danger || '#ef4444',
+        backgroundBrightness: themes[newTheme as keyof typeof themes]?.backgroundBrightness || 1.0,
+        backgroundGradient: themes[newTheme as keyof typeof themes]?.backgroundGradient,
+        decorativeCorners: themes[newTheme as keyof typeof themes]?.decorativeCorners || false,
       };
       setCurrentTheme(themeWithAllProps);
       localStorage.setItem('theme', newTheme as string);

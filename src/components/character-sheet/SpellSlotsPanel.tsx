@@ -27,20 +27,11 @@ export const SpellSlotsPanel: React.FC<SpellSlotsPanelProps> = ({ className }) =
 
     const updatedSpellSlots = { ...character.spellSlots };
     
-    // Convert to object structure if it's a number
-    if (typeof updatedSpellSlots[level] === 'number' || !updatedSpellSlots[level]) {
-      const maxSlots = getMaxSlotsForLevel(level);
-      updatedSpellSlots[level] = {
-        max: maxSlots,
-        used: maxSlots - newSlots
-      };
-    } else {
-      // Update existing object structure
-      updatedSpellSlots[level] = {
-        ...updatedSpellSlots[level],
-        used: updatedSpellSlots[level].max - newSlots
-      };
-    }
+    // Ensure spellSlots is always an object with max and used properties
+    updatedSpellSlots[level] = {
+      max: getMaxSlots(level),
+      used: getMaxSlots(level) - newSlots
+    };
 
     updateCharacter({ spellSlots: updatedSpellSlots });
   };

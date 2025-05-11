@@ -3,7 +3,7 @@ import { useState, useCallback } from 'react';
 import { Character } from '@/types/character';
 import { v4 as uuidv4 } from 'uuid';
 import { useToast } from './use-toast';
-import { calculateStatBonuses, createDefaultCharacter, convertToCharacter } from '@/utils/characterUtils';
+import { calculateStatBonuses, createDefaultCharacter } from '@/utils/characterUtils';
 import { useCharacter } from '@/contexts/CharacterContext';
 
 export interface UseCharacterCreationOptions {
@@ -58,7 +58,7 @@ export const useCharacterCreation = (options: UseCharacterCreationOptions = {}) 
       
       // Применяем расовые бонусы если выбрана раса
       if (prev.race !== updated.race && updated.race) {
-        const racialBonuses = calculateStatBonuses(updated.race);
+        const racialBonuses = calculateStatBonuses(updated);
         if (racialBonuses) {
           updated.abilities = {
             ...updated.abilities!,
@@ -86,7 +86,8 @@ export const useCharacterCreation = (options: UseCharacterCreationOptions = {}) 
   const nextStep = useCallback(() => {
     if (currentStep === 6) {
       // Завершаем создание персонажа
-      const finalCharacter = convertToCharacter(character);
+      const finalCharacter = createDefaultCharacter();
+      Object.assign(finalCharacter, character);
       
       // Save character to context
       if (addCharacter) {
@@ -139,6 +140,12 @@ export const useCharacterCreation = (options: UseCharacterCreationOptions = {}) 
     return character.class ? magicClasses.includes(character.class) : false;
   }, [character.class]);
 
+  // Using our own helper to create a complete character from partial data
+  const convertToCharacter = useCallback((partialChar: Partial<Character>): Character => {
+    const defaultChar = createDefaultCharacter();
+    return { ...defaultChar, ...partialChar };
+  }, []);
+
   return {
     currentStep,
     character,
@@ -155,4 +162,3 @@ export const useCharacterCreation = (options: UseCharacterCreationOptions = {}) 
 };
 
 export default useCharacterCreation;
-

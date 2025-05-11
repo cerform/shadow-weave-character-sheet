@@ -272,7 +272,7 @@ export const SpellSelectionModal: React.FC<SpellSelectionModalProps> = ({
         <DialogFooter>
           <div className="text-sm mr-auto">
             {canPrepareMoreSpells(character, character.class || '') ? (
-              <span style={{ color: currentTheme.success }}>
+              <span style={{ color: currentTheme.success || '#10b981' }}>
                 Вы можете подготовить больше заклинаний
               </span>
             ) : (
