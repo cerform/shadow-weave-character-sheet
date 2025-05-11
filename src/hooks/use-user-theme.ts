@@ -1,7 +1,7 @@
 
 import { useContext } from 'react';
 import { ThemeContext } from './use-theme';
-import { Theme, ThemeType } from '@/types/theme';
+import { ThemeType } from '@/types/theme';
 
 export function useUserTheme() {
   const context = useContext(ThemeContext);
@@ -11,9 +11,9 @@ export function useUserTheme() {
   }
   
   return {
-    activeTheme: context.theme,
+    activeTheme: context.theme as ThemeType,
     setUserTheme: context.setTheme,
-    currentTheme: context.currentTheme
+    currentTheme: context.themeStyles
   };
 }
 

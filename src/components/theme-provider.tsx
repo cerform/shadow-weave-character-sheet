@@ -21,9 +21,14 @@ export const ThemeProviderContext = React.createContext<ThemeContextType>({
   themeStyles: themes.default
 });
 
-export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
+// Update the ThemeProvider interface to include defaultTheme
+interface CustomThemeProviderProps extends ThemeProviderProps {
+  defaultTheme?: ThemeType;
+}
+
+export function ThemeProvider({ children, defaultTheme = 'default', ...props }: CustomThemeProviderProps) {
   const { activeTheme, setUserTheme } = useUserTheme();
-  const [theme, setTheme] = React.useState<ThemeType>(activeTheme as ThemeType || 'default' as ThemeType);
+  const [theme, setTheme] = React.useState<ThemeType>(activeTheme as ThemeType || defaultTheme as ThemeType);
 
   // Синхронизируем с UserTheme при изменении activeTheme
   React.useEffect(() => {
@@ -51,10 +56,12 @@ export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
   // Обработчик для установки темы с синхронизацией между контекстами
   const handleSetTheme = (newTheme: ThemeType) => {
     setTheme(newTheme);
-    setUserTheme(newTheme);
+    if (setUserTheme) {
+      setUserTheme(newTheme);
+    }
     
     // Сохраняем тему в localStorage
-    localStorage.setItem('theme', newTheme);
+    localStorage.setItem('theme', newTheme as string);
     
     console.log("Theme set in ThemeProvider:", newTheme);
   };

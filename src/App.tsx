@@ -4,7 +4,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { AuthProvider } from './contexts/AuthContext';
 import { CharacterProvider } from './contexts/CharacterContext';
 import { SpellbookProvider } from './contexts/SpellbookContext';
-import { ThemeProvider } from './hooks/use-theme'; // Using this ThemeProvider instead
+import { ThemeProvider } from './components/theme-provider'; // Updated import path
 import AppRoutes from './AppRoutes';
 import { SocketProvider } from './contexts/SocketContext';
 
