@@ -1,5 +1,6 @@
 
 import { Character, CharacterSpell } from '@/types/character';
+import { SpellData } from '@/types/spells';
 import { slugify } from './stringUtils';
 
 /**
@@ -145,4 +146,155 @@ export const filterSpellsByClassAndLevel = (allSpells: CharacterSpell[], charact
       spellClass.toLowerCase() === classLower
     );
   });
+};
+
+/**
+ * Преобразует CharacterSpell в SpellData
+ */
+export const convertToSpellData = (spell: CharacterSpell | string): SpellData => {
+  if (typeof spell === 'string') {
+    return {
+      id: `spell-${slugify(spell)}`,
+      name: spell,
+      level: 0,
+      school: 'Универсальная',
+      castingTime: '1 действие',
+      range: 'На себя',
+      components: '',
+      duration: 'Мгновенная',
+      description: ''
+    };
+  }
+  
+  return {
+    id: spell.id || `spell-${slugify(spell.name)}`,
+    name: spell.name,
+    level: spell.level || 0,
+    school: spell.school || 'Универсальная',
+    castingTime: spell.castingTime || '1 действие',
+    range: spell.range || 'На себя',
+    components: spell.components || '',
+    duration: spell.duration || 'Мгновенная',
+    description: spell.description || '',
+    classes: spell.classes,
+    prepared: spell.prepared,
+    verbal: spell.verbal,
+    somatic: spell.somatic,
+    material: spell.material,
+    ritual: spell.ritual,
+    concentration: spell.concentration,
+    materials: spell.materials,
+    source: spell.source
+  };
+};
+
+/**
+ * Преобразует SpellData в CharacterSpell
+ */
+export const convertSpellDataToCharacterSpell = (spellData: SpellData): CharacterSpell => {
+  return {
+    id: spellData.id,
+    name: spellData.name,
+    level: spellData.level,
+    school: spellData.school,
+    castingTime: spellData.castingTime,
+    range: spellData.range,
+    components: spellData.components,
+    duration: spellData.duration,
+    description: spellData.description,
+    prepared: spellData.prepared || false,
+    ritual: spellData.ritual,
+    concentration: spellData.concentration,
+    verbal: spellData.verbal,
+    somatic: spellData.somatic,
+    material: spellData.material,
+    materials: spellData.materials,
+    classes: spellData.classes,
+    source: spellData.source
+  };
+};
+
+/**
+ * Преобразует массив CharacterSpell в массив SpellData
+ */
+export const convertSpellsForState = (spells: CharacterSpell[]): SpellData[] => {
+  return spells.map(spell => convertToSpellData(spell));
+};
+
+/**
+ * Вычисляет доступные заклинания в зависимости от класса и уровня
+ */
+export const calculateAvailableSpellsByClassAndLevel = (
+  characterClass: string, 
+  level: number,
+  abilityModifier = 0
+): { maxSpellLevel: number, cantripsCount: number, knownSpells: number } => {
+  // Значения по умолчанию
+  let maxSpellLevel = 0;
+  let cantripsCount = 0;
+  let knownSpells = 0;
+  
+  const classLower = characterClass?.toLowerCase() || '';
+  
+  // Максимальный уровень заклинаний
+  if (level >= 1 && level <= 2) maxSpellLevel = 1;
+  else if (level >= 3 && level <= 4) maxSpellLevel = 2;
+  else if (level >= 5 && level <= 8) maxSpellLevel = 3;
+  else if (level >= 9 && level <= 12) maxSpellLevel = 4;
+  else if (level >= 13 && level <= 16) maxSpellLevel = 5;
+  else if (level >= 17 && level <= 18) maxSpellLevel = 6;
+  else if (level >= 19) maxSpellLevel = 7;
+  
+  // Количество заговоров и известных заклинаний по классам
+  switch (classLower) {
+    case 'волшебник':
+    case 'wizard':
+      cantripsCount = level >= 10 ? 5 : level >= 4 ? 4 : 3;
+      knownSpells = 6 + (level * 2); // Стартовая книга заклинаний
+      break;
+      
+    case 'жрец':
+    case 'cleric':
+    case 'друид':
+    case 'druid':
+      cantripsCount = level >= 10 ? 5 : level >= 4 ? 4 : 3;
+      knownSpells = level + Math.max(1, abilityModifier); // Уровень + модификатор характеристики
+      break;
+      
+    case 'бард':
+    case 'bard':
+      cantripsCount = level >= 10 ? 4 : 2;
+      knownSpells = Math.max(4, level + 3); // Таблица из книги игрока
+      break;
+      
+    case 'чародей':
+    case 'sorcerer':
+      cantripsCount = level >= 10 ? 6 : level >= 4 ? 5 : 4;
+      knownSpells = level + 1; // Таблица из книги игрока
+      break;
+      
+    case 'колдун':
+    case 'warlock':
+      cantripsCount = level >= 10 ? 4 : 2;
+      knownSpells = Math.min(15, level + 1); // Таблица из книги игрока, максимум 15
+      break;
+      
+    case 'следопыт':
+    case 'ranger':
+      cantripsCount = 0; // По умолчанию у следопыта нет заговоров
+      knownSpells = Math.floor((level + 1) / 2); // Половина от уровня, округлённая вверх
+      break;
+      
+    case 'паладин':
+    case 'paladin':
+      cantripsCount = 0; // По умолчанию у паладина нет заговоров
+      knownSpells = Math.floor((level + 1) / 2); // Половина от уровня, округлённая вверх
+      break;
+      
+    default:
+      cantripsCount = 0;
+      knownSpells = 0;
+  }
+  
+  return { maxSpellLevel, cantripsCount, knownSpells };
 };
