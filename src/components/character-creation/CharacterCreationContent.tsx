@@ -57,12 +57,61 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
     onLevelChange(level);
   };
 
+  // Создаем типобезопасную обертку для character, чтобы передать в компоненты
+  const safeCharacter: Character = {
+    id: character.id || '',
+    name: character.name || '',
+    race: character.race || '',
+    subrace: character.subrace || '',
+    class: character.class || '',
+    level: character.level || 1,
+    background: character.background || '',
+    alignment: character.alignment || '',
+    experience: character.experience || 0,
+    strength: character.strength || 10,
+    dexterity: character.dexterity || 10, 
+    constitution: character.constitution || 10,
+    intelligence: character.intelligence || 10,
+    wisdom: character.wisdom || 10,
+    charisma: character.charisma || 10,
+    maxHp: character.maxHp || 0,
+    currentHp: character.currentHp || 0,
+    temporaryHp: character.temporaryHp || 0,
+    armorClass: character.armorClass || 10,
+    initiative: character.initiative || 0,
+    speed: character.speed || 30,
+    proficiencyBonus: character.proficiencyBonus || 2,
+    inspiration: character.inspiration || false,
+    equipment: character.equipment || [],
+    spells: character.spells || [],
+    features: character.features || [],
+    proficiencies: character.proficiencies || {
+      skills: [],
+      tools: [],
+      weapons: [],
+      armor: [],
+      languages: []
+    },
+    personality: character.personality || '',
+    ideals: character.ideals || '',
+    bonds: character.bonds || '',
+    flaws: character.flaws || '',
+    backstory: character.backstory || '',
+    notes: character.notes || '',
+    createdAt: character.createdAt || new Date().toISOString(),
+    updatedAt: character.updatedAt || new Date().toISOString(),
+    userId: character.userId || '',
+    portrait: character.portrait || '',
+    stats: character.stats || {},
+    hitDice: character.hitDice || { total: 1, current: 1, value: 'd8' }
+  };
+
   // Modified to use correct props
   switch (currentStep) {
     case 0:
       return (
         <CharacterRace
-          character={character}
+          character={safeCharacter}
           onUpdate={updateCharacter}
           nextStep={nextStep}
           prevStep={prevStep}
@@ -71,7 +120,7 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
     case 2:
       return (
         <CharacterClass
-          character={character}
+          character={safeCharacter}
           onUpdate={updateCharacter}
           nextStep={nextStep}
           prevStep={prevStep}
@@ -80,7 +129,7 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
     case 3:
       return (
         <CharacterLevelSelection
-          character={character}
+          character={safeCharacter}
           onUpdate={updateCharacter}
           onLevelChange={handleLevelChange}
           nextStep={nextStep}
@@ -90,7 +139,7 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
     case 4:
       return (
         <CharacterAbilities
-          character={character}
+          character={safeCharacter}
           onUpdate={updateCharacter}
           nextStep={nextStep}
           prevStep={prevStep}
@@ -108,7 +157,7 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
     case 5:
       return (
         <CharacterBackground
-          character={character}
+          character={safeCharacter}
           onUpdate={updateCharacter}
           nextStep={nextStep}
           prevStep={prevStep}
@@ -117,7 +166,7 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
     case 9:
       return (
         <CharacterSpells
-          character={character}
+          character={safeCharacter}
           onUpdate={updateCharacter}
           nextStep={nextStep}
           prevStep={prevStep}
@@ -126,7 +175,7 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
     case 10:
       return (
         <CharacterReview
-          character={character}
+          character={safeCharacter}
           onUpdate={updateCharacter}
           nextStep={nextStep}
           prevStep={prevStep}

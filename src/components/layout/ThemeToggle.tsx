@@ -14,6 +14,7 @@ const ThemeToggle = () => {
   
   // На основе текущей темы определяем, на какую переключаться
   const toggleTheme = () => {
+    console.log('Toggle theme from', theme);
     if (isDarkTheme) {
       // If theme is dark, switch to light theme
       setTheme('light' as ThemeType);

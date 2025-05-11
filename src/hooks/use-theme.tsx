@@ -4,73 +4,91 @@ import { themes } from '@/lib/themes';
 import { ThemeType, ThemeContextType, Theme } from '@/types/theme';
 
 // Create context with proper types
-const UserThemeContext = createContext<ThemeContextType>({
+const ThemeContext = createContext<ThemeContextType>({
+  theme: 'default',
+  setTheme: () => {},
+  themeStyles: themes.default,
   activeTheme: 'default',
   setUserTheme: () => {},
-  currentTheme: themes.default,
-  themeStyles: themes.default, // Add themeStyles for components that need it
-  theme: 'default',
-  setTheme: () => {}
+  currentTheme: themes.default
 });
 
-// Hook for using the theme context
-export const useTheme = () => useContext(UserThemeContext);
+// Hook для использования контекста темы
+export const useTheme = () => {
+  const context = useContext(ThemeContext);
+  
+  if (context === undefined) {
+    throw new Error('useTheme must be used within a ThemeProvider');
+  }
+  
+  return context;
+};
 
-interface UserThemeProviderProps {
+interface ThemeProviderProps {
   children: React.ReactNode;
   defaultTheme?: ThemeType;
 }
 
 // Theme provider component
-export const UserThemeProvider: React.FC<UserThemeProviderProps> = ({ 
+export const ThemeProvider: React.FC<ThemeProviderProps> = ({ 
   children, 
   defaultTheme = 'default' 
 }) => {
-  const [activeTheme, setActiveTheme] = useState<ThemeType>(defaultTheme);
-  const [currentTheme, setCurrentTheme] = useState<Theme>(themes[defaultTheme as keyof typeof themes] || themes.default);
+  const [theme, setTheme] = useState<ThemeType>(defaultTheme);
+  const [currentTheme, setCurrentTheme] = useState<Theme>(themes[theme as keyof typeof themes] || themes.default);
   
-  // Function for setting the theme
-  const setUserTheme = (theme: ThemeType) => {
-    setActiveTheme(theme);
-    localStorage.setItem('user-theme', theme.toString());
-  };
-
-  // Alias for compatibility with other components
-  const setTheme = (theme: string | ThemeType) => {
-    setUserTheme(theme as ThemeType);
+  // Функция для установки темы
+  const setUserTheme = (newTheme: ThemeType) => {
+    console.log('Setting theme to:', newTheme);
+    setTheme(newTheme);
+    localStorage.setItem('user-theme', newTheme);
+    
+    // Применение CSS-переменных
+    applyThemeToDOM(newTheme);
   };
   
-  // Effect for loading saved theme on initialization
+  // Функция для применения CSS переменных к DOM
+  const applyThemeToDOM = (themeName: ThemeType) => {
+    const themeObj = themes[themeName as keyof typeof themes] || themes.default;
+    setCurrentTheme(themeObj);
+    
+    document.documentElement.setAttribute('data-theme', themeName);
+    document.body.className = '';
+    document.body.classList.add(`theme-${themeName}`);
+    
+    // Применение CSS-переменных
+    document.documentElement.style.setProperty('--primary', themeObj.primary);
+    document.documentElement.style.setProperty('--secondary', themeObj.secondary);
+    document.documentElement.style.setProperty('--background', themeObj.background);
+    document.documentElement.style.setProperty('--foreground', themeObj.foreground);
+    document.documentElement.style.setProperty('--text-color', themeObj.textColor);
+    document.documentElement.style.setProperty('--accent', themeObj.accent);
+    document.documentElement.style.setProperty('--card-bg', themeObj.cardBackground);
+  };
+  
+  // Загрузка сохраненной темы при загрузке приложения
   useEffect(() => {
     const savedTheme = localStorage.getItem('user-theme') as ThemeType;
     if (savedTheme && themes[savedTheme as keyof typeof themes]) {
-      setActiveTheme(savedTheme);
+      setUserTheme(savedTheme);
+    } else {
+      setUserTheme(defaultTheme);
     }
-  }, []);
+  }, [defaultTheme]);
   
-  // Effect for updating current theme when active theme changes
-  useEffect(() => {
-    const themeObj = themes[activeTheme as keyof typeof themes] || themes.default;
-    setCurrentTheme(themeObj);
-    
-    // Update CSS variables for global theme
-    document.documentElement.style.setProperty('--primary-color', themeObj.primary);
-    document.documentElement.style.setProperty('--secondary-color', themeObj.secondary);
-    document.documentElement.style.setProperty('--background-color', themeObj.background);
-  }, [activeTheme]);
-
   return (
-    <UserThemeContext.Provider value={{ 
-      activeTheme, 
-      setUserTheme, 
-      currentTheme,
-      themeStyles: currentTheme, // Add themeStyles for components that need it
-      theme: activeTheme,
-      setTheme
+    <ThemeContext.Provider value={{ 
+      theme, 
+      setTheme: setUserTheme,
+      themeStyles: currentTheme,
+      activeTheme: theme,
+      setUserTheme,
+      currentTheme
     }}>
       {children}
-    </UserThemeContext.Provider>
+    </ThemeContext.Provider>
   );
 };
 
 export default useTheme;
+export { ThemeContext };

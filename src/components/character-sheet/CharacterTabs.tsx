@@ -1,75 +1,56 @@
-
-import React from 'react';
-import { Tabs, TabsContent } from '@/components/ui/tabs';
-import AbilitiesTab from './tabs/AbilitiesTab'; // Using default import now
-import { CombatTab } from './tabs/CombatTab';
-import { EquipmentTab } from './tabs/EquipmentTab';
-import { FeaturesTab } from './tabs/FeaturesTab';
-import FeatsTab from './tabs/FeatsTab';
-import { HandbookTab } from './tabs/HandbookTab';
-import NotesTab from './tabs/NotesTab';
-import BackgroundTab from './tabs/BackgroundTab';
-import { SpellsTab } from './tabs/SpellsTab';
+// CharacterTabs.tsx
+import React, { useState } from 'react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Character } from '@/types/character';
-import { TabsList, TabsTrigger } from '@/components/ui/tabs';
+import AbilitiesTab from './tabs/AbilitiesTab';
+// Импортируйте другие вкладки
+import CombatTab from './tabs/CombatTab';
+import SpellsTab from './tabs/SpellsTab';
+import EquipmentTab from './tabs/EquipmentTab';
+import FeaturesTab from './tabs/FeaturesTab';
+import NotesTab from './tabs/NotesTab';
 
-export interface CharacterTabsProps {
+interface CharacterTabsProps {
   character: Character;
-  onUpdate?: (updates: Partial<Character>) => void;
+  onUpdate: (updates: Partial<Character>) => void;
 }
 
-const CharacterTabs: React.FC<CharacterTabsProps> = ({ 
-  character, 
-  onUpdate = () => {} 
-}) => {
+const CharacterTabs: React.FC<CharacterTabsProps> = ({ character, onUpdate }) => {
+  const [activeTab, setActiveTab] = useState('abilities');
+
+  // Обработчик изменения вкладки
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+  };
+
   return (
-    <Tabs defaultValue="abilities" className="w-full">
-      <TabsList className="grid grid-cols-3 md:grid-cols-9 mb-4">
-        <TabsTrigger value="abilities">Способности</TabsTrigger>
+    <Tabs defaultValue="abilities" value={activeTab} onValueChange={handleTabChange} className="w-full">
+      <TabsList className="grid grid-cols-3 md:grid-cols-6 gap-2">
+        <TabsTrigger value="abilities">Характеристики</TabsTrigger>
         <TabsTrigger value="combat">Бой</TabsTrigger>
         <TabsTrigger value="spells">Заклинания</TabsTrigger>
         <TabsTrigger value="equipment">Снаряжение</TabsTrigger>
-        <TabsTrigger value="features">Умения</TabsTrigger>
-        <TabsTrigger value="feats">Черты</TabsTrigger>
-        <TabsTrigger value="background">Предыстория</TabsTrigger>
+        <TabsTrigger value="features">Особенности</TabsTrigger>
         <TabsTrigger value="notes">Заметки</TabsTrigger>
-        <TabsTrigger value="handbook">Справочник</TabsTrigger>
       </TabsList>
-      
+
       <TabsContent value="abilities">
         <AbilitiesTab character={character} onUpdate={onUpdate} />
       </TabsContent>
-      
       <TabsContent value="combat">
         <CombatTab character={character} onUpdate={onUpdate} />
       </TabsContent>
-      
       <TabsContent value="spells">
         <SpellsTab character={character} onUpdate={onUpdate} />
       </TabsContent>
-      
       <TabsContent value="equipment">
         <EquipmentTab character={character} onUpdate={onUpdate} />
       </TabsContent>
-      
       <TabsContent value="features">
         <FeaturesTab character={character} onUpdate={onUpdate} />
       </TabsContent>
-      
-      <TabsContent value="feats">
-        <FeatsTab character={character} onUpdate={onUpdate} />
-      </TabsContent>
-      
-      <TabsContent value="background">
-        <BackgroundTab character={character} onUpdate={onUpdate} />
-      </TabsContent>
-      
       <TabsContent value="notes">
         <NotesTab character={character} onUpdate={onUpdate} />
-      </TabsContent>
-      
-      <TabsContent value="handbook">
-        <HandbookTab character={character} />
       </TabsContent>
     </Tabs>
   );
