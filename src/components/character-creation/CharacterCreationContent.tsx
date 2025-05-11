@@ -102,9 +102,21 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
     updatedAt: character.updatedAt || new Date().toISOString(),
     userId: character.userId || '',
     portrait: character.portrait || '',
-    stats: character.stats || {},
+    stats: character.stats || {
+      strength: 10,
+      dexterity: 10,
+      constitution: 10,
+      intelligence: 10,
+      wisdom: 10,
+      charisma: 10
+    },
     hitDice: character.hitDice || { total: 1, current: 1, value: 'd8' }
   };
+
+  // Get the race, class, background arrays from props or data
+  const allRaces = races;
+  const allClasses = classes;
+  const allBackgrounds = backgrounds;
 
   // Modified to use correct props
   switch (currentStep) {
@@ -115,6 +127,7 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
           onUpdate={updateCharacter}
           nextStep={nextStep}
           prevStep={prevStep}
+          races={allRaces}
         />
       );
     case 2:
@@ -124,6 +137,7 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
           onUpdate={updateCharacter}
           nextStep={nextStep}
           prevStep={prevStep}
+          classes={allClasses}
         />
       );
     case 3:
@@ -143,8 +157,8 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
           onUpdate={updateCharacter}
           nextStep={nextStep}
           prevStep={prevStep}
-          method={abilitiesMethod}
-          setMethod={setAbilitiesMethod}
+          abilitiesMethod={abilitiesMethod}
+          setAbilitiesMethod={setAbilitiesMethod}
           diceResults={diceResults}
           getModifier={getModifier}
           rollAllAbilities={rollAllAbilities}
@@ -161,6 +175,7 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
           onUpdate={updateCharacter}
           nextStep={nextStep}
           prevStep={prevStep}
+          backgrounds={allBackgrounds}
         />
       );
     case 9:
@@ -176,7 +191,7 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
       return (
         <CharacterReview
           character={safeCharacter}
-          onUpdate={updateCharacter}
+          onUpdateCharacter={updateCharacter}
           nextStep={nextStep}
           prevStep={prevStep}
         />

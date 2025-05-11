@@ -1,13 +1,13 @@
+
 // CharacterTabs.tsx
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Character } from '@/types/character';
 import AbilitiesTab from './tabs/AbilitiesTab';
-// Импортируйте другие вкладки
 import CombatTab from './tabs/CombatTab';
 import SpellsTab from './tabs/SpellsTab';
-import EquipmentTab from './tabs/EquipmentTab';
-import FeaturesTab from './tabs/FeaturesTab';
+import { EquipmentTab } from './tabs/EquipmentTab';
+import { FeaturesTab } from './tabs/FeaturesTab';
 import NotesTab from './tabs/NotesTab';
 
 interface CharacterTabsProps {
