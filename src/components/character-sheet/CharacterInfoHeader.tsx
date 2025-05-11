@@ -1,69 +1,71 @@
 
 import React from 'react';
 import { Character } from '@/types/character';
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { calculateAbilityModifier } from '@/utils/characterUtils';
-import { useTheme } from '@/hooks/use-theme';
-import { themes } from '@/lib/themes';
+import { Button } from '@/components/ui/button';
+import { Crown, User } from "lucide-react";
 
 interface CharacterInfoHeaderProps {
   character: Character;
+  onLevelUp?: () => void;
 }
 
-const CharacterInfoHeader: React.FC<CharacterInfoHeaderProps> = ({ character }) => {
-  const { theme } = useTheme();
-  const themeKey = (theme || 'default') as keyof typeof themes;
-  const currentTheme = themes[themeKey] || themes.default;
+const CharacterInfoHeader: React.FC<CharacterInfoHeaderProps> = ({ 
+  character,
+  onLevelUp 
+}) => {
+  // Convert level to number to ensure proper comparison
+  const characterLevel = typeof character.level === 'string' ? 
+    parseInt(character.level, 10) : character.level || 0;
   
-  const getModifier = (abilityScore: number) => {
-    const mod = calculateAbilityModifier(abilityScore);
-    return mod >= 0 ? `+${mod}` : mod;
-  };
-  
-  const headerClass = () => {
-    if (typeof theme === 'string' && theme in themes) {
-      return `bg-gradient-to-r border-b-2 px-4 py-3 rounded-t-md ${character?.class?.toLowerCase() === 'wizard' ? 'wizard-header' : ''}`;
-    }
-    return `bg-gradient-to-r from-primary/20 to-primary/10 border-b-2 border-accent/50 px-4 py-3 rounded-t-md`;
-  };
-  
+  // Check if character can level up (up to level 20)
+  const canLevelUp = characterLevel < 20;
+
   return (
-    <div className={headerClass()} style={{ borderColor: currentTheme.accent }}>
-      <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-2xl font-bold" style={{ color: currentTheme.textColor }}>
-            {character.name}
-          </h2>
-          <div className="text-sm" style={{ color: currentTheme.mutedTextColor }}>
-            {character.race} {character.subrace ? `(${character.subrace})` : ''} • {character.class} {character.subclass ? `(${character.subclass})` : ''} • Уровень {character.level}
-          </div>
+    <div className="flex items-center p-4 bg-card rounded-t-lg">
+      <Avatar className="h-16 w-16 border-2 border-primary">
+        {character.avatarUrl ? (
+          <AvatarImage src={character.avatarUrl} alt={character.name} />
+        ) : (
+          <AvatarFallback>
+            <User className="h-8 w-8" />
+          </AvatarFallback>
+        )}
+      </Avatar>
+      
+      <div className="ml-4 flex-1">
+        <div className="flex items-center">
+          <h2 className="text-2xl font-bold">{character.name}</h2>
+          {character.isHeroic && (
+            <Crown className="ml-2 text-amber-500 h-5 w-5" />
+          )}
         </div>
         
-        <div className="flex space-x-2">
-          <div className="text-center">
-            <div className="text-xs" style={{ color: currentTheme.mutedTextColor }}>КД</div>
-            <div className="font-bold text-lg" style={{ color: currentTheme.textColor }}>{character.ac}</div>
-          </div>
-          
-          <div className="text-center">
-            <div className="text-xs" style={{ color: currentTheme.mutedTextColor }}>ХП</div>
-            <div className="font-bold text-lg" style={{ color: currentTheme.textColor }}>
-              {character.hp}/{character.maxHp}
-            </div>
-          </div>
-          
-          <div className="text-center">
-            <div className="text-xs" style={{ color: currentTheme.mutedTextColor }}>Инициатива</div>
-            <div className="font-bold text-lg" style={{ color: currentTheme.textColor }}>
-              {getModifier(character.abilities.DEX || character.abilities.dexterity || 10)}
-            </div>
-          </div>
-          
-          <div className="text-center">
-            <div className="text-xs" style={{ color: currentTheme.mutedTextColor }}>Скорость</div>
-            <div className="font-bold text-lg" style={{ color: currentTheme.textColor }}>{character.speed}</div>
-          </div>
+        <div className="flex items-center text-sm text-muted-foreground">
+          <span>
+            {character.race} {character.subrace ? `(${character.subrace})` : ''} 
+            {character.class && ` • ${character.class}`} 
+            {character.level && ` • Уровень ${character.level}`}
+          </span>
+        </div>
+        
+        <div className="text-sm">
+          {character.background && (
+            <span className="mr-4">Предыстория: {character.background}</span>
+          )}
         </div>
       </div>
+      
+      {onLevelUp && canLevelUp && (
+        <Button 
+          size="sm" 
+          className="bg-gradient-to-r from-amber-400 to-amber-600 text-white"
+          onClick={onLevelUp}
+        >
+          Повысить уровень
+        </Button>
+      )}
     </div>
   );
 };

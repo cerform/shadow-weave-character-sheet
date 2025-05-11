@@ -143,6 +143,51 @@ export function getSpellcastingAbilityModifier(character: Character): number {
 }
 
 /**
+ * Get default casting ability for a class
+ */
+export function getDefaultCastingAbility(className?: string): string {
+  if (!className) return 'intelligence';
+  
+  const classLower = className.toLowerCase();
+  
+  if (classLower.includes('волшебник') || classLower.includes('wizard')) {
+    return 'intelligence';
+  }
+  
+  if (classLower.includes('жрец') || classLower.includes('cleric') || 
+      classLower.includes('друид') || classLower.includes('druid') ||
+      classLower.includes('следопыт') || classLower.includes('ranger')) {
+    return 'wisdom';
+  }
+  
+  return 'charisma';
+}
+
+/**
+ * Calculate spell save DC for a character
+ */
+export function calculateSpellSaveDC(character: Character): number {
+  if (!character) return 8;
+  
+  const profBonus = Math.ceil(1 + (character.level || 1) / 4);
+  const abilityMod = getSpellcastingAbilityModifier(character);
+  
+  return 8 + profBonus + abilityMod;
+}
+
+/**
+ * Calculate spell attack bonus for a character
+ */
+export function calculateSpellAttackBonus(character: Character): number {
+  if (!character) return 0;
+  
+  const profBonus = Math.ceil(1 + (character.level || 1) / 4);
+  const abilityMod = getSpellcastingAbilityModifier(character);
+  
+  return profBonus + abilityMod;
+}
+
+/**
  * Get prepared spells limit for classes that prepare spells
  */
 export function getPreparedSpellsLimit(character: Character, className: string): number {
@@ -215,6 +260,56 @@ export function convertSpellsForState(spells: SpellData[]): CharacterSpell[] {
   }));
 }
 
+/**
+ * Convert CharacterSpell to SpellData
+ */
+export function convertToSpellData(spell: CharacterSpell): SpellData {
+  return {
+    id: spell.id || `spell-${spell.name.replace(/\s+/g, '-').toLowerCase()}`,
+    name: spell.name,
+    level: spell.level,
+    school: spell.school || 'Универсальная',
+    castingTime: spell.castingTime || '1 действие',
+    range: spell.range || 'На себя',
+    components: spell.components || '',
+    duration: spell.duration || 'Мгновенная',
+    description: spell.description || '',
+    classes: spell.classes || [],
+    verbal: spell.verbal,
+    somatic: spell.somatic,
+    material: spell.material,
+    ritual: spell.ritual,
+    concentration: spell.concentration,
+    prepared: spell.prepared
+  };
+}
+
+/**
+ * Normalize spells array to ensure consistent format
+ */
+export function normalizeSpells(spells: (string | CharacterSpell)[]): CharacterSpell[] {
+  if (!Array.isArray(spells)) return [];
+  
+  return spells.map(spell => {
+    if (typeof spell === 'string') {
+      // Convert string spell to CharacterSpell
+      return {
+        id: `spell-${spell.toLowerCase().replace(/\s+/g, '-')}`,
+        name: spell,
+        level: 0, // Default to cantrip
+        school: 'Универсальная',
+        castingTime: '1 действие',
+        range: 'На себя',
+        components: '',
+        duration: 'Мгновенная',
+        description: '',
+        prepared: false
+      };
+    }
+    return spell;
+  });
+}
+
 export default {
   calculateAvailableSpellsByClassAndLevel,
   filterSpellsByClassAndLevel,
@@ -222,5 +317,10 @@ export default {
   getSpellcastingAbilityModifier,
   getPreparedSpellsLimit,
   canPrepareMoreSpells,
-  convertSpellsForState
+  convertSpellsForState,
+  convertToSpellData,
+  normalizeSpells,
+  getDefaultCastingAbility,
+  calculateSpellSaveDC,
+  calculateSpellAttackBonus
 };

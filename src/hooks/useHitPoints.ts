@@ -1,296 +1,254 @@
-import { useState, useEffect } from 'react';
-import type { Character, HitPointEvent } from '@/types/character';
-import { getNumericModifier } from '@/utils/characterUtils';
-import { v4 as uuidv4 } from 'uuid';
-import { toast } from 'sonner';
 
-interface UseHitPointsProps {
-  character: Character;
-  onUpdate: (updates: Partial<Character>) => void;
+import { useState, useCallback } from 'react';
+import { Character } from '@/types/character';
+import { useTheme } from '@/hooks/use-theme';
+import { getNumericModifier } from '@/utils/characterUtils';
+import { useToast } from '@/hooks/use-toast';
+
+interface UseHitPointsReturn {
+  currentHp: number;
+  maxHp: number;
+  tempHp: number;
+  addDamage: (amount: number) => void;
+  healDamage: (amount: number) => void;
+  addTempHp: (amount: number) => void;
+  setHp: (current: number, max?: number, temp?: number) => void;
+  takeLongRest: () => void;
+  takeShortRest: () => void;
+  rollHitDie: () => void;
+  hitDice: {
+    total: number;
+    used: number;
+    dieType: string;
+    value: string;
+  };
 }
 
-export const useHitPoints = ({ character, onUpdate }: UseHitPointsProps) => {
-  const [events, setEvents] = useState<HitPointEvent[]>([]);
-  const [currentHP, setCurrentHP] = useState(character.hp);
-  const [maxHP, setMaxHP] = useState(character.maxHp);
-  const [tempHP, setTempHP] = useState(character.temporaryHp || 0);
-  const [isEditing, setIsEditing] = useState(false);
+// Get hit die type based on class
+function getHitDieType(characterClass: string): string {
+  const classLower = characterClass?.toLowerCase();
   
-  // Sync with character prop changes
-  useEffect(() => {
-    setCurrentHP(character.hp);
-    setMaxHP(character.maxHp);
-    setTempHP(character.temporaryHp || 0);
-  }, [character.hp, character.maxHp, character.temporaryHp]);
+  if (['варвар', 'barbarian'].includes(classLower)) {
+    return 'd12';
+  } else if (['воин', 'fighter', 'паладин', 'paladin', 'рейнджер', 'ranger'].includes(classLower)) {
+    return 'd10';
+  } else if (['бард', 'bard', 'клерик', 'cleric', 'друид', 'druid', 'монах', 'monk', 'жрец'].includes(classLower)) {
+    return 'd8';
+  } else if (['плут', 'rogue', 'чародей', 'sorcerer', 'колдун', 'warlock'].includes(classLower)) {
+    return 'd6';
+  } else {
+    return 'd6'; // default
+  }
+}
 
-  const addEvent = (eventType: 'damage' | 'healing' | 'temp' | 'tempHP' | 'heal' | 'death-save', amount: number, source = 'manual') => {
-    const newEvent: HitPointEvent = {
-      id: uuidv4(),
-      type: eventType,
-      amount,
-      source,
-      timestamp: new Date().toISOString()
-    };
-    
-    setEvents(prev => [...prev, newEvent]);
-    return newEvent;
+// Calculate maximum hit points
+export function calculateMaximumHitPoints(character: Character): number {
+  if (!character || !character.level || !character.class) return 0;
+  
+  const conModifier = getNumericModifier(character.abilities?.constitution || character.constitution || 10);
+  const hitDieValue = getHitDieType(character.class);
+  const hitDieMax = parseInt(hitDieValue.substring(1));
+  
+  // First level gets maximum hit points
+  let maxHp = hitDieMax + conModifier;
+  
+  // Add average hit die + con mod for each level after 1st
+  for (let i = 1; i < character.level; i++) {
+    maxHp += Math.floor(hitDieMax / 2) + 1 + conModifier;
+  }
+  
+  return Math.max(1, maxHp); // Minimum 1 HP
+}
+
+export function useHitPoints(character: Character, onUpdate?: (updates: Partial<Character>) => void): UseHitPointsReturn {
+  const { toast } = useToast();
+  const { themeStyles } = useTheme();
+  
+  // Initialize hit points
+  const calculatedMaxHp = calculateMaximumHitPoints(character);
+  const initialMaxHp = character.maxHp || calculatedMaxHp;
+  const initialCurrentHp = character.currentHp !== undefined ? character.currentHp : initialMaxHp;
+  
+  const [currentHp, setCurrentHp] = useState(initialCurrentHp);
+  const [maxHp, setMaxHp] = useState(initialMaxHp);
+  const [tempHp, setTempHp] = useState(character.tempHp || 0);
+  
+  // Hit dice management
+  const dieType = getHitDieType(character.class || '');
+  const totalHitDice = character.level || 1;
+  const initialUsedDice = character.hitDice?.used || 0;
+  const [usedHitDice, setUsedHitDice] = useState(initialUsedDice);
+  
+  const hitDice = {
+    total: totalHitDice,
+    used: usedHitDice,
+    dieType,
+    value: `${totalHitDice - usedHitDice}/${totalHitDice} ${dieType}`
   };
   
-  // Apply damage
-  const applyDamage = (amount: number, source = 'manual') => {
-    if (amount <= 0) return;
+  // Update character if parent component provides an update function
+  const updateParent = useCallback((updates: Partial<Character>) => {
+    if (onUpdate) {
+      onUpdate(updates);
+    }
+  }, [onUpdate]);
+  
+  // Add damage to character
+  const addDamage = useCallback((amount: number) => {
+    if (isNaN(amount) || amount <= 0) return;
     
-    addEvent('damage', amount, source);
-    
-    // First reduce tempHP if available
-    if (tempHP > 0) {
-      if (tempHP >= amount) {
-        // Temp HP absorbs all damage
-        setTempHP(tempHP - amount);
-        onUpdate({ temporaryHp: tempHP - amount });
-        return;
+    setTempHp(prev => {
+      const newTempHp = Math.max(0, prev - amount);
+      const damageRemaining = amount - (prev - newTempHp);
+      
+      if (damageRemaining > 0) {
+        setCurrentHp(prevHp => {
+          const newHp = Math.max(0, prevHp - damageRemaining);
+          updateParent({ currentHp: newHp, tempHp: newTempHp });
+          
+          // Show toast notification with damage information
+          toast({
+            description: `${character.name} получил ${amount} урона (${newHp}/${maxHp} ОЗ)`
+          });
+          
+          return newHp;
+        });
       } else {
-        // Temp HP absorbs part of the damage
-        amount -= tempHP;
-        setTempHP(0);
-        onUpdate({ temporaryHp: 0 });
+        updateParent({ tempHp: newTempHp });
+        toast({
+            description: `${amount} урона поглощено временными ОЗ (${newTempHp} врем. ОЗ осталось)`
+        });
       }
-    }
+      
+      return newTempHp;
+    });
+  }, [character.name, maxHp, updateParent, toast]);
+  
+  // Heal character
+  const healDamage = useCallback((amount: number) => {
+    if (isNaN(amount) || amount <= 0) return;
     
-    // Reduce current HP
-    const newHP = Math.max(0, currentHP - amount);
-    setCurrentHP(newHP);
-    onUpdate({ hp: newHP });
-    
-    // Check for unconsciousness
-    if (newHP === 0) {
+    setCurrentHp(prevHp => {
+      const newHp = Math.min(maxHp, prevHp + amount);
+      updateParent({ currentHp: newHp });
+      
       toast({
-        description: "HP достигло 0, персонаж без сознания.",
-        variant: "destructive",
+          description: `${character.name} исцелён на ${amount} ОЗ (${newHp}/${maxHp} ОЗ)`
       });
-    }
-  };
-  
-  // Apply healing
-  const applyHealing = (amount: number, source = 'manual') => {
-    if (amount <= 0) return;
-    
-    addEvent('healing', amount, source);
-    
-    // Cannot heal above max HP
-    const newHP = Math.min(maxHP, currentHP + amount);
-    setCurrentHP(newHP);
-    onUpdate({ hp: newHP });
-  };
-  
-  // Add temporary HP
-  const addTemporaryHP = (amount: number, source = 'manual') => {
-    if (amount <= 0) return;
-    
-    // Temp HP doesn't stack, take the higher value
-    if (amount > tempHP) {
-      addEvent('tempHP', amount, source);
-      setTempHP(amount);
-      onUpdate({ temporaryHp: amount });
-    }
-  };
-  
-  // Set current HP directly
-  const setHP = (amount: number) => {
-    // Clamp between 0 and maxHP
-    const newHP = Math.max(0, Math.min(maxHP, amount));
-    setCurrentHP(newHP);
-    onUpdate({ hp: newHP });
-  };
-  
-  // Set max HP directly
-  const setMaximumHP = (amount: number) => {
-    if (amount <= 0) return;
-    
-    setMaxHP(amount);
-    onUpdate({ maxHp: amount });
-    
-    // If current HP is greater than new max HP, reduce current HP
-    if (currentHP > amount) {
-      setCurrentHP(amount);
-      onUpdate({ hp: amount });
-    }
-  };
-  
-  // Calculate initial max HP for a character
-  const calculateInitialMaxHP = () => {
-    if (!character) return 0;
-    
-    const conModifier = getNumericModifier(character.abilities.CON || character.constitution || 10);
-    const classLevel = character.level || 1;
-    const className = character.class?.toLowerCase() || '';
-    
-    // Determine hit die based on class
-    let hitDie = 8; // Default medium hit die
-    
-    if (['варвар', 'barbarian'].includes(className)) {
-      hitDie = 12;
-    } else if (['воин', 'fighter', 'паладин', 'paladin', 'следопыт', 'ranger'].includes(className)) {
-      hitDie = 10;
-    } else if (['волшебник', 'wizard', 'колдун', 'warlock', 'чародей', 'sorcerer'].includes(className)) {
-      hitDie = 6;
-    }
-    
-    // First level gets maximum hit die value
-    let maxHP = hitDie + conModifier;
-    
-    // Add average hit die for each level beyond first
-    if (classLevel > 1) {
-      // Average hit die value is (hit die / 2) + 0.5, e.g. d8 average is 4.5
-      const averageHitDie = (hitDie / 2) + 0.5;
-      maxHP += Math.floor((classLevel - 1) * (averageHitDie + conModifier));
-    }
-    
-    return Math.max(1, maxHP); // Minimum 1 HP
-  };
-  
-  // Set maximum HP based on calculated value
-  const resetMaxHP = () => {
-    const calculatedMaxHP = calculateInitialMaxHP();
-    setMaximumHP(calculatedMaxHP);
-    
-    // Also set current HP to match if it's at max or 0
-    if (currentHP === maxHP || currentHP === 0) {
-      setHP(calculatedMaxHP);
-    }
-  };
-  
-  // Handle death saves
-  const addDeathSave = (success: boolean) => {
-    // Only track death saves when at 0 HP
-    if (currentHP > 0) return;
-    
-    const { deathSaves } = character;
-    const updatedDeathSaves = { ...deathSaves };
-    
-    if (success) {
-      updatedDeathSaves.successes = Math.min(3, deathSaves.successes + 1);
       
-      // Check for stabilization
-      if (updatedDeathSaves.successes >= 3) {
-        toast({
-          description: "Персонаж стабилизирован",
-        });
-      }
-    } else {
-      updatedDeathSaves.failures = Math.min(3, deathSaves.failures + 1);
+      return newHp;
+    });
+  }, [character.name, maxHp, updateParent, toast]);
+  
+  // Add temporary hit points
+  const addTempHp = useCallback((amount: number) => {
+    if (isNaN(amount) || amount <= 0) return;
+    
+    setTempHp(prevTempHp => {
+      const newTempHp = Math.max(prevTempHp, amount); // Temp HP doesn't stack, take highest
+      updateParent({ tempHp: newTempHp });
       
-      // Check for death
-      if (updatedDeathSaves.failures >= 3) {
-        toast({
-          description: "Персонаж умер",
-          variant: "destructive",
-        });
-      }
-    }
-    
-    onUpdate({ deathSaves: updatedDeathSaves });
-    addEvent('death-save', success ? 1 : 0, success ? 'success' : 'failure');
-  };
+      toast({
+          description: `${character.name} получает ${newTempHp} временных ОЗ`
+      });
+      
+      return newTempHp;
+    });
+  }, [character.name, updateParent, toast]);
   
-  // Reset death saves
-  const resetDeathSaves = () => {
-    onUpdate({
-      deathSaves: {
-        successes: 0,
-        failures: 0
-      }
-    });
-  };
-  
-  // Take a long rest
-  const takeLongRest = () => {
-    // Restore all HP
-    setCurrentHP(maxHP);
-    onUpdate({ hp: maxHP });
+  // Set HP values directly
+  const setHp = useCallback((current: number, max?: number, temp?: number) => {
+    setCurrentHp(current);
+    if (max !== undefined) setMaxHp(max);
+    if (temp !== undefined) setTempHp(temp);
     
-    // Reset death saves
-    resetDeathSaves();
+    const updates: Partial<Character> = { currentHp: current };
+    if (max !== undefined) updates.maxHp = max;
+    if (temp !== undefined) updates.tempHp = temp;
     
-    // Clear temporary HP
-    setTempHP(0);
-    onUpdate({ temporaryHp: 0 });
-    
-    // Reset hit dice (regain up to half)
-    const maxHitDice = character.level;
-    const currentUsed = character.hitDice.used;
-    const regain = Math.min(Math.floor(maxHitDice / 2), currentUsed);
-    
-    onUpdate({
-      hitDice: {
-        ...character.hitDice,
-        used: Math.max(0, currentUsed - regain)
-      }
-    });
-    
-    toast({
-      description: `HP восстановлены до максимума (${maxHP}). Восстановлено ${regain} костей хитов.`,
-    });
-  };
+    updateParent(updates);
+  }, [updateParent]);
   
   // Take a short rest
-  const takeShortRest = (hitDiceToUse: number) => {
-    // Validate number of hit dice to use
-    const availableHitDice = character.level - character.hitDice.used;
-    hitDiceToUse = Math.min(hitDiceToUse, availableHitDice);
+  const takeShortRest = useCallback(() => {
+    // Short rest doesn't automatically restore hit points in D&D 5e
+    toast({
+        description: `${character.name} отдыхает короткий отдых. Вы можете потратить Кость Хита для восстановления ОЗ.`
+    });
+  }, [character.name, toast]);
+  
+  // Roll hit die to recover HP during short rest
+  const rollHitDie = useCallback(() => {
+    const availableHitDice = totalHitDice - usedHitDice;
     
-    if (hitDiceToUse <= 0) {
+    if (availableHitDice <= 0) {
       toast({
-        description: "Нет доступных костей хитов",
+          description: `У вас не осталось Костей Хитов для восстановления ОЗ.`
       });
       return;
     }
     
-    // Calculate healing
-    const conModifier = getNumericModifier(character.abilities.CON || character.constitution || 10);
-    const hitDieValue = parseInt(character.hitDice.dieType.substring(1)) || 8; // e.g. "d8" -> 8
+    // Determine die type and roll
+    const dieMax = parseInt(dieType.substring(1));
+    const roll = Math.floor(Math.random() * dieMax) + 1;
+    const conMod = getNumericModifier(character.abilities?.constitution || character.constitution || 10);
+    const healAmount = Math.max(1, roll + conMod);
     
-    let totalHealing = 0;
-    for (let i = 0; i < hitDiceToUse; i++) {
-      // Roll for each hit die (simulate by using average value)
-      const healing = Math.floor(hitDieValue / 2) + 1 + conModifier; // Average roll + CON mod
-      totalHealing += Math.max(1, healing); // Minimum 1 HP per die
-    }
+    // Update hit dice used
+    setUsedHitDice(prev => {
+      const newUsed = prev + 1;
+      updateParent({ hitDice: { used: newUsed, total: totalHitDice, dieType } });
+      return newUsed;
+    });
     
     // Apply healing
-    applyHealing(totalHealing, 'short rest');
+    setCurrentHp(prev => {
+      const newHp = Math.min(maxHp, prev + healAmount);
+      updateParent({ currentHp: newHp });
+      
+      toast({
+         description: `${character.name} восстанавливает ${healAmount} ОЗ (${dieType}=${roll} + ${conMod}). Осталось ${availableHitDice-1} КХ.`
+      });
+      
+      return newHp;
+    });
+  }, [character, dieType, maxHp, totalHitDice, usedHitDice, updateParent, toast]);
+  
+  // Take a long rest
+  const takeLongRest = useCallback(() => {
+    // Restore all hit points
+    setCurrentHp(maxHp);
+    setTempHp(0);
     
-    // Increase used hit dice
-    onUpdate({
-      hitDice: {
-        ...character.hitDice,
-        used: character.hitDice.used + hitDiceToUse
-      }
+    // Restore up to half of maximum hit dice (minimum of 1)
+    const restoredDice = Math.max(1, Math.floor(totalHitDice / 2));
+    const newUsed = Math.max(0, usedHitDice - restoredDice);
+    setUsedHitDice(newUsed);
+    
+    updateParent({ 
+      currentHp: maxHp, 
+      tempHp: 0,
+      hitDice: { used: newUsed, total: totalHitDice, dieType }
     });
     
     toast({
-      description: `Использовано костей хитов: ${hitDiceToUse}. Восстановлено ${totalHealing} HP.`,
+        description: `${character.name} завершил продолжительный отдых. ОЗ полностью восстановлены и восстановлено ${restoredDice} КХ.`
     });
-  };
+  }, [maxHp, totalHitDice, usedHitDice, character.name, updateParent, dieType, toast]);
   
   return {
-    currentHP,
-    maxHP,
-    tempHP,
-    isEditing,
-    setIsEditing,
-    applyDamage,
-    applyHealing,
-    addTemporaryHP,
-    setHP,
-    setMaximumHP,
-    resetMaxHP,
-    addDeathSave,
-    resetDeathSaves,
+    currentHp,
+    maxHp,
+    tempHp,
+    addDamage,
+    healDamage,
+    addTempHp,
+    setHp,
     takeLongRest,
     takeShortRest,
-    events
+    rollHitDie,
+    hitDice
   };
-};
+}
 
 export default useHitPoints;

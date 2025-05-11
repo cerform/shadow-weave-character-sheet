@@ -11,6 +11,21 @@ export interface SpellCardProps {
 }
 
 const SpellCard: React.FC<SpellCardProps> = ({ spell, currentTheme, onClick }) => {
+  // Helper function to handle material components display
+  const renderComponents = () => {
+    const components = [];
+    if (spell.verbal) components.push(<Badge key="verbal" variant="outline" className="mr-1">В</Badge>);
+    if (spell.somatic) components.push(<Badge key="somatic" variant="outline" className="mr-1">С</Badge>);
+    if (spell.material) components.push(<Badge key="material" variant="outline">М</Badge>);
+    
+    // If no specific component flags, show generic components
+    if (components.length === 0 && spell.components) {
+      return <span>{spell.components}</span>;
+    }
+    
+    return <div>{components}</div>;
+  };
+  
   return (
     <div 
       className="p-2 text-sm cursor-pointer"
@@ -33,11 +48,7 @@ const SpellCard: React.FC<SpellCardProps> = ({ spell, currentTheme, onClick }) =
       
       <div className="flex justify-between mb-1">
         <span className="font-medium">Компоненты:</span>
-        <div>
-          {spell.verbal && <Badge variant="outline" className="mr-1">В</Badge>}
-          {spell.somatic && <Badge variant="outline" className="mr-1">С</Badge>}
-          {spell.material && <Badge variant="outline">М</Badge>}
-        </div>
+        {renderComponents()}
       </div>
       
       {spell.duration && (
@@ -47,8 +58,20 @@ const SpellCard: React.FC<SpellCardProps> = ({ spell, currentTheme, onClick }) =
         </div>
       )}
       
+      {spell.ritual && (
+        <div className="mb-1">
+          <Badge variant="secondary" className="mr-1">Ритуал</Badge>
+        </div>
+      )}
+      
+      {spell.concentration && (
+        <div className="mb-1">
+          <Badge variant="secondary" className="mr-1">Концентрация</Badge>
+        </div>
+      )}
+      
       {spell.description && (
-        <div className="mt-2 text-sm border-t pt-2" style={{ borderColor: `${currentTheme.borderColor}40` }}>
+        <div className="mt-2 text-sm border-t pt-2" style={{ borderColor: `${currentTheme.borderColor || currentTheme.accent}40` }}>
           {typeof spell.description === 'string' ? (
             <p>{spell.description}</p>
           ) : Array.isArray(spell.description) ? (

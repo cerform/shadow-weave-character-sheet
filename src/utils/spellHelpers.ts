@@ -129,3 +129,10 @@ export function extractSpellDetailsFromText(text: string): Partial<CharacterSpel
 export function generateSpellId(name: string): string {
   return `spell-${name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-zа-я0-9\-]/gi, '')}`;
 }
+
+export default {
+  getSpellLevelName,
+  convertCharacterSpellsToSpellData,
+  extractSpellDetailsFromText,
+  generateSpellId
+};
