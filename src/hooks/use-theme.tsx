@@ -62,4 +62,5 @@ export const useTheme = () => {
   return context;
 };
 
+// Экспортируем ThemeProvider по умолчанию для импорта без деструктуризации
 export default ThemeProvider;

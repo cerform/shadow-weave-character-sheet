@@ -1,4 +1,3 @@
-
 import { Character, AbilityScores } from '@/types/character';
 
 // Создание персонажа по умолчанию
@@ -157,4 +156,16 @@ export const defaultAbilityScores: AbilityScores = {
   intelligence: 10,
   wisdom: 10,
   charisma: 10
+};
+
+// Добавляем отсутствующую функцию getDefaultAbilities
+export const getDefaultAbilities = () => {
+  return {
+    strength: 10,
+    dexterity: 10,
+    constitution: 10,
+    intelligence: 10,
+    wisdom: 10,
+    charisma: 10
+  };
 };

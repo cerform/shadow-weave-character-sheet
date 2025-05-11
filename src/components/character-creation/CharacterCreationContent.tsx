@@ -57,7 +57,7 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
     onLevelChange(level);
   };
 
-  // Создаем типобезопасную обертку для character, чтобы передать в компоненты
+  // Создаем типобезопасную обертку для character с правильными дефолтными значениями
   const safeCharacter: Character = {
     id: character.id || '',
     name: character.name || '',
@@ -110,7 +110,7 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
       wisdom: 10,
       charisma: 10
     },
-    hitDice: character.hitDice || { total: 1, current: 1, value: 'd8' }
+    hitDice: character.hitDice || { total: 1, used: 0, dieType: 'd8' }
   };
 
   // Get the race, class, background arrays from props or data
@@ -157,8 +157,8 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
           onUpdate={updateCharacter}
           nextStep={nextStep}
           prevStep={prevStep}
-          abilitiesMethod={abilitiesMethod}
-          setAbilitiesMethod={setAbilitiesMethod}
+          method={abilitiesMethod}
+          setMethod={setAbilitiesMethod}
           diceResults={diceResults}
           getModifier={getModifier}
           rollAllAbilities={rollAllAbilities}
@@ -191,7 +191,7 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
       return (
         <CharacterReview
           character={safeCharacter}
-          onUpdateCharacter={updateCharacter}
+          updateCharacter={updateCharacter}
           nextStep={nextStep}
           prevStep={prevStep}
         />

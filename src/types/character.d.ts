@@ -66,6 +66,9 @@ export interface Character {
     value: string;
     total?: number;
     remaining?: number;
+    used?: number;
+    dieType?: string;
+    current?: number;
   };
   
   // Combat stats
@@ -107,7 +110,11 @@ export interface Character {
     ideals?: string;
     bonds?: string;
     flaws?: string;
-  };
+  } | string;
+  ideals?: string;
+  bonds?: string;
+  flaws?: string;
+  portrait?: string;
   
   // Notes
   notes?: string;
@@ -116,6 +123,30 @@ export interface Character {
   createdAt?: string;
   updatedAt?: string;
   lastUsed?: string;
+  userId?: string;
+  
+  // Stats for direct access
+  stats?: {
+    strength: number;
+    dexterity: number;
+    constitution: number;
+    intelligence: number;
+    wisdom: number;
+    charisma: number;
+  };
+  
+  // Direct stat access
+  strength?: number;
+  dexterity?: number;
+  constitution?: number;
+  intelligence?: number;
+  wisdom?: number;
+  charisma?: number;
+  
+  // Other HP fields
+  maxHp?: number;
+  currentHp?: number;
+  temporaryHp?: number;
   
   // Other details as needed
   [key: string]: any;
