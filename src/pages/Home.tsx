@@ -10,15 +10,16 @@ import BackgroundWrapper from '@/components/layout/BackgroundWrapper';
 import ProfilePreview from '@/components/home/ProfilePreview';
 import CharactersList from '@/components/home/CharactersList';
 import { useTheme } from '@/hooks/use-theme';
-import { themes } from '@/lib/themes';
+import { themes, ThemeType } from '@/lib/themes';
 
 const Home = () => {
   const { currentUser, isAuthenticated } = useAuth();
   const isDM = currentUser?.isDM;
   const navigate = useNavigate();
   const { theme } = useTheme();
+  // Add fallback to default theme if the theme from context is not found
   const currentThemeId = theme || 'default';
-  const currentTheme = themes[currentThemeId as keyof typeof themes] || themes.default;
+  const currentTheme = themes[currentThemeId as ThemeType] || themes.default;
 
   const handleNavigation = (path: string) => {
     console.log('Home: Переход на страницу', path);

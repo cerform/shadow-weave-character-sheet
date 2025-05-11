@@ -31,6 +31,25 @@ export const SpellSlotsPanel: React.FC<SpellSlotsPanelProps> = ({ className }) =
     updateCharacter({ spellSlots: updatedSpellSlots });
   };
 
+  // Calculate max slots for each level based on character class and level
+  const getMaxSlotsForLevel = (level: number): number => {
+    // This is a placeholder, ideally you'd have logic based on class and level
+    // For now, using a simplified version
+    const maxSlotsByLevel: Record<number, number> = {
+      1: 4,
+      2: 3,
+      3: 3,
+      4: 3,
+      5: 2,
+      6: 1,
+      7: 1,
+      8: 1,
+      9: 1
+    };
+    
+    return maxSlotsByLevel[level] || 0;
+  };
+
   return (
     <Card className={className}>
       <CardHeader>
@@ -42,6 +61,7 @@ export const SpellSlotsPanel: React.FC<SpellSlotsPanelProps> = ({ className }) =
           const spellCount = getSelectedSpellCount(level);
           const hasSpells = spellCount > 0;
           const currentSlots = typeof spellSlots[level] === 'number' ? spellSlots[level] : 0;
+          const maxSlots = getMaxSlotsForLevel(level);
 
           return (
             <div key={level} className="flex items-center justify-between">
@@ -52,7 +72,7 @@ export const SpellSlotsPanel: React.FC<SpellSlotsPanelProps> = ({ className }) =
               <SpellSlotsPopover
                 level={level}
                 currentSlots={currentSlots}
-                maxSlots={4} // Default max, can be calculated based on class and level
+                maxSlots={maxSlots}
                 onSlotsChange={(newSlots) => handleSpellSlotsChange(level, newSlots)}
                 disabled={!hasSpells}
               />

@@ -1,8 +1,8 @@
 
-import { themes, Theme } from "@/lib/themes";
+import { themes, Theme, ThemeStyles } from "@/lib/themes";
 
 // Define allowed theme types based on the keys in the themes object
-export type ThemeType = 'light' | 'dark' | 'wizard' | 'warlock' | 'default';
+export type ThemeType = 'light' | 'dark' | 'wizard' | 'warlock' | 'default' | 'bard' | 'druid' | 'cleric' | 'paladin' | 'rogue' | 'ranger' | 'barbarian' | 'monk' | 'fighter' | 'sorcerer';
 
 // Define the context interface to match how it's being used
 export interface ThemeContextType {
@@ -11,6 +11,7 @@ export interface ThemeContextType {
   activeTheme?: ThemeType;
   setUserTheme?: (theme: ThemeType) => void;
   themeStyles: Theme; // Required property
+  currentTheme?: Theme;
 }
 
-export type { Theme };
+export type { Theme, ThemeStyles };
