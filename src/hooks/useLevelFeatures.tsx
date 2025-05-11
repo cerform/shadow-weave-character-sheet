@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { LevelFeature, UseLevelFeaturesResult } from '@/types/characterCreation';
 import { Character } from '@/types/character';
@@ -46,8 +45,7 @@ const useLevelFeatures = (character: Partial<Character>): UseLevelFeaturesResult
         title: 'Extra Attack',
         level: 5,
         description: 'You can attack twice, instead of once, whenever you take the Attack action on your turn.',
-        type: 'extra_attack',
-        class: 'fighter' // Using the class property correctly
+        type: 'extra_attack'
       });
     }
     
@@ -57,8 +55,7 @@ const useLevelFeatures = (character: Partial<Character>): UseLevelFeaturesResult
         title: 'Arcane Tradition',
         level: 2,
         description: 'Choose an arcane tradition, which shapes your practice of magic.',
-        type: 'subclass',
-        class: 'wizard' // Using the class property correctly
+        type: 'subclass'
       });
     }
     
@@ -68,8 +65,7 @@ const useLevelFeatures = (character: Partial<Character>): UseLevelFeaturesResult
         title: 'Roguish Archetype',
         level: 3,
         description: 'Choose a roguish archetype that you emulate in the exercise of your rogue abilities.',
-        type: 'subclass',
-        class: 'rogue' // Using the class property correctly
+        type: 'subclass'
       });
     }
   }

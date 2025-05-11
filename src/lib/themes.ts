@@ -1,186 +1,175 @@
 
-// Add these missing properties to the Theme interface
-export interface Theme {
-  name: string;
+export interface ThemeStyles {
   background: string;
-  foreground: string; 
-  accent: string;
-  primary: string;
-  secondary: string;
-  textColor: string;
-  mutedTextColor: string;
   cardBackground: string;
-  buttonText: string; // Make sure this is included in all theme objects
-  success?: string;
-  warning?: string;
-  danger?: string;
-  info?: string;
-  // Add these new properties
-  backgroundBrightness?: number;
-  backgroundGradient?: string;
-  decorativeCorners?: boolean;
-  primaryColor?: string; // Alias for primary
+  textColor: string;
+  accentTextColor: string;
+  buttonText: string;
+  borderColor: string;
+  accent: string;
+  shadowColor: string;
+  fontFamily?: string;
 }
 
-export const themes: Record<string, Theme> = {
-  default: {
-    name: 'Default',
-    primary: '#6b21a8',
-    secondary: '#9333ea',
-    accent: '#d8b4fe',
-    background: '#1e1b4b',
-    foreground: '#2e2b8a',
-    textColor: '#e2e8f0',
-    mutedTextColor: '#94a3b8',
-    cardBackground: 'rgba(30, 27, 75, 0.8)',
+export type ThemeType = 'light' | 'dark' | 'warlock' | 'wizard' | 'bard' | 'druid' | 'cleric' | 'paladin' | 'rogue' | 'ranger' | 'barbarian' | 'monk' | 'fighter' | 'sorcerer';
+
+// Define themes
+export const themes: Record<ThemeType, ThemeStyles> = {
+  light: {
+    background: '#f8f9fa',
+    cardBackground: '#ffffff',
+    textColor: '#222222',
+    accentTextColor: '#6366f1',
     buttonText: '#ffffff',
-    success: '#10b981',
-    warning: '#f59e0b',
-    danger: '#ef4444',
-    info: '#3b82f6'
+    borderColor: '#e2e8f0',
+    accent: '#6366f1',
+    shadowColor: 'rgba(0, 0, 0, 0.1)',
+    fontFamily: 'system-ui, sans-serif'
   },
   dark: {
-    name: 'Dark',
-    primary: '#334155',
-    secondary: '#475569',
-    accent: '#94a3b8',
     background: '#0f172a',
-    foreground: '#1e293b',
-    textColor: '#f1f5f9',
-    mutedTextColor: '#94a3b8',
-    cardBackground: 'rgba(15, 23, 42, 0.8)',
+    cardBackground: '#1e293b',
+    textColor: '#e2e8f0',
+    accentTextColor: '#818cf8',
     buttonText: '#ffffff',
-    success: '#059669',
-    warning: '#d97706',
-    danger: '#dc2626',
-    info: '#2563eb'
-  },
-  light: {
-    name: 'Light',
-    primary: '#3b82f6',
-    secondary: '#60a5fa',
-    accent: '#93c5fd',
-    background: '#f8fafc',
-    foreground: '#f1f5f9',
-    textColor: '#0f172a',
-    mutedTextColor: '#64748b',
-    cardBackground: 'rgba(248, 250, 252, 0.8)',
-    buttonText: '#ffffff',
-    success: '#10b981',
-    warning: '#f59e0b',
-    danger: '#ef4444',
-    info: '#3b82f6'
-  },
-  fantasy: {
-    name: 'Fantasy',
-    primary: '#854d0e',
-    secondary: '#a16207',
-    accent: '#eab308',
-    background: '#422006',
-    foreground: '#713f12',
-    textColor: '#fef3c7',
-    mutedTextColor: '#d97706',
-    cardBackground: 'rgba(66, 32, 6, 0.8)',
-    buttonText: '#ffffff',
-    success: '#14532d',
-    warning: '#ca8a04',
-    danger: '#991b1b',
-    info: '#1e40af'
+    borderColor: '#334155',
+    accent: '#818cf8',
+    shadowColor: 'rgba(0, 0, 0, 0.5)',
+    fontFamily: 'system-ui, sans-serif'
   },
   warlock: {
-    name: 'Warlock',
-    primary: '#7c3aed',
-    secondary: '#8b5cf6',
-    accent: '#a78bfa',
-    background: '#2e1065',
-    foreground: '#4c1d95',
-    textColor: '#ede9fe',
-    mutedTextColor: '#c4b5fd',
-    cardBackground: 'rgba(46, 16, 101, 0.8)',
+    background: '#18181b',
+    cardBackground: '#27272a',
+    textColor: '#fafafa',
+    accentTextColor: '#d946ef',
     buttonText: '#ffffff',
-    success: '#059669',
-    warning: '#d97706',
-    danger: '#dc2626',
-    info: '#2563eb'
+    borderColor: '#3f3f46',
+    accent: '#d946ef',
+    shadowColor: 'rgba(217, 70, 239, 0.3)',
+    fontFamily: '"Cinzel", serif'
   },
   wizard: {
-    name: 'Wizard',
-    primary: '#1e40af',
-    secondary: '#3b82f6',
-    accent: '#93c5fd',
-    background: '#172554',
-    foreground: '#1e3a8a',
-    textColor: '#dbeafe',
-    mutedTextColor: '#60a5fa',
-    cardBackground: 'rgba(23, 37, 84, 0.8)',
+    background: '#0c0a20',
+    cardBackground: '#1a1a3a',
+    textColor: '#e2e8f0',
+    accentTextColor: '#60a5fa',
     buttonText: '#ffffff',
-    success: '#059669',
-    warning: '#d97706',
-    danger: '#dc2626',
-    info: '#2563eb'
+    borderColor: '#2d2b42',
+    accent: '#60a5fa',
+    shadowColor: 'rgba(96, 165, 250, 0.3)',
+    fontFamily: '"Lora", serif'
+  },
+  // ... add the rest of the themes with all required properties
+  bard: {
+    background: '#2d1b36',
+    cardBackground: '#432352',
+    textColor: '#fdf6fd',
+    accentTextColor: '#f9a8d4',
+    buttonText: '#ffffff',
+    borderColor: '#583168',
+    accent: '#f9a8d4',
+    shadowColor: 'rgba(249, 168, 212, 0.3)',
+    fontFamily: '"Dancing Script", cursive'
   },
   druid: {
-    name: 'Druid',
-    primary: '#14532d',
-    secondary: '#15803d',
+    background: '#064e3b',
+    cardBackground: '#115e59',
+    textColor: '#ecfdf5',
+    accentTextColor: '#6ee7b7',
+    buttonText: '#064e3b',
+    borderColor: '#0f766e',
+    accent: '#6ee7b7',
+    shadowColor: 'rgba(110, 231, 183, 0.3)',
+    fontFamily: '"Fauna One", serif'
+  },
+  cleric: {
+    background: '#3f3f46',
+    cardBackground: '#52525b',
+    textColor: '#fafafa',
+    accentTextColor: '#e4e4e7',
+    buttonText: '#18181b',
+    borderColor: '#71717a',
+    accent: '#e4e4e7',
+    shadowColor: 'rgba(228, 228, 231, 0.3)',
+    fontFamily: '"Cormorant Garamond", serif'
+  },
+  paladin: {
+    background: '#172554',
+    cardBackground: '#1e3a8a',
+    textColor: '#f8fafc',
+    accentTextColor: '#fcd34d',
+    buttonText: '#000000',
+    borderColor: '#1e40af',
+    accent: '#fcd34d',
+    shadowColor: 'rgba(252, 211, 77, 0.3)',
+    fontFamily: '"Cinzel", serif'
+  },
+  rogue: {
+    background: '#18181b',
+    cardBackground: '#27272a',
+    textColor: '#d4d4d8',
+    accentTextColor: '#9f1239',
+    buttonText: '#f8fafc',
+    borderColor: '#3f3f46',
+    accent: '#9f1239',
+    shadowColor: 'rgba(159, 18, 57, 0.3)',
+    fontFamily: '"Roboto Condensed", sans-serif'
+  },
+  ranger: {
+    background: '#1c1917',
+    cardBackground: '#292524',
+    textColor: '#e7e5e4',
+    accentTextColor: '#84cc16',
+    buttonText: '#1c1917',
+    borderColor: '#44403c',
     accent: '#84cc16',
-    background: '#052e16',
-    foreground: '#166534',
-    textColor: '#dcfce7',
-    mutedTextColor: '#4ade80',
-    cardBackground: 'rgba(5, 46, 22, 0.8)',
-    buttonText: '#ffffff',
-    success: '#15803d',
-    warning: '#ca8a04',
-    danger: '#b91c1c',
-    info: '#0369a1'
+    shadowColor: 'rgba(132, 204, 22, 0.3)',
+    fontFamily: '"Roboto Slab", serif'
   },
-  warrior: {
-    name: 'Warrior',
-    primary: '#9f1239',
-    secondary: '#be123c',
-    accent: '#f43f5e',
-    background: '#4c0519',
-    foreground: '#881337',
-    textColor: '#fee2e2',
-    mutedTextColor: '#f87171',
-    cardBackground: 'rgba(76, 5, 25, 0.8)',
-    buttonText: '#ffffff',
-    success: '#15803d',
-    warning: '#ca8a04',
-    danger: '#b91c1c',
-    info: '#0369a1'
+  barbarian: {
+    background: '#7f1d1d',
+    cardBackground: '#991b1b',
+    textColor: '#fef2f2',
+    accentTextColor: '#fbbf24',
+    buttonText: '#7f1d1d',
+    borderColor: '#b91c1c',
+    accent: '#fbbf24',
+    shadowColor: 'rgba(251, 191, 36, 0.3)',
+    fontFamily: '"Fjalla One", sans-serif'
   },
-  bard: {
-    name: 'Bard',
-    primary: '#854d0e',
-    secondary: '#b45309',
-    accent: '#f59e0b',
-    background: '#422006',
-    foreground: '#713f12',
-    textColor: '#fef3c7',
-    mutedTextColor: '#fbbf24',
-    cardBackground: 'rgba(66, 32, 6, 0.8)',
-    buttonText: '#ffffff',
-    success: '#15803d',
-    warning: '#ca8a04',
-    danger: '#b91c1c',
-    info: '#0369a1'
+  monk: {
+    background: '#1e293b',
+    cardBackground: '#334155',
+    textColor: '#f1f5f9',
+    accentTextColor: '#c084fc',
+    buttonText: '#1e1b4b',
+    borderColor: '#475569',
+    accent: '#c084fc',
+    shadowColor: 'rgba(192, 132, 252, 0.3)',
+    fontFamily: '"Noto Sans", sans-serif'
   },
-  cyberpunk: {
-    name: 'Cyberpunk',
-    primary: '#0ea5e9',
-    secondary: '#0284c7',
-    accent: '#22d3ee',
-    background: '#020617',
-    foreground: '#0f172a',
-    textColor: '#f0f9ff',
-    mutedTextColor: '#67e8f9',
-    cardBackground: 'rgba(2, 6, 23, 0.8)',
-    buttonText: '#ecfeff',
-    success: '#059669',
-    warning: '#d97706',
-    danger: '#dc2626',
-    info: '#2563eb'
+  fighter: {
+    background: '#374151',
+    cardBackground: '#4b5563',
+    textColor: '#f3f4f6',
+    accentTextColor: '#f97316',
+    buttonText: '#1f2937',
+    borderColor: '#6b7280',
+    accent: '#f97316',
+    shadowColor: 'rgba(249, 115, 22, 0.3)',
+    fontFamily: '"Roboto", sans-serif'
+  },
+  sorcerer: {
+    background: '#4c1d95',
+    cardBackground: '#581c87',
+    textColor: '#f5f3ff',
+    accentTextColor: '#fb7185',
+    buttonText: '#ffffff',
+    borderColor: '#7e22ce',
+    accent: '#fb7185',
+    shadowColor: 'rgba(251, 113, 133, 0.3)',
+    fontFamily: '"Alegreya", serif'
   }
 };
+
+export default themes;

@@ -1,6 +1,7 @@
+
 import React, { useState, useEffect } from 'react';
 import { Character } from '@/types/character';
-import { calculateAbilityModifier } from '@/utils/characterUtils';
+import { getAbilityModifier } from '@/utils/characterUtils';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface SkillsPanelProps {
@@ -15,12 +16,12 @@ export const SkillsPanel: React.FC<SkillsPanelProps> = ({ character, onUpdate })
     setSkills(character.skills || {});
   }, [character.skills]);
   
-  const getAbilityModifier = (ability: string): number => {
-    return calculateAbilityModifier(character?.abilities?.[ability] || 10);
+  const getAbilityMod = (ability: string): number => {
+    return getAbilityModifier(character?.abilities?.[ability] || 10);
   };
   
   const calculateSkillValue = (skillName: string, proficient: boolean, expertise: boolean): number => {
-    let baseValue = getAbilityModifier(skillName.slice(0, 3).toUpperCase());
+    let baseValue = getAbilityMod(skillName.slice(0, 3).toUpperCase());
     if (proficient) {
       baseValue += character.proficiencyBonus || 2;
     }

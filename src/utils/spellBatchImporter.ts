@@ -62,3 +62,34 @@ export function importSpellsFromText(rawText: string, existingSpells: CharacterS
     return nameA.localeCompare(nameB);
   });
 }
+
+/**
+ * Process a batch of spells from text
+ */
+export function processSpellBatch(text: string, existingSpells: CharacterSpell[] = []): CharacterSpell[] {
+  return importSpellsFromText(text, existingSpells);
+}
+
+/**
+ * Parse a single spell entry
+ */
+export function parseSpellEntry(text: string): CharacterSpell | null {
+  const spellDetails = extractSpellDetailsFromText(text);
+  
+  if (!spellDetails.name) {
+    return null;
+  }
+  
+  return {
+    id: generateSpellId(spellDetails.name),
+    name: spellDetails.name,
+    level: spellDetails.level || 0,
+    school: spellDetails.school || 'Универсальная',
+    castingTime: spellDetails.castingTime || '1 действие',
+    range: spellDetails.range || 'На себя',
+    components: spellDetails.components || '',
+    duration: spellDetails.duration || 'Мгновенная',
+    description: spellDetails.description || '',
+    prepared: false
+  };
+}

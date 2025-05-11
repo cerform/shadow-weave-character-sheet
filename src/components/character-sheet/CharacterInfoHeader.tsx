@@ -2,7 +2,7 @@
 import React from 'react';
 import { Character } from '@/types/character';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { calculateAbilityModifier } from '@/utils/characterUtils';
+import { getAbilityModifier } from '@/utils/characterUtils';
 import { Button } from '@/components/ui/button';
 import { Crown, User } from "lucide-react";
 
@@ -25,8 +25,8 @@ const CharacterInfoHeader: React.FC<CharacterInfoHeaderProps> = ({
   return (
     <div className="flex items-center p-4 bg-card rounded-t-lg">
       <Avatar className="h-16 w-16 border-2 border-primary">
-        {character.avatarUrl ? (
-          <AvatarImage src={character.avatarUrl} alt={character.name} />
+        {character.avatar ? (
+          <AvatarImage src={character.avatar} alt={character.name} />
         ) : (
           <AvatarFallback>
             <User className="h-8 w-8" />
@@ -37,9 +37,7 @@ const CharacterInfoHeader: React.FC<CharacterInfoHeaderProps> = ({
       <div className="ml-4 flex-1">
         <div className="flex items-center">
           <h2 className="text-2xl font-bold">{character.name}</h2>
-          {character.isHeroic && (
-            <Crown className="ml-2 text-amber-500 h-5 w-5" />
-          )}
+          {/* Removed isHeroic check since it doesn't exist in the Character type */}
         </div>
         
         <div className="flex items-center text-sm text-muted-foreground">
