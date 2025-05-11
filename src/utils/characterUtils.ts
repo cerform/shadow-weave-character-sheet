@@ -1,4 +1,3 @@
-
 import { Character } from "@/types/character";
 import { generateRandomStats } from './characterGenerator';
 import { v4 as uuidv4 } from 'uuid';
@@ -41,7 +40,8 @@ export function createBaseCharacter(name: string = "Новый персонаж"
     charisma: 0,
   };
 
-  return {
+  // Создаем персонажа с обязательными полями
+  const character: Character = {
     id: uuidv4(),
     name,
     race: "",
@@ -102,6 +102,8 @@ export function createBaseCharacter(name: string = "Новый персонаж"
     },
     image: "" // Добавляем пустое поле изображения
   };
+  
+  return character;
 }
 
 // Alias for createBaseCharacter for backward compatibility
@@ -290,8 +292,9 @@ export function getLevelByXP(xp: number): number {
 }
 
 // Additional functions for backward compatibility
-export const convertToCharacter = (data: any): Character => {
-  return { ...createDefaultCharacter(), ...data };
+export const convertToCharacter = (data: Partial<Character>): Character => {
+  const baseCharacter = createDefaultCharacter();
+  return { ...baseCharacter, ...data, id: data.id || baseCharacter.id };
 };
 
 export const calculateInitiative = (character: Character): number => {
@@ -322,13 +325,15 @@ export const calculateMaxHP = (character: Character): number => {
 };
 
 // Function to calculate bonuses from stats, race, etc.
-export const calculateStatBonuses = (character: Character): Character => {
+export const calculateStatBonuses = (character: Partial<Character>): Partial<Character> => {
   // This is just a basic implementation
   const updatedCharacter = { ...character };
   
   // Update derived statistics
-  updatedCharacter.initiative = calculateInitiative(updatedCharacter);
-  updatedCharacter.ac = calculateArmorClass(updatedCharacter);
+  if (character.abilities && character.abilities.DEX) {
+    updatedCharacter.initiative = calculateInitiative(character as Character);
+    updatedCharacter.ac = calculateArmorClass(character as Character);
+  }
   
   return updatedCharacter;
 };

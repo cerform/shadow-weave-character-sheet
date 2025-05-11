@@ -1,3 +1,4 @@
+
 import { Character, CharacterSpell } from '@/types/character';
 import { SpellData } from '@/types/spells';
 import { getModifier } from '@/utils/characterUtils';
@@ -197,12 +198,12 @@ export function getPreparedSpellsLimit(character: Character, className: string):
   
   // Get relevant ability modifier
   if (classLower.includes('волшебник') || classLower.includes('wizard')) {
-    abilityMod = getModifier(character.abilities?.intelligence || character.intelligence || 10);
+    abilityMod = parseInt(getModifier(character.abilities?.intelligence || character.intelligence || 10));
   } else if (classLower.includes('жрец') || classLower.includes('cleric') || 
             classLower.includes('друид') || classLower.includes('druid')) {
-    abilityMod = getModifier(character.abilities?.wisdom || character.wisdom || 10);
+    abilityMod = parseInt(getModifier(character.abilities?.wisdom || character.wisdom || 10));
   } else if (classLower.includes('паладин') || classLower.includes('paladin')) {
-    abilityMod = getModifier(character.abilities?.charisma || character.charisma || 10);
+    abilityMod = parseInt(getModifier(character.abilities?.charisma || character.charisma || 10));
   }
   
   // Calculate prepared spells limit

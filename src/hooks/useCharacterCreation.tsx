@@ -58,22 +58,22 @@ export const useCharacterCreation = (options: UseCharacterCreationOptions = {}) 
       
       // Применяем расовые бонусы если выбрана раса
       if (prev.race !== updated.race && updated.race) {
-        const racialBonuses = calculateStatBonuses(updated);
-        if (racialBonuses) {
+        const racialBonuses = calculateStatBonuses(updated as Character);
+        if (racialBonuses && racialBonuses.abilities) {
           updated.abilities = {
             ...updated.abilities!,
-            STR: (updated.abilities?.STR || 10) + (racialBonuses.STR || 0),
-            DEX: (updated.abilities?.DEX || 10) + (racialBonuses.DEX || 0),
-            CON: (updated.abilities?.CON || 10) + (racialBonuses.CON || 0),
-            INT: (updated.abilities?.INT || 10) + (racialBonuses.INT || 0),
-            WIS: (updated.abilities?.WIS || 10) + (racialBonuses.WIS || 0),
-            CHA: (updated.abilities?.CHA || 10) + (racialBonuses.CHA || 0),
-            strength: (updated.abilities?.strength || 10) + (racialBonuses.STR || 0),
-            dexterity: (updated.abilities?.dexterity || 10) + (racialBonuses.DEX || 0),
-            constitution: (updated.abilities?.constitution || 10) + (racialBonuses.CON || 0),
-            intelligence: (updated.abilities?.intelligence || 10) + (racialBonuses.INT || 0),
-            wisdom: (updated.abilities?.wisdom || 10) + (racialBonuses.WIS || 0),
-            charisma: (updated.abilities?.charisma || 10) + (racialBonuses.CHA || 0)
+            STR: (updated.abilities?.STR || 10) + (racialBonuses.abilities.STR || 0),
+            DEX: (updated.abilities?.DEX || 10) + (racialBonuses.abilities.DEX || 0),
+            CON: (updated.abilities?.CON || 10) + (racialBonuses.abilities.CON || 0),
+            INT: (updated.abilities?.INT || 10) + (racialBonuses.abilities.INT || 0),
+            WIS: (updated.abilities?.WIS || 10) + (racialBonuses.abilities.WIS || 0),
+            CHA: (updated.abilities?.CHA || 10) + (racialBonuses.abilities.CHA || 0),
+            strength: (updated.abilities?.strength || 10) + (racialBonuses.abilities.strength || 0),
+            dexterity: (updated.abilities?.dexterity || 10) + (racialBonuses.abilities.dexterity || 0),
+            constitution: (updated.abilities?.constitution || 10) + (racialBonuses.abilities.constitution || 0),
+            intelligence: (updated.abilities?.intelligence || 10) + (racialBonuses.abilities.INT || 0),
+            wisdom: (updated.abilities?.wisdom || 10) + (racialBonuses.abilities.wisdom || 0),
+            charisma: (updated.abilities?.charisma || 10) + (racialBonuses.abilities.charisma || 0)
           };
         }
       }
@@ -87,22 +87,28 @@ export const useCharacterCreation = (options: UseCharacterCreationOptions = {}) 
     if (currentStep === 6) {
       // Завершаем создание персонажа
       const finalCharacter = createDefaultCharacter();
-      Object.assign(finalCharacter, character);
+      
+      // Убедимся, что у персонажа всегда есть id
+      const mergedCharacter = {
+        ...finalCharacter,
+        ...character,
+        id: character.id || uuidv4() // Гарантируем, что id всегда существует
+      };
       
       // Save character to context
       if (addCharacter) {
-        addCharacter(finalCharacter);
+        addCharacter(mergedCharacter);
       }
       
       // Show success notification
       toast({
         title: 'Персонаж создан',
-        description: `${finalCharacter.name} готов к приключениям!`,
+        description: `${mergedCharacter.name} готов к приключениям!`,
       });
       
       // Call onComplete callback if provided
       if (onComplete) {
-        onComplete(finalCharacter);
+        onComplete(mergedCharacter);
       }
     } else {
       setCurrentStep(prev => prev + 1);
