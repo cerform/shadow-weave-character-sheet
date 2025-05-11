@@ -94,15 +94,18 @@ export function createBaseCharacter(name: string = "Новый персонаж"
     },
     features: [],
     notes: "",
-    // Добавляем personality в соответствии с интерфейсом
     personality: {
       traits: "",
       ideals: "",
       bonds: "",
       flaws: ""
-    }
+    },
+    image: "" // Добавляем пустое поле изображения
   };
 }
+
+// Alias for createBaseCharacter for backward compatibility
+export const createDefaultCharacter = createBaseCharacter;
 
 /**
  * Расчет модификатора характеристики
@@ -110,6 +113,20 @@ export function createBaseCharacter(name: string = "Новый персонаж"
 export const calculateAbilityModifier = (score: number): number => {
   return Math.floor((score - 10) / 2);
 };
+
+// Aliases for backward compatibility
+export const getModifier = (score: number): string => {
+  const mod = calculateAbilityModifier(score);
+  return mod >= 0 ? `+${mod}` : `${mod}`;
+};
+
+export const getModifierString = getModifier;
+
+export const getNumericModifier = calculateAbilityModifier;
+
+export const getAbilityModifier = calculateAbilityModifier;
+
+export const getModifierFromAbilityScore = calculateAbilityModifier;
 
 /**
  * Получение значения спасброска
@@ -202,9 +219,10 @@ export const createRandomCharacter = (): Character => {
   );
   
   // Добавляем случайное снаряжение
-  character.equipment.weapons.push(randomClass === "Маг" ? "Посох" : "Кинжал");
-  character.equipment.items.push("Рюкзак", "Рацион", "Веревка");
-  character.equipment.gold = Math.floor(Math.random() * 50) + 10;
+  const equipment = character.equipment as { weapons: string[], armor: string, items: string[], gold: number };
+  equipment.weapons.push(randomClass === "Маг" ? "Посох" : "Кинжал");
+  equipment.items.push("Рюкзак", "Рацион", "Веревка");
+  equipment.gold = Math.floor(Math.random() * 50) + 10;
   
   // Добавляем personality трейты
   character.personality = {
@@ -270,3 +288,47 @@ export function getLevelByXP(xp: number): number {
   
   return Math.min(level, 20);
 }
+
+// Additional functions for backward compatibility
+export const convertToCharacter = (data: any): Character => {
+  return { ...createDefaultCharacter(), ...data };
+};
+
+export const calculateInitiative = (character: Character): number => {
+  return calculateAbilityModifier(character.abilities.DEX);
+};
+
+export const calculateArmorClass = (character: Character): number => {
+  // Basic AC calculation: 10 + DEX modifier
+  return 10 + calculateAbilityModifier(character.abilities.DEX);
+};
+
+export const calculateMaxHP = (character: Character): number => {
+  // Basic HP calculation: class hit die + CON modifier per level
+  const conModifier = calculateAbilityModifier(character.abilities.CON);
+  const hitDieValue = parseInt(character.hitDice.dieType.substring(1), 10);
+  
+  // First level gives maximum hit die value + CON modifier
+  let maxHp = hitDieValue + conModifier;
+  
+  // Additional levels
+  if (character.level > 1) {
+    // Average roll for additional levels: (hit die / 2) + 1 + CON modifier
+    const averageRoll = Math.floor(hitDieValue / 2) + 1;
+    maxHp += (averageRoll + conModifier) * (character.level - 1);
+  }
+  
+  return maxHp;
+};
+
+// Function to calculate bonuses from stats, race, etc.
+export const calculateStatBonuses = (character: Character): Character => {
+  // This is just a basic implementation
+  const updatedCharacter = { ...character };
+  
+  // Update derived statistics
+  updatedCharacter.initiative = calculateInitiative(updatedCharacter);
+  updatedCharacter.ac = calculateArmorClass(updatedCharacter);
+  
+  return updatedCharacter;
+};

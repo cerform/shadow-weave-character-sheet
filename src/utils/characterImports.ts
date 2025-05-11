@@ -7,6 +7,20 @@ export type { Skill } from '@/types/constants';
 // Add CharacterSheet type alias for backward compatibility
 export type CharacterSheet = Character;
 
-// Re-export utility functions
-export { convertToCharacter, getModifier, getModifierString, getNumericModifier, getAbilityModifier, getModifierFromAbilityScore, calculateAbilityModifier, calculateInitiative, calculateArmorClass, calculateMaxHP } from './characterUtils';
+// Re-export utility functions from characterUtils.ts
+export { 
+  convertToCharacter,
+  getModifier,
+  getModifierString,
+  getNumericModifier,
+  getAbilityModifier,
+  getModifierFromAbilityScore,
+  calculateAbilityModifier,
+  calculateInitiative,
+  calculateArmorClass,
+  calculateMaxHP,
+  createDefaultCharacter
+} from './characterUtils';
+
+// Re-export from spellUtils.ts
 export { calculateSpellSaveDC, calculateSpellAttackBonus } from './spellUtils';

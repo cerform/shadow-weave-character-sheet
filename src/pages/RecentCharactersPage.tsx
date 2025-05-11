@@ -95,9 +95,10 @@ const RecentCharactersPage: React.FC = () => {
       
     } catch (err) {
       console.error('RecentCharactersPage: Ошибка при загрузке персонажей:', err);
-      // Исправляем генерацию toast с ошибкой, убирая свойство title
+      
+      // Исправляем генерацию toast с ошибкой
       toast({
-        description: error instanceof Error ? error.message : "Неизвестная ошибка",
+        description: err instanceof Error ? err.message : "Неизвестная ошибка",
         variant: "destructive"
       });
     } finally {
