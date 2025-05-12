@@ -33,25 +33,27 @@ export interface SpellFilters {
 }
 
 export function convertCharacterSpellToSpellData(spell: CharacterSpell): SpellData {
+  // Полностью обрабатываем все возможные типы полей
   return {
     id: spell.id ? String(spell.id) : `spell-${spell.name.replace(/\s+/g, '-').toLowerCase()}`,
-    name: spell.name,
-    level: spell.level || 0,
+    name: spell.name || '',
+    level: typeof spell.level === 'number' ? spell.level : 0,
     school: spell.school || 'Универсальная',
     castingTime: spell.castingTime || '1 действие',
-    range: spell.range || 'Касание',
+    range: spell.range || 'На себя',
     components: spell.components || '',
     duration: spell.duration || 'Мгновенная',
-    description: spell.description || '',
-    classes: spell.classes || [],
-    ritual: !!spell.ritual,
-    concentration: !!spell.concentration,
-    verbal: !!spell.verbal,
-    somatic: !!spell.somatic,
-    material: !!spell.material,
+    description: spell.description || 'Нет описания',
+    classes: Array.isArray(spell.classes) ? spell.classes : 
+             spell.classes ? [spell.classes.toString()] : [],
+    ritual: Boolean(spell.ritual),
+    concentration: Boolean(spell.concentration),
+    verbal: Boolean(spell.verbal),
+    somatic: Boolean(spell.somatic),
+    material: Boolean(spell.material),
     materials: spell.materials || '',
     source: spell.source || "Player's Handbook",
     higherLevels: spell.higherLevel || spell.higherLevels || '',
-    prepared: spell.prepared
+    prepared: Boolean(spell.prepared)
   };
 }

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -14,11 +15,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
 import SpellDetailModal from './SpellDetailModal';
-import { spells, getSpellsByClass, getSpellsByLevel } from '@/data/spells';
+import { spells as allSpells, getSpellsByClass, getSpellsByLevel } from '@/data/spells/index';
 import { CharacterSpell } from '@/types/character';
 
 const SpellBookViewer: React.FC = () => {
-  const { theme, themeStyles } = useTheme();
+  const { theme } = useTheme();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedLevel, setSelectedLevel] = useState<string>('all');
   const [selectedClass, setSelectedClass] = useState<string>('all');
@@ -32,12 +33,20 @@ const SpellBookViewer: React.FC = () => {
   const themeKey = (theme || 'default') as keyof typeof themes;
   const currentTheme = themes[themeKey] || themes.default;
 
+  // Загружаем все заклинания при первой загрузке компонента
+  useEffect(() => {
+    console.log("Загружено заклинаний:", allSpells.length);
+    filterSpells();
+  }, []);
+
+  // Перефильтровываем заклинания при изменении фильтров
   useEffect(() => {
     filterSpells();
   }, [searchTerm, selectedLevel, selectedClass, selectedSchool, onlyRitual, onlyConcentration]);
 
   const filterSpells = () => {
-    let filtered = [...spells];
+    let filtered = [...allSpells];
+    console.log("Начало фильтрации, всего заклинаний:", filtered.length);
 
     // Фильтр по поисковому запросу
     if (searchTerm.trim() !== '') {
@@ -87,6 +96,7 @@ const SpellBookViewer: React.FC = () => {
       return a.name.localeCompare(b.name);
     });
 
+    console.log("Отфильтровано заклинаний:", filtered.length);
     setFilteredSpells(filtered);
   };
 
@@ -97,7 +107,7 @@ const SpellBookViewer: React.FC = () => {
 
   const getSchoolsList = () => {
     const schools = new Set<string>();
-    spells.forEach(spell => {
+    allSpells.forEach(spell => {
       if (spell.school) {
         schools.add(spell.school);
       }
@@ -107,7 +117,7 @@ const SpellBookViewer: React.FC = () => {
 
   const getClassesList = () => {
     const classes = new Set<string>();
-    spells.forEach(spell => {
+    allSpells.forEach(spell => {
       if (Array.isArray(spell.classes)) {
         spell.classes.forEach(cls => {
           if (cls) classes.add(cls);
@@ -219,42 +229,42 @@ const SpellBookViewer: React.FC = () => {
         
         <ScrollArea className="h-[60vh]">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredSpells.map(spell => (
-              <Card 
-                key={spell.id || spell.name} 
-                className="p-4 cursor-pointer hover:border-accent transition-all"
-                style={{ backgroundColor: currentTheme.background }}
-                onClick={() => handleSpellClick(spell)}
-              >
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <h3 className="font-bold" style={{ color: currentTheme.textColor }}>{spell.name}</h3>
-                    <span style={{ color: currentTheme.mutedTextColor }}>
-                      {spell.level === 0 ? 'Заговор' : `${spell.level} уровень`}
-                    </span>
-                  </div>
-                  
-                  <div className="text-sm" style={{ color: currentTheme.mutedTextColor }}>
-                    <p>{spell.school || 'Школа неизвестна'}</p>
-                    <p>
-                      {spell.ritual && <span className="mr-2">Ритуал</span>}
-                      {spell.concentration && <span>Концентрация</span>}
+            {filteredSpells.length > 0 ? (
+              filteredSpells.map(spell => (
+                <Card 
+                  key={spell.id || spell.name} 
+                  className="p-4 cursor-pointer hover:border-accent transition-all"
+                  style={{ backgroundColor: currentTheme.background }}
+                  onClick={() => handleSpellClick(spell)}
+                >
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <h3 className="font-bold" style={{ color: currentTheme.textColor }}>{spell.name}</h3>
+                      <span style={{ color: currentTheme.mutedTextColor }}>
+                        {spell.level === 0 ? 'Заговор' : `${spell.level} уровень`}
+                      </span>
+                    </div>
+                    
+                    <div className="text-sm" style={{ color: currentTheme.mutedTextColor }}>
+                      <p>{spell.school || 'Школа неизвестна'}</p>
+                      <p>
+                        {spell.ritual && <span className="mr-2">Ритуал</span>}
+                        {spell.concentration && <span>Концентрация</span>}
+                      </p>
+                    </div>
+                    
+                    <p className="text-xs truncate" style={{ color: currentTheme.mutedTextColor }}>
+                      {typeof spell.description === 'string' 
+                        ? spell.description.substring(0, 100) + (spell.description.length > 100 ? '...' : '')
+                        : Array.isArray(spell.description) && spell.description.length > 0
+                          ? spell.description[0].substring(0, 100) + (spell.description[0].length > 100 ? '...' : '')
+                          : 'Нет описания'
+                      }
                     </p>
                   </div>
-                  
-                  <p className="text-xs truncate" style={{ color: currentTheme.mutedTextColor }}>
-                    {typeof spell.description === 'string' 
-                      ? spell.description.substring(0, 100) + (spell.description.length > 100 ? '...' : '')
-                      : Array.isArray(spell.description) && spell.description.length > 0
-                        ? spell.description[0].substring(0, 100) + (spell.description[0].length > 100 ? '...' : '')
-                        : 'Нет описания'
-                    }
-                  </p>
-                </div>
-              </Card>
-            ))}
-            
-            {filteredSpells.length === 0 && (
+                </Card>
+              ))
+            ) : (
               <div 
                 className="col-span-3 text-center py-8"
                 style={{ color: currentTheme.mutedTextColor }}

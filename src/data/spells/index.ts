@@ -15,9 +15,9 @@ import { level8 } from './level8';
 import { level9 } from './level9';
 import { allCantrips } from './all_cantrips';
 
-// Объединяем все заклинания в единый массив
+// Объединяем все заклинания в единый массив и добавляем уникальные ID
 export const spells: CharacterSpell[] = [
-  ...allCantrips, // Добавляем все заговоры
+  ...allCantrips,
   ...cantrips,
   ...level0,
   ...level1,
@@ -31,15 +31,19 @@ export const spells: CharacterSpell[] = [
   ...level7,
   ...level8,
   ...level9
-];
+].map((spell, index) => ({
+  ...spell,
+  id: spell.id || `spell-${index}-${spell.name.toLowerCase().replace(/\s+/g, '-')}`
+}));
 
 // Функция для получения заклинаний по классу
 export const getSpellsByClass = (className: string): CharacterSpell[] => {
+  console.log(`Ищу заклинания для класса: ${className}, всего заклинаний: ${spells.length}`);
   return spells.filter(spell => {
     if (Array.isArray(spell.classes)) {
-      return spell.classes.includes(className);
+      return spell.classes.some(cls => cls.toLowerCase() === className.toLowerCase());
     } else if (typeof spell.classes === 'string') {
-      return spell.classes === className;
+      return spell.classes.toLowerCase() === className.toLowerCase();
     }
     return false;
   });
@@ -47,6 +51,7 @@ export const getSpellsByClass = (className: string): CharacterSpell[] => {
 
 // Функция для получения заклинаний по уровню
 export const getSpellsByLevel = (level: number): CharacterSpell[] => {
+  console.log(`Ищу заклинания для уровня: ${level}, всего заклинаний: ${spells.length}`);
   return spells.filter(spell => spell.level === level);
 };
 
@@ -65,7 +70,7 @@ export const getSpellByName = (name: string): CharacterSpell | undefined => {
 // Функция для получения заклинаний по школе магии
 export const getSpellsBySchool = (school: string): CharacterSpell[] => {
   return spells.filter(spell => 
-    spell.school.toLowerCase() === school.toLowerCase()
+    spell.school && spell.school.toLowerCase() === school.toLowerCase()
   );
 };
 
@@ -90,8 +95,10 @@ export const filterSpells = (options: {
     }
     
     // Фильтр по школе
-    if (options.school && options.school.length > 0 && !options.school.includes(spell.school)) {
-      return false;
+    if (options.school && options.school.length > 0) {
+      if (!spell.school || !options.school.includes(spell.school)) {
+        return false;
+      }
     }
     
     // Фильтр по классу
@@ -104,6 +111,8 @@ export const filterSpells = (options: {
         if (!options.className.includes(spell.classes)) {
           return false;
         }
+      } else {
+        return false; // Нет классов у заклинания
       }
     }
     
@@ -120,3 +129,6 @@ export const filterSpells = (options: {
     return true;
   });
 };
+
+// Инициализируем консольный лог с количеством заклинаний
+console.log(`Загружено заклинаний в базу данных: ${spells.length}`);

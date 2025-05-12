@@ -1,14 +1,19 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import SpellBookViewer from '@/components/spellbook/SpellBookViewer';
 import { useTheme } from '@/hooks/use-theme';
 import ThemeSelector from '@/components/ThemeSelector';
 import NavigationButtons from '@/components/ui/NavigationButtons';
 import FloatingDiceButton from '@/components/dice/FloatingDiceButton';
 import BackgroundWrapper from '@/components/layout/BackgroundWrapper';
+import { spells } from '@/data/spells';
 
 const SpellbookPage: React.FC = () => {
   const { themeStyles } = useTheme();
+  
+  useEffect(() => {
+    console.log("SpellbookPage: Загружено заклинаний", spells.length);
+  }, []);
 
   return (
     <BackgroundWrapper>
