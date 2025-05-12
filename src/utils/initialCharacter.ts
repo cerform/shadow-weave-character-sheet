@@ -1,3 +1,4 @@
+
 import { Character } from '@/types/character';
 
 export const createInitialCharacter = (): Character => {
@@ -22,6 +23,20 @@ export const createInitialCharacter = (): Character => {
       wisdom: 10,
       charisma: 10
     },
+    stats: {
+      strength: 10,
+      dexterity: 10,
+      constitution: 10,
+      intelligence: 10,
+      wisdom: 10,
+      charisma: 10
+    },
+    strength: 10,
+    dexterity: 10,
+    constitution: 10,
+    intelligence: 10,
+    wisdom: 10,
+    charisma: 10,
     maxHp: 0,
     currentHp: 0,
     tempHp: 0,
@@ -66,8 +81,8 @@ export const createInitialCharacter = (): Character => {
     spellSlots: {},
     resources: {},
     sorceryPoints: {
-      max: 0,
-      current: 0
+      current: 0,
+      max: 0
     },
     lastDiceRoll: {
       diceType: 'd20',
@@ -78,6 +93,34 @@ export const createInitialCharacter = (): Character => {
       label: '',
       timestamp: ''
     },
-    notes: ''
+    notes: '',
+    hp: {
+      current: 0,
+      max: 0,
+      temp: 0
+    },
+    spellcasting: null,
+    savingThrows: {
+      strength: false,
+      dexterity: false,
+      constitution: false,
+      intelligence: false,
+      wisdom: false,
+      charisma: false
+    },
+    skills: {},
+    updatedAt: new Date().toISOString(),
+    gold: 0,
+    experience: 0,
+    languages: [],
+    image: '',
+    skillBonuses: {},
+    currency: {
+      cp: 0,
+      sp: 0,
+      ep: 0,
+      gp: 0,
+      pp: 0
+    }
   };
 };
