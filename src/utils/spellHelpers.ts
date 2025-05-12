@@ -80,6 +80,43 @@ export const toCharacterSpell = (spell: string | SpellData | CharacterSpell): Ch
   };
 };
 
+// Нормализует смешанный массив заклинаний (строки и объекты) в массив объектов CharacterSpell
+export const normalizeSpells = (spells: (CharacterSpell | string)[]): CharacterSpell[] => {
+  if (!Array.isArray(spells)) return [];
+  
+  return spells.map(spell => {
+    if (typeof spell === 'string') {
+      return {
+        name: spell,
+        level: 0
+      };
+    }
+    return spell;
+  });
+};
+
+// Преобразует CharacterSpell в SpellData
+export const convertToSpellData = (spells: CharacterSpell[]): SpellData[] => {
+  return spells.map(spell => ({
+    id: spell.id || `spell-${spell.name.toLowerCase().replace(/\s+/g, '-')}`,
+    name: spell.name,
+    level: spell.level || 0,
+    school: spell.school || 'Воплощение',
+    castingTime: spell.castingTime || '1 действие',
+    range: spell.range || 'На себя',
+    components: spell.components || '',
+    duration: spell.duration || 'Мгновенная',
+    description: spell.description || '',
+    classes: spell.classes || [],
+    ritual: spell.ritual || false,
+    concentration: spell.concentration || false,
+    verbal: spell.verbal || false,
+    somatic: spell.somatic || false,
+    material: spell.material || false,
+    materials: spell.materials || ''
+  }));
+};
+
 // Функция для фильтрации заклинаний по уровню
 export const filterSpellsByLevel = (spells: (CharacterSpell | string)[], level: number): (CharacterSpell | string)[] => {
   return spells.filter(spell => {

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -23,7 +24,10 @@ const CharacterBackgroundSelection: React.FC<CharacterBackgroundSelectionProps> 
   }, []);
 
   // При обработке профессий, создаем правильную структуру объекта
-  const handleBackgroundSelection = (background: any) => {
+  const handleBackgroundSelection = (backgroundName: string) => {
+    const selectedBackground = backgrounds.find(bg => bg.name === backgroundName);
+    if (!selectedBackground) return;
+
     // Ensure proficiencies object is properly structured
     const existingProficiencies = character.proficiencies || {
       languages: [],
@@ -34,13 +38,13 @@ const CharacterBackgroundSelection: React.FC<CharacterBackgroundSelectionProps> 
     };
     
     // Safe access to background properties
-    const backgroundProficiencies = background.proficiency || {};
+    const backgroundProficiencies = selectedBackground.proficiencies || {};
     const weaponProfs = Array.isArray(backgroundProficiencies.weapons) ? backgroundProficiencies.weapons : [];
     const toolProfs = Array.isArray(backgroundProficiencies.tools) ? backgroundProficiencies.tools : [];
     const languageProfs = Array.isArray(backgroundProficiencies.languages) ? backgroundProficiencies.languages : [];
     
     updateCharacter({
-      background: background.name,
+      background: backgroundName,
       proficiencies: {
         ...existingProficiencies,
         weapons: [...existingProficiencies.weapons, ...weaponProfs],

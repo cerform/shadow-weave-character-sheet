@@ -66,6 +66,13 @@ export interface Character {
     gp: number;
     pp: number;
   };
+  currency?: {
+    cp: number;
+    sp: number;
+    ep: number;
+    gp: number;
+    pp: number;
+  };
   deathSaves: {
     successes: number;
     failures: number;
@@ -77,8 +84,17 @@ export interface Character {
   flaws?: string;
   backstory?: string;
   initiative?: number;
-  spellSlots?: Record<string, { max: number; used: number; current?: number; }>;
-  resources?: Record<string, { max: number; used: number; current?: number; recoveryType?: 'short' | 'short-rest' | 'long' | 'long-rest' }>;
+  spellSlots?: Record<string, { 
+    max: number; 
+    used: number; 
+    current?: number; 
+  }>;
+  resources?: Record<string, { 
+    max: number; 
+    used: number; 
+    current?: number; 
+    recoveryType?: 'short' | 'short-rest' | 'long' | 'long-rest' 
+  }>;
   sorceryPoints?: {
     max: number;
     current: number;
@@ -121,6 +137,18 @@ export interface Character {
   inspiration?: boolean;
   ac?: number;
   experience?: number;
+  
+  // Добавляем свойства для разделения фичей по категориям
+  raceFeatures?: any[];
+  classFeatures?: any[];
+  backgroundFeatures?: any[];
+  feats?: any[];
+  
+  // Добавляем skillBonuses для кастомных бонусов навыков
+  skillBonuses?: Record<string, number>;
+
+  // Добавляем additionalClasses для мультиклассовых персонажей
+  additionalClasses?: Array<{class: string, level: number, subclass?: string}>;
 }
 
 export interface CharacterSpell {
