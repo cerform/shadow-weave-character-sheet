@@ -3,6 +3,7 @@ import { Character } from "@/types/character";
 import { toast } from 'sonner';
 import { getCurrentUid } from "@/utils/authHelpers";
 import { saveCharacterToFirestore } from "@/services/characterService";
+import { calculateModifier } from "@/utils/characterUtils";
 
 export const useCharacterCreation = () => {
   const defaultCharacter: Character = {
@@ -49,9 +50,17 @@ export const useCharacterCreation = () => {
       wisdom: 10,
       charisma: 10
     },
+    // Initialize with proper savingThrows
+    savingThrows: {
+      strength: false,
+      dexterity: false,
+      constitution: false,
+      intelligence: false,
+      wisdom: false,
+      charisma: false
+    },
     // Initialize with proper empty objects instead of empty arrays
     skills: {},
-    savingThrows: {},
     proficiencies: {
       languages: [],
       tools: [],
@@ -93,8 +102,18 @@ export const useCharacterCreation = () => {
       total: 1,
       used: 0,
       dieType: "d8",
-      value: "1d8"
-    }
+      value: 'd8' // Исправляем тип с string на number
+    },
+    gold: 0,
+    hp: {
+      current: 10,
+      max: 10,
+      temp: 0
+    },
+    initiative: 0,
+    spellcasting: null,
+    updatedAt: new Date().toISOString(),
+    createdAt: new Date().toISOString()
   };
 
   const [character, setCharacter] = useState<Character>(defaultCharacter);
@@ -241,7 +260,7 @@ export const useCharacterCreation = () => {
 
   // Вычисляем модификатор характеристики
   const getModifier = (score: number): string => {
-    const modifier = getModifierFromAbilityScore(score);
+    const modifier = calculateModifier(score); // Используем импортированную функцию вместо getModifierFromAbilityScore
     return modifier >= 0 ? `+${modifier}` : `${modifier}`;
   };
   
@@ -308,7 +327,7 @@ export const useCharacterCreation = () => {
       
       console.log(`Уровень персонажа изменен на ${level}`);
     } else {
-      toast.error("Уровень должен быть от 1 до 20");
+      toast.error("Уровень должен б��ть от 1 до 20");
     }
   };
   

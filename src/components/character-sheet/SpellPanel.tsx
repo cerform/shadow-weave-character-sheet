@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -49,7 +48,7 @@ const SpellPanel: React.FC<SpellPanelProps> = ({
   // Handler for opening spell details
   const handleOpenSpell = (spell: CharacterSpell) => {
     // Convert to SpellData format if needed
-    const spellData = convertToSpellData([spell])[0];
+    const spellData = convertToSpellData(spell); // Исправляем вызов функции, чтобы она принимала один объект заклинания
     
     // Set the current spell and open dialog
     setCurrentSpell(spellData);

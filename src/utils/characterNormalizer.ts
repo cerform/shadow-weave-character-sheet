@@ -1,4 +1,3 @@
-
 import { Character } from '@/types/character';
 
 /**
@@ -60,8 +59,22 @@ export function normalizeCharacterData(character: Character): Character {
   if (!Array.isArray(normalized.equipment)) normalized.equipment = [];
   if (!Array.isArray(normalized.features)) normalized.features = [];
   if (!Array.isArray(normalized.spells)) normalized.spells = [];
-  if (!Array.isArray(normalized.languages)) normalized.languages = [];
-  if (!Array.isArray(normalized.proficiencies)) normalized.proficiencies = [];
+  
+  // Проверяем языки - если они определены, используем их, иначе берем из proficiencies
+  if (!Array.isArray(normalized.languages)) {
+    normalized.languages = normalized.proficiencies?.languages || [];
+  }
+  
+  // Исправляем proficiencies если они отсутствуют
+  if (!normalized.proficiencies) {
+    normalized.proficiencies = {
+      languages: Array.isArray(normalized.languages) ? normalized.languages : [],
+      tools: [],
+      weapons: [],
+      armor: [],
+      skills: []
+    };
+  }
   
   // Проверяем наличие userId
   if (!normalized.userId) {

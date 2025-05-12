@@ -14,4 +14,5 @@ export interface Item {
   description?: string;
   weight?: number;
   value?: number;
+  equipped?: boolean; // Add the equipped property
 }

@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -94,7 +93,7 @@ const CharacterSpells: React.FC<CharacterSpellsProps> = ({
   const handleSpellClick = (spell: CharacterSpell) => {
     if (onSpellClick) {
       // Преобразуем CharacterSpell в SpellData с дефолтными значениями для обязательных полей
-      const spellData = convertToSpellData([spell])[0];
+      const spellData = convertToSpellData(spell);
       onSpellClick(spellData);
     }
   };

@@ -26,6 +26,7 @@ export interface SpellSlot {
 export interface Resource {
   max: number;
   used: number;
+  current?: number; // Добавляем поле current в Resource
   recoveryType?: 'short-rest' | 'long-rest' | 'short' | 'long';
   name?: string;
 }
@@ -100,7 +101,7 @@ export interface Character {
   speed: number;
   hitDice: {
     total: number;
-    value: number;
+    value: string | number; // Поддержка как строк, так и чисел
     used?: number;
     dieType?: string;
   };
@@ -165,6 +166,12 @@ export interface Character {
     gp: number;
     pp: number;
   };
+  image?: string; // Добавляем поле image
+  deathSaves?: {
+    successes: number;
+    failures: number;
+  };
+  languages?: string[]; // Добавляем поле languages
 }
 
 export interface CharacterSpell {
@@ -188,7 +195,7 @@ export interface CharacterSpell {
   source?: string;
   higher_level?: string;
   higherLevel?: string;
-  higherLevels?: string;
+  higherLevels?: string; // Добавляем поле higherLevels
 }
 
 export interface LevelFeature {

@@ -144,7 +144,14 @@ export const createDefaultCharacter = (): Character => {
       total: 0,
       label: '',
       timestamp: currentDate
-    }
+    },
+    image: '', // Добавляем отсутствующее поле image
+    deathSaves: {
+      successes: 0,
+      failures: 0
+    },
+    languages: [], // Добавляем поле languages
+    skillBonuses: {} // Добавляем поле skillBonuses
   };
 };
 

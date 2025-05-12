@@ -1,4 +1,3 @@
-
 import { Character } from '@/types/character';
 
 export const createInitialCharacter = (): Character => {
@@ -42,9 +41,9 @@ export const createInitialCharacter = (): Character => {
     },
     hitDice: {
       total: 1,
+      value: 'd8', // строка вместо числа
       used: 0,
-      dieType: 'd8',
-      value: '1d8'
+      dieType: 'd8'
     },
     money: {
       cp: 0,
