@@ -18,6 +18,49 @@ export const normalizeSpells = (spells: any[]): CharacterSpell[] => {
   });
 };
 
+// Check if a spell object is actually a CharacterSpell object or just a string
+export const isCharacterSpellObject = (spell: any): spell is CharacterSpell => {
+  return typeof spell === 'object' && spell !== null && 'name' in spell;
+};
+
+// Get the level of a spell (handles both string and object formats)
+export const getSpellLevel = (spell: any): number => {
+  if (isCharacterSpellObject(spell)) {
+    return spell.level || 0;
+  }
+  return 0; // Default to cantrip if it's just a string
+};
+
+// Check if a spell is prepared
+export const isSpellPrepared = (spell: any): boolean => {
+  if (isCharacterSpellObject(spell)) {
+    return !!spell.prepared;
+  }
+  return true; // Default to prepared if it's just a string
+};
+
+// Get spell level name based on level number
+export const getSpellLevelName = (level: number): string => {
+  const levelNames = [
+    'Заговоры',
+    'Заклинания 1 уровня',
+    'Заклинания 2 уровня',
+    'Заклинания 3 уровня',
+    'Заклинания 4 уровня',
+    'Заклинания 5 уровня',
+    'Заклинания 6 уровня',
+    'Заклинания 7 уровня',
+    'Заклинания 8 уровня',
+    'Заклинания 9 уровня'
+  ];
+  
+  if (level >= 0 && level < levelNames.length) {
+    return levelNames[level];
+  }
+  
+  return `Заклинания ${level} уровня`;
+};
+
 // Convert regular spells to SpellData format
 export const convertToSpellData = (spells: any[]): SpellData[] => {
   if (!spells || !Array.isArray(spells)) return [];
