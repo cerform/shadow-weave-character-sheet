@@ -3,6 +3,7 @@ import { CharacterSpell } from '@/types/character';
 import { allCantrips } from '@/data/spells/all_cantrips';
 import { allLevel1Spells } from '@/data/spells/all_level1';
 import { spells } from '@/data/spells';
+import { SpellData, convertCharacterSpellToSpellData } from '@/types/spells';
 
 /**
  * Обновляет базу данных заклинаний, добавляя новые заклинания
@@ -84,7 +85,7 @@ export function importSpellsFromTextFormat(text: string, existingSpells: Charact
       const verbal = componentStr.includes('В');
       const somatic = componentStr.includes('С');
       const material = componentStr.includes('М');
-      const ritual = componentStr.toLowerCase().includes('Р') || componentStr.toLowerCase().includes('Р');
+      const ritual = componentStr.toLowerCase().includes('Р') || componentStr.toLowerCase().includes('р');
       const concentration = componentStr.toLowerCase().includes('К');
       
       if (existingIndex >= 0) {

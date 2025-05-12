@@ -33,7 +33,7 @@ export interface SpellFilters {
 }
 
 export function convertCharacterSpellToSpellData(spell: CharacterSpell): SpellData {
-  // Полностью обрабатываем все возможные типы полей
+  // Полностью обрабатываем все возможные типы полей и преобразуем id в string
   return {
     id: spell.id ? String(spell.id) : `spell-${spell.name.replace(/\s+/g, '-').toLowerCase()}`,
     name: spell.name || '',
