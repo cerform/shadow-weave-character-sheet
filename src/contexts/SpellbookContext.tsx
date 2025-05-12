@@ -1,10 +1,21 @@
+
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
-import { SpellData, convertCharacterSpellToSpellData, convertSpellArray } from '@/types/spells';
+import { SpellData } from '@/types/spells';
 import { CharacterSpell } from '@/types/character';
 import { useCharacter } from './CharacterContext';
 import { useToast } from '@/hooks/use-toast';
 import { getAllSpells } from '@/data/spells';
 import { calculateAvailableSpellsByClassAndLevel, getMaxSpellLevel } from '@/utils/spellUtils';
+
+// Define type for spell filters
+interface SpellFilters {
+  name: string;
+  schools: string[];
+  levels: number[];
+  classes: string[];
+  ritual: boolean | null;
+  concentration: boolean | null;
+}
 
 interface SpellbookContextType {
   selectedSpells: SpellData[];
@@ -72,7 +83,7 @@ export const SpellbookProvider: React.FC<{ children: ReactNode }> = ({ children 
         // Преобразуем classes к массиву, если строка
         const spellClasses = typeof spell.classes === 'string' 
           ? [spell.classes.toLowerCase()] 
-          : (spell.classes || []).map((cls: string) => cls.toLowerCase());
+          : Array.isArray(spell.classes) ? spell.classes.map((cls: string) => cls.toLowerCase()) : [];
           
         // Проверяем соответствие класса персонажа
         const isForClass = spellClasses.some(cls => {
@@ -97,7 +108,7 @@ export const SpellbookProvider: React.FC<{ children: ReactNode }> = ({ children 
       
       console.log(`Found ${classSpells.length} spells for ${characterClass}`);
       
-      // Преобразуем заклинания в формат SpellData
+      // Преобразуем заклинания в формат SpellData с проверкой на существование всех полей
       const spellDataArray = classSpells.map(spell => {
         return {
           id: spell.id || `spell-${spell.name.replace(/\s+/g, '-').toLowerCase()}`,
@@ -111,45 +122,51 @@ export const SpellbookProvider: React.FC<{ children: ReactNode }> = ({ children 
           description: spell.description || '',
           classes: spell.classes || [],
           ritual: spell.ritual || false,
-          concentration: spell.concentration || false
+          concentration: spell.concentration || false,
+          verbal: spell.verbal || false,
+          somatic: spell.somatic || false,
+          material: spell.material || false,
+          source: spell.source || "Player's Handbook"
         } as SpellData;
       });
       
       setAvailableSpells(spellDataArray);
       
       // Если у персонажа уже есть заклинания, загружаем их
-      if (character && character.spells && character.spells.length > 0) {
+      if (character && character.spells && Array.isArray(character.spells) && character.spells.length > 0) {
         // Преобразуем CharacterSpell[] в SpellData[]
-        const characterSpellData = Array.isArray(character.spells) 
-          ? character.spells.map(spell => {
-              if (typeof spell === 'string') {
-                // Если заклинание представлено строкой, ищем полные данные
-                const foundSpell = allSpells.find(s => s.name === spell);
-                if (foundSpell) {
-                  return convertCharacterSpellToSpellData(foundSpell as CharacterSpell);
-                } else {
-                  // Создаем минимальный объект заклинания
-                  return {
-                    id: `spell-${spell.replace(/\s+/g, '-').toLowerCase()}`,
-                    name: spell,
-                    level: 0,
-                    school: 'Универсальная',
-                    castingTime: '1 действие',
-                    range: 'Касание',
-                    components: '',
-                    duration: 'Мгновенная',
-                    description: [''],
-                    classes: characterClass,
-                    ritual: false,
-                    concentration: false
-                  } as SpellData;
-                }
+        const characterSpellData = character.spells.map(spell => {
+            if (typeof spell === 'string') {
+              // Если заклинание представлено строкой, ищем полные данные
+              const foundSpell = allSpells.find(s => s.name === spell);
+              if (foundSpell) {
+                return convertCharacterSpellToSpellData(foundSpell);
               } else {
-                // Если это уже объект заклинания
-                return convertCharacterSpellToSpellData(spell);
+                // Создаем минимальный объект заклинания
+                return {
+                  id: `spell-${spell.replace(/\s+/g, '-').toLowerCase()}`,
+                  name: spell,
+                  level: 0,
+                  school: 'Универсальная',
+                  castingTime: '1 действие',
+                  range: 'Касание',
+                  components: '',
+                  duration: 'Мгновенная',
+                  description: [''],
+                  classes: characterClass,
+                  ritual: false,
+                  concentration: false,
+                  verbal: false,
+                  somatic: false,
+                  material: false,
+                  source: "Player's Handbook"
+                } as SpellData;
               }
-            })
-          : [];
+            } else {
+              // Если это уже объект заклинания
+              return convertCharacterSpellToSpellData(spell);
+            }
+          });
         
         setSelectedSpells(characterSpellData);
       }
@@ -175,6 +192,28 @@ export const SpellbookProvider: React.FC<{ children: ReactNode }> = ({ children 
       // Харизма (бард, колдун, чародей, паладин)
       return Math.floor((character.abilities?.charisma || character.abilities?.CHA || character.charisma || 10) - 10) / 2;
     }
+  };
+
+  // Helper function to convert character spell to spell data
+  const convertCharacterSpellToSpellData = (spell: any): SpellData => {
+    return {
+      id: String(spell.id || `spell-${spell.name.replace(/\s+/g, '-').toLowerCase()}`),
+      name: spell.name,
+      level: spell.level || 0,
+      school: spell.school || 'Универсальная',
+      castingTime: spell.castingTime || '1 действие',
+      range: spell.range || 'Касание',
+      components: spell.components || '',
+      duration: spell.duration || 'Мгновенная',
+      description: spell.description || '',
+      classes: spell.classes || [],
+      ritual: Boolean(spell.ritual),
+      concentration: Boolean(spell.concentration),
+      verbal: Boolean(spell.verbal),
+      somatic: Boolean(spell.somatic),
+      material: Boolean(spell.material),
+      source: spell.source || "Player's Handbook"
+    };
   };
 
   // Добавление заклинания
@@ -213,7 +252,7 @@ export const SpellbookProvider: React.FC<{ children: ReactNode }> = ({ children 
         };
         
         // Добавляем заклинание к списку заклинаний персонажа
-        const updatedSpells = [...(character.spells || []), characterSpell];
+        const updatedSpells = Array.isArray(character.spells) ? [...character.spells, characterSpell] : [characterSpell];
         updateCharacter({ spells: updatedSpells });
         
         toast({
@@ -233,7 +272,7 @@ export const SpellbookProvider: React.FC<{ children: ReactNode }> = ({ children 
     if (character && character.spells && updateCharacter) {
       const spellName = selectedSpells.find(s => s.id === spellId || s.id === `spell-${spellId}`)?.name;
       
-      if (spellName) {
+      if (spellName && Array.isArray(character.spells)) {
         const updatedSpells = character.spells.filter(spell => {
           if (typeof spell === 'string') {
             return spell !== spellName;
@@ -258,9 +297,14 @@ export const SpellbookProvider: React.FC<{ children: ReactNode }> = ({ children 
     const characterClassLower = character.class.toLowerCase();
     
     // Преобразуем classes к массиву
-    const spellClasses = typeof spell.classes === 'string' 
-      ? [spell.classes.toLowerCase()]
-      : (spell.classes || []).map(cls => typeof cls === 'string' ? cls.toLowerCase() : '');
+    let spellClasses: string[] = [];
+    if (typeof spell.classes === 'string') {
+      spellClasses = [spell.classes.toLowerCase()];
+    } else if (Array.isArray(spell.classes)) {
+      spellClasses = spell.classes.map(cls => 
+        typeof cls === 'string' ? cls.toLowerCase() : ''
+      );
+    }
     
     // Проверяем соответствие класса
     return spellClasses.some(cls => 

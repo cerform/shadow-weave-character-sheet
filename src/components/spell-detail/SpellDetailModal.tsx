@@ -65,6 +65,7 @@ const SpellDetailModal: React.FC<SpellDetailModalProps> = ({
       );
     }
     
+    // Safely handle array description
     if (Array.isArray(spell.description)) {
       return spell.description.map((paragraph, index) => (
         <p key={index} className="mb-3" style={{ color: currentTheme.textColor }}>
@@ -80,7 +81,8 @@ const SpellDetailModal: React.FC<SpellDetailModalProps> = ({
   const formatClasses = (classes: string[] | string | undefined): string => {
     if (!classes) return "Нет информации";
     if (typeof classes === 'string') return classes;
-    return classes.join(', ');
+    if (Array.isArray(classes)) return classes.join(', ');
+    return "Нет информации";
   };
 
   return (

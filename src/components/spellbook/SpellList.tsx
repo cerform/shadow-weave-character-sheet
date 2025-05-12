@@ -26,7 +26,7 @@ const SpellList: React.FC<SpellListProps> = ({
   return (
     <ScrollArea className="h-[70vh]">
       <div className="p-4 space-y-4">
-        {spells.length > 0 ? (
+        {Array.isArray(spells) && spells.length > 0 ? (
           spells.map((spell, index) => (
             <Card 
               key={spell.id !== undefined ? String(spell.id) : `spell-${index}`} 
