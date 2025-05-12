@@ -1,4 +1,3 @@
-
 import { CharacterSpell } from '@/types/character';
 
 /**
@@ -28,7 +27,7 @@ export function componentsToString(components: {
 /**
  * Преобразует строковое представление компонентов в объект
  */
-export function stringToComponents(componentString: string): {
+export function parseComponents(componentString: string): {
   verbal: boolean;
   somatic: boolean;
   material: boolean;
@@ -46,8 +45,8 @@ export function stringToComponents(componentString: string): {
   if (componentString.includes('В')) components.verbal = true;
   if (componentString.includes('С')) components.somatic = true;
   if (componentString.includes('М')) components.material = true;
-  if (componentString.toLowerCase().includes('ритуал')) components.ritual = true;
-  if (componentString.toLowerCase().includes('концентрация')) components.concentration = true;
+  if (componentString.toLowerCase().includes('р') || componentString.toLowerCase().includes('ритуал')) components.ritual = true;
+  if (componentString.toLowerCase().includes('к') || componentString.toLowerCase().includes('концентрация')) components.concentration = true;
   
   return components;
 }

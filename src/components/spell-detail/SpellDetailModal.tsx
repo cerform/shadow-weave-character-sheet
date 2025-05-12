@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { SpellData } from '@/types/spells';
@@ -57,12 +56,8 @@ const SpellDetailModal: React.FC<SpellDetailModalProps> = ({
   
   // Safely render higher level effects
   const renderHigherLevels = () => {
-    // Check different possible property names
-    const higherLevelText = 
-      spell.higherLevels || 
-      spell.higherLevel || 
-      spell.higher_level || 
-      '';
+    // Check for higherLevels property
+    const higherLevelText = spell?.higherLevels || '';
       
     if (!higherLevelText) return null;
     

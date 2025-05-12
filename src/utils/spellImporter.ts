@@ -1,6 +1,22 @@
 
 import { CharacterSpell } from '@/types/character';
-import { parseComponents } from './spellProcessors';
+
+/**
+ * Функция для разбора компонентов заклинания
+ */
+function parseSpellComponents(componentString: string): {
+  verbal: boolean;
+  somatic: boolean;
+  material: boolean;
+  ritual: boolean;
+} {
+  return {
+    verbal: componentString.includes('В'),
+    somatic: componentString.includes('С'),
+    material: componentString.includes('М'),
+    ritual: componentString.toLowerCase().includes('р')
+  };
+}
 
 /**
  * Parses a spell entry from the raw text format
@@ -29,7 +45,7 @@ export const parseSpellEntry = (entry: string): {
   return {
     name,
     level,
-    components: parseComponents(componentCode)
+    components: parseSpellComponents(componentCode)
   };
 };
 

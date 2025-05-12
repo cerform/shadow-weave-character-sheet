@@ -1,10 +1,9 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { parseSpellEntry, processSpellBatch } from '@/utils/spellBatchImporter';
+import { processSpellBatch } from '@/utils/spellBatchImporter';
 
 interface SpellImportModalProps {
   isOpen: boolean;
@@ -97,7 +96,7 @@ const SpellImportModal: React.FC<SpellImportModalProps> = ({
             onClick={handleImport} 
             disabled={processing || !importText.trim()}
           >
-            {processing ? "Импорт..." : "Импортировать"}
+            {processing ? "Импорт..." : "Импо��тировать"}
           </Button>
         </DialogFooter>
       </DialogContent>

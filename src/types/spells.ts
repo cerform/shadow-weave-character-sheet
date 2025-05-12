@@ -20,6 +20,7 @@ export interface SpellData {
   materials?: string;
   source?: string;
   higherLevels?: string;
+  source: string;
   prepared?: boolean;
 }
 
@@ -34,7 +35,7 @@ export interface SpellFilters {
 
 export function convertCharacterSpellToSpellData(spell: CharacterSpell): SpellData {
   return {
-    id: spell.id || `spell-${spell.name.replace(/\s+/g, '-').toLowerCase()}`,
+    id: spell.id ? String(spell.id) : `spell-${spell.name.replace(/\s+/g, '-').toLowerCase()}`,
     name: spell.name,
     level: spell.level || 0,
     school: spell.school || 'Универсальная',
@@ -51,6 +52,7 @@ export function convertCharacterSpellToSpellData(spell: CharacterSpell): SpellDa
     material: !!spell.material,
     materials: spell.materials || '',
     source: spell.source || "Player's Handbook",
+    higherLevels: spell.higherLevel || spell.higherLevels || spell.higher_level || '',
     prepared: spell.prepared
   };
 }

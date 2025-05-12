@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Badge } from "@/components/ui/badge";
 import { SpellData } from '@/types/spells';
@@ -79,7 +78,7 @@ const SpellDescription: React.FC<SpellDescriptionProps> = ({ spell, isPrepared =
 
   // Helper function to get higher level text
   const getHigherLevelText = () => {
-    return spell.higherLevel || spell.higherLevels || '';
+    return spell.higherLevels || '';
   };
   
   return (

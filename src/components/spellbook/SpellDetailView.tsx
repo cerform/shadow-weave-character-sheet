@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
@@ -124,11 +123,11 @@ const SpellDetailView: React.FC<SpellDetailViewProps> = ({
                   {formattedDescription}
                 </div>
                 
-                {(spell.higherLevel || spell.higherLevels) && (
+                {spell.higherLevels && (
                   <>
                     <Separator className="my-4" />
                     <h3 className="text-lg font-medium" style={{ color: currentTheme.accent }}>На более высоких уровнях</h3>
-                    <p className="text-pretty">{spell.higherLevel || spell.higherLevels}</p>
+                    <p className="text-pretty">{spell.higherLevels}</p>
                   </>
                 )}
               </div>
