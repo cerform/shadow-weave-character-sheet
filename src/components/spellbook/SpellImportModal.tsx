@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
@@ -96,7 +97,7 @@ const SpellImportModal: React.FC<SpellImportModalProps> = ({
             onClick={handleImport} 
             disabled={processing || !importText.trim()}
           >
-            {processing ? "Импорт..." : "Импо��тировать"}
+            {processing ? "Импорт..." : "Импортировать"}
           </Button>
         </DialogFooter>
       </DialogContent>

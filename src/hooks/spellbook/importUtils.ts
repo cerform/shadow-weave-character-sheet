@@ -1,5 +1,6 @@
 
 import { CharacterSpell } from '@/types/character';
+import { parseComponents } from '@/utils/spellProcessors';
 
 /**
  * Парсит запись заклинания из текстового формата
@@ -25,22 +26,18 @@ export function parseSpellEntry(entry: string): {
   const name = match[2].trim();
   const componentCode = match[3] || '';
   
-  // Определяем компоненты вручную, не используя внешнюю функцию
-  const verbal = componentCode.includes('В');
-  const somatic = componentCode.includes('С');
-  const material = componentCode.includes('М');
-  const ritual = componentCode.toLowerCase().includes('р');
-  const concentration = componentCode.toLowerCase().includes('к');
+  // Определяем компоненты с использованием parseComponents
+  const components = parseComponents(componentCode);
   
   return {
     name,
     level,
     components: componentCode,
-    verbal,
-    somatic,
-    material,
-    ritual,
-    concentration
+    verbal: components.verbal,
+    somatic: components.somatic,
+    material: components.material,
+    ritual: components.ritual,
+    concentration: components.concentration
   };
 }
 

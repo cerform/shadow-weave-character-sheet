@@ -18,7 +18,6 @@ export interface SpellData {
   somatic: boolean;
   material: boolean;
   materials?: string;
-  source?: string;
   higherLevels?: string;
   source: string;
   prepared?: boolean;

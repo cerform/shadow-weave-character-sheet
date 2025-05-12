@@ -13,9 +13,11 @@ import { level6 } from './level6';
 import { level7 } from './level7';
 import { level8 } from './level8';
 import { level9 } from './level9';
+import { allCantrips } from './all_cantrips';
 
 // Объединяем все заклинания в единый массив
 export const spells: CharacterSpell[] = [
+  ...allCantrips, // Добавляем все заговоры
   ...cantrips,
   ...level0,
   ...level1,

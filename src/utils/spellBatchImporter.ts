@@ -26,7 +26,7 @@ export function processSpellBatch(batchText: string): CharacterSpell[] {
     let remainingText = line.replace(/\[\d+\]/, '').trim();
     
     // Ищем название заклинания (до компонентов или до конца строки)
-    const componentsIndex = remainingText.search(/\s[ВСМ]+$/);
+    const componentsIndex = remainingText.search(/\s[ВСМРК\.]+$/);
     let name = remainingText;
     let componentsText = '';
     
@@ -36,13 +36,7 @@ export function processSpellBatch(batchText: string): CharacterSpell[] {
     }
     
     // Определяем компоненты
-    const components = {
-      verbal: componentsText.includes('В'),
-      somatic: componentsText.includes('С'),
-      material: componentsText.includes('М'),
-      ritual: false,
-      concentration: false
-    };
+    const components = parseComponents(componentsText);
     
     // Создаем объект заклинания
     const spell: CharacterSpell = {
@@ -78,7 +72,7 @@ export function parseSpellEntry(line: string): CharacterSpell | null {
   let remainingText = line.replace(/\[\d+\]/, '').trim();
   
   // Ищем название заклинания (до компонентов или до конца строки)
-  const componentsIndex = remainingText.search(/\s[ВСМ]+$/);
+  const componentsIndex = remainingText.search(/\s[ВСМРК\.]+$/);
   let name = remainingText;
   let componentsText = '';
   

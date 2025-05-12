@@ -1,5 +1,5 @@
-
 import { CharacterSpell } from '@/types/character';
+import { parseComponents } from './spellProcessors';
 
 /**
  * Функция для разбора компонентов заклинания
@@ -10,12 +10,7 @@ function parseSpellComponents(componentString: string): {
   material: boolean;
   ritual: boolean;
 } {
-  return {
-    verbal: componentString.includes('В'),
-    somatic: componentString.includes('С'),
-    material: componentString.includes('М'),
-    ritual: componentString.toLowerCase().includes('р')
-  };
+  return parseComponents(componentString);
 }
 
 /**

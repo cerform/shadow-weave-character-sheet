@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -17,6 +16,17 @@ import { themes } from '@/lib/themes';
 import SpellDetailModal from './SpellDetailModal';
 import { spells, getSpellsByClass, getSpellsByLevel } from '@/data/spells';
 import { CharacterSpell } from '@/types/character';
+
+interface Theme {
+  accent: string;
+  textColor: string;
+  background: string;
+  foreground: string;
+  primary: string;
+  cardBackground: string;
+  inputBackground?: string;
+  mutedTextColor?: string;
+}
 
 const SpellBookViewer: React.FC = () => {
   const { theme } = useTheme();
@@ -121,8 +131,12 @@ const SpellBookViewer: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <Card className="p-6" style={{ backgroundColor: currentTheme.cardBackground }}>
+    <div className="py-4">
+      {/* Используйте проверку на наличие inputBackground с fallback на background */}
+      <div 
+        className="bg-card p-4 mb-6 rounded-lg border"
+        style={{ backgroundColor: themeStyles?.inputBackground || themeStyles?.background }}
+      >
         <div className="space-y-4">
           <h2 className="text-2xl font-bold" style={{ color: currentTheme.textColor }}>
             Поиск заклинаний
@@ -208,7 +222,7 @@ const SpellBookViewer: React.FC = () => {
             </div>
           </div>
         </div>
-      </Card>
+      </div>
       
       <Card className="p-6" style={{ backgroundColor: currentTheme.cardBackground }}>
         <h2 className="text-2xl font-bold mb-4" style={{ color: currentTheme.textColor }}>

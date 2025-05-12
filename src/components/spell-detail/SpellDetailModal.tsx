@@ -8,7 +8,7 @@ import { Book, BookOpen, Clock, Flame, Maximize2, ScrollText, Shield, Wand, Wand
 
 interface SpellDetailModalProps {
   spell: SpellData | null;
-  open: boolean;
+  isOpen: boolean;
   onClose: () => void;
   currentTheme: any;
   showAddButton?: boolean;
@@ -19,7 +19,7 @@ interface SpellDetailModalProps {
 
 const SpellDetailModal: React.FC<SpellDetailModalProps> = ({
   spell,
-  open,
+  isOpen,
   onClose,
   currentTheme,
   showAddButton = false,
@@ -65,7 +65,7 @@ const SpellDetailModal: React.FC<SpellDetailModalProps> = ({
     if (Array.isArray(higherLevelText)) {
       return (
         <>
-          <h4 className="font-bold mt-4 mb-2">На более высоких уровнях:</h4>
+          <h3 className="font-bold mb-1">На более высоких уровнях:</h3>
           {higherLevelText.map((text, index) => (
             <p key={`higher-${index}`} className="mb-2">{text}</p>
           ))}
@@ -75,16 +75,16 @@ const SpellDetailModal: React.FC<SpellDetailModalProps> = ({
     
     return (
       <>
-        <h4 className="font-bold mt-4 mb-2">На более высоких уровнях:</h4>
+        <h3 className="font-bold mb-1">На более высоких уровнях:</h3>
         <p>{higherLevelText}</p>
       </>
     );
   };
 
   return (
-    <Dialog open={open} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent 
-        className="max-w-2xl max-h-[90vh] overflow-auto" 
+        className="max-w-2xl" 
         style={{
           backgroundColor: currentTheme.cardBackground || 'rgba(0, 0, 0, 0.8)',
           color: currentTheme.textColor || 'white',
@@ -112,7 +112,7 @@ const SpellDetailModal: React.FC<SpellDetailModalProps> = ({
           </DialogTitle>
         </DialogHeader>
         
-        <div className="space-y-4 py-4">
+        <div className="space-y-4 mt-4">
           <div className="flex flex-wrap gap-2">
             <Badge variant="outline" style={{ borderColor: currentTheme.accent }}>
               <ScrollText className="h-4 w-4 mr-1" style={{ color: currentTheme.accent }} />

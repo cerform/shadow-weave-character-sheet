@@ -1,6 +1,6 @@
 
 import { CharacterSpell } from '@/types/character';
-import { processSpellBatch } from './spellBatchImporter';
+import { processSpellBatch, importSpellsFromText } from './spellBatchImporter';
 
 // Функция для обновления списка заклинаний на основе текстового ввода
 export function updateSpellsFromText(rawText: string, existingSpells: CharacterSpell[]): CharacterSpell[] {
