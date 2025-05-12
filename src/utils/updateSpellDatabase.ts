@@ -66,7 +66,17 @@ export function getSpellByName(name: string, spells: SpellData[]): SpellData | u
  */
 export function importSpellsFromTextFormat(text: string, existingSpells: SpellData[]): SpellData[] {
   const lines = text.split('\n').filter(line => line.trim() !== '');
+  // Создаем копию существующих заклинаний
   const result: SpellData[] = [...existingSpells];
+  
+  // Используем Map для отслеживания уникальных заклинаний по имени и уровню
+  const uniqueSpells = new Map<string, number>();
+  
+  // Заполняем Map существующими заклинаниями
+  existingSpells.forEach((spell, index) => {
+    const key = `${spell.name.toLowerCase()}-${spell.level}`;
+    uniqueSpells.set(key, index);
+  });
   
   lines.forEach(line => {
     // Регулярное выражение для извлечения уровня, имени и компонентов
@@ -77,20 +87,19 @@ export function importSpellsFromTextFormat(text: string, existingSpells: SpellDa
       const name = match[2].trim();
       const componentStr = match[3] || '';
       
-      // Проверяем наличие заклинания в текущем списке
-      const existingIndex = result.findIndex(
-        s => s.name.toLowerCase() === name.toLowerCase() && s.level === level
-      );
+      const uniqueKey = `${name.toLowerCase()}-${level}`;
       
       // Определяем компоненты
       const verbal = componentStr.includes('В');
       const somatic = componentStr.includes('С');
       const material = componentStr.includes('М');
       const ritual = componentStr.toLowerCase().includes('Р') || componentStr.toLowerCase().includes('р');
-      const concentration = componentStr.toLowerCase().includes('К');
+      const concentration = componentStr.toLowerCase().includes('К') || componentStr.toLowerCase().includes('к');
       
-      if (existingIndex >= 0) {
+      // Проверяем наличие заклинания в уникальном Map
+      if (uniqueSpells.has(uniqueKey)) {
         // Обновляем существующее заклинание
+        const existingIndex = uniqueSpells.get(uniqueKey)!;
         result[existingIndex] = {
           ...result[existingIndex],
           components: componentStr,
@@ -122,6 +131,7 @@ export function importSpellsFromTextFormat(text: string, existingSpells: SpellDa
         };
         
         result.push(newSpell);
+        uniqueSpells.set(uniqueKey, result.length - 1);
       }
     }
   });

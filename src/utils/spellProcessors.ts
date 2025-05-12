@@ -51,10 +51,16 @@ export function parseComponents(componentString: string): {
   components.verbal = upperStr.includes('В') || upperStr.includes('V');
   components.somatic = upperStr.includes('С') || upperStr.includes('S');
   components.material = upperStr.includes('М') || upperStr.includes('M');
-  components.ritual = componentString.includes('Р') || componentString.includes('р') || 
-                     componentString.includes('R') || componentString.includes('r');
-  components.concentration = componentString.includes('К') || componentString.includes('к') || 
-                           componentString.includes('C') || componentString.includes('c');
+  
+  const lowerStr = componentString.toLowerCase();
+  
+  // Улучшенное распознавание ритуала и концентрации
+  // Ритуал может быть обозначен как "р" или "r"
+  components.ritual = lowerStr.includes('р') || lowerStr.includes('r');
+  
+  // Концентрация может быть обозначена как "к" или "c" или полным словом "концентрация"
+  components.concentration = lowerStr.includes('к') || lowerStr.includes('c') || 
+                            lowerStr.includes('концентрация') || lowerStr.includes('concentration');
   
   return components;
 }
