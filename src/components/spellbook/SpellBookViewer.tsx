@@ -17,19 +17,8 @@ import SpellDetailModal from './SpellDetailModal';
 import { spells, getSpellsByClass, getSpellsByLevel } from '@/data/spells';
 import { CharacterSpell } from '@/types/character';
 
-interface Theme {
-  accent: string;
-  textColor: string;
-  background: string;
-  foreground: string;
-  primary: string;
-  cardBackground: string;
-  inputBackground?: string;
-  mutedTextColor?: string;
-}
-
 const SpellBookViewer: React.FC = () => {
-  const { theme } = useTheme();
+  const { theme, themeStyles } = useTheme();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedLevel, setSelectedLevel] = useState<string>('all');
   const [selectedClass, setSelectedClass] = useState<string>('all');
@@ -132,10 +121,9 @@ const SpellBookViewer: React.FC = () => {
 
   return (
     <div className="py-4">
-      {/* Используйте проверку на наличие inputBackground с fallback на background */}
       <div 
         className="bg-card p-4 mb-6 rounded-lg border"
-        style={{ backgroundColor: themeStyles?.inputBackground || themeStyles?.background }}
+        style={{ backgroundColor: currentTheme.inputBackground || currentTheme.background }}
       >
         <div className="space-y-4">
           <h2 className="text-2xl font-bold" style={{ color: currentTheme.textColor }}>

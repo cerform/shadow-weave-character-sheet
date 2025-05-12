@@ -1,11 +1,14 @@
+
 import React from 'react';
 import { SpellData } from '@/types/spells';
 
 interface SpellDescriptionProps {
   spell: SpellData;
+  isPrepared?: boolean;
+  isKnown?: boolean;
 }
 
-const SpellDescription: React.FC<SpellDescriptionProps> = ({ spell }) => {
+const SpellDescription: React.FC<SpellDescriptionProps> = ({ spell, isPrepared, isKnown }) => {
   return (
     <div className="space-y-2">
       <div>

@@ -51,7 +51,7 @@ export function convertCharacterSpellToSpellData(spell: CharacterSpell): SpellDa
     material: !!spell.material,
     materials: spell.materials || '',
     source: spell.source || "Player's Handbook",
-    higherLevels: spell.higherLevel || spell.higherLevels || spell.higher_level || '',
+    higherLevels: spell.higherLevel || spell.higherLevels || '',
     prepared: spell.prepared
   };
 }

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { SpellData } from '@/types/spells';
 import { Badge } from "@/components/ui/badge";
