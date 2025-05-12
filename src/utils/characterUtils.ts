@@ -1,5 +1,6 @@
 
 import { Character } from '@/types/character';
+import { calculateModifier } from './abilityUtils';
 
 /**
  * Creates a default character object
@@ -100,4 +101,19 @@ export function updateCharacterProficiencyBonus(character: Character, level: num
 export function calculateInitiative(character: Character): number {
   const dex = character.dexterity || character.abilities?.DEX || 10;
   return Math.floor((dex - 10) / 2);
+}
+
+/**
+ * Get ability score modifier with plus or minus sign
+ * This is exposed for components that need it
+ */
+export function getModifierFromAbilityScore(score: number): string {
+  return score >= 0 ? `+${calculateModifier(score)}` : `${calculateModifier(score)}`;
+}
+
+/**
+ * Get numeric modifier from ability score
+ */
+export function getNumericModifier(score: number): number {
+  return calculateModifier(score);
 }

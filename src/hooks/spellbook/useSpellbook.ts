@@ -1,7 +1,15 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { SpellData, SpellFilters, CharacterSpell, convertCharacterSpellToSpellData } from '@/types/spells';
-import { applyAllFilters, searchSpellsByName, filterSpellsByLevel, filterSpellsBySchool, filterSpellsByClass, filterSpellsByRitual, filterSpellsByConcentration } from './filterUtils';
+import { 
+  applyAllFilters, 
+  searchSpellsByName, 
+  filterSpellsByLevel, 
+  filterSpellsBySchool, 
+  filterSpellsByClass, 
+  filterSpellsByRitual, 
+  filterSpellsByConcentration 
+} from './filterUtils';
 
 export const useSpellbook = () => {
   const [spells, setSpells] = useState<SpellData[]>([]);

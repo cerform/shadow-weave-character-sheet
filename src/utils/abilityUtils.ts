@@ -35,3 +35,10 @@ export function getModifierFromAbilityScore(score: number): string {
   const modifier = calculateModifier(score);
   return modifier >= 0 ? `+${modifier}` : `${modifier}`;
 }
+
+/**
+ * Get ability modifier as a number
+ */
+export function getAbilityModifierString(score: number): string {
+  return getModifierFromAbilityScore(score);
+}
