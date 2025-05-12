@@ -33,9 +33,13 @@ export interface SpellFilters {
 }
 
 export function convertCharacterSpellToSpellData(spell: CharacterSpell): SpellData {
-  // Полностью обрабатываем все возможные типы полей и преобразуем id в string
+  // Гарантируем, что id будет строкой
+  const id = typeof spell.id === 'number' ? String(spell.id) : 
+            spell.id || `spell-${spell.name.replace(/\s+/g, '-').toLowerCase()}-${Date.now()}`;
+
+  // Полностью обрабатываем все возможные типы полей
   return {
-    id: spell.id ? String(spell.id) : `spell-${spell.name.replace(/\s+/g, '-').toLowerCase()}`,
+    id: id,
     name: spell.name || '',
     level: typeof spell.level === 'number' ? spell.level : 0,
     school: spell.school || 'Универсальная',

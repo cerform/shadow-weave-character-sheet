@@ -1,3 +1,4 @@
+
 import { CharacterSpell } from '@/types/character';
 
 /**
@@ -42,11 +43,18 @@ export function parseComponents(componentString: string): {
     concentration: false
   };
   
-  if (componentString.includes('В')) components.verbal = true;
-  if (componentString.includes('С')) components.somatic = true;
-  if (componentString.includes('М')) components.material = true;
-  if (componentString.toLowerCase().includes('р') || componentString.toLowerCase().includes('ритуал')) components.ritual = true;
-  if (componentString.toLowerCase().includes('к') || componentString.toLowerCase().includes('концентрация')) components.concentration = true;
+  // Улучшенное распознавание компонентов с учетом регистра
+  if (!componentString) return components;
+  
+  const upperStr = componentString.toUpperCase();
+  
+  components.verbal = upperStr.includes('В') || upperStr.includes('V');
+  components.somatic = upperStr.includes('С') || upperStr.includes('S');
+  components.material = upperStr.includes('М') || upperStr.includes('M');
+  components.ritual = componentString.includes('Р') || componentString.includes('р') || 
+                     componentString.includes('R') || componentString.includes('r');
+  components.concentration = componentString.includes('К') || componentString.includes('к') || 
+                           componentString.includes('C') || componentString.includes('c');
   
   return components;
 }

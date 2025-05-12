@@ -1,19 +1,21 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { processSpellBatch } from '@/utils/spellBatchImporter';
 import { useToast } from '@/components/ui/use-toast';
-import { CharacterSpell } from '@/types/character';
 import { spells } from '@/data/spells'; // Import directly from spells
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
+import { importSpellsFromTextFormat } from '@/utils/updateSpellDatabase';
+import { SpellData } from '@/types/spells';
+import { parseComponents } from '@/utils/spellProcessors';
 
 const SpellDatabaseManager: React.FC = () => {
   const [rawData, setRawData] = useState('');
-  const [processedSpells, setProcessedSpells] = useState<Array<any>>([]);
-  const [allSpells, setAllSpells] = useState<CharacterSpell[]>([]);
+  const [processedSpells, setProcessedSpells] = useState<SpellData[]>([]);
+  const [allSpells, setAllSpells] = useState<SpellData[]>([]);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -31,12 +33,14 @@ const SpellDatabaseManager: React.FC = () => {
     }
 
     try {
-      const processed = processSpellBatch(rawData);
-      setProcessedSpells(processed);
+      const updated = importSpellsFromTextFormat(rawData, allSpells);
+      const newSpells = updated.slice(allSpells.length);
+      setProcessedSpells(newSpells);
+      setAllSpells(updated);
       
       toast({
         title: "Импорт успешен",
-        description: `Обработано ${processed.length} заклинаний`,
+        description: `Обработано ${newSpells.length} новых заклинаний`,
       });
     } catch (error) {
       toast({
@@ -47,7 +51,7 @@ const SpellDatabaseManager: React.FC = () => {
     }
   };
 
-  const getSpellsByLevel = (level: number): CharacterSpell[] => {
+  const getSpellsByLevel = (level: number): SpellData[] => {
     return allSpells.filter(spell => spell.level === level);
   };
 
@@ -105,11 +109,11 @@ const SpellDatabaseManager: React.FC = () => {
                         <td className="p-2">{spell.level}</td>
                         <td className="p-2">{spell.name}</td>
                         <td className="p-2">
-                          {spell.components.verbal ? 'В ' : ''}
-                          {spell.components.somatic ? 'С ' : ''}
-                          {spell.components.material ? 'М ' : ''}
-                          {spell.components.ritual ? 'Р ' : ''}
-                          {spell.components.concentration ? 'К ' : ''}
+                          {spell.verbal ? 'В ' : ''}
+                          {spell.somatic ? 'С ' : ''}
+                          {spell.material ? 'М ' : ''}
+                          {spell.ritual ? 'Р ' : ''}
+                          {spell.concentration ? 'К ' : ''}
                         </td>
                       </tr>
                     ))}
@@ -130,7 +134,7 @@ const SpellDatabaseManager: React.FC = () => {
                 <div className="space-y-2">
                   <p>Всего заклинаний: {allSpells.length}</p>
                   <div className="flex items-center gap-2">
-                    <div className="flex gap-1">
+                    <div className="flex flex-wrap gap-1">
                       {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map(level => (
                         <Badge key={level} variant="outline" className="text-xs">
                           {level}: {getSpellsByLevel(level).length}

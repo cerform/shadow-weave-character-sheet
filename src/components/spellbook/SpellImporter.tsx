@@ -4,13 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { importSpellsFromText } from '@/hooks/spellbook/importUtils';
+import { importSpellsFromTextFormat } from '@/utils/updateSpellDatabase';
 import { spells as allSpells } from '@/data/spells';
-import { CharacterSpell } from '@/types/character';
+import { SpellData } from '@/types/spells';
 
 interface SpellImporterProps {
   onClose: () => void;
-  onImport?: (updatedSpells: CharacterSpell[]) => void;
+  onImport?: (updatedSpells: SpellData[]) => void;
 }
 
 const SpellImporter: React.FC<SpellImporterProps> = ({ onClose, onImport }) => {
@@ -22,7 +22,7 @@ const SpellImporter: React.FC<SpellImporterProps> = ({ onClose, onImport }) => {
   const handleImport = () => {
     try {
       setIsProcessing(true);
-      const updatedSpells = importSpellsFromText(inputText, allSpells);
+      const updatedSpells = importSpellsFromTextFormat(inputText, allSpells);
       const newCount = updatedSpells.length - allSpells.length;
       setImportedCount(newCount > 0 ? newCount : 0);
       
