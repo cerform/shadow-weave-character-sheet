@@ -1,220 +1,275 @@
 
 import React, { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Search } from 'lucide-react';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Character, CharacterSpell } from '@/types/character';
 import { SpellData } from '@/types/spells';
+import { getAllSpells } from '@/data/spells';
 import { useToast } from '@/hooks/use-toast';
-import { Character } from '@/types/character';
-import SpellDetailModal from '../spell-detail/SpellDetailModal';
+import SpellDetailModal from '../spellbook/SpellDetailModal';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
-import { canPrepareMoreSpells, getPreparedSpellsLimit } from '@/utils/spellHelpers';
 
 interface SpellSelectionModalProps {
   open: boolean;
   onClose: () => void;
-  spells: SpellData[];
   character: Character;
-  onAddSpell: (spell: SpellData) => void;
+  onUpdate: (updates: Partial<Character>) => void;
 }
 
 const SpellSelectionModal: React.FC<SpellSelectionModalProps> = ({
   open,
   onClose,
-  spells,
   character,
-  onAddSpell
+  onUpdate
 }) => {
-  const [searchTerm, setSearchTerm] = useState('');
+  const [spells, setSpells] = useState<SpellData[]>([]);
   const [filteredSpells, setFilteredSpells] = useState<SpellData[]>([]);
   const [selectedSpell, setSelectedSpell] = useState<SpellData | null>(null);
-  const [isDetailOpen, setIsDetailOpen] = useState(false);
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [maxLevel, setMaxLevel] = useState(9);
   const { toast } = useToast();
   const { theme } = useTheme();
   const themeKey = (theme || 'default') as keyof typeof themes;
   const currentTheme = themes[themeKey] || themes.default;
 
-  // Filter spells based on search term
   useEffect(() => {
-    if (!spells) {
-      setFilteredSpells([]);
-      return;
+    loadSpells();
+    
+    if (character.level) {
+      calculateMaxLevel(character.level);
     }
+  }, [character.class, character.level]);
 
-    if (!searchTerm) {
+  useEffect(() => {
+    if (searchTerm) {
+      filterSpells(searchTerm);
+    } else {
       setFilteredSpells(spells);
-      return;
     }
-
-    const searchTermLower = searchTerm.toLowerCase();
-    const filtered = spells.filter(spell => {
-      // Safely access string properties and convert them to lowercase for comparison
-      const nameMatches = spell.name && typeof spell.name === 'string' ? 
-        spell.name.toLowerCase().includes(searchTermLower) : false;
-      
-      const schoolMatches = spell.school && typeof spell.school === 'string' ? 
-        spell.school.toLowerCase().includes(searchTermLower) : false;
-      
-      let descMatches = false;
-      if (spell.description) {
-        if (typeof spell.description === 'string') {
-          descMatches = spell.description.toLowerCase().includes(searchTermLower);
-        } else if (Array.isArray(spell.description)) {
-          descMatches = spell.description.some(desc => 
-            typeof desc === 'string' && desc.toLowerCase().includes(searchTermLower)
-          );
-        }
-      }
-      
-      return nameMatches || schoolMatches || descMatches;
-    });
-
-    setFilteredSpells(filtered);
   }, [searchTerm, spells]);
 
-  const handleSpellClick = (spell: SpellData) => {
-    setSelectedSpell(spell);
-    setIsDetailOpen(true);
-  };
-
-  const handleAddSpell = (spell: SpellData) => {
-    if (canAddSpell(spell)) {
-      onAddSpell(spell);
+  // Загрузка заклинаний из данных
+  const loadSpells = () => {
+    try {
+      const allSpells = getAllSpells();
+      
+      // Если есть класс, фильтруем заклинания для него
+      if (character.class) {
+        const classSpells = allSpells.filter(spell => {
+          if (!spell.classes) return false;
+          
+          // Преобразуем classes к массиву, если это строка
+          const spellClasses = typeof spell.classes === 'string' 
+            ? [spell.classes.toLowerCase()] 
+            : Array.isArray(spell.classes) ? spell.classes.map(c => 
+                typeof c === 'string' ? c.toLowerCase() : ''
+              ) : [];
+          
+          // Проверяем соответствие класса (русские и английские названия)
+          const characterClassLower = character.class.toLowerCase();
+          return spellClasses.some(cls => {
+            return cls === characterClassLower || 
+              (characterClassLower === 'жрец' && cls === 'cleric') ||
+              (characterClassLower === 'волшебник' && cls === 'wizard') ||
+              (characterClassLower === 'друид' && cls === 'druid') ||
+              (characterClassLower === 'бард' && cls === 'bard') ||
+              (characterClassLower === 'колдун' && cls === 'warlock') ||
+              (characterClassLower === 'чародей' && cls === 'sorcerer') ||
+              (characterClassLower === 'паладин' && cls === 'paladin');
+          });
+        });
+        
+        setSpells(classSpells);
+        setFilteredSpells(classSpells);
+      } else {
+        setSpells(allSpells);
+        setFilteredSpells(allSpells);
+      }
+    } catch (error) {
+      console.error('Ошибка при загрузке заклинаний:', error);
       toast({
-        title: "Заклинание добавлено",
-        description: `${spell.name} добавлено в список известных заклинаний.`
-      });
-      // Close the modal
-      setIsDetailOpen(false);
-    } else {
-      toast({
-        title: "Невозможно добавить заклинание",
-        description: "Вы достигли максимального количества подготовленных заклинаний.",
-        variant: "destructive"
+        title: 'Ошибка',
+        description: 'Не удалось загрузить список заклинаний',
+        variant: 'destructive'
       });
     }
   };
 
-  const canAddSpell = (spell: SpellData) => {
-    // Check if character can prepare more spells
-    return canPrepareMoreSpells(character);
+  // Фильтрация заклинаний по строке поиска
+  const filterSpells = (term: string) => {
+    const filtered = spells.filter(spell => 
+      spell.name.toLowerCase().includes(term.toLowerCase())
+    );
+    setFilteredSpells(filtered);
   };
 
-  // Check if a spell is already known to the character
-  const isSpellKnown = (spell: SpellData): boolean => {
-    if (!character.spells) return false;
+  // Определение максимального уровня заклинаний в зависимости от уровня персонажа
+  const calculateMaxLevel = (characterLevel: number) => {
+    // Упрощенная формула определения доступных уровней заклинаний
+    // Для полных заклинателей
+    if (['жрец', 'волшебник', 'друид', 'чародей', 'бард', 'cleric', 'wizard', 'druid', 'sorcerer', 'bard'].includes(character.class.toLowerCase())) {
+      if (characterLevel < 3) setMaxLevel(1);
+      else if (characterLevel < 5) setMaxLevel(2);
+      else if (characterLevel < 7) setMaxLevel(3);
+      else if (characterLevel < 9) setMaxLevel(4);
+      else if (characterLevel < 11) setMaxLevel(5);
+      else if (characterLevel < 13) setMaxLevel(6);
+      else if (characterLevel < 15) setMaxLevel(7);
+      else if (characterLevel < 17) setMaxLevel(8);
+      else setMaxLevel(9);
+    } 
+    // Для полузаклинателей (паладин, следопыт, воин элдрич найт)
+    else if (['паладин', 'следопыт', 'paladin', 'ranger'].includes(character.class.toLowerCase())) {
+      if (characterLevel < 5) setMaxLevel(1);
+      else if (characterLevel < 9) setMaxLevel(2);
+      else if (characterLevel < 13) setMaxLevel(3);
+      else if (characterLevel < 17) setMaxLevel(4);
+      else setMaxLevel(5);
+    }
+    // Для остальных классов оставляем 9
+    else {
+      setMaxLevel(9);
+    }
+  };
+
+  // Добавление заклинания в список заклинаний персонажа
+  const addSpellToCharacter = (spell: SpellData) => {
+    if (!character.spells) {
+      character.spells = [];
+    }
     
-    return character.spells.some(s => {
-      if (typeof s === 'string') {
-        return s === spell.name;
+    // Проверяем, есть ли уже такое заклинание у персонажа
+    const exists = character.spells.some(existingSpell => {
+      if (typeof existingSpell === 'string') {
+        return existingSpell === spell.name;
+      } else {
+        return existingSpell.name === spell.name;
       }
-      return s.name === spell.name || s.id === spell.id;
+    });
+    
+    if (exists) {
+      toast({
+        title: 'Заклинание уже добавлено',
+        description: `${spell.name} уже есть в списке заклинаний персонажа`,
+        variant: 'destructive'
+      });
+      return;
+    }
+    
+    // Создаем объект заклинания персонажа
+    const characterSpell: CharacterSpell = {
+      id: spell.id,
+      name: spell.name,
+      level: spell.level,
+      school: spell.school,
+      castingTime: spell.castingTime,
+      range: spell.range,
+      components: spell.components,
+      duration: spell.duration,
+      description: spell.description,
+      classes: spell.classes,
+      ritual: spell.ritual,
+      concentration: spell.concentration,
+      verbal: spell.verbal,
+      somatic: spell.somatic,
+      material: spell.material,
+      materials: spell.materials,
+      prepared: spell.level === 0 || character.class.toLowerCase() === 'колдун' || character.class.toLowerCase() === 'warlock',
+      source: spell.source
+    };
+    
+    // Добавляем заклинание
+    const updatedSpells = [...character.spells, characterSpell];
+    onUpdate({ spells: updatedSpells });
+    
+    toast({
+      title: 'Заклинание добавлено',
+      description: `${spell.name} добавлено в список заклинаний`,
     });
   };
+  
+  // Открытие модального окна с деталями заклинания
+  const handleOpenDetails = (spell: SpellData) => {
+    setSelectedSpell(spell);
+    setDetailsOpen(true);
+  };
 
-  // Format for display
-  const formatSpellLevel = (level: number): string => {
-    return level === 0 ? "Заговор" : `${level}-й уровень`;
+  // Показывает название уровня заклинания
+  const getSpellLevelName = (level: number) => {
+    if (level === 0) return 'Заговор';
+    return `${level} уровень`;
   };
 
   return (
-    <>
-      <Dialog open={open} onOpenChange={onClose}>
-        <DialogContent className="max-w-4xl max-h-[90vh]"
-          style={{
-            backgroundColor: currentTheme.cardBackground || 'rgba(0, 0, 0, 0.8)',
-            color: currentTheme.textColor || 'white',
-            borderColor: currentTheme.accent
-          }}
-        >
-          <DialogHeader>
-            <DialogTitle>Выбор заклинаний</DialogTitle>
-          </DialogHeader>
-
-          <div className="flex items-center relative mb-4">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Поиск заклинаний..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
-          </div>
-
-          <div className="font-medium mb-2">
-            Лимит подготовленных заклинаний: {getPreparedSpellsLimit(character)}
-          </div>
-
-          <ScrollArea className="h-[50vh]">
-            <div className="space-y-2">
-              {filteredSpells.length > 0 ? (
-                filteredSpells.map((spell) => {
-                  const isKnown = isSpellKnown(spell);
-                  
-                  return (
-                    <div
-                      key={spell.id || spell.name}
-                      className="flex items-center justify-between p-3 border rounded-md cursor-pointer hover:bg-black/20"
-                      onClick={() => handleSpellClick(spell)}
-                      style={{ borderColor: currentTheme.accent + '40' }}
-                    >
-                      <div>
-                        <div className="font-medium">{spell.name}</div>
-                        <div className="text-sm text-muted-foreground">
-                          {spell.school}, {formatSpellLevel(spell.level)}
-                        </div>
-                      </div>
-                      <div className="flex items-center">
-                        {isKnown ? (
-                          <Badge style={{ backgroundColor: '#6b7280' }}>
-                            Уже изучено
-                          </Badge>
-                        ) : (
-                          <Badge 
-                            className="cursor-pointer"
-                            style={{ backgroundColor: currentTheme.accent }}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleAddSpell(spell);
-                            }}
-                          >
-                            Добавить
-                          </Badge>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })
-              ) : (
-                <div className="text-center py-8 text-muted-foreground">
-                  {searchTerm ? 'Заклинания не найдены. Попробуйте изменить запрос.' : 'Загрузка заклинаний...'}
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Выбор заклинаний</DialogTitle>
+        </DialogHeader>
+        
+        <div className="space-y-4">
+          <Input
+            placeholder="Поиск заклинаний..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full"
+          />
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {filteredSpells.filter(spell => spell.level <= maxLevel).map(spell => (
+              <div 
+                key={spell.id} 
+                className="border rounded-md p-3 hover:bg-accent/20 cursor-pointer"
+                onClick={() => handleOpenDetails(spell)}
+              >
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h3 className="font-medium">{spell.name}</h3>
+                    <p className="text-sm text-muted-foreground">
+                      {getSpellLevelName(spell.level)} • {spell.school}
+                    </p>
+                  </div>
+                  <Button 
+                    size="sm" 
+                    onClick={(e) => {
+                      e.stopPropagation(); // Предотвращаем открытие деталей
+                      addSpellToCharacter(spell);
+                    }}
+                  >
+                    Добавить
+                  </Button>
                 </div>
-              )}
-            </div>
-          </ScrollArea>
-
-          <DialogFooter>
-            <Button onClick={onClose}>Закрыть</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
+                <p className="text-xs mt-2 text-muted-foreground truncate">
+                  {typeof spell.description === 'string' 
+                    ? spell.description.substring(0, 100) + (spell.description.length > 100 ? '...' : '') 
+                    : Array.isArray(spell.description) && spell.description.length > 0 
+                      ? spell.description[0].substring(0, 100) + (spell.description[0].length > 100 ? '...' : '')
+                      : 'Нет описания'}
+                </p>
+              </div>
+            ))}
+            
+            {filteredSpells.filter(spell => spell.level <= maxLevel).length === 0 && (
+              <div className="col-span-3 text-center py-8 text-muted-foreground">
+                Нет заклинаний, соответствующих поисковому запросу
+              </div>
+            )}
+          </div>
+        </div>
+      </DialogContent>
+      
       {selectedSpell && (
-        <SpellDetailModal
+        <SpellDetailModal 
           spell={selectedSpell}
-          open={isDetailOpen}
-          onClose={() => setIsDetailOpen(false)}
+          open={detailsOpen}
+          onClose={() => setDetailsOpen(false)}
           currentTheme={currentTheme}
-          showAddButton={true}
-          onAddSpell={handleAddSpell}
-          alreadyAdded={isSpellKnown(selectedSpell)}
         />
       )}
-    </>
+    </Dialog>
   );
 };
 

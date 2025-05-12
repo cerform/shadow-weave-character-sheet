@@ -343,7 +343,7 @@ const SpellsTab: React.FC<SpellsTabProps> = ({ character, onUpdate }) => {
       {/* Модальное окно для добавления заклинаний */}
       <SpellSelectionModal
         open={isAddSpellModalOpen}
-        onOpenChange={setIsAddSpellModalOpen}
+        onClose={() => setIsAddSpellModalOpen(false)}
         character={character}
         onUpdate={onUpdate}
       />

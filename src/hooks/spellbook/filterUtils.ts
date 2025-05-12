@@ -1,125 +1,139 @@
 
-import { SpellData } from '@/types/spells';
-import { Character } from '@/types/character';
+import { SpellData } from "@/types/spells";
 
-export const getSpellcastingAbilityModifier = (character: Character): number => {
-  if (!character || !character.abilities) return 0;
+/**
+ * Фильтрует заклинания по имени
+ * @param spells Список заклинаний
+ * @param searchTerm Строка поиска
+ * @returns Отфильтрованный список заклинаний
+ */
+export const searchSpellsByName = (spells: SpellData[], searchTerm: string): SpellData[] => {
+  if (!searchTerm) return spells;
   
-  const classLower = character?.class?.toLowerCase() || '';
-  
-  if (['жрец', 'друид', 'cleric', 'druid'].includes(classLower)) {
-    // Мудрость
-    const wisdom = character.abilities?.wisdom || character.abilities?.WIS || character.wisdom || 10;
-    return Math.floor((wisdom - 10) / 2);
-  } else if (['волшебник', 'маг', 'wizard'].includes(classLower)) {
-    // Интеллект
-    const intelligence = character.abilities?.intelligence || character.abilities?.INT || character.intelligence || 10;
-    return Math.floor((intelligence - 10) / 2);
-  } else {
-    // Харизма (бард, колдун, чародей, паладин)
-    const charisma = character.abilities?.charisma || character.abilities?.CHA || character.charisma || 10;
-    return Math.floor((charisma - 10) / 2);
-  }
+  const lowerSearchTerm = searchTerm.toLowerCase();
+  return spells.filter(spell => 
+    spell.name.toLowerCase().includes(lowerSearchTerm)
+  );
 };
 
-export const calculateAvailableSpellsByClassAndLevel = (
-  characterClass: string,
-  characterLevel: number,
-  abilityModifier: number = 0
-): { cantripsCount: number; knownSpells: number; maxSpellLevel: number } => {
-  // Значения по умолчанию
-  let cantripsCount = 0;
-  let knownSpells = 0;
-  let maxSpellLevel = 0;
-
-  const classLower = characterClass.toLowerCase();
-
-  if (['волшебник', 'маг', 'wizard'].includes(classLower)) {
-    // Волшебник
-    cantripsCount = characterLevel >= 10 ? 5 : characterLevel >= 4 ? 4 : 3;
-    knownSpells = 6 + (characterLevel > 1 ? (characterLevel - 1) * 2 : 0);
-    maxSpellLevel = Math.min(9, Math.ceil(characterLevel / 2));
-  } else if (['жрец', 'cleric'].includes(classLower)) {
-    // Жрец
-    cantripsCount = characterLevel >= 10 ? 5 : characterLevel >= 4 ? 4 : 3;
-    knownSpells = characterLevel + abilityModifier;
-    maxSpellLevel = Math.min(9, Math.ceil(characterLevel / 2));
-  } else if (['бард', 'bard'].includes(classLower)) {
-    // Бард
-    cantripsCount = 2;
-    knownSpells = 4 + Math.floor((characterLevel - 1) / 2);
-    maxSpellLevel = Math.min(9, Math.ceil(characterLevel / 2));
-  } else if (['друид', 'druid'].includes(classLower)) {
-    // Друид
-    cantripsCount = characterLevel >= 4 ? 3 : 2;
-    knownSpells = characterLevel + abilityModifier;
-    maxSpellLevel = Math.min(9, Math.ceil(characterLevel / 2));
-  } else if (['колдун', 'чародей', 'warlock', 'sorcerer'].includes(classLower)) {
-    // Колдун/Чародей
-    cantripsCount = characterLevel >= 10 ? 4 : characterLevel >= 4 ? 3 : 2;
-    knownSpells = Math.min(15, characterLevel + 1);
-    maxSpellLevel = Math.min(5, Math.ceil(characterLevel / 2));
-  } else if (['паладин', 'paladin'].includes(classLower)) {
-    // Паладин
-    cantripsCount = 0;
-    knownSpells = Math.floor(characterLevel / 2) + abilityModifier;
-    maxSpellLevel = Math.min(5, Math.ceil(characterLevel / 4));
-  } else if (['рейнджер', 'следопыт', 'ranger'].includes(classLower)) {
-    // Следопыт
-    cantripsCount = 0;
-    knownSpells = Math.floor(characterLevel / 2);
-    maxSpellLevel = Math.min(5, Math.ceil(characterLevel / 4));
-  }
-
-  return { cantripsCount, knownSpells, maxSpellLevel };
+/**
+ * Фильтрует заклинания по уровням
+ * @param spells Список заклинаний
+ * @param levels Массив уровней для фильтрации
+ * @returns Отфильтрованный список заклинаний
+ */
+export const filterSpellsByLevel = (spells: SpellData[], levels: number[]): SpellData[] => {
+  if (!levels || levels.length === 0) return spells;
+  
+  return spells.filter(spell => levels.includes(spell.level));
 };
 
-export const getMaxSpellLevel = (characterClass: string, characterLevel: number): number => {
-  const classLower = characterClass.toLowerCase();
-  
-  if (['волшебник', 'маг', 'wizard', 'жрец', 'cleric', 'бард', 'bard', 'друид', 'druid'].includes(classLower)) {
-    return Math.min(9, Math.ceil(characterLevel / 2));
-  } else if (['колдун', 'чародей', 'warlock', 'sorcerer'].includes(classLower)) {
-    return Math.min(5, Math.ceil(characterLevel / 2));
-  } else if (['паладин', 'paladin', 'рейнджер', 'следопыт', 'ranger'].includes(classLower)) {
-    return Math.min(5, Math.ceil(characterLevel / 4));
-  }
-  
-  return 0;
-};
-
-export const filterSpellsByClassAndLevel = (
-  spells: SpellData[], 
-  characterClass: string, 
-  characterLevel: number
-): SpellData[] => {
-  if (!spells || !Array.isArray(spells) || spells.length === 0) {
-    return [];
-  }
-  
-  const maxSpellLevel = getMaxSpellLevel(characterClass, characterLevel);
-  const classLower = characterClass.toLowerCase();
+/**
+ * Фильтрует заклинания по школам магии
+ * @param spells Список заклинаний
+ * @param schools Массив школ для фильтрации
+ * @returns Отфильтрованный список заклинаний
+ */
+export const filterSpellsBySchool = (spells: SpellData[], schools: string[]): SpellData[] => {
+  if (!schools || schools.length === 0) return spells;
   
   return spells.filter(spell => {
-    // Проверка уровня заклинания
-    if (spell.level > maxSpellLevel) {
-      return false;
-    }
+    // Безопасно обрабатываем возможные значения school
+    if (!spell.school) return false;
     
-    // Проверка соответствия классу
-    if (spell.classes) {
-      if (Array.isArray(spell.classes)) {
-        return spell.classes.some(cls => {
-          if (typeof cls === 'string') {
-            return cls.toLowerCase() === classLower;
-          }
-          return false;
-        });
-      } else if (typeof spell.classes === 'string') {
-        return spell.classes.toLowerCase() === classLower;
+    const spellSchool = typeof spell.school === 'string' 
+      ? spell.school.toLowerCase() 
+      : '';
+      
+    return schools.some(school => school.toLowerCase() === spellSchool);
+  });
+};
+
+/**
+ * Фильтрует заклинания по классам
+ * @param spells Список заклинаний
+ * @param classes Массив классов для фильтрации
+ * @returns Отфильтрованный список заклинаний
+ */
+export const filterSpellsByClass = (spells: SpellData[], classes: string[]): SpellData[] => {
+  if (!classes || classes.length === 0) return spells;
+  
+  return spells.filter(spell => {
+    // Проверяем, есть ли у заклинания информация о классах
+    if (!spell.classes) return false;
+    
+    // Преобразуем в массив, если это строка
+    const spellClasses = typeof spell.classes === 'string' 
+      ? [spell.classes] 
+      : Array.isArray(spell.classes) ? spell.classes : [];
+      
+    // Проверяем каждый класс заклинания
+    for (const spellClass of spellClasses) {
+      // Если класс не строка, пропускаем
+      if (typeof spellClass !== 'string') continue;
+      
+      // Проверяем, соответствует ли хотя бы один класс заклинания запрошенным классам
+      if (classes.some(cls => 
+        cls.toLowerCase() === spellClass.toLowerCase()
+      )) {
+        return true;
       }
     }
     
     return false;
   });
+};
+
+/**
+ * Фильтрует заклинания по наличию свойства "ритуал"
+ * @param spells Список заклинаний
+ * @param isRitual Флаг для фильтрации ритуальных заклинаний
+ * @returns Отфильтрованный список заклинаний
+ */
+export const filterSpellsByRitual = (spells: SpellData[], isRitual: boolean | null): SpellData[] => {
+  if (isRitual === null) return spells;
+  
+  return spells.filter(spell => Boolean(spell.ritual) === isRitual);
+};
+
+/**
+ * Фильтрует заклинания по наличию свойства "концентрация"
+ * @param spells Список заклинаний
+ * @param requiresConcentration Флаг для фильтрации заклинаний с концентрацией
+ * @returns Отфильтрованный список заклинаний
+ */
+export const filterSpellsByConcentration = (spells: SpellData[], requiresConcentration: boolean | null): SpellData[] => {
+  if (requiresConcentration === null) return spells;
+  
+  return spells.filter(spell => Boolean(spell.concentration) === requiresConcentration);
+};
+
+/**
+ * Применяет все фильтры к списку заклинаний
+ * @param spells Исходный список заклинаний
+ * @param filters Объект с фильтрами
+ * @returns Отфильтрованный список заклинаний
+ */
+export const applyAllFilters = (
+  spells: SpellData[], 
+  filters: {
+    name: string;
+    schools: string[];
+    levels: number[];
+    classes: string[];
+    ritual: boolean | null;
+    concentration: boolean | null;
+  }
+): SpellData[] => {
+  let filteredSpells = [...spells];
+  
+  // Применяем все фильтры последовательно
+  filteredSpells = searchSpellsByName(filteredSpells, filters.name);
+  filteredSpells = filterSpellsByLevel(filteredSpells, filters.levels);
+  filteredSpells = filterSpellsBySchool(filteredSpells, filters.schools);
+  filteredSpells = filterSpellsByClass(filteredSpells, filters.classes);
+  filteredSpells = filterSpellsByRitual(filteredSpells, filters.ritual);
+  filteredSpells = filterSpellsByConcentration(filteredSpells, filters.concentration);
+  
+  return filteredSpells;
 };

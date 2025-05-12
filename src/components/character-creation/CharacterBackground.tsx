@@ -14,13 +14,39 @@ interface CharacterBackgroundProps {
   prevStep?: () => void;
 }
 
+interface BackgroundProficiencies {
+  skills?: string[];
+  tools?: string[] | string;
+  languages?: string[] | string;
+  weapons?: string[] | string;
+}
+
+interface BackgroundIdeal {
+  text: string;
+  alignment?: string;
+}
+
+interface Background {
+  name: string;
+  description: string;
+  source: string;
+  proficiencies: BackgroundProficiencies;
+  feature?: { name: string; description: string };
+  personalityTraits?: string[];
+  ideals?: BackgroundIdeal[];
+  bonds?: string[];
+  flaws?: string[];
+  suggestedCharacteristics?: string;
+  equipment?: string[] | string;
+}
+
 const CharacterBackground: React.FC<CharacterBackgroundProps> = ({
   character,
   updateCharacter,
   nextStep = () => {},
   prevStep = () => {}
 }) => {
-  const [backgrounds] = useState(getAllBackgrounds());
+  const [backgrounds] = useState<Background[]>(getAllBackgrounds());
   const { toast } = useToast();
   const [selectedBackground, setSelectedBackground] = useState(character.background || '');
 
@@ -43,14 +69,15 @@ const CharacterBackground: React.FC<CharacterBackgroundProps> = ({
       skills: []
     };
 
-    // For safety, check if properties exist before accessing them
-    const backgroundProficiencies = selectedBackground.proficiencies || {};
-    
     // Safely get array values with defaults if missing or wrong type
     const getArraySafely = <T,>(value: any, defaultValue: T[] = []): T[] => {
       if (Array.isArray(value)) return value as T[];
+      if (typeof value === 'string') return [value] as T[];
       return defaultValue;
     };
+    
+    // For safety, check if properties exist before accessing them
+    const backgroundProficiencies = selectedBackground.proficiencies || {};
     
     // Get weapon proficiencies safely
     const weaponProfs = backgroundProficiencies.weapons ? 
@@ -78,7 +105,7 @@ const CharacterBackground: React.FC<CharacterBackgroundProps> = ({
         selectedBackground.ideals.length > 0) {
       const ideal = selectedBackground.ideals[0];
       if (ideal && typeof ideal === 'object' && 'text' in ideal) {
-        idealText = ideal.text as string;
+        idealText = ideal.text;
       }
     }
     
@@ -97,8 +124,10 @@ const CharacterBackground: React.FC<CharacterBackgroundProps> = ({
     }
     
     // Safe equipment handling
-    const equipment = selectedBackground.equipment && Array.isArray(selectedBackground.equipment) ?
-      selectedBackground.equipment : [];
+    const equipment = selectedBackground.equipment ? 
+      (Array.isArray(selectedBackground.equipment) ? 
+        selectedBackground.equipment : 
+        [selectedBackground.equipment]) : [];
 
     // Update the character
     updateCharacter({
@@ -152,8 +181,9 @@ const CharacterBackground: React.FC<CharacterBackgroundProps> = ({
               background.proficiencies.languages.join(', ') : background.proficiencies.languages) : 'Нет';
           
           // Safely get equipment
-          const equipment = background.equipment && Array.isArray(background.equipment) ? 
-            background.equipment.join(', ') : 'Нет';
+          const equipment = background.equipment ? 
+            (Array.isArray(background.equipment) ? 
+              background.equipment.join(', ') : background.equipment) : 'Нет';
             
           return (
             <Card

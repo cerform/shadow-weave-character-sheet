@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from 'react';
 import { useCharacter } from '@/contexts/CharacterContext';
 import { calculateAvailableSpellsByClassAndLevel } from '@/utils/spellUtils';
@@ -45,12 +46,39 @@ const useLevelUp = () => {
         const spellsInfo = calculateAvailableSpellsByClassAndLevel(character.class, newLevel);
         console.log('Новые данные о заклинаниях:', spellsInfo);
         
+        // Получаем информацию о способности заклинаний для класса
+        const getSpellcastingAbility = (characterClass: string) => {
+          const classLower = characterClass.toLowerCase();
+          if (['жрец', 'друид', 'cleric', 'druid'].includes(classLower)) {
+            return 'wisdom';
+          } else if (['волшебник', 'wizard'].includes(classLower)) {
+            return 'intelligence';
+          } else {
+            // барды, колдуны, чародеи, паладины
+            return 'charisma';
+          }
+        };
+        
+        // Вычисляем модификатор способности
+        const getAbilityModifier = (character: Character, ability: string) => {
+          const abilityValue = character[ability as keyof Character] || 10;
+          return Math.floor((Number(abilityValue) - 10) / 2);
+        };
+        
+        // Получаем нужную способность и модификатор
+        const spellcastingAbility = getSpellcastingAbility(character.class);
+        const abilityModifier = getAbilityModifier(character, spellcastingAbility);
+        
         // Создаем или обновляем spellcasting объект
         const currentSpellcasting = character.spellcasting || {};
-        const updatedSpellcasting = {
-          ...currentSpellcasting,
-          preparedSpellsLimit: spellsInfo.knownSpells
-        };
+        
+        // Если spellcasting еще не инициализирован полностью, создаем его заново
+        const updatedSpellcasting = currentSpellcasting.ability 
+          ? {
+              ...currentSpellcasting,
+              preparedSpellsLimit: spellsInfo.knownSpells || (newLevel + abilityModifier)
+            }
+          : initializeSpellcasting(spellcastingAbility, newLevel, abilityModifier);
         
         // Обновляем персонажа с новыми данными о заклинаниях и уровнем
         updateCharacter({

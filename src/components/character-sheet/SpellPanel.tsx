@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Character, CharacterSpell } from '@/types/character';
-import { SpellData, convertSpellDataToCharacterSpell } from '@/types/spells';
+import { SpellData } from '@/types/spells';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import SpellDialog from './SpellDialog';
@@ -180,18 +180,14 @@ const SpellPanel: React.FC<SpellPanelProps> = ({
         </Card>
       ))}
       
-      {Object.keys(spellsByLevel).length === 0 && (
-        <div className="text-center py-8 text-muted-foreground">
-          У персонажа нет известных заклинаний
-        </div>
+      {/* Dialog for spell details */}
+      {currentSpell && (
+        <SpellDialog 
+          spell={currentSpell} 
+          open={isSpellDialogOpen} 
+          onClose={handleCloseSpellDialog}
+        />
       )}
-      
-      <SpellDialog 
-        open={isSpellDialogOpen}
-        onClose={handleCloseSpellDialog}
-        spell={currentSpell}
-        character={character}
-      />
     </div>
   );
 };

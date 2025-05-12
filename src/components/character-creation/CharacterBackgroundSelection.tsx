@@ -13,8 +13,27 @@ interface CharacterBackgroundSelectionProps {
   updateCharacter: (updates: Partial<Character>) => void;
 }
 
-const CharacterBackgroundSelection: React.FC<CharacterBackgroundSelectionProps> = ({ character, updateCharacter }) => {
-  const [backgrounds, setBackgrounds] = useState(getAllBackgrounds());
+interface BackgroundProficiencies {
+  skills?: string[];
+  tools?: string[] | string;
+  languages?: string[] | string;
+  weapons?: string[] | string;
+}
+
+interface Background {
+  name: string;
+  description: string;
+  source?: string;
+  proficiencies?: BackgroundProficiencies;
+  equipment?: string[] | string;
+  [key: string]: any;
+}
+
+const CharacterBackgroundSelection: React.FC<CharacterBackgroundSelectionProps> = ({ 
+  character, 
+  updateCharacter 
+}) => {
+  const [backgrounds, setBackgrounds] = useState<Background[]>([]);
   const { theme } = useTheme();
   const themeKey = (theme || 'default') as keyof typeof themes;
   const currentTheme = themes[themeKey] || themes.default;
@@ -26,6 +45,7 @@ const CharacterBackgroundSelection: React.FC<CharacterBackgroundSelectionProps> 
   // Safely get array values with defaults if missing or wrong type
   const getArraySafely = <T,>(value: any, defaultValue: T[] = []): T[] => {
     if (Array.isArray(value)) return value as T[];
+    if (typeof value === 'string') return [value] as T[];
     return defaultValue;
   };
 
