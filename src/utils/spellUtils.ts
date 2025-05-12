@@ -1,5 +1,6 @@
 
 import { Character } from '@/types/character';
+import { SpellData } from '@/types/spells';
 
 /**
  * Вычисляет максимальное число заклинаний, доступных классу на определенном уровне
@@ -99,3 +100,85 @@ export const getPreparedSpellsLimit = (character: Character): number => {
   // Для классов, которые знают фиксированное количество заклинаний (бард, чародей)
   return 0; // Эти классы не готовят заклинания, а просто знают их
 };
+
+/**
+ * Получает модификатор заклинательной способности персонажа
+ */
+export const getSpellcastingAbilityModifier = (character: Character): number => {
+  if (!character || !character.class) return 0;
+  
+  const classLower = character.class.toLowerCase();
+  
+  if (['жрец', 'друид', 'cleric', 'druid'].includes(classLower)) {
+    // Мудрость
+    const wisdom = character.wisdom || 10;
+    return Math.floor((wisdom - 10) / 2);
+  } else if (['волшебник', 'маг', 'wizard'].includes(classLower)) {
+    // Интеллект
+    const intelligence = character.intelligence || 10;
+    return Math.floor((intelligence - 10) / 2);
+  } else {
+    // Харизма (бард, колдун, чародей, паладин)
+    const charisma = character.charisma || 10;
+    return Math.floor((charisma - 10) / 2);
+  }
+};
+
+/**
+ * Возвращает максимальный уровень заклинаний для заданного класса и уровня персонажа
+ */
+export const getMaxSpellLevel = (characterClass: string, characterLevel: number): number => {
+  if (!characterClass) return 0;
+  
+  const classLower = typeof characterClass === 'string' ? characterClass.toLowerCase() : '';
+  
+  if (['волшебник', 'маг', 'wizard', 'жрец', 'cleric', 'бард', 'bard', 'друид', 'druid', 'чародей', 'sorcerer'].includes(classLower)) {
+    return Math.min(9, Math.ceil(characterLevel / 2));
+  } else if (['колдун', 'warlock'].includes(classLower)) {
+    return Math.min(5, Math.ceil(characterLevel / 2));
+  } else if (['паладин', 'paladin', 'рейнджер', 'следопыт', 'ranger'].includes(classLower)) {
+    return Math.min(5, Math.ceil(characterLevel / 4));
+  }
+  
+  return 0;
+};
+
+/**
+ * Фильтрует заклинания по классу и уровню персонажа
+ */
+export const filterSpellsByClassAndLevel = (
+  spells: SpellData[], 
+  characterClass: string, 
+  characterLevel: number
+): SpellData[] => {
+  if (!spells || !Array.isArray(spells) || spells.length === 0 || !characterClass) {
+    return [];
+  }
+  
+  const maxSpellLevel = getMaxSpellLevel(characterClass, characterLevel);
+  const classLower = typeof characterClass === 'string' ? characterClass.toLowerCase() : '';
+  
+  return spells.filter(spell => {
+    // Проверка уровня заклинания
+    if (spell.level > maxSpellLevel) {
+      return false;
+    }
+    
+    // Проверка соответствия классу
+    if (spell.classes) {
+      if (Array.isArray(spell.classes)) {
+        return spell.classes.some(cls => {
+          if (typeof cls === 'string') {
+            return cls.toLowerCase() === classLower;
+          }
+          return false;
+        });
+      } else if (typeof spell.classes === 'string') {
+        return spell.classes.toLowerCase() === classLower;
+      }
+    }
+    
+    return false;
+  });
+};
+

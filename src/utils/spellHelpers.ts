@@ -1,4 +1,5 @@
 
+
 import { CharacterSpell } from '@/types/character';
 import { SpellData } from '@/types/spells';
 
@@ -60,3 +61,52 @@ export const getSpellLevelName = (level: number): string => {
   
   return `Заклинания ${level} уровня`;
 };
+
+/**
+ * Конвертирует CharacterSpell в SpellData для отображения
+ */
+export const convertToSpellData = (spell: CharacterSpell | string): SpellData => {
+  if (typeof spell === 'string') {
+    return {
+      id: `spell-${Math.random().toString(36).substring(2, 11)}`,
+      name: spell,
+      level: 0, // По умолчанию заговор
+      school: 'Универсальная',
+      castingTime: '1 действие',
+      range: 'На себя',
+      components: '',
+      duration: 'Мгновенная',
+      description: '',
+      classes: [],
+      ritual: false,
+      concentration: false,
+      verbal: false,
+      somatic: false,
+      material: false,
+      source: 'Custom',
+      prepared: true
+    };
+  }
+  
+  return {
+    id: spell.id?.toString() || `spell-${Math.random().toString(36).substring(2, 11)}`,
+    name: spell.name,
+    level: spell.level || 0,
+    school: spell.school || 'Универсальная',
+    castingTime: spell.castingTime || '1 действие',
+    range: spell.range || 'На себя',
+    components: spell.components || '',
+    duration: spell.duration || 'Мгновенная',
+    description: spell.description || '',
+    classes: spell.classes || [],
+    ritual: !!spell.ritual,
+    concentration: !!spell.concentration,
+    verbal: !!spell.verbal,
+    somatic: !!spell.somatic,
+    material: !!spell.material,
+    materials: spell.materials || '',
+    source: spell.source || 'Custom',
+    prepared: !!spell.prepared
+  };
+};
+

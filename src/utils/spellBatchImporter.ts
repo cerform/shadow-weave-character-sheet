@@ -43,3 +43,83 @@ export function importSpellsFromText(text: string, existingSpells: CharacterSpel
   
   return combinedSpells;
 }
+
+/**
+ * Парсит запись заклинания из сырого текстового формата
+ * Формат: [уровень] название компоненты
+ * Пример: [0] Брызги кислоты ВС
+ */
+export const parseSpellEntry = (entry: string): {
+  name: string;
+  level: number;
+  components: {
+    verbal: boolean;
+    somatic: boolean;
+    material: boolean;
+    ritual: boolean;
+  };
+} | null => {
+  // Паттерн для строк типа [0] Название АБВ
+  const match = entry.match(/\[(\d+)\]\s+(.+?)\s+([\w\.]*)$/);
+  
+  if (!match) return null;
+  
+  const level = parseInt(match[1], 10);
+  const name = match[2].trim();
+  const componentCode = match[3] || '';
+  
+  return {
+    name,
+    level,
+    components: parseComponents(componentCode)
+  };
+};
+
+/**
+ * Парсит коды компонентов заклинания
+ */
+export const parseComponents = (componentCode: string): {
+  verbal: boolean;
+  somatic: boolean;
+  material: boolean;
+  ritual: boolean;
+} => {
+  const verbal = componentCode.includes('В') || componentCode.includes('V');
+  const somatic = componentCode.includes('С') || componentCode.includes('S');
+  const material = componentCode.includes('М') || componentCode.includes('M');
+  const ritual = componentCode.includes('Р') || componentCode.includes('R');
+  
+  return {
+    verbal,
+    somatic,
+    material,
+    ritual
+  };
+};
+
+/**
+ * Обрабатывает несколько записей заклинаний из сырого текста
+ */
+export const processSpellBatch = (rawText: string): Array<{
+  name: string;
+  level: number;
+  components: {
+    verbal: boolean;
+    somatic: boolean;
+    material: boolean;
+    ritual: boolean;
+  };
+}> => {
+  const lines = rawText.split('\n').filter(line => line.trim().length > 0);
+  const results = [];
+  
+  for (const line of lines) {
+    const parsed = parseSpellEntry(line);
+    if (parsed) {
+      results.push(parsed);
+    }
+  }
+  
+  return results;
+};
+

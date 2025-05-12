@@ -129,4 +129,42 @@ export const createDefaultCharacter = (): Character => {
   };
 };
 
+/**
+ * Получает числовой модификатор для характеристики
+ */
+export const getNumericModifier = (abilityScore: number): number => {
+  return Math.floor((abilityScore - 10) / 2);
+};
+
+/**
+ * Обновляет бонус мастерства в зависимости от уровня персонажа
+ */
+export const updateCharacterProficiencyBonus = (character: Character): number => {
+  const level = character.level || 1;
+  const proficiencyBonus = 1 + Math.ceil(level / 4);
+  return proficiencyBonus;
+};
+
+/**
+ * Возвращает полное название характеристики
+ */
+export const getAbilityNameFull = (shortName: string): string => {
+  const abilityNames: Record<string, string> = {
+    'STR': 'Сила',
+    'DEX': 'Ловкость',
+    'CON': 'Телосложение',
+    'INT': 'Интеллект',
+    'WIS': 'Мудрость',
+    'CHA': 'Харизма',
+    'strength': 'Сила',
+    'dexterity': 'Ловкость',
+    'constitution': 'Телосложение',
+    'intelligence': 'Интеллект',
+    'wisdom': 'Мудрость',
+    'charisma': 'Харизма'
+  };
+
+  return abilityNames[shortName] || shortName;
+};
+
 import { Character } from '@/types/character';
