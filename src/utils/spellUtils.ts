@@ -227,3 +227,39 @@ export const parseComponents = (components: string): {
   
   return result;
 };
+
+// Функции для проверки возможности подготовки заклинаний
+export const canPrepareMoreSpells = (character: Character, preparedCount: number): boolean => {
+  const limit = getPreparedSpellsLimit(character);
+  return preparedCount < limit;
+};
+
+export const getPreparedSpellsLimit = (character: Character): number => {
+  const { class: className, level } = character;
+  
+  // Классы, которые готовят заклинания
+  if (['жрец', 'cleric', 'друид', 'druid', 'волшебник', 'wizard'].includes(className?.toLowerCase())) {
+    // Лимит заклинаний = уровень + модификатор характеристики
+    const abilityMod = getSpellcastingAbilityModifier(character);
+    return Math.max(1, level + abilityMod);
+  }
+  
+  // Классы, которые не готовят заклинания, просто знают их
+  if (['бард', 'bard', 'колдун', 'warlock', 'чародей', 'sorcerer'].includes(className?.toLowerCase())) {
+    // Используем количество известных заклинаний
+    const { knownSpells } = calculateAvailableSpellsByClassAndLevel(
+      className,
+      level,
+      getSpellcastingAbilityModifier(character)
+    );
+    return knownSpells;
+  }
+  
+  // Для паладинов и следопытов
+  if (['паладин', 'paladin', 'следопыт', 'ranger'].includes(className?.toLowerCase())) {
+    const abilityMod = getSpellcastingAbilityModifier(character);
+    return Math.max(1, Math.floor(level / 2) + abilityMod);
+  }
+  
+  return 0;
+};

@@ -18,6 +18,7 @@ export const useSpellbook = () => {
   const [filteredSpells, setFilteredSpells] = useState<SpellData[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [availableSpells, setAvailableSpells] = useState<SpellData[]>([]);
   
   const [filters, setFilters] = useState<SpellFilters>({
     name: '',
@@ -76,6 +77,7 @@ export const useSpellbook = () => {
       
       setSpells(exampleSpells);
       setFilteredSpells(exampleSpells);
+      setAvailableSpells(exampleSpells);
     } catch (err) {
       console.error("Error fetching spells:", err);
       setError("Не удалось загрузить заклинания");
@@ -92,6 +94,24 @@ export const useSpellbook = () => {
   useEffect(() => {
     setFilteredSpells(applyAllFilters(spells, filters));
   }, [spells, filters]);
+
+  // Загрузка заклинаний для конкретного класса и уровня
+  const loadSpellsForCharacter = useCallback((characterClass: string, characterLevel: number) => {
+    console.log(`Loading spells for ${characterClass} (level ${characterLevel})`);
+    // В реальном приложении здесь был бы запрос к API или фильтрация локальных данных
+    // Пока просто установим availableSpells в текущий список заклинаний
+    setAvailableSpells(spells.filter(spell => {
+      // Фильтруем по классу
+      const spellClasses = Array.isArray(spell.classes) ? spell.classes : [spell.classes];
+      const matchesClass = spellClasses.some(c => c?.toLowerCase() === characterClass.toLowerCase());
+      
+      // Фильтруем по уровню (максимальный уровень заклинаний для персонажа)
+      const maxLevel = Math.min(9, Math.ceil(characterLevel / 2));
+      const matchesLevel = spell.level <= maxLevel;
+      
+      return matchesClass && matchesLevel;
+    }));
+  }, [spells]);
 
   const updateFilters = (newFilters: Partial<SpellFilters>) => {
     setFilters(prev => ({ ...prev, ...newFilters }));
@@ -119,10 +139,12 @@ export const useSpellbook = () => {
     loading,
     error,
     filters,
+    availableSpells,
     updateFilters,
     resetFilters,
     fetchSpells,
-    getSpellById
+    getSpellById,
+    loadSpellsForCharacter
   };
 };
 

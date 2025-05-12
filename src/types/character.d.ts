@@ -1,14 +1,20 @@
 
 export const ABILITY_SCORE_CAPS = {
   MIN: 1,
-  MAX: 30
+  MAX: 30,
+  BASE_CAP: 20,
+  EPIC_CAP: 22,
+  LEGENDARY_CAP: 24
 };
 
 export interface HitPointEvent {
-  type: 'damage' | 'healing' | 'temp';
+  id?: string;
+  type: 'damage' | 'healing' | 'temp' | 'heal' | 'temporary' | 'tempHP' | 'death-save';
   value: number;
   source?: string;
   timestamp?: string;
+  description?: string;
+  amount?: number;
 }
 
 export interface Character {
@@ -78,6 +84,8 @@ export interface Character {
   hitDice: {
     total: number;
     value: number;
+    used?: number;
+    dieType?: string;
   };
   savingThrows: {
     strength: boolean;
@@ -103,6 +111,10 @@ export interface Character {
     level: number;
     subclass?: string;
   }[];
+  userId?: string;
+  abilityPointsUsed?: number;
+  lastDiceRoll?: any;
+  notes?: string;
 }
 
 export interface CharacterSpell {
@@ -124,4 +136,14 @@ export interface CharacterSpell {
   materials?: string;
   prepared?: boolean;
   source?: string;
+}
+
+export interface LevelFeature {
+  id: string;
+  level: number;
+  name: string;
+  description: string;
+  type: string;
+  class?: string;
+  required?: boolean;
 }
