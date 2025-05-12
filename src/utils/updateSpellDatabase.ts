@@ -9,9 +9,9 @@ import { SpellData, convertCharacterSpellToSpellData } from '@/types/spells';
  * Обновляет базу данных заклинаний, добавляя новые заклинания
  * и обновляя существующие, если они уже есть в базе
  */
-export function updateSpellDatabase(): CharacterSpell[] {
+export function updateSpellDatabase(): SpellData[] {
   // Получаем все существующие заклинания
-  const existingSpells = [...spells];
+  const existingSpells: SpellData[] = [...spells];
   
   // Создаем карту существующих заклинаний по имени и уровню для быстрого поиска
   const spellMap = new Map<string, number>();
@@ -38,8 +38,9 @@ export function updateSpellDatabase(): CharacterSpell[] {
           components: newSpell.components
         };
       } else {
-        // Добавляем новое заклинание
-        existingSpells.push(newSpell);
+        // Преобразуем и добавляем новое заклинание
+        const spellData = convertCharacterSpellToSpellData(newSpell);
+        existingSpells.push(spellData);
         spellMap.set(key, existingSpells.length - 1);
       }
     });
@@ -55,7 +56,7 @@ export function updateSpellDatabase(): CharacterSpell[] {
 /**
  * Получает заклинание из базы по имени
  */
-export function getSpellByName(name: string, spells: CharacterSpell[]): CharacterSpell | undefined {
+export function getSpellByName(name: string, spells: SpellData[]): SpellData | undefined {
   return spells.find(spell => spell.name.toLowerCase() === name.toLowerCase());
 }
 
@@ -63,9 +64,9 @@ export function getSpellByName(name: string, spells: CharacterSpell[]): Characte
  * Импортирует заклинания из текста в формате
  * [уровень] название ВСМ
  */
-export function importSpellsFromTextFormat(text: string, existingSpells: CharacterSpell[]): CharacterSpell[] {
+export function importSpellsFromTextFormat(text: string, existingSpells: SpellData[]): SpellData[] {
   const lines = text.split('\n').filter(line => line.trim() !== '');
-  const result = [...existingSpells];
+  const result: SpellData[] = [...existingSpells];
   
   lines.forEach(line => {
     // Регулярное выражение для извлечения уровня, имени и компонентов
@@ -101,7 +102,7 @@ export function importSpellsFromTextFormat(text: string, existingSpells: Charact
         };
       } else {
         // Создаем новое заклинание с базовыми параметрами
-        const newSpell: CharacterSpell = {
+        const newSpell: SpellData = {
           id: `imported-${Date.now()}-${level}-${name.toLowerCase().replace(/\s+/g, '-')}`,
           name,
           level,
@@ -116,7 +117,8 @@ export function importSpellsFromTextFormat(text: string, existingSpells: Charact
           somatic,
           material,
           ritual,
-          concentration
+          concentration,
+          source: "Custom",
         };
         
         result.push(newSpell);
