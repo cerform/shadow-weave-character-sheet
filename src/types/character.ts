@@ -1,3 +1,4 @@
+
 // Re-export all the types from character.d.ts
 import { Character, CharacterSpell, ABILITY_SCORE_CAPS, HitPointEvent } from './character.d';
 
@@ -14,6 +15,3 @@ export interface Item {
   weight?: number;
   value?: number;
 }
-
-// No need to redefine Character here as it causes conflicts
-// Just re-export from the .d.ts file instead

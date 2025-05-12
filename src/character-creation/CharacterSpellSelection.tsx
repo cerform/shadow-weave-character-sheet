@@ -11,23 +11,23 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
 
-// Temporary utility functions until proper imports can be fixed
+// Функция для получения модификатора способности заклинаний
 const getSpellcastingAbilityModifier = (character: Character): number => {
   if (!character || !character.abilities) return 0;
   
-  const classLower = character?.class?.toLowerCase() || '';
+  const classLower = character?.class ? character.class.toLowerCase() : '';
   
   if (['жрец', 'друид', 'cleric', 'druid'].includes(classLower)) {
     // Мудрость
-    const wisdom = character.abilities?.wisdom || character.abilities?.WIS || character.wisdom || 10;
+    const wisdom = character.abilities?.wisdom || character.abilities?.WIS || 10;
     return Math.floor((wisdom - 10) / 2);
   } else if (['волшебник', 'маг', 'wizard'].includes(classLower)) {
     // Интеллект
-    const intelligence = character.abilities?.intelligence || character.abilities?.INT || character.intelligence || 10;
+    const intelligence = character.abilities?.intelligence || character.abilities?.INT || 10;
     return Math.floor((intelligence - 10) / 2);
   } else {
     // Харизма (бард, колдун, чародей, паладин)
-    const charisma = character.abilities?.charisma || character.abilities?.CHA || character.charisma || 10;
+    const charisma = character.abilities?.charisma || character.abilities?.CHA || 10;
     return Math.floor((charisma - 10) / 2);
   }
 };
@@ -100,7 +100,8 @@ const filterSpellsByClassAndLevel = (
   const getMaxSpellLevel = (characterClass: string, characterLevel: number): number => {
     if (!characterClass) return 0;
     
-    const classLower = characterClass.toLowerCase();
+    // Убедимся, что characterClass - это строка и используем безопасный вызов toLowerCase()
+    const classLower = typeof characterClass === 'string' ? characterClass.toLowerCase() : '';
     
     if (['волшебник', 'маг', 'wizard', 'жрец', 'cleric', 'бард', 'bard', 'друид', 'druid'].includes(classLower)) {
       return Math.min(9, Math.ceil(characterLevel / 2));
@@ -114,7 +115,8 @@ const filterSpellsByClassAndLevel = (
   };
   
   const maxSpellLevel = getMaxSpellLevel(characterClass, characterLevel);
-  const classLower = characterClass.toLowerCase();
+  // Убедимся, что characterClass - это строка и используем безопасный вызов toLowerCase()
+  const classLower = typeof characterClass === 'string' ? characterClass.toLowerCase() : '';
   
   return spells.filter(spell => {
     // Проверка уровня заклинания

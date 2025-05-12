@@ -115,7 +115,7 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
         return (
           <CharacterBackground 
             character={character} 
-            onUpdate={updateCharacter}
+            updateCharacter={updateCharacter}
             nextStep={nextStep}
             prevStep={prevStep}
           />

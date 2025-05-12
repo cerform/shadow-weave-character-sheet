@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -18,8 +19,8 @@ const DamageLog = ({ events = [], maxEvents = 10 }: DamageLogProps) => {
   useEffect(() => {
     // Сортируем события по времени (самые новые сверху)
     const sortedEvents = [...events].sort((a, b) => {
-      const timeA = typeof a.timestamp === 'number' ? a.timestamp : (a.timestamp as Date).getTime();
-      const timeB = typeof b.timestamp === 'number' ? b.timestamp : (b.timestamp as Date).getTime();
+      const timeA = typeof a.timestamp === 'number' ? a.timestamp : new Date(a.timestamp as string).getTime();
+      const timeB = typeof b.timestamp === 'number' ? b.timestamp : new Date(b.timestamp as string).getTime();
       return timeB - timeA;
     });
     
@@ -39,7 +40,7 @@ const DamageLog = ({ events = [], maxEvents = 10 }: DamageLogProps) => {
       return `-${amount}`;
     } else if (type === 'healing' || type === 'heal') {
       return `+${amount}`;
-    } else if (type === 'tempHP' || type === 'temp') {
+    } else if (type === 'temporary' || type === 'tempHP' || type === 'temp') {
       return `+${amount} (врем)`;
     } else {
       return `${amount}`;
@@ -54,6 +55,7 @@ const DamageLog = ({ events = [], maxEvents = 10 }: DamageLogProps) => {
       case 'healing':
       case 'heal':
         return 'text-emerald-500';
+      case 'temporary':
       case 'tempHP':
       case 'temp':
         return 'text-blue-400';
@@ -72,6 +74,7 @@ const DamageLog = ({ events = [], maxEvents = 10 }: DamageLogProps) => {
       case 'healing':
       case 'heal':
         return <Heart className="h-4 w-4 text-emerald-500" />;
+      case 'temporary':
       case 'tempHP':
       case 'temp':
         return <Shield className="h-4 w-4 text-blue-400" />;
@@ -83,9 +86,10 @@ const DamageLog = ({ events = [], maxEvents = 10 }: DamageLogProps) => {
   };
   
   // Форматирование временных меток (например, "5 минут назад")
-  const formatTimestamp = (timestamp: number | Date): string => {
+  const formatTimestamp = (timestamp: string | number | Date): string => {
     try {
-      const date = typeof timestamp === 'number' ? new Date(timestamp) : timestamp;
+      const date = typeof timestamp === 'number' ? new Date(timestamp) : 
+                  typeof timestamp === 'string' ? new Date(timestamp) : timestamp;
       return formatDistance(date, new Date(), { 
         addSuffix: true,
         locale: ru 
@@ -104,15 +108,15 @@ const DamageLog = ({ events = [], maxEvents = 10 }: DamageLogProps) => {
         <ScrollArea className="h-[200px] pr-4">
           <div className="px-4 pb-4 space-y-3">
             {displayEvents.map((event, index) => (
-              <div key={event.id || index} className="flex items-start gap-3 py-2">
+              <div key={event.id || `event-${index}`} className="flex items-start gap-3 py-2">
                 <div className="mt-1">
                   {getEventIcon(event.type)}
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center justify-between">
-                    <span className="font-medium">{event.source}</span>
+                    <span className="font-medium">{event.source || event.description || ''}</span>
                     <span className={`font-semibold ${getEventClass(event.type)}`}>
-                      {formatAmount(event.type, event.amount)}
+                      {formatAmount(event.type, event.value || event.amount || 0)}
                     </span>
                   </div>
                   <div className="text-xs text-muted-foreground">

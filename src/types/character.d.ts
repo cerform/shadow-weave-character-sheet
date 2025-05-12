@@ -6,6 +6,7 @@ export interface Character {
   level: number;
   race: string;
   subrace?: string;
+  subclass?: string;
   background: string;
   alignment: string;
   abilities: {
@@ -21,6 +22,19 @@ export interface Character {
     intelligence: number;
     wisdom: number;
     charisma: number;
+  };
+  // Добавляем прямые свойства для характеристик
+  strength?: number;
+  dexterity?: number;
+  constitution?: number;
+  intelligence?: number;
+  wisdom?: number;
+  charisma?: number;
+  // Добавляем hitPoints для обратной совместимости
+  hitPoints?: { 
+    maximum: number; 
+    current: number; 
+    temporary?: number;
   };
   maxHp: number;
   currentHp: number;
@@ -63,8 +77,8 @@ export interface Character {
   flaws?: string;
   backstory?: string;
   initiative?: number;
-  spellSlots?: Record<string, { max: number; used: number }>;
-  resources?: Record<string, { max: number; used: number; recoveryType?: 'short' | 'short-rest' | 'long' | 'long-rest' }>;
+  spellSlots?: Record<string, { max: number; used: number; current?: number; }>;
+  resources?: Record<string, { max: number; used: number; current?: number; recoveryType?: 'short' | 'short-rest' | 'long' | 'long-rest' }>;
   sorceryPoints?: {
     max: number;
     current: number;
@@ -106,6 +120,7 @@ export interface Character {
   className?: string;
   inspiration?: boolean;
   ac?: number;
+  experience?: number;
 }
 
 export interface CharacterSpell {
@@ -139,10 +154,13 @@ export const ABILITY_SCORE_CAPS = {
   LEGENDARY_CAP: 24
 };
 
-// Экспортируем интерфейс для событий хит-поинтов
+// Экспортируем интерфейс для событий хит-поинтов с расширенным типом
 export interface HitPointEvent {
-  type: 'damage' | 'healing' | 'temporary';
+  id?: string | number;
+  type: 'damage' | 'healing' | 'temporary' | 'heal' | 'tempHP' | 'temp' | 'death-save';
   value: number;
-  timestamp: string;
+  amount?: number;
+  timestamp: string | number | Date;
   description?: string;
+  source?: string;
 }
