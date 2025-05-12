@@ -1,112 +1,156 @@
 
 import React from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { SpellData } from '@/types/spells';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { CharacterSpell } from '@/types/character';
+import { componentsToString } from '@/utils/spellProcessors';
 
 interface SpellDetailModalProps {
-  spell: SpellData | null;
+  spell: CharacterSpell | any;
   open: boolean;
   onClose: () => void;
   currentTheme: any;
 }
 
-const SpellDetailModal: React.FC<SpellDetailModalProps> = ({
-  spell,
-  open,
-  onClose,
-  currentTheme
-}) => {
-  if (!spell) return null;
-  
-  // Safely format classes array or string
-  const formatClasses = (classes: string[] | string | undefined): string => {
-    if (!classes) return "Нет";
-    if (typeof classes === 'string') return classes;
-    if (Array.isArray(classes)) return classes.join(', ');
-    return "Нет";
+const SpellDetailModal: React.FC<SpellDetailModalProps> = ({ spell, open, onClose, currentTheme }) => {
+  const getComponentsString = () => {
+    if (spell.components) {
+      return spell.components;
+    } else {
+      return componentsToString({
+        verbal: spell.verbal,
+        somatic: spell.somatic,
+        material: spell.material,
+        ritual: spell.ritual,
+        concentration: spell.concentration
+      });
+    }
+  };
+
+  const parseDescription = () => {
+    if (!spell.description) return 'Нет описания';
+    
+    if (typeof spell.description === 'string') {
+      return spell.description;
+    } else if (Array.isArray(spell.description)) {
+      return spell.description.join('\n\n');
+    }
+    
+    return String(spell.description);
   };
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl" style={{backgroundColor: currentTheme.cardBackground, color: currentTheme.textColor}}>
+      <DialogContent 
+        className="max-w-2xl max-h-[80vh] overflow-y-auto"
+        style={{ 
+          backgroundColor: currentTheme.cardBackground, 
+          color: currentTheme.textColor,
+          borderColor: currentTheme.borderColor || currentTheme.accent + '40' 
+        }}
+      >
         <DialogHeader>
-          <DialogTitle className="text-2xl flex items-center justify-between">
+          <DialogTitle 
+            className="text-2xl flex items-center justify-between"
+            style={{ color: currentTheme.textColor }}
+          >
             <span>{spell.name}</span>
-            <Badge style={{backgroundColor: currentTheme.accent, color: currentTheme.textColor}}>
-              {spell.level === 0 ? "Заговор" : `${spell.level}-й уровень`}
-            </Badge>
+            <span className="text-base font-normal" style={{ color: currentTheme.mutedTextColor }}>
+              {spell.level === 0 ? 'Заговор' : `${spell.level} уровень`}
+            </span>
           </DialogTitle>
+          <DialogDescription style={{ color: currentTheme.mutedTextColor }}>
+            {spell.school || 'Школа неизвестна'} • {spell.castingTime || '1 действие'}
+          </DialogDescription>
         </DialogHeader>
-        
-        <div className="space-y-4 py-4">
+
+        <div className="space-y-4">
           <div className="flex flex-wrap gap-2">
-            <Badge variant="outline" style={{borderColor: currentTheme.accent}}>
-              {spell.school}
-            </Badge>
             {spell.ritual && (
-              <Badge variant="outline" style={{borderColor: currentTheme.accent}}>
+              <span 
+                className="px-2 py-1 text-xs rounded-md"
+                style={{ backgroundColor: currentTheme.accent + '20', color: currentTheme.accent }}
+              >
                 Ритуал
-              </Badge>
+              </span>
             )}
             {spell.concentration && (
-              <Badge variant="outline" style={{borderColor: currentTheme.accent}}>
+              <span 
+                className="px-2 py-1 text-xs rounded-md"
+                style={{ backgroundColor: currentTheme.accent + '20', color: currentTheme.accent }}
+              >
                 Концентрация
-              </Badge>
+              </span>
             )}
           </div>
-          
-          <Separator className="my-2" style={{backgroundColor: currentTheme.accent + '40'}} />
-          
-          <div className="grid grid-cols-2 gap-3">
+
+          <div className="grid grid-cols-2 gap-4">
             <div>
-              <p className="font-semibold">Время накладывания</p>
-              <p>{spell.castingTime}</p>
+              <h4 className="text-sm font-medium mb-1" style={{ color: currentTheme.mutedTextColor }}>
+                Дистанция
+              </h4>
+              <p>{spell.range || 'Касание'}</p>
             </div>
-            
             <div>
-              <p className="font-semibold">Дистанция</p>
-              <p>{spell.range}</p>
+              <h4 className="text-sm font-medium mb-1" style={{ color: currentTheme.mutedTextColor }}>
+                Компоненты
+              </h4>
+              <p>{getComponentsString()}</p>
             </div>
-            
             <div>
-              <p className="font-semibold">Компоненты</p>
-              <p>{spell.components}</p>
+              <h4 className="text-sm font-medium mb-1" style={{ color: currentTheme.mutedTextColor }}>
+                Длительность
+              </h4>
+              <p>{spell.duration || 'Мгновенная'}</p>
             </div>
-            
             <div>
-              <p className="font-semibold">Длительность</p>
-              <p>{spell.duration}</p>
+              <h4 className="text-sm font-medium mb-1" style={{ color: currentTheme.mutedTextColor }}>
+                Классы
+              </h4>
+              <p>
+                {Array.isArray(spell.classes) 
+                  ? spell.classes.join(', ') 
+                  : spell.classes || 'Неизвестно'}
+              </p>
             </div>
           </div>
-          
+
+          {spell.materials && (
+            <div>
+              <h4 className="text-sm font-medium mb-1" style={{ color: currentTheme.mutedTextColor }}>
+                Материальные компоненты
+              </h4>
+              <p>{spell.materials}</p>
+            </div>
+          )}
+
           <div>
-            <p className="font-semibold">Доступно классам: </p>
-            <p>{formatClasses(spell.classes)}</p>
+            <h4 className="text-sm font-medium mb-1" style={{ color: currentTheme.mutedTextColor }}>
+              Описание
+            </h4>
+            <div className="whitespace-pre-wrap">
+              {parseDescription()}
+            </div>
           </div>
-          
-          <Separator className="my-4" style={{backgroundColor: currentTheme.accent + '40'}} />
-          
-          <div className="prose prose-invert max-w-none" style={{color: currentTheme.textColor}}>
-            {typeof spell.description === 'string' ? (
-              <p>{spell.description}</p>
-            ) : Array.isArray(spell.description) ? (
-              spell.description.map((paragraph, index) => (
-                <p key={index} className="mb-2">{paragraph}</p>
-              ))
-            ) : (
-              <p>Нет описания</p>
-            )}
+
+          {spell.higherLevels && (
+            <div>
+              <h4 className="text-sm font-medium mb-1" style={{ color: currentTheme.mutedTextColor }}>
+                На более высоких уровнях
+              </h4>
+              <p>{spell.higherLevels}</p>
+            </div>
+          )}
+
+          <div className="text-xs text-right" style={{ color: currentTheme.mutedTextColor }}>
+            Источник: {spell.source || 'Книга игрока'}
           </div>
         </div>
-        
-        <DialogFooter>
-          <Button variant="outline" onClick={onClose}>
-            Закрыть
-          </Button>
-        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
