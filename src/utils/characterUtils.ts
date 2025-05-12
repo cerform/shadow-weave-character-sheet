@@ -1,41 +1,18 @@
 
-// Функция для расчета модификатора характеристики
-export const calculateModifier = (abilityScore: number = 10): number => {
-  return Math.floor((abilityScore - 10) / 2);
-};
+import { Character } from '@/types/character';
 
-// Альтернативные имена для совместимости с различными частями приложения
-export const getModifierFromAbilityScore = calculateModifier;
-export const getNumericModifier = calculateModifier;
-export const getAbilityModifierValue = calculateModifier;
-
-// Функция для получения строки модификатора с + или -
-export const getModifierString = (modifier: number): string => {
-  return modifier >= 0 ? `+${modifier}` : `${modifier}`;
-};
-
-// Альтернативные имена для совместимости
-export const getAbilityModifier = (abilityScore: number): string => {
-  return getModifierString(calculateModifier(abilityScore));
-};
-
-export const getAbilityModifierString = getAbilityModifier;
-export const formatModifier = getModifierString;
-
-// Функция для расчета бонуса мастерства
-export const calculateProficiencyBonus = (level: number): number => {
-  return Math.floor((level - 1) / 4) + 2;
-};
-
-// Функция для создания пустого персонажа
-export const createDefaultCharacter = (): any => {
+/**
+ * Creates a default character object
+ */
+export function createDefaultCharacter(): Character {
   return {
-    name: '',
-    race: '',
+    id: crypto.randomUUID(),
+    name: 'Новый персонаж',
     class: '',
     level: 1,
+    race: '',
     background: '',
-    alignment: '',
+    alignment: 'Нейтральный',
     abilities: {
       STR: 10,
       DEX: 10,
@@ -44,26 +21,26 @@ export const createDefaultCharacter = (): any => {
       WIS: 10,
       CHA: 10,
       strength: 10,
-      dexterity: 10,
+      dexterity: 10, 
+      constitution: 10,
+      intelligence: 10,
+      wisdom: 10,
+      charisma: 10
+    },
+    stats: {
+      strength: 10,
+      dexterity: 10, 
       constitution: 10,
       intelligence: 10,
       wisdom: 10,
       charisma: 10
     },
     strength: 10,
-    dexterity: 10,
+    dexterity: 10, 
     constitution: 10,
     intelligence: 10,
-    wisdom: 10, 
+    wisdom: 10,
     charisma: 10,
-    maxHp: 0,
-    currentHp: 0,
-    armorClass: 10,
-    proficiencyBonus: 2,
-    speed: 30,
-    equipment: [],
-    features: [],
-    spells: [],
     proficiencies: {
       languages: [],
       tools: [],
@@ -71,24 +48,56 @@ export const createDefaultCharacter = (): any => {
       armor: [],
       skills: []
     },
-    money: {
-      cp: 0,
-      sp: 0,
-      ep: 0,
-      gp: 0,
-      pp: 0
+    equipment: [],
+    gold: 0,
+    hp: {
+      current: 8,
+      max: 8,
+      temp: 0
     },
-    deathSaves: {
-      successes: 0,
-      failures: 0
+    spellcasting: null,
+    spells: [],
+    features: [],
+    proficiencyBonus: 2,
+    armorClass: 10,
+    initiative: 0,
+    speed: 30,
+    hitDice: { total: 1, value: 8 },
+    savingThrows: {
+      strength: false,
+      dexterity: false,
+      constitution: false,
+      intelligence: false,
+      wisdom: false,
+      charisma: false
     },
-    savingThrowProficiencies: {}, // Добавляем для совместимости
-    skillProficiencies: {}, // Добавляем для совместимости
-    expertise: [], // Добавляем для совместимости
-    raceFeatures: [], // Добавляем для совместимости
-    classFeatures: [], // Добавляем для совместимости
-    backgroundFeatures: [], // Добавляем для совместимости
-    feats: [], // Добавляем для совместимости
-    skillBonuses: {} // Добавляем для совместимости
+    skills: {},
+    personalityTraits: '',
+    ideals: '',
+    bonds: '',
+    flaws: '',
+    backstory: '',
+    updatedAt: new Date().toISOString()
   };
-};
+}
+
+/**
+ * Updates character's proficiency bonus based on level
+ */
+export function updateCharacterProficiencyBonus(character: Character, level: number): Character {
+  // Calculate proficiency bonus: 2 + floor((level - 1) / 4)
+  const proficiencyBonus = 2 + Math.floor((level - 1) / 4);
+  
+  return {
+    ...character,
+    proficiencyBonus
+  };
+}
+
+/**
+ * Calculate initiative from dexterity
+ */
+export function calculateInitiative(character: Character): number {
+  const dex = character.dexterity || character.abilities?.DEX || 10;
+  return Math.floor((dex - 10) / 2);
+}

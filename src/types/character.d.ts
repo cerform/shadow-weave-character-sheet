@@ -1,5 +1,22 @@
+
+export const ABILITY_SCORE_CAPS = {
+  BASE_CAP: 20,      // Standard cap for most characters
+  EPIC_CAP: 22,      // Cap for characters level 10-15
+  LEGENDARY_CAP: 24, // Cap for characters level 16+
+  DEITY_CAP: 30      // Maximum possible value (for gods, etc)
+};
+
+export interface HitPointEvent {
+  amount: number;
+  type: 'damage' | 'healing' | 'temp';
+  source?: string;
+  timestamp: string;
+}
+
 export interface Character {
+  // Basic info
   id?: string;
+  userId?: string;
   name: string;
   class: string;
   level: number;
@@ -8,114 +25,23 @@ export interface Character {
   subclass?: string;
   background: string;
   alignment: string;
-  abilities: {
+  
+  // Ability scores - multiple formats for backward compatibility
+  abilities?: {
     STR: number;
     DEX: number;
     CON: number;
     INT: number;
     WIS: number;
     CHA: number;
-    strength: number;
-    dexterity: number;
-    constitution: number;
-    intelligence: number;
-    wisdom: number;
-    charisma: number;
+    strength?: number;
+    dexterity?: number;
+    constitution?: number;
+    intelligence?: number;
+    wisdom?: number;
+    charisma?: number;
   };
-  // Добавляем прямые свойства для характеристик
-  strength?: number;
-  dexterity?: number;
-  constitution?: number;
-  intelligence?: number;
-  wisdom?: number;
-  charisma?: number;
-  // Добавляем hitPoints для обратной совместимости
-  hitPoints?: { 
-    maximum: number; 
-    current: number; 
-    temporary?: number;
-  };
-  maxHp: number;
-  currentHp: number;
-  tempHp?: number;
-  temporaryHp?: number;
-  armorClass: number;
-  proficiencyBonus: number;
-  speed: number;
-  equipment: any[];
-  features: any[];
-  spells: (CharacterSpell | string)[];
-  proficiencies: {
-    languages: string[];
-    tools: string[];
-    weapons: string[];
-    armor: string[];
-    skills?: string[];
-  };
-  hitDice?: {
-    total: number;
-    used: number;
-    dieType: string;
-    value: string;
-  };
-  money: {
-    cp: number;
-    sp: number;
-    ep: number;
-    gp: number;
-    pp: number;
-  };
-  currency?: {
-    cp: number;
-    sp: number;
-    ep: number;
-    gp: number;
-    pp: number;
-  };
-  deathSaves: {
-    successes: number;
-    failures: number;
-  };
-  gender?: string;
-  personalityTraits?: string;
-  ideals?: string;
-  bonds?: string;
-  flaws?: string;
-  backstory?: string;
-  initiative?: number;
-  spellSlots?: Record<string, { 
-    max: number; 
-    used: number; 
-    current?: number; 
-  }>;
-  resources?: Record<string, { 
-    max: number; 
-    used: number; 
-    current?: number; 
-    recoveryType?: 'short' | 'short-rest' | 'long' | 'long-rest' 
-  }>;
-  sorceryPoints?: {
-    max: number;
-    current: number;
-  };
-  lastDiceRoll?: {
-    diceType: string;
-    count: number;
-    modifier: number;
-    rolls: number[];
-    total: number;
-    label: string;
-    timestamp: string;
-  };
-  notes?: string;
-  spellcasting?: {
-    ability: string;
-    saveDC: number;
-    attackBonus: number;
-    preparedSpellsLimit?: number;
-  };
-  abilityPointsUsed?: number;
-  userId?: string;
+  
   stats?: {
     strength: number;
     dexterity: number;
@@ -124,84 +50,93 @@ export interface Character {
     wisdom: number;
     charisma: number;
   };
-  skills?: Record<string, boolean | number | { proficient: boolean; value?: number; bonus?: number }>;
+  
+  // Direct ability scores
+  strength?: number;
+  dexterity?: number;
+  constitution?: number;
+  intelligence?: number;
+  wisdom?: number;
+  charisma?: number;
+  
+  // Additional character stats
+  abilityPointsUsed?: number;
+  proficiencyBonus?: number;
+  armorClass?: number;
+  initiative?: number;
+  speed?: number;
+  
+  // Hit points and hit dice
+  hp?: {
+    current: number;
+    max: number;
+    temp: number;
+  };
+  
+  hitDice?: {
+    total: number;
+    value: number;
+    used?: number;
+  };
+  
+  hpHistory?: HitPointEvent[];
+  
+  // Proficiencies
+  proficiencies?: {
+    languages: string[];
+    tools: string[];
+    weapons: string[];
+    armor: string[];
+    skills?: string[];
+  };
+  
   savingThrows?: Record<string, boolean>;
-  languages?: string[];
-  skill?: Record<string, boolean | { proficient: boolean }>;
-  savingThrowProficiencies?: Record<string, boolean>;
-  skillProficiencies?: Record<string, boolean>;
-  expertise?: string[];
-  appearance?: string;
-  className?: string;
-  inspiration?: boolean;
-  ac?: number;
-  experience?: number;
-  
-  // Добавляем свойства для разделения фичей по категориям
-  raceFeatures?: any[];
-  classFeatures?: any[];
-  backgroundFeatures?: any[];
-  feats?: any[];
-  
-  // Добавляем skillBonuses для кастомных бонусов навыков
+  skills?: Record<string, boolean> | Record<string, { proficient: boolean; expertise?: boolean; }>;
   skillBonuses?: Record<string, number>;
-
-  // Добавляем additionalClasses для мультиклассовых персонажей
-  additionalClasses?: Array<{class: string, level: number, subclass?: string}>;
-}
-
-export interface CharacterSpell {
-  id?: string | number;
-  name: string;
-  level: number;
-  school?: string;
-  castingTime?: string;
-  range?: string;
-  components?: string;
-  duration?: string;
-  description?: string | string[];
-  classes?: string[] | string;
+  
+  // Equipment
+  equipment?: string[];
+  items?: Array<{
+    id?: string;
+    name: string;
+    quantity: number;
+    type?: string;
+    description?: string;
+    weight?: number;
+    value?: number;
+  }>;
+  gold?: number;
+  
+  // Magic
+  spellcasting?: {
+    ability?: string;
+    saveDC?: number;
+    attackBonus?: number;
+    preparedSpellsLimit?: number;
+  };
+  spells?: any[];
   ritual?: boolean;
-  concentration?: boolean;
-  verbal?: boolean;
-  somatic?: boolean;
-  material?: boolean;
-  materials?: string;
-  prepared?: boolean;
-  source?: string;
-  higher_level?: string;
-  higherLevel?: string;
-  higherLevels?: string;
+  
+  // Character flavor
+  personalityTraits?: string;
+  ideals?: string;
+  bonds?: string;
+  flaws?: string;
+  features?: any[];
+  
+  // Additional info
+  backstory?: string;
+  notes?: string;
+  avatarUrl?: string;
+  
+  // Multiclassing
+  additionalClasses?: {
+    className: string;
+    level: number;
+    subclass?: string;
+  }[];
+  
+  // Character management
+  createdAt?: string;
+  updatedAt?: string;
 }
-
-// Экспортируем константу для лимитов характеристик
-export const ABILITY_SCORE_CAPS = {
-  BASE_CAP: 20,
-  EPIC_CAP: 22,
-  LEGENDARY_CAP: 24
-};
-
-// Экспортируем интерфейс для событий хит-поинтов с расширенным типом
-export interface HitPointEvent {
-  id?: string | number;
-  type: 'damage' | 'healing' | 'temporary' | 'heal' | 'tempHP' | 'temp' | 'death-save';
-  value: number;
-  amount?: number;
-  timestamp: string | number | Date;
-  description?: string;
-  source?: string;
-}
-
-// Add LevelFeature interface
-export interface LevelFeature {
-  id: string;
-  level: number;
-  name: string;
-  description: string;
-  type: 'subclass' | 'ability_increase' | 'extra_attack' | 'spell_level' | 'feature';
-  class?: string;
-  required?: boolean;
-}
-
-// Export for useLevelFeatures
-export { LevelFeature };

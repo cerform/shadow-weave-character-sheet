@@ -7,26 +7,11 @@ import { Character } from '@/types/character';
 import { getAllBackgrounds } from '@/data/backgrounds';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
+import { Background } from '@/types/background';
 
 interface CharacterBackgroundSelectionProps {
   character: Character;
   updateCharacter: (updates: Partial<Character>) => void;
-}
-
-interface BackgroundProficiencies {
-  skills?: string[];
-  tools?: string[] | string;
-  languages?: string[] | string;
-  weapons?: string[] | string;
-}
-
-interface Background {
-  name: string;
-  description: string;
-  source?: string;
-  proficiencies?: BackgroundProficiencies;
-  equipment?: string[] | string;
-  [key: string]: any;
 }
 
 const CharacterBackgroundSelection: React.FC<CharacterBackgroundSelectionProps> = ({ 
@@ -39,7 +24,9 @@ const CharacterBackgroundSelection: React.FC<CharacterBackgroundSelectionProps> 
   const currentTheme = themes[themeKey] || themes.default;
 
   useEffect(() => {
-    setBackgrounds(getAllBackgrounds());
+    // Cast the backgrounds to the correct type
+    const bgData = getAllBackgrounds();
+    setBackgrounds(bgData as unknown as Background[]);
   }, []);
 
   // Safely get array values with defaults if missing or wrong type

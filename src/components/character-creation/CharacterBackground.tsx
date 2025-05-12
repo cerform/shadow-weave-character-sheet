@@ -6,6 +6,7 @@ import { Character } from '@/types/character';
 import { getAllBackgrounds } from '@/data/backgrounds';
 import { useToast } from '@/hooks/use-toast';
 import NavigationButtons from './NavigationButtons';
+import { Background, BackgroundIdeal } from '@/types/background';
 
 interface CharacterBackgroundProps {
   character: Character;
@@ -14,43 +15,21 @@ interface CharacterBackgroundProps {
   prevStep?: () => void;
 }
 
-interface BackgroundProficiencies {
-  skills?: string[];
-  tools?: string[] | string;
-  languages?: string[] | string;
-  weapons?: string[] | string;
-}
-
-interface BackgroundIdeal {
-  text: string;
-  alignment?: string;
-}
-
-interface Background {
-  name: string;
-  description: string;
-  source: string;
-  proficiencies: BackgroundProficiencies;
-  feature?: { name: string; description: string };
-  personalityTraits?: string[];
-  ideals?: BackgroundIdeal[];
-  bonds?: string[];
-  flaws?: string[];
-  suggestedCharacteristics?: string;
-  equipment?: string[] | string;
-}
-
 const CharacterBackground: React.FC<CharacterBackgroundProps> = ({
   character,
   updateCharacter,
   nextStep = () => {},
   prevStep = () => {}
 }) => {
-  const [backgrounds] = useState<Background[]>(getAllBackgrounds());
+  const [backgrounds, setBackgrounds] = useState<Background[]>([]);
   const { toast } = useToast();
   const [selectedBackground, setSelectedBackground] = useState(character.background || '');
 
   useEffect(() => {
+    // Get backgrounds but cast to the correct type
+    const bgData = getAllBackgrounds();
+    setBackgrounds(bgData as unknown as Background[]);
+    
     if (character.background) {
       setSelectedBackground(character.background);
     }
@@ -105,6 +84,7 @@ const CharacterBackground: React.FC<CharacterBackgroundProps> = ({
         selectedBackground.ideals.length > 0) {
       const ideal = selectedBackground.ideals[0];
       if (ideal && typeof ideal === 'object' && 'text' in ideal) {
+        // Check if ideal is not null and has a text property
         idealText = ideal.text;
       }
     }
@@ -123,11 +103,13 @@ const CharacterBackground: React.FC<CharacterBackgroundProps> = ({
       flaw = selectedBackground.flaws[0];
     }
     
-    // Safe equipment handling
-    const equipment = selectedBackground.equipment ? 
-      (Array.isArray(selectedBackground.equipment) ? 
+    // Safe equipment handling - make a type guard for equipment
+    let equipment: string[] = [];
+    if ('equipment' in selectedBackground && selectedBackground.equipment) {
+      equipment = Array.isArray(selectedBackground.equipment) ? 
         selectedBackground.equipment : 
-        [selectedBackground.equipment]) : [];
+        [selectedBackground.equipment];
+    }
 
     // Update the character
     updateCharacter({
@@ -166,7 +148,7 @@ const CharacterBackground: React.FC<CharacterBackgroundProps> = ({
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {backgrounds.map((background) => {
-          // Safely get proficiencies
+          // Safely get skills
           const skills = background.proficiencies?.skills && Array.isArray(background.proficiencies.skills) ? 
             background.proficiencies.skills.join(', ') : 'Нет';
           
@@ -180,8 +162,8 @@ const CharacterBackground: React.FC<CharacterBackgroundProps> = ({
             (Array.isArray(background.proficiencies.languages) ? 
               background.proficiencies.languages.join(', ') : background.proficiencies.languages) : 'Нет';
           
-          // Safely get equipment
-          const equipment = background.equipment ? 
+          // Safely get equipment with type guard
+          const equipment = 'equipment' in background && background.equipment ? 
             (Array.isArray(background.equipment) ? 
               background.equipment.join(', ') : background.equipment) : 'Нет';
             

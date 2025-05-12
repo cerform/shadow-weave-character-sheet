@@ -19,7 +19,8 @@ export interface SpellData {
   prepared?: boolean;
   higherLevel?: string;
   higherLevels?: string;
-  source?: string;
+  higher_level?: string;
+  source: string;
 }
 
 export interface CharacterSpell {
@@ -77,6 +78,30 @@ export function convertCharacterSpellToSpellData(spell: CharacterSpell): SpellDa
     prepared: Boolean(spell.prepared),
     higherLevel: spell.higherLevel || spell.higherLevels || spell.higher_level || '',
     higherLevels: spell.higherLevels || spell.higherLevel || spell.higher_level || '',
-    source: spell.source || ''
+    source: spell.source || 'Custom'
+  };
+}
+
+// Функция для преобразования данных заклинаний в формат CharacterSpell
+export function convertSpellDataToCharacterSpell(spell: SpellData): CharacterSpell {
+  return {
+    id: spell.id.toString(),
+    name: spell.name,
+    level: spell.level,
+    school: spell.school,
+    castingTime: spell.castingTime,
+    range: spell.range,
+    components: spell.components,
+    duration: spell.duration,
+    description: spell.description,
+    classes: spell.classes,
+    ritual: spell.ritual,
+    concentration: spell.concentration,
+    verbal: spell.verbal,
+    somatic: spell.somatic,
+    material: spell.material,
+    materials: spell.materials,
+    prepared: spell.prepared || false,
+    source: spell.source
   };
 }
