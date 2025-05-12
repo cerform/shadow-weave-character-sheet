@@ -80,11 +80,13 @@ const CharacterExportPDF: React.FC<CharacterExportPDFProps> = ({ character }) =>
           } else if (typeof value === 'object' && value !== null) {
             if ('bonus' in value && value.bonus !== undefined) {
               const bonus = value.bonus;
-              displayValue = typeof bonus === 'number' && bonus >= 0 ? `+${bonus}` : `${bonus}`;
+              displayValue = typeof bonus === 'number' && bonus >= 0 ? `+${bonus}` : `${bonus || ''}`;
             } else if ('value' in value && value.value !== undefined) {
               const val = value.value;
-              displayValue = typeof val === 'number' && val >= 0 ? `+${val}` : `${val}`;
+              displayValue = typeof val === 'number' && val >= 0 ? `+${val}` : `${val || ''}`;
             }
+          } else if (typeof value === 'boolean') {
+            displayValue = value ? 'Владеет' : '';
           }
           
           return [name, displayValue];

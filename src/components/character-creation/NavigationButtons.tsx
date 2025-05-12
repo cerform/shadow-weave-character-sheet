@@ -10,9 +10,9 @@ export interface NavigationButtonsProps {
   prevDisabled?: boolean;
   nextLabel?: string;
   prevLabel?: string;
-  allowNext?: boolean; // Добавляем поддержку атрибута allowNext
+  allowNext?: boolean;
   isFirstStep?: boolean;
-  nextText?: string; // Добавляем поддержку nextText
+  nextText?: string;
   disableNext?: boolean;
 }
 

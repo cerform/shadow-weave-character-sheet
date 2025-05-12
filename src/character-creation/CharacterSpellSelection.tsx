@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { SpellData } from '@/types/spells';
 import { Character } from '@/types/character';
 import { useCharacter } from '@/contexts/CharacterContext';
@@ -41,6 +41,10 @@ const calculateAvailableSpellsByClassAndLevel = (
   let cantripsCount = 0;
   let knownSpells = 0;
   let maxSpellLevel = 0;
+
+  if (!characterClass) {
+    return { cantripsCount, knownSpells, maxSpellLevel };
+  }
 
   const classLower = characterClass.toLowerCase();
 
@@ -89,11 +93,13 @@ const filterSpellsByClassAndLevel = (
   characterClass: string, 
   characterLevel: number
 ): SpellData[] => {
-  if (!spells || !Array.isArray(spells) || spells.length === 0) {
+  if (!spells || !Array.isArray(spells) || spells.length === 0 || !characterClass) {
     return [];
   }
   
   const getMaxSpellLevel = (characterClass: string, characterLevel: number): number => {
+    if (!characterClass) return 0;
+    
     const classLower = characterClass.toLowerCase();
     
     if (['волшебник', 'маг', 'wizard', 'жрец', 'cleric', 'бард', 'bard', 'друид', 'druid'].includes(classLower)) {

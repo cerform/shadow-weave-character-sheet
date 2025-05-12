@@ -1,10 +1,11 @@
 
 export interface Character {
+  id?: string;
   name: string;
   class: string;
   level: number;
   race: string;
-  subrace?: string; // Добавляем поле для подрасы
+  subrace?: string;
   background: string;
   alignment: string;
   abilities: {
@@ -24,7 +25,7 @@ export interface Character {
   maxHp: number;
   currentHp: number;
   tempHp?: number;
-  temporaryHp?: number;  // Добавлено для совместимости
+  temporaryHp?: number;
   armorClass: number;
   proficiencyBonus: number;
   speed: number;
@@ -85,6 +86,26 @@ export interface Character {
     preparedSpellsLimit?: number;
   };
   abilityPointsUsed?: number;
+  userId?: string;
+  stats?: {
+    strength: number;
+    dexterity: number;
+    constitution: number;
+    intelligence: number;
+    wisdom: number;
+    charisma: number;
+  };
+  skills?: Record<string, boolean | number | { proficient: boolean; value?: number; bonus?: number }>;
+  savingThrows?: Record<string, boolean>;
+  languages?: string[];
+  skill?: Record<string, boolean | { proficient: boolean }>;
+  savingThrowProficiencies?: Record<string, boolean>;
+  skillProficiencies?: Record<string, boolean>;
+  expertise?: string[];
+  appearance?: string;
+  className?: string;
+  inspiration?: boolean;
+  ac?: number;
 }
 
 export interface CharacterSpell {
@@ -118,5 +139,10 @@ export const ABILITY_SCORE_CAPS = {
   LEGENDARY_CAP: 24
 };
 
-// ВАЖНО: Не дублируем Character здесь, так как это перекрывает определение выше
-// Вместо этого приводим только дополнительные свойства
+// Экспортируем интерфейс для событий хит-поинтов
+export interface HitPointEvent {
+  type: 'damage' | 'healing' | 'temporary';
+  value: number;
+  timestamp: string;
+  description?: string;
+}

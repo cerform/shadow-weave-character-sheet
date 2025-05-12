@@ -80,6 +80,7 @@ const CharacterContent: React.FC<CharacterContentProps> = ({
                     {typeof skillValue === 'object' && skillValue !== null && 'bonus' in skillValue ? 
                       (skillValue.bonus !== undefined && Number(skillValue.bonus) >= 0 ? 
                         `+${skillValue.bonus}` : `${skillValue.bonus}`) : ''}
+                    {typeof skillValue === 'boolean' ? (skillValue ? '+' : '') : ''}
                   </span>
                 </div>
               ))

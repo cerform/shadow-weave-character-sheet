@@ -41,6 +41,27 @@ export const normalizeSpells = (spells: any[] | null | undefined): CharacterSpel
   });
 };
 
+// Проверяет, является ли объект CharacterSpell, а не строкой
+export const isCharacterSpellObject = (spell: CharacterSpell | string): spell is CharacterSpell => {
+  return typeof spell !== 'string';
+};
+
+// Получает уровень заклинания
+export const getSpellLevel = (spell: CharacterSpell | string): number => {
+  if (isCharacterSpellObject(spell)) {
+    return spell.level || 0;
+  }
+  return 0; // Строки по умолчанию считаем заговорами
+};
+
+// Проверяет, подготовлено ли заклинание
+export const isSpellPrepared = (spell: CharacterSpell | string): boolean => {
+  if (isCharacterSpellObject(spell)) {
+    return Boolean(spell.prepared);
+  }
+  return true; // Строки по умолчанию считаем подготовленными
+};
+
 // Возвращает отображаемое название уровня заклинания
 export const getSpellLevelName = (level: number): string => {
   switch (level) {
