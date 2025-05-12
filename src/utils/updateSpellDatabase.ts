@@ -1,6 +1,6 @@
 
 import { CharacterSpell } from '@/types/character';
-import { allCantrips } from '@/data/spells/all_cantrips';
+import { cantrips as allCantrips } from '@/data/spells/all_cantrips';
 import { allLevel1Spells } from '@/data/spells/all_level1';
 import { spells } from '@/data/spells';
 import { SpellData, convertCharacterSpellToSpellData } from '@/types/spells';

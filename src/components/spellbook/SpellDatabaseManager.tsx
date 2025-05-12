@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -294,7 +293,7 @@ const SpellDatabaseManager: React.FC = () => {
                 </div>
               </>
             ) : (
-              <Alert variant="success" className="bg-green-50 border-green-300">
+              <Alert>
                 <Check className="h-4 w-4 text-green-600" />
                 <AlertDescription className="text-green-800">
                   Дубликатов не обнаружено! База данных заклинаний содержит только уникальные записи.
@@ -309,4 +308,3 @@ const SpellDatabaseManager: React.FC = () => {
 };
 
 export default SpellDatabaseManager;
-

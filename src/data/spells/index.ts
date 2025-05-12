@@ -13,12 +13,12 @@ import { level6 } from './level6';
 import { level7 } from './level7';
 import { level8 } from './level8';
 import { level9 } from './level9';
-import { allCantrips } from './all_cantrips';
+import { cantrips as allCantripsList } from './all_cantrips';
 import { removeDuplicateSpells } from '@/utils/spellProcessors';
 
 // Объединяем все заклинания в единый массив и удаляем дубликаты
 const allSpellsWithDuplicates: CharacterSpell[] = [
-  ...allCantrips,
+  ...allCantripsList,
   ...cantrips,
   ...level0,
   ...level1,
