@@ -142,3 +142,149 @@ export const getMaxSpellLevel = (characterClass: string, characterLevel: number)
   
   return 0;
 };
+
+// Добавляем недостающие функции, импортированные в spellUtils.ts
+
+// Функция для проверки, можно ли подготовить еще заклинания
+export const canPrepareMoreSpells = (character: any): boolean => {
+  if (!character || !character.spells) return true;
+  
+  const preparedCount = character.spells
+    .filter((spell: any) => typeof spell !== 'string' && spell.prepared && spell.level > 0)
+    .length;
+  
+  const preparedLimit = getPreparedSpellsLimit(character);
+  
+  return preparedCount < preparedLimit;
+};
+
+// Получение лимита подготовленных заклинаний
+export const getPreparedSpellsLimit = (character: any): number => {
+  if (!character || !character.abilities) return 0;
+  
+  const classLower = character.class?.toLowerCase() || '';
+  
+  // Базовый модификатор способности
+  let abilityMod = 0;
+  
+  if (['жрец', 'друид', 'клерик', 'cleric', 'druid'].includes(classLower)) {
+    // Мудрость
+    const wisdom = character.abilities?.wisdom || character.abilities?.WIS || character.wisdom || 10;
+    abilityMod = Math.floor((wisdom - 10) / 2);
+  } else if (['волшебник', 'маг', 'wizard'].includes(classLower)) {
+    // Интеллект
+    const intelligence = character.abilities?.intelligence || character.abilities?.INT || character.intelligence || 10;
+    abilityMod = Math.floor((intelligence - 10) / 2);
+  } else if (['паладин', 'paladin'].includes(classLower)) {
+    // Харизма
+    const charisma = character.abilities?.charisma || character.abilities?.CHA || character.charisma || 10;
+    abilityMod = Math.floor((charisma - 10) / 2);
+  }
+  
+  // Базовый расчет: уровень класса + модификатор способности
+  let preparedLimit = Math.max(1, character.level + abilityMod);
+  
+  // Корректировки для конкретных классов
+  if (['паладин', 'paladin', 'рейнджер', 'следопыт', 'ranger'].includes(classLower)) {
+    preparedLimit = Math.max(1, Math.floor(character.level / 2) + abilityMod);
+  }
+  
+  return preparedLimit;
+};
+
+// Функция для получения заклинательной способности персонажа
+export const getSpellcastingAbility = (character: any): string => {
+  if (!character) return 'Харизма';
+  
+  const classLower = character?.class?.toLowerCase() || '';
+  
+  if (['жрец', 'друид', 'клерик', 'cleric', 'druid'].includes(classLower)) {
+    return 'Мудрость';
+  } else if (['волшебник', 'маг', 'wizard'].includes(classLower)) {
+    return 'Интеллект';
+  } else {
+    // Бард, Чародей, Колдун, Паладин
+    return 'Харизма';
+  }
+};
+
+// Группировка заклинаний по уровням
+export const groupSpellsByLevel = (spells: any[]): Record<number, any[]> => {
+  if (!Array.isArray(spells)) return {};
+  
+  const grouped: Record<number, any[]> = {};
+  
+  spells.forEach(spell => {
+    if (typeof spell === 'string') {
+      // По умолчанию считаем строковые заклинания заговорами
+      const level = 0;
+      grouped[level] = [...(grouped[level] || []), { name: spell, level: 0 }];
+    } else {
+      const level = spell.level || 0;
+      grouped[level] = [...(grouped[level] || []), spell];
+    }
+  });
+  
+  return grouped;
+};
+
+// Получение подготовленных заклинаний
+export const getPreparedSpells = (spells: any[]): any[] => {
+  if (!Array.isArray(spells)) return [];
+  
+  return spells.filter(spell => {
+    if (typeof spell === 'string') return true;
+    return spell.prepared === true;
+  });
+};
+
+// Конвертация заклинаний персонажа в формат SpellData
+export const convertCharacterSpellsToSpellData = (spells: any[]): SpellData[] => {
+  if (!Array.isArray(spells)) return [];
+  
+  return spells.map(spell => {
+    if (typeof spell === 'string') {
+      return {
+        id: `spell-${spell.toLowerCase().replace(/\s+/g, '-')}`,
+        name: spell,
+        level: 0,
+        school: 'Универсальная',
+        castingTime: '1 действие',
+        range: 'На себя',
+        components: '',
+        duration: 'Мгновенная',
+        description: '',
+        classes: [],
+        ritual: false,
+        concentration: false,
+        verbal: true,
+        somatic: true,
+        material: false,
+        materials: '',
+        source: 'PHB'
+      };
+    }
+    
+    // Если это уже SpellData или CharacterSpell
+    return {
+      id: spell.id || `spell-${spell.name.toLowerCase().replace(/\s+/g, '-')}`,
+      name: spell.name,
+      level: spell.level || 0,
+      school: spell.school || 'Универсальная',
+      castingTime: spell.castingTime || '1 действие',
+      range: spell.range || 'На себя',
+      components: spell.components || '',
+      duration: spell.duration || 'Мгновенная',
+      description: spell.description || '',
+      classes: spell.classes || [],
+      ritual: !!spell.ritual,
+      concentration: !!spell.concentration,
+      verbal: !!spell.verbal,
+      somatic: !!spell.somatic,
+      material: !!spell.material,
+      materials: spell.materials || '',
+      source: spell.source || 'PHB',
+      prepared: !!spell.prepared
+    };
+  });
+};

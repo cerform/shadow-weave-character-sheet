@@ -1,159 +1,122 @@
 
-import React, { useState } from 'react';
+import React from 'react';
+import { Character } from '@/types/character';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Character } from '@/types/character';
-import { Badge } from '@/components/ui/badge';
 
 interface SpellSlotsPanelProps {
   character: Character;
   onUpdate: (updates: Partial<Character>) => void;
 }
 
-export const SpellSlotsPanel: React.FC<SpellSlotsPanelProps> = ({ character, onUpdate }) => {
-  const [restType, setRestType] = useState<'short' | 'long'>('long');
-  
+export const SpellSlotsPanel: React.FC<SpellSlotsPanelProps> = ({ 
+  character, 
+  onUpdate 
+}) => {
   // Обработчик использования ячейки заклинания
-  const handleUseSpellSlot = (level: string) => {
-    if (!character.spellSlots) return;
+  const useSpellSlot = (level: number) => {
+    if (!character.spellSlots || !character.spellSlots[level]) return;
     
-    const spellSlot = character.spellSlots[level];
-    if (!spellSlot || spellSlot.used >= spellSlot.max) return;
+    const slotInfo = character.spellSlots[level];
+    if (slotInfo.used >= slotInfo.max) return;
     
-    const updatedSpellSlots = {
-      ...character.spellSlots,
-      [level]: {
-        ...spellSlot,
-        used: spellSlot.used + 1,
-        current: spellSlot.max - (spellSlot.used + 1)
-      }
+    const updatedSpellSlots = { ...character.spellSlots };
+    updatedSpellSlots[level] = {
+      ...slotInfo,
+      used: slotInfo.used + 1
     };
     
-    onUpdate({ spellSlots: updatedSpellSlots });
-  };
-  
-  // Обработчик восстановления ячейки заклинания
-  const handleRestoreSpellSlot = (level: string) => {
-    if (!character.spellSlots) return;
-    
-    const spellSlot = character.spellSlots[level];
-    if (!spellSlot || spellSlot.used <= 0) return;
-    
-    const updatedSpellSlots = {
-      ...character.spellSlots,
-      [level]: {
-        ...spellSlot,
-        used: spellSlot.used - 1,
-        current: spellSlot.max - (spellSlot.used - 1)
-      }
-    };
-    
-    onUpdate({ spellSlots: updatedSpellSlots });
-  };
-  
-  // Обработчик восстановления всех ячеек заклинания
-  const handleRestoreAllSpellSlots = () => {
-    if (!character.spellSlots) return;
-    
-    const updatedSpellSlots: Record<string, { max: number; used: number; current: number }> = {};
-    
-    // При коротком отдыхе восстанавливаем только определенные уровни
-    if (restType === 'short') {
-      // Восстанавливаем только ячейки, которые восстанавливаются при коротком отдыхе
-      Object.keys(character.spellSlots).forEach(level => {
-        // Для примера, допустим, что только колдун восстанавливает ячейки при коротком отдыхе
-        if (character.class && character.class.toLowerCase() === 'колдун') {
-          updatedSpellSlots[level] = {
-            ...character.spellSlots![level],
-            used: 0,
-            current: character.spellSlots![level].max
-          };
-        } else {
-          updatedSpellSlots[level] = character.spellSlots![level];
-        }
-      });
-    } else {
-      // При длинном отдыхе восстанавливаем все
-      Object.keys(character.spellSlots).forEach(level => {
-        updatedSpellSlots[level] = {
-          ...character.spellSlots![level],
-          used: 0,
-          current: character.spellSlots![level].max
-        };
-      });
+    // Если есть свойство current, обновляем его
+    if ('current' in slotInfo) {
+      updatedSpellSlots[level] = {
+        ...updatedSpellSlots[level],
+        current: Math.max(0, (slotInfo.current || slotInfo.max) - 1)
+      };
     }
     
     onUpdate({ spellSlots: updatedSpellSlots });
   };
   
-  // Если у персонажа нет ячеек заклинаний, не показываем панель
-  if (!character.spellSlots || Object.keys(character.spellSlots).length === 0) {
+  // Обработчик восстановления ячейки заклинания
+  const restoreSpellSlot = (level: number) => {
+    if (!character.spellSlots || !character.spellSlots[level]) return;
+    
+    const slotInfo = character.spellSlots[level];
+    if (slotInfo.used <= 0) return;
+    
+    const updatedSpellSlots = { ...character.spellSlots };
+    updatedSpellSlots[level] = {
+      ...slotInfo,
+      used: slotInfo.used - 1
+    };
+    
+    // Если есть свойство current, обновляем его
+    if ('current' in slotInfo) {
+      updatedSpellSlots[level] = {
+        ...updatedSpellSlots[level],
+        current: Math.min(slotInfo.max, (slotInfo.current || 0) + 1)
+      };
+    }
+    
+    onUpdate({ spellSlots: updatedSpellSlots });
+  };
+  
+  if (!character.spellSlots) {
     return null;
   }
   
+  // Отображаем ячейки заклинаний по уровням
   return (
     <Card>
       <CardHeader className="pb-2">
-        <CardTitle className="text-lg flex justify-between items-center">
-          <span>Ячейки заклинаний</span>
-          <div className="flex gap-2">
-            <Button 
-              size="sm" 
-              variant={restType === 'short' ? 'default' : 'outline'}
-              onClick={() => setRestType('short')}
-            >
-              КО
-            </Button>
-            <Button 
-              size="sm" 
-              variant={restType === 'long' ? 'default' : 'outline'}
-              onClick={() => setRestType('long')}
-            >
-              ДО
-            </Button>
-          </div>
-        </CardTitle>
+        <CardTitle className="text-sm">Ячейки заклинаний</CardTitle>
       </CardHeader>
-      <CardContent>
-        <div className="grid grid-cols-3 gap-2">
-          {Object.entries(character.spellSlots).map(([level, slots]) => {
-            // Safe access to current, defaulting to max - used
-            const currentSlots = slots.current !== undefined ? slots.current : (slots.max - slots.used);
-            
-            return (
-              <div key={level} className="flex flex-col items-center border rounded p-2">
-                <span className="text-sm">{level} уровень</span>
-                <div className="flex items-center gap-1 mt-1">
-                  <Button 
-                    size="sm" 
-                    variant="outline"
-                    onClick={() => handleRestoreSpellSlot(level)}
-                    disabled={slots.used <= 0}
-                  >
-                    +
-                  </Button>
-                  <Badge className="mx-1 py-1 px-3">
-                    {currentSlots}/{slots.max}
-                  </Badge>
-                  <Button 
-                    size="sm" 
-                    variant="outline"
-                    onClick={() => handleUseSpellSlot(level)}
-                    disabled={slots.used >= slots.max}
-                  >
-                    -
-                  </Button>
+      <CardContent className="p-3">
+        <div className="space-y-2">
+          {Object.entries(character.spellSlots)
+            .map(([level, slotInfo]) => {
+              // Пропускаем уровень 0 (заговоры)
+              if (level === '0') return null;
+              
+              const usedSlots = slotInfo.used;
+              const maxSlots = slotInfo.max;
+              
+              // Отображаем и current, если он есть, иначе вычисляем из max и used
+              const availableSlots = 'current' in slotInfo 
+                ? slotInfo.current || maxSlots - usedSlots 
+                : maxSlots - usedSlots;
+              
+              return (
+                <div key={level} className="flex justify-between items-center">
+                  <span>{level}-й уровень:</span>
+                  <div className="flex items-center space-x-1">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="h-7 w-7 p-0"
+                      onClick={() => useSpellSlot(Number(level))}
+                      disabled={availableSlots <= 0}
+                    >
+                      -
+                    </Button>
+                    <span className="mx-2 font-bold min-w-[50px] text-center">
+                      {availableSlots}/{maxSlots}
+                    </span>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="h-7 w-7 p-0"
+                      onClick={() => restoreSpellSlot(Number(level))}
+                      disabled={usedSlots <= 0}
+                    >
+                      +
+                    </Button>
+                  </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })
+            .filter(Boolean)}
         </div>
-        <Button 
-          className="w-full mt-3" 
-          onClick={handleRestoreAllSpellSlots}
-        >
-          Восстановить после {restType === 'short' ? 'короткого' : 'длинного'} отдыха
-        </Button>
       </CardContent>
     </Card>
   );

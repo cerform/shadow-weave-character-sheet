@@ -43,14 +43,27 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
     if (!spellbook.availableSpells || !character.class) return;
 
     // Сначала фильтруем по классу и уровню
-    const classSpells = filterSpellsByClassAndLevel(spellbook.availableSpells, character.class, character.level || 1);
+    const classSpells = filterSpellsByClassAndLevel(
+      spellbook.availableSpells, 
+      character.class, 
+      character.level || 1
+    );
 
     // Затем фильтруем по поиску, если есть
     const searchFiltered = searchTerm
-      ? classSpells.filter(spell => 
-          spell.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          spell.school.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          (typeof spell.description === 'string' && spell.description.toLowerCase().includes(searchTerm.toLowerCase())))
+      ? classSpells.filter(spell => {
+          const spellName = spell.name?.toLowerCase() || '';
+          const spellSchool = spell.school?.toLowerCase() || '';
+          const spellDesc = typeof spell.description === 'string' 
+            ? spell.description.toLowerCase() 
+            : '';
+          
+          const searchTermLower = searchTerm.toLowerCase();
+          
+          return spellName.includes(searchTermLower) || 
+                 spellSchool.includes(searchTermLower) || 
+                 spellDesc.includes(searchTermLower);
+        })
       : classSpells;
 
     setFilteredSpells(searchFiltered);

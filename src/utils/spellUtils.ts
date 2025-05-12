@@ -1,4 +1,3 @@
-
 import { Character } from '@/types/character';
 import { SpellData } from '@/types/spells';
 import { 
@@ -6,7 +5,6 @@ import {
   getPreparedSpellsLimit,
   normalizeSpells,
   convertToSpellData,
-  convertCharacterSpellsToSpellData,
   getSpellLevelName,
   groupSpellsByLevel,
   getPreparedSpells,
@@ -19,7 +17,6 @@ export {
   getPreparedSpellsLimit,
   normalizeSpells,
   convertToSpellData,
-  convertCharacterSpellsToSpellData,
   getSpellLevelName,
   groupSpellsByLevel,
   getPreparedSpells,
