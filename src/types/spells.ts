@@ -61,3 +61,11 @@ export function convertCharacterSpellToSpellData(spell: CharacterSpell): SpellDa
     prepared: Boolean(spell.prepared)
   };
 }
+
+/**
+ * Создает уникальный ключ для заклинания на основе его имени и уровня
+ */
+export function createSpellKey(spell: SpellData | CharacterSpell): string {
+  return `${spell.name.toLowerCase().trim()}-${spell.level}`;
+}
+

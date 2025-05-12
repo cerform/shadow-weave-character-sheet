@@ -14,9 +14,10 @@ import { level7 } from './level7';
 import { level8 } from './level8';
 import { level9 } from './level9';
 import { allCantrips } from './all_cantrips';
+import { removeDuplicateSpells } from '@/utils/spellProcessors';
 
-// Объединяем все заклинания в единый массив и добавляем уникальные ID
-export const spells: CharacterSpell[] = [
+// Объединяем все заклинания в единый массив и удаляем дубликаты
+const allSpellsWithDuplicates: CharacterSpell[] = [
   ...allCantrips,
   ...cantrips,
   ...level0,
@@ -35,6 +36,9 @@ export const spells: CharacterSpell[] = [
   ...spell,
   id: spell.id || `spell-${index}-${spell.name.toLowerCase().replace(/\s+/g, '-')}`
 }));
+
+// Удаляем дубликаты
+export const spells: CharacterSpell[] = removeDuplicateSpells(allSpellsWithDuplicates);
 
 // Функция для получения заклинаний по классу
 export const getSpellsByClass = (className: string): CharacterSpell[] => {
@@ -132,3 +136,4 @@ export const filterSpells = (options: {
 
 // Инициализируем консольный лог с количеством заклинаний
 console.log(`Загружено заклинаний в базу данных: ${spells.length}`);
+

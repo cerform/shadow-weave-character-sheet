@@ -8,21 +8,34 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { importSpellsFromTextFormat } from '@/utils/updateSpellDatabase';
+import { 
+  importSpellsFromTextFormat, 
+  checkDuplicateSpells,
+  removeDuplicates
+} from '@/utils/updateSpellDatabase';
 import { SpellData } from '@/types/spells';
 import { parseComponents } from '@/utils/spellProcessors';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { AlertTriangle } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { AlertTriangle, Check, Trash } from 'lucide-react';
 
 const SpellDatabaseManager: React.FC = () => {
   const [rawData, setRawData] = useState('');
   const [processedSpells, setProcessedSpells] = useState<SpellData[]>([]);
   const [allSpells, setAllSpells] = useState<SpellData[]>([]);
-  const [duplicatesFound, setDuplicatesFound] = useState(0);
+  const [duplicatesInfo, setDuplicatesInfo] = useState<{ 
+    hasDuplicates: boolean; 
+    count: number;
+    duplicates: Array<{name: string, level: number, count: number}>
+  }>({ hasDuplicates: false, count: 0, duplicates: [] });
+  
   const { toast } = useToast();
 
   useEffect(() => {
     setAllSpells(spells); // Use the imported spells array directly
+    
+    // Проверяем наличие дубликатов при загрузке
+    const dupes = checkDuplicateSpells(spells);
+    setDuplicatesInfo(dupes);
   }, []);
   
   const handleImport = () => {
@@ -53,11 +66,14 @@ const SpellDatabaseManager: React.FC = () => {
       const newSpells = updated.slice(beforeCount);
       
       // Подсчитываем дубликаты
-      const duplicates = inputSpellsCount - newSpells.length;
-      setDuplicatesFound(duplicates > 0 ? duplicates : 0);
+      const duplicates = inputSpellsCount - (afterCount - beforeCount);
       
       setProcessedSpells(newSpells);
       setAllSpells(updated);
+      
+      // Проверяем наличие дубликатов
+      const dupes = checkDuplicateSpells(updated);
+      setDuplicatesInfo(dupes);
       
       toast({
         title: "Импорт успешен",
@@ -70,6 +86,23 @@ const SpellDatabaseManager: React.FC = () => {
         variant: "destructive"
       });
     }
+  };
+
+  const handleRemoveDuplicates = () => {
+    const deduplicatedSpells = removeDuplicates(allSpells);
+    const removedCount = allSpells.length - deduplicatedSpells.length;
+    
+    setAllSpells(deduplicatedSpells);
+    
+    // Обновляем информацию о дубликатах
+    const dupes = checkDuplicateSpells(deduplicatedSpells);
+    setDuplicatesInfo(dupes);
+    
+    toast({
+      title: "Дубликаты удалены",
+      description: `Удалено ${removedCount} дублирующихся заклинаний`,
+      variant: "success"
+    });
   };
 
   const getSpellsByLevel = (level: number): SpellData[] => {
@@ -86,39 +119,6 @@ const SpellDatabaseManager: React.FC = () => {
     
     return Math.round((withComponents.length / spells.length) * 100);
   };
-  
-  // Функция проверки дубликатов
-  const checkDuplicates = (): { hasDuplicates: boolean, duplicateCount: number, duplicates: string[] } => {
-    const spellMap = new Map<string, SpellData[]>();
-    
-    // Группируем заклинания по имени и уровню
-    allSpells.forEach(spell => {
-      const key = `${spell.name.toLowerCase()}-${spell.level}`;
-      if (!spellMap.has(key)) {
-        spellMap.set(key, []);
-      }
-      spellMap.get(key)!.push(spell);
-    });
-    
-    // Находим дубликаты
-    const duplicates: string[] = [];
-    let duplicateCount = 0;
-    
-    spellMap.forEach((spells, key) => {
-      if (spells.length > 1) {
-        duplicateCount += spells.length - 1;
-        duplicates.push(`${spells[0].name} (уровень ${spells[0].level})`);
-      }
-    });
-    
-    return {
-      hasDuplicates: duplicateCount > 0,
-      duplicateCount,
-      duplicates
-    };
-  };
-  
-  const duplicateCheck = checkDuplicates();
 
   return (
     <div className="p-4 space-y-6">
@@ -128,6 +128,7 @@ const SpellDatabaseManager: React.FC = () => {
         <TabsList>
           <TabsTrigger value="import">Импорт заклинаний</TabsTrigger>
           <TabsTrigger value="stats">Статистика</TabsTrigger>
+          <TabsTrigger value="duplicates">Дубликаты</TabsTrigger>
         </TabsList>
         
         <TabsContent value="import" className="space-y-4 pt-4">
@@ -145,12 +146,12 @@ const SpellDatabaseManager: React.FC = () => {
             <Button onClick={handleImport}>Обработать</Button>
           </div>
           
-          {duplicateCheck.hasDuplicates && (
+          {duplicatesInfo.hasDuplicates && (
             <Alert variant="warning" className="bg-yellow-50 border-yellow-300">
               <AlertTriangle className="h-4 w-4 text-yellow-600" />
               <AlertDescription className="text-yellow-800">
-                Обнаружено {duplicateCheck.duplicateCount} дублирующихся заклинаний в базе. 
-                Рекомендуется удалить дубликаты для корректной работы.
+                Обнаружено {duplicatesInfo.count} дублирующихся заклинаний в базе. 
+                Перейдите на вкладку "Дубликаты" для очистки.
               </AlertDescription>
             </Alert>
           )}
@@ -184,12 +185,6 @@ const SpellDatabaseManager: React.FC = () => {
                   </tbody>
                 </table>
               </div>
-              
-              {duplicatesFound > 0 && (
-                <div className="bg-yellow-50 border border-yellow-300 rounded p-2 text-sm text-yellow-800">
-                  Пропущено {duplicatesFound} дубликатов (заклинания с одинаковым названием и уровнем).
-                </div>
-              )}
             </div>
           )}
         </TabsContent>
@@ -248,9 +243,70 @@ const SpellDatabaseManager: React.FC = () => {
             </div>
           </div>
         </TabsContent>
+        
+        <TabsContent value="duplicates" className="space-y-4 pt-4">
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-medium">Проверка дубликатов</h3>
+              {duplicatesInfo.hasDuplicates && (
+                <Button 
+                  variant="destructive" 
+                  size="sm" 
+                  onClick={handleRemoveDuplicates}
+                  className="flex items-center gap-2"
+                >
+                  <Trash className="h-4 w-4" />
+                  <span>Удалить все дубликаты</span>
+                </Button>
+              )}
+            </div>
+            
+            {duplicatesInfo.hasDuplicates ? (
+              <>
+                <Alert variant="warning">
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertTitle>Найдены дубликаты</AlertTitle>
+                  <AlertDescription>
+                    В базе данных заклинаний обнаружено {duplicatesInfo.count} дубликатов. 
+                    Рекомендуется их удалить для повышения производительности и избежания ошибок.
+                  </AlertDescription>
+                </Alert>
+                
+                <div className="border rounded-md p-4 max-h-[400px] overflow-y-auto">
+                  <table className="w-full border-collapse">
+                    <thead>
+                      <tr className="border-b">
+                        <th className="text-left p-2">Уровень</th>
+                        <th className="text-left p-2">Название</th>
+                        <th className="text-left p-2">Количество дубликатов</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {duplicatesInfo.duplicates.map((dupe, index) => (
+                        <tr key={index} className="border-b hover:bg-secondary/20">
+                          <td className="p-2">{dupe.level === 0 ? 'Заговор' : `${dupe.level} уровень`}</td>
+                          <td className="p-2">{dupe.name}</td>
+                          <td className="p-2">{dupe.count} копий</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </>
+            ) : (
+              <Alert variant="success" className="bg-green-50 border-green-300">
+                <Check className="h-4 w-4 text-green-600" />
+                <AlertDescription className="text-green-800">
+                  Дубликатов не обнаружено! База данных заклинаний содержит только уникальные записи.
+                </AlertDescription>
+              </Alert>
+            )}
+          </div>
+        </TabsContent>
       </Tabs>
     </div>
   );
 };
 
 export default SpellDatabaseManager;
+

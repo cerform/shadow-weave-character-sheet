@@ -55,12 +55,16 @@ export function parseComponents(componentString: string): {
   const lowerStr = componentString.toLowerCase();
   
   // Улучшенное распознавание ритуала и концентрации
-  // Ритуал может быть обозначен как "р" или "r"
-  components.ritual = lowerStr.includes('р') || lowerStr.includes('r');
+  components.ritual = lowerStr.includes('р') || 
+                      lowerStr.includes('r') || 
+                      lowerStr.includes('ритуал') ||
+                      componentString.includes('Р');
   
-  // Концентрация может быть обозначена как "к" или "c" или полным словом "концентрация"
-  components.concentration = lowerStr.includes('к') || lowerStr.includes('c') || 
-                            lowerStr.includes('концентрация') || lowerStr.includes('concentration');
+  components.concentration = lowerStr.includes('к') || 
+                            lowerStr.includes('c') || 
+                            lowerStr.includes('концентрация') || 
+                            lowerStr.includes('concentration') ||
+                            componentString.includes('К');
   
   return components;
 }
@@ -118,3 +122,55 @@ export function processSpellDescription(description: string | string[]): string 
   }
   return description;
 }
+
+/**
+ * Создает уникальный ключ для заклинания на основе имени и уровня
+ */
+export function createSpellKey(name: string, level: number): string {
+  return `${name.toLowerCase().trim()}-${level}`;
+}
+
+/**
+ * Проверяет, является ли заклинание дубликатом
+ */
+export function isDuplicateSpell(spell: CharacterSpell, existingSpells: CharacterSpell[]): boolean {
+  const spellKey = createSpellKey(spell.name, spell.level);
+  
+  return existingSpells.some(existingSpell => 
+    createSpellKey(existingSpell.name, existingSpell.level) === spellKey
+  );
+}
+
+/**
+ * Удаляет дубликаты заклинаний из массива
+ */
+export function removeDuplicateSpells(spells: CharacterSpell[]): CharacterSpell[] {
+  const uniqueSpells = new Map<string, CharacterSpell>();
+  
+  spells.forEach(spell => {
+    const key = createSpellKey(spell.name, spell.level);
+    // Если заклинание уже существует, сохраняем то, у которого больше информации
+    if (!uniqueSpells.has(key) || hasMoreInfo(spell, uniqueSpells.get(key)!)) {
+      uniqueSpells.set(key, spell);
+    }
+  });
+  
+  return Array.from(uniqueSpells.values());
+}
+
+/**
+ * Проверяет, содержит ли первое заклинание больше информации, чем второе
+ */
+function hasMoreInfo(spell1: CharacterSpell, spell2: CharacterSpell): boolean {
+  // Подсчитываем количество непустых полей
+  const countDefinedProps = (obj: any) => 
+    Object.keys(obj).filter(key => 
+      obj[key] !== undefined && 
+      obj[key] !== null && 
+      obj[key] !== '' && 
+      !(Array.isArray(obj[key]) && obj[key].length === 0)
+    ).length;
+    
+  return countDefinedProps(spell1) > countDefinedProps(spell2);
+}
+
