@@ -1,32 +1,20 @@
 
 import { CharacterSpell } from '@/types/character';
-import { SpellData } from '@/types/spells';
+import { SpellData, SpellFilters } from '@/types/spells';
 
 // Интерфейс для возвращаемого значения хука useSpellbook
 export interface UseSpellbookReturn {
+  spells: SpellData[];
   filteredSpells: SpellData[];
-  searchTerm: string;
-  setSearchTerm: (term: string) => void;
-  activeLevel: number[];
-  selectedSpell: SpellData | null;
-  isModalOpen: boolean;
-  activeSchool: string[];
-  activeClass: string[];
-  currentTheme: any;
-  allLevels: number[];
-  allSchools: string[];
-  allClasses: string[];
-  handleOpenSpell: (spell: SpellData) => void;
-  handleClose: () => void;
-  toggleLevel: (level: number) => void;
-  toggleSchool: (school: string) => void;
-  toggleClass: (className: string) => void;
-  clearFilters: () => void;
-  getBadgeColor: (level: number) => string;
-  getSchoolBadgeColor: (school: string) => string;
-  formatClasses: (classes: string[] | string | undefined) => string;
-  importSpellsFromText?: (text: string, existingSpells: CharacterSpell[]) => CharacterSpell[];
+  loading: boolean;
+  error: string | null;
+  filters: SpellFilters;
+  updateFilters: (newFilters: Partial<SpellFilters>) => void;
+  resetFilters: () => void;
+  fetchSpells: () => Promise<void>;
+  getSpellById: (id: string | number) => SpellData | undefined;
 }
 
 // Используем правильный синтаксис для экспорта типа
 export type { SpellData };
+export type { SpellFilters };

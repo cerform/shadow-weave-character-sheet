@@ -1,6 +1,8 @@
 
 import { useState, useEffect, useCallback } from 'react';
-import { SpellData, SpellFilters, CharacterSpell, convertCharacterSpellToSpellData } from '@/types/spells';
+import { SpellData } from '@/types/spells';
+import type { SpellFilters, CharacterSpell } from '@/types/spells';
+import { convertCharacterSpellToSpellData } from '@/types/spells';
 import { 
   applyAllFilters, 
   searchSpellsByName, 
@@ -124,5 +126,5 @@ export const useSpellbook = () => {
   };
 };
 
-export { SpellFilters };
+export type SpellbookHook = ReturnType<typeof useSpellbook>;
 export default useSpellbook;
