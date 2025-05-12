@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import { spells } from '@/data/spells'; // Import directly from spells
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
@@ -293,7 +293,7 @@ const SpellDatabaseManager: React.FC = () => {
                 </div>
               </>
             ) : (
-              <Alert>
+              <Alert variant="default" className="bg-green-50 border-green-300">
                 <Check className="h-4 w-4 text-green-600" />
                 <AlertDescription className="text-green-800">
                   Дубликатов не обнаружено! База данных заклинаний содержит только уникальные записи.
