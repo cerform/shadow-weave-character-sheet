@@ -1,7 +1,6 @@
 
 import { useState, useEffect, useCallback } from 'react';
-import { SpellData } from '@/types/spells';
-import type { SpellFilters, CharacterSpell } from '@/types/spells';
+import { SpellData, SpellFilters } from '@/types/spells';
 import { convertCharacterSpellToSpellData } from '@/types/spells';
 import { 
   applyAllFilters, 

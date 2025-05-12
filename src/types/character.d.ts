@@ -17,6 +17,19 @@ export interface HitPointEvent {
   amount?: number;
 }
 
+export interface SpellSlot {
+  max: number;
+  used: number;
+  current?: number;
+}
+
+export interface Resource {
+  max: number;
+  used: number;
+  recoveryType?: 'short-rest' | 'long-rest' | 'short' | 'long';
+  name?: string;
+}
+
 export interface Character {
   id?: string;
   name: string;
@@ -73,7 +86,11 @@ export interface Character {
   maxHp?: number;      // For compatibility
   tempHp?: number;     // For compatibility
   temporaryHp?: number; // For compatibility
-  hitPoints?: number;   // For compatibility
+  hitPoints?: {
+    current: number;
+    maximum: number;
+    temporary?: number;
+  };
   spellcasting: any | null;
   spells: any[];
   features: any[];
@@ -95,7 +112,12 @@ export interface Character {
     wisdom: boolean;
     charisma: boolean;
   };
-  skills: Record<string, boolean>;
+  skills: Record<string, boolean | {
+    proficient?: boolean;
+    expertise?: boolean;
+    bonus?: number;
+    value?: number;
+  }>;
   personalityTraits: string;
   ideals: string;
   bonds: string;
@@ -115,6 +137,13 @@ export interface Character {
   abilityPointsUsed?: number;
   lastDiceRoll?: any;
   notes?: string;
+  resources?: Record<string, Resource>;
+  spellSlots?: Record<number, SpellSlot>;
+  sorceryPoints?: {
+    current: number;
+    max: number;
+  };
+  expertise?: string[];
 }
 
 export interface CharacterSpell {
