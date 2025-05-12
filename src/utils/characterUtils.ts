@@ -112,6 +112,25 @@ export const createDefaultCharacter = (): Character => {
     resources: {},
     spellSlots: {},
     expertise: [],
+    raceFeatures: [],
+    classFeatures: [],
+    backgroundFeatures: [],
+    feats: [],
+    money: {
+      cp: 0,
+      sp: 0,
+      ep: 0,
+      gp: 0,
+      pp: 0
+    },
+    currency: {
+      cp: 0,
+      sp: 0,
+      ep: 0,
+      gp: 0,
+      pp: 0
+    },
+    appearance: '',
     sorceryPoints: {
       current: 0,
       max: 0
@@ -139,10 +158,10 @@ export const getNumericModifier = (abilityScore: number): number => {
 /**
  * Обновляет бонус мастерства в зависимости от уровня персонажа
  */
-export const updateCharacterProficiencyBonus = (character: Character): number => {
+export const updateCharacterProficiencyBonus = (character: Character): Partial<Character> => {
   const level = character.level || 1;
   const proficiencyBonus = 1 + Math.ceil(level / 4);
-  return proficiencyBonus;
+  return { proficiencyBonus };
 };
 
 /**
@@ -166,5 +185,8 @@ export const getAbilityNameFull = (shortName: string): string => {
 
   return abilityNames[shortName] || shortName;
 };
+
+// Adding helper functions for character creation
+export const getModifierFromAbilityScore = calculateModifier;
 
 import { Character } from '@/types/character';

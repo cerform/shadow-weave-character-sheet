@@ -1,10 +1,9 @@
 
-
 import { CharacterSpell } from '@/types/character';
 import { SpellData } from '@/types/spells';
 
 // Normalize spell array that might contain strings or spell objects
-export const normalizeSpells = (spells: any[]): CharacterSpell[] => {
+export const normalizeSpells = (spells: Array<string | CharacterSpell>): CharacterSpell[] => {
   if (!spells || !Array.isArray(spells)) return [];
   
   return spells.map(spell => {
@@ -25,7 +24,7 @@ export const isCharacterSpellObject = (spell: any): spell is CharacterSpell => {
 };
 
 // Get the level of a spell (handles both string and object formats)
-export const getSpellLevel = (spell: any): number => {
+export const getSpellLevel = (spell: string | CharacterSpell): number => {
   if (isCharacterSpellObject(spell)) {
     return spell.level || 0;
   }
@@ -33,7 +32,7 @@ export const getSpellLevel = (spell: any): number => {
 };
 
 // Check if a spell is prepared
-export const isSpellPrepared = (spell: any): boolean => {
+export const isSpellPrepared = (spell: string | CharacterSpell): boolean => {
   if (isCharacterSpellObject(spell)) {
     return !!spell.prepared;
   }
@@ -109,4 +108,3 @@ export const convertToSpellData = (spell: CharacterSpell | string): SpellData =>
     prepared: !!spell.prepared
   };
 };
-

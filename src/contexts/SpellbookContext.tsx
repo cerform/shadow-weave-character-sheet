@@ -4,7 +4,7 @@ import { CharacterSpell } from '@/types/character';
 import { useCharacter } from './CharacterContext';
 import { useToast } from '@/hooks/use-toast';
 import { getAllSpells } from '@/data/spells';
-import { calculateAvailableSpellsByClassAndLevel, getMaxSpellLevel } from '@/utils/spellUtils';
+import { calculateAvailableSpellsByClassAndLevel } from '@/utils/spellUtils';
 
 // Define type for spell filters
 interface SpellFilters {
@@ -68,9 +68,8 @@ export const SpellbookProvider: React.FC<{ children: ReactNode }> = ({ children 
       
       // Получаем максимальный уровень заклинаний
       const { maxSpellLevel } = calculateAvailableSpellsByClassAndLevel(
-        characterClass, 
-        level || 1,
-        getModifierForClass(character)
+        character.class, 
+        level || 1
       );
       
       console.log("Max spell level calculated:", maxSpellLevel);
@@ -250,7 +249,7 @@ export const SpellbookProvider: React.FC<{ children: ReactNode }> = ({ children 
           prepared: true // По умолчанию заклинания подготовлены
         };
         
-        // Добавляем заклинание к списку заклинаний персонажа
+        // Добавляем заклинание к с��иску заклинаний персонажа
         const updatedSpells = Array.isArray(character.spells) ? [...character.spells, characterSpell] : [characterSpell];
         updateCharacter({ spells: updatedSpells });
         
@@ -322,13 +321,10 @@ export const SpellbookProvider: React.FC<{ children: ReactNode }> = ({ children 
   const getSpellLimits = () => {
     if (!character || !character.class) return { cantrips: 0, spells: 0 };
     
-    const { cantripsCount, knownSpells } = calculateAvailableSpellsByClassAndLevel(
-      character.class, 
-      character.level || 1,
-      getModifierForClass(character)
-    );
+    const spellLimits = calculateAvailableSpellsByClassAndLevel(character.class, character.level);
+    const cantripsKnown = spellLimits.cantripsKnown;
     
-    return { cantrips: cantripsCount, spells: knownSpells };
+    return { cantrips: cantripsKnown, spells: spellLimits.knownSpells };
   };
   
   // Получение текущего количества выбранных заклинаний по типам

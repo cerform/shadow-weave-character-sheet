@@ -56,7 +56,14 @@ const AbilitiesTab: React.FC<AbilitiesTabProps> = ({ character, onUpdate }) => {
   });
   
   // Инициализация профессий спасбросков
-  const [savingThrows, setSavingThrows] = useState<Record<string, boolean>>({
+  const [savingThrows, setSavingThrows] = useState<{
+    strength: boolean;
+    dexterity: boolean;
+    constitution: boolean;
+    intelligence: boolean;
+    wisdom: boolean;
+    charisma: boolean;
+  }>({
     strength: character.savingThrows?.strength || false,
     dexterity: character.savingThrows?.dexterity || false,
     constitution: character.savingThrows?.constitution || false,
@@ -83,7 +90,7 @@ const AbilitiesTab: React.FC<AbilitiesTabProps> = ({ character, onUpdate }) => {
         if (typeof value === 'boolean') {
           initialSkills[key] = value;
         } else if (value && typeof value === 'object' && 'proficient' in value) {
-          initialSkills[key] = value.proficient;
+          initialSkills[key] = Boolean(value.proficient);
         }
       });
     }
@@ -154,13 +161,13 @@ const AbilitiesTab: React.FC<AbilitiesTabProps> = ({ character, onUpdate }) => {
     };
     
     // Обновляем бонус мастерства, основываясь на уровне
-    const withUpdatedProfBonus = updateCharacterProficiencyBonus(
-      { ...character, ...updatedCharacter },
-      character.level || 1
-    );
+    const profBonus = updateCharacterProficiencyBonus({
+      ...character,
+      ...updatedCharacter
+    });
     
     // Сохраняем обновления
-    onUpdate(withUpdatedProfBonus);
+    onUpdate({...updatedCharacter, ...profBonus});
   }, [abilities, savingThrows, skills]);
   
   // Handler for ability score changes
@@ -172,7 +179,7 @@ const AbilitiesTab: React.FC<AbilitiesTabProps> = ({ character, onUpdate }) => {
 
   // Handler for saving throw proficiency changes
   const handleSavingThrowChange = (ability: string, checked: boolean) => {
-    setSavingThrows(prev => ({ ...prev, [ability]: checked }));
+    setSavingThrows(prev => ({ ...prev, [ability]: checked } as typeof savingThrows));
   };
 
   // Handler for skill proficiency changes
@@ -184,7 +191,7 @@ const AbilitiesTab: React.FC<AbilitiesTabProps> = ({ character, onUpdate }) => {
   const getSavingThrowBonus = (ability: keyof typeof abilities) => {
     const abilityMod = calculateModifier(abilities[ability]);
     const profBonus = character.proficiencyBonus || 2;
-    const isProficient = savingThrows[ability];
+    const isProficient = savingThrows[ability as keyof typeof savingThrows];
     
     return abilityMod + (isProficient ? profBonus : 0);
   };

@@ -1,8 +1,8 @@
 
 // Re-export all the types from character.d.ts
-import { Character, CharacterSpell, ABILITY_SCORE_CAPS, HitPointEvent } from './character.d';
+import { Character, CharacterSpell, ABILITY_SCORE_CAPS, HitPointEvent, LevelFeature } from './character.d';
 
-export type { Character, CharacterSpell, HitPointEvent };
+export type { Character, CharacterSpell, HitPointEvent, LevelFeature };
 export { ABILITY_SCORE_CAPS };
 
 // Adding this to the character.ts file if it doesn't already have these definitions

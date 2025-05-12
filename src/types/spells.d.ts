@@ -102,6 +102,9 @@ export function convertSpellDataToCharacterSpell(spell: SpellData): CharacterSpe
     material: spell.material,
     materials: spell.materials,
     prepared: spell.prepared || false,
-    source: spell.source
+    source: spell.source,
+    higherLevel: spell.higherLevel,
+    higherLevels: spell.higherLevels,
+    higher_level: spell.higher_level
   };
 }

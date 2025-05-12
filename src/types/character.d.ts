@@ -137,13 +137,34 @@ export interface Character {
   abilityPointsUsed?: number;
   lastDiceRoll?: any;
   notes?: string;
+  // Adding missing properties identified in the errors
   resources?: Record<string, Resource>;
-  spellSlots?: Record<number, SpellSlot>;
+  spellSlots?: Record<string | number, SpellSlot>;
   sorceryPoints?: {
     current: number;
     max: number;
   };
   expertise?: string[];
+  raceFeatures?: Array<{name: string, description: string, level?: number}>;
+  classFeatures?: Array<{name: string, description: string, level?: number}>;
+  backgroundFeatures?: Array<{name: string, description: string, level?: number}>;
+  feats?: Array<{name: string, description: string, level?: number}>;
+  skillBonuses?: Record<string, number>;
+  appearance?: string;
+  money?: {
+    cp?: number;
+    sp?: number;
+    ep?: number;
+    gp?: number;
+    pp?: number;
+  };
+  currency?: {
+    cp: number;
+    sp: number;
+    ep: number;
+    gp: number;
+    pp: number;
+  };
 }
 
 export interface CharacterSpell {
@@ -165,6 +186,9 @@ export interface CharacterSpell {
   materials?: string;
   prepared?: boolean;
   source?: string;
+  higher_level?: string;
+  higherLevel?: string;
+  higherLevels?: string;
 }
 
 export interface LevelFeature {
