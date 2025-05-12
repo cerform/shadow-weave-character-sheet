@@ -1,8 +1,6 @@
-
 import { useState, useEffect } from "react";
 import { Character } from "@/types/character";
 import { toast } from 'sonner';
-import { getModifierFromAbilityScore } from "@/utils/characterUtils";
 import { getCurrentUid } from "@/utils/authHelpers";
 import { saveCharacterToFirestore } from "@/services/characterService";
 
@@ -51,20 +49,52 @@ export const useCharacterCreation = () => {
       wisdom: 10,
       charisma: 10
     },
-    // Initialize with empty objects instead of arrays
+    // Initialize with proper empty objects instead of empty arrays
     skills: {},
     savingThrows: {},
-    proficiencies: [],
-    languages: [],
+    proficiencies: {
+      languages: [],
+      tools: [],
+      weapons: [],
+      armor: [],
+      skills: []
+    },
     equipment: [],
     spells: [],
     features: [],
+    money: {
+      cp: 0,
+      sp: 0,
+      ep: 0,
+      gp: 0,
+      pp: 0
+    },
+    currency: {
+      cp: 0,
+      sp: 0,
+      ep: 0,
+      gp: 0,
+      pp: 0
+    },
     personalityTraits: "",
     ideals: "",
     bonds: "",
     flaws: "",
     appearance: "",
-    backstory: ""
+    backstory: "",
+    armorClass: 10,
+    proficiencyBonus: 2,
+    speed: 30,
+    deathSaves: {
+      successes: 0,
+      failures: 0
+    },
+    hitDice: {
+      total: 1,
+      used: 0,
+      dieType: "d8",
+      value: "1d8"
+    }
   };
 
   const [character, setCharacter] = useState<Character>(defaultCharacter);

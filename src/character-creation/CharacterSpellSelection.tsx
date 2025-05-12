@@ -100,7 +100,7 @@ const filterSpellsByClassAndLevel = (
   const getMaxSpellLevel = (characterClass: string, characterLevel: number): number => {
     if (!characterClass) return 0;
     
-    // Убедимся, что characterClass - это строка и используем безопасный вызов toLowerCase()
+    // Убедимся, что characterClass - это строка
     const classLower = typeof characterClass === 'string' ? characterClass.toLowerCase() : '';
     
     if (['волшебник', 'маг', 'wizard', 'жрец', 'cleric', 'бард', 'bard', 'друид', 'druid'].includes(classLower)) {
@@ -115,7 +115,8 @@ const filterSpellsByClassAndLevel = (
   };
   
   const maxSpellLevel = getMaxSpellLevel(characterClass, characterLevel);
-  // Убедимся, что characterClass - это строка и используем безопасный вызов toLowerCase()
+  
+  // Убедимся, что characterClass - это строка
   const classLower = typeof characterClass === 'string' ? characterClass.toLowerCase() : '';
   
   return spells.filter(spell => {

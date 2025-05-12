@@ -23,7 +23,12 @@ const CharacterBackgroundSelection: React.FC<CharacterBackgroundSelectionProps> 
     setBackgrounds(getAllBackgrounds());
   }, []);
 
-  // При обработке профессий, создаем правильную структуру объекта
+  // Safely get array values with defaults if missing or wrong type
+  const getArraySafely = <T,>(value: any, defaultValue: T[] = []): T[] => {
+    if (Array.isArray(value)) return value as T[];
+    return defaultValue;
+  };
+
   const handleBackgroundSelection = (backgroundName: string) => {
     const selectedBackground = backgrounds.find(bg => bg.name === backgroundName);
     if (!selectedBackground) return;
@@ -39,9 +44,16 @@ const CharacterBackgroundSelection: React.FC<CharacterBackgroundSelectionProps> 
     
     // Safe access to background properties
     const backgroundProficiencies = selectedBackground.proficiencies || {};
-    const weaponProfs = Array.isArray(backgroundProficiencies.weapons) ? backgroundProficiencies.weapons : [];
-    const toolProfs = Array.isArray(backgroundProficiencies.tools) ? backgroundProficiencies.tools : [];
-    const languageProfs = Array.isArray(backgroundProficiencies.languages) ? backgroundProficiencies.languages : [];
+    
+    // Get proficiencies safely
+    const weaponProfs = backgroundProficiencies.weapons ? 
+      getArraySafely<string>(backgroundProficiencies.weapons) : [];
+      
+    const toolProfs = backgroundProficiencies.tools ? 
+      getArraySafely<string>(backgroundProficiencies.tools) : [];
+      
+    const languageProfs = backgroundProficiencies.languages ? 
+      getArraySafely<string>(backgroundProficiencies.languages) : [];
     
     updateCharacter({
       background: backgroundName,

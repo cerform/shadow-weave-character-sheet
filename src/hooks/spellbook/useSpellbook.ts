@@ -1,6 +1,8 @@
-
 import { useState, useCallback, useEffect } from 'react';
 import { SpellData, CharacterSpell, SpellFilters } from '@/types/spells';
+import { useTheme } from '@/hooks/use-theme';
+import { themes } from '@/lib/themes';
+import { searchSpellsByName, filterSpellsByLevel, filterSpellsBySchool, filterSpellsByClass, filterSpellsByRitual, filterSpellsByConcentration } from './filterUtils';
 
 export interface SpellbookHook {
   spells: SpellData[];
@@ -218,3 +220,33 @@ const useSpellbook = (): SpellbookHook => {
 };
 
 export default useSpellbook;
+
+// Make sure any spell objects are created with all required properties
+const createSpell = (spell: Partial<SpellData>): SpellData => {
+  return {
+    id: spell.id || `spell-${Math.random().toString(36).substring(2, 11)}`,
+    name: spell.name || 'Unknown Spell',
+    level: spell.level || 0,
+    school: spell.school || 'Universal',
+    castingTime: spell.castingTime || '1 action',
+    range: spell.range || 'Self',
+    components: spell.components || 'V, S',
+    duration: spell.duration || 'Instantaneous',
+    description: spell.description || '',
+    classes: spell.classes || [],
+    ritual: spell.ritual || false,
+    concentration: spell.concentration || false,
+    verbal: spell.verbal || false,
+    somatic: spell.somatic || false,
+    material: spell.material || false,
+    source: spell.source || "Player's Handbook"
+  };
+};
+
+// Safely handle toString for non-string values
+const safeToString = (value: any): string => {
+  if (value === null || value === undefined) return '';
+  if (typeof value === 'string') return value;
+  if (typeof value.toString === 'function') return value.toString();
+  return '';
+};

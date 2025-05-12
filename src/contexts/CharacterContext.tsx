@@ -34,6 +34,62 @@ const CharacterContext = createContext<CharacterContextType>({
   refreshCharacters: async () => {},
 });
 
+// Add safe date handling for the character timestamps
+const formatDate = (timestamp: any): string => {
+  if (!timestamp) return '';
+  
+  try {
+    // If it's a Firebase Timestamp
+    if (timestamp && typeof timestamp.toDate === 'function') {
+      return timestamp.toDate().toLocaleDateString();
+    }
+    
+    // If it's a Date object
+    if (timestamp instanceof Date) {
+      return timestamp.toLocaleDateString();
+    }
+    
+    // If it's a string that can be parsed
+    if (typeof timestamp === 'string') {
+      return new Date(timestamp).toLocaleDateString();
+    }
+    
+    // If it's a number (unix timestamp)
+    if (typeof timestamp === 'number') {
+      return new Date(timestamp).toLocaleDateString();
+    }
+  } catch (error) {
+    console.error("Error formatting date:", error);
+  }
+  
+  return '';
+};
+
+// When handling character data with timestamps
+const sortCharacters = (characters: any[]) => {
+  return [...characters].sort((a, b) => {
+    // Use optional chaining and nullish coalescing for safety
+    const aUpdated = a?.updatedAt ?? '';
+    const bUpdated = b?.updatedAt ?? '';
+    
+    // If both have updatedAt, compare them
+    if (aUpdated && bUpdated) {
+      return new Date(bUpdated).getTime() - new Date(aUpdated).getTime();
+    }
+    
+    // Fall back to createdAt if available
+    const aCreated = a?.createdAt ?? '';
+    const bCreated = b?.createdAt ?? '';
+    
+    if (aCreated && bCreated) {
+      return new Date(bCreated).getTime() - new Date(aCreated).getTime();
+    }
+    
+    // Default sorting by name if no timestamps
+    return (a?.name ?? '').localeCompare(b?.name ?? '');
+  });
+};
+
 // Исправляем определение провайдера для корректной работы Fast Refresh
 export const CharacterProvider: React.FC<{children: React.ReactNode}> = ({ children }) => {
   const [character, setCharacter] = useState<Character | null>(null);
@@ -79,7 +135,7 @@ export const CharacterProvider: React.FC<{children: React.ReactNode}> = ({ child
       console.log('CharacterContext: Загрузка персонажей для пользователя', user.uid);
       
       const result = await getUserCharacters();
-      console.log('CharacterContext: Список персонажей обновлен, получено:', result.length);
+      console.log('CharacterContext: Список персонаже�� обновлен, получено:', result.length);
       return Promise.resolve();
     } catch (err) {
       console.error('CharacterContext: Ошибка при обновлении персонажей:', err);

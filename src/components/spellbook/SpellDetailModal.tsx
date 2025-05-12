@@ -1,120 +1,111 @@
 
 import React from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { SpellData } from '@/types/spells';
-import { useTheme } from '@/hooks/use-theme';
-import { themes } from '@/lib/themes';
+import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { Button } from '@/components/ui/button';
 
 interface SpellDetailModalProps {
   spell: SpellData | null;
   open: boolean;
   onClose: () => void;
+  currentTheme: any;
 }
 
-const SpellDetailModal: React.FC<SpellDetailModalProps> = ({ spell, open, onClose }) => {
-  const { theme } = useTheme();
-  const themeKey = (theme || 'default') as keyof typeof themes;
-  const currentTheme = themes[themeKey] || themes.default;
-
+const SpellDetailModal: React.FC<SpellDetailModalProps> = ({
+  spell,
+  open,
+  onClose,
+  currentTheme
+}) => {
   if (!spell) return null;
-
-  // Преобразуем описание в удобный для отображения формат
-  const formattedDescription = typeof spell.description === 'string'
-    ? spell.description
-    : Array.isArray(spell.description)
-      ? spell.description.join('\n\n')
-      : '';
-
-  // Форматирование уровня заклинания
-  const spellLevelText = spell.level === 0
-    ? "Заговор"
-    : `${spell.level}-й уровень`;
+  
+  // Safely format classes array or string
+  const formatClasses = (classes: string[] | string | undefined): string => {
+    if (!classes) return "Нет";
+    if (typeof classes === 'string') return classes;
+    if (Array.isArray(classes)) return classes.join(', ');
+    return "Нет";
+  };
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent 
-        className="max-w-3xl max-h-[80vh] overflow-y-auto" 
-        style={{ 
-          backgroundColor: currentTheme.cardBackground || 'rgba(0, 0, 0, 0.85)',
-          borderColor: currentTheme.accent,
-          color: currentTheme.textColor
-        }}
-      >
+      <DialogContent className="max-w-2xl" style={{backgroundColor: currentTheme.cardBackground, color: currentTheme.textColor}}>
         <DialogHeader>
-          <div className="flex items-center justify-between">
-            <DialogTitle className="text-2xl font-bold">{spell.name}</DialogTitle>
-            <Badge 
-              variant="outline"
-              style={{
-                backgroundColor: currentTheme.accent,
-                color: currentTheme.textColor
-              }}
-            >
-              {spellLevelText}
+          <DialogTitle className="text-2xl flex items-center justify-between">
+            <span>{spell.name}</span>
+            <Badge style={{backgroundColor: currentTheme.accent, color: currentTheme.textColor}}>
+              {spell.level === 0 ? "Заговор" : `${spell.level}-й уровень`}
             </Badge>
-          </div>
-          <DialogDescription className="flex flex-wrap gap-2 mt-2">
-            <Badge variant="outline" className="bg-black/30">{spell.school}</Badge>
-            {spell.ritual && <Badge variant="outline" className="bg-black/30">Ритуал</Badge>}
-            {spell.concentration && <Badge variant="outline" className="bg-black/30">Концентрация</Badge>}
-          </DialogDescription>
+          </DialogTitle>
         </DialogHeader>
-
-        <div className="grid grid-cols-2 gap-4 text-sm" style={{color: currentTheme.textColor}}>
-          <div>
-            <span className="font-semibold">Время накладывания:</span> {spell.castingTime}
+        
+        <div className="space-y-4 py-4">
+          <div className="flex flex-wrap gap-2">
+            <Badge variant="outline" style={{borderColor: currentTheme.accent}}>
+              {spell.school}
+            </Badge>
+            {spell.ritual && (
+              <Badge variant="outline" style={{borderColor: currentTheme.accent}}>
+                Ритуал
+              </Badge>
+            )}
+            {spell.concentration && (
+              <Badge variant="outline" style={{borderColor: currentTheme.accent}}>
+                Концентрация
+              </Badge>
+            )}
           </div>
-          <div>
-            <span className="font-semibold">Дистанция:</span> {spell.range}
+          
+          <Separator className="my-2" style={{backgroundColor: currentTheme.accent + '40'}} />
+          
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <p className="font-semibold">Время накладывания</p>
+              <p>{spell.castingTime}</p>
+            </div>
+            
+            <div>
+              <p className="font-semibold">Дистанция</p>
+              <p>{spell.range}</p>
+            </div>
+            
+            <div>
+              <p className="font-semibold">Компоненты</p>
+              <p>{spell.components}</p>
+            </div>
+            
+            <div>
+              <p className="font-semibold">Длительность</p>
+              <p>{spell.duration}</p>
+            </div>
           </div>
+          
           <div>
-            <span className="font-semibold">Компоненты:</span> {spell.components}
+            <p className="font-semibold">Доступно классам: </p>
+            <p>{formatClasses(spell.classes)}</p>
           </div>
-          <div>
-            <span className="font-semibold">Длительность:</span> {spell.duration}
+          
+          <Separator className="my-4" style={{backgroundColor: currentTheme.accent + '40'}} />
+          
+          <div className="prose prose-invert max-w-none" style={{color: currentTheme.textColor}}>
+            {typeof spell.description === 'string' ? (
+              <p>{spell.description}</p>
+            ) : Array.isArray(spell.description) ? (
+              spell.description.map((paragraph, index) => (
+                <p key={index} className="mb-2">{paragraph}</p>
+              ))
+            ) : (
+              <p>Нет описания</p>
+            )}
           </div>
         </div>
-
-        <Separator style={{backgroundColor: `${currentTheme.accent}40`}} />
-
-        <div className="mt-4 text-sm prose prose-invert" style={{color: currentTheme.textColor}}>
-          {formattedDescription.split('\n').map((paragraph, idx) => (
-            <p key={idx}>{paragraph}</p>
-          ))}
-        </div>
-
-        {spell.classes && (
-          <div className="mt-2 text-xs" style={{color: currentTheme.mutedTextColor || '#9ca3af'}}>
-            <span className="font-semibold">Классы:</span> {
-              typeof spell.classes === 'string' 
-                ? spell.classes 
-                : Array.isArray(spell.classes) 
-                  ? spell.classes.join(', ') 
-                  : ''
-            }
-          </div>
-        )}
-
-        {spell.source && (
-          <div className="mt-1 text-xs" style={{color: currentTheme.mutedTextColor || '#9ca3af'}}>
-            <span className="font-semibold">Источник:</span> {spell.source}
-          </div>
-        )}
-
+        
         <DialogFooter>
-          <DialogClose asChild>
-            <Button 
-              style={{
-                backgroundColor: currentTheme.accent,
-                color: currentTheme.buttonText
-              }}
-            >
-              Закрыть
-            </Button>
-          </DialogClose>
+          <Button variant="outline" onClick={onClose}>
+            Закрыть
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

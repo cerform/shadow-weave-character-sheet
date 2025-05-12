@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from 'react';
 import { useCharacter } from '@/contexts/CharacterContext';
 import { calculateAvailableSpellsByClassAndLevel } from '@/utils/spellUtils';
@@ -9,6 +8,16 @@ const useLevelUp = () => {
   const { character, setCharacter, updateCharacter, saveCurrentCharacter } = useCharacter();
   const [isLevelingUp, setIsLevelingUp] = useState(false);
   const { toast } = useToast();
+
+  // Fix the spellcasting initialization to include all required properties
+  const initializeSpellcasting = (ability: string, level: number, abilityModifier: number) => {
+    return {
+      ability: ability,
+      saveDC: 8 + 2 + abilityModifier, // 8 + proficiency bonus + ability modifier
+      attackBonus: 2 + abilityModifier, // proficiency bonus + ability modifier
+      preparedSpellsLimit: level + abilityModifier
+    };
+  };
 
   const handleLevelUp = async () => {
     setIsLevelingUp(true);

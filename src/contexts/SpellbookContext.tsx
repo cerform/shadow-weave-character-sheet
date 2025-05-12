@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { SpellData } from '@/types/spells';
 import { CharacterSpell } from '@/types/character';

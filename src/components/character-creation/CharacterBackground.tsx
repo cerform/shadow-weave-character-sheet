@@ -9,7 +9,7 @@ import NavigationButtons from './NavigationButtons';
 
 interface CharacterBackgroundProps {
   character: Character;
-  updateCharacter: (updates: Partial<Character>) => void; // Исправление для соответствия onUpdate в CharacterCreationContent
+  updateCharacter: (updates: Partial<Character>) => void;
   nextStep?: () => void;
   prevStep?: () => void;
 }
@@ -46,37 +46,61 @@ const CharacterBackground: React.FC<CharacterBackgroundProps> = ({
     // For safety, check if properties exist before accessing them
     const backgroundProficiencies = selectedBackground.proficiencies || {};
     
-    // Получаем профессии из объекта backgroundProficiencies, проверяя их наличие
-    const weaponProfs = Array.isArray(backgroundProficiencies.weapons) ? backgroundProficiencies.weapons : [];
-    const toolProfs = Array.isArray(backgroundProficiencies.tools) ? backgroundProficiencies.tools : [];
-    const languageProfs = Array.isArray(backgroundProficiencies.languages) ? backgroundProficiencies.languages : [];
+    // Safely get array values with defaults if missing or wrong type
+    const getArraySafely = <T,>(value: any, defaultValue: T[] = []): T[] => {
+      if (Array.isArray(value)) return value as T[];
+      return defaultValue;
+    };
     
-    // Проверяем наличие текстовых полей и получаем значения с безопасным доступом
+    // Get weapon proficiencies safely
+    const weaponProfs = backgroundProficiencies.weapons ? 
+      getArraySafely<string>(backgroundProficiencies.weapons) : [];
+      
+    // Get tool proficiencies safely
+    const toolProfs = backgroundProficiencies.tools ? 
+      getArraySafely<string>(backgroundProficiencies.tools) : [];
+      
+    // Get language proficiencies safely
+    const languageProfs = backgroundProficiencies.languages ? 
+      getArraySafely<string>(backgroundProficiencies.languages) : [];
+    
+    // Safely get text fields with null checks
     let personalityTrait = '';
-    if (selectedBackground.personalityTraits && Array.isArray(selectedBackground.personalityTraits) && selectedBackground.personalityTraits.length > 0) {
+    if (selectedBackground.personalityTraits && 
+        Array.isArray(selectedBackground.personalityTraits) && 
+        selectedBackground.personalityTraits.length > 0) {
       personalityTrait = selectedBackground.personalityTraits[0];
     }
     
     let idealText = '';
-    if (selectedBackground.ideals && Array.isArray(selectedBackground.ideals) && selectedBackground.ideals.length > 0) {
+    if (selectedBackground.ideals && 
+        Array.isArray(selectedBackground.ideals) && 
+        selectedBackground.ideals.length > 0) {
       const ideal = selectedBackground.ideals[0];
-      idealText = typeof ideal === 'object' && ideal !== null && 'text' in ideal ? ideal.text as string : '';
+      if (ideal && typeof ideal === 'object' && 'text' in ideal) {
+        idealText = ideal.text as string;
+      }
     }
     
     let bond = '';
-    if (selectedBackground.bonds && Array.isArray(selectedBackground.bonds) && selectedBackground.bonds.length > 0) {
+    if (selectedBackground.bonds && 
+        Array.isArray(selectedBackground.bonds) && 
+        selectedBackground.bonds.length > 0) {
       bond = selectedBackground.bonds[0];
     }
     
     let flaw = '';
-    if (selectedBackground.flaws && Array.isArray(selectedBackground.flaws) && selectedBackground.flaws.length > 0) {
+    if (selectedBackground.flaws && 
+        Array.isArray(selectedBackground.flaws) && 
+        selectedBackground.flaws.length > 0) {
       flaw = selectedBackground.flaws[0];
     }
     
-    // Безопасное получение оборудования
-    const equipment = Array.isArray(selectedBackground.equipment) ? selectedBackground.equipment : [];
+    // Safe equipment handling
+    const equipment = selectedBackground.equipment && Array.isArray(selectedBackground.equipment) ?
+      selectedBackground.equipment : [];
 
-    // Обновляем персонажа
+    // Update the character
     updateCharacter({
       background: backgroundName,
       personalityTraits: personalityTrait,
@@ -112,26 +136,46 @@ const CharacterBackground: React.FC<CharacterBackgroundProps> = ({
       <p className="mb-4">Выберите предысторию для своего персонажа, которая определит его навыки, умения и особенности.</p>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {backgrounds.map((background) => (
-          <Card
-            key={background.name}
-            className={`cursor-pointer ${selectedBackground === background.name ? 'border-2 border-primary' : ''}`}
-            onClick={() => setSelectedBackground(background.name)}
-          >
-            <CardHeader>
-              <CardTitle>{background.name}</CardTitle>
-              <CardDescription>{background.description}</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ul className="list-disc pl-4">
-                <li><strong>Навыки:</strong> {background.proficiencies && background.proficiencies.skills && Array.isArray(background.proficiencies.skills) ? background.proficiencies.skills.join(', ') : 'Нет'}</li>
-                <li><strong>Инструменты:</strong> {background.proficiencies && background.proficiencies.tools ? (Array.isArray(background.proficiencies.tools) ? background.proficiencies.tools.join(', ') : background.proficiencies.tools) : 'Нет'}</li>
-                <li><strong>Языки:</strong> {background.proficiencies && background.proficiencies.languages ? (Array.isArray(background.proficiencies.languages) ? background.proficiencies.languages.join(', ') : background.proficiencies.languages) : 'Нет'}</li>
-                <li><strong>Снаряжение:</strong> {Array.isArray(background.equipment) ? background.equipment.join(', ') : 'Нет'}</li>
-              </ul>
-            </CardContent>
-          </Card>
-        ))}
+        {backgrounds.map((background) => {
+          // Safely get proficiencies
+          const skills = background.proficiencies?.skills && Array.isArray(background.proficiencies.skills) ? 
+            background.proficiencies.skills.join(', ') : 'Нет';
+          
+          // Safely get tools
+          const tools = background.proficiencies?.tools ? 
+            (Array.isArray(background.proficiencies.tools) ? 
+              background.proficiencies.tools.join(', ') : background.proficiencies.tools) : 'Нет';
+          
+          // Safely get languages
+          const languages = background.proficiencies?.languages ? 
+            (Array.isArray(background.proficiencies.languages) ? 
+              background.proficiencies.languages.join(', ') : background.proficiencies.languages) : 'Нет';
+          
+          // Safely get equipment
+          const equipment = background.equipment && Array.isArray(background.equipment) ? 
+            background.equipment.join(', ') : 'Нет';
+            
+          return (
+            <Card
+              key={background.name}
+              className={`cursor-pointer ${selectedBackground === background.name ? 'border-2 border-primary' : ''}`}
+              onClick={() => setSelectedBackground(background.name)}
+            >
+              <CardHeader>
+                <CardTitle>{background.name}</CardTitle>
+                <CardDescription>{background.description}</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ul className="list-disc pl-4">
+                  <li><strong>Навыки:</strong> {skills}</li>
+                  <li><strong>Инструменты:</strong> {tools}</li>
+                  <li><strong>Языки:</strong> {languages}</li>
+                  <li><strong>Снаряжение:</strong> {equipment}</li>
+                </ul>
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
 
       <NavigationButtons

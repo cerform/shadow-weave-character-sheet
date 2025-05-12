@@ -1,4 +1,3 @@
-
 export interface Character {
   id?: string;
   name: string;
@@ -192,3 +191,17 @@ export interface HitPointEvent {
   description?: string;
   source?: string;
 }
+
+// Add LevelFeature interface
+export interface LevelFeature {
+  id: string;
+  level: number;
+  name: string;
+  description: string;
+  type: 'subclass' | 'ability_increase' | 'extra_attack' | 'spell_level' | 'feature';
+  class?: string;
+  required?: boolean;
+}
+
+// Export for useLevelFeatures
+export { LevelFeature };
