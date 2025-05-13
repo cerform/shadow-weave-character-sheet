@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import { SpellData } from '@/types/spells';
 import { getAllSpells } from '@/data/spells';
 import { useToast } from './use-toast';
@@ -7,6 +7,7 @@ import { useToast } from './use-toast';
 interface SpellbookContextType {
   spells: SpellData[];
   filteredSpells: SpellData[];
+  availableSpells: SpellData[]; // Добавляем отсутствующее свойство
   selectedSpell: SpellData | null;
   searchTerm: string;
   levelFilter: number[];
@@ -22,11 +23,13 @@ interface SpellbookContextType {
   setConcentrationFilter: (concentration: boolean | null) => void;
   selectSpell: (spell: SpellData | null) => void;
   resetFilters: () => void;
+  loadSpellsForCharacter: (className: string, level: number) => void; // Добавляем отсутствующую функцию
 }
 
 const SpellbookContext = createContext<SpellbookContextType>({
   spells: [],
   filteredSpells: [],
+  availableSpells: [], // Добавляем отсутствующее свойство
   selectedSpell: null,
   searchTerm: '',
   levelFilter: [],
@@ -42,11 +45,13 @@ const SpellbookContext = createContext<SpellbookContextType>({
   setConcentrationFilter: () => {},
   selectSpell: () => {},
   resetFilters: () => {},
+  loadSpellsForCharacter: () => {}, // Добавляем отсутствующую функцию
 });
 
 export const SpellbookProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [spells, setSpells] = useState<SpellData[]>([]);
   const [filteredSpells, setFilteredSpells] = useState<SpellData[]>([]);
+  const [availableSpells, setAvailableSpells] = useState<SpellData[]>([]); // Добавляем отсутствующее состояние
   const [selectedSpell, setSelectedSpell] = useState<SpellData | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [levelFilter, setLevelFilter] = useState<number[]>([]);
@@ -62,6 +67,7 @@ export const SpellbookProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       const allSpells = getAllSpells();
       setSpells(allSpells);
       setFilteredSpells(allSpells);
+      setAvailableSpells(allSpells); // Инициализируем доступные заклинания
       console.log("Loaded spells:", allSpells.length);
     } catch (error) {
       console.error("Error loading spells:", error);
@@ -72,6 +78,39 @@ export const SpellbookProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       });
     }
   }, []);
+
+  // Добавляем функцию для загрузки заклинаний для конкретного класса и уровня
+  const loadSpellsForCharacter = (className: string, level: number) => {
+    try {
+      const allSpells = getAllSpells();
+      
+      // Получаем максимальный уровень заклинаний для данного уровня персонажа
+      const maxSpellLevel = Math.min(9, Math.ceil(level / 2));
+      
+      // Фильтруем заклинания по классу и уровню
+      const classSpells = allSpells.filter(spell => {
+        // Проверяем, подходит ли заклинание для этого класса
+        const classMatch = Array.isArray(spell.classes) 
+          ? spell.classes.some(c => c.toLowerCase() === className.toLowerCase())
+          : String(spell.classes).toLowerCase() === className.toLowerCase();
+        
+        // Проверяем, доступен ли уровень заклинания
+        const levelMatch = spell.level <= maxSpellLevel;
+        
+        return classMatch && levelMatch;
+      });
+      
+      setAvailableSpells(classSpells);
+      console.log(`Loaded ${classSpells.length} spells for ${className} (level ${level})`);
+    } catch (error) {
+      console.error("Error loading spells for character:", error);
+      toast({
+        title: "Ошибка загрузки заклинаний",
+        description: `Не удалось загрузить заклинания для класса ${className}`,
+        variant: "destructive"
+      });
+    }
+  };
 
   // Apply filters when any filter changes
   React.useEffect(() => {
@@ -146,6 +185,7 @@ export const SpellbookProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       value={{
         spells,
         filteredSpells,
+        availableSpells, // Добавляем отсутствующее свойство
         selectedSpell,
         searchTerm,
         levelFilter,
@@ -160,7 +200,8 @@ export const SpellbookProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         setRitualFilter,
         setConcentrationFilter,
         selectSpell,
-        resetFilters
+        resetFilters,
+        loadSpellsForCharacter // Добавляем отсутствующую функцию
       }}
     >
       {children}

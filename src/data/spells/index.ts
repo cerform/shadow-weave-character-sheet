@@ -1,6 +1,5 @@
-
 import { CharacterSpell } from '@/types/character';
-import { cantrips } from './cantrips';
+import { cantrips } from './all_cantrips';
 import { level0 } from './level0';
 import { level1 } from './level1';
 import { level2 } from './level2';
@@ -13,12 +12,10 @@ import { level6 } from './level6';
 import { level7 } from './level7';
 import { level8 } from './level8';
 import { level9 } from './level9';
-import { cantrips as allCantripsList } from './all_cantrips';
 import { removeDuplicateSpells } from '@/utils/spellProcessors';
 
 // Объединяем все заклинания в единый массив и удаляем дубликаты
 const allSpellsWithDuplicates: CharacterSpell[] = [
-  ...allCantripsList,
   ...cantrips,
   ...level0,
   ...level1,
@@ -136,4 +133,3 @@ export const filterSpells = (options: {
 
 // Инициализируем консольный лог с количеством заклинаний
 console.log(`Загружено заклинаний в базу данных: ${spells.length}`);
-
