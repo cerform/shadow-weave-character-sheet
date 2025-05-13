@@ -100,7 +100,7 @@ const SpellDatabaseManager: React.FC = () => {
     toast({
       title: "Дубликаты удалены",
       description: `Удалено ${removedCount} дублирующихся заклинаний`,
-      variant: "success"
+      variant: "default"
     });
   };
 
