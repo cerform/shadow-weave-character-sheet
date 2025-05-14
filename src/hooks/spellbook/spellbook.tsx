@@ -1,11 +1,26 @@
+
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { SpellData, SpellFilters } from '@/types/spells';
-import { useSpellbook as useSpellbookHook } from './useSpellbook';
+import { convertCharacterSpellToSpellData } from '@/types/spells'; 
 import { useToast } from '@/hooks/use-toast';
 import { getAllSpells } from '@/data/spells';
 
 // Тип контекста книги заклинаний
-type SpellbookContextType = ReturnType<typeof useSpellbookHook>;
+type SpellbookContextType = {
+  spells: SpellData[];
+  filteredSpells: SpellData[];
+  loading: boolean;
+  error: string | null;
+  filters: SpellFilters;
+  availableSpells: SpellData[];
+  updateFilters: (newFilters: Partial<SpellFilters>) => void;
+  resetFilters: () => void;
+  fetchSpells: () => Promise<void>;
+  getSpellById: (id: string | number) => SpellData | undefined;
+  loadSpellsForCharacter: (characterClass: string, characterLevel: number) => void;
+  selectedSpell: SpellData | null;
+  selectSpell: (spell: SpellData | null) => void;
+};
 
 // Создаем контекст с безопасными дефолтными значениями
 const SpellbookContext = createContext<SpellbookContextType | undefined>(undefined);

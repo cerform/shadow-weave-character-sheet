@@ -1,21 +1,23 @@
 
 import React from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { SpellData } from '@/types/spells';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
-import { Book, BookOpen, Clock, Flame, Maximize2, ScrollText, Shield, Wand, Wand2 } from 'lucide-react';
+import { Plus, CheckCircle2 } from 'lucide-react';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Separator } from '@/components/ui/separator';
+import { useTheme } from '@/hooks/use-theme';
+import { themes } from '@/lib/themes';
 
-interface SpellDetailModalProps {
-  spell: SpellData | null;
+export interface SpellDetailModalProps {
+  spell: SpellData;
   open: boolean;
   onClose: () => void;
-  currentTheme: any;
+  currentTheme?: any;
   showAddButton?: boolean;
   onAddSpell?: (spell: SpellData) => void;
   alreadyAdded?: boolean;
-  addButtonText?: string;
 }
 
 const SpellDetailModal: React.FC<SpellDetailModalProps> = ({
@@ -25,184 +27,151 @@ const SpellDetailModal: React.FC<SpellDetailModalProps> = ({
   currentTheme,
   showAddButton = false,
   onAddSpell,
-  alreadyAdded = false,
-  addButtonText = "Добавить заклинание"
+  alreadyAdded = false
 }) => {
+  const { theme } = useTheme();
+  const themeKey = (theme || 'default') as keyof typeof themes;
+  const modalTheme = currentTheme || themes[themeKey] || themes.default;
+
+  // Обработка компонентов заклинания
+  const renderComponents = () => {
+    const components = [];
+    if (spell.verbal) components.push('Вербальный');
+    if (spell.somatic) components.push('Соматический');
+    if (spell.material) components.push('Материальный');
+    return components.join(', ') || 'Нет';
+  };
+
   if (!spell) return null;
 
-  const handleAddSpell = () => {
-    if (onAddSpell && spell) onAddSpell(spell);
-  };
-
-  // Safely format classes array or string
-  const formatClasses = (classes: string[] | string | undefined): string => {
-    if (!classes) return "—";
-    if (typeof classes === 'string') return classes;
-    if (Array.isArray(classes)) return classes.join(', ');
-    return "—";
-  };
-  
-  // Safely render description which can be string or string array
-  const renderDescription = () => {
-    if (!spell.description) return <p>Нет описания</p>;
-    
-    if (Array.isArray(spell.description)) {
-      return spell.description.map((paragraph, index) => (
-        <p key={index} className="mb-2">{paragraph}</p>
-      ));
-    }
-    
-    return <p>{spell.description}</p>;
-  };
-  
-  // Safely render higher level effects
-  const renderHigherLevels = () => {
-    // Check for higherLevels property - removed higherLevel reference, using only higherLevels
-    const higherLevelText = spell?.higherLevels || '';
-      
-    if (!higherLevelText) return null;
-    
-    // Handle array or string
-    if (Array.isArray(higherLevelText)) {
-      return (
-        <>
-          <h3 className="font-bold mb-1">На более высоких уровнях:</h3>
-          {higherLevelText.map((text, index) => (
-            <p key={`higher-${index}`} className="mb-2">{text}</p>
-          ))}
-        </>
-      );
-    }
-    
-    return (
-      <>
-        <h3 className="font-bold mb-1">На более высоких уровнях:</h3>
-        <p>{higherLevelText}</p>
-      </>
-    );
-  };
-
   return (
-    <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent 
-        className="max-w-2xl" 
-        style={{
-          backgroundColor: currentTheme.cardBackground || 'rgba(0, 0, 0, 0.8)',
-          color: currentTheme.textColor || 'white',
-          borderColor: currentTheme.accent
-        }}
-      >
+    <Dialog open={open} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-hidden" 
+                    style={{ 
+                      backgroundColor: modalTheme.cardBackground || 'rgba(0, 0, 0, 0.95)',
+                      borderColor: modalTheme.accent,
+                      color: modalTheme.textColor
+                    }}>
         <DialogHeader>
-          <DialogTitle className="text-2xl flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Wand2 
-                className="h-6 w-6" 
-                style={{ color: currentTheme.accent }}
-              />
-              <span>{spell.name}</span>
-            </div>
-            <Badge 
-              className="ml-2"
-              style={{
-                backgroundColor: currentTheme.accent,
-                color: '#fff'
-              }}
-            >
-              {spell.level === 0 ? "Заговор" : `${spell.level}-й уровень`}
-            </Badge>
+          <DialogTitle className="text-2xl font-philosopher"
+                      style={{ color: modalTheme.accent }}>
+            {spell.name}
           </DialogTitle>
-        </DialogHeader>
-        
-        <div className="space-y-4 mt-4">
-          <div className="flex flex-wrap gap-2">
-            <Badge variant="outline" style={{ borderColor: currentTheme.accent }}>
-              <ScrollText className="h-4 w-4 mr-1" style={{ color: currentTheme.accent }} />
+          <div className="flex flex-wrap gap-2 mt-2">
+            <Badge style={{ backgroundColor: modalTheme.accent, color: '#000' }}>
+              {spell.level === 0 ? 'Заговор' : `${spell.level} уровень`}
+            </Badge>
+            <Badge variant="outline" style={{ borderColor: modalTheme.accent, color: modalTheme.textColor }}>
               {spell.school}
             </Badge>
             {spell.ritual && (
-              <Badge variant="outline" style={{ borderColor: currentTheme.accent }}>
-                <Book className="h-4 w-4 mr-1" style={{ color: currentTheme.accent }} />
+              <Badge variant="outline" style={{ borderColor: '#8B5CF6', color: '#8B5CF6' }}>
                 Ритуал
               </Badge>
             )}
             {spell.concentration && (
-              <Badge variant="outline" style={{ borderColor: currentTheme.accent }}>
-                <Flame className="h-4 w-4 mr-1" style={{ color: currentTheme.accent }} />
+              <Badge variant="outline" style={{ borderColor: '#EF4444', color: '#EF4444' }}>
                 Концентрация
               </Badge>
             )}
           </div>
-          
-          <Separator className="my-2" style={{ backgroundColor: currentTheme.accent + '40' }} />
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <div className="space-y-2">
-              <div className="flex items-start gap-2">
-                <Clock className="h-4 w-4 mt-1" style={{ color: currentTheme.accent }} />
-                <div>
-                  <p className="font-semibold">Время накладывания</p>
-                  <p>{spell.castingTime}</p>
-                </div>
+        </DialogHeader>
+        <ScrollArea className="max-h-[65vh] pr-4">
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <p className="text-sm opacity-75">Время накладывания</p>
+                <p>{spell.castingTime}</p>
               </div>
-              
-              <div className="flex items-start gap-2">
-                <Maximize2 className="h-4 w-4 mt-1" style={{ color: currentTheme.accent }} />
-                <div>
-                  <p className="font-semibold">Дистанция</p>
-                  <p>{spell.range}</p>
-                </div>
+              <div>
+                <p className="text-sm opacity-75">Дистанция</p>
+                <p>{spell.range}</p>
+              </div>
+              <div>
+                <p className="text-sm opacity-75">Компоненты</p>
+                <p>{renderComponents()}</p>
+                {spell.materials && (
+                  <p className="text-xs opacity-70 mt-1">{spell.materials}</p>
+                )}
+              </div>
+              <div>
+                <p className="text-sm opacity-75">Длительность</p>
+                <p>{spell.duration}</p>
               </div>
             </div>
             
-            <div className="space-y-2">
-              <div className="flex items-start gap-2">
-                <Shield className="h-4 w-4 mt-1" style={{ color: currentTheme.accent }} />
-                <div>
-                  <p className="font-semibold">Компоненты</p>
-                  <p>{spell.components}</p>
+            <Separator style={{ backgroundColor: `${modalTheme.accent}30` }} />
+            
+            <div>
+              <h4 className="text-lg font-semibold mb-2">Описание</h4>
+              {typeof spell.description === 'string' ? (
+                <p className="text-sm whitespace-pre-line">{spell.description}</p>
+              ) : (
+                <div className="space-y-2">
+                  {Array.isArray(spell.description) && spell.description.map((desc, index) => (
+                    <p key={index} className="text-sm whitespace-pre-line">{desc}</p>
+                  ))}
                 </div>
+              )}
+            </div>
+            
+            {spell.higherLevels && (
+              <div>
+                <h4 className="text-lg font-semibold mb-2">На более высоких уровнях</h4>
+                <p className="text-sm">{spell.higherLevels}</p>
               </div>
-              
-              <div className="flex items-start gap-2">
-                <BookOpen className="h-4 w-4 mt-1" style={{ color: currentTheme.accent }} />
-                <div>
-                  <p className="font-semibold">Длительность</p>
-                  <p>{spell.duration}</p>
-                </div>
+            )}
+            
+            <div>
+              <h4 className="text-lg font-semibold mb-2">Доступно классам</h4>
+              <div className="flex flex-wrap gap-2">
+                {Array.isArray(spell.classes) ? (
+                  spell.classes.map((cls, index) => (
+                    <Badge key={index} variant="outline" 
+                          style={{ borderColor: modalTheme.accent, color: modalTheme.textColor }}>
+                      {cls}
+                    </Badge>
+                  ))
+                ) : (
+                  <Badge variant="outline" 
+                        style={{ borderColor: modalTheme.accent, color: modalTheme.textColor }}>
+                    {spell.classes}
+                  </Badge>
+                )}
               </div>
             </div>
+            
+            <div>
+              <p className="text-xs opacity-70 text-right">Источник: {spell.source || 'PHB'}</p>
+            </div>
           </div>
-          
-          <div className="mt-3">
-            <p className="font-semibold">Доступно классам: </p>
-            <p>{formatClasses(spell.classes)}</p>
-          </div>
-          
-          <Separator className="my-4" style={{ backgroundColor: currentTheme.accent + '40' }} />
-          
-          <div className="prose prose-invert max-w-none" style={{ color: currentTheme.textColor }}>
-            {renderDescription()}
-            {renderHigherLevels()}
-          </div>
-        </div>
+        </ScrollArea>
         
-        <DialogFooter>
-          {showAddButton && onAddSpell && (
+        {showAddButton && onAddSpell && (
+          <div className="mt-4 flex justify-end">
             <Button 
-              onClick={handleAddSpell} 
+              onClick={() => onAddSpell(spell)} 
               disabled={alreadyAdded}
-              style={{
-                backgroundColor: alreadyAdded ? '#6b7280' : currentTheme.accent,
-                color: '#fff'
-              }}
+              className={alreadyAdded ? "bg-green-700" : ""}
+              style={!alreadyAdded ? { 
+                backgroundColor: modalTheme.accent, 
+                color: '#000' 
+              } : {}}
             >
-              {alreadyAdded ? "Уже добавлено" : addButtonText}
+              {alreadyAdded ? (
+                <>
+                  <CheckCircle2 className="mr-2 h-4 w-4" />
+                  Добавлено
+                </>
+              ) : (
+                <>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Добавить заклинание
+                </>
+              )}
             </Button>
-          )}
-          <Button variant="outline" onClick={onClose}>
-            Закрыть
-          </Button>
-        </DialogFooter>
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );
