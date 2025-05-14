@@ -1,6 +1,5 @@
 
 // Экспортируем провайдер и хук из нового местоположения
-import { useSpellbook } from './spellbook';
-import { SpellbookProvider } from './spellbook';
+import { useSpellbook, SpellbookProvider } from './spellbook';
 
 export { useSpellbook, SpellbookProvider };

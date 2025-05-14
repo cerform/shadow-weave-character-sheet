@@ -36,7 +36,7 @@ const SpellSelectionModal: React.FC<SpellSelectionModalProps> = ({
   character,
   onUpdate
 }) => {
-  const { filteredSpells, spells, filters, updateFilters, resetFilters, loading } = useSpellbook();
+  const { filteredSpells, spells, updateFilters, resetFilters, loading } = useSpellbook();
   const { toast } = useToast();
   const { theme } = useTheme();
   const themeKey = (theme || 'default') as keyof typeof themes;
@@ -50,15 +50,19 @@ const SpellSelectionModal: React.FC<SpellSelectionModalProps> = ({
   const [tab, setTab] = useState("available");
   
   // Character class and spellcasting stats
-  const characterClass = character.class?.name || "";
+  const characterClass = typeof character.class === 'object' ? character.class.name : character.class || "";
   const spellcastingAbility = character.spellcasting?.ability || "INT";
   
   // Available spell slots
   const maxPreparedSpells = character.spellcasting?.maxPreparedSpells || 0;
-  const currentPreparedSpells = (character.spells?.known || []).length;
+  const currentPreparedSpells = (character.spells && character.spells.known) 
+    ? character.spells.known.length 
+    : 0;
   
   // Already known spells (including prepared and non-prepared)
-  const knownSpells = character.spells?.known || [];
+  const knownSpells = (character.spells && character.spells.known) 
+    ? character.spells.known 
+    : [];
   
   // Filter spells for character class
   useEffect(() => {
@@ -134,12 +138,11 @@ const SpellSelectionModal: React.FC<SpellSelectionModalProps> = ({
       ritual: spell.ritual || false,
       concentration: spell.concentration || false,
       castingTime: spell.castingTime,
-      components: {
-        verbal: spell.verbal || false,
-        somatic: spell.somatic || false,
-        material: spell.material || false,
-        materials: spell.materials || ""
-      }
+      components: `${spell.verbal ? 'В' : ''}${spell.somatic ? 'С' : ''}${spell.material ? 'М' : ''}`,
+      verbal: spell.verbal,
+      somatic: spell.somatic,
+      material: spell.material,
+      materials: spell.materials || ""
     };
     
     // Add to character spells
@@ -415,12 +418,12 @@ const SpellSelectionModal: React.FC<SpellSelectionModalProps> = ({
         {selectedSpell && (
           <SpellDetailModal
             spell={selectedSpell}
-            open={showDetails}
+            isOpen={showDetails}
             onClose={() => setShowDetails(false)}
-            currentTheme={currentTheme}
+            theme={currentTheme}
             showAddButton={tab === "available"}
             onAddSpell={handleAddSpell}
-            alreadyAdded={isSpellAdded(selectedSpell.id)}
+            isSpellAdded={isSpellAdded(selectedSpell.id)}
           />
         )}
       </DialogContent>

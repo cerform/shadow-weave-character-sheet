@@ -31,7 +31,7 @@ const CharacterTabs: React.FC<CharacterTabsProps> = ({ character, onUpdate }) =>
       </TabsContent>
       
       <TabsContent value="spells">
-        <SpellsTab character={character} onUpdate={onUpdate} />
+        <SpellsTab character={character} onUpdateCharacter={onUpdate} />
       </TabsContent>
       
       <TabsContent value="inventory">

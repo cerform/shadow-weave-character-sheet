@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -248,7 +247,7 @@ const SpellsTab: React.FC<SpellsTabProps> = ({ character, onUpdateCharacter }) =
           <div className="mb-4">
             <SpellSlotsPanel 
               character={character} 
-              onUpdateCharacter={onUpdateCharacter} 
+              onUpdate={onUpdateCharacter} 
             />
           </div>
         )}
@@ -312,7 +311,7 @@ const SpellsTab: React.FC<SpellsTabProps> = ({ character, onUpdateCharacter }) =
                       {filteredSpells.map((spell) => (
                         <SpellPanel
                           key={spell.id}
-                          spell={spell}
+                          spellData={spell}
                           character={character}
                           canPrepare={hasPreparedSpellSystem}
                           onTogglePrepared={() => togglePrepared(spell.id)}

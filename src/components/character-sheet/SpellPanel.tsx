@@ -1,193 +1,164 @@
+
 import React, { useState } from 'react';
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Character, CharacterSpell } from '@/types/character';
-import { SpellData } from '@/types/spells';
+import { CharacterSpell, Character } from '@/types/character';
 import { Button } from '@/components/ui/button';
-import { useToast } from '@/hooks/use-toast';
-import SpellDialog from './SpellDialog';
-import { normalizeSpells, convertToSpellData } from '@/utils/spellHelpers';
-import { Book, CheckCircle, Circle } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Sparkles, Check, Trash2 } from 'lucide-react';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import { cn } from '@/lib/utils';
 
 interface SpellPanelProps {
+  spellData: CharacterSpell;
   character: Character;
-  onUpdate: (updates: Partial<Character>) => void;
-  selectedSpell?: SpellData | null;
-  onSelectSpell?: (spell: SpellData | null) => void;
+  canPrepare: boolean;
+  onTogglePrepared: () => void;
+  onRemoveSpell: () => void;
 }
 
 const SpellPanel: React.FC<SpellPanelProps> = ({
+  spellData,
   character,
-  onUpdate,
-  selectedSpell,
-  onSelectSpell
+  canPrepare,
+  onTogglePrepared,
+  onRemoveSpell
 }) => {
-  const [isSpellDialogOpen, setIsSpellDialogOpen] = useState(false);
-  const [currentSpell, setCurrentSpell] = useState<SpellData | null>(null);
-  const { toast } = useToast();
+  const [isOpen, setIsOpen] = useState(false);
 
-  // Get normalized character spells
-  const characterSpells = React.useMemo(() => {
-    if (!character.spells) return [];
-    return normalizeSpells(character.spells);
-  }, [character.spells]);
-
-  // Group spells by level
-  const spellsByLevel = React.useMemo(() => {
-    const grouped: Record<number, CharacterSpell[]> = {};
-    
-    characterSpells.forEach(spell => {
-      const level = spell.level || 0;
-      if (!grouped[level]) grouped[level] = [];
-      grouped[level].push(spell);
-    });
-    
-    return grouped;
-  }, [characterSpells]);
-
-  // Handler for opening spell details
-  const handleOpenSpell = (spell: CharacterSpell) => {
-    // Convert to SpellData format if needed
-    const spellData = convertToSpellData(spell); // Исправляем вызов функции, чтобы она принимала один объект заклинания
-    
-    // Set the current spell and open dialog
-    setCurrentSpell(spellData);
-    setIsSpellDialogOpen(true);
-    
-    // Call the onSelectSpell prop if provided
-    if (onSelectSpell) {
-      onSelectSpell(spellData);
-    }
-  };
-
-  // Handler for toggling prepared status
-  const handleTogglePrepared = (spell: CharacterSpell) => {
-    if (!character.spells) return;
-    
-    const updatedSpells = character.spells.map(s => {
-      if (typeof s === 'string') return s; // Keep strings as is
-      
-      if (s.name === spell.name) {
-        // Toggle prepared status
-        return {
-          ...s,
-          prepared: !s.prepared
-        };
-      }
-      
-      return s;
-    });
-    
-    // Update character
-    onUpdate({ spells: updatedSpells });
-    
-    // Show toast message
-    toast({
-      title: spell.prepared ? "Заклинание не подготовлено" : "Заклинание подготовлено",
-      description: `${spell.name} ${spell.prepared ? "убрано из" : "добавлено в"} список подготовленных`,
-    });
-  };
-
-  // Handler for closing spell dialog
-  const handleCloseSpellDialog = () => {
-    setIsSpellDialogOpen(false);
-    if (onSelectSpell) {
-      onSelectSpell(null);
-    }
-  };
-
-  // Utility function to get badge color based on spell level
-  const getSpellLevelColor = (level: number) => {
-    const colors = [
-      '#9e9e9e', // Level 0 (cantrips)
-      '#4caf50', // Level 1
-      '#2196f3', // Level 2
-      '#ff9800', // Level 3
-      '#9c27b0', // Level 4
-      '#f44336', // Level 5
-      '#795548', // Level 6
-      '#607d8b', // Level 7
-      '#ff5722', // Level 8
-      '#e91e63', // Level 9
-    ];
-    return colors[Math.min(level, 9)];
+  const getLevelText = (level: number) => {
+    if (level === 0) return 'Заговор';
+    return `${level} уровень`;
   };
 
   return (
-    <div>
-      {Object.entries(spellsByLevel).sort(([a, b]) => Number(a) - Number(b)).map(([level, spells]) => (
-        <Card key={`spell-level-${level}`} className="mb-4">
-          <CardHeader className="pb-2">
-            <div className="flex justify-between items-center">
-              <h3 className="text-lg font-medium">
-                {parseInt(level) === 0 ? "Заговоры" : `Заклинания ${level} уровня`}
-              </h3>
-              <Badge variant="outline">
-                {spells.length} {spells.length === 1 ? "заклинание" : "заклинаний"}
-              </Badge>
+    <Collapsible
+      open={isOpen}
+      onOpenChange={setIsOpen}
+      className="border border-primary/10 rounded-lg bg-black/30 backdrop-blur-sm overflow-hidden"
+    >
+      <div className="flex items-center p-3">
+        <CollapsibleTrigger className="flex-1 flex items-center text-left">
+          <div className="mr-4">
+            <Badge
+              variant="outline"
+              className={cn(
+                "px-2 py-0 text-xs font-normal",
+                spellData.level === 0 ? "border-blue-400 text-blue-400" :
+                spellData.level <= 3 ? "border-green-400 text-green-400" :
+                spellData.level <= 6 ? "border-amber-400 text-amber-400" :
+                "border-purple-400 text-purple-400"
+              )}
+            >
+              {getLevelText(spellData.level)}
+            </Badge>
+          </div>
+          <div className="flex-1">
+            <div className="font-medium">{spellData.name}</div>
+            <div className="text-xs text-muted-foreground flex flex-wrap gap-1">
+              <span>{spellData.school || 'Универсальная'}</span>
+              {spellData.ritual && <span>• Ритуал</span>}
+              {spellData.concentration && <span>• Концентрация</span>}
             </div>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-              {spells.map((spell, idx) => (
-                <div 
-                  key={`spell-${spell.name}-${idx}`}
-                  className="flex items-center justify-between p-2 border rounded-md hover:bg-background/10 cursor-pointer"
-                  style={{ borderColor: spell.prepared ? getSpellLevelColor(parseInt(level)) : 'inherit' }}
-                >
-                  <span 
-                    className="truncate flex-1"
-                    onClick={() => handleOpenSpell(spell)}
-                  >
-                    {spell.name}
-                  </span>
-                  <div className="flex items-center gap-1">
-                    <Button 
-                      variant="ghost" 
-                      size="icon"
-                      className="h-8 w-8"
-                      onClick={() => handleOpenSpell(spell)}
-                    >
-                      <Book className="h-4 w-4" />
-                    </Button>
-                    
-                    {parseInt(level) > 0 && (
-                      <Button 
-                        variant="ghost" 
-                        size="icon"
-                        className="h-8 w-8"
-                        onClick={() => handleTogglePrepared(spell)}
-                      >
-                        {spell.prepared ? (
-                          <CheckCircle className="h-4 w-4 text-primary" />
-                        ) : (
-                          <Circle className="h-4 w-4" />
-                        )}
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              ))}
-              
-              {spells.length === 0 && (
-                <div className="col-span-2 text-center py-4 text-muted-foreground">
-                  Нет доступных заклинаний этого уровня
+          </div>
+        </CollapsibleTrigger>
+        
+        <div className="flex items-center gap-2">
+          {canPrepare && (
+            <Button
+              size="sm"
+              variant={spellData.prepared ? "default" : "outline"}
+              className={spellData.prepared ? "bg-primary" : ""}
+              onClick={(e) => {
+                e.stopPropagation();
+                onTogglePrepared();
+              }}
+              title={spellData.prepared ? "Снять подготовку" : "Подготовить заклинание"}
+            >
+              {spellData.prepared ? (
+                <Check className="h-4 w-4" />
+              ) : (
+                <Sparkles className="h-4 w-4" />
+              )}
+            </Button>
+          )}
+          
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={(e) => {
+              e.stopPropagation();
+              onRemoveSpell();
+            }}
+            title="Удалить заклинание"
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+      
+      <CollapsibleContent>
+        <div className="p-4 pt-1 border-t border-primary/10">
+          <dl className="space-y-2 text-sm">
+            {spellData.castingTime && (
+              <div className="flex">
+                <dt className="w-1/3 font-medium">Время накладывания:</dt>
+                <dd>{spellData.castingTime}</dd>
+              </div>
+            )}
+            
+            {spellData.range && (
+              <div className="flex">
+                <dt className="w-1/3 font-medium">Дистанция:</dt>
+                <dd>{spellData.range}</dd>
+              </div>
+            )}
+            
+            <div className="flex">
+              <dt className="w-1/3 font-medium">Компоненты:</dt>
+              <dd>
+                {Array.isArray(spellData.components) ? spellData.components.join(", ") : 
+                 typeof spellData.components === 'object' ? 
+                   [
+                     spellData.components.verbal && 'В',
+                     spellData.components.somatic && 'С',
+                     spellData.components.material && 'М'
+                   ].filter(Boolean).join(", ") : 
+                   spellData.components}
+                {spellData.components?.material && spellData.components?.materials && (
+                  <span className="text-muted-foreground ml-1">({spellData.components.materials})</span>
+                )}
+              </dd>
+            </div>
+            
+            {spellData.duration && (
+              <div className="flex">
+                <dt className="w-1/3 font-medium">Длительность:</dt>
+                <dd>{spellData.duration}</dd>
+              </div>
+            )}
+          </dl>
+          
+          {spellData.description && (
+            <div className="mt-4">
+              <h4 className="font-medium mb-2">Описание</h4>
+              {typeof spellData.description === 'string' ? (
+                <p className="text-sm">{spellData.description}</p>
+              ) : (
+                <div className="space-y-2">
+                  {Array.isArray(spellData.description) &&
+                    spellData.description.map((paragraph, idx) => (
+                      <p key={idx} className="text-sm">{paragraph}</p>
+                    ))}
                 </div>
               )}
             </div>
-          </CardContent>
-        </Card>
-      ))}
-      
-      {/* Dialog for spell details */}
-      {currentSpell && (
-        <SpellDialog 
-          spell={currentSpell} 
-          open={isSpellDialogOpen} 
-          onClose={handleCloseSpellDialog}
-        />
-      )}
-    </div>
+          )}
+        </div>
+      </CollapsibleContent>
+    </Collapsible>
   );
 };
 
