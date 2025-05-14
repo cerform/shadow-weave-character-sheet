@@ -1,34 +1,34 @@
 
 import React from 'react';
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { CharacterSpell } from '@/types/character';
-import { convertCharacterSpellToSpellData } from '@/types/spells';
+import { SpellData } from '@/types/spells'; 
 import SpellDetailView from './SpellDetailView';
-import { Theme } from '@/types/theme';
+import { useTheme } from '@/hooks/use-theme'; 
 
 interface SpellDetailModalProps {
-  spell: CharacterSpell;
+  spell: SpellData | null;
   open: boolean;
   onClose: () => void;
-  currentTheme: Theme;
 }
 
 const SpellDetailModal: React.FC<SpellDetailModalProps> = ({ 
   spell, 
   open, 
-  onClose,
-  currentTheme 
+  onClose
 }) => {
-  // Преобразуем CharacterSpell в SpellData для отображения
-  const spellData = convertCharacterSpellToSpellData(spell);
+  const { themeStyles, theme } = useTheme();
+
+  if (!spell) {
+    return null;
+  }
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
       <DialogContent className="max-w-4xl p-0 border-none bg-transparent shadow-none">
         <SpellDetailView 
-          spell={spellData}
+          spell={spell}
           onClose={onClose} 
-          currentTheme={currentTheme}
+          currentTheme={themeStyles}
         />
       </DialogContent>
     </Dialog>

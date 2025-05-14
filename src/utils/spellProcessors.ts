@@ -2,27 +2,32 @@
 import { CharacterSpell } from '@/types/character';
 import { SpellData } from '@/types/spells';
 
-// Обрабатывает компоненты заклинания в удобный для отображения формат
-export const componentsToString = (spell: CharacterSpell | SpellData | {
+// Тип для объекта с компонентами заклинания
+type SpellComponentsObject = {
   verbal?: boolean;
   somatic?: boolean;
   material?: boolean;
   ritual?: boolean;
   concentration?: boolean;
-}): string => {
-  if (spell.components) {
+  components?: string;
+};
+
+// Обрабатывает компоненты заклинания в удобный для отображения формат
+export const componentsToString = (spell: CharacterSpell | SpellData | SpellComponentsObject): string => {
+  // Если уже есть строка компонентов, возвращаем её
+  if ('components' in spell && typeof spell.components === 'string' && spell.components) {
     return spell.components;
   }
   
   const components: string[] = [];
   
-  if (spell.verbal) components.push('В');
-  if (spell.somatic) components.push('С');
-  if (spell.material) components.push('М');
+  if ('verbal' in spell && spell.verbal) components.push('В');
+  if ('somatic' in spell && spell.somatic) components.push('С');
+  if ('material' in spell && spell.material) components.push('М');
   
   let result = components.join(', ');
   
-  if (spell.material && 'materials' in spell && spell.materials) {
+  if ('material' in spell && spell.material && 'materials' in spell && spell.materials) {
     result += ` (${spell.materials})`;
   }
   

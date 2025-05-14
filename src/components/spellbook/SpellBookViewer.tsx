@@ -1,6 +1,7 @@
+
 import React, { useEffect, useState } from 'react';
-import { SpellCard } from './SpellCard';
-import { SpellFilterPanel } from './SpellFilterPanel';
+import SpellCard from './SpellCard';
+import SpellFilterPanel from './SpellFilterPanel';
 import SpellDetailModal from './SpellDetailModal';
 import { SpellData, convertCharacterSpellToSpellData } from '@/types/spells';
 import { useTheme } from '@/hooks/use-theme';
@@ -53,7 +54,7 @@ const SpellBookViewer: React.FC = () => {
 
       {/* Модальное окно с деталями */}
       <SpellDetailModal
-        isOpen={isDetailModalOpen}
+        open={isDetailModalOpen}
         onClose={handleCloseDetailModal}
         spell={selectedSpell}
       />
