@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import SpellBookViewer from '@/components/spellbook/SpellBookViewer';
 import { useTheme } from '@/hooks/use-theme';
 import ThemeSelector from '@/components/ThemeSelector';
@@ -7,9 +7,13 @@ import NavigationButtons from '@/components/ui/NavigationButtons';
 import FloatingDiceButton from '@/components/dice/FloatingDiceButton';
 import BackgroundWrapper from '@/components/layout/BackgroundWrapper';
 import { spells } from '@/data/spells';
+import { Button } from '@/components/ui/button';
+import { PlusCircle } from 'lucide-react';
+import SpellImportModal from '@/components/spellbook/SpellImportModal';
 
 const SpellbookPage: React.FC = () => {
   const { themeStyles } = useTheme();
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   
   useEffect(() => {
     console.log("SpellbookPage: Загружено заклинаний", spells.length);
@@ -24,6 +28,15 @@ const SpellbookPage: React.FC = () => {
               Книга заклинаний D&D 5e
             </h1>
             <div className="flex items-center space-x-4">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="flex items-center gap-2"
+                onClick={() => setIsImportModalOpen(true)}
+              >
+                <PlusCircle size={16} />
+                Импортировать заклинания
+              </Button>
               <ThemeSelector />
               <NavigationButtons />
             </div>
@@ -33,6 +46,12 @@ const SpellbookPage: React.FC = () => {
         </div>
       </div>
       <FloatingDiceButton />
+
+      {/* Модальное окно импорта заклинаний */}
+      <SpellImportModal 
+        isOpen={isImportModalOpen} 
+        onClose={() => setIsImportModalOpen(false)} 
+      />
     </BackgroundWrapper>
   );
 };

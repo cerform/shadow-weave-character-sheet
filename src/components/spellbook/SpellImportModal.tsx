@@ -3,8 +3,10 @@ import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
-import { processSpellBatch } from '@/utils/spellBatchImporter';
+import { useToast } from "@/components/ui/use-toast";
+import { updateSpellsFromText } from '@/utils/updateSpellsWithInput';
+import { spells } from '@/data/spells';
+import { useNavigate } from 'react-router-dom';
 
 interface SpellImportModalProps {
   isOpen: boolean;
@@ -18,6 +20,7 @@ const SpellImportModal: React.FC<SpellImportModalProps> = ({
   const [importText, setImportText] = useState('');
   const [processing, setProcessing] = useState(false);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const handleImport = () => {
     if (!importText.trim()) {
@@ -31,21 +34,28 @@ const SpellImportModal: React.FC<SpellImportModalProps> = ({
 
     try {
       setProcessing(true);
-      // Обрабатываем заклинания из текста
-      const processed = processSpellBatch(importText);
       
-      // Здесь будет логика сохранения заклинаний
-      // В реальном приложении тут может быть сохранение в БД или localStorage
+      // Обрабатываем заклинания из текста
+      const updatedSpells = updateSpellsFromText(importText, spells);
+      
+      // В реальном приложении тут было бы сохранение в БД или localStorage
+      console.log('Импортировано заклинаний:', updatedSpells.length - spells.length);
       
       toast({
         title: "Заклинания импортированы",
-        description: `Успешно обработано ${processed.length} заклинаний`,
-        variant: "default"
+        description: `Успешно обработано ${updatedSpells.length - spells.length} заклинаний`,
       });
       
       // Закрываем модальное окно и очищаем текст
       setImportText('');
       onClose();
+      
+      // Перезагружаем страницу для обновления списка заклинаний
+      // В реальном приложении вместо перезагрузки можно было бы обновить состояние
+      setTimeout(() => {
+        navigate(0);
+      }, 1500);
+      
     } catch (error) {
       console.error('Ошибка импорта заклинаний:', error);
       toast({
@@ -80,6 +90,10 @@ const SpellImportModal: React.FC<SpellImportModalProps> = ({
             </pre>
             <p className="text-xs text-muted-foreground mt-2">
               [уровень] название компоненты
+            </p>
+            <p className="text-xs text-muted-foreground mt-1">
+              где компоненты: В - вербальный, С - соматический, М - материальный, 
+              Р - ритуальное, К - концентрация
             </p>
           </div>
           
