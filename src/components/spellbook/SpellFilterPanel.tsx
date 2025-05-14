@@ -1,207 +1,215 @@
 
 import React from 'react';
-import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { X, FilterIcon, SlidersHorizontal } from 'lucide-react';
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Search, Filter, X } from 'lucide-react';
 
 interface SpellFilterPanelProps {
   activeLevel: number[];
+  setActiveLevel: (level: number[]) => void;
   activeSchool: string[];
+  setActiveSchool: (school: string[]) => void;
   activeClass: string[];
+  setActiveClass: (cls: string[]) => void;
+  searchTerm: string;
+  setSearchTerm: (term: string) => void;
   allLevels: number[];
   allSchools: string[];
   allClasses: string[];
-  toggleLevel: (level: number) => void;
-  toggleSchool: (school: string) => void;
-  toggleClass: (cls: string) => void;
-  clearFilters: () => void;
-  getBadgeColor: (level: number) => string;
-  getSchoolBadgeColor: (school: string) => string;
-  currentTheme: any;
+  ritualFilter: boolean | null;
+  setRitualFilter: (value: boolean | null) => void;
+  concentrationFilter: boolean | null;
+  setConcentrationFilter: (value: boolean | null) => void;
+  resetFilters: () => void;
 }
 
 const SpellFilterPanel: React.FC<SpellFilterPanelProps> = ({
   activeLevel,
+  setActiveLevel,
   activeSchool,
+  setActiveSchool,
   activeClass,
+  setActiveClass,
+  searchTerm,
+  setSearchTerm,
   allLevels,
   allSchools,
   allClasses,
-  toggleLevel,
-  toggleSchool,
-  toggleClass,
-  clearFilters,
-  getBadgeColor,
-  getSchoolBadgeColor,
-  currentTheme
+  ritualFilter,
+  setRitualFilter,
+  concentrationFilter,
+  setConcentrationFilter,
+  resetFilters
 }) => {
+  const handleLevelToggle = (level: number) => {
+    if (activeLevel.includes(level)) {
+      setActiveLevel(activeLevel.filter(l => l !== level));
+    } else {
+      setActiveLevel([...activeLevel, level]);
+    }
+  };
+
+  const handleSchoolToggle = (school: string) => {
+    if (activeSchool.includes(school)) {
+      setActiveSchool(activeSchool.filter(s => s !== school));
+    } else {
+      setActiveSchool([...activeSchool, school]);
+    }
+  };
+
+  const handleClassToggle = (cls: string) => {
+    if (activeClass.includes(cls)) {
+      setActiveClass(activeClass.filter(c => c !== cls));
+    } else {
+      setActiveClass([...activeClass, cls]);
+    }
+  };
+
+  const handleRitualToggle = () => {
+    // Трехстороннее состояние: null -> true -> false -> null
+    if (ritualFilter === null) {
+      setRitualFilter(true);
+    } else if (ritualFilter === true) {
+      setRitualFilter(false);
+    } else {
+      setRitualFilter(null);
+    }
+  };
+
+  const handleConcentrationToggle = () => {
+    // Трехстороннее состояние: null -> true -> false -> null
+    if (concentrationFilter === null) {
+      setConcentrationFilter(true);
+    } else if (concentrationFilter === true) {
+      setConcentrationFilter(false);
+    } else {
+      setConcentrationFilter(null);
+    }
+  };
+
+  const getRitualLabel = () => {
+    if (ritualFilter === null) return "Ритуал: Любой";
+    if (ritualFilter === true) return "Только ритуалы";
+    return "Исключить ритуалы";
+  };
+
+  const getConcentrationLabel = () => {
+    if (concentrationFilter === null) return "Концентрация: Любая";
+    if (concentrationFilter === true) return "Только с концентрацией";
+    return "Без концентрации";
+  };
+
   return (
-    <div className="filter-panel bg-card/80 backdrop-blur-md p-4 rounded-lg mb-6 animate-in fade-in-50 slide-in-from-top-5 border"
-         style={{ borderColor: `${currentTheme?.accent}50` || 'transparent' }}>
-      <div className="flex justify-between items-center mb-4">
-        <div className="flex items-center gap-2">
-          <FilterIcon size={18} style={{ color: currentTheme?.accent }} />
-          <h3 className="text-lg font-medium" style={{ color: currentTheme?.textColor }}>Фильтры заклинаний</h3>
-        </div>
-        <Button 
-          variant="ghost" 
-          size="sm"
-          onClick={clearFilters}
-          className="h-8 px-2 hover:bg-accent/10"
-          style={{ 
-            color: currentTheme?.accent,
-            borderColor: `${currentTheme?.accent}30`
-          }}
-        >
-          Сбросить <X className="ml-1 h-3 w-3" />
-        </Button>
-      </div>
-      
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <Card className="mb-4">
+      <CardHeader>
+        <CardTitle className="flex justify-between items-center">
+          <div className="flex items-center gap-2">
+            <Filter className="h-5 w-5" />
+            Фильтры заклинаний
+          </div>
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={resetFilters}
+          >
+            <X className="h-4 w-4 mr-1" />
+            Сбросить
+          </Button>
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {/* Поиск по названию */}
         <div>
-          <h4 className="text-sm font-medium mb-2 flex items-center gap-1" style={{ color: currentTheme?.textColor }}>
-            <SlidersHorizontal size={14} /> Уровень
-          </h4>
+          <Label htmlFor="search">Поиск заклинания</Label>
+          <div className="relative">
+            <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input 
+              id="search"
+              className="pl-8"
+              placeholder="Введите название..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+        </div>
+
+        {/* Фильтр по уровню заклинаний */}
+        <div>
+          <Label className="block mb-2">Уровень</Label>
           <div className="flex flex-wrap gap-2">
             {allLevels.map(level => (
               <Badge
-                key={`level-filter-${level}`}
+                key={`level-${level}`}
                 variant={activeLevel.includes(level) ? "default" : "outline"}
-                className="spell-filter-badge cursor-pointer transition-all"
-                style={activeLevel.includes(level) ? {
-                  backgroundColor: currentTheme?.spellLevels?.[level] || getBadgeColor(level),
-                  color: '#fff',
-                  borderColor: 'transparent',
-                } : {
-                  borderColor: `${currentTheme?.accent}50`,
-                  color: currentTheme?.textColor
-                }}
-                onClick={() => toggleLevel(level)}
+                className="cursor-pointer"
+                onClick={() => handleLevelToggle(level)}
               >
-                {level === 0 ? 'Заговор' : level}
+                {level === 0 ? "Заговор" : `${level}`}
               </Badge>
             ))}
           </div>
         </div>
-        
+
+        {/* Фильтр по школам магии */}
         <div>
-          <h4 className="text-sm font-medium mb-2 flex items-center gap-1" style={{ color: currentTheme?.textColor }}>
-            <SlidersHorizontal size={14} /> Школа
-          </h4>
+          <Label className="block mb-2">Школа магии</Label>
           <div className="flex flex-wrap gap-2">
             {allSchools.map(school => (
               <Badge
-                key={`school-filter-${school}`}
+                key={`school-${school}`}
                 variant={activeSchool.includes(school) ? "default" : "outline"}
-                className="spell-filter-badge cursor-pointer transition-all"
-                style={activeSchool.includes(school) ? {
-                  backgroundColor: getSchoolBadgeColor(school),
-                  color: '#fff',
-                  borderColor: 'transparent',
-                } : {
-                  borderColor: `${currentTheme?.accent}50`,
-                  color: currentTheme?.textColor
-                }}
-                onClick={() => toggleSchool(school)}
+                className="cursor-pointer"
+                onClick={() => handleSchoolToggle(school)}
               >
                 {school}
               </Badge>
             ))}
           </div>
         </div>
-        
+
+        {/* Фильтр по классам персонажей */}
         <div>
-          <h4 className="text-sm font-medium mb-2 flex items-center gap-1" style={{ color: currentTheme?.textColor }}>
-            <SlidersHorizontal size={14} /> Класс
-          </h4>
+          <Label className="block mb-2">Класс персонажа</Label>
           <div className="flex flex-wrap gap-2">
             {allClasses.map(cls => (
               <Badge
-                key={`class-filter-${cls}`}
+                key={`class-${cls}`}
                 variant={activeClass.includes(cls) ? "default" : "outline"}
-                className="spell-filter-badge cursor-pointer transition-all"
-                style={activeClass.includes(cls) ? {
-                  backgroundColor: currentTheme?.accent,
-                  color: '#fff',
-                  borderColor: 'transparent',
-                } : {
-                  borderColor: `${currentTheme?.accent}50`,
-                  color: currentTheme?.textColor
-                }}
-                onClick={() => toggleClass(cls)}
+                className="cursor-pointer"
+                onClick={() => handleClassToggle(cls)}
               >
                 {cls}
               </Badge>
             ))}
           </div>
         </div>
-      </div>
-      
-      {(activeLevel.length > 0 || activeSchool.length > 0 || activeClass.length > 0) && (
-        <>
-          <Separator className="my-4" style={{ backgroundColor: `${currentTheme?.accent}30` }} />
-          <div>
-            <h4 className="text-sm font-medium mb-2" style={{ color: currentTheme?.textColor }}>Активные фильтры</h4>
-            <div className="flex flex-wrap gap-2">
-              {activeLevel.map(level => (
-                <Badge
-                  key={`active-level-${level}`}
-                  variant="default"
-                  className="flex items-center transition-all"
-                  style={{
-                    backgroundColor: currentTheme?.spellLevels?.[level] || getBadgeColor(level),
-                    color: '#fff'
-                  }}
-                >
-                  {level === 0 ? 'Заговор' : `Уровень ${level}`}
-                  <X
-                    className="ml-1 h-3 w-3 cursor-pointer"
-                    onClick={() => toggleLevel(level)}
-                  />
-                </Badge>
-              ))}
-              
-              {activeSchool.map(school => (
-                <Badge
-                  key={`active-school-${school}`}
-                  variant="default"
-                  className="flex items-center transition-all"
-                  style={{
-                    backgroundColor: getSchoolBadgeColor(school),
-                    color: '#fff'
-                  }}
-                >
-                  {school}
-                  <X
-                    className="ml-1 h-3 w-3 cursor-pointer"
-                    onClick={() => toggleSchool(school)}
-                  />
-                </Badge>
-              ))}
-              
-              {activeClass.map(cls => (
-                <Badge
-                  key={`active-class-${cls}`}
-                  variant="default"
-                  className="flex items-center transition-all"
-                  style={{
-                    backgroundColor: currentTheme?.accent,
-                    color: '#fff'
-                  }}
-                >
-                  {cls}
-                  <X
-                    className="ml-1 h-3 w-3 cursor-pointer"
-                    onClick={() => toggleClass(cls)}
-                  />
-                </Badge>
-              ))}
-            </div>
-          </div>
-        </>
-      )}
-    </div>
+
+        {/* Дополнительные фильтры */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+          <Button 
+            variant={ritualFilter !== null ? "default" : "outline"} 
+            size="sm" 
+            onClick={handleRitualToggle}
+            className={`justify-start ${ritualFilter === false ? 'bg-destructive' : ''}`}
+          >
+            {getRitualLabel()}
+          </Button>
+          
+          <Button 
+            variant={concentrationFilter !== null ? "default" : "outline"} 
+            size="sm" 
+            onClick={handleConcentrationToggle}
+            className={`justify-start ${concentrationFilter === false ? 'bg-destructive' : ''}`}
+          >
+            {getConcentrationLabel()}
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 

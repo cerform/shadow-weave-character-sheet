@@ -39,13 +39,23 @@ export const parseComponents = (componentString: string): {
   verbal: boolean;
   somatic: boolean;
   material: boolean;
+  materials?: string;
   ritual: boolean;
   concentration: boolean;
 } => {
+  let materials: string | undefined;
+  
+  // Извлекаем материальные компоненты из скобок, если они есть
+  const materialsMatch = componentString.match(/\(([^)]+)\)/);
+  if (materialsMatch && materialsMatch[1]) {
+    materials = materialsMatch[1].trim();
+  }
+  
   return {
     verbal: componentString.includes('В'),
     somatic: componentString.includes('С'),
     material: componentString.includes('М'),
+    materials,
     ritual: componentString.toLowerCase().includes('р') || 
            componentString.includes('Р') || 
            componentString.toLowerCase().includes('r'),
