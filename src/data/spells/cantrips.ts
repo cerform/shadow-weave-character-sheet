@@ -4,7 +4,6 @@ import { CharacterSpell } from '@/types/character';
 export const cantrips: CharacterSpell[] = [
   {
     id: "cantrip-1",
-    
     name: "Брызги кислоты",
     level: 0,
     school: "Воплощение",
@@ -20,7 +19,6 @@ export const cantrips: CharacterSpell[] = [
   },
   {
     id: "cantrip-2",
-    
     name: "Власть над огнём",
     level: 0,
     school: "Преобразование",
@@ -36,7 +34,6 @@ export const cantrips: CharacterSpell[] = [
   },
   {
     id: "cantrip-3",
-    
     name: "Волшебная рука",
     level: 0,
     school: "Вызов",
@@ -51,8 +48,7 @@ export const cantrips: CharacterSpell[] = [
     classes: ["Бард", "Чародей", "Волшебник", "Колдун"]
   },
   {
-    id: "cantrip-4",
-    
+    id: "cantrip-4",    
     name: "Волшебный камень",
     level: 0,
     school: "Преобразование",
@@ -67,8 +63,7 @@ export const cantrips: CharacterSpell[] = [
     classes: ["Друид", "Искусственный"]
   },
   {
-    id: "cantrip-5",
-    
+    id: "cantrip-5",    
     name: "Вспышка мечей",
     level: 0,
     school: "Воплощение",
@@ -83,8 +78,7 @@ export const cantrips: CharacterSpell[] = [
     classes: ["Чародей", "Колдун", "Волшебник"]
   },
   {
-    id: "cantrip-6",
-    
+    id: "cantrip-6",    
     name: "Громовой клинок",
     level: 0,
     school: "Воплощение",
@@ -99,8 +93,7 @@ export const cantrips: CharacterSpell[] = [
     classes: ["Искусственный", "Колдун", "Волшебник"]
   },
   {
-    id: "cantrip-7",
-    
+    id: "cantrip-7",    
     name: "Дружба",
     level: 0,
     school: "Очарование",
@@ -115,8 +108,7 @@ export const cantrips: CharacterSpell[] = [
     classes: ["Бард", "Чародей", "Колдун"]
   },
   {
-    id: "cantrip-8",
-    
+    id: "cantrip-8",    
     name: "Дубинка",
     level: 0,
     school: "Преобразование",
@@ -131,8 +123,7 @@ export const cantrips: CharacterSpell[] = [
     classes: ["Друид"]
   },
   {
-    id: "cantrip-9",
-    
+    id: "cantrip-9",    
     name: "Защита от оружия",
     level: 0,
     school: "Ограждение",
@@ -147,8 +138,7 @@ export const cantrips: CharacterSpell[] = [
     classes: ["Жрец"]
   },
   {
-    id: "cantrip-10",
-    
+    id: "cantrip-10",    
     name: "Злая насмешка",
     level: 0,
     school: "Очарование",
@@ -163,8 +153,7 @@ export const cantrips: CharacterSpell[] = [
     classes: ["Бард"]
   },
   {
-    id: "cantrip-11",
-    
+    id: "cantrip-11",    
     name: "Искусство друидов",
     level: 0,
     school: "Преобразование",
@@ -179,8 +168,7 @@ export const cantrips: CharacterSpell[] = [
     classes: ["Друид"]
   },
   {
-    id: "cantrip-12",
-    
+    id: "cantrip-12",    
     name: "Иссушающий укол",
     level: 0,
     school: "Некромантия",
@@ -195,8 +183,7 @@ export const cantrips: CharacterSpell[] = [
     classes: ["Колдун"]
   },
   {
-    id: "cantrip-13",
-    
+    id: "cantrip-13",    
     name: "Клинок зелёного пламени",
     level: 0,
     school: "Воплощение",
@@ -211,8 +198,7 @@ export const cantrips: CharacterSpell[] = [
     classes: ["Искусственный", "Волшебник"]
   },
   {
-    id: "cantrip-14",
-    
+    id: "cantrip-14",    
     name: "Кодировка мыслей",
     level: 0,
     school: "Очарование",
@@ -228,7 +214,6 @@ export const cantrips: CharacterSpell[] = [
   },
   {
     id: "cantrip-15",
-    
     name: "Лассо молнии",
     level: 0,
     school: "Воплощение",
@@ -243,8 +228,7 @@ export const cantrips: CharacterSpell[] = [
     classes: ["Чародей"]
   },
   {
-    id: "cantrip-16",
-    
+    id: "cantrip-16",    
     name: "Леденящее прикосновение",
     level: 0,
     school: "Некромантия",
@@ -259,8 +243,7 @@ export const cantrips: CharacterSpell[] = [
     classes: ["Колдун", "Волшебник"]
   },
   {
-    id: "cantrip-17",
-    
+    id: "cantrip-17",    
     name: "Лепка земли",
     level: 0,
     school: "Преобразование",
@@ -275,8 +258,7 @@ export const cantrips: CharacterSpell[] = [
     classes: ["Друид"]
   },
   {
-    id: "cantrip-18",
-    
+    id: "cantrip-18",    
     name: "Луч холода",
     level: 0,
     school: "Воплощение",
@@ -291,8 +273,7 @@ export const cantrips: CharacterSpell[] = [
     classes: ["Чародей", "Волшебник"]
   },
   {
-    id: "cantrip-19",
-    
+    id: "cantrip-19",    
     name: "Малая иллюзия",
     level: 0,
     school: "Иллюзия",
@@ -307,8 +288,7 @@ export const cantrips: CharacterSpell[] = [
     classes: ["Бард", "Колдун", "Волшебник"]
   },
   {
-    id: "cantrip-20",
-    
+    id: "cantrip-20",    
     name: "Меткий удар",
     level: 0,
     school: "Воплощение",
@@ -323,8 +303,7 @@ export const cantrips: CharacterSpell[] = [
     classes: ["Жрец"]
   },
   {
-    id: "cantrip-21",
-    
+    id: "cantrip-21",    
     name: "Мистический заряд",
     level: 0,
     school: "Вызов",
@@ -339,8 +318,7 @@ export const cantrips: CharacterSpell[] = [
     classes: ["Колдун"]
   },
   {
-    id: "cantrip-22",
-    
+    id: "cantrip-22",    
     name: "Нашествие",
     level: 0,
     school: "Воплощение",
@@ -355,8 +333,7 @@ export const cantrips: CharacterSpell[] = [
     classes: ["Чародей", "Друид", "Волшебник"]
   },
   {
-    id: "cantrip-23",
-    
+    id: "cantrip-23",    
     name: "Обморожение",
     level: 0,
     school: "Воплощение",
@@ -371,8 +348,7 @@ export const cantrips: CharacterSpell[] = [
     classes: ["Друид", "Волшебник"]
   },
   {
-    id: "cantrip-24",
-    
+    id: "cantrip-24",    
     name: "Огненный снаряд",
     level: 0,
     school: "Вызов",
@@ -387,8 +363,7 @@ export const cantrips: CharacterSpell[] = [
     classes: ["Чародей", "Волшебник"]
   },
   {
-    id: "cantrip-25",
-    
+    id: "cantrip-25",    
     name: "Первобытная дикость",
     level: 0,
     school: "Преобразование",
@@ -403,8 +378,7 @@ export const cantrips: CharacterSpell[] = [
     classes: ["Друид"]
   },
   {
-    id: "cantrip-26",
-    
+    id: "cantrip-26",    
     name: "Пляшущие огоньки",
     level: 0,
     school: "Вызов",
@@ -419,8 +393,7 @@ export const cantrips: CharacterSpell[] = [
     classes: ["Бард", "Волшебник"]
   },
   {
-    id: "cantrip-27",
-    
+    id: "cantrip-27",    
     name: "Погребальный звон",
     level: 0,
     school: "Некромантия",
@@ -435,8 +408,7 @@ export const cantrips: CharacterSpell[] = [
     classes: ["Жрец", "Колдун", "Волшебник"]
   },
   {
-    id: "cantrip-28",
-    
+    id: "cantrip-28",    
     name: "Починка",
     level: 0,
     school: "Преобразование",
@@ -451,8 +423,7 @@ export const cantrips: CharacterSpell[] = [
     classes: ["Бард", "Жрец", "Волшебник", "Искусственный"]
   },
   {
-    id: "cantrip-29",
-    
+    id: "cantrip-29",    
     name: "Раскат грома",
     level: 0,
     school: "Воплощение",
@@ -467,8 +438,7 @@ export const cantrips: CharacterSpell[] = [
     classes: ["Бард", "Чародей", "Волшебник"]
   },
   {
-    id: "cantrip-30",
-    
+    id: "cantrip-30",    
     name: "Расщепление разума",
     level: 0,
     school: "Очарование",
@@ -483,8 +453,7 @@ export const cantrips: CharacterSpell[] = [
     classes: ["Колдун"]
   },
   {
-    id: "cantrip-31",
-    
+    id: "cantrip-31",    
     name: "Свет",
     level: 0,
     school: "Вызов",
@@ -499,8 +468,7 @@ export const cantrips: CharacterSpell[] = [
     classes: ["Бард", "Жрец", "Паладин", "Чародей", "Волшебник", "Искусственный"]
   },
   {
-    id: "cantrip-32",
-    
+    id: "cantrip-32",    
     name: "Священное пламя",
     level: 0,
     school: "Воплощение",
@@ -515,8 +483,7 @@ export const cantrips: CharacterSpell[] = [
     classes: ["Жрец"]
   },
   {
-    id: "cantrip-33",
-    
+    id: "cantrip-33",    
     name: "Слово сияния",
     level: 0,
     school: "Воплощение",
@@ -530,8 +497,7 @@ export const cantrips: CharacterSpell[] = [
     classes: ["Жрец"]
   },
   {
-    id: "cantrip-34",
-    
+    id: "cantrip-34",    
     name: "Сообщение",
     level: 0,
     school: "Преобразование",
@@ -546,8 +512,7 @@ export const cantrips: CharacterSpell[] = [
     classes: ["Бард", "Чародей", "Волшебник"]
   },
   {
-    id: "cantrip-35",
-    
+    id: "cantrip-35",    
     name: "Сопротивление",
     level: 0,
     school: "Ограждение",
@@ -562,8 +527,7 @@ export const cantrips: CharacterSpell[] = [
     classes: ["Жрец", "Друид"]
   },
   {
-    id: "cantrip-36",
-    
+    id: "cantrip-36",    
     name: "Сотворение костра",
     level: 0,
     school: "Вызов",
@@ -578,8 +542,7 @@ export const cantrips: CharacterSpell[] = [
     classes: ["Друид", "Волшебник", "Следопыт"]
   },
   {
-    id: "cantrip-37",
-    
+    id: "cantrip-37",    
     name: "Сотворение пламени",
     level: 0,
     school: "Вызов",
@@ -594,8 +557,7 @@ export const cantrips: CharacterSpell[] = [
     classes: ["Друид", "Жрец"]
   },
   {
-    id: "cantrip-38",
-    
+    id: "cantrip-38",    
     name: "Терновый кнут",
     level: 0,
     school: "Преобразование",
@@ -610,8 +572,7 @@ export const cantrips: CharacterSpell[] = [
     classes: ["Друид"]
   },
   {
-    id: "cantrip-39",
-    
+    id: "cantrip-39",    
     name: "Указание",
     level: 0,
     school: "Ограждение",
@@ -626,8 +587,7 @@ export const cantrips: CharacterSpell[] = [
     classes: ["Жрец"]
   },
   {
-    id: "cantrip-40",
-    
+    id: "cantrip-40",    
     name: "Уход за умирающим",
     level: 0,
     school: "Ограждение",
@@ -642,8 +602,7 @@ export const cantrips: CharacterSpell[] = [
     classes: ["Жрец"]
   },
   {
-    id: "cantrip-41",
-    
+    id: "cantrip-41",    
     name: "Фокусы",
     level: 0,
     school: "Преобразование",
@@ -658,8 +617,7 @@ export const cantrips: CharacterSpell[] = [
     classes: ["Бард", "Чародей", "Волшебник"]
   },
   {
-    id: "cantrip-42",
-    
+    id: "cantrip-42",    
     name: "Формование воды",
     level: 0,
     school: "Преобразование",
@@ -674,8 +632,7 @@ export const cantrips: CharacterSpell[] = [
     classes: ["Друид", "Волшебник"]
   },
   {
-    id: "cantrip-43",
-    
+    id: "cantrip-43",    
     name: "Чудотворство",
     level: 0,
     school: "Воплощение",
@@ -689,8 +646,7 @@ export const cantrips: CharacterSpell[] = [
     classes: ["Жрец"]
   },
   {
-    id: "cantrip-44",
-    
+    id: "cantrip-44",    
     name: "Шквал",
     level: 0,
     school: "Воплощение",
@@ -705,8 +661,7 @@ export const cantrips: CharacterSpell[] = [
     classes: ["Друид", "Чародей", "Волшебник"]
   },
   {
-    id: "cantrip-45",
-    
+    id: "cantrip-45",    
     name: "Электрошок",
     level: 0,
     school: "Воплощение",
@@ -721,8 +676,7 @@ export const cantrips: CharacterSpell[] = [
     classes: ["Чародей", "Волшебник"]
   },
   {
-    id: "cantrip-46",
-    
+    id: "cantrip-46",    
     name: "Ядовитые брызги",
     level: 0,
     school: "Воплощение",
