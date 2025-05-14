@@ -130,12 +130,14 @@ const SpellBookViewer: React.FC = () => {
       </div>
 
       {/* Модальное окно с деталями */}
-      <SpellDetailModal
-        spell={selectedSpell}
-        open={isDetailModalOpen}
-        onClose={handleCloseDetailModal}
-        currentTheme={currentTheme}
-      />
+      {selectedSpell && (
+        <SpellDetailModal
+          spell={selectedSpell}
+          isOpen={isDetailModalOpen}
+          onClose={handleCloseDetailModal}
+          theme={currentTheme}
+        />
+      )}
     </div>
   );
 };

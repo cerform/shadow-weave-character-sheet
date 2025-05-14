@@ -152,10 +152,10 @@ const SpellDetailModal: React.FC<SpellDetailModalProps> = ({
               </>
             )}
             
-            {(spell.higherLevels || spell.higher_level) && (
+            {(spell.higherLevels) && (
               <div className="mt-4 pt-4 border-t border-primary/10">
                 <h4 className="font-bold mb-2">На более высоких уровнях</h4>
-                <p className="leading-relaxed">{spell.higherLevels || spell.higher_level}</p>
+                <p className="leading-relaxed">{spell.higherLevels}</p>
               </div>
             )}
             

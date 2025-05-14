@@ -1,10 +1,10 @@
+
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Character, CharacterSpell } from '@/types/character';
-import { SpellData } from '@/types/spells';
 import SpellPanel from '../SpellPanel';
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
@@ -45,7 +45,12 @@ const SpellsTab: React.FC<SpellsTabProps> = ({ character, onUpdateCharacter }) =
   const themeKey = (theme || 'default') as keyof typeof themes;
   const currentTheme = themes[themeKey] || themes.default;
   
-  const characterSpells = character.spells?.known || [];
+  // Safely access character spells
+  const characterSpells = character.spells && Array.isArray(character.spells) 
+    ? character.spells 
+    : character.spells && typeof character.spells === 'object' && Array.isArray(character.spells.known) 
+    ? character.spells.known 
+    : [];
   const hasPreparedSpellSystem = character.spellcasting?.prepareSpells || false;
   const maxPreparedSpells = character.spellcasting?.maxPreparedSpells || 0;
   const spellcastingAbility = character.spellcasting?.ability || "INT";
@@ -91,12 +96,20 @@ const SpellsTab: React.FC<SpellsTabProps> = ({ character, onUpdateCharacter }) =
     });
     
     // Update character
-    onUpdateCharacter({
-      spells: {
-        ...character.spells,
-        known: updatedSpells
-      }
-    });
+    if (character.spells && typeof character.spells === 'object' && 'known' in character.spells) {
+      // For character.spells.known structure
+      onUpdateCharacter({
+        spells: {
+          ...character.spells,
+          known: updatedSpells
+        }
+      });
+    } else {
+      // For character.spells as direct array
+      onUpdateCharacter({
+        spells: updatedSpells
+      });
+    }
   };
   
   // Remove spell
@@ -104,12 +117,20 @@ const SpellsTab: React.FC<SpellsTabProps> = ({ character, onUpdateCharacter }) =
     const updatedSpells = characterSpells.filter(spell => spell.id !== spellId);
     
     // Update character
-    onUpdateCharacter({
-      spells: {
-        ...character.spells,
-        known: updatedSpells
-      }
-    });
+    if (character.spells && typeof character.spells === 'object' && 'known' in character.spells) {
+      // For character.spells.known structure
+      onUpdateCharacter({
+        spells: {
+          ...character.spells,
+          known: updatedSpells
+        }
+      });
+    } else {
+      // For character.spells as direct array
+      onUpdateCharacter({
+        spells: updatedSpells
+      });
+    }
   };
   
   // Handle level filter change

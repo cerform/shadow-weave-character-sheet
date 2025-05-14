@@ -55,14 +55,15 @@ const SpellSelectionModal: React.FC<SpellSelectionModalProps> = ({
   
   // Available spell slots
   const maxPreparedSpells = character.spellcasting?.maxPreparedSpells || 0;
-  const currentPreparedSpells = (character.spells && character.spells.known) 
-    ? character.spells.known.length 
-    : 0;
   
-  // Already known spells (including prepared and non-prepared)
-  const knownSpells = (character.spells && character.spells.known) 
+  // Safely access character spells
+  const characterSpells = character.spells && Array.isArray(character.spells) 
+    ? character.spells 
+    : character.spells && typeof character.spells === 'object' && Array.isArray(character.spells.known) 
     ? character.spells.known 
     : [];
+  
+  const currentPreparedSpells = characterSpells.filter(spell => spell.prepared).length;
   
   // Filter spells for character class
   useEffect(() => {
@@ -118,7 +119,7 @@ const SpellSelectionModal: React.FC<SpellSelectionModalProps> = ({
     }
     
     // Check if already known
-    const isAlreadyKnown = knownSpells.some(s => s.id === spell.id);
+    const isAlreadyKnown = characterSpells.some(s => s.id === spell.id);
     if (isAlreadyKnown) {
       toast({
         title: "Заклинание уже известно",
@@ -146,12 +147,18 @@ const SpellSelectionModal: React.FC<SpellSelectionModalProps> = ({
     };
     
     // Add to character spells
-    const updatedSpells = {
-      ...character.spells,
-      known: [...(character.spells?.known || []), characterSpell]
-    };
-    
-    onUpdate({ spells: updatedSpells });
+    if (character.spells && typeof character.spells === 'object' && 'known' in character.spells) {
+      // For character.spells.known structure
+      const updatedSpells = {
+        ...character.spells,
+        known: [...(character.spells.known || []), characterSpell]
+      };
+      onUpdate({ spells: updatedSpells });
+    } else {
+      // For character.spells as direct array
+      const updatedSpells = [...(Array.isArray(character.spells) ? character.spells : []), characterSpell];
+      onUpdate({ spells: updatedSpells });
+    }
     
     toast({
       title: "Заклинание добавлено",
@@ -163,14 +170,20 @@ const SpellSelectionModal: React.FC<SpellSelectionModalProps> = ({
   
   // Remove spell from character
   const handleRemoveSpell = (spellId: string) => {
-    const updatedKnownSpells = knownSpells.filter(s => s.id !== spellId);
+    const updatedSpells = characterSpells.filter(s => s.id !== spellId);
     
-    const updatedSpells = {
-      ...character.spells,
-      known: updatedKnownSpells
-    };
-    
-    onUpdate({ spells: updatedSpells });
+    if (character.spells && typeof character.spells === 'object' && 'known' in character.spells) {
+      // For character.spells.known structure
+      onUpdate({
+        spells: {
+          ...character.spells,
+          known: updatedSpells
+        }
+      });
+    } else {
+      // For character.spells as direct array
+      onUpdate({ spells: updatedSpells });
+    }
     
     toast({
       title: "Заклинание удалено",
@@ -186,7 +199,7 @@ const SpellSelectionModal: React.FC<SpellSelectionModalProps> = ({
   
   // Check if spell is already added
   const isSpellAdded = (spellId: string) => {
-    return knownSpells.some(s => s.id === spellId);
+    return characterSpells.some(s => s.id === spellId);
   };
   
   // Sort spells
@@ -364,9 +377,9 @@ const SpellSelectionModal: React.FC<SpellSelectionModalProps> = ({
           
           <TabsContent value="known" className="m-0">
             <ScrollArea className="h-[60vh]">
-              {knownSpells.length > 0 ? (
+              {characterSpells.length > 0 ? (
                 <div className="divide-y divide-border">
-                  {knownSpells.map((spell) => {
+                  {characterSpells.map((spell) => {
                     // Find full spell data
                     const fullSpell = spells.find(s => s.id === spell.id);
                     if (!fullSpell) return null;

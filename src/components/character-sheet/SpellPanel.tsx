@@ -119,16 +119,20 @@ const SpellPanel: React.FC<SpellPanelProps> = ({
             <div className="flex">
               <dt className="w-1/3 font-medium">Компоненты:</dt>
               <dd>
-                {Array.isArray(spellData.components) ? spellData.components.join(", ") : 
-                 typeof spellData.components === 'object' ? 
+                {typeof spellData.components === 'string' ? spellData.components : 
+                 spellData.components && typeof spellData.components === 'object' ? 
                    [
                      spellData.components.verbal && 'В',
                      spellData.components.somatic && 'С',
                      spellData.components.material && 'М'
                    ].filter(Boolean).join(", ") : 
-                   spellData.components}
-                {spellData.components?.material && spellData.components?.materials && (
-                  <span className="text-muted-foreground ml-1">({spellData.components.materials})</span>
+                   [
+                     spellData.verbal && 'В',
+                     spellData.somatic && 'С',
+                     spellData.material && 'М'
+                   ].filter(Boolean).join(", ")}
+                {spellData.material && spellData.materials && (
+                  <span className="text-muted-foreground ml-1">({spellData.materials})</span>
                 )}
               </dd>
             </div>
