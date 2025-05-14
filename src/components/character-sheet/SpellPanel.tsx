@@ -1,20 +1,27 @@
 
 import React, { useState } from 'react';
-import { CharacterSpell, Character } from '@/types/character';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Sparkles, Check, Trash2 } from 'lucide-react';
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
-import { cn } from '@/lib/utils';
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Character, CharacterSpell } from '@/types/character';
+import { 
+  CirclePlay, 
+  Trash2, 
+  ChevronDown, 
+  ChevronUp, 
+  Clock, 
+  Ruler, 
+  Hourglass,
+  CircleCheck
+} from 'lucide-react';
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 
 interface SpellPanelProps {
   spellData: CharacterSpell;
   character: Character;
-  canPrepare: boolean;
+  canPrepare?: boolean;
   onTogglePrepared: () => void;
   onRemoveSpell: () => void;
 }
@@ -22,164 +29,168 @@ interface SpellPanelProps {
 const SpellPanel: React.FC<SpellPanelProps> = ({
   spellData,
   character,
-  canPrepare,
+  canPrepare = false,
   onTogglePrepared,
   onRemoveSpell
 }) => {
-  const [isOpen, setIsOpen] = useState(false);
-
-  const getLevelText = (level: number) => {
-    if (level === 0) return 'Заговор';
-    return `${level} уровень`;
+  const [expanded, setExpanded] = useState(false);
+  
+  const toggleExpand = () => {
+    setExpanded(!expanded);
+  };
+  
+  // Преобразование описания в формат для отображения
+  const formatDescription = (description: string | string[] | undefined) => {
+    if (!description) return <p>Нет описания</p>;
+    
+    if (typeof description === 'string') {
+      return description.split('\n').map((paragraph, idx) => (
+        <p key={idx} className="mb-2">{paragraph}</p>
+      ));
+    }
+    
+    if (Array.isArray(description)) {
+      return description.map((paragraph, idx) => (
+        <p key={idx} className="mb-2">{paragraph}</p>
+      ));
+    }
+    
+    return <p>Нет описания</p>;
   };
 
-  // Helper function to safely interpret components
-  const getComponentString = () => {
-    // If components is a string, use it directly
+  // Получение строки компонентов заклинания
+  const getSpellComponents = () => {
+    if (!spellData) return 'Н/Д';
+    
+    let componentsStr = '';
+    
     if (typeof spellData.components === 'string') {
-      return spellData.components;
+      return spellData.components; // Если компоненты уже представлены в виде строки
     }
     
-    // If it's an object with verbal/somatic/material properties
-    if (spellData.components && typeof spellData.components === 'object') {
-      const comp = spellData.components as Record<string, boolean>;
-      const componentParts: string[] = [];
-      
-      if (comp.verbal) componentParts.push('В');
-      if (comp.somatic) componentParts.push('С');
-      if (comp.material) componentParts.push('М');
-      
-      return componentParts.join(", ");
-    }
+    // Проверяем прямые булевские свойства
+    if (spellData.verbal) componentsStr += 'В';
+    if (spellData.somatic) componentsStr += 'С';
+    if (spellData.material) componentsStr += 'М';
     
-    // If we have direct verbal/somatic/material properties on the spell
-    const componentParts: string[] = [];
-    if (spellData.verbal) componentParts.push('В');
-    if (spellData.somatic) componentParts.push('С');
-    if (spellData.material) componentParts.push('М');
-    
-    return componentParts.join(", ");
+    return componentsStr || 'Н/Д';
   };
-
+  
+  // Получение материальных компонентов для отображения
+  const getMaterialComponents = () => {
+    if (!spellData) return '';
+    
+    if (typeof spellData === 'object' && 'materials' in spellData && spellData.materials) {
+      return `(${spellData.materials})`;
+    }
+    
+    return '';
+  };
+  
   return (
-    <Collapsible
-      open={isOpen}
-      onOpenChange={setIsOpen}
-      className="border border-primary/10 rounded-lg bg-black/30 backdrop-blur-sm overflow-hidden"
-    >
-      <div className="flex items-center p-3">
-        <CollapsibleTrigger className="flex-1 flex items-center text-left">
-          <div className="mr-4">
-            <Badge
-              variant="outline"
-              className={cn(
-                "px-2 py-0 text-xs font-normal",
-                spellData.level === 0 ? "border-blue-400 text-blue-400" :
-                spellData.level <= 3 ? "border-green-400 text-green-400" :
-                spellData.level <= 6 ? "border-amber-400 text-amber-400" :
-                "border-purple-400 text-purple-400"
-              )}
-            >
-              {getLevelText(spellData.level)}
-            </Badge>
-          </div>
-          <div className="flex-1">
-            <div className="font-medium">{spellData.name}</div>
-            <div className="text-xs text-muted-foreground flex flex-wrap gap-1">
-              <span>{spellData.school || 'Универсальная'}</span>
-              {spellData.ritual && <span>• Ритуал</span>}
-              {spellData.concentration && <span>• Концентрация</span>}
-            </div>
-          </div>
-        </CollapsibleTrigger>
-        
-        <div className="flex items-center gap-2">
-          {canPrepare && (
-            <Button
-              size="sm"
-              variant={spellData.prepared ? "default" : "outline"}
-              className={spellData.prepared ? "bg-primary" : ""}
-              onClick={(e) => {
-                e.stopPropagation();
-                onTogglePrepared();
-              }}
-              title={spellData.prepared ? "Снять подготовку" : "Подготовить заклинание"}
-            >
-              {spellData.prepared ? (
-                <Check className="h-4 w-4" />
-              ) : (
-                <Sparkles className="h-4 w-4" />
-              )}
-            </Button>
-          )}
-          
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={(e) => {
-              e.stopPropagation();
-              onRemoveSpell();
-            }}
-            title="Удалить заклинание"
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
-        </div>
-      </div>
-      
-      <CollapsibleContent>
-        <div className="p-4 pt-1 border-t border-primary/10">
-          <dl className="space-y-2 text-sm">
-            {spellData.castingTime && (
-              <div className="flex">
-                <dt className="w-1/3 font-medium">Время накладывания:</dt>
-                <dd>{spellData.castingTime}</dd>
-              </div>
-            )}
-            
-            {spellData.range && (
-              <div className="flex">
-                <dt className="w-1/3 font-medium">Дистанция:</dt>
-                <dd>{spellData.range}</dd>
-              </div>
-            )}
-            
-            <div className="flex">
-              <dt className="w-1/3 font-medium">Компоненты:</dt>
-              <dd>
-                {getComponentString()}
-                {spellData.material && spellData.materials && (
-                  <span className="text-muted-foreground ml-1">({spellData.materials})</span>
+    <Card className={`border ${spellData.prepared ? 'border-green-500/50 bg-green-900/10' : 'border-gray-700 bg-gray-900/30'}`}>
+      <CardContent className="p-3">
+        <div className="flex flex-col">
+          {/* Заголовок заклинания */}
+          <div className="flex justify-between items-center">
+            <div className="flex-1">
+              <div className="flex items-center">
+                <h3 className="text-lg font-semibold">{spellData.name}</h3>
+                {spellData.ritual && (
+                  <Badge variant="outline" className="ml-2 border-purple-400 text-purple-400 text-xs">
+                    Ритуал
+                  </Badge>
                 )}
-              </dd>
+                {spellData.concentration && (
+                  <Badge variant="outline" className="ml-2 border-yellow-400 text-yellow-400 text-xs">
+                    Концентрация
+                  </Badge>
+                )}
+              </div>
+              <div className="text-sm text-muted-foreground flex flex-wrap items-center gap-x-3">
+                <span>{spellData.level === 0 ? 'Заговор' : `${spellData.level} уровень`}</span>
+                <span>{spellData.school}</span>
+              </div>
             </div>
             
-            {spellData.duration && (
-              <div className="flex">
-                <dt className="w-1/3 font-medium">Длительность:</dt>
-                <dd>{spellData.duration}</dd>
-              </div>
-            )}
-          </dl>
-          
-          {spellData.description && (
-            <div className="mt-4">
-              <h4 className="font-medium mb-2">Описание</h4>
-              {typeof spellData.description === 'string' ? (
-                <p className="text-sm">{spellData.description}</p>
-              ) : (
-                <div className="space-y-2">
-                  {Array.isArray(spellData.description) &&
-                    spellData.description.map((paragraph, idx) => (
-                      <p key={idx} className="text-sm">{paragraph}</p>
-                    ))}
+            <div className="flex items-center gap-2">
+              {canPrepare && (
+                <div className="flex items-center mr-2">
+                  <Checkbox 
+                    id={`prepare-${spellData.id}`}
+                    checked={spellData.prepared}
+                    onCheckedChange={onTogglePrepared}
+                  />
+                  <Label 
+                    htmlFor={`prepare-${spellData.id}`}
+                    className="ml-1 text-xs text-muted-foreground"
+                  >
+                    {spellData.prepared ? (
+                      <span className="text-green-400 flex items-center">
+                        <CircleCheck className="w-3 h-3 mr-1" />
+                        Подготовлено
+                      </span>
+                    ) : (
+                      "Подготовить"
+                    )}
+                  </Label>
                 </div>
               )}
+              
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-8 w-8" 
+                onClick={toggleExpand}
+              >
+                {expanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+              </Button>
+              
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-8 w-8 text-destructive hover:text-destructive" 
+                onClick={onRemoveSpell}
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+          
+          {/* Детали заклинания (появляются при развороте) */}
+          {expanded && (
+            <div className="mt-3 pt-3 border-t border-border">
+              <div className="grid grid-cols-2 gap-2 mb-3 text-sm">
+                <div className="flex items-center">
+                  <Clock className="h-4 w-4 mr-2 text-muted-foreground" />
+                  <span>{spellData.castingTime || 'Не указано'}</span>
+                </div>
+                <div className="flex items-center">
+                  <Ruler className="h-4 w-4 mr-2 text-muted-foreground" />
+                  <span>{spellData.range || 'Не указано'}</span>
+                </div>
+                <div className="flex items-start">
+                  <span className="font-semibold mr-2">Компоненты:</span>
+                  <span>
+                    {getSpellComponents()} {getMaterialComponents()}
+                  </span>
+                </div>
+                <div className="flex items-center">
+                  <Hourglass className="h-4 w-4 mr-2 text-muted-foreground" />
+                  <span>{spellData.duration || 'Не указано'}</span>
+                </div>
+              </div>
+              
+              <ScrollArea className="max-h-40 overflow-y-auto">
+                <div className="text-sm">
+                  {formatDescription(spellData.description)}
+                </div>
+              </ScrollArea>
             </div>
           )}
         </div>
-      </CollapsibleContent>
-    </Collapsible>
+      </CardContent>
+    </Card>
   );
 };
 

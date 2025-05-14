@@ -163,11 +163,11 @@ const SpellDetailModal: React.FC<SpellDetailModalProps> = ({
               </div>
             </div>
             
-            {(spell.higherLevels || spell.higherLevel) && (
+            {spell.higherLevels && (
               <div>
                 <h3 className="font-semibold mb-2">На более высоких уровнях</h3>
                 <div className="text-sm">
-                  {formatDescription(spell.higherLevels || spell.higherLevel || '')}
+                  {formatDescription(spell.higherLevels)}
                 </div>
               </div>
             )}

@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -305,8 +306,8 @@ const SpellsTab: React.FC<SpellsTabProps> = ({ character, onUpdateCharacter }) =
                           spellData={spell}
                           character={character}
                           canPrepare={hasPreparedSpellSystem}
-                          onTogglePrepared={() => togglePrepared(spell.id)}
-                          onRemoveSpell={() => removeSpell(spell.id)}
+                          onTogglePrepared={() => togglePrepared(String(spell.id))}
+                          onRemoveSpell={() => removeSpell(String(spell.id))}
                         />
                       ))}
                     </div>

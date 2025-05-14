@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -38,9 +39,11 @@ const SpellSelectionModal: React.FC<SpellSelectionModalProps> = ({
   const { 
     filteredSpells, 
     spells, 
-    updateFilters, 
-    resetFilters, 
-    loading 
+    filters,
+    resetFilters,
+    setSearchTerm,
+    setLevelFilter,
+    loading
   } = useSpellbook();
   
   const { toast } = useToast();
@@ -52,7 +55,7 @@ const SpellSelectionModal: React.FC<SpellSelectionModalProps> = ({
   const [showDetails, setShowDetails] = useState(false);
   const [selectedLevel, setSelectedLevel] = useState<string>("all");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTermLocal] = useState("");
   const [tab, setTab] = useState("available");
   
   // Character class and spellcasting stats
@@ -80,18 +83,18 @@ const SpellSelectionModal: React.FC<SpellSelectionModalProps> = ({
       
       // Set filter for character class
       if (characterClass) {
-        updateFilters({ 
-          classes: [characterClass],
-          name: '' 
-        });
+        setSearchTerm('');
+        if (characterClass.length > 0) {
+          setLevelFilter([]);
+        }
       }
     }
-  }, [open, characterClass, resetFilters, updateFilters]);
+  }, [open, characterClass, resetFilters, setSearchTerm, setLevelFilter]);
   
   // Handle search input change
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTermLocal(e.target.value);
     setSearchTerm(e.target.value);
-    updateFilters({ name: e.target.value });
   };
   
   // Handle level filter change
@@ -99,11 +102,11 @@ const SpellSelectionModal: React.FC<SpellSelectionModalProps> = ({
     setSelectedLevel(value);
     
     if (value === "all") {
-      updateFilters({ levels: [] });
+      setLevelFilter([]);
     } else if (value === "cantrips") {
-      updateFilters({ levels: [0] });
+      setLevelFilter([0]);
     } else {
-      updateFilters({ levels: [parseInt(value)] });
+      setLevelFilter([parseInt(value)]);
     }
   };
   
@@ -138,7 +141,7 @@ const SpellSelectionModal: React.FC<SpellSelectionModalProps> = ({
     
     // Convert to character spell
     const characterSpell: CharacterSpell = {
-      id: spell.id,
+      id: spell.id.toString(),
       name: spell.name,
       level: spell.level,
       school: spell.school,
@@ -366,8 +369,7 @@ const SpellSelectionModal: React.FC<SpellSelectionModalProps> = ({
                 <div className="divide-y divide-border">
                   {characterSpells.map((spell) => {
                     // Find full spell data
-                    const fullSpell = spells.find(s => s.id === spell.id);
-                    if (!fullSpell) return null;
+                    const fullSpell = spells.find(s => s.id === spell.id) || spell;
                     
                     return (
                       <div 
@@ -391,7 +393,7 @@ const SpellSelectionModal: React.FC<SpellSelectionModalProps> = ({
                           variant="outline" 
                           onClick={(e) => {
                             e.stopPropagation();
-                            handleRemoveSpell(spell.id);
+                            handleRemoveSpell(String(spell.id));
                           }}
                         >
                           <X className="h-4 w-4" />
