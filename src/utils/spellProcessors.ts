@@ -25,6 +25,51 @@ export function parseComponents(componentString: string): {
 }
 
 /**
+ * Преобразует объект компонентов заклинания в строковое представление
+ */
+export function componentsToString({
+  verbal = false,
+  somatic = false,
+  material = false,
+  ritual = false,
+  concentration = false
+}: {
+  verbal?: boolean;
+  somatic?: boolean;
+  material?: boolean;
+  ritual?: boolean;
+  concentration?: boolean;
+}): string {
+  const components: string[] = [];
+  
+  if (verbal) components.push('В');
+  if (somatic) components.push('С');
+  if (material) components.push('М');
+  
+  let result = components.join(', ');
+  
+  if (ritual) {
+    result += ' (ритуал)';
+  }
+  
+  if (concentration) {
+    result += ' (концентрация)';
+  }
+  
+  return result;
+}
+
+/**
+ * Обрабатывает описание заклинания для корректного отображения
+ */
+export function processSpellDescription(description: string | string[]): string {
+  if (Array.isArray(description)) {
+    return description.join('\n\n');
+  }
+  return description;
+}
+
+/**
  * Создает уникальный ключ для заклинания
  */
 export function createSpellKey(spell: SpellData | CharacterSpell): string;
