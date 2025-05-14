@@ -1,17 +1,23 @@
 
 import React from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { SpellData } from '@/types/spells';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Plus, Check, BookText } from 'lucide-react';
+import { Plus, BookOpen, Sparkles } from 'lucide-react';
+import { componentsToString } from '@/utils/spellProcessors';
 
 export interface SpellDetailModalProps {
   spell: SpellData;
   isOpen: boolean;
   onClose: () => void;
-  theme: any;
+  theme?: any;
   showAddButton?: boolean;
   onAddSpell?: (spell: SpellData) => void;
   isSpellAdded?: boolean;
@@ -26,56 +32,66 @@ const SpellDetailModal: React.FC<SpellDetailModalProps> = ({
   onAddSpell,
   isSpellAdded = false
 }) => {
-  const getSpellLevelText = (level: number) => {
-    if (level === 0) return 'Заговор';
-    return `${level} уровень`;
-  };
-
-  const getSchoolWithLevel = (school: string, level: number) => {
-    if (level === 0) {
-      return `${school} (заговор)`;
+  if (!spell) return null;
+  
+  const getLevelAndSchoolText = (spell: SpellData) => {
+    if (spell.level === 0) {
+      return `Заговор, ${spell.school}`;
     }
-    return `${school} (${level} уровень)`;
+    return `${spell.level} уровень, ${spell.school}`;
   };
-
+  
+  const getSpellClasses = (classes: string[] | string | undefined) => {
+    if (!classes) return "—";
+    if (typeof classes === 'string') return classes;
+    return classes.join(', ');
+  };
+  
+  const formatDescription = (description: string | string[]) => {
+    if (typeof description === 'string') {
+      return description.split('\n').map((paragraph, index) => (
+        <p key={index} className="mb-2">{paragraph}</p>
+      ));
+    }
+    
+    if (Array.isArray(description)) {
+      return description.map((paragraph, index) => (
+        <p key={index} className="mb-2">{paragraph}</p>
+      ));
+    }
+    
+    return <p>Нет описания</p>;
+  };
+  
+  const handleAddSpell = () => {
+    if (onAddSpell && !isSpellAdded) {
+      onAddSpell(spell);
+    }
+  };
+  
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent 
-        className="max-w-3xl max-h-[90vh] overflow-hidden p-0"
+      <DialogContent
+        className="max-w-3xl max-h-[90vh] overflow-auto"
         style={{
-          backgroundColor: theme.cardBackground || 'rgba(0, 0, 0, 0.95)', 
-          borderColor: theme.accent,
-          color: theme.textColor
+          backgroundColor: theme?.cardBackground || 'rgba(16, 16, 16, 0.8)',
+          borderColor: theme?.accent,
+          color: theme?.textColor || 'white',
         }}
       >
-        <DialogHeader className="p-6 pb-2 border-b border-primary/10">
+        <DialogHeader className="space-y-1">
           <div className="flex justify-between items-center">
-            <div>
-              <Badge 
-                variant="outline" 
-                className="mb-2"
-                style={{ borderColor: theme.accent, color: theme.accent }}
-              >
-                {getSpellLevelText(spell.level)}
-              </Badge>
-              <DialogTitle className="text-2xl font-philosopher" style={{ color: theme.accent }}>
-                {spell.name}
-              </DialogTitle>
-              <div className="text-sm opacity-70 mt-1">
-                {getSchoolWithLevel(spell.school, spell.level)}
-              </div>
-            </div>
-            
+            <DialogTitle className="text-2xl font-philosopher">{spell.name}</DialogTitle>
             {showAddButton && onAddSpell && (
               <Button
-                onClick={() => onAddSpell(spell)}
+                variant={isSpellAdded ? "outline" : "default"}
+                onClick={handleAddSpell}
                 disabled={isSpellAdded}
-                style={!isSpellAdded ? { backgroundColor: theme.accent } : {}}
-                className={isSpellAdded ? "bg-green-600" : ""}
+                style={isSpellAdded ? {} : { backgroundColor: theme?.accent }}
               >
                 {isSpellAdded ? (
                   <>
-                    <Check className="mr-2 h-4 w-4" />
+                    <Sparkles className="mr-2 h-4 w-4" />
                     Добавлено
                   </>
                 ) : (
@@ -87,83 +103,76 @@ const SpellDetailModal: React.FC<SpellDetailModalProps> = ({
               </Button>
             )}
           </div>
-        </DialogHeader>
-        
-        <ScrollArea className="p-6 h-[60vh]">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-            <div>
-              <h3 className="font-medium text-sm opacity-70 mb-1">Время накладывания</h3>
-              <p>{spell.castingTime}</p>
-            </div>
-            
-            <div>
-              <h3 className="font-medium text-sm opacity-70 mb-1">Дистанция</h3>
-              <p>{spell.range}</p>
-            </div>
-            
-            <div>
-              <h3 className="font-medium text-sm opacity-70 mb-1">Компоненты</h3>
-              <p>
-                {typeof spell.components === 'string' ? spell.components : 
-                  `${spell.verbal ? 'В' : ''}${spell.somatic ? 'С' : ''}${spell.material ? 'М' : ''}`}
-                {spell.material && spell.materials && (
-                  <span className="opacity-70"> ({spell.materials})</span>
-                )}
-              </p>
-            </div>
-            
-            <div>
-              <h3 className="font-medium text-sm opacity-70 mb-1">Длительность</h3>
-              <p>{spell.duration}</p>
-            </div>
-          </div>
-          
-          <div className="space-y-2 mb-6">
-            <div className="flex flex-wrap gap-2">
+          <DialogDescription>
+            <div className="flex flex-wrap gap-2 mt-1">
+              <Badge variant="outline" className={`${spell.level === 0 ? 'border-blue-400 text-blue-400' : ''}`}>
+                {getLevelAndSchoolText(spell)}
+              </Badge>
               {spell.ritual && (
-                <Badge variant="secondary">Ритуал</Badge>
+                <Badge variant="outline" className="border-purple-400 text-purple-400">
+                  Ритуал
+                </Badge>
               )}
               {spell.concentration && (
-                <Badge variant="secondary">Концентрация</Badge>
+                <Badge variant="outline" className="border-yellow-400 text-yellow-400">
+                  Концентрация
+                </Badge>
               )}
-              {typeof spell.classes === 'string' ? (
-                <Badge variant="outline">{spell.classes}</Badge>
-              ) : (
-                Array.isArray(spell.classes) && spell.classes.map(cls => (
-                  <Badge key={cls} variant="outline">{cls}</Badge>
-                ))
-              )}
+            </div>
+          </DialogDescription>
+        </DialogHeader>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+          <div>
+            <h3 className="font-semibold mb-2">Детали заклинания</h3>
+            <div className="space-y-2 text-sm">
+              <div className="grid grid-cols-[100px_1fr]">
+                <span className="font-medium">Время:</span>
+                <span>{spell.castingTime}</span>
+              </div>
+              <div className="grid grid-cols-[100px_1fr]">
+                <span className="font-medium">Дистанция:</span>
+                <span>{spell.range}</span>
+              </div>
+              <div className="grid grid-cols-[100px_1fr]">
+                <span className="font-medium">Компоненты:</span>
+                <span>
+                  {componentsToString(spell)}
+                </span>
+              </div>
+              <div className="grid grid-cols-[100px_1fr]">
+                <span className="font-medium">Длительность:</span>
+                <span>{spell.duration}</span>
+              </div>
+              <div className="grid grid-cols-[100px_1fr]">
+                <span className="font-medium">Классы:</span>
+                <span>{getSpellClasses(spell.classes)}</span>
+              </div>
+              <div className="grid grid-cols-[100px_1fr]">
+                <span className="font-medium">Источник:</span>
+                <span>{spell.source}</span>
+              </div>
             </div>
           </div>
           
           <div className="space-y-4">
-            <h3 className="font-bold flex items-center gap-2">
-              <BookText className="h-5 w-5" />
-              Описание
-            </h3>
+            <div>
+              <h3 className="font-semibold mb-2">Описание</h3>
+              <div className="text-sm">
+                {formatDescription(spell.description)}
+              </div>
+            </div>
             
-            {typeof spell.description === 'string' ? (
-              <p className="leading-relaxed">{spell.description}</p>
-            ) : (
-              <>
-                {Array.isArray(spell.description) && spell.description.map((paragraph, idx) => (
-                  <p key={idx} className="leading-relaxed">{paragraph}</p>
-                ))}
-              </>
-            )}
-            
-            {(spell.higherLevels) && (
-              <div className="mt-4 pt-4 border-t border-primary/10">
-                <h4 className="font-bold mb-2">На более высоких уровнях</h4>
-                <p className="leading-relaxed">{spell.higherLevels}</p>
+            {(spell.higherLevels || spell.higherLevel) && (
+              <div>
+                <h3 className="font-semibold mb-2">На более высоких уровнях</h3>
+                <div className="text-sm">
+                  {formatDescription(spell.higherLevels || spell.higherLevel || '')}
+                </div>
               </div>
             )}
-            
-            <div className="text-sm opacity-70 mt-4 pt-4 border-t border-primary/10">
-              <p>Источник: {spell.source}</p>
-            </div>
           </div>
-        </ScrollArea>
+        </div>
       </DialogContent>
     </Dialog>
   );

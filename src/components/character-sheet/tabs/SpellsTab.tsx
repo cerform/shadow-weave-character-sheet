@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -46,11 +45,10 @@ const SpellsTab: React.FC<SpellsTabProps> = ({ character, onUpdateCharacter }) =
   const currentTheme = themes[themeKey] || themes.default;
   
   // Safely access character spells
-  const characterSpells = character.spells && Array.isArray(character.spells) 
+  const characterSpells: CharacterSpell[] = Array.isArray(character.spells) 
     ? character.spells 
-    : character.spells && typeof character.spells === 'object' && Array.isArray(character.spells.known) 
-    ? character.spells.known 
     : [];
+  
   const hasPreparedSpellSystem = character.spellcasting?.prepareSpells || false;
   const maxPreparedSpells = character.spellcasting?.maxPreparedSpells || 0;
   const spellcastingAbility = character.spellcasting?.ability || "INT";
@@ -95,42 +93,14 @@ const SpellsTab: React.FC<SpellsTabProps> = ({ character, onUpdateCharacter }) =
       return spell;
     });
     
-    // Update character
-    if (character.spells && typeof character.spells === 'object' && 'known' in character.spells) {
-      // For character.spells.known structure
-      onUpdateCharacter({
-        spells: {
-          ...character.spells,
-          known: updatedSpells
-        }
-      });
-    } else {
-      // For character.spells as direct array
-      onUpdateCharacter({
-        spells: updatedSpells
-      });
-    }
+    // Update character with the new spells array
+    onUpdateCharacter({ spells: updatedSpells });
   };
   
   // Remove spell
   const removeSpell = (spellId: string) => {
     const updatedSpells = characterSpells.filter(spell => spell.id !== spellId);
-    
-    // Update character
-    if (character.spells && typeof character.spells === 'object' && 'known' in character.spells) {
-      // For character.spells.known structure
-      onUpdateCharacter({
-        spells: {
-          ...character.spells,
-          known: updatedSpells
-        }
-      });
-    } else {
-      // For character.spells as direct array
-      onUpdateCharacter({
-        spells: updatedSpells
-      });
-    }
+    onUpdateCharacter({ spells: updatedSpells });
   };
   
   // Handle level filter change

@@ -1,127 +1,213 @@
-
-import React, { useEffect, useState } from 'react';
-import SpellCard from './SpellCard';
-import SpellFilterPanel from './SpellFilterPanel';
-import SpellDetailModal from './SpellDetailModal';
-import { SpellData } from '@/types/spells';
-import { useTheme } from '@/hooks/use-theme';
-import SpellDatabaseManager from './SpellDatabaseManager';
-import { CharacterSpell } from '@/types/character';
-import { useSpellbook } from '@/hooks/spellbook';
+import React, { useState, useEffect } from 'react';
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { SpellData } from '@/types/spells';
+import { useSpellbook } from '@/hooks/spellbook';
+import SpellDetailModal from './SpellDetailModal';
+import SpellCard from './SpellCard';
+import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
+import { Search, Book, Filter, X } from 'lucide-react';
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+} from "@/components/ui/card";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuCheckboxItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
-// Добавим интерфейс для аргументов SpellFilterPanel
-interface SpellFilterPanelProps {
-  activeLevel: number[];
-  setActiveLevel: (level: number[]) => void;
-  activeSchool: string[];
-  setActiveSchool: (school: string[]) => void;
-  activeClass: string[];
-  setActiveClass: (cls: string[]) => void;
-  searchTerm: string;
-  setSearchTerm: (term: string) => void;
-  allLevels: number[];
-  allSchools: string[];
-  allClasses: string[];
-  ritualFilter: boolean | null;
-  setRitualFilter: (value: boolean | null) => void;
-  concentrationFilter: boolean | null;
-  setConcentrationFilter: (value: boolean | null) => void;
-  resetFilters: () => void;
-}
+// Get all unique schools from the spells
+const getSchools = (spells: SpellData[]): string[] => {
+  const schoolsSet = new Set<string>();
+  spells.forEach(spell => {
+    if (spell.school) {
+      schoolsSet.add(spell.school);
+    }
+  });
+  return Array.from(schoolsSet).sort();
+};
 
-const SpellBookViewer: React.FC = () => {
-  const { themeStyles, theme } = useTheme();
+// Get all unique classes from the spells
+const getClasses = (spells: SpellData[]): string[] => {
+  const classesSet = new Set<string>();
+  spells.forEach(spell => {
+    if (typeof spell.classes === 'string') {
+      classesSet.add(spell.classes);
+    } else if (Array.isArray(spell.classes)) {
+      spell.classes.forEach(c => classesSet.add(c));
+    }
+  });
+  return Array.from(classesSet).sort();
+};
+
+const SpellBookViewer = () => {
+  const { 
+    filteredSpells,
+    spells, 
+    searchTerm, 
+    setSearchTerm, 
+    setLevelFilter, 
+    setSchoolFilter,
+    setClassFilter, 
+    setRitualFilter, 
+    setConcentrationFilter,
+    levelFilter,
+    schoolFilter,
+    classFilter,
+    ritualFilter,
+    concentrationFilter,
+    resetFilters,
+    selectSpell,
+    selectedSpell,
+  } = useSpellbook();
+  
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [activeTab, setActiveTab] = useState<string>("all");
+  const [visibleSpells, setVisibleSpells] = useState<SpellData[]>([]);
+  
+  const { theme } = useTheme();
   const themeKey = (theme || 'default') as keyof typeof themes;
   const currentTheme = themes[themeKey] || themes.default;
   
-  const { spells, filteredSpells, selectSpell, searchTerm, setSearchTerm, 
-    levelFilter, setLevelFilter, schoolFilter, setSchoolFilter, 
-    classFilter, setClassFilter, ritualFilter, setRitualFilter, 
-    concentrationFilter, setConcentrationFilter, resetFilters } = useSpellbook();
+  const schools = getSchools(spells);
+  const classes = getClasses(spells);
   
-  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
-  const [selectedSpell, setSelectedSpell] = useState<SpellData | null>(null);
-
-  // Получаем уникальные значения для фильтров из доступных заклинаний
-  const allLevels = React.useMemo(() => {
-    const levels = new Set(spells?.map(spell => spell.level) || []);
-    return Array.from(levels).sort((a, b) => a - b);
-  }, [spells]);
-
-  const allSchools = React.useMemo(() => {
-    const schools = new Set<string>();
-    spells?.forEach(spell => {
-      if (spell.school) schools.add(spell.school);
-    });
-    return Array.from(schools).sort();
-  }, [spells]);
-
-  const allClasses = React.useMemo(() => {
-    const classes = new Set<string>();
-    spells?.forEach(spell => {
-      if (typeof spell.classes === 'string') {
-        classes.add(spell.classes);
-      } else if (Array.isArray(spell.classes)) {
-        spell.classes.forEach(cls => {
-          if (typeof cls === 'string') classes.add(cls);
-        });
-      }
-    });
-    return Array.from(classes).sort();
-  }, [spells]);
-
+  // Update filtered spells when tab changes
   useEffect(() => {
-    console.log("SpellBookViewer: Загружено заклинаний", spells?.length || 0);
-  }, [spells]);
-
-  const handleSpellClick = (spell: SpellData) => {
-    setSelectedSpell(spell);
-    setIsDetailModalOpen(true);
+    if (!filteredSpells) return;
+    
+    let visibleSpellsList = [...filteredSpells];
+    
+    // Filter by active tab
+    if (activeTab === "cantrips") {
+      visibleSpellsList = visibleSpellsList.filter(spell => spell.level === 0);
+    } else if (activeTab !== "all") {
+      const level = parseInt(activeTab);
+      visibleSpellsList = visibleSpellsList.filter(spell => spell.level === level);
+    }
+    
+    setVisibleSpells(visibleSpellsList);
+  }, [activeTab, filteredSpells]);
+  
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
   };
-
-  const handleCloseDetailModal = () => {
-    setIsDetailModalOpen(false);
+  
+  const handleResetFilters = () => {
+    resetFilters();
+    setActiveTab("all");
   };
-
-  // Создаем пустой список заклинаний, если он undefined
-  const safeFilteredSpells = filteredSpells || [];
-
+  
+  const handleOpenSpellDetails = (spell: SpellData) => {
+    selectSpell(spell);
+    setShowDetailModal(true);
+  };
+  
+  const handleCloseSpellDetails = () => {
+    setShowDetailModal(false);
+    selectSpell(null);
+  };
+  
   return (
-    <div className="flex flex-col lg:flex-row gap-4">
+    <div className="container mx-auto p-4">
       {/* Фильтры */}
       <aside className="lg:w-1/4">
-        <SpellFilterPanel
-          activeLevel={levelFilter}
-          setActiveLevel={setLevelFilter}
-          activeSchool={schoolFilter}
-          setActiveSchool={setSchoolFilter}
-          activeClass={classFilter}
-          setActiveClass={setClassFilter}
-          searchTerm={searchTerm || ""}
-          setSearchTerm={setSearchTerm}
-          allLevels={allLevels}
-          allSchools={allSchools}
-          allClasses={allClasses}
-          ritualFilter={ritualFilter}
-          setRitualFilter={setRitualFilter}
-          concentrationFilter={concentrationFilter}
-          setConcentrationFilter={setConcentrationFilter}
-          resetFilters={resetFilters}
-        />
-        <SpellDatabaseManager />
+        <div className="flex flex-col gap-4">
+          <div className="flex items-center gap-2">
+            <Input
+              placeholder="Поиск заклинаний"
+              value={searchTerm}
+              onChange={handleSearchChange}
+            />
+            <Button onClick={handleResetFilters}>
+              <X size={16} />
+            </Button>
+          </div>
+          <Tabs>
+            <TabsList>
+              <TabsTrigger value="all">Все</TabsTrigger>
+              <TabsTrigger value="cantrips">Канонические</TabsTrigger>
+              <TabsTrigger value="1">1-й уровень</TabsTrigger>
+              <TabsTrigger value="2">2-й уровень</TabsTrigger>
+              <TabsTrigger value="3">3-й уровень</TabsTrigger>
+              <TabsTrigger value="4">4-й уровень</TabsTrigger>
+              <TabsTrigger value="5">5-й уровень</TabsTrigger>
+              <TabsTrigger value="6">6-й уровень</TabsTrigger>
+              <TabsTrigger value="7">7-й уровень</TabsTrigger>
+              <TabsTrigger value="8">8-й уровень</TabsTrigger>
+              <TabsTrigger value="9">9-й уровень</TabsTrigger>
+            </TabsList>
+            <TabsContent value="all">
+              <Select>
+                <SelectTrigger>
+                  <SelectValue placeholder="Уровень" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="1">1-й уровень</SelectItem>
+                  <SelectItem value="2">2-й уровень</SelectItem>
+                  <SelectItem value="3">3-й уровень</SelectItem>
+                  <SelectItem value="4">4-й уровень</SelectItem>
+                  <SelectItem value="5">5-й уровень</SelectItem>
+                  <SelectItem value="6">6-й уровень</SelectItem>
+                  <SelectItem value="7">7-й уровень</SelectItem>
+                  <SelectItem value="8">8-й уровень</SelectItem>
+                  <SelectItem value="9">9-й уровень</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select>
+                <SelectTrigger>
+                  <SelectValue placeholder="Школа" />
+                </SelectTrigger>
+                <SelectContent>
+                  {schools.map(school => (
+                    <SelectItem key={school} value={school}>{school}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select>
+                <SelectTrigger>
+                  <SelectValue placeholder="Класс" />
+                </SelectTrigger>
+                <SelectContent>
+                  {classes.map(cls => (
+                    <SelectItem key={cls} value={cls}>{cls}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </TabsContent>
+          </Tabs>
+          <SpellDatabaseManager />
+        </div>
       </aside>
 
       {/* Список заклинаний */}
       <div className="lg:w-3/4">
         <ScrollArea className="h-[600px] w-full">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {safeFilteredSpells.map(spell => (
+            {visibleSpells.map(spell => (
               <SpellCard
                 key={spell.id}
                 spell={spell}
-                onClick={() => handleSpellClick(spell)}
+                onClick={() => handleOpenSpellDetails(spell)}
                 currentTheme={currentTheme}
               />
             ))}
@@ -133,8 +219,8 @@ const SpellBookViewer: React.FC = () => {
       {selectedSpell && (
         <SpellDetailModal
           spell={selectedSpell}
-          isOpen={isDetailModalOpen}
-          onClose={handleCloseDetailModal}
+          isOpen={showDetailModal}
+          onClose={handleCloseSpellDetails}
           theme={currentTheme}
         />
       )}

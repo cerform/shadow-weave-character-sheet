@@ -1,14 +1,5 @@
 
-import { SpellData } from '@/types/spells';
-
-export interface SpellFilters {
-  name: string;
-  schools: string[];
-  levels: number[];
-  classes: string[];
-  ritual: boolean | null;
-  concentration: boolean | null;
-}
+import { SpellData, SpellFilters } from '@/types/spells';
 
 export interface SpellbookContextType {
   spells: SpellData[];
@@ -23,7 +14,7 @@ export interface SpellbookContextType {
   concentrationFilter: boolean | null;
   loading: boolean;
   filters: SpellFilters;
-  updateFilters: (filters: Partial<SpellFilters>) => void;
+  updateFilters: (newFilters: Partial<SpellFilters>) => void;
   setSearchTerm: (term: string) => void;
   setLevelFilter: (levels: number[]) => void;
   setClassFilter: (classes: string[]) => void;

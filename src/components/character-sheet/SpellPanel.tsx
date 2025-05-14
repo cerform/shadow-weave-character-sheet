@@ -33,6 +33,34 @@ const SpellPanel: React.FC<SpellPanelProps> = ({
     return `${level} уровень`;
   };
 
+  // Helper function to safely interpret components
+  const getComponentString = () => {
+    // If components is a string, use it directly
+    if (typeof spellData.components === 'string') {
+      return spellData.components;
+    }
+    
+    // If it's an object with verbal/somatic/material properties
+    if (spellData.components && typeof spellData.components === 'object') {
+      const comp = spellData.components as Record<string, boolean>;
+      const componentParts: string[] = [];
+      
+      if (comp.verbal) componentParts.push('В');
+      if (comp.somatic) componentParts.push('С');
+      if (comp.material) componentParts.push('М');
+      
+      return componentParts.join(", ");
+    }
+    
+    // If we have direct verbal/somatic/material properties on the spell
+    const componentParts: string[] = [];
+    if (spellData.verbal) componentParts.push('В');
+    if (spellData.somatic) componentParts.push('С');
+    if (spellData.material) componentParts.push('М');
+    
+    return componentParts.join(", ");
+  };
+
   return (
     <Collapsible
       open={isOpen}
@@ -119,18 +147,7 @@ const SpellPanel: React.FC<SpellPanelProps> = ({
             <div className="flex">
               <dt className="w-1/3 font-medium">Компоненты:</dt>
               <dd>
-                {typeof spellData.components === 'string' ? spellData.components : 
-                 spellData.components && typeof spellData.components === 'object' ? 
-                   [
-                     spellData.components.verbal && 'В',
-                     spellData.components.somatic && 'С',
-                     spellData.components.material && 'М'
-                   ].filter(Boolean).join(", ") : 
-                   [
-                     spellData.verbal && 'В',
-                     spellData.somatic && 'С',
-                     spellData.material && 'М'
-                   ].filter(Boolean).join(", ")}
+                {getComponentString()}
                 {spellData.material && spellData.materials && (
                   <span className="text-muted-foreground ml-1">({spellData.materials})</span>
                 )}

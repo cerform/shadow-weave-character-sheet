@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -36,7 +35,14 @@ const SpellSelectionModal: React.FC<SpellSelectionModalProps> = ({
   character,
   onUpdate
 }) => {
-  const { filteredSpells, spells, updateFilters, resetFilters, loading } = useSpellbook();
+  const { 
+    filteredSpells, 
+    spells, 
+    updateFilters, 
+    resetFilters, 
+    loading 
+  } = useSpellbook();
+  
   const { toast } = useToast();
   const { theme } = useTheme();
   const themeKey = (theme || 'default') as keyof typeof themes;
@@ -50,17 +56,18 @@ const SpellSelectionModal: React.FC<SpellSelectionModalProps> = ({
   const [tab, setTab] = useState("available");
   
   // Character class and spellcasting stats
-  const characterClass = typeof character.class === 'object' ? character.class.name : character.class || "";
+  const characterClass = typeof character.class === 'object' 
+    ? character.class.name 
+    : character.class || "";
+    
   const spellcastingAbility = character.spellcasting?.ability || "INT";
   
   // Available spell slots
   const maxPreparedSpells = character.spellcasting?.maxPreparedSpells || 0;
   
   // Safely access character spells
-  const characterSpells = character.spells && Array.isArray(character.spells) 
-    ? character.spells 
-    : character.spells && typeof character.spells === 'object' && Array.isArray(character.spells.known) 
-    ? character.spells.known 
+  const characterSpells: CharacterSpell[] = Array.isArray(character.spells) 
+    ? character.spells
     : [];
   
   const currentPreparedSpells = characterSpells.filter(spell => spell.prepared).length;
@@ -147,18 +154,8 @@ const SpellSelectionModal: React.FC<SpellSelectionModalProps> = ({
     };
     
     // Add to character spells
-    if (character.spells && typeof character.spells === 'object' && 'known' in character.spells) {
-      // For character.spells.known structure
-      const updatedSpells = {
-        ...character.spells,
-        known: [...(character.spells.known || []), characterSpell]
-      };
-      onUpdate({ spells: updatedSpells });
-    } else {
-      // For character.spells as direct array
-      const updatedSpells = [...(Array.isArray(character.spells) ? character.spells : []), characterSpell];
-      onUpdate({ spells: updatedSpells });
-    }
+    const updatedSpells = [...characterSpells, characterSpell];
+    onUpdate({ spells: updatedSpells });
     
     toast({
       title: "Заклинание добавлено",
@@ -171,19 +168,7 @@ const SpellSelectionModal: React.FC<SpellSelectionModalProps> = ({
   // Remove spell from character
   const handleRemoveSpell = (spellId: string) => {
     const updatedSpells = characterSpells.filter(s => s.id !== spellId);
-    
-    if (character.spells && typeof character.spells === 'object' && 'known' in character.spells) {
-      // For character.spells.known structure
-      onUpdate({
-        spells: {
-          ...character.spells,
-          known: updatedSpells
-        }
-      });
-    } else {
-      // For character.spells as direct array
-      onUpdate({ spells: updatedSpells });
-    }
+    onUpdate({ spells: updatedSpells });
     
     toast({
       title: "Заклинание удалено",
