@@ -331,7 +331,7 @@ const SpellSelectionModal: React.FC<SpellSelectionModalProps> = ({
       {/* Модальное окно с деталями заклинания */}
       <SpellDetailModal 
         spell={detailSpell} 
-        open={showDetailModal} 
+        open={showDetailModal} // Note the property is 'open' now, not 'isOpen'
         onClose={handleCloseDetailModal}
         currentTheme={currentTheme}
         showAddButton={true}

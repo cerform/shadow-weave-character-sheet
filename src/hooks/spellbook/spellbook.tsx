@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { SpellData, SpellFilters } from '@/types/spells';
 import { useSpellbook as useSpellbookHook } from './useSpellbook';
@@ -18,12 +17,15 @@ export const SpellbookProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [filteredSpells, setFilteredSpells] = useState<SpellData[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [levelFilter, setLevelFilter] = useState<number[]>([]);
-  const [classFilter, setClassFilter] = useState<string[]>([]);
-  const [schoolFilter, setSchoolFilter] = useState<string[]>([]);
-  const [ritualFilter, setRitualFilter] = useState<boolean | null>(null);
-  const [concentrationFilter, setConcentrationFilter] = useState<boolean | null>(null);
+  const [filters, setFilters] = useState<SpellFilters>({
+    name: '',
+    schools: [],
+    levels: [],
+    classes: [],
+    ritual: null,
+    concentration: null
+  });
+  const [availableSpells, setAvailableSpells] = useState<SpellData[]>([]);
   const [selectedSpell, setSelectedSpell] = useState<SpellData | null>(null);
   const { toast } = useToast();
 
@@ -36,6 +38,7 @@ export const SpellbookProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       const allSpells = getAllSpells();
       setSpells(allSpells);
       setFilteredSpells(allSpells);
+      setAvailableSpells(allSpells);
       console.log("Загружено заклинаний:", allSpells.length);
     } catch (err) {
       console.error("Ошибка загрузки заклинаний:", err);
@@ -55,13 +58,65 @@ export const SpellbookProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     fetchSpells();
   }, [fetchSpells]);
 
+  // Обновление фильтров
+  const updateFilters = useCallback((newFilters: Partial<SpellFilters>) => {
+    setFilters(prev => ({ ...prev, ...newFilters }));
+  }, []);
+
+  // Сброс фильтров
+  const resetFilters = useCallback(() => {
+    setFilters({
+      name: '',
+      schools: [],
+      levels: [],
+      classes: [],
+      ritual: null,
+      concentration: null
+    });
+  }, []);
+
+  // Получение заклинания по идентификатору
+  const getSpellById = useCallback((id: string | number): SpellData | undefined => {
+    const idStr = id.toString();
+    return spells.find(spell => spell.id.toString() === idStr);
+  }, [spells]);
+
+  // Загрузка заклинаний для конкретного класса и уровня
+  const loadSpellsForCharacter = useCallback((characterClass: string, characterLevel: number) => {
+    console.log(`Loading spells for ${characterClass} (level ${characterLevel})`);
+    
+    try {
+      // Фильтруем по классу
+      const filteredByClass = spells.filter(spell => {
+        const spellClasses = Array.isArray(spell.classes) ? spell.classes : [spell.classes];
+        return spellClasses.some(c => 
+          typeof c === 'string' && c.toLowerCase() === characterClass.toLowerCase()
+        );
+      });
+      
+      // Фильтруем по уровню (максимальный уровень заклинаний для персонажа)
+      const maxLevel = Math.min(9, Math.ceil(characterLevel / 2));
+      const filteredByLevel = filteredByClass.filter(spell => spell.level <= maxLevel);
+      
+      setAvailableSpells(filteredByLevel);
+      console.log(`Found ${filteredByLevel.length} spells for ${characterClass} (max level ${maxLevel})`);
+    } catch (error) {
+      console.error("Error loading spells for character:", error);
+      toast({
+        title: "Ошибка",
+        description: `Не удалось загрузить заклинания для класса ${characterClass}`,
+        variant: "destructive"
+      });
+    }
+  }, [spells, toast]);
+
   // Применение фильтров при их изменении
   useEffect(() => {
     let result = [...spells];
 
     // Поиск по названию
-    if (searchTerm) {
-      const searchLower = searchTerm.toLowerCase();
+    if (filters.name) {
+      const searchLower = filters.name.toLowerCase();
       result = result.filter(spell => {
         const nameMatch = spell.name.toLowerCase().includes(searchLower);
         
@@ -80,27 +135,27 @@ export const SpellbookProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }
 
     // Фильтр по уровню заклинаний
-    if (levelFilter.length > 0) {
-      result = result.filter(spell => levelFilter.includes(spell.level));
+    if (filters.levels.length > 0) {
+      result = result.filter(spell => filters.levels.includes(spell.level));
     }
 
     // Фильтр по школе магии
-    if (schoolFilter.length > 0) {
+    if (filters.schools.length > 0) {
       result = result.filter(spell => {
-        return spell.school && schoolFilter.includes(spell.school);
+        return spell.school && filters.schools.includes(spell.school);
       });
     }
 
     // Фильтр по классу персонажей
-    if (classFilter.length > 0) {
+    if (filters.classes.length > 0) {
       result = result.filter(spell => {
         if (typeof spell.classes === 'string') {
-          return classFilter.includes(spell.classes);
+          return filters.classes.includes(spell.classes);
         }
         
         if (Array.isArray(spell.classes)) {
           return spell.classes.some(cls => 
-            typeof cls === 'string' && classFilter.includes(cls)
+            typeof cls === 'string' && filters.classes.includes(cls)
           );
         }
         
@@ -109,27 +164,17 @@ export const SpellbookProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }
 
     // Фильтр по ритуальности
-    if (ritualFilter !== null) {
-      result = result.filter(spell => spell.ritual === ritualFilter);
+    if (filters.ritual !== null) {
+      result = result.filter(spell => spell.ritual === filters.ritual);
     }
 
     // Фильтр по концентрации
-    if (concentrationFilter !== null) {
-      result = result.filter(spell => spell.concentration === concentrationFilter);
+    if (filters.concentration !== null) {
+      result = result.filter(spell => spell.concentration === filters.concentration);
     }
 
     setFilteredSpells(result);
-  }, [spells, searchTerm, levelFilter, schoolFilter, classFilter, ritualFilter, concentrationFilter]);
-
-  // Сброс всех фильтров
-  const resetFilters = useCallback(() => {
-    setSearchTerm('');
-    setLevelFilter([]);
-    setSchoolFilter([]);
-    setClassFilter([]);
-    setRitualFilter(null);
-    setConcentrationFilter(null);
-  }, []);
+  }, [spells, filters]);
 
   // Выбор заклинания для детального просмотра
   const selectSpell = useCallback((spell: SpellData | null) => {
@@ -142,22 +187,15 @@ export const SpellbookProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     filteredSpells,
     loading,
     error,
-    searchTerm,
-    levelFilter,
-    classFilter,
-    schoolFilter,
-    ritualFilter,
-    concentrationFilter,
-    selectedSpell,
-    setSearchTerm,
-    setLevelFilter,
-    setSchoolFilter,
-    setClassFilter,
-    setRitualFilter,
-    setConcentrationFilter,
-    selectSpell,
+    filters,
+    availableSpells,
+    updateFilters,
     resetFilters,
-    fetchSpells
+    fetchSpells,
+    getSpellById,
+    loadSpellsForCharacter,
+    selectedSpell,
+    selectSpell
   };
 
   return (

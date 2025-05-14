@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { SpellData } from '@/types/spells';
@@ -8,7 +9,7 @@ import { Book, BookOpen, Clock, Flame, Maximize2, ScrollText, Shield, Wand, Wand
 
 interface SpellDetailModalProps {
   spell: SpellData | null;
-  isOpen: boolean;
+  open: boolean; // Changed from isOpen to open for consistency
   onClose: () => void;
   currentTheme: any;
   showAddButton?: boolean;
@@ -19,7 +20,7 @@ interface SpellDetailModalProps {
 
 const SpellDetailModal: React.FC<SpellDetailModalProps> = ({
   spell,
-  isOpen,
+  open, // Changed from isOpen to open
   onClose,
   currentTheme,
   showAddButton = false,
@@ -82,7 +83,7 @@ const SpellDetailModal: React.FC<SpellDetailModalProps> = ({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={open} onOpenChange={onClose}>
       <DialogContent 
         className="max-w-2xl" 
         style={{

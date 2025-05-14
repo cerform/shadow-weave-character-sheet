@@ -57,8 +57,8 @@ const SpellDetailModal: React.FC<SpellDetailModalProps> = ({
   
   // Safely render higher level effects
   const renderHigherLevels = () => {
-    // Check for higherLevels property
-    const higherLevelText = spell?.higherLevels || spell?.higherLevel || '';
+    // Check for higherLevels property - removed higherLevel reference, using only higherLevels
+    const higherLevelText = spell?.higherLevels || '';
       
     if (!higherLevelText) return null;
     

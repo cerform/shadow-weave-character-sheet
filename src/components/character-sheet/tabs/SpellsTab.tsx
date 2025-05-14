@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -102,6 +101,32 @@ const SpellsTab: React.FC<SpellsTabProps> = ({ character, onUpdate }) => {
     toast({
       title: "Ячейка восстановлена",
       description: `Восстановлена ячейка заклинания ${level} уровня`,
+    });
+  };
+
+  // Handle spell selection from modal
+  const handleSpellsSelected = (spells: CharacterSpell[]) => {
+    const currentSpells = character.spells || [];
+    // Merge existing spells with newly selected ones
+    const updatedSpells = [...currentSpells];
+    
+    // Add new spells that aren't already in the list
+    spells.forEach(newSpell => {
+      const existingIndex = updatedSpells.findIndex(s => 
+        (isCharacterSpellObject(s) && isCharacterSpellObject(newSpell) && s.id === newSpell.id) ||
+        (isCharacterSpellObject(s) && s.name === newSpell.name)
+      );
+      
+      if (existingIndex === -1) {
+        updatedSpells.push(newSpell);
+      }
+    });
+    
+    onUpdate({ spells: updatedSpells });
+    
+    toast({
+      title: "Заклинания добавлены",
+      description: `Добавлено ${spells.length} заклинаний`,
     });
   };
 
@@ -344,8 +369,8 @@ const SpellsTab: React.FC<SpellsTabProps> = ({ character, onUpdate }) => {
       <SpellSelectionModal
         open={isAddSpellModalOpen}
         onClose={() => setIsAddSpellModalOpen(false)}
-        character={character}
-        onUpdate={onUpdate}
+        onSpellsSelected={handleSpellsSelected}
+        selectedSpells={character.spells || []}
       />
     </div>
   );
