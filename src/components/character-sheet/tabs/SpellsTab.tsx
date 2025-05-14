@@ -1,9 +1,10 @@
+
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Character } from '@/types/character';
+import { Character, CharacterSpell } from '@/types/character';
 import { SpellData } from '@/types/spells';
 import SpellPanel from '../SpellPanel';
 import { Separator } from "@/components/ui/separator";
