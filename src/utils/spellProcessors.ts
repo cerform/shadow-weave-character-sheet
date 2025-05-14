@@ -3,7 +3,13 @@ import { CharacterSpell } from '@/types/character';
 import { SpellData } from '@/types/spells';
 
 // Обрабатывает компоненты заклинания в удобный для отображения формат
-export const componentsToString = (spell: CharacterSpell | SpellData): string => {
+export const componentsToString = (spell: CharacterSpell | SpellData | {
+  verbal?: boolean;
+  somatic?: boolean;
+  material?: boolean;
+  ritual?: boolean;
+  concentration?: boolean;
+}): string => {
   if (spell.components) {
     return spell.components;
   }
@@ -16,11 +22,32 @@ export const componentsToString = (spell: CharacterSpell | SpellData): string =>
   
   let result = components.join(', ');
   
-  if (spell.material && spell.materials) {
+  if (spell.material && 'materials' in spell && spell.materials) {
     result += ` (${spell.materials})`;
   }
   
   return result || 'Нет';
+};
+
+// Анализ компонентов заклинания из строкового представления
+export const parseComponents = (componentString: string): {
+  verbal: boolean;
+  somatic: boolean;
+  material: boolean;
+  ritual: boolean;
+  concentration: boolean;
+} => {
+  return {
+    verbal: componentString.includes('В'),
+    somatic: componentString.includes('С'),
+    material: componentString.includes('М'),
+    ritual: componentString.toLowerCase().includes('р') || 
+           componentString.includes('Р') || 
+           componentString.toLowerCase().includes('r'),
+    concentration: componentString.toLowerCase().includes('к') || 
+                  componentString.includes('К') || 
+                  componentString.toLowerCase().includes('c')
+  };
 };
 
 // Обрабатывает описание заклинания для правильного отображения
@@ -56,6 +83,17 @@ export const removeDuplicateSpells = (spells: CharacterSpell[]): CharacterSpell[
   });
   
   return Array.from(uniqueSpells.values());
+};
+
+// Создает уникальный ключ для заклинания на основе имени и уровня
+export const createSpellKey = (name: string, level: number): string => {
+  return `${name.toLowerCase().trim()}-${level}`;
+};
+
+// Проверяет, является ли заклинание дубликатом другого
+export const isDuplicateSpell = (spell1: CharacterSpell, spell2: CharacterSpell): boolean => {
+  return spell1.name.toLowerCase() === spell2.name.toLowerCase() && 
+         spell1.level === spell2.level;
 };
 
 // Объединяет два объекта заклинаний, выбирая непустые поля

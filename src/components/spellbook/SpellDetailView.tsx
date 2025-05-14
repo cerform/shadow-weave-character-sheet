@@ -48,13 +48,7 @@ const SpellDetailView: React.FC<SpellDetailViewProps> = ({ spell, onClose, curre
         <Badge style={{ backgroundColor: theme.primary }}>{spell.castingTime}</Badge>
         <Badge style={{ backgroundColor: theme.primary }}>{spell.range}</Badge>
         <Badge style={{ backgroundColor: theme.primary }}>
-          {componentsToString({
-            verbal: spell.verbal,
-            somatic: spell.somatic,
-            material: spell.material,
-            ritual: spell.ritual,
-            concentration: spell.concentration
-          })}
+          {componentsToString(spell)}
         </Badge>
         <Badge style={{ backgroundColor: theme.primary }}>{spell.duration}</Badge>
       </div>

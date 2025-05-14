@@ -1,4 +1,3 @@
-
 import { CharacterSpell } from '@/types/character';
 import { componentsToString } from './spellProcessors';
 
@@ -9,13 +8,7 @@ export function characterSpellToString(spell: CharacterSpell): string {
   let result = `[${spell.level}] ${spell.name}`;
   
   // Добавляем компоненты, если они определены
-  const components = componentsToString({
-    verbal: spell.verbal,
-    somatic: spell.somatic,
-    material: spell.material,
-    ritual: spell.ritual,
-    concentration: spell.concentration
-  });
+  const components = componentsToString(spell);
   
   if (components) {
     result += ` ${components}`;
