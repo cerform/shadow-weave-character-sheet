@@ -17,34 +17,40 @@ import { themes } from '@/lib/themes';
 import SpellDetailModal from './SpellDetailModal';
 import { spells as allSpells, getSpellsByClass, getSpellsByLevel } from '@/data/spells/index';
 import { CharacterSpell } from '@/types/character';
+import SpellCard from './SpellCard';
+import SpellTable from './SpellTable';
+import SpellFilterPanel from './SpellFilterPanel';
+import { useSpellTheme } from '@/hooks/spellbook/themeUtils';
+import { filterSpells } from '@/data/spells/index';
+import { Grid2X2, Rows3 } from 'lucide-react';
+import { toast } from '@/hooks/use-toast';
 
 const SpellBookViewer: React.FC = () => {
   const { theme } = useTheme();
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedLevel, setSelectedLevel] = useState<string>('all');
-  const [selectedClass, setSelectedClass] = useState<string>('all');
-  const [selectedSchool, setSelectedSchool] = useState<string>('all');
+  const [activeLevels, setActiveLevels] = useState<number[]>([]);
+  const [activeSchools, setActiveSchools] = useState<string[]>([]);
+  const [activeClasses, setActiveClasses] = useState<string[]>([]);
   const [filteredSpells, setFilteredSpells] = useState<CharacterSpell[]>([]);
   const [selectedSpell, setSelectedSpell] = useState<CharacterSpell | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [onlyRitual, setOnlyRitual] = useState(false);
   const [onlyConcentration, setOnlyConcentration] = useState(false);
-
-  const themeKey = (theme || 'default') as keyof typeof themes;
-  const currentTheme = themes[themeKey] || themes.default;
+  const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
+  const { getBadgeColor, getSchoolBadgeColor, currentTheme } = useSpellTheme();
 
   // Загружаем все заклинания при первой загрузке компонента
   useEffect(() => {
     console.log("Загружено заклинаний:", allSpells.length);
-    filterSpells();
+    filterSpellList();
   }, []);
 
   // Перефильтровываем заклинания при изменении фильтров
   useEffect(() => {
-    filterSpells();
-  }, [searchTerm, selectedLevel, selectedClass, selectedSchool, onlyRitual, onlyConcentration]);
+    filterSpellList();
+  }, [searchTerm, activeLevels, activeSchools, activeClasses, onlyRitual, onlyConcentration]);
 
-  const filterSpells = () => {
+  const filterSpellList = () => {
     let filtered = [...allSpells];
     console.log("Начало фильтрации, всего заклинаний:", filtered.length);
 
@@ -55,27 +61,26 @@ const SpellBookViewer: React.FC = () => {
       );
     }
 
-    // Фильтр по уровню
-    if (selectedLevel !== 'all') {
-      const level = parseInt(selectedLevel);
-      filtered = filtered.filter(spell => spell.level === level);
+    // Фильтр по уровню (множественный выбор)
+    if (activeLevels.length > 0) {
+      filtered = filtered.filter(spell => activeLevels.includes(spell.level));
     }
 
-    // Фильтр по классу
-    if (selectedClass !== 'all') {
+    // Фильтр по школе (множественный выбор)
+    if (activeSchools.length > 0) {
+      filtered = filtered.filter(spell => 
+        activeSchools.includes(spell.school || '')
+      );
+    }
+
+    // Фильтр по классу (множественный выбор)
+    if (activeClasses.length > 0) {
       filtered = filtered.filter(spell => {
         if (Array.isArray(spell.classes)) {
-          return spell.classes.some(cls => cls.toLowerCase() === selectedClass.toLowerCase());
+          return spell.classes.some(cls => activeClasses.includes(cls));
         }
-        return spell.classes?.toString().toLowerCase() === selectedClass.toLowerCase();
+        return activeClasses.includes(spell.classes?.toString() || '');
       });
-    }
-
-    // Фильтр по школе
-    if (selectedSchool !== 'all') {
-      filtered = filtered.filter(spell => 
-        spell.school?.toLowerCase() === selectedSchool.toLowerCase()
-      );
     }
 
     // Фильтр по ритуалам
@@ -105,7 +110,7 @@ const SpellBookViewer: React.FC = () => {
     setIsDetailModalOpen(true);
   };
 
-  const getSchoolsList = () => {
+  const getAllSchools = () => {
     const schools = new Set<string>();
     allSpells.forEach(spell => {
       if (spell.school) {
@@ -115,7 +120,7 @@ const SpellBookViewer: React.FC = () => {
     return Array.from(schools).sort();
   };
 
-  const getClassesList = () => {
+  const getAllClasses = () => {
     const classes = new Set<string>();
     allSpells.forEach(spell => {
       if (Array.isArray(spell.classes)) {
@@ -129,151 +134,193 @@ const SpellBookViewer: React.FC = () => {
     return Array.from(classes).sort();
   };
 
+  const getAllLevels = () => {
+    const levels = new Set<number>();
+    allSpells.forEach(spell => {
+      levels.add(spell.level);
+    });
+    return Array.from(levels).sort((a, b) => a - b);
+  };
+
+  const toggleLevel = (level: number) => {
+    setActiveLevels(prev => 
+      prev.includes(level) 
+        ? prev.filter(l => l !== level) 
+        : [...prev, level]
+    );
+  };
+
+  const toggleSchool = (school: string) => {
+    setActiveSchools(prev => 
+      prev.includes(school) 
+        ? prev.filter(s => s !== school) 
+        : [...prev, school]
+    );
+  };
+
+  const toggleClass = (cls: string) => {
+    setActiveClasses(prev => 
+      prev.includes(cls) 
+        ? prev.filter(c => c !== cls) 
+        : [...prev, cls]
+    );
+  };
+
+  const clearFilters = () => {
+    setSearchTerm('');
+    setActiveLevels([]);
+    setActiveSchools([]);
+    setActiveClasses([]);
+    setOnlyRitual(false);
+    setOnlyConcentration(false);
+    
+    toast({
+      title: "Фильтры сброшены",
+      description: "Все фильтры заклинаний были сброшены"
+    });
+  };
+
+  const formatClasses = (classes: string[] | string | undefined): string => {
+    if (!classes) return "—";
+    if (typeof classes === 'string') return classes;
+    if (Array.isArray(classes)) return classes.join(', ');
+    return "—";
+  };
+
   return (
     <div className="py-4">
       <div 
         className="bg-card p-4 mb-6 rounded-lg border"
-        style={{ backgroundColor: currentTheme.inputBackground || currentTheme.background }}
+        style={{ 
+          backgroundColor: currentTheme.inputBackground || currentTheme.background,
+          borderColor: `${currentTheme.accent}30`
+        }}
       >
         <div className="space-y-4">
-          <h2 className="text-2xl font-bold" style={{ color: currentTheme.textColor }}>
-            Поиск заклинаний
-          </h2>
+          <div className="flex justify-between items-center">
+            <h2 className="text-2xl font-bold" style={{ color: currentTheme.textColor }}>
+              Поиск заклинаний
+            </h2>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setViewMode('grid')}
+                className={`p-2 ${viewMode === 'grid' ? 'bg-accent/20' : ''}`}
+                style={{
+                  borderColor: currentTheme.accent,
+                  color: viewMode === 'grid' ? currentTheme.accent : currentTheme.textColor
+                }}
+              >
+                <Grid2X2 size={18} />
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setViewMode('table')}
+                className={`p-2 ${viewMode === 'table' ? 'bg-accent/20' : ''}`}
+                style={{
+                  borderColor: currentTheme.accent,
+                  color: viewMode === 'table' ? currentTheme.accent : currentTheme.textColor
+                }}
+              >
+                <Rows3 size={18} />
+              </Button>
+            </div>
+          </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 gap-4">
             <div>
               <Input
                 placeholder="Поиск по названию..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                style={{ backgroundColor: currentTheme.inputBackground, color: currentTheme.textColor }}
+                style={{ 
+                  backgroundColor: currentTheme.inputBackground, 
+                  color: currentTheme.textColor,
+                  borderColor: `${currentTheme.accent}30`
+                }}
               />
             </div>
-            
-            <Select value={selectedLevel} onValueChange={setSelectedLevel}>
-              <SelectTrigger style={{ backgroundColor: currentTheme.inputBackground, color: currentTheme.textColor }}>
-                <SelectValue placeholder="Уровень" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Все уровни</SelectItem>
-                <SelectItem value="0">Заговоры</SelectItem>
-                <SelectItem value="1">1 уровень</SelectItem>
-                <SelectItem value="2">2 уровень</SelectItem>
-                <SelectItem value="3">3 уровень</SelectItem>
-                <SelectItem value="4">4 уровень</SelectItem>
-                <SelectItem value="5">5 уровень</SelectItem>
-                <SelectItem value="6">6 уровень</SelectItem>
-                <SelectItem value="7">7 уровень</SelectItem>
-                <SelectItem value="8">8 уровень</SelectItem>
-                <SelectItem value="9">9 уровень</SelectItem>
-              </SelectContent>
-            </Select>
-            
-            <Select value={selectedClass} onValueChange={setSelectedClass}>
-              <SelectTrigger style={{ backgroundColor: currentTheme.inputBackground, color: currentTheme.textColor }}>
-                <SelectValue placeholder="Класс" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Все классы</SelectItem>
-                {getClassesList().map(cls => (
-                  <SelectItem key={cls} value={cls}>{cls}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
           </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Select value={selectedSchool} onValueChange={setSelectedSchool}>
-              <SelectTrigger style={{ backgroundColor: currentTheme.inputBackground, color: currentTheme.textColor }}>
-                <SelectValue placeholder="Школа магии" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Все школы</SelectItem>
-                {getSchoolsList().map(school => (
-                  <SelectItem key={school} value={school}>{school}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+
+          <div className="flex items-center gap-2">
+            <Button 
+              variant={onlyRitual ? "default" : "outline"}
+              onClick={() => setOnlyRitual(!onlyRitual)}
+              style={onlyRitual ? 
+                { backgroundColor: currentTheme.accent, color: currentTheme.background } : 
+                { backgroundColor: 'transparent', color: currentTheme.textColor, borderColor: `${currentTheme.accent}50` }
+              }
+            >
+              Только ритуалы
+            </Button>
             
-            <div className="flex items-center space-x-2">
-              <Button 
-                variant={onlyRitual ? "default" : "outline"}
-                onClick={() => setOnlyRitual(!onlyRitual)}
-                style={onlyRitual ? 
-                  { backgroundColor: currentTheme.accent, color: currentTheme.background } : 
-                  { backgroundColor: currentTheme.inputBackground, color: currentTheme.textColor }
-                }
-              >
-                Только ритуалы
-              </Button>
-              
-              <Button 
-                variant={onlyConcentration ? "default" : "outline"}
-                onClick={() => setOnlyConcentration(!onlyConcentration)}
-                style={onlyConcentration ? 
-                  { backgroundColor: currentTheme.accent, color: currentTheme.background } : 
-                  { backgroundColor: currentTheme.inputBackground, color: currentTheme.textColor }
-                }
-              >
-                Только концентрация
-              </Button>
-            </div>
+            <Button 
+              variant={onlyConcentration ? "default" : "outline"}
+              onClick={() => setOnlyConcentration(!onlyConcentration)}
+              style={onlyConcentration ? 
+                { backgroundColor: currentTheme.accent, color: currentTheme.background } : 
+                { backgroundColor: 'transparent', color: currentTheme.textColor, borderColor: `${currentTheme.accent}50` }
+              }
+            >
+              Только концентрация
+            </Button>
           </div>
         </div>
       </div>
       
-      <Card className="p-6" style={{ backgroundColor: currentTheme.cardBackground }}>
+      <SpellFilterPanel 
+        activeLevel={activeLevels}
+        activeSchool={activeSchools}
+        activeClass={activeClasses}
+        allLevels={getAllLevels()}
+        allSchools={getAllSchools()}
+        allClasses={getAllClasses()}
+        toggleLevel={toggleLevel}
+        toggleSchool={toggleSchool}
+        toggleClass={toggleClass}
+        clearFilters={clearFilters}
+        getBadgeColor={getBadgeColor}
+        getSchoolBadgeColor={getSchoolBadgeColor}
+        currentTheme={currentTheme}
+      />
+      
+      <Card className="p-6" style={{ 
+        backgroundColor: currentTheme.cardBackground,
+        borderColor: `${currentTheme.accent}30`
+      }}>
         <h2 className="text-2xl font-bold mb-4" style={{ color: currentTheme.textColor }}>
           Результаты поиска ({filteredSpells.length})
         </h2>
         
-        <ScrollArea className="h-[60vh]">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {viewMode === 'grid' ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mt-4">
             {filteredSpells.length > 0 ? (
-              filteredSpells.map(spell => (
-                <Card 
-                  key={spell.id || spell.name} 
-                  className="p-4 cursor-pointer hover:border-accent transition-all"
-                  style={{ backgroundColor: currentTheme.background }}
+              filteredSpells.map((spell) => (
+                <SpellCard
+                  key={spell.id ? spell.id.toString() : spell.name}
+                  spell={spell}
                   onClick={() => handleSpellClick(spell)}
-                >
-                  <div className="space-y-2">
-                    <div className="flex justify-between">
-                      <h3 className="font-bold" style={{ color: currentTheme.textColor }}>{spell.name}</h3>
-                      <span style={{ color: currentTheme.mutedTextColor }}>
-                        {spell.level === 0 ? 'Заговор' : `${spell.level} уровень`}
-                      </span>
-                    </div>
-                    
-                    <div className="text-sm" style={{ color: currentTheme.mutedTextColor }}>
-                      <p>{spell.school || 'Школа неизвестна'}</p>
-                      <p>
-                        {spell.ritual && <span className="mr-2">Ритуал</span>}
-                        {spell.concentration && <span>Концентрация</span>}
-                      </p>
-                    </div>
-                    
-                    <p className="text-xs truncate" style={{ color: currentTheme.mutedTextColor }}>
-                      {typeof spell.description === 'string' 
-                        ? spell.description.substring(0, 100) + (spell.description.length > 100 ? '...' : '')
-                        : Array.isArray(spell.description) && spell.description.length > 0
-                          ? spell.description[0].substring(0, 100) + (spell.description[0].length > 100 ? '...' : '')
-                          : 'Нет описания'
-                      }
-                    </p>
-                  </div>
-                </Card>
+                  currentTheme={currentTheme}
+                />
               ))
             ) : (
               <div 
-                className="col-span-3 text-center py-8"
+                className="col-span-full text-center py-12"
                 style={{ color: currentTheme.mutedTextColor }}
               >
                 Заклинания не найдены. Попробуйте изменить параметры поиска.
               </div>
             )}
           </div>
-        </ScrollArea>
+        ) : (
+          <SpellTable 
+            spells={filteredSpells}
+            onSpellClick={handleSpellClick}
+            currentTheme={currentTheme}
+          />
+        )}
       </Card>
       
       {selectedSpell && (

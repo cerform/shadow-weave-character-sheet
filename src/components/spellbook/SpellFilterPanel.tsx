@@ -3,7 +3,7 @@ import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { X } from 'lucide-react';
+import { X, FilterIcon, SlidersHorizontal } from 'lucide-react';
 
 interface SpellFilterPanelProps {
   activeLevel: number[];
@@ -18,6 +18,7 @@ interface SpellFilterPanelProps {
   clearFilters: () => void;
   getBadgeColor: (level: number) => string;
   getSchoolBadgeColor: (school: string) => string;
+  currentTheme: any;
 }
 
 const SpellFilterPanel: React.FC<SpellFilterPanelProps> = ({
@@ -32,17 +33,26 @@ const SpellFilterPanel: React.FC<SpellFilterPanelProps> = ({
   toggleClass,
   clearFilters,
   getBadgeColor,
-  getSchoolBadgeColor
+  getSchoolBadgeColor,
+  currentTheme
 }) => {
   return (
-    <div className="filter-panel bg-card/80 backdrop-blur-md p-4 rounded-lg mb-6 animate-in fade-in-50 slide-in-from-top-5">
+    <div className="filter-panel bg-card/80 backdrop-blur-md p-4 rounded-lg mb-6 animate-in fade-in-50 slide-in-from-top-5 border"
+         style={{ borderColor: `${currentTheme?.accent}50` || 'transparent' }}>
       <div className="flex justify-between items-center mb-4">
-        <h3 className="text-lg font-medium">Фильтры заклинаний</h3>
+        <div className="flex items-center gap-2">
+          <FilterIcon size={18} style={{ color: currentTheme?.accent }} />
+          <h3 className="text-lg font-medium" style={{ color: currentTheme?.textColor }}>Фильтры заклинаний</h3>
+        </div>
         <Button 
           variant="ghost" 
           size="sm"
           onClick={clearFilters}
-          className="h-8 px-2"
+          className="h-8 px-2 hover:bg-accent/10"
+          style={{ 
+            color: currentTheme?.accent,
+            borderColor: `${currentTheme?.accent}30`
+          }}
         >
           Сбросить <X className="ml-1 h-3 w-3" />
         </Button>
@@ -50,17 +60,23 @@ const SpellFilterPanel: React.FC<SpellFilterPanelProps> = ({
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div>
-          <h4 className="text-sm font-medium mb-2">Уровень</h4>
+          <h4 className="text-sm font-medium mb-2 flex items-center gap-1" style={{ color: currentTheme?.textColor }}>
+            <SlidersHorizontal size={14} /> Уровень
+          </h4>
           <div className="flex flex-wrap gap-2">
             {allLevels.map(level => (
               <Badge
                 key={`level-filter-${level}`}
                 variant={activeLevel.includes(level) ? "default" : "outline"}
-                className="spell-filter-badge cursor-pointer"
+                className="spell-filter-badge cursor-pointer transition-all"
                 style={activeLevel.includes(level) ? {
-                  backgroundColor: getBadgeColor(level),
-                  color: '#fff'
-                } : {}}
+                  backgroundColor: currentTheme?.spellLevels?.[level] || getBadgeColor(level),
+                  color: '#fff',
+                  borderColor: 'transparent',
+                } : {
+                  borderColor: `${currentTheme?.accent}50`,
+                  color: currentTheme?.textColor
+                }}
                 onClick={() => toggleLevel(level)}
               >
                 {level === 0 ? 'Заговор' : level}
@@ -70,19 +86,22 @@ const SpellFilterPanel: React.FC<SpellFilterPanelProps> = ({
         </div>
         
         <div>
-          <h4 className="text-sm font-medium mb-2">Школа</h4>
+          <h4 className="text-sm font-medium mb-2 flex items-center gap-1" style={{ color: currentTheme?.textColor }}>
+            <SlidersHorizontal size={14} /> Школа
+          </h4>
           <div className="flex flex-wrap gap-2">
             {allSchools.map(school => (
               <Badge
                 key={`school-filter-${school}`}
                 variant={activeSchool.includes(school) ? "default" : "outline"}
-                className="spell-filter-badge cursor-pointer"
+                className="spell-filter-badge cursor-pointer transition-all"
                 style={activeSchool.includes(school) ? {
                   backgroundColor: getSchoolBadgeColor(school),
-                  color: '#fff'
+                  color: '#fff',
+                  borderColor: 'transparent',
                 } : {
-                  borderColor: getSchoolBadgeColor(school),
-                  color: activeSchool.includes(school) ? '#fff' : getSchoolBadgeColor(school)
+                  borderColor: `${currentTheme?.accent}50`,
+                  color: currentTheme?.textColor
                 }}
                 onClick={() => toggleSchool(school)}
               >
@@ -93,13 +112,23 @@ const SpellFilterPanel: React.FC<SpellFilterPanelProps> = ({
         </div>
         
         <div>
-          <h4 className="text-sm font-medium mb-2">Класс</h4>
+          <h4 className="text-sm font-medium mb-2 flex items-center gap-1" style={{ color: currentTheme?.textColor }}>
+            <SlidersHorizontal size={14} /> Класс
+          </h4>
           <div className="flex flex-wrap gap-2">
             {allClasses.map(cls => (
               <Badge
                 key={`class-filter-${cls}`}
                 variant={activeClass.includes(cls) ? "default" : "outline"}
-                className="spell-filter-badge cursor-pointer"
+                className="spell-filter-badge cursor-pointer transition-all"
+                style={activeClass.includes(cls) ? {
+                  backgroundColor: currentTheme?.accent,
+                  color: '#fff',
+                  borderColor: 'transparent',
+                } : {
+                  borderColor: `${currentTheme?.accent}50`,
+                  color: currentTheme?.textColor
+                }}
                 onClick={() => toggleClass(cls)}
               >
                 {cls}
@@ -111,17 +140,17 @@ const SpellFilterPanel: React.FC<SpellFilterPanelProps> = ({
       
       {(activeLevel.length > 0 || activeSchool.length > 0 || activeClass.length > 0) && (
         <>
-          <Separator className="my-4" />
+          <Separator className="my-4" style={{ backgroundColor: `${currentTheme?.accent}30` }} />
           <div>
-            <h4 className="text-sm font-medium mb-2">Активные фильтры</h4>
+            <h4 className="text-sm font-medium mb-2" style={{ color: currentTheme?.textColor }}>Активные фильтры</h4>
             <div className="flex flex-wrap gap-2">
               {activeLevel.map(level => (
                 <Badge
                   key={`active-level-${level}`}
                   variant="default"
-                  className="flex items-center"
+                  className="flex items-center transition-all"
                   style={{
-                    backgroundColor: getBadgeColor(level),
+                    backgroundColor: currentTheme?.spellLevels?.[level] || getBadgeColor(level),
                     color: '#fff'
                   }}
                 >
@@ -137,7 +166,7 @@ const SpellFilterPanel: React.FC<SpellFilterPanelProps> = ({
                 <Badge
                   key={`active-school-${school}`}
                   variant="default"
-                  className="flex items-center"
+                  className="flex items-center transition-all"
                   style={{
                     backgroundColor: getSchoolBadgeColor(school),
                     color: '#fff'
@@ -155,7 +184,11 @@ const SpellFilterPanel: React.FC<SpellFilterPanelProps> = ({
                 <Badge
                   key={`active-class-${cls}`}
                   variant="default"
-                  className="flex items-center"
+                  className="flex items-center transition-all"
+                  style={{
+                    backgroundColor: currentTheme?.accent,
+                    color: '#fff'
+                  }}
                 >
                   {cls}
                   <X

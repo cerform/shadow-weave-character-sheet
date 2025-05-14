@@ -42,7 +42,7 @@ const SpellCard: React.FC<SpellCardProps> = ({ spell, onClick, currentTheme }) =
       onClick={onClick}
       className="cursor-pointer hover:scale-105 transition-all duration-200 overflow-hidden"
       style={{ 
-        backgroundColor: 'rgba(0, 0, 0, 0.7)', 
+        backgroundColor: currentTheme.cardBackground || 'rgba(0, 0, 0, 0.7)', 
         border: `1px solid ${currentTheme.accent}30`,
         boxShadow: `0 5px 15px rgba(0, 0, 0, 0.3), 0 0 8px ${currentTheme.accent}40`,
       }}
@@ -78,22 +78,22 @@ const SpellCard: React.FC<SpellCardProps> = ({ spell, onClick, currentTheme }) =
       <CardContent>
         <div className="grid grid-cols-2 gap-2 mb-2">
           <div className="flex items-center" style={{ color: currentTheme.textColor }}>
-            <Clock className="h-4 w-4 mr-1" />
+            <Clock className="h-4 w-4 mr-1" style={{ color: currentTheme.accent }} />
             <span className="text-xs">{spell.castingTime || 'Н/Д'}</span>
           </div>
           
           <div className="flex items-center" style={{ color: currentTheme.textColor }}>
-            <Target className="h-4 w-4 mr-1" />
+            <Target className="h-4 w-4 mr-1" style={{ color: currentTheme.accent }} />
             <span className="text-xs">{spell.range || 'Н/Д'}</span>
           </div>
           
           <div className="flex items-center" style={{ color: currentTheme.textColor }}>
-            <Component className="h-4 w-4 mr-1" />
+            <Component className="h-4 w-4 mr-1" style={{ color: currentTheme.accent }} />
             <span className="text-xs">{spell.components || 'Н/Д'}</span>
           </div>
           
           <div className="flex items-center" style={{ color: currentTheme.textColor }}>
-            <Timer className="h-4 w-4 mr-1" />
+            <Timer className="h-4 w-4 mr-1" style={{ color: currentTheme.accent }} />
             <span className="text-xs">{spell.duration || 'Н/Д'}</span>
           </div>
         </div>
@@ -111,7 +111,7 @@ const SpellCard: React.FC<SpellCardProps> = ({ spell, onClick, currentTheme }) =
               : desc;
           })()}
           <div className="absolute bottom-0 left-0 right-0 h-8" style={{ 
-            background: 'linear-gradient(to top, rgba(0,0,0,0.8), transparent)'
+            background: `linear-gradient(to top, ${currentTheme.cardBackground || 'rgba(0,0,0,0.8)'}, transparent)`
           }}></div>
         </div>
       </CardContent>
@@ -134,7 +134,8 @@ const SpellCard: React.FC<SpellCardProps> = ({ spell, onClick, currentTheme }) =
             )}
           </div>
           
-          <Badge variant="secondary" className="transition-all duration-200" style={{ backgroundColor: currentTheme.accent + '20', color: currentTheme.accent }}>
+          <Badge variant="secondary" className="transition-all duration-200" 
+                style={{ backgroundColor: currentTheme.accent + '20', color: currentTheme.accent }}>
             <Zap className="h-3 w-3 mr-1" />
             {(() => {
               if (typeof spell.classes === 'string') return spell.classes;

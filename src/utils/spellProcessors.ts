@@ -2,108 +2,93 @@
 import { CharacterSpell } from '@/types/character';
 import { SpellData } from '@/types/spells';
 
-/**
- * Разбирает строку компонентов заклинания и возвращает булевы значения для каждого типа компонента
- */
-export function parseComponents(componentString: string): {
-  verbal: boolean;
-  somatic: boolean;
-  material: boolean;
-  ritual: boolean;
-  concentration: boolean;
-} {
-  // Приводим строку к верхнему регистру для упрощения проверки
-  const upperString = componentString.toUpperCase();
+// Обрабатывает компоненты заклинания в удобный для отображения формат
+export const componentsToString = (spell: CharacterSpell | SpellData): string => {
+  if (spell.components) {
+    return spell.components;
+  }
   
-  return {
-    verbal: upperString.includes('В') || upperString.includes('V'),
-    somatic: upperString.includes('С') || upperString.includes('S'),
-    material: upperString.includes('М') || upperString.includes('M'),
-    ritual: upperString.includes('Р') || upperString.includes('R'),
-    concentration: upperString.includes('К') || upperString.includes('C')
-  };
-}
-
-/**
- * Преобразует объект компонентов заклинания в строковое представление
- */
-export function componentsToString({
-  verbal = false,
-  somatic = false,
-  material = false,
-  ritual = false,
-  concentration = false
-}: {
-  verbal?: boolean;
-  somatic?: boolean;
-  material?: boolean;
-  ritual?: boolean;
-  concentration?: boolean;
-}): string {
   const components: string[] = [];
   
-  if (verbal) components.push('В');
-  if (somatic) components.push('С');
-  if (material) components.push('М');
+  if (spell.verbal) components.push('В');
+  if (spell.somatic) components.push('С');
+  if (spell.material) components.push('М');
   
   let result = components.join(', ');
   
-  if (ritual) {
-    result += ' (ритуал)';
+  if (spell.material && spell.materials) {
+    result += ` (${spell.materials})`;
   }
   
-  if (concentration) {
-    result += ' (концентрация)';
-  }
-  
-  return result;
-}
+  return result || 'Нет';
+};
 
-/**
- * Обрабатывает описание заклинания для корректного отображения
- */
-export function processSpellDescription(description: string | string[]): string {
+// Обрабатывает описание заклинания для правильного отображения
+export const processSpellDescription = (description: string | string[]): string[] => {
+  if (!description) return ['Нет описания'];
+  
+  if (typeof description === 'string') {
+    return description.split('\n');
+  }
+  
   if (Array.isArray(description)) {
-    return description.join('\n\n');
+    return description;
   }
-  return description;
-}
+  
+  return ['Нет описания'];
+};
 
-/**
- * Создает уникальный ключ для заклинания
- */
-export function createSpellKey(spell: SpellData | CharacterSpell): string;
-export function createSpellKey(name: string, level: number): string;
-export function createSpellKey(spellOrName: SpellData | CharacterSpell | string, level?: number): string {
-  if (typeof spellOrName === 'string') {
-    return `${spellOrName.toLowerCase().trim()}-${level}`;
-  }
-  return `${spellOrName.name.toLowerCase().trim()}-${spellOrName.level}`;
-}
-
-/**
- * Проверяет, является ли заклинание дубликатом существующего
- */
-export function isDuplicateSpell(spell: SpellData | CharacterSpell, existingSpells: Array<SpellData | CharacterSpell>): boolean {
-  const key = createSpellKey(spell);
-  return existingSpells.some(existing => createSpellKey(existing) === key);
-}
-
-/**
- * Удаляет дубликаты заклинаний из массива
- */
-export function removeDuplicateSpells<T extends SpellData | CharacterSpell>(spells: T[]): T[] {
-  const uniqueSpells = new Map<string, T>();
+// Удаляет дубликаты заклинаний из массива
+export const removeDuplicateSpells = (spells: CharacterSpell[]): CharacterSpell[] => {
+  const uniqueSpells = new Map<string, CharacterSpell>();
   
   spells.forEach(spell => {
-    const key = createSpellKey(spell);
-    // Если заклинания еще нет в карте или текущее заклинание имеет больше заполненных полей
-    if (!uniqueSpells.has(key) || 
-        Object.keys(spell).filter(k => Boolean(spell[k as keyof T])).length > 
-        Object.keys(uniqueSpells.get(key)!).filter(k => Boolean(uniqueSpells.get(key)![k as keyof T])).length) {
+    const key = `${spell.name.toLowerCase()}-${spell.level}`;
+    
+    if (!uniqueSpells.has(key)) {
       uniqueSpells.set(key, spell);
+    } else {
+      // Если есть дубликат, выбираем более полный объект
+      const existing = uniqueSpells.get(key)!;
+      const merged = mergeSpellObjects(existing, spell);
+      uniqueSpells.set(key, merged);
     }
   });
   
   return Array.from(uniqueSpells.values());
-}
+};
+
+// Объединяет два объекта заклинаний, выбирая непустые поля
+export const mergeSpellObjects = (spell1: CharacterSpell, spell2: CharacterSpell): CharacterSpell => {
+  return {
+    id: spell1.id || spell2.id,
+    name: spell1.name || spell2.name,
+    level: spell1.level || spell2.level || 0,
+    school: spell1.school || spell2.school,
+    castingTime: spell1.castingTime || spell2.castingTime,
+    range: spell1.range || spell2.range,
+    components: spell1.components || spell2.components,
+    duration: spell1.duration || spell2.duration,
+    description: spell1.description || spell2.description,
+    classes: spell1.classes || spell2.classes,
+    ritual: spell1.ritual || spell2.ritual,
+    concentration: spell1.concentration || spell2.concentration,
+    verbal: spell1.verbal || spell2.verbal,
+    somatic: spell1.somatic || spell2.somatic,
+    material: spell1.material || spell2.material,
+    materials: spell1.materials || spell2.materials,
+    prepared: spell1.prepared || spell2.prepared,
+    source: spell1.source || spell2.source,
+    higherLevel: spell1.higherLevel || spell2.higherLevel,
+    higherLevels: spell1.higherLevels || spell2.higherLevels,
+    higher_level: spell1.higher_level || spell2.higher_level
+  };
+};
+
+// Функция форматирования строк классов для отображения
+export const formatClassesString = (classes: string[] | string | undefined): string => {
+  if (!classes) return "—";
+  if (typeof classes === 'string') return classes;
+  if (Array.isArray(classes)) return classes.join(', ');
+  return "—";
+};
