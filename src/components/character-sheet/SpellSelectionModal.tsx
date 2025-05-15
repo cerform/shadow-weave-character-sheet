@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { SpellData } from '@/types/spells';
+import { SpellData, convertCharacterSpellToSpellData } from '@/types/spells';
 import { Character, CharacterSpell } from '@/types/character';
 import { Progress } from "@/components/ui/progress";
 import { useSpellbook } from '@/hooks/spellbook';
@@ -59,9 +59,9 @@ const SpellSelectionModal: React.FC<SpellSelectionModalProps> = ({
   const [tab, setTab] = useState("available");
   
   // Character class and spellcasting stats
-  const characterClass = typeof character.class === 'object' 
-    ? character.class.name 
-    : character.class || "";
+  const characterClass = character?.class ? 
+    (typeof character.class === 'object' ? character.class.name : character.class) 
+    : "";
     
   const spellcastingAbility = character.spellcasting?.ability || "INT";
   
@@ -187,7 +187,11 @@ const SpellSelectionModal: React.FC<SpellSelectionModalProps> = ({
   
   // Check if spell is already added
   const isSpellAdded = (spellId: string) => {
-    return characterSpells.some(s => s.id === spellId);
+    return characterSpells.some(s => 
+      (typeof s === 'string' && s === spellId) ||
+      (s.id === spellId) || 
+      (s.name === spellId)
+    );
   };
   
   // Sort spells
@@ -368,12 +372,12 @@ const SpellSelectionModal: React.FC<SpellSelectionModalProps> = ({
               {characterSpells.length > 0 ? (
                 <div className="divide-y divide-border">
                   {characterSpells.map((spell) => {
-                    // Find full spell data
-                    const fullSpell = spells.find(s => s.id === spell.id) || spell;
+                    // Find full spell data or convert character spell to SpellData
+                    const fullSpell = spells.find(s => s.id === spell.id) || convertCharacterSpellToSpellData(spell);
                     
                     return (
                       <div 
-                        key={spell.id}
+                        key={spell.id ? spell.id.toString() : spell.name}
                         className="p-2 border-b last:border-b-0 hover:bg-black/20 cursor-pointer flex justify-between items-center"
                         onClick={() => handleViewDetails(fullSpell)}
                       >
@@ -393,7 +397,7 @@ const SpellSelectionModal: React.FC<SpellSelectionModalProps> = ({
                           variant="outline" 
                           onClick={(e) => {
                             e.stopPropagation();
-                            handleRemoveSpell(String(spell.id));
+                            handleRemoveSpell(spell.id ? spell.id.toString() : spell.name);
                           }}
                         >
                           <X className="h-4 w-4" />
