@@ -155,10 +155,10 @@ const SpellDetailModal: React.FC<SpellDetailModalProps> = ({
             <div className="prose prose-invert max-w-none" style={{ color: theme.textColor }}>
               {renderDescription()}
               
-              {(spell.higherLevels || spell.higherLevel) && (
+              {(spell.higherLevels) && (
                 <div className="mt-6">
                   <h4 className="text-lg font-medium" style={{ color: theme.accent }}>На более высоких уровнях</h4>
-                  <p>{spell.higherLevels || spell.higherLevel}</p>
+                  <p>{spell.higherLevels}</p>
                 </div>
               )}
             </div>
