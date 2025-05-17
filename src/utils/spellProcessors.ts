@@ -5,7 +5,7 @@ import { SpellData } from '@/types/spells';
 /**
  * Преобразует компоненты заклинания в строку (В, С, М)
  */
-export function componentsToString(spell: CharacterSpell): string {
+export function componentsToString(spell: CharacterSpell | SpellData): string {
   const components: string[] = [];
   if (spell.verbal) components.push('В');
   if (spell.somatic) components.push('С');
@@ -38,6 +38,16 @@ export function removeDuplicateSpells(spells: CharacterSpell[]): CharacterSpell[
 }
 
 /**
+ * Обрабатывает описание заклинания
+ */
+export function processSpellDescription(description: string | string[]): string {
+  if (Array.isArray(description)) {
+    return description.join("\n\n");
+  }
+  return description || "Нет описания";
+}
+
+/**
  * Преобразует массив заклинаний из формата CharacterSpell в формат SpellData
  */
 export function convertToSpellData(spells: CharacterSpell[]): SpellData[] {
@@ -60,4 +70,56 @@ export function convertToSpellData(spells: CharacterSpell[]): SpellData[] {
     materials: spell.materials || '',
     source: spell.source || "Player's Handbook"
   }));
+}
+
+/**
+ * Парсит компоненты заклинания из строки
+ */
+export function parseComponents(componentString: string): {
+  verbal: boolean;
+  somatic: boolean;
+  material: boolean;
+  ritual: boolean;
+  concentration: boolean;
+} {
+  const verbal = /[Вв]/.test(componentString);
+  const somatic = /[Сс]/.test(componentString);
+  const material = /[Мм]/.test(componentString);
+  const ritual = /[Рр]/.test(componentString);
+  const concentration = /[Кк]/.test(componentString);
+  
+  return {
+    verbal,
+    somatic,
+    material,
+    ritual,
+    concentration
+  };
+}
+
+/**
+ * Создает уникальный ключ для заклинания
+ */
+export function createSpellKey(spell: SpellData | CharacterSpell): string {
+  return `${spell.name.toLowerCase().trim()}-${spell.level}`;
+}
+
+/**
+ * Проверяет, является ли заклинание дубликатом
+ */
+export function isDuplicateSpell(spell: SpellData | CharacterSpell, existingSpells: Map<string, SpellData | CharacterSpell>): boolean {
+  const key = createSpellKey(spell);
+  return existingSpells.has(key);
+}
+
+/**
+ * Объединяет два заклинания
+ */
+export function mergeSpells(existing: SpellData | CharacterSpell, newSpell: SpellData | CharacterSpell): SpellData | CharacterSpell {
+  return {
+    ...existing,
+    ...newSpell,
+    // Сохраняем описание из существующего заклинания, если новое пусто
+    description: newSpell.description || existing.description
+  };
 }
