@@ -6,12 +6,12 @@ import { Character } from '@/types/character';
 import { useSpellbook } from '@/hooks/spellbook';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Search } from 'lucide-react';
+import { Search, Loader2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import NavigationButtons from './NavigationButtons';
-import { getSpellcastingAbilityModifier, filterSpellsByClassAndLevel } from '@/utils/spellUtils';
+import { filterSpellsByClassAndLevel } from '@/utils/spellUtils';
 import { SpellData } from '@/types/spells';
 
 interface CharacterSpellSelectionProps {
@@ -31,10 +31,21 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
   const [selectedSpells, setSelectedSpells] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredSpells, setFilteredSpells] = useState<SpellData[]>([]);
+  const [loading, setLoading] = useState(true);
   
+  // При инициализации явно загружаем заклинания для класса персонажа
   useEffect(() => {
     if (character && character.class) {
+      setLoading(true);
+      console.log(`Загружаем заклинания для класса ${character.class}...`);
       spellbook.loadSpellsForCharacter(character.class, character.level || 1);
+      
+      // Добавляем дополнительную задержку для полной загрузки
+      const timer = setTimeout(() => {
+        setLoading(false);
+      }, 1500);
+      
+      return () => clearTimeout(timer);
     }
   }, [character?.class, character?.level, spellbook]);
 
@@ -56,7 +67,9 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
           const spellSchool = spell.school?.toLowerCase() || '';
           const spellDesc = typeof spell.description === 'string' 
             ? spell.description.toLowerCase() 
-            : '';
+            : Array.isArray(spell.description) 
+              ? spell.description.join(' ').toLowerCase() 
+              : '';
           
           const searchTermLower = searchTerm.toLowerCase();
           
@@ -66,8 +79,9 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
         })
       : classSpells;
 
+    console.log(`Отфильтровано заклинаний: ${searchFiltered.length} из ${spellbook.availableSpells.length}`);
     setFilteredSpells(searchFiltered);
-  }, [spellbook.availableSpells, searchTerm, character.class, character.level]);
+  }, [spellbook.availableSpells, searchTerm, character?.class, character?.level]);
 
   // При инициализации загружаем уже выбранные заклинания
   useEffect(() => {
@@ -125,7 +139,12 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
           <TabsContent value="all" className="mt-4">
             <ScrollArea className="h-[400px]">
               <div className="space-y-2">
-                {filteredSpells.length > 0 ? (
+                {loading ? (
+                  <div className="flex flex-col items-center justify-center py-12">
+                    <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
+                    <p className="text-muted-foreground">Загрузка заклинаний...</p>
+                  </div>
+                ) : filteredSpells.length > 0 ? (
                   filteredSpells.map(spell => (
                     <div key={spell.id || spell.name} className="flex items-center justify-between border p-3 rounded">
                       <div>
@@ -136,14 +155,14 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
                       </div>
                       <Checkbox
                         checked={isSpellSelected(spell)}
-                        onCheckedChange={(checked) => handleSpellChange(spell, checked as boolean)}
+                        onCheckedChange={(checked) => handleSpellChange(spell, Boolean(checked))}
                         id={`spell-${spell.id || spell.name}`}
                       />
                     </div>
                   ))
                 ) : (
                   <div className="text-center p-4 text-muted-foreground">
-                    {searchTerm ? 'Заклинания не найдены' : 'Загрузка заклинаний...'}
+                    {searchTerm ? 'Заклинания не найдены' : 'Нет доступных заклинаний для вашего класса'}
                   </div>
                 )}
               </div>
