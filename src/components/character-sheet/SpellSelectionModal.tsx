@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -59,7 +58,7 @@ const SpellSelectionModal: React.FC<SpellSelectionModalProps> = ({
   const [tab, setTab] = useState("available");
   
   // Character class and spellcasting stats - Adding null check
-  const characterClass = character && character.class ? 
+  const characterClass = (character && character.class) ? 
     (typeof character.class === 'object' ? character.class.name : character.class) 
     : "";
     
@@ -304,12 +303,25 @@ const SpellSelectionModal: React.FC<SpellSelectionModalProps> = ({
                   placeholder="Поиск заклинаний..."
                   className="pl-8"
                   value={searchTerm}
-                  onChange={handleSearchChange}
+                  onChange={(e) => {
+                    setSearchTermLocal(e.target.value);
+                    setSearchTerm(e.target.value);
+                  }}
                 />
               </div>
               
               <div className="flex gap-2">
-                <Select value={selectedLevel} onValueChange={handleLevelChange}>
+                <Select value={selectedLevel} onValueChange={(value) => {
+                  setSelectedLevel(value);
+                  
+                  if (value === "all") {
+                    setLevelFilter([]);
+                  } else if (value === "cantrips") {
+                    setLevelFilter([0]);
+                  } else {
+                    setLevelFilter([parseInt(value)]);
+                  }
+                }}>
                   <SelectTrigger className="w-32">
                     <SelectValue placeholder="Уровень" />
                   </SelectTrigger>
@@ -328,7 +340,10 @@ const SpellSelectionModal: React.FC<SpellSelectionModalProps> = ({
                   </SelectContent>
                 </Select>
                 
-                <Button variant="outline" onClick={handleSortChange}>
+                <Button variant="outline" onClick={() => {
+                  const newOrder = sortOrder === "asc" ? "desc" : "asc";
+                  setSortOrder(newOrder);
+                }}>
                   <ArrowDownUp className="h-4 w-4 mr-2" />
                   {sortOrder === "asc" ? "А-Я" : "Я-А"}
                 </Button>
@@ -352,7 +367,41 @@ const SpellSelectionModal: React.FC<SpellSelectionModalProps> = ({
               ) : sortedSpells.length > 0 ? (
                 <div className="divide-y divide-border">
                   {sortedSpells.map((spell) => (
-                    <SpellListItem key={spell.id} spell={spell} />
+                    <div 
+                      key={spell.id}
+                      className={`p-2 border-b last:border-b-0 hover:bg-black/20 cursor-pointer flex justify-between items-center ${isSpellAdded(spell.id) ? 'opacity-50' : ''}`}
+                      onClick={() => {
+                        setSelectedSpell(spell);
+                        setShowDetails(true);
+                      }}
+                    >
+                      <div>
+                        <div className="font-semibold">{spell.name}</div>
+                        <div className="text-sm opacity-70 flex gap-2 flex-wrap">
+                          <span>{spell.level === 0 ? "Заговор" : `${spell.level} уровень`}</span>
+                          <span>•</span>
+                          <span>{spell.school}</span>
+                          {spell.concentration && <span>• Концентрация</span>}
+                          {spell.ritual && <span>• Ритуал</span>}
+                        </div>
+                      </div>
+                      <Button 
+                        size="sm" 
+                        variant={isSpellAdded(spell.id) ? "outline" : "default"} 
+                        className={isSpellAdded(spell.id) ? "border-green-500 text-green-500" : ""}
+                        style={!isSpellAdded(spell.id) ? { backgroundColor: currentTheme.accent } : {}}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          isSpellAdded(spell.id) ? handleRemoveSpell(spell.id) : handleAddSpell(spell);
+                        }}
+                      >
+                        {isSpellAdded(spell.id) ? (
+                          <X className="h-4 w-4" />
+                        ) : (
+                          <Plus className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </div>
                   ))}
                 </div>
               ) : (
@@ -379,7 +428,10 @@ const SpellSelectionModal: React.FC<SpellSelectionModalProps> = ({
                       <div 
                         key={spell.id ? spell.id.toString() : spell.name}
                         className="p-2 border-b last:border-b-0 hover:bg-black/20 cursor-pointer flex justify-between items-center"
-                        onClick={() => handleViewDetails(fullSpell)}
+                        onClick={() => {
+                          setSelectedSpell(fullSpell);
+                          setShowDetails(true);
+                        }}
                       >
                         <div>
                           <div className="font-semibold">{spell.name}</div>
