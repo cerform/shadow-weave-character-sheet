@@ -57,8 +57,8 @@ const SpellSelectionModal: React.FC<SpellSelectionModalProps> = ({
   const [searchTerm, setSearchTermLocal] = useState("");
   const [tab, setTab] = useState("available");
   
-  // Character class and spellcasting stats - Adding null check
-  const characterClass = (character && character.class) ? 
+  // Character class and spellcasting stats - Adding safe null checks
+  const characterClass = character?.class ? 
     (typeof character.class === 'object' ? character.class.name : character.class) 
     : "";
     
@@ -340,10 +340,7 @@ const SpellSelectionModal: React.FC<SpellSelectionModalProps> = ({
                   </SelectContent>
                 </Select>
                 
-                <Button variant="outline" onClick={() => {
-                  const newOrder = sortOrder === "asc" ? "desc" : "asc";
-                  setSortOrder(newOrder);
-                }}>
+                <Button variant="outline" onClick={handleSortChange}>
                   <ArrowDownUp className="h-4 w-4 mr-2" />
                   {sortOrder === "asc" ? "А-Я" : "Я-А"}
                 </Button>

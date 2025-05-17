@@ -2,7 +2,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { SpellData, SpellFilters } from '@/types/spells';
 import { getAllSpells } from '@/data/spells';
-import { useToast } from '../use-toast';
+import { useToast } from '@/hooks/use-toast';
 import { SpellbookContextType } from './types';
 
 const defaultFilters: SpellFilters = {
@@ -70,13 +70,24 @@ export const SpellbookProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const loadSpells = async () => {
     setLoading(true);
     try {
+      // Добавляем отладочную информацию
+      console.log("Загружаем заклинания из data/spells...");
       const allSpells = getAllSpells();
+      console.log(`Загружено заклинаний: ${allSpells.length}`);
+      
+      // Проверяем структуру первых нескольких заклинаний для отладки
+      if (allSpells.length > 0) {
+        console.log("Пример первого заклинания:", allSpells[0]);
+      }
+      
       setSpells(allSpells);
       setFilteredSpells(allSpells);
       setAvailableSpells(allSpells);
-      console.log("Loaded spells:", allSpells.length);
+      
+      // Сообщаем о загрузке в консоль
+      console.log(`Заклинания успешно загружены: ${allSpells.length} заклинаний`);
     } catch (error) {
-      console.error("Error loading spells:", error);
+      console.error("Ошибка загрузки заклинаний:", error);
       toast({
         title: "Ошибка загрузки заклинаний",
         description: "Не удалось загрузить базу заклинаний",
@@ -136,7 +147,8 @@ export const SpellbookProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     if (filters.concentration !== null) {
       result = result.filter(spell => spell.concentration === filters.concentration);
     }
-
+    
+    console.log(`Отфильтровано заклинаний: ${result.length} из ${spells.length}`);
     setFilteredSpells(result);
   };
 

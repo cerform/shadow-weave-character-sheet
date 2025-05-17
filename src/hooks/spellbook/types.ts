@@ -14,7 +14,7 @@ export interface SpellbookContextType {
   concentrationFilter: boolean | null;
   loading: boolean;
   filters: SpellFilters;
-  updateFilters: (newFilters: Partial<SpellFilters>) => void;
+  updateFilters: (filters: Partial<SpellFilters>) => void;
   setSearchTerm: (term: string) => void;
   setLevelFilter: (levels: number[]) => void;
   setClassFilter: (classes: string[]) => void;
