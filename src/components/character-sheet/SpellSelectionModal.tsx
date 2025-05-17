@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -57,18 +58,18 @@ const SpellSelectionModal: React.FC<SpellSelectionModalProps> = ({
   const [searchTerm, setSearchTermLocal] = useState("");
   const [tab, setTab] = useState("available");
   
-  // Character class and spellcasting stats
-  const characterClass = character?.class ? 
+  // Character class and spellcasting stats - Adding null check
+  const characterClass = character && character.class ? 
     (typeof character.class === 'object' ? character.class.name : character.class) 
     : "";
     
-  const spellcastingAbility = character.spellcasting?.ability || "INT";
+  const spellcastingAbility = character?.spellcasting?.ability || "INT";
   
   // Available spell slots
-  const maxPreparedSpells = character.spellcasting?.maxPreparedSpells || 0;
+  const maxPreparedSpells = character?.spellcasting?.maxPreparedSpells || 0;
   
   // Safely access character spells
-  const characterSpells: CharacterSpell[] = Array.isArray(character.spells) 
+  const characterSpells: CharacterSpell[] = Array.isArray(character?.spells) 
     ? character.spells
     : [];
   
