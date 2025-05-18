@@ -123,3 +123,63 @@ export function mergeSpells(existing: SpellData | CharacterSpell, newSpell: Spel
     description: newSpell.description || existing.description
   };
 }
+
+/**
+ * Проверяет наличие дубликатов заклинаний
+ */
+export function checkDuplicateSpells(spells: SpellData[] | CharacterSpell[]): { 
+  hasDuplicates: boolean; 
+  count: number;
+  duplicates: Array<{name: string, level: number, count: number}> 
+} {
+  const spellCounts = new Map<string, number>();
+  const duplicateInfo: Array<{name: string, level: number, count: number}> = [];
+  
+  // Подсчитываем количество каждого заклинания по ключу (имя+уровень)
+  spells.forEach(spell => {
+    const key = createSpellKey(spell);
+    const count = (spellCounts.get(key) || 0) + 1;
+    spellCounts.set(key, count);
+  });
+  
+  // Находим дубликаты (где счетчик > 1)
+  let totalDuplicates = 0;
+  spellCounts.forEach((count, key) => {
+    if (count > 1) {
+      const [nameAndLevel] = key.split('-');
+      const level = parseInt(key.split('-').pop() || "0");
+      const name = key.substring(0, key.lastIndexOf('-')).replace(/-/g, ' ');
+      
+      duplicateInfo.push({ 
+        name, 
+        level, 
+        count 
+      });
+      
+      totalDuplicates += (count - 1); // Считаем лишние копии
+    }
+  });
+  
+  return {
+    hasDuplicates: totalDuplicates > 0,
+    count: totalDuplicates,
+    duplicates: duplicateInfo
+  };
+}
+
+/**
+ * Удаляет дубликаты из массива заклинаний
+ */
+export function removeDuplicates(spells: SpellData[] | CharacterSpell[]): SpellData[] | CharacterSpell[] {
+  const uniqueSpells = new Map<string, SpellData | CharacterSpell>();
+  
+  // Берем первую встреченную копию каждого заклинания
+  spells.forEach(spell => {
+    const key = createSpellKey(spell);
+    if (!uniqueSpells.has(key)) {
+      uniqueSpells.set(key, spell);
+    }
+  });
+  
+  return Array.from(uniqueSpells.values());
+}

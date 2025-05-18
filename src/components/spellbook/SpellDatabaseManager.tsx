@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -10,10 +11,10 @@ import { Card } from "@/components/ui/card";
 import { 
   importSpellsFromTextFormat, 
   checkDuplicateSpells,
-  removeDuplicates
+  removeDuplicates,
+  convertToSpellData
 } from '@/utils/updateSpellDatabase';
 import { SpellData } from '@/types/spells';
-import { parseComponents } from '@/utils/spellProcessors';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertTriangle, Check, Trash } from 'lucide-react';
 
@@ -30,10 +31,12 @@ const SpellDatabaseManager: React.FC = () => {
   const { toast } = useToast();
 
   useEffect(() => {
-    setAllSpells(spells); // Use the imported spells array directly
+    // Конвертируем из CharacterSpell[] в SpellData[]
+    const spellDataArray = convertToSpellData(spells);
+    setAllSpells(spellDataArray);
     
     // Проверяем наличие дубликатов при загрузке
-    const dupes = checkDuplicateSpells(spells);
+    const dupes = checkDuplicateSpells(spellDataArray);
     setDuplicatesInfo(dupes);
   }, []);
   
@@ -55,29 +58,33 @@ const SpellDatabaseManager: React.FC = () => {
       // Количество заклинаний до импорта
       const beforeCount = allSpells.length;
       
-      // Импортируем заклинания
-      const updated = importSpellsFromTextFormat(rawData, allSpells);
+      // Импортируем заклинания и конвертируем результат в SpellData[]
+      const importedSpells = importSpellsFromTextFormat(rawData, allSpells);
+      const updatedSpells = convertToSpellData(importedSpells);
       
       // Количество заклинаний после импорта
-      const afterCount = updated.length;
+      const afterCount = updatedSpells.length;
       
       // Определяем новые заклинания
-      const newSpells = updated.slice(beforeCount);
+      const newSpells = updatedSpells.slice(beforeCount);
       
       // Подсчитываем дубликаты
       const duplicates = inputSpellsCount - (afterCount - beforeCount);
       
       setProcessedSpells(newSpells);
-      setAllSpells(updated);
+      setAllSpells(updatedSpells);
       
       // Проверяем наличие дубликатов
-      const dupes = checkDuplicateSpells(updated);
+      const dupes = checkDuplicateSpells(updatedSpells);
       setDuplicatesInfo(dupes);
       
       toast({
         title: "Импорт успешен",
         description: `Добавлено ${newSpells.length} новых заклинаний${duplicates > 0 ? `, пропущено ${duplicates} дубликатов` : ''}`,
       });
+      
+      // Очистим поле ввода после успешного импорта
+      setRawData('');
     } catch (error) {
       toast({
         title: "Ошибка обработки",
@@ -88,7 +95,7 @@ const SpellDatabaseManager: React.FC = () => {
   };
 
   const handleRemoveDuplicates = () => {
-    const deduplicatedSpells = removeDuplicates(allSpells);
+    const deduplicatedSpells = removeDuplicates(allSpells) as SpellData[];
     const removedCount = allSpells.length - deduplicatedSpells.length;
     
     setAllSpells(deduplicatedSpells);

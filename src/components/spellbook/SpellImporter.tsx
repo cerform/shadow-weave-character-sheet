@@ -1,10 +1,9 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { importSpellsFromTextFormat } from '@/utils/updateSpellDatabase';
+import { importSpellsFromTextFormat, convertToSpellData } from '@/utils/updateSpellDatabase';
 import { spells as allSpells } from '@/data/spells';
 import { SpellData } from '@/types/spells';
 import { Badge } from '@/components/ui/badge';
@@ -32,7 +31,7 @@ const SpellImporter: React.FC<SpellImporterProps> = ({ onClose, onImport }) => {
       const existingSpellsMap = new Map<string, SpellData>();
       allSpells.forEach(spell => {
         const key = `${spell.name.toLowerCase()}-${spell.level}`;
-        existingSpellsMap.set(key, spell);
+        existingSpellsMap.set(key, spell as SpellData);
       });
       
       // Подсчитываем количество уникальных заклинаний во входных данных
@@ -40,7 +39,9 @@ const SpellImporter: React.FC<SpellImporterProps> = ({ onClose, onImport }) => {
       const inputSpellsCount = inputLines.length;
       
       // Импортируем заклинания
-      const updatedSpells = importSpellsFromTextFormat(inputText, allSpells);
+      const importedSpells = importSpellsFromTextFormat(inputText, allSpells);
+      // Преобразуем в SpellData[]
+      const updatedSpells = convertToSpellData(importedSpells);
       
       // Подсчитываем количество заклинаний после импорта
       const afterCount = updatedSpells.length;
@@ -84,7 +85,7 @@ const SpellImporter: React.FC<SpellImporterProps> = ({ onClose, onImport }) => {
           Вставьте заклинания в формате: [уровень] название компоненты
         </CardDescription>
         <CardDescription>
-          Например: [3] Огненный шар ВСМ
+          Например: [3] Огне��ный шар ВСМ
         </CardDescription>
       </CardHeader>
       <CardContent>

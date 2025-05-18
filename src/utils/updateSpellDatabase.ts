@@ -1,106 +1,93 @@
 
 import { CharacterSpell } from '@/types/character';
-import { SpellData } from '@/types/spells';
-import { parseComponents, createSpellKey, isDuplicateSpell } from './spellProcessors';
+import { SpellData, convertCharacterSpellToSpellData } from '@/types/spells';
+import { 
+  parseComponents, 
+  checkDuplicateSpells, 
+  removeDuplicates,
+  convertToSpellData 
+} from './spellProcessors';
 
 /**
- * Парсит заклинания из текстового формата [уровень] название компоненты
+ * Импортирует заклинания из текстового формата и добавляет их в существующий массив
+ * Формат: [уровень] название компоненты
  */
-export function importSpellsFromTextFormat(inputText: string, existingSpells: CharacterSpell[]): CharacterSpell[] {
-  const lines = inputText.split('\n').filter(line => line.trim().length > 0);
-  const existingSpellsMap = new Map<string, CharacterSpell>();
-  const updatedSpells = [...existingSpells];
+export function importSpellsFromTextFormat(
+  textData: string,
+  existingSpells: CharacterSpell[] | SpellData[]
+): CharacterSpell[] {
+  // Если строка пуста, возвращаем исходный массив
+  if (!textData.trim()) {
+    return existingSpells as CharacterSpell[];
+  }
+
+  // Разбиваем входные данные на строки
+  const lines = textData.split('\n');
   
-  // Создаем карту существующих заклинаний
+  // Массив для новых заклинаний
+  const newSpells: CharacterSpell[] = [];
+  
+  // Карта для отслеживания существующих заклинаний
+  const existingSpellsMap = new Map<string, CharacterSpell | SpellData>();
   existingSpells.forEach(spell => {
-    const key = createSpellKey(spell);
+    const key = `${spell.name.toLowerCase()}-${spell.level}`;
     existingSpellsMap.set(key, spell);
   });
   
-  // Обрабатываем каждую строку текста
-  for (const line of lines) {
-    const spellEntry = parseSpellEntry(line);
-    if (!spellEntry) continue;
+  // Обрабатываем каждую строку
+  lines.forEach(line => {
+    const trimmedLine = line.trim();
+    if (!trimmedLine) return;
     
-    const { name, level, components } = spellEntry;
-    const key = `${name.toLowerCase()}-${level}`;
+    // Регулярное выражение для извлечения уровня, названия и компонентов
+    const match = trimmedLine.match(/^\[(\d+)\]\s+(.+?)(?:\s+([ВСМРКвсмрк]+))?$/);
     
-    // Если заклинание уже существует, обновляем его компоненты
-    if (existingSpellsMap.has(key)) {
-      const existingSpellIndex = updatedSpells.findIndex(
-        spell => spell.name.toLowerCase() === name.toLowerCase() && spell.level === level
-      );
+    if (match) {
+      const level = parseInt(match[1]);
+      const name = match[2].trim();
+      const componentsStr = match[3] || '';
       
-      if (existingSpellIndex >= 0) {
-        updatedSpells[existingSpellIndex] = {
-          ...updatedSpells[existingSpellIndex],
-          ...components
-        };
+      // Проверяем, существует ли уже такое заклинание
+      const spellKey = `${name.toLowerCase()}-${level}`;
+      if (existingSpellsMap.has(spellKey)) {
+        // Заклинание уже существует, пропускаем
+        console.log(`Пропуск дубликата: ${name} (уровень ${level})`);
+        return;
       }
-    } else {
-      // Иначе добавляем новое заклинание
+      
+      // Парсим компоненты (В, С, М, Р, К)
+      const components = parseComponents(componentsStr);
+      
+      // Создаем новое заклинание
       const newSpell: CharacterSpell = {
+        id: `spell-${name.toLowerCase().replace(/\s+/g, '-')}-${Date.now()}`,
         name,
         level,
-        school: 'Прорицание', // По умолчанию
-        castingTime: '1 действие',
-        range: 'На себя',
-        duration: components.concentration ? 'Концентрация, до 1 минуты' : 'Мгновенная',
-        description: 'Нет описания',
-        classes: ['Волшебник'], // По умолчанию
-        ...components
+        verbal: components.verbal,
+        somatic: components.somatic,
+        material: components.material,
+        ritual: components.ritual,
+        concentration: components.concentration,
+        components: componentsStr,
+        school: 'Универсальная', // Значение по умолчанию
+        castingTime: '1 действие', // Значение по умолчанию
+        range: 'Касание', // Значение по умолчанию
+        duration: 'Мгновенная', // Значение по умолчанию
+        classes: [], // Будет заполнено позже
+        source: 'Custom Import'
       };
       
-      updatedSpells.push(newSpell);
+      newSpells.push(newSpell);
+      // Также добавляем в карту для отслеживания
+      existingSpellsMap.set(spellKey, newSpell);
     }
-  }
+  });
   
-  return updatedSpells;
+  console.log(`Импортировано ${newSpells.length} новых заклинаний`);
+  
+  // Объединяем существующие и новые заклинания
+  return [...(existingSpells as CharacterSpell[]), ...newSpells];
 }
 
-/**
- * Анализирует строку заклинания
- */
-function parseSpellEntry(line: string): { 
-  name: string; 
-  level: number; 
-  components: {
-    verbal: boolean;
-    somatic: boolean;
-    material: boolean;
-    ritual: boolean;
-    concentration: boolean;
-    components: string;
-  }; 
-} | null {
-  // Извлекаем уровень заклинания [0], [1], и т.д.
-  const levelMatch = line.match(/\[(\d+)\]/);
-  if (!levelMatch) return null;
-  
-  const level = parseInt(levelMatch[1], 10);
-  
-  // Удаляем уровень из строки и получаем остальную часть
-  let remainingText = line.replace(/\[\d+\]/, '').trim();
-  
-  // Ищем название заклинания (до компонентов или до конца строки)
-  const componentsIndex = remainingText.search(/\s[ВСМРК\.]+$/);
-  let name = remainingText;
-  let componentsText = '';
-  
-  if (componentsIndex > -1) {
-    name = remainingText.substring(0, componentsIndex).trim();
-    componentsText = remainingText.substring(componentsIndex).trim();
-  }
-  
-  // Определяем компоненты
-  const parsedComponents = parseComponents(componentsText);
-  
-  return {
-    name,
-    level,
-    components: {
-      ...parsedComponents,
-      components: componentsText
-    }
-  };
-}
+// Экспортируем функции из spellProcessors
+export { checkDuplicateSpells, removeDuplicates, convertToSpellData };
