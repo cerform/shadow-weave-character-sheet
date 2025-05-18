@@ -1,93 +1,85 @@
 
 import { CharacterSpell } from '@/types/character';
-import { SpellData, convertCharacterSpellToSpellData } from '@/types/spells';
-import { 
-  parseComponents, 
-  checkDuplicateSpells, 
-  removeDuplicates,
-  convertToSpellData 
-} from './spellProcessors';
+import { SpellData } from '@/types/spells';
+import { parseComponents, convertToSpellData, checkDuplicateSpells, removeDuplicates } from './spellProcessors';
 
 /**
- * Импортирует заклинания из текстового формата и добавляет их в существующий массив
+ * Импортирует заклинания из текстового формата
  * Формат: [уровень] название компоненты
  */
-export function importSpellsFromTextFormat(
-  textData: string,
-  existingSpells: CharacterSpell[] | SpellData[]
-): CharacterSpell[] {
-  // Если строка пуста, возвращаем исходный массив
-  if (!textData.trim()) {
-    return existingSpells as CharacterSpell[];
+export function importSpellsFromTextFormat(text: string, existingSpells: CharacterSpell[] = []): CharacterSpell[] {
+  // Получаем все строки и фильтруем пустые
+  const lines = text.split('\n').filter(line => line.trim() !== '');
+  console.log(`Импортирую ${lines.length} строк с заклинаниями`);
+  
+  // Для отслеживания уникальности заклинаний
+  const spellsMap = new Map<string, CharacterSpell>();
+  
+  // Заполняем карту существующими заклинаниями
+  for (const spell of existingSpells) {
+    if (!spell.name) continue;
+    const key = `${spell.name.toLowerCase()}-${spell.level}`;
+    spellsMap.set(key, spell);
   }
 
-  // Разбиваем входные данные на строки
-  const lines = textData.split('\n');
-  
-  // Массив для новых заклинаний
-  const newSpells: CharacterSpell[] = [];
-  
-  // Карта для отслеживания существующих заклинаний
-  const existingSpellsMap = new Map<string, CharacterSpell | SpellData>();
-  existingSpells.forEach(spell => {
-    const key = `${spell.name.toLowerCase()}-${spell.level}`;
-    existingSpellsMap.set(key, spell);
-  });
-  
-  // Обрабатываем каждую строку
-  lines.forEach(line => {
-    const trimmedLine = line.trim();
-    if (!trimmedLine) return;
-    
-    // Регулярное выражение для извлечения уровня, названия и компонентов
-    const match = trimmedLine.match(/^\[(\d+)\]\s+(.+?)(?:\s+([ВСМРКвсмрк]+))?$/);
-    
-    if (match) {
-      const level = parseInt(match[1]);
-      const name = match[2].trim();
-      const componentsStr = match[3] || '';
-      
-      // Проверяем, существует ли уже такое заклинание
-      const spellKey = `${name.toLowerCase()}-${level}`;
-      if (existingSpellsMap.has(spellKey)) {
-        // Заклинание уже существует, пропускаем
-        console.log(`Пропуск дубликата: ${name} (уровень ${level})`);
-        return;
+  // Импортируем заклинания из строк
+  for (const line of lines) {
+    try {
+      // Обрабатываем строку формата: [уровень] название компоненты
+      const levelMatch = line.match(/\[(\d+)\]/);
+      if (!levelMatch) {
+        console.warn(`Пропускаю строку с неверным форматом: ${line}`);
+        continue;
       }
       
-      // Парсим компоненты (В, С, М, Р, К)
-      const components = parseComponents(componentsStr);
+      const level = parseInt(levelMatch[1]);
       
-      // Создаем новое заклинание
-      const newSpell: CharacterSpell = {
-        id: `spell-${name.toLowerCase().replace(/\s+/g, '-')}-${Date.now()}`,
+      // Удаляем [уровень] из строки и получаем остальное
+      const rest = line.replace(/\[\d+\]/, '').trim();
+      
+      // Разделяем название и компоненты
+      const componentsMatch = rest.match(/(.*?)\s+([ВСМРКвсмрк]+)$/);
+      if (!componentsMatch) {
+        console.warn(`Пропускаю строку без компонентов: ${line}`);
+        continue;
+      }
+      
+      const name = componentsMatch[1].trim();
+      const componentString = componentsMatch[2].trim();
+      
+      // Парсим компоненты
+      const { verbal, somatic, material, ritual, concentration } = parseComponents(componentString);
+      
+      // Создаем объект заклинания
+      const spell: CharacterSpell = {
+        id: `imported-spell-${name.toLowerCase().replace(/\s+/g, '-')}-${Date.now()}`,
         name,
         level,
-        verbal: components.verbal,
-        somatic: components.somatic,
-        material: components.material,
-        ritual: components.ritual,
-        concentration: components.concentration,
-        components: componentsStr,
-        school: 'Универсальная', // Значение по умолчанию
-        castingTime: '1 действие', // Значение по умолчанию
-        range: 'Касание', // Значение по умолчанию
-        duration: 'Мгновенная', // Значение по умолчанию
-        classes: [], // Будет заполнено позже
-        source: 'Custom Import'
+        verbal,
+        somatic,
+        material,
+        ritual,
+        concentration,
+        components: componentString,
+        school: 'Универсальная', // По умолчанию
+        source: 'PHB' // По умолчанию
       };
       
-      newSpells.push(newSpell);
-      // Также добавляем в карту для отслеживания
-      existingSpellsMap.set(spellKey, newSpell);
+      // Проверяем на дубликаты по имени и уровню
+      const key = `${name.toLowerCase()}-${level}`;
+      if (!spellsMap.has(key)) {
+        spellsMap.set(key, spell);
+      } else {
+        console.log(`Пропускаю дубликат: ${name} (уровень ${level})`);
+      }
+    } catch (error) {
+      console.error(`Ошибка при обработке строки: ${line}`, error);
     }
-  });
+  }
   
-  console.log(`Импортировано ${newSpells.length} новых заклинаний`);
-  
-  // Объединяем существующие и новые заклинания
-  return [...(existingSpells as CharacterSpell[]), ...newSpells];
+  console.log(`Импортировано заклинаний: ${spellsMap.size - existingSpells.length}`);
+  return Array.from(spellsMap.values());
 }
 
-// Экспортируем функции из spellProcessors
-export { checkDuplicateSpells, removeDuplicates, convertToSpellData };
+// Реэкспортируем функции из spellProcessors для обратной совместимости
+export { convertToSpellData, checkDuplicateSpells, removeDuplicates };

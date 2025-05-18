@@ -1,6 +1,5 @@
 
-// Правильно экспортируем провайдер и хук из соответствующего местоположения
-import { useSpellbook, SpellbookProvider } from './spellbook';
-import type { SpellbookContextType } from './types'; 
+// Реэкспорт для обратной совместимости
+export * from './spellbook';
+export { default } from './spellbook';
 
-export { useSpellbook, SpellbookProvider, type SpellbookContextType };

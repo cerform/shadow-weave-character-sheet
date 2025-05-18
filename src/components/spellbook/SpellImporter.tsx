@@ -1,11 +1,12 @@
+
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { importSpellsFromTextFormat, convertToSpellData } from '@/utils/updateSpellDatabase';
+import { importSpellsFromTextFormat } from '@/utils/updateSpellDatabase';
 import { spells as allSpells } from '@/data/spells';
-import { SpellData } from '@/types/spells';
+import { convertToSpellData } from '@/utils/spellProcessors';
 import { Badge } from '@/components/ui/badge';
 
 interface SpellImporterProps {
@@ -85,7 +86,7 @@ const SpellImporter: React.FC<SpellImporterProps> = ({ onClose, onImport }) => {
           Вставьте заклинания в формате: [уровень] название компоненты
         </CardDescription>
         <CardDescription>
-          Например: [3] Огне��ный шар ВСМ
+          Например: [3] Огненный шар ВСМ
         </CardDescription>
       </CardHeader>
       <CardContent>
