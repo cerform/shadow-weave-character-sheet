@@ -8,6 +8,7 @@ import { importSpellsFromTextFormat } from '@/utils/updateSpellDatabase';
 import { spells as allSpells } from '@/data/spells';
 import { convertToSpellData } from '@/utils/spellProcessors';
 import { Badge } from '@/components/ui/badge';
+import { SpellData } from '@/types/spells';
 
 interface SpellImporterProps {
   onClose: () => void;
