@@ -64,11 +64,14 @@ const CharacterSummary: React.FC<CharacterSummaryProps> = ({ character }) => {
   };
 
   // Функция для безопасного получения профессий навыков
-  const getSkillProficiencies = () => {
-    if (typeof character.proficiencies === 'object' && !Array.isArray(character.proficiencies) && character.proficiencies?.skills) {
-      return character.proficiencies.skills;
+  const getSkillProficiencies = (): string[] => {
+    if (!character.proficiencies) return [];
+    
+    if (Array.isArray(character.proficiencies)) {
+      return character.proficiencies;
     }
-    return [];
+    
+    return character.proficiencies.skills || [];
   };
   
   return (
@@ -99,7 +102,7 @@ const CharacterSummary: React.FC<CharacterSummaryProps> = ({ character }) => {
               <h4 className="font-medium mb-1">Базовые параметры:</h4>
               <div className="space-y-1 text-sm">
                 <div>КД: {character.armorClass || '–'}</div>
-                <div>Инициатива: {character.initiative !== undefined ? `${character.initiative}` : '–'}</div>
+                <div>Инициатива: {character.initiative !== undefined ? `+${character.initiative}` : '–'}</div>
                 <div>Скорость: {character.speed || '–'}</div>
                 <div>Максимум ХП: {character.maxHp || character.hitPoints?.maximum || '–'}</div>
                 <div>Бонус мастерства: +{character.proficiencyBonus || '–'}</div>

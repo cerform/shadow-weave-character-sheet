@@ -75,9 +75,9 @@ const CharacterEquipment: React.FC<CharacterEquipmentProps> = ({ character, onUp
       items
     };
     
-    // Обновляем персонажа с правильным типом
+    // Обновляем персонажа
     onUpdate({ 
-      equipment: equipmentObj as any, // Используем any для обхода проверки типов
+      equipment: equipmentObj, 
       gold: gold
     });
     

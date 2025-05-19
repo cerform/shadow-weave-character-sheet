@@ -56,7 +56,12 @@ const SkillsPanel: React.FC<SkillsPanelProps> = ({ character, onUpdate }) => {
       return character.proficiencies;
     }
     
-    return character.proficiencies.skills || [];
+    // Проверка наличия skills в объекте proficiencies
+    if (typeof character.proficiencies === 'object' && character.proficiencies.skills) {
+      return character.proficiencies.skills;
+    }
+    
+    return [];
   };
 
   const toggleProficiency = (skillKey: string) => {
@@ -92,7 +97,7 @@ const SkillsPanel: React.FC<SkillsPanelProps> = ({ character, onUpdate }) => {
     };
     
     // Обновляем персонажа - обрабатываем структуру proficiencies
-    let updatedProficiencies = { ...character.proficiencies } as any;
+    let updatedProficiencies: any = { ...(character.proficiencies || {}) };
     
     // Если proficiencies это массив, конвертируем его в объект
     if (Array.isArray(character.proficiencies)) {
@@ -102,9 +107,19 @@ const SkillsPanel: React.FC<SkillsPanelProps> = ({ character, onUpdate }) => {
     }
     
     // Работаем с навыками
-    let skillsList = Array.isArray(updatedProficiencies.skills) 
-      ? [...updatedProficiencies.skills]
-      : [];
+    let skillsList: string[] = [];
+    
+    // Безопасно получаем текущий список навыков
+    if (Array.isArray(updatedProficiencies.skills)) {
+      skillsList = [...updatedProficiencies.skills];
+    } else if (Array.isArray(updatedProficiencies)) {
+      skillsList = [...updatedProficiencies];
+      // Преобразуем в объект с полем skills
+      updatedProficiencies = { skills: skillsList };
+    } else {
+      updatedProficiencies.skills = updatedProficiencies.skills || [];
+      skillsList = [...updatedProficiencies.skills];
+    }
     
     if (!currentSkill.proficient) {
       // Добавляем навык в список владений
@@ -115,10 +130,7 @@ const SkillsPanel: React.FC<SkillsPanelProps> = ({ character, onUpdate }) => {
     }
     
     // Обновляем список навыков в proficiencies
-    updatedProficiencies = {
-      ...updatedProficiencies,
-      skills: skillsList
-    };
+    updatedProficiencies.skills = skillsList;
     
     onUpdate({
       skills: updatedSkills,

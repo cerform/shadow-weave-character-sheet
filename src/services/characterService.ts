@@ -1,5 +1,6 @@
 
 import { Character } from '@/types/character';
+import { getCurrentUid } from '@/utils/authHelpers';
 
 // Функция для создания нового персонажа
 export const createCharacter = async (character: Character): Promise<Character> => {
@@ -85,6 +86,11 @@ export const deleteCharacter = async (id: string): Promise<void> => {
 // Функция saveCharacterToFirestore для совместимости с Firebase
 export const saveCharacterToFirestore = async (character: Character): Promise<Character> => {
   console.warn('saveCharacterToFirestore вызван, но функция сохраняет только локально');
+  
+  // Добавляем поле userId, если его нет
+  if (!character.userId) {
+    character.userId = getCurrentUid();
+  }
   
   // Если у персонажа нет id, создаем новый
   if (!character.id) {
