@@ -1,16 +1,14 @@
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
-import { useTheme } from '@/hooks/use-theme';
-import { themes } from '@/lib/themes';
-import { SpellData, convertCharacterSpellToSpellData } from '@/types/spells';
-import { spells } from '@/data/spells';
+import { useState, useEffect, useMemo } from 'react';
+import { SpellData } from '@/types/spells';
+import { allSpells } from '@/data/spells';
+import { filterSpellsByText, filterSpellsByLevel, filterSpellsBySchool, filterSpellsByClass } from './filterUtils';
+import { UseSpellbookReturn } from './types';
+import { CharacterSpell } from '@/types/character';
+import { importSpellsFromText } from '@/utils/spellBatchImporter';
 
-export const useSpellbook = () => {
-  const { theme } = useTheme();
-  const themeKey = (theme || 'default') as keyof typeof themes;
-  const currentTheme = themes[themeKey] || themes.default;
-
-  // Состояния для фильтрации
+export const useSpellbook = (): UseSpellbookReturn => {
+  // State for filtered spells
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [activeLevel, setActiveLevel] = useState<number[]>([]);
   const [activeSchool, setActiveSchool] = useState<string[]>([]);
@@ -18,170 +16,217 @@ export const useSpellbook = () => {
   const [selectedSpell, setSelectedSpell] = useState<SpellData | null>(null);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
 
-  // Создаем списки всех уровней, школ и классов
-  const allSpells = useMemo(() => spells, []);
-
-  const allLevels = useMemo(() => {
-    const levels = new Set(allSpells.map(spell => spell.level));
-    return Array.from(levels).sort((a, b) => a - b);
+  // Convert CharacterSpell[] to SpellData[]
+  const spells: SpellData[] = useMemo(() => {
+    return allSpells.map(spell => ({
+      id: spell.id || spell.name.toLowerCase().replace(/\s/g, '-'),
+      name: spell.name,
+      level: spell.level,
+      school: spell.school || '',
+      castingTime: spell.castingTime || '',
+      range: spell.range || '',
+      components: spell.components || '',
+      duration: spell.duration || '',
+      description: Array.isArray(spell.description) 
+        ? spell.description.join('\n') 
+        : (spell.description || ''),
+      classes: Array.isArray(spell.classes) 
+        ? spell.classes 
+        : (spell.classes ? [spell.classes] : []),
+      ritual: spell.ritual || false,
+      concentration: spell.concentration || false,
+      verbal: spell.verbal || false,
+      somatic: spell.somatic || false,
+      material: spell.material || false,
+      prepared: spell.prepared || false,
+      materials: spell.materials || '',
+      higherLevels: spell.higherLevel || spell.higherLevels || '',
+      source: spell.source || 'PHB'
+    }));
   }, [allSpells]);
+
+  // Get unique values for filters
+  const allLevels = useMemo(() => {
+    const levels = [...new Set(spells.map(spell => spell.level))];
+    return levels.sort((a, b) => a - b);
+  }, [spells]);
 
   const allSchools = useMemo(() => {
-    const schools = new Set(allSpells.map(spell => spell.school || 'Универсальная'));
-    return Array.from(schools).filter(Boolean).sort();
-  }, [allSpells]);
+    const schools = [...new Set(spells.map(spell => spell.school))];
+    return schools.filter(Boolean).sort();
+  }, [spells]);
 
   const allClasses = useMemo(() => {
     const classes = new Set<string>();
-    allSpells.forEach(spell => {
-      if (typeof spell.classes === 'string') {
-        classes.add(spell.classes);
-      } else if (Array.isArray(spell.classes)) {
+    spells.forEach(spell => {
+      if (Array.isArray(spell.classes)) {
         spell.classes.forEach(cls => classes.add(cls));
+      } else if (typeof spell.classes === 'string') {
+        classes.add(spell.classes);
       }
     });
-    return Array.from(classes).filter(Boolean).sort();
-  }, [allSpells]);
+    return [...classes].sort();
+  }, [spells]);
 
-  // Отфильтрованные заклинания
+  // Filter spells based on all active filters
   const filteredSpells = useMemo(() => {
-    return allSpells.filter(spell => {
-      // Фильтр по поисковому запросу
-      if (searchTerm && !spell.name.toLowerCase().includes(searchTerm.toLowerCase())) {
-        return false;
-      }
+    let result = [...spells];
 
-      // Фильтр по уровню
-      if (activeLevel.length > 0 && !activeLevel.includes(spell.level)) {
-        return false;
-      }
+    // Apply text search filter
+    if (searchTerm) {
+      result = filterSpellsByText(result, searchTerm);
+    }
 
-      // Фильтр по школе
-      if (activeSchool.length > 0 && !activeSchool.includes(spell.school || 'Универсальная')) {
-        return false;
-      }
+    // Apply level filter
+    if (activeLevel.length > 0) {
+      result = filterSpellsByLevel(result, activeLevel);
+    }
 
-      // Фильтр по классу
-      if (activeClass.length > 0) {
-        if (typeof spell.classes === 'string') {
-          if (!activeClass.includes(spell.classes)) {
-            return false;
-          }
-        } else if (Array.isArray(spell.classes)) {
-          if (!spell.classes.some(cls => activeClass.includes(cls))) {
-            return false;
-          }
-        } else {
-          return false;
-        }
-      }
+    // Apply school filter
+    if (activeSchool.length > 0) {
+      result = filterSpellsBySchool(result, activeSchool);
+    }
 
-      return true;
+    // Apply class filter
+    if (activeClass.length > 0) {
+      result = filterSpellsByClass(result, activeClass);
+    }
+
+    return result;
+  }, [spells, searchTerm, activeLevel, activeSchool, activeClass]);
+
+  // Theme setup
+  const currentTheme = {
+    primary: '#7c3aed',
+    secondary: '#a78bfa',
+    accent: '#c4b5fd',
+    background: '#1e1b4b',
+    text: '#f5f3ff',
+    surface: '#312e81'
+  };
+
+  // Handlers
+  const handleOpenSpell = (spell: SpellData) => {
+    setSelectedSpell(spell);
+    setIsModalOpen(true);
+  };
+
+  const handleClose = () => {
+    setIsModalOpen(false);
+    setTimeout(() => {
+      setSelectedSpell(null);
+    }, 200);
+  };
+
+  const toggleLevel = (level: number) => {
+    setActiveLevel(prev => {
+      if (prev.includes(level)) {
+        return prev.filter(l => l !== level);
+      } else {
+        return [...prev, level];
+      }
     });
-  }, [allSpells, searchTerm, activeLevel, activeSchool, activeClass]);
+  };
 
-  // Функции для фильтрации
-  const toggleLevel = useCallback((level: number) => {
-    setActiveLevel(prev => 
-      prev.includes(level) 
-        ? prev.filter(l => l !== level) 
-        : [...prev, level]
-    );
-  }, []);
+  const toggleSchool = (school: string) => {
+    setActiveSchool(prev => {
+      if (prev.includes(school)) {
+        return prev.filter(s => s !== school);
+      } else {
+        return [...prev, school];
+      }
+    });
+  };
 
-  const toggleSchool = useCallback((school: string) => {
-    setActiveSchool(prev => 
-      prev.includes(school) 
-        ? prev.filter(s => s !== school) 
-        : [...prev, school]
-    );
-  }, []);
+  const toggleClass = (className: string) => {
+    setActiveClass(prev => {
+      if (prev.includes(className)) {
+        return prev.filter(c => c !== className);
+      } else {
+        return [...prev, className];
+      }
+    });
+  };
 
-  const toggleClass = useCallback((className: string) => {
-    setActiveClass(prev => 
-      prev.includes(className) 
-        ? prev.filter(c => c !== className) 
-        : [...prev, className]
-    );
-  }, []);
-
-  const clearFilters = useCallback(() => {
+  const clearFilters = () => {
+    setSearchTerm('');
     setActiveLevel([]);
     setActiveSchool([]);
     setActiveClass([]);
-    setSearchTerm('');
-  }, []);
+  };
 
-  // Функции для модального окна с деталями заклинания
-  const handleOpenSpell = useCallback((spell: SpellData) => {
-    setSelectedSpell(spell);
-    setIsModalOpen(true);
-  }, []);
-
-  const handleClose = useCallback(() => {
-    setIsModalOpen(false);
-    setSelectedSpell(null);
-  }, []);
-
-  // Функции для отображения
-  const getBadgeColor = useCallback((level: number): string => {
+  const getBadgeColor = (level: number) => {
     const colors = {
-      0: "#6b7280", // заговор - серый
-      1: "#10b981", // 1 уровень - зеленый
-      2: "#3b82f6", // 2 уровень - синий
-      3: "#8b5cf6", // 3 уровень - фиолетовый
-      4: "#ec4899", // 4 уровень - розовый
-      5: "#f59e0b", // 5 уровень - оранжевый
-      6: "#ef4444", // 6 уровень - красный
-      7: "#6366f1", // 7 уровень - индиго
-      8: "#0ea5e9", // 8 уровень - голубой
-      9: "#7c3aed"  // 9 уровень - насыщенный фиолетовый
+      0: 'bg-gray-700',
+      1: 'bg-blue-700',
+      2: 'bg-green-700',
+      3: 'bg-yellow-700',
+      4: 'bg-orange-700',
+      5: 'bg-red-700',
+      6: 'bg-purple-700',
+      7: 'bg-pink-700',
+      8: 'bg-indigo-700',
+      9: 'bg-teal-700'
     };
-    return colors[level as keyof typeof colors] || colors[0];
-  }, []);
+    return colors[level as keyof typeof colors] || 'bg-gray-700';
+  };
 
-  const getSchoolBadgeColor = useCallback((school: string): string => {
-    const colors: {[key: string]: string} = {
-      "Преобразование": "#10b981",
-      "Воплощение": "#ef4444",
-      "Очарование": "#8b5cf6",
-      "Прорицание": "#f59e0b",
-      "Ограждение": "#3b82f6",
-      "Иллюзия": "#ec4899",
-      "Некромантия": "#6b7280",
-      "Вызов": "#0ea5e9",
-      "Универсальная": "#6b7280"
+  const getSchoolBadgeColor = (school: string) => {
+    const colors: { [key: string]: string } = {
+      'Abjuration': 'bg-blue-700',
+      'Conjuration': 'bg-yellow-700',
+      'Divination': 'bg-cyan-700',
+      'Enchantment': 'bg-pink-700',
+      'Evocation': 'bg-red-700',
+      'Illusion': 'bg-purple-700',
+      'Necromancy': 'bg-green-700', 
+      'Transmutation': 'bg-orange-700'
     };
-    return colors[school] || "#6b7280";
-  }, []);
+    return colors[school] || 'bg-gray-700';
+  };
 
-  const formatClasses = useCallback((classes: string[] | string | undefined): string => {
-    if (!classes) return "";
-    if (typeof classes === "string") return classes;
-    return classes.join(", ");
-  }, []);
+  const formatClasses = (classes: string[] | string | undefined): string => {
+    if (!classes) return '';
+    
+    if (Array.isArray(classes)) {
+      return classes.join(', ');
+    }
+    
+    return classes.toString();
+  };
+
+  // Функция импорта заклинаний из текста
+  const importSpellsFromTextWrapper = (text: string, existingSpells: CharacterSpell[]): CharacterSpell[] => {
+    try {
+      return importSpellsFromText(text, existingSpells);
+    } catch (error) {
+      console.error('Ошибка при импорте заклинаний:', error);
+      return existingSpells;
+    }
+  };
 
   return {
     filteredSpells,
     searchTerm,
     setSearchTerm,
     activeLevel,
+    selectedSpell,
+    isModalOpen,
     activeSchool,
     activeClass,
     currentTheme,
     allLevels,
     allSchools,
     allClasses,
+    handleOpenSpell,
+    handleClose,
     toggleLevel,
     toggleSchool,
     toggleClass,
     clearFilters,
-    selectedSpell,
-    isModalOpen,
-    handleOpenSpell,
-    handleClose,
     getBadgeColor,
     getSchoolBadgeColor,
-    formatClasses
+    formatClasses,
+    importSpellsFromText: importSpellsFromTextWrapper
   };
 };

@@ -1,109 +1,169 @@
 
 import { CharacterSpell } from '@/types/character';
 
-/**
- * Парсит строку с заклинанием из формата [уровень] Название заклинания ВСМ
- */
-export const parseSpellEntry = (entry: string): {
-  name: string;
-  level: number;
-  components: {
-    verbal: boolean;
-    somatic: boolean;
-    material: boolean;
-    ritual: boolean;
-    concentration: boolean;
-  };
-} | null => {
-  // Формат: [0] Название ВСМ или [1] Название ВСР
-  const match = entry.match(/\[(\d+)\]\s+(.+?)\s+([ВСМРК\.]*)$/);
-  
-  if (!match) return null;
-  
-  const level = parseInt(match[1], 10);
-  const name = match[2].trim();
-  const componentCode = match[3] || '';
-  
-  return {
-    name,
-    level,
-    components: {
-      verbal: componentCode.includes('В'),
-      somatic: componentCode.includes('С'),
-      material: componentCode.includes('М'),
-      ritual: componentCode.includes('Р'),
-      concentration: componentCode.includes('К')
-    }
-  };
-};
-
-/**
- * Обрабатывает пакет заклинаний из текста
- */
-export const processSpellBatch = (rawText: string): any[] => {
-  const lines = rawText.split('\n').filter(line => line.trim().length > 0);
-  const results = [];
-  
-  for (const line of lines) {
-    const parsed = parseSpellEntry(line);
-    if (parsed) {
-      results.push({
-        name: parsed.name,
-        level: parsed.level,
-        components: parsed.components
-      });
-    }
+// Функция для парсинга текстовых данных заклинаний
+export function importSpellsFromText(text: string, existingSpells: CharacterSpell[]): CharacterSpell[] {
+  if (!text || text.trim() === '') {
+    return existingSpells;
   }
-  
-  return results;
-};
 
-/**
- * Импортирует заклинания из текста и добавляет их к существующим
- */
-export const importSpellsFromText = (
-  rawText: string, 
-  existingSpells: CharacterSpell[]
-): CharacterSpell[] => {
-  if (!rawText.trim()) return existingSpells;
-  
-  const parsed = processSpellBatch(rawText);
-  const updatedSpells = [...existingSpells];
-  
-  parsed.forEach(spell => {
-    const existingIndex = updatedSpells.findIndex(s => 
-      s.name === spell.name && s.level === spell.level
-    );
+  try {
+    // Попробуем сначала парсить как JSON
+    try {
+      const parsedData = JSON.parse(text);
+      if (Array.isArray(parsedData)) {
+        // Проверяем, что это массив заклинаний
+        const validSpells = parsedData.filter(spell => 
+          typeof spell === 'object' && 
+          spell !== null && 
+          'name' in spell && 
+          'level' in spell
+        );
+        
+        // Объединяем с существующими заклинаниями и удаляем дубликаты
+        return mergeAndDedupeSpells([...existingSpells, ...validSpells]);
+      }
+    } catch (e) {
+      // Если не JSON, продолжаем с другими форматами
+      console.log('Не удалось распарсить как JSON, пробуем другие форматы');
+    }
     
-    if (existingIndex >= 0) {
-      // Обновляем существующее заклинание
-      updatedSpells[existingIndex] = {
-        ...updatedSpells[existingIndex],
-        verbal: spell.components.verbal,
-        somatic: spell.components.somatic,
-        material: spell.components.material,
-        ritual: spell.components.ritual,
-        concentration: spell.components.concentration
-      };
-    } else {
-      // Добавляем новое заклинание
-      updatedSpells.push({
-        name: spell.name,
-        level: spell.level,
-        verbal: spell.components.verbal,
-        somatic: spell.components.somatic,
-        material: spell.components.material,
-        ritual: spell.components.ritual,
-        concentration: spell.components.concentration,
-        school: "Не указано",
-        castingTime: "1 действие",
-        range: "Не указано",
-        components: "",
-        duration: "Мгновенная",
-        description: "Нет описания"
-      });
+    // Парсим структурированный текстовый формат
+    const lines = text.split('\n').filter(line => line.trim() !== '');
+    const spells: CharacterSpell[] = [];
+    
+    let currentSpell: Partial<CharacterSpell> | null = null;
+    let descriptionBuffer: string[] = [];
+    
+    lines.forEach(line => {
+      // Начало нового заклинания (обычно содержит название и уровень/школу)
+      if (line.match(/^([A-Za-zА-Яа-я\s]+)(?:\s*\(|\s+—|\s+-)/i)) {
+        // Сохраняем предыдущее заклинание, если оно было
+        if (currentSpell?.name && currentSpell?.level !== undefined) {
+          if (descriptionBuffer.length > 0) {
+            currentSpell.description = descriptionBuffer.join('\n');
+          }
+          spells.push(currentSpell as CharacterSpell);
+        }
+        
+        // Начинаем новое заклинание
+        currentSpell = { name: '', level: 0 };
+        descriptionBuffer = [];
+        
+        // Извлекаем название заклинания
+        const nameMatch = line.match(/^([A-Za-zА-Яа-я\s]+)/);
+        if (nameMatch) {
+          currentSpell.name = nameMatch[1].trim();
+        }
+        
+        // Пытаемся определить уровень
+        const levelMatch = line.match(/(\d+)-й уровень|уровень (\d+)|заговор|cantrip/i);
+        if (levelMatch) {
+          currentSpell.level = levelMatch[1] ? parseInt(levelMatch[1], 10) : 
+                              (levelMatch[2] ? parseInt(levelMatch[2], 10) : 0);
+        } else if (line.toLowerCase().includes('заговор') || line.toLowerCase().includes('cantrip')) {
+          currentSpell.level = 0;
+        }
+        
+        // Определяем школу магии
+        const schools = ['вызов', 'ограждение', 'прорицание', 'очарование', 'преобразование', 'некромантия', 'иллюзия', 'воплощение',
+                        'conjuration', 'abjuration', 'divination', 'enchantment', 'transmutation', 'necromancy', 'illusion', 'evocation'];
+        
+        for (const school of schools) {
+          if (line.toLowerCase().includes(school)) {
+            currentSpell.school = school;
+            break;
+          }
+        }
+      }
+      // Время накладывания
+      else if (line.match(/^Время накладывания:|^Casting Time:/i)) {
+        if (currentSpell) {
+          currentSpell.castingTime = line.split(':')[1]?.trim();
+        }
+      }
+      // Дистанция
+      else if (line.match(/^Дистанция:|^Range:/i)) {
+        if (currentSpell) {
+          currentSpell.range = line.split(':')[1]?.trim();
+        }
+      }
+      // Компоненты
+      else if (line.match(/^Компоненты:|^Components:/i)) {
+        if (currentSpell) {
+          const comps = line.split(':')[1]?.trim();
+          currentSpell.components = comps;
+          
+          // Анализируем компоненты
+          currentSpell.verbal = comps?.includes('В') || comps?.includes('V') || false;
+          currentSpell.somatic = comps?.includes('С') || comps?.includes('S') || false;
+          currentSpell.material = (comps?.includes('М') || comps?.includes('M')) || false;
+          
+          // Извлекаем материалы
+          const materialMatch = comps?.match(/\((.*?)\)/);
+          if (materialMatch) {
+            currentSpell.materials = materialMatch[1].trim();
+          }
+        }
+      }
+      // Длительность
+      else if (line.match(/^Длительность:|^Duration:/i)) {
+        if (currentSpell) {
+          const duration = line.split(':')[1]?.trim();
+          currentSpell.duration = duration;
+          currentSpell.concentration = duration?.toLowerCase().includes('концентрация') || 
+                                     duration?.toLowerCase().includes('concentration') || 
+                                     false;
+        }
+      }
+      // Классы
+      else if (line.match(/^Классы:|^Classes:/i)) {
+        if (currentSpell) {
+          const classesStr = line.split(':')[1]?.trim();
+          if (classesStr) {
+            currentSpell.classes = classesStr.split(',').map(c => c.trim());
+          }
+        }
+      }
+      // Если ничего не совпало, считаем строку частью описания
+      else {
+        descriptionBuffer.push(line);
+      }
+    });
+    
+    // Добавляем последнее заклинание, если оно было
+    if (currentSpell?.name && currentSpell?.level !== undefined) {
+      if (descriptionBuffer.length > 0) {
+        currentSpell.description = descriptionBuffer.join('\n');
+      }
+      spells.push(currentSpell as CharacterSpell);
+    }
+    
+    // Объединяем с существующими заклинаниями и удаляем дубликаты
+    return mergeAndDedupeSpells([...existingSpells, ...spells]);
+  } catch (error) {
+    console.error('Ошибка при импорте заклинаний из текста:', error);
+    return existingSpells;
+  }
+}
+
+// Функция для объединения списков заклинаний и удаления дубликатов
+function mergeAndDedupeSpells(spells: CharacterSpell[]): CharacterSpell[] {
+  const uniqueSpells = new Map<string, CharacterSpell>();
+  
+  spells.forEach(spell => {
+    if (spell && spell.name) {
+      const key = spell.name.toLowerCase();
+      
+      // Если заклинание уже существует, обогащаем его данными из нового
+      if (uniqueSpells.has(key)) {
+        const existingSpell = uniqueSpells.get(key)!;
+        uniqueSpells.set(key, { ...existingSpell, ...spell });
+      } else {
+        uniqueSpells.set(key, { ...spell });
+      }
     }
   });
   
-  return updatedSpells;
-};
+  return Array.from(uniqueSpells.values());
+}
