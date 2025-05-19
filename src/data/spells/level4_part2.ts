@@ -1,7 +1,8 @@
+
 import { CharacterSpell } from '@/types/character';
+
 export const level4Part2: CharacterSpell[] = [
   {
-    id: "level4p2-1",
     name: "Леомундов потайной сундук",
     level: 4,
     school: "Вызов",
@@ -18,7 +19,6 @@ export const level4Part2: CharacterSpell[] = [
     classes: ["Волшебник", "Искуситель"]
   },
   {
-    id: "level4p2-2",
     name: "Магический глаз",
     level: 4,
     school: "Прорицание",
@@ -35,7 +35,6 @@ export const level4Part2: CharacterSpell[] = [
     classes: ["Волшебник", "Бард"]
   },
   {
-    id: "level4p2-3",
     name: "Мираж",
     level: 4,
     school: "Иллюзия",
@@ -52,7 +51,6 @@ export const level4Part2: CharacterSpell[] = [
     classes: ["Бард", "Волшебник", "Друид"]
   },
   {
-    id: "level4p2-4",
     name: "Облачение тени",
     level: 4,
     school: "Иллюзия",
@@ -69,7 +67,6 @@ export const level4Part2: CharacterSpell[] = [
     classes: ["Колдун", "Волшебник"]
   },
   {
-    id: "level4p2-5",
     name: "Оглушающая кара",
     level: 4,
     school: "Воплощение",
@@ -86,7 +83,6 @@ export const level4Part2: CharacterSpell[] = [
     classes: ["Паладин"]
   },
   {
-    id: "level4p2-6",
     name: "Огненная стена",
     level: 4,
     school: "Воплощение",
@@ -103,7 +99,6 @@ export const level4Part2: CharacterSpell[] = [
     classes: ["Волшебник", "Друид", "Чародей"]
   },
   {
-    id: "level4p2-7",
     name: "Огненный щит",
     level: 4,
     school: "Воплощение",
@@ -120,7 +115,6 @@ export const level4Part2: CharacterSpell[] = [
     classes: ["Волшебник", "Чародей"]
   },
   {
-    id: "level4p2-8",
     name: "Отилюков упругий шар",
     level: 4,
     school: "Воплощение",
@@ -137,7 +131,6 @@ export const level4Part2: CharacterSpell[] = [
     classes: ["Волшебник", "Искуситель"]
   },
   {
-    id: "level4p2-9",
     name: "Очарование чудовища",
     level: 4,
     school: "Очарование",
@@ -154,7 +147,6 @@ export const level4Part2: CharacterSpell[] = [
     classes: ["Бард", "Волшебник", "Друид", "Колдун"]
   },
   {
-    id: "level4p2-10",
     name: "Переносящая дверь",
     level: 4,
     school: "Вызов",
@@ -171,7 +163,6 @@ export const level4Part2: CharacterSpell[] = [
     classes: ["Бард", "Волшебник", "Чародей"]
   },
   {
-    id: "level4p2-11",
     name: "Подчинение зверя",
     level: 4,
     school: "Очарование",
@@ -188,7 +179,6 @@ export const level4Part2: CharacterSpell[] = [
     classes: ["Друид", "Чародей", "Следопыт"]
   },
   {
-    id: "level4p2-12",
     name: "Поиск высшего скакуна",
     level: 4,
     school: "Вызов",
@@ -205,7 +195,6 @@ export const level4Part2: CharacterSpell[] = [
     classes: ["Паладин"]
   },
   {
-    id: "level4p2-13",
     name: "Поиск существа",
     level: 4,
     school: "Прорицание",
@@ -222,7 +211,6 @@ export const level4Part2: CharacterSpell[] = [
     classes: ["Бард", "Волшебник", "Друид", "Жрец", "Следопыт", "Паладин"]
   },
   {
-    id: "level4p2-14",
     name: "Превращение",
     level: 4,
     school: "Преобразование",
@@ -239,7 +227,6 @@ export const level4Part2: CharacterSpell[] = [
     classes: ["Бард", "Волшебник", "Друид", "Чародей"]
   },
   {
-    id: "level4p2-15",
     name: "Предсказание",
     level: 4,
     school: "Прорицание",
@@ -256,7 +243,6 @@ export const level4Part2: CharacterSpell[] = [
     classes: ["Жрец", "Друид", "Волшебник", "Бард"]
   },
   {
-    id: "level4p2-16",
     name: "Призыв высшего демона",
     level: 4,
     school: "Вызов",
@@ -273,7 +259,6 @@ export const level4Part2: CharacterSpell[] = [
     classes: ["Волшебник", "Колдун"]
   },
   {
-    id: "level4p2-17",
     name: "Призыв духа аберрации",
     level: 4,
     school: "Вызов",
@@ -290,7 +275,6 @@ export const level4Part2: CharacterSpell[] = [
     classes: ["Колдун", "Волшебник"]
   },
   {
-    id: "level4p2-18",
     name: "Призыв духа конструкта",
     level: 4,
     school: "Вызов",

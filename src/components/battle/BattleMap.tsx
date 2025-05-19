@@ -4,10 +4,9 @@ import { Slider } from "@/components/ui/slider";
 import { Eye, EyeOff, ZoomIn, ZoomOut, Grid, Mouse, Eraser, Lock, Unlock, Upload, ImageIcon } from 'lucide-react';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
-import { Token } from '@/types/battle';
+import { Token, Initiative } from '@/stores/battleStore'; // Import from store
 import { VisibleArea } from '@/types/battle';
 import { motion } from 'framer-motion';
-import { getSizeMultiplier } from '@/utils/tokenHelpers';
 
 interface BattleMapProps {
   tokens: Token[];
@@ -18,7 +17,7 @@ interface BattleMapProps {
   onUpdateTokenPosition: (id: number, x: number, y: number) => void;
   onSelectToken: (id: number | null) => void;
   selectedTokenId: number | null;
-  initiative: any[];
+  initiative: Initiative[];
   battleActive: boolean;
 }
 
@@ -46,8 +45,8 @@ const BattleMap: React.FC<BattleMapProps> = ({
   const [dragPath, setDragPath] = useState<{ x: number, y: number }[]>([]);
   const [dragConstraints, setDragConstraints] = useState({ top: 0, left: 0, right: 0, bottom: 0 });
   const [isMapLocked, setIsMapLocked] = useState(false);
-  const [selectedTokenSize, setSelectedTokenSize] = useState<number>(1); // Размер выбранного токена
-
+  const [selectedTokenSize, setSelectedTokenSize] = useState(1); // Размер выбранного токена
+  
   // Новые состояния для тумана войны
   const [fogOfWar, setFogOfWar] = useState<boolean>(false);
   const [showPlayerView, setShowPlayerView] = useState<boolean>(false);
@@ -94,9 +93,8 @@ const BattleMap: React.FC<BattleMapProps> = ({
   useEffect(() => {
     if (selectedTokenId) {
       const token = tokens.find(t => t.id === selectedTokenId);
-      if (token && token.size !== undefined) {
-        const tokenSize = typeof token.size === 'number' ? token.size : getSizeMultiplier(token.size);
-        setSelectedTokenSize(tokenSize);
+      if (token && token.size) {
+        setSelectedTokenSize(token.size);
       } else {
         setSelectedTokenSize(1);
       }
@@ -724,8 +722,8 @@ const BattleMap: React.FC<BattleMapProps> = ({
                 );
                 
                 // Получаем размер токена или используем значение по умолчанию
-                const tokenSizeMultiplier = getSizeMultiplier(token.size);
-                const sizeInPixels = 12 * tokenSizeMultiplier;
+                const tokenSize = token.size || 1;
+                const sizeInPixels = 12 * tokenSize;
                 
                 return (
                   <motion.div
@@ -809,7 +807,7 @@ const BattleMap: React.FC<BattleMapProps> = ({
                         className="text-center text-xs font-bold mt-1 bg-black/50 text-white rounded px-1 truncate"
                         style={{
                           maxWidth: `${sizeInPixels * 2}px`,
-                          fontSize: `${8 * Math.min(1, tokenSizeMultiplier)}px`
+                          fontSize: `${8 * Math.min(1, tokenSize)}px`
                         }}
                       >
                         {token.name}
@@ -820,9 +818,9 @@ const BattleMap: React.FC<BattleMapProps> = ({
                         <div 
                           className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full flex items-center justify-center"
                           style={{
-                            width: `${Math.max(4, 4 * tokenSizeMultiplier)}px`,
-                            height: `${Math.max(4, 4 * tokenSizeMultiplier)}px`,
-                            fontSize: `${7 * Math.min(1, tokenSizeMultiplier)}px`
+                            width: `${Math.max(4, 4 * tokenSize)}px`,
+                            height: `${Math.max(4, 4 * tokenSize)}px`,
+                            fontSize: `${7 * Math.min(1, tokenSize)}px`
                           }}
                         >
                           {token.conditions.length}
@@ -911,7 +909,7 @@ const BattleMap: React.FC<BattleMapProps> = ({
                     return Math.sqrt(dx*dx + dy*dy) <= area.radius;
                   }))
                   .map(token => {
-                    const tokenSizeMultiplier = getSizeMultiplier(token.size);
+                    const tokenSize = token.size || 1;
                     return (
                       <div 
                         key={`player-view-${token.id}`}
@@ -919,8 +917,8 @@ const BattleMap: React.FC<BattleMapProps> = ({
                         style={{
                           left: `${Number(token.x) / 5}px`,
                           top: `${Number(token.y) / 5}px`,
-                          width: `${2 + 8 * tokenSizeMultiplier}px`,
-                          height: `${2 + 8 * tokenSizeMultiplier}px`,
+                          width: `${2 + 8 * tokenSize}px`,
+                          height: `${2 + 8 * tokenSize}px`,
                         }}
                       >
                         <div className={`

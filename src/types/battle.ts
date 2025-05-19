@@ -6,28 +6,6 @@ export interface VisibleArea {
   tokenId: number;
 }
 
-export interface Token {
-  id: number;
-  name: string;
-  type: "player" | "monster" | "npc" | "boss";
-  x: number;
-  y: number;
-  img: string;
-  initiative?: number;
-  hp?: number;
-  maxHp?: number;
-  ac?: number;
-  conditions?: string[];
-  resources?: Record<string, { max: number; used: number }>;
-  visible?: boolean;
-  isVisible?: boolean;
-  size?: 'tiny' | 'small' | 'medium' | 'large' | 'huge' | 'gargantuan' | number;
-  scale?: number;
-  rotation?: number;
-  characterId?: string;
-  tokenColor?: string;
-}
-
 // Добавляем привязку к SessionStore
 export interface TokenOwner {
   userId: string;
@@ -43,6 +21,5 @@ export interface LightSource {
   radius: number;
   color: string;
   intensity: number;
-  flickering?: boolean;
   attachedToTokenId?: number;
 }

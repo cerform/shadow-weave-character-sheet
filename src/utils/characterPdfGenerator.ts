@@ -1,65 +1,84 @@
 import { Character } from '@/types/character';
-import jsPDF from 'jspdf';
 
-export const generateCharacterPDF = async (character: Character) => {
-  const doc = new jsPDF();
+// Заглушка для генератора PDF
+export function generateCharacterPdf(character: Character): void {
+  console.log('Генерация PDF для персонажа:', character);
   
-  doc.setFontSize(20);
-  doc.text(character.name, 10, 10);
+  // В реальном приложении здесь будет код для генерации PDF
   
-  doc.setFontSize(12);
-  doc.text(`Класс: ${character.class}`, 10, 20);
-  doc.text(`Уровень: ${character.level.toString()}`, 10, 30);
-  doc.text(`Раса: ${character.race}`, 10, 40);
-  
-  doc.text(`Сила: ${character.strength.toString()}`, 10, 60);
-  doc.text(`Ловкость: ${character.dexterity.toString()}`, 10, 70);
-  doc.text(`Телосложение: ${character.constitution.toString()}`, 10, 80);
-  doc.text(`Интеллект: ${character.intelligence.toString()}`, 10, 90);
-  doc.text(`Мудрость: ${character.wisdom.toString()}`, 10, 100);
-  doc.text(`Харизма: ${character.charisma.toString()}`, 10, 110);
-  
-  // Исправим обращение к спискам языков и других вещей
-  
-  // Языки
-  const languages = character.proficiencies?.languages || [];
-  const languagesText = languages.length > 0 ? 
-    languages.join(', ') : 
-    'Нет известных языков';
-  
-  // Инструменты
-  const tools = character.proficiencies?.tools || [];
-  const toolsText = tools.length > 0 ?
-    tools.join(', ') :
-    'Нет владения инструментами';
-  
-  doc.text(`Языки: ${languagesText}`, 10, 130);
-  doc.text(`Инструменты: ${toolsText}`, 10, 140);
-  
-  doc.text(`Предыстория: ${character.backstory}`, 10, 160);
-  
-  // Изображение персонажа
-  let characterImageSrc = null;
-  if (character.image) {
-    characterImageSrc = character.image;
-  }
-  
-  if (characterImageSrc) {
-    try {
-      const imageResponse = await fetch(characterImageSrc);
-      const imageBlob = await imageResponse.blob();
-      const imageBase64 = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onloadend = () => resolve(reader.result as string);
-        reader.onerror = reject;
-        reader.readAsDataURL(imageBlob);
-      });
+  // Проверка на тип equipment для корректного отображения
+  if (character.equipment) {
+    if (Array.isArray(character.equipment)) {
+      console.log('Список снаряжения:', character.equipment.join(', '));
+    } else {
+      const { weapons, armor, items } = character.equipment;
       
-      doc.addImage(imageBase64, 'JPEG', 120, 10, 80, 80);
-    } catch (error) {
-      console.error("Ошибка при загрузке изображения:", error);
+      if (weapons && weapons.length > 0) {
+        console.log('Оружие:', weapons.join(', '));
+      }
+      
+      if (armor) {
+        console.log('Броня:', armor);
+      }
+      
+      if (items && items.length > 0) {
+        console.log('Предметы:', items.join(', '));
+      }
     }
   }
   
-  doc.save(`${character.name}.pdf`);
+  // Проверка на proficiencies
+  if (character.proficiencies) {
+    if (Array.isArray(character.proficiencies)) {
+      console.log('Владения:', character.proficiencies.join(', '));
+    } else {
+      const { armor, weapons, tools, languages } = character.proficiencies;
+      
+      if (armor && armor.length > 0) {
+        console.log('Владение доспехами:', armor.join(', '));
+      }
+      
+      if (weapons && weapons.length > 0) {
+        console.log('Владение оружием:', weapons.join(', '));
+      }
+      
+      if (tools && tools.length > 0) {
+        console.log('Владение инструментами:', tools.join(', '));
+      }
+      
+      if (languages && languages.length > 0) {
+        console.log('Владение языками:', languages.join(', '));
+      }
+    }
+  }
+  
+  // Проверка на изображение персонажа
+  if (character.image) {
+    console.log('Изображение персонажа:', character.image);
+  }
+  
+  alert('Функция генерации PDF в разработке. В будущем здесь будет реальная генерация PDF.');
+}
+
+// Экспорт дополнительных функций для PDF генерации
+export const characterPdfUtils = {
+  getModifier: (score: number): string => {
+    const mod = Math.floor((score - 10) / 2);
+    return mod >= 0 ? `+${mod}` : `${mod}`;
+  },
+  
+  formatSpellList: (spells: any[] | undefined): string => {
+    if (!spells || spells.length === 0) return "Нет заклинаний";
+    
+    return spells.map(spell => {
+      if (typeof spell === 'string') return spell;
+      return spell.name;
+    }).join(', ');
+  },
+  
+  calculateProficiencyBonus: (level: number): number => {
+    return Math.floor((level - 1) / 4) + 2;
+  }
 };
+
+export default generateCharacterPdf;

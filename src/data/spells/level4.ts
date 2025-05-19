@@ -1,7 +1,8 @@
+
 import { CharacterSpell } from '@/types/character';
+
 export const level4: CharacterSpell[] = [
   {
-    id: "level4-1",
     name: "Аура жизни",
     level: 4,
     school: "Ограждение",
@@ -18,7 +19,6 @@ export const level4: CharacterSpell[] = [
     classes: ["Паладин", "Жрец"]
   },
   {
-    id: "level4-2",
     name: "Аура очищения",
     level: 4,
     school: "Ограждение",
@@ -35,7 +35,6 @@ export const level4: CharacterSpell[] = [
     classes: ["Паладин", "Жрец"]
   },
   {
-    id: "level4-3",
     name: "Болезненное сияние",
     level: 4,
     school: "Воплощение",
@@ -52,7 +51,6 @@ export const level4: CharacterSpell[] = [
     classes: ["Жрец", "Волшебник", "Искуситель"]
   },
   {
-    id: "level4-4",
     name: "Быстрый гонец Гальдера",
     level: 4,
     school: "Вызов",
@@ -69,7 +67,6 @@ export const level4: CharacterSpell[] = [
     classes: ["Волшебник", "Бард"]
   },
   {
-    id: "level4-5",
     name: "Верный пёс Морденкайнена",
     level: 4,
     school: "Вызов",
@@ -86,7 +83,6 @@ export const level4: CharacterSpell[] = [
     classes: ["Волшебник"]
   },
   {
-    id: "level4-6",
     name: "Власть над водами",
     level: 4,
     school: "Преобразование",
@@ -103,7 +99,6 @@ export const level4: CharacterSpell[] = [
     classes: ["Друид", "Волшебник", "Жрец"]
   },
   {
-    id: "level4-7",
     name: "Водяная сфера",
     level: 4,
     school: "Вызов",
@@ -120,7 +115,6 @@ export const level4: CharacterSpell[] = [
     classes: ["Друид", "Волшебник", "Чародей"]
   },
   {
-    id: "level4-8",
     name: "Воображаемый убийца",
     level: 4,
     school: "Иллюзия",
@@ -137,7 +131,6 @@ export const level4: CharacterSpell[] = [
     classes: ["Волшебник", "Бард"]
   },
   {
-    id: "level4-9",
     name: "Высшая невидимость",
     level: 4,
     school: "Иллюзия",
@@ -154,7 +147,6 @@ export const level4: CharacterSpell[] = [
     classes: ["Бард", "Волшебник", "Чародей"]
   },
   {
-    id: "level4-10",
     name: "Гигантское насекомое",
     level: 4,
     school: "Преобразование",
@@ -171,7 +163,6 @@ export const level4: CharacterSpell[] = [
     classes: ["Друид", "Жрец"]
   },
   {
-    id: "level4-11",
     name: "Град",
     level: 4,
     school: "Воплощение",
@@ -188,7 +179,6 @@ export const level4: CharacterSpell[] = [
     classes: ["Друид", "Волшебник", "Чародей"]
   },
   {
-    id: "level4-12",
     name: "Дух смерти",
     level: 4,
     school: "Некромантия",
@@ -205,7 +195,6 @@ export const level4: CharacterSpell[] = [
     classes: ["Волшебник", "Чародей"]
   },
   {
-    id: "level4-13",
     name: "Едкий шар",
     level: 4,
     school: "Воплощение",
@@ -222,7 +211,6 @@ export const level4: CharacterSpell[] = [
     classes: ["Волшебник", "Чародей"]
   },
   {
-    id: "level4-14",
     name: "Запечатывание врат",
     level: 4,
     school: "Ограждение",
@@ -239,7 +227,6 @@ export const level4: CharacterSpell[] = [
     classes: ["Волшебник", "Жрец", "Паладин"]
   },
   {
-    id: "level4-15",
     name: "Защита от смерти",
     level: 4,
     school: "Ограждение",
@@ -256,7 +243,6 @@ export const level4: CharacterSpell[] = [
     classes: ["Жрец", "Паладин"]
   },
   {
-    id: "level4-16",
     name: "Изгнание",
     level: 4,
     school: "Ограждение",
@@ -273,7 +259,6 @@ export const level4: CharacterSpell[] = [
     classes: ["Волшебник", "Жрец", "Паладин", "Колдун"]
   },
   {
-    id: "level4-17",
     name: "Изготовление",
     level: 4,
     school: "Преобразование",
@@ -290,7 +275,6 @@ export const level4: CharacterSpell[] = [
     classes: ["Волшебник", "Искуситель"]
   },
   {
-    id: "level4-18",
     name: "Изменение формы камня",
     level: 4,
     school: "Преобразование",
@@ -307,7 +291,6 @@ export const level4: CharacterSpell[] = [
     classes: ["Друид", "Волшебник", "Искуситель"]
   },
   {
-    id: "level4-19",
     name: "Кабинет Морденкайнена",
     level: 4,
     school: "Вызов",
@@ -324,7 +307,6 @@ export const level4: CharacterSpell[] = [
     classes: ["Бард", "Волшебник"]
   },
   {
-    id: "level4-20",
     name: "Каменная кожа",
     level: 4,
     school: "Ограждение",

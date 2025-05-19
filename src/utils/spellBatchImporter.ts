@@ -1,138 +1,109 @@
 
 import { CharacterSpell } from '@/types/character';
-import { parseComponents } from './spellProcessors';
 
 /**
- * Обрабатывает партию заклинаний из текстового формата
- * Пример входных данных:
- * [0] Луч холода ВС
- * [1] Волшебная стрела ВС
- * 
- * @param batchText Текст с заклинаниями
- * @returns Массив обработанных заклинаний
+ * Парсит строку с заклинанием из формата [уровень] Название заклинания ВСМ
  */
-export function processSpellBatch(batchText: string): CharacterSpell[] {
-  const processedSpells: CharacterSpell[] = [];
-  const lines = batchText.split('\n').filter(line => line.trim() !== '');
+export const parseSpellEntry = (entry: string): {
+  name: string;
+  level: number;
+  components: {
+    verbal: boolean;
+    somatic: boolean;
+    material: boolean;
+    ritual: boolean;
+    concentration: boolean;
+  };
+} | null => {
+  // Формат: [0] Название ВСМ или [1] Название ВСР
+  const match = entry.match(/\[(\d+)\]\s+(.+?)\s+([ВСМРК\.]*)$/);
   
-  lines.forEach((line, index) => {
-    // Извлекаем уровень заклинания [0], [1], и т.д.
-    const levelMatch = line.match(/\[(\d+)\]/);
-    if (!levelMatch) return;
-    
-    const level = parseInt(levelMatch[1]);
-    
-    // Удаляем уровень из строки и получаем остальную часть
-    let remainingText = line.replace(/\[\d+\]/, '').trim();
-    
-    // Ищем название заклинания (до компонентов или до конца строки)
-    const componentsIndex = remainingText.search(/\s[ВСМРК\.]+$/);
-    let name = remainingText;
-    let componentsText = '';
-    
-    if (componentsIndex > -1) {
-      name = remainingText.substring(0, componentsIndex).trim();
-      componentsText = remainingText.substring(componentsIndex).trim();
+  if (!match) return null;
+  
+  const level = parseInt(match[1], 10);
+  const name = match[2].trim();
+  const componentCode = match[3] || '';
+  
+  return {
+    name,
+    level,
+    components: {
+      verbal: componentCode.includes('В'),
+      somatic: componentCode.includes('С'),
+      material: componentCode.includes('М'),
+      ritual: componentCode.includes('Р'),
+      concentration: componentCode.includes('К')
     }
-    
-    // Определяем компоненты
-    const components = parseComponents(componentsText);
-    
-    // Создаем объект заклинания
-    const spell: CharacterSpell = {
-      id: `imported-${index}`,
-      name: name,
-      level: level,
-      school: '',
-      verbal: components.verbal,
-      somatic: components.somatic,
-      material: components.material,
-      ritual: components.ritual,
-      concentration: components.concentration,
-      components: componentsText
-    };
-    
-    processedSpells.push(spell);
-  });
-  
-  return processedSpells;
-}
+  };
+};
 
 /**
- * Обрабатывает заклинание из текста и извлекает его данные
+ * Обрабатывает пакет заклинаний из текста
  */
-export function parseSpellEntry(line: string): CharacterSpell | null {
-  // Извлекаем уровень заклинания [0], [1], и т.д.
-  const levelMatch = line.match(/\[(\d+)\]/);
-  if (!levelMatch) return null;
+export const processSpellBatch = (rawText: string): any[] => {
+  const lines = rawText.split('\n').filter(line => line.trim().length > 0);
+  const results = [];
   
-  const level = parseInt(levelMatch[1]);
-  
-  // Удаляем уровень из строки и получаем остальную часть
-  let remainingText = line.replace(/\[\d+\]/, '').trim();
-  
-  // Ищем название заклинания (до компонентов или до конца строки)
-  const componentsIndex = remainingText.search(/\s[ВСМРК\.]+$/);
-  let name = remainingText;
-  let componentsText = '';
-  
-  if (componentsIndex > -1) {
-    name = remainingText.substring(0, componentsIndex).trim();
-    componentsText = remainingText.substring(componentsIndex).trim();
+  for (const line of lines) {
+    const parsed = parseSpellEntry(line);
+    if (parsed) {
+      results.push({
+        name: parsed.name,
+        level: parsed.level,
+        components: parsed.components
+      });
+    }
   }
   
-  // Определяем компоненты
-  const components = parseComponents(componentsText);
-  
-  // Создаем объект заклинания
-  const spell: CharacterSpell = {
-    id: `parsed-${Date.now()}`,
-    name: name,
-    level: level,
-    school: '',
-    verbal: components.verbal,
-    somatic: components.somatic,
-    material: components.material,
-    ritual: components.ritual,
-    concentration: components.concentration,
-    components: componentsText
-  };
-  
-  return spell;
-}
+  return results;
+};
 
 /**
- * Импортирует заклинания из текста
+ * Импортирует заклинания из текста и добавляет их к существующим
  */
-export function importSpellsFromText(text: string, existingSpells: CharacterSpell[]): CharacterSpell[] {
-  const lines = text.split('\n').filter(line => line.trim() !== '');
-  const newSpells: CharacterSpell[] = [];
+export const importSpellsFromText = (
+  rawText: string, 
+  existingSpells: CharacterSpell[]
+): CharacterSpell[] => {
+  if (!rawText.trim()) return existingSpells;
   
-  lines.forEach((line) => {
-    const spell = parseSpellEntry(line);
-    if (spell) {
-      // Проверяем, существует ли уже такое заклинание
-      const existingIndex = existingSpells.findIndex(
-        s => s.name === spell.name && s.level === spell.level
-      );
-      
-      if (existingIndex >= 0) {
-        // Обновляем существующее заклинание
-        existingSpells[existingIndex] = {
-          ...existingSpells[existingIndex],
-          verbal: spell.verbal,
-          somatic: spell.somatic,
-          material: spell.material,
-          ritual: spell.ritual,
-          concentration: spell.concentration,
-          components: spell.components
-        };
-      } else {
-        // Добавляем новое заклинание
-        newSpells.push(spell);
-      }
+  const parsed = processSpellBatch(rawText);
+  const updatedSpells = [...existingSpells];
+  
+  parsed.forEach(spell => {
+    const existingIndex = updatedSpells.findIndex(s => 
+      s.name === spell.name && s.level === spell.level
+    );
+    
+    if (existingIndex >= 0) {
+      // Обновляем существующее заклинание
+      updatedSpells[existingIndex] = {
+        ...updatedSpells[existingIndex],
+        verbal: spell.components.verbal,
+        somatic: spell.components.somatic,
+        material: spell.components.material,
+        ritual: spell.components.ritual,
+        concentration: spell.components.concentration
+      };
+    } else {
+      // Добавляем новое заклинание
+      updatedSpells.push({
+        name: spell.name,
+        level: spell.level,
+        verbal: spell.components.verbal,
+        somatic: spell.components.somatic,
+        material: spell.components.material,
+        ritual: spell.components.ritual,
+        concentration: spell.components.concentration,
+        school: "Не указано",
+        castingTime: "1 действие",
+        range: "Не указано",
+        components: "",
+        duration: "Мгновенная",
+        description: "Нет описания"
+      });
     }
   });
   
-  return [...existingSpells, ...newSpells];
-}
+  return updatedSpells;
+};

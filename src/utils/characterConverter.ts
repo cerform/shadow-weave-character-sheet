@@ -1,3 +1,4 @@
+
 import { Character } from '@/types/character';
 
 /**
@@ -5,7 +6,7 @@ import { Character } from '@/types/character';
  * и устранения ошибок совместимости
  */
 export const convertToCharacter = (data: any): Character => {
-  // Если данных нет, возвращаем базовый объект персонажа
+  // Если данных нет, возвращаем пустой объект
   if (!data) {
     console.error('convertToCharacter: Получен пустой объект');
     return {
@@ -14,54 +15,6 @@ export const convertToCharacter = (data: any): Character => {
       race: '',
       class: '',
       level: 1,
-      background: '', // Добавляем обязательные свойства
-      alignment: '',
-      abilities: {
-        STR: 10,
-        DEX: 10,
-        CON: 10,
-        INT: 10,
-        WIS: 10,
-        CHA: 10,
-        strength: 10,
-        dexterity: 10,
-        constitution: 10,
-        intelligence: 10,
-        wisdom: 10,
-        charisma: 10
-      },
-      stats: {
-        strength: 10,
-        dexterity: 10,
-        constitution: 10,
-        intelligence: 10,
-        wisdom: 10,
-        charisma: 10
-      },
-      proficiencies: {
-        languages: [],
-        tools: [],
-        weapons: [],
-        armor: [],
-        skills: []
-      },
-      equipment: [],
-      spells: [],
-      features: [],
-      savingThrows: {
-        strength: false,
-        dexterity: false,
-        constitution: false,
-        intelligence: false,
-        wisdom: false,
-        charisma: false
-      },
-      skills: {},
-      hp: {
-        current: 10,
-        max: 10,
-        temp: 0
-      },
       experience: 0,
       strength: 10,
       dexterity: 10,
@@ -70,23 +23,7 @@ export const convertToCharacter = (data: any): Character => {
       wisdom: 10,
       charisma: 10,
       maxHp: 10,
-      currentHp: 10,
-      proficiencyBonus: 2,
-      armorClass: 10,
-      initiative: 0,
-      speed: 30,
-      personalityTraits: '',
-      ideals: '',
-      bonds: '',
-      flaws: '',
-      backstory: '',
-      updatedAt: new Date().toISOString(),
-      gold: 0,
-      hitDice: {
-        total: 1,
-        value: 'd8'
-      },
-      spellcasting: null
+      currentHp: 10
     };
   }
   
@@ -155,49 +92,6 @@ export const createEmptyCharacter = (): Character => {
     race: '',
     class: '',
     level: 1,
-    background: '', // Добавляем обязательные свойства
-    alignment: '',
-    abilities: {
-      STR: 10,
-      DEX: 10,
-      CON: 10,
-      INT: 10,
-      WIS: 10,
-      CHA: 10,
-      strength: 10,
-      dexterity: 10,
-      constitution: 10,
-      intelligence: 10,
-      wisdom: 10,
-      charisma: 10
-    },
-    stats: {
-      strength: 10,
-      dexterity: 10,
-      constitution: 10,
-      intelligence: 10,
-      wisdom: 10,
-      charisma: 10
-    },
-    proficiencies: {
-      languages: [],
-      tools: [],
-      weapons: [],
-      armor: [],
-      skills: []
-    },
-    equipment: [],
-    spells: [],
-    features: [],
-    savingThrows: {
-      strength: false,
-      dexterity: false,
-      constitution: false,
-      intelligence: false,
-      wisdom: false,
-      charisma: false
-    },
-    skills: {},
     experience: 0,
     strength: 10,
     dexterity: 10,
@@ -207,29 +101,13 @@ export const createEmptyCharacter = (): Character => {
     charisma: 10,
     maxHp: 10,
     currentHp: 10,
-    hp: {
-      current: 10,
-      max: 10,
-      temp: 0
-    },
-    gold: 0,
     backstory: '',
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     proficiencyBonus: 2,
     armorClass: 10,
-    initiative: 0,
-    speed: 30,
-    hitDice: {
-      total: 1,
-      value: 'd8'
-    },
-    spellSlots: {},
-    personalityTraits: '',
-    ideals: '',
-    bonds: '',
-    flaws: '',
-    spellcasting: null
+    spells: [],
+    spellSlots: {}
   };
 };
 
@@ -331,7 +209,7 @@ function calculateSpellcastingParams(character: any) {
   // Вычисляем модификатор
   const abilityMod = Math.floor((abilityScore - 10) / 2);
   
-  // Вычисляем бонус мастер��тва
+  // Вычисляем бонус мастерства
   const proficiencyBonus = character.proficiencyBonus || Math.ceil(1 + (character.level / 4));
   
   // Считаем СЛ спасброска и бонус атаки заклинанием

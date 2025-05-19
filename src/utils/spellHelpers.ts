@@ -1,94 +1,70 @@
 
 import { CharacterSpell } from '@/types/character';
-import { SpellData } from '@/types/spells';
+import { SpellData, convertCharacterSpellToSpellData } from '@/types/spells';
 
-// Normalize spell array that might contain strings or spell objects
-export const normalizeSpells = (spells: Array<string | CharacterSpell>): CharacterSpell[] => {
-  if (!spells || !Array.isArray(spells)) return [];
-  
-  return spells.map(spell => {
-    if (typeof spell === 'string') {
-      return {
-        name: spell,
-        level: 0, // Default to cantrip if unknown
-        prepared: true
-      };
-    }
-    return spell;
-  });
-};
-
-// Check if a spell object is actually a CharacterSpell object or just a string
-export const isCharacterSpellObject = (spell: any): spell is CharacterSpell => {
-  return typeof spell === 'object' && spell !== null && 'name' in spell;
-};
-
-// Get the level of a spell (handles both string and object formats)
-export const getSpellLevel = (spell: string | CharacterSpell): number => {
-  if (isCharacterSpellObject(spell)) {
-    return spell.level || 0;
-  }
-  return 0; // Default to cantrip if it's just a string
-};
-
-// Check if a spell is prepared
-export const isSpellPrepared = (spell: string | CharacterSpell): boolean => {
-  if (isCharacterSpellObject(spell)) {
-    return !!spell.prepared;
-  }
-  return true; // Default to prepared if it's just a string
-};
-
-// Get spell level name based on level number
-export const getSpellLevelName = (level: number): string => {
-  const levelNames = [
-    'Заговоры',
-    'Заклинания 1 уровня',
-    'Заклинания 2 уровня',
-    'Заклинания 3 уровня',
-    'Заклинания 4 уровня',
-    'Заклинания 5 уровня',
-    'Заклинания 6 уровня',
-    'Заклинания 7 уровня',
-    'Заклинания 8 уровня',
-    'Заклинания 9 уровня'
-  ];
-  
-  if (level >= 0 && level < levelNames.length) {
-    return levelNames[level];
-  }
-  
-  return `Заклинания ${level} уровня`;
+/**
+ * Конвертирует массив CharacterSpell в массив SpellData
+ */
+export const convertCharacterSpellsToSpellData = (spells: CharacterSpell[]): SpellData[] => {
+  return spells.map(spell => convertCharacterSpellToSpellData(spell));
 };
 
 /**
- * Конвертирует CharacterSpell в SpellData для отображения
+ * Преобразует строковое представление компонентов в отдельные флаги
+ * @param components Строка с компонентами (например "ВСМ")
  */
-export const convertToSpellData = (spell: CharacterSpell | string): SpellData => {
-  if (typeof spell === 'string') {
-    return {
-      id: `spell-${Math.random().toString(36).substring(2, 11)}`,
-      name: spell,
-      level: 0, // По умолчанию заговор
-      school: 'Универсальная',
-      castingTime: '1 действие',
-      range: 'На себя',
-      components: '',
-      duration: 'Мгновенная',
-      description: '',
-      classes: [],
-      ritual: false,
-      concentration: false,
-      verbal: false,
-      somatic: false,
-      material: false,
-      source: 'Custom',
-      prepared: true
-    };
-  }
+export const parseSpellComponents = (components: string) => {
+  if (!components) return { verbal: false, somatic: false, material: false };
   
   return {
-    id: spell.id?.toString() || `spell-${Math.random().toString(36).substring(2, 11)}`,
+    verbal: components.includes('В'),
+    somatic: components.includes('С'),
+    material: components.includes('М'),
+  };
+};
+
+/**
+ * Форматирует классы заклинаний для отображения
+ */
+export const formatSpellClasses = (classes: string[] | string): string => {
+  if (!classes) return '';
+  
+  if (Array.isArray(classes)) {
+    return classes.join(', ');
+  }
+  
+  return classes;
+};
+
+/**
+ * Проверяет, является ли заклинание объектом типа CharacterSpell
+ */
+export const isCharacterSpellObject = (spell: any): spell is CharacterSpell => {
+  return typeof spell === 'object' && 'name' in spell && 'level' in spell;
+};
+
+/**
+ * Проверяет, подготовлено ли заклинание
+ */
+export const isSpellPrepared = (spell: CharacterSpell | string): boolean => {
+  if (typeof spell === 'string') return false;
+  return !!spell.prepared;
+};
+
+/**
+ * Получает уровень заклинания
+ */
+export const getSpellLevel = (spell: CharacterSpell | string): number => {
+  if (typeof spell === 'string') return 0; // По умолчанию заговор
+  return spell.level;
+};
+
+/**
+ * Преобразует CharacterSpell к SpellData
+ */
+export const convertCharacterSpellToSpellDataHelper = (spell: CharacterSpell): SpellData => {
+  return {
+    id: spell.id || `spell-${spell.name.replace(/\s+/g, '-').toLowerCase()}`,
     name: spell.name,
     level: spell.level || 0,
     school: spell.school || 'Универсальная',
@@ -96,15 +72,51 @@ export const convertToSpellData = (spell: CharacterSpell | string): SpellData =>
     range: spell.range || 'На себя',
     components: spell.components || '',
     duration: spell.duration || 'Мгновенная',
-    description: spell.description || '',
+    description: Array.isArray(spell.description) ? spell.description : [spell.description || 'Нет описания'],
     classes: spell.classes || [],
-    ritual: !!spell.ritual,
-    concentration: !!spell.concentration,
-    verbal: !!spell.verbal,
-    somatic: !!spell.somatic,
-    material: !!spell.material,
-    materials: spell.materials || '',
-    source: spell.source || 'Custom',
-    prepared: !!spell.prepared
+    prepared: spell.prepared || false,
+    ritual: spell.ritual || false,
+    concentration: spell.concentration || false
   };
+};
+
+/**
+ * Получает название уровня заклинания (для отображения)
+ */
+export const getSpellLevelName = (level: number): string => {
+  if (level === 0) return "Заговор";
+  if (level === 1) return "1-й уровень";
+  if (level === 2) return "2-й уровень";
+  if (level === 3) return "3-й уровень";
+  if (level >= 4) return `${level}-й уровень`;
+  return `${level} уровень`;
+};
+
+/**
+ * Проверяет, соответствует ли заклинание классу персонажа
+ */
+export const isSpellAvailableForClass = (spell: SpellData, characterClass: string): boolean => {
+  if (!characterClass || !spell.classes) return false;
+  
+  const characterClassLower = characterClass.toLowerCase();
+  
+  let spellClasses: string[] = [];
+  if (typeof spell.classes === 'string') {
+    spellClasses = [spell.classes.toLowerCase()];
+  } else if (Array.isArray(spell.classes)) {
+    spellClasses = spell.classes.map(c => c.toLowerCase());
+  }
+  
+  // Проверяем соответствие класса
+  return spellClasses.some(cls => 
+    cls === characterClassLower ||
+    (characterClassLower === 'жрец' && cls === 'cleric') ||
+    (characterClassLower === 'волшебник' && cls === 'wizard') ||
+    (characterClassLower === 'друид' && cls === 'druid') ||
+    (characterClassLower === 'бард' && cls === 'bard') ||
+    (characterClassLower === 'колдун' && cls === 'warlock') ||
+    (characterClassLower === 'чародей' && cls === 'sorcerer') ||
+    (characterClassLower === 'паладин' && cls === 'paladin') ||
+    (characterClassLower === 'следопыт' && cls === 'ranger')
+  );
 };

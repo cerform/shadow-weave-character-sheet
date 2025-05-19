@@ -4,55 +4,26 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { importSpellsFromTextFormat } from '@/utils/updateSpellDatabase';
+import { importSpellsFromText } from '@/hooks/spellbook/importUtils';
 import { spells as allSpells } from '@/data/spells';
-import { convertToSpellData } from '@/utils/spellProcessors';
-import { Badge } from '@/components/ui/badge';
-import { SpellData } from '@/types/spells';
+import { CharacterSpell } from '@/types/character';
 
 interface SpellImporterProps {
   onClose: () => void;
-  onImport?: (updatedSpells: SpellData[]) => void;
+  onImport?: (updatedSpells: CharacterSpell[]) => void;
 }
 
 const SpellImporter: React.FC<SpellImporterProps> = ({ onClose, onImport }) => {
   const [inputText, setInputText] = useState('');
   const [importedCount, setImportedCount] = useState(0);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [duplicatesFound, setDuplicatesFound] = useState(0);
   const { toast } = useToast();
 
   const handleImport = () => {
     try {
       setIsProcessing(true);
-      
-      // Подсчитываем количество заклинаний до импорта
-      const beforeCount = allSpells.length;
-      
-      // Создаем карту существующих заклинаний для проверки дубликатов
-      const existingSpellsMap = new Map<string, SpellData>();
-      allSpells.forEach(spell => {
-        const key = `${spell.name.toLowerCase()}-${spell.level}`;
-        existingSpellsMap.set(key, spell as SpellData);
-      });
-      
-      // Подсчитываем количество уникальных заклинаний во входных данных
-      const inputLines = inputText.split('\n').filter(line => line.trim() !== '');
-      const inputSpellsCount = inputLines.length;
-      
-      // Импортируем заклинания
-      const importedSpells = importSpellsFromTextFormat(inputText, allSpells);
-      // Преобразуем в SpellData[]
-      const updatedSpells = convertToSpellData(importedSpells);
-      
-      // Подсчитываем количество заклинаний после импорта
-      const afterCount = updatedSpells.length;
-      const newCount = afterCount - beforeCount;
-      
-      // Определяем количество дубликатов
-      const duplicates = inputSpellsCount - newCount;
-      setDuplicatesFound(duplicates > 0 ? duplicates : 0);
-      
+      const updatedSpells = importSpellsFromText(inputText, allSpells);
+      const newCount = updatedSpells.length - allSpells.length;
       setImportedCount(newCount > 0 ? newCount : 0);
       
       if (onImport) {
@@ -61,7 +32,7 @@ const SpellImporter: React.FC<SpellImporterProps> = ({ onClose, onImport }) => {
       
       toast({
         title: "Заклинания импортированы",
-        description: `Добавлено ${newCount > 0 ? newCount : 0} новых заклинаний${duplicates > 0 ? `, пропущено ${duplicates} дубликатов` : ''}`,
+        description: `Добавлено или обновлено ${newCount > 0 ? newCount : 'несколько'} заклинаний`,
         variant: "default",
       });
       
@@ -100,12 +71,7 @@ const SpellImporter: React.FC<SpellImporterProps> = ({ onClose, onImport }) => {
         
         {importedCount > 0 && (
           <div className="bg-green-500/10 text-green-500 p-2 rounded-md mb-4">
-            Успешно добавлено: {importedCount} заклинаний
-            {duplicatesFound > 0 && (
-              <Badge variant="outline" className="ml-2">
-                Пропущено дубликатов: {duplicatesFound}
-              </Badge>
-            )}
+            Успешно добавлено или обновлено: {importedCount} заклинаний
           </div>
         )}
       </CardContent>

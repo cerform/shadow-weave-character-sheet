@@ -1,9 +1,10 @@
+
 import { useState, useEffect } from "react";
 import { Character } from "@/types/character";
 import { toast } from 'sonner';
+import { getModifierFromAbilityScore } from "@/utils/characterUtils";
 import { getCurrentUid } from "@/utils/authHelpers";
 import { saveCharacterToFirestore } from "@/services/characterService";
-import { calculateModifier } from "@/utils/characterUtils";
 
 export const useCharacterCreation = () => {
   const defaultCharacter: Character = {
@@ -50,70 +51,20 @@ export const useCharacterCreation = () => {
       wisdom: 10,
       charisma: 10
     },
-    // Initialize with proper savingThrows
-    savingThrows: {
-      strength: false,
-      dexterity: false,
-      constitution: false,
-      intelligence: false,
-      wisdom: false,
-      charisma: false
-    },
-    // Initialize with proper empty objects instead of empty arrays
+    // Initialize with empty objects instead of arrays
     skills: {},
-    proficiencies: {
-      languages: [],
-      tools: [],
-      weapons: [],
-      armor: [],
-      skills: []
-    },
+    savingThrows: {},
+    proficiencies: [],
+    languages: [],
     equipment: [],
     spells: [],
     features: [],
-    money: {
-      cp: 0,
-      sp: 0,
-      ep: 0,
-      gp: 0,
-      pp: 0
-    },
-    currency: {
-      cp: 0,
-      sp: 0,
-      ep: 0,
-      gp: 0,
-      pp: 0
-    },
     personalityTraits: "",
     ideals: "",
     bonds: "",
     flaws: "",
     appearance: "",
-    backstory: "",
-    armorClass: 10,
-    proficiencyBonus: 2,
-    speed: 30,
-    deathSaves: {
-      successes: 0,
-      failures: 0
-    },
-    hitDice: {
-      total: 1,
-      used: 0,
-      dieType: "d8",
-      value: 'd8' // Исправляем тип с string на number
-    },
-    gold: 0,
-    hp: {
-      current: 10,
-      max: 10,
-      temp: 0
-    },
-    initiative: 0,
-    spellcasting: null,
-    updatedAt: new Date().toISOString(),
-    createdAt: new Date().toISOString()
+    backstory: ""
   };
 
   const [character, setCharacter] = useState<Character>(defaultCharacter);
@@ -260,7 +211,7 @@ export const useCharacterCreation = () => {
 
   // Вычисляем модификатор характеристики
   const getModifier = (score: number): string => {
-    const modifier = calculateModifier(score); // Используем импортированную функцию вместо getModifierFromAbilityScore
+    const modifier = getModifierFromAbilityScore(score);
     return modifier >= 0 ? `+${modifier}` : `${modifier}`;
   };
   
@@ -327,7 +278,7 @@ export const useCharacterCreation = () => {
       
       console.log(`Уровень персонажа изменен на ${level}`);
     } else {
-      toast.error("Уровень должен б��ть от 1 до 20");
+      toast.error("Уровень должен быть от 1 до 20");
     }
   };
   

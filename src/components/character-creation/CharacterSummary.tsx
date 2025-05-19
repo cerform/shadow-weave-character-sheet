@@ -93,7 +93,7 @@ const CharacterSummary: React.FC<CharacterSummaryProps> = ({ character }) => {
                 <div>КД: {character.armorClass || '–'}</div>
                 <div>Инициатива: {character.initiative !== undefined ? character.initiative : '–'}</div>
                 <div>Скорость: {character.speed || '–'}</div>
-                <div>Максимум ХП: {character.maxHp || (character.hitPoints && character.hitPoints.maximum) || '–'}</div>
+                <div>Максимум ХП: {character.maxHp || character.hitPoints?.maximum || '–'}</div>
                 <div>Бонус мастерства: +{character.proficiencyBonus || '–'}</div>
               </div>
             </div>

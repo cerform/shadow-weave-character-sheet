@@ -9,42 +9,36 @@ export const useSpellTheme = () => {
   const currentTheme = themes[themeKey] || themes.default;
   
   const getBadgeColor = (level: number) => {
-    // Используем цвета уровней из темы, если они есть
-    if (currentTheme.spellLevels && currentTheme.spellLevels[level]) {
-      return currentTheme.spellLevels[level];
-    }
-    
-    // Запасные цвета, если в теме не определены уровни
+    // Цвета на основе выбранной темы
     const levelColors: { [key: number]: string } = {
-      0: '#6b7280', // gray-500
-      1: '#3b82f6', // blue-500
-      2: '#8b5cf6', // violet-500
-      3: '#ec4899', // pink-500
-      4: '#f97316', // orange-500
-      5: '#ef4444', // red-500
-      6: '#14b8a6', // teal-500
-      7: '#6366f1', // indigo-500
-      8: '#ca8a04', // yellow-600
-      9: '#059669'  // emerald-600
+      0: `bg-stone-800 text-white border border-${currentTheme.accent}`,
+      1: `bg-blue-900 text-white border border-${currentTheme.accent}`,
+      2: `bg-green-900 text-white border border-${currentTheme.accent}`,
+      3: `bg-yellow-900 text-white border border-${currentTheme.accent}`,
+      4: `bg-orange-900 text-white border border-${currentTheme.accent}`,
+      5: `bg-red-900 text-white border border-${currentTheme.accent}`,
+      6: `bg-purple-900 text-white border border-${currentTheme.accent}`,
+      7: `bg-pink-900 text-white border border-${currentTheme.accent}`,
+      8: `bg-indigo-900 text-white border border-${currentTheme.accent}`,
+      9: `bg-cyan-900 text-white border border-${currentTheme.accent}`,
     };
 
-    return levelColors[level] || "#6b7280";
+    return levelColors[level] || "bg-gray-800 text-white";
   };
 
   const getSchoolBadgeColor = (school: string) => {
     const schoolColors: { [key: string]: string } = {
-      'Преобразование': '#3b82f6', // blue-600
-      'Воплощение': '#ef4444', // red-500
-      'Вызов': '#f97316', // orange-500
-      'Прорицание': '#8b5cf6', // violet-500
-      'Очарование': '#ec4899', // pink-500
-      'Иллюзия': '#6366f1', // indigo-500
-      'Некромантия': '#10b981', // emerald-500
-      'Ограждение': '#eab308', // yellow-500
-      'Универсальная': '#6b7280', // gray-500
+      'Преобразование': 'bg-blue-900 text-white',
+      'Воплощение': 'bg-red-900 text-white',
+      'Вызов': 'bg-orange-900 text-white',
+      'Прорицание': 'bg-purple-900 text-white',
+      'Очарование': 'bg-pink-900 text-white',
+      'Иллюзия': 'bg-indigo-900 text-white',
+      'Некромантия': 'bg-green-900 text-white',
+      'Ограждение': 'bg-yellow-900 text-white',
     };
 
-    return schoolColors[school] || currentTheme.accent || "#6b7280";
+    return schoolColors[school] || "bg-gray-800 text-white";
   };
   
   return { currentTheme, getBadgeColor, getSchoolBadgeColor };

@@ -1,3 +1,4 @@
+
 import { Character } from '@/types/character';
 
 /**
@@ -28,30 +29,23 @@ export function normalizeCharacterData(character: Character): Character {
   
   // Проверяем существование объекта stats
   if (!normalized.stats) {
-    normalized.stats = {
-      strength: 10,
-      dexterity: 10,
-      constitution: 10,
-      intelligence: 10,
-      wisdom: 10,
-      charisma: 10
-    };
+    normalized.stats = {};
   }
   
   // Проходим по всем характеристикам
   abilities.forEach(ability => {
     // Если значение установлено напрямую в объекте персонажа, но отсутствует в stats
-    if (normalized[ability as keyof Character] !== undefined && normalized.stats[ability] === undefined) {
-      normalized.stats[ability] = normalized[ability as keyof Character] as number;
+    if (normalized[ability] !== undefined && normalized.stats[ability] === undefined) {
+      normalized.stats[ability] = normalized[ability];
     } 
     // Если значение в stats установлено, но отсутствует в корне объекта
-    else if (normalized.stats[ability] !== undefined && normalized[ability as keyof Character] === undefined) {
-      (normalized as any)[ability] = normalized.stats[ability];
+    else if (normalized.stats[ability] !== undefined && normalized[ability] === undefined) {
+      normalized[ability] = normalized.stats[ability];
     }
     
     // Если значения различаются, приоритет у поля stats
-    if (normalized[ability as keyof Character] !== normalized.stats[ability] && normalized.stats[ability] !== undefined) {
-      (normalized as any)[ability] = normalized.stats[ability];
+    if (normalized[ability] !== normalized.stats[ability] && normalized.stats[ability] !== undefined) {
+      normalized[ability] = normalized.stats[ability];
     }
   });
   
@@ -59,22 +53,8 @@ export function normalizeCharacterData(character: Character): Character {
   if (!Array.isArray(normalized.equipment)) normalized.equipment = [];
   if (!Array.isArray(normalized.features)) normalized.features = [];
   if (!Array.isArray(normalized.spells)) normalized.spells = [];
-  
-  // Проверяем языки - если они определены, используем их, иначе берем из proficiencies
-  if (!Array.isArray(normalized.languages)) {
-    normalized.languages = normalized.proficiencies?.languages || [];
-  }
-  
-  // Исправляем proficiencies если они отсутствуют
-  if (!normalized.proficiencies) {
-    normalized.proficiencies = {
-      languages: Array.isArray(normalized.languages) ? normalized.languages : [],
-      tools: [],
-      weapons: [],
-      armor: [],
-      skills: []
-    };
-  }
+  if (!Array.isArray(normalized.languages)) normalized.languages = [];
+  if (!Array.isArray(normalized.proficiencies)) normalized.proficiencies = [];
   
   // Проверяем наличие userId
   if (!normalized.userId) {

@@ -10,16 +10,6 @@ const useLevelUp = () => {
   const [isLevelingUp, setIsLevelingUp] = useState(false);
   const { toast } = useToast();
 
-  // Fix the spellcasting initialization to include all required properties
-  const initializeSpellcasting = (ability: string, level: number, abilityModifier: number) => {
-    return {
-      ability: ability,
-      saveDC: 8 + 2 + abilityModifier, // 8 + proficiency bonus + ability modifier
-      attackBonus: 2 + abilityModifier, // proficiency bonus + ability modifier
-      preparedSpellsLimit: level + abilityModifier
-    };
-  };
-
   const handleLevelUp = async () => {
     setIsLevelingUp(true);
     if (!character) {
@@ -46,44 +36,17 @@ const useLevelUp = () => {
         const spellsInfo = calculateAvailableSpellsByClassAndLevel(character.class, newLevel);
         console.log('Новые данные о заклинаниях:', spellsInfo);
         
-        // Получаем информацию о способности заклинаний для класса
-        const getSpellcastingAbility = (characterClass: string) => {
-          const classLower = characterClass.toLowerCase();
-          if (['жрец', 'друид', 'cleric', 'druid'].includes(classLower)) {
-            return 'wisdom';
-          } else if (['волшебник', 'wizard'].includes(classLower)) {
-            return 'intelligence';
-          } else {
-            // барды, колдуны, чародеи, паладины
-            return 'charisma';
-          }
-        };
-        
-        // Вычисляем модификатор способности
-        const getAbilityModifier = (character: Character, ability: string) => {
-          const abilityValue = character[ability as keyof Character] || 10;
-          return Math.floor((Number(abilityValue) - 10) / 2);
-        };
-        
-        // Получаем нужную способность и модификатор
-        const spellcastingAbility = getSpellcastingAbility(character.class);
-        const abilityModifier = getAbilityModifier(character, spellcastingAbility);
-        
-        // Создаем или обновляем spellcasting объект
-        const currentSpellcasting = character.spellcasting || {};
-        
-        // Если spellcasting еще не инициализирован полностью, создаем его заново
-        const updatedSpellcasting = currentSpellcasting.ability 
-          ? {
-              ...currentSpellcasting,
-              preparedSpellsLimit: spellsInfo.knownSpells || (newLevel + abilityModifier)
-            }
-          : initializeSpellcasting(spellcastingAbility, newLevel, abilityModifier);
-        
         // Обновляем персонажа с новыми данными о заклинаниях и уровнем
         updateCharacter({
           level: newLevel,
-          spellcasting: updatedSpellcasting
+          // Используем правильные названия полей для Character
+          spellcasting: {
+            // Обновляем информацию о заклинаниях
+            preparedSpellsLimit: spellsInfo.knownSpells
+          },
+          // Если нужно, добавляем другие поля для заклинаний
+          // Этих полей нет в типе Character, поэтому мы не можем их обновить напрямую
+          // maxSpellLevel: spellsInfo.maxLevel
         });
         
         // Сохраняем обновленного персонажа

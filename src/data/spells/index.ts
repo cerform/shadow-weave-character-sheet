@@ -1,6 +1,6 @@
 
 import { CharacterSpell } from '@/types/character';
-import { cantrips } from './all_cantrips';
+import { cantrips } from './cantrips';
 import { level0 } from './level0';
 import { level1 } from './level1';
 import { level2 } from './level2';
@@ -13,58 +13,31 @@ import { level6 } from './level6';
 import { level7 } from './level7';
 import { level8 } from './level8';
 import { level9 } from './level9';
-import { removeDuplicateSpells } from '@/utils/spellProcessors';
-import { SpellData } from '@/types/spells';
-
-// Функция для генерации уникального ID для заклинания
-function generateSpellId(spell: CharacterSpell, index: number): string {
-  return spell.id?.toString() || 
-    `spell-${index}-${spell.name.toLowerCase().replace(/\s+/g, '-')}`;
-}
 
 // Объединяем все заклинания в единый массив
-console.log("Загрузка всех файлов заклинаний:");
-console.log(`cantrips: ${cantrips?.length || 0}`);
-console.log(`level0: ${level0?.length || 0}`);
-console.log(`level1: ${level1?.length || 0}`);
-console.log(`level2: ${level2?.length || 0}`);
-console.log(`level3: ${level3?.length || 0}`);
-console.log(`level4: ${level4?.length || 0}`);
-
-const allSpellsWithDuplicates: CharacterSpell[] = [
-  ...(Array.isArray(cantrips) ? cantrips : []),
-  ...(Array.isArray(level0) ? level0 : []),
-  ...(Array.isArray(level1) ? level1 : []),
-  ...(Array.isArray(level2) ? level2 : []),
-  ...(Array.isArray(level3) ? level3 : []),
-  ...(Array.isArray(level4) ? level4 : []),
-  ...(Array.isArray(level4Part2) ? level4Part2 : []),
-  ...(Array.isArray(level4Part3) ? level4Part3 : []),
-  ...(Array.isArray(level5) ? level5 : []),
-  ...(Array.isArray(level6) ? level6 : []),
-  ...(Array.isArray(level7) ? level7 : []),
-  ...(Array.isArray(level8) ? level8 : []),
-  ...(Array.isArray(level9) ? level9 : [])
-].map((spell, index) => ({
-  ...spell,
-  id: generateSpellId(spell, index)
-}));
-
-// Удаляем дубликаты
-export const spells: CharacterSpell[] = removeDuplicateSpells(allSpellsWithDuplicates);
-
-console.log(`Всего загружено заклинаний (после удаления дубликатов): ${spells.length}`);
+export const spells: CharacterSpell[] = [
+  ...cantrips,
+  ...level0,
+  ...level1,
+  ...level2,
+  ...level3,
+  ...level4,
+  ...level4Part2,
+  ...level4Part3,
+  ...level5,
+  ...level6,
+  ...level7,
+  ...level8,
+  ...level9
+];
 
 // Функция для получения заклинаний по классу
 export const getSpellsByClass = (className: string): CharacterSpell[] => {
-  console.log(`Ищу заклинания для класса: ${className}, всего заклинаний: ${spells.length}`);
   return spells.filter(spell => {
     if (Array.isArray(spell.classes)) {
-      return spell.classes.some(cls => 
-        typeof cls === 'string' && cls.toLowerCase() === className.toLowerCase()
-      );
+      return spell.classes.includes(className);
     } else if (typeof spell.classes === 'string') {
-      return spell.classes.toLowerCase() === className.toLowerCase();
+      return spell.classes === className;
     }
     return false;
   });
@@ -72,7 +45,6 @@ export const getSpellsByClass = (className: string): CharacterSpell[] => {
 
 // Функция для получения заклинаний по уровню
 export const getSpellsByLevel = (level: number): CharacterSpell[] => {
-  console.log(`Ищу заклинания для уровня: ${level}, всего заклинаний: ${spells.length}`);
   return spells.filter(spell => spell.level === level);
 };
 
@@ -91,7 +63,7 @@ export const getSpellByName = (name: string): CharacterSpell | undefined => {
 // Функция для получения заклинаний по школе магии
 export const getSpellsBySchool = (school: string): CharacterSpell[] => {
   return spells.filter(spell => 
-    spell.school && spell.school.toLowerCase() === school.toLowerCase()
+    spell.school.toLowerCase() === school.toLowerCase()
   );
 };
 
@@ -116,10 +88,8 @@ export const filterSpells = (options: {
     }
     
     // Фильтр по школе
-    if (options.school && options.school.length > 0) {
-      if (!spell.school || !options.school.includes(spell.school)) {
-        return false;
-      }
+    if (options.school && options.school.length > 0 && !options.school.includes(spell.school)) {
+      return false;
     }
     
     // Фильтр по классу
@@ -132,18 +102,16 @@ export const filterSpells = (options: {
         if (!options.className.includes(spell.classes)) {
           return false;
         }
-      } else {
-        return false; // Нет классов у заклинания
       }
     }
     
     // Фильтр по ритуальным заклинаниям
-    if (options.ritual !== undefined && spell.ritual !== options.ritual) {
+    if (options.ritual && !spell.ritual) {
       return false;
     }
     
     // Фильтр по заклинаниям с концентрацией
-    if (options.concentration !== undefined && spell.concentration !== options.concentration) {
+    if (options.concentration && !spell.concentration) {
       return false;
     }
     

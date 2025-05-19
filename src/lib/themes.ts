@@ -1,3 +1,4 @@
+
 // Типы и интерфейсы для системы тем
 export interface Theme {
   background: string;
@@ -5,12 +6,11 @@ export interface Theme {
   primary: string;
   accent: string;
   textColor: string;
-  mutedTextColor: string;
   cardBackground: string;
-  inputBackground: string;
   buttonText?: string;
   borderColor?: string;
   // Добавляем новые свойства, которые используются в компонентах
+  mutedTextColor?: string;
   backgroundBrightness?: number;
   backgroundGradient?: string;
   decorativeCorners?: boolean;
@@ -25,11 +25,10 @@ export const themes: Record<string, Theme> = {
     primary: '#8B5A2B',
     accent: '#8B5A2B',
     textColor: '#FFFFFF',
-    mutedTextColor: '#9ca3af',
     cardBackground: 'rgba(0, 0, 0, 0.85)',
-    inputBackground: 'rgba(0, 0, 0, 0.85)',
     buttonText: '#FFFFFF',
     borderColor: '#8B5A2B',
+    mutedTextColor: '#9ca3af',
     backgroundBrightness: 0.7,
     decorativeCorners: false,
     spellLevels: {
@@ -51,11 +50,10 @@ export const themes: Record<string, Theme> = {
     primary: '#9061F9',
     accent: '#9061F9',
     textColor: '#FFFFFF',
-    mutedTextColor: '#9ca3af',
     cardBackground: 'rgba(20, 15, 30, 0.9)',
-    inputBackground: 'rgba(20, 15, 30, 0.9)',
     buttonText: '#FFFFFF',
     borderColor: '#9061F9',
+    mutedTextColor: '#9ca3af',
     backgroundBrightness: 0.5,
     backgroundGradient: 'linear-gradient(to bottom, rgba(30, 26, 43, 0.8), rgba(20, 15, 30, 0.9))',
     decorativeCorners: true,
@@ -78,11 +76,10 @@ export const themes: Record<string, Theme> = {
     primary: '#3B82F6',
     accent: '#3B82F6', 
     textColor: '#FFFFFF',
-    mutedTextColor: '#9ca3af',
     cardBackground: 'rgba(15, 25, 40, 0.9)',
-    inputBackground: 'rgba(15, 25, 40, 0.9)',
     buttonText: '#FFFFFF',
     borderColor: '#3B82F6',
+    mutedTextColor: '#9ca3af',
     backgroundBrightness: 0.6,
     backgroundGradient: 'linear-gradient(to bottom, rgba(21, 34, 56, 0.8), rgba(15, 25, 40, 0.9))',
     decorativeCorners: true,
@@ -105,11 +102,10 @@ export const themes: Record<string, Theme> = {
     primary: '#10B981',
     accent: '#10B981',
     textColor: '#FFFFFF',
-    mutedTextColor: '#9ca3af',
     cardBackground: 'rgba(15, 30, 25, 0.9)',
-    inputBackground: 'rgba(15, 30, 25, 0.9)',
     buttonText: '#FFFFFF',
     borderColor: '#10B981',
+    mutedTextColor: '#9ca3af',
     backgroundBrightness: 0.8,
     backgroundGradient: 'linear-gradient(to bottom, rgba(27, 45, 37, 0.8), rgba(15, 30, 25, 0.9))',
     decorativeCorners: true,
@@ -132,11 +128,10 @@ export const themes: Record<string, Theme> = {
     primary: '#F43F5E',
     accent: '#F43F5E',
     textColor: '#FFFFFF',
-    mutedTextColor: '#9ca3af',
     cardBackground: 'rgba(35, 20, 20, 0.9)',
-    inputBackground: 'rgba(35, 20, 20, 0.9)',
     buttonText: '#FFFFFF',
     borderColor: '#F43F5E',
+    mutedTextColor: '#9ca3af',
     backgroundBrightness: 0.6,
     backgroundGradient: 'linear-gradient(to bottom, rgba(50, 30, 30, 0.8), rgba(35, 20, 20, 0.9))',
     decorativeCorners: false,
@@ -159,11 +154,10 @@ export const themes: Record<string, Theme> = {
     primary: '#F59E0B',
     accent: '#F59E0B',
     textColor: '#FFFFFF',
-    mutedTextColor: '#9ca3af',
     cardBackground: 'rgba(35, 28, 15, 0.9)',
-    inputBackground: 'rgba(35, 28, 15, 0.9)',
     buttonText: '#FFFFFF',
     borderColor: '#F59E0B',
+    mutedTextColor: '#9ca3af',
     backgroundBrightness: 0.7,
     backgroundGradient: 'linear-gradient(to bottom, rgba(50, 40, 21, 0.8), rgba(35, 28, 15, 0.9))',
     decorativeCorners: true,

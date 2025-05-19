@@ -1,185 +1,180 @@
 
-import { CharacterSpell } from '@/types/character';
-import { SpellData } from '@/types/spells';
-
 /**
- * Преобразует компоненты заклинания в строку (В, С, М)
+ * Форматирует текст заклинания, разбивая его на абзацы
  */
-export function componentsToString(spell: CharacterSpell | SpellData): string {
-  const components: string[] = [];
-  if (spell.verbal) components.push('В');
-  if (spell.somatic) components.push('С');
-  if (spell.material) components.push('М');
-  
-  return components.join(', ');
-}
-
-/**
- * Удаляет дубликаты заклинаний из массива
- */
-export function removeDuplicateSpells(spells: CharacterSpell[]): CharacterSpell[] {
-  // Создаем карту для отслеживания уникальных заклинаний по имени и уровню
-  const uniqueSpells = new Map<string, CharacterSpell>();
-  
-  for (const spell of spells) {
-    if (!spell.name) continue; // Пропускаем заклинания без имени
-    
-    // Создаем ключ на основе имени и уровня
-    const key = `${spell.name.toLowerCase()}-${spell.level}`;
-    
-    // Если заклинание с таким ключом уже существует, пропускаем
-    if (!uniqueSpells.has(key)) {
-      uniqueSpells.set(key, spell);
-    }
-  }
-  
-  console.log(`Всего уникальных заклинаний после обработки: ${uniqueSpells.size}`);
-  return Array.from(uniqueSpells.values());
-}
-
-/**
- * Обрабатывает описание заклинания
- */
-export function processSpellDescription(description: string | string[]): string {
+export function formatSpellDescription(description: string | string[]): string[] {
   if (Array.isArray(description)) {
-    return description.join("\n\n");
+    return description;
   }
-  return description || "Нет описания";
+  
+  // Разбиваем по двойным переносам или по точкам в конце предложений
+  return description.split(/\n\n|\. (?=[A-ZА-Я])/).map(p => p.trim()).filter(p => p);
 }
 
 /**
- * Преобразует массив заклинаний из формата CharacterSpell в формат SpellData
+ * Преобразует объектное представление компонентов в строку
  */
-export function convertToSpellData(spells: CharacterSpell[]): SpellData[] {
-  return spells.map(spell => ({
-    id: spell.id?.toString() || `spell-${spell.name.toLowerCase().replace(/\s+/g, '-')}`,
-    name: spell.name,
-    level: spell.level,
-    school: spell.school || 'Универсальная',
-    castingTime: spell.castingTime || '1 действие',
-    range: spell.range || 'Касание',
-    components: spell.components || '',
-    duration: spell.duration || 'Мгновенная',
-    description: spell.description || '',
-    classes: spell.classes || [],
-    ritual: Boolean(spell.ritual),
-    concentration: Boolean(spell.concentration),
-    verbal: Boolean(spell.verbal),
-    somatic: Boolean(spell.somatic),
-    material: Boolean(spell.material),
-    materials: spell.materials || '',
-    source: spell.source || "Player's Handbook"
-  }));
+export function componentsToString({
+  verbal = false,
+  somatic = false,
+  material = false,
+  materials = '',
+  ritual = false,
+  concentration = false
+}: {
+  verbal?: boolean;
+  somatic?: boolean;
+  material?: boolean;
+  materials?: string;
+  ritual?: boolean;
+  concentration?: boolean;
+}): string {
+  const components: string[] = [];
+  if (verbal) components.push('В');
+  if (somatic) components.push('С');
+  if (material) components.push(`М${materials ? ` (${materials})` : ''}`);
+  
+  let result = components.join(', ');
+  
+  if (ritual) result += ' (ритуал)';
+  if (concentration) result += ' (концентрация)';
+  
+  return result;
 }
 
 /**
- * Парсит компоненты заклинания из строки
+ * Преобразует строку компонентов в объектное представление
  */
-export function parseComponents(componentString: string): {
+export function parseComponents(componentsStr: string): {
   verbal: boolean;
   somatic: boolean;
   material: boolean;
+  materials: string;
   ritual: boolean;
   concentration: boolean;
 } {
-  const verbal = /[Вв]/.test(componentString);
-  const somatic = /[Сс]/.test(componentString);
-  const material = /[Мм]/.test(componentString);
-  const ritual = /[Рр]/.test(componentString);
-  const concentration = /[Кк]/.test(componentString);
+  const result = {
+    verbal: componentsStr.includes('В'),
+    somatic: componentsStr.includes('С'),
+    material: componentsStr.includes('М'),
+    materials: '',
+    ritual: componentsStr.toLowerCase().includes('ритуал'),
+    concentration: componentsStr.toLowerCase().includes('концентрация')
+  };
+  
+  // Извлекаем материальные компоненты из скобок
+  const materialMatch = componentsStr.match(/М\s*\((.*?)\)/);
+  if (materialMatch && materialMatch[1]) {
+    result.materials = materialMatch[1];
+  }
+  
+  return result;
+}
+
+/**
+ * Определяет основную характеристику для заклинаний класса
+ */
+export function getSpellcastingAbilityForClass(className: string): string {
+  switch (className.toLowerCase()) {
+    case 'бард':
+    case 'чародей':
+    case 'колдун':
+    case 'паладин':
+      return 'ХАР';
+    case 'жрец':
+    case 'друид':
+    case 'следопыт':
+      return 'МДР';
+    case 'волшебник':
+    case 'мистический рыцарь':
+    case 'мистический ловкач':
+      return 'ИНТ';
+    default:
+      return '';
+  }
+}
+
+/**
+ * Возвращает сокращение для характеристики
+ */
+export function getAbilityShortName(abilityName: string): string {
+  switch (abilityName.toLowerCase()) {
+    case 'сила': return 'СИЛ';
+    case 'ловкость': return 'ЛОВ';
+    case 'телосложение': return 'ТЕЛ';
+    case 'интеллект': return 'ИНТ';
+    case 'мудрость': return 'МДР';
+    case 'харизма': return 'ХАР';
+    default: return abilityName;
+  }
+}
+
+/**
+ * Получает полное название характеристики из сокращения
+ */
+export function getAbilityFullName(shortName: string): string {
+  switch (shortName.toUpperCase()) {
+    case 'СИЛ': case 'STR': return 'Сила';
+    case 'ЛОВ': case 'DEX': return 'Ловкость';
+    case 'ТЕЛ': case 'CON': return 'Телосложение';
+    case 'ИНТ': case 'INT': return 'Интеллект';
+    case 'МДР': case 'WIS': return 'Мудрость';
+    case 'ХАР': case 'CHA': return 'Харизма';
+    default: return shortName;
+  }
+}
+
+/**
+ * Рассчитывает доступные заклинания по классу и уровню персонажа
+ */
+export function calculateAvailableSpellsByClassAndLevel(
+  className: string,
+  level: number
+): { maxLevel: number; cantripsCount: number; knownSpells: number } {
+  // Максимальный уровень заклинаний по уровню персонажа
+  const spellLevelTable = [
+    /* 1 */ 1, /* 2 */ 1, /* 3 */ 2, /* 4 */ 2, /* 5 */ 3,
+    /* 6 */ 3, /* 7 */ 4, /* 8 */ 4, /* 9 */ 5, /* 10 */ 5,
+    /* 11 */ 6, /* 12 */ 6, /* 13 */ 7, /* 14 */ 7, /* 15 */ 8,
+    /* 16 */ 8, /* 17 */ 9, /* 18 */ 9, /* 19 */ 9, /* 20 */ 9
+  ];
+  
+  // Таблица известных заговоров по классу и уровню
+  const cantripsKnownTable: Record<string, number[]> = {
+    "Бард": [2, 2, 2, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4],
+    "Жрец": [3, 3, 3, 4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5],
+    "Друид": [2, 2, 2, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4],
+    "Волшебник": [3, 3, 3, 4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5],
+    "Чародей": [4, 4, 4, 5, 5, 5, 5, 5, 5, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6],
+    "Колдун": [2, 2, 2, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4],
+    "Следопыт": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    "Паладин": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+  };
+  
+  // Таблица известных заклинаний (не для подготовки) по классу и уровню
+  const spellsKnownTable: Record<string, number[]> = {
+    "Бард": [4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 15, 15, 16, 18, 19, 19, 20, 22, 22, 22],
+    "Следопыт": [0, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10, 11, 11],
+    "Чародей": [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 12, 13, 13, 14, 14, 15, 15, 15, 15],
+    "Колдун": [2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 11, 11, 12, 12, 13, 13, 14, 14, 15, 15]
+  };
+  
+  // Проверка валидности уровня
+  const validLevel = Math.max(1, Math.min(level, 20));
+  const levelIndex = validLevel - 1;
+  
+  // Получаем максимальный уровень заклинаний
+  const maxLevel = spellLevelTable[levelIndex];
+  
+  // Получаем количество известных заговоров
+  const cantripsCount = cantripsKnownTable[className]?.[levelIndex] || 0;
+  
+  // Получаем количество известных заклинаний (для классов, которые не готовят заклинания)
+  const knownSpells = spellsKnownTable[className]?.[levelIndex] || 0;
   
   return {
-    verbal,
-    somatic,
-    material,
-    ritual,
-    concentration
+    maxLevel,
+    cantripsCount,
+    knownSpells
   };
-}
-
-/**
- * Создает уникальный ключ для заклинания
- */
-export function createSpellKey(spell: SpellData | CharacterSpell): string {
-  return `${spell.name.toLowerCase().trim()}-${spell.level}`;
-}
-
-/**
- * Проверяет, является ли заклинание дубликатом
- */
-export function isDuplicateSpell(spell: SpellData | CharacterSpell, existingSpells: Map<string, SpellData | CharacterSpell>): boolean {
-  const key = createSpellKey(spell);
-  return existingSpells.has(key);
-}
-
-/**
- * Объединяет два заклинания
- */
-export function mergeSpells(existing: SpellData | CharacterSpell, newSpell: SpellData | CharacterSpell): SpellData | CharacterSpell {
-  return {
-    ...existing,
-    ...newSpell,
-    // Сохраняем описание из существующего заклинания, если новое пусто
-    description: newSpell.description || existing.description
-  };
-}
-
-/**
- * Проверяет наличие дубликатов заклинаний
- */
-export function checkDuplicateSpells(spells: SpellData[] | CharacterSpell[]): { 
-  hasDuplicates: boolean; 
-  count: number;
-  duplicates: Array<{name: string, level: number, count: number}> 
-} {
-  const spellCounts = new Map<string, number>();
-  const duplicateInfo: Array<{name: string, level: number, count: number}> = [];
-  
-  // Подсчитываем количество каждого заклинания по ключу (имя+уровень)
-  spells.forEach(spell => {
-    const key = createSpellKey(spell);
-    const count = (spellCounts.get(key) || 0) + 1;
-    spellCounts.set(key, count);
-  });
-  
-  // Находим дубликаты (где счетчик > 1)
-  let totalDuplicates = 0;
-  spellCounts.forEach((count, key) => {
-    if (count > 1) {
-      const [nameAndLevel] = key.split('-');
-      const level = parseInt(key.split('-').pop() || "0");
-      const name = key.substring(0, key.lastIndexOf('-')).replace(/-/g, ' ');
-      
-      duplicateInfo.push({ 
-        name, 
-        level, 
-        count 
-      });
-      
-      totalDuplicates += (count - 1); // Считаем лишние копии
-    }
-  });
-  
-  return {
-    hasDuplicates: totalDuplicates > 0,
-    count: totalDuplicates,
-    duplicates: duplicateInfo
-  };
-}
-
-/**
- * Удаляет дубликаты из массива заклинаний
- */
-export function removeDuplicates(spells: SpellData[] | CharacterSpell[]): SpellData[] | CharacterSpell[] {
-  const uniqueSpells = new Map<string, SpellData | CharacterSpell>();
-  
-  // Берем первую встреченную копию каждого заклинания
-  spells.forEach(spell => {
-    const key = createSpellKey(spell);
-    if (!uniqueSpells.has(key)) {
-      uniqueSpells.set(key, spell);
-    }
-  });
-  
-  return Array.from(uniqueSpells.values());
 }

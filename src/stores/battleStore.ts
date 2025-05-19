@@ -1,26 +1,23 @@
-import { create } from 'zustand';
-import { devtools, persist } from 'zustand/middleware';
+import { create } from "zustand";
+import { LightSource } from "@/types/battle";
 
+// Импортируем необходимые типы
 export interface Token {
   id: number;
   name: string;
-  type: 'player' | 'monster' | 'boss' | 'npc';
+  type: "player" | "monster" | "npc" | "boss";
+  img: string;
   x: number;
   y: number;
-  maxHp: number;
   hp: number;
-  isVisible: boolean;
-  visible?: boolean; // Compatibility with older code
-  scale?: number;
-  rotation?: number;
-  img?: string;
-  ac?: number;
-  initiative?: number;
-  conditions?: string[];
-  characterId?: string;
-  tokenColor?: string;
-  size?: 'tiny' | 'small' | 'medium' | 'large' | 'huge' | 'gargantuan' | number;
-  resources?: Record<string, { max: number; used: number }>;
+  maxHp: number;
+  ac: number;
+  initiative: number;
+  conditions: string[];
+  resources: { [key: string]: number };
+  spellSlots?: { [key: string]: { used: number; max: number } };
+  visible: boolean;
+  size: number;
 }
 
 export interface Initiative {
@@ -31,445 +28,405 @@ export interface Initiative {
   isActive: boolean;
 }
 
+export interface BattleState {
+  isActive: boolean;
+  round: number;
+  currentInitiativeIndex: number;
+}
+
 export interface MapSettings {
-  gridSize: number;
-  width: number;
-  height: number;
-  showGrid: boolean;
-  backgroundImage?: string;
-  background?: string;
   fogOfWar: boolean;
+  revealedCells: { [key: string]: boolean };
+  revealRadius: number;
   gridVisible: boolean;
   gridOpacity: number;
-  revealRadius: number;
+  gridSize: { rows: number; cols: number };
   zoom: number;
-  revealedCells: { row: number, col: number }[];
+  background: string | null;
+  lightSources: LightSource[];
   isDynamicLighting: boolean;
-  lightSources: any[];
 }
 
-export interface BattleState {
+// Интерфейс состояния хранилища
+interface BattleStore {
+  // Данные боя
   tokens: Token[];
   initiative: Initiative[];
-  activeTokenId: number | null;
-  battleState: {
-    isActive: boolean;
-    round: number;
-  };
-  round: number;
+  battleState: BattleState;
+  selectedTokenId: number | null;
+  isDM: boolean;
+  
+  // Настройки карты
   mapSettings: MapSettings;
   
-  // Token management
-  setTokens: (tokens: Token[]) => void;
-  addToken: (token: Omit<Token, 'id'>) => void;
-  removeToken: (tokenId: number) => void;
-  updateToken: (tokenId: number, updates: Partial<Token>) => void;
-  updateTokenPosition: (tokenId: number, x: number, y: number) => void;
-  updateTokenHP: (tokenId: number, hp: number) => void;
-  setActiveTokenId: (tokenId: number | null) => void;
+  // Визуальные настройки
+  showWebcams: boolean;
   
-  // Initiative management
-  setInitiative: (initiative: Initiative[]) => void;
-  addToInitiative: (tokenId: number, roll: number) => void;
-  removeFromInitiative: (initiativeId: number) => void;
-  clearInitiative: () => void;
-  nextTurn: () => void;
+  // Действия с токенами
+  addToken: (token: Token) => void;
+  updateToken: (id: number, updates: Partial<Token>) => void;
+  removeToken: (id: number) => void;
+  updateTokenPosition: (id: number, x: number, y: number) => void;
+  updateTokenHP: (id: number, change: number) => void;
+  selectToken: (id: number | null) => void;
+  
+  // Действия с боем
   startBattle: () => void;
   pauseBattle: () => void;
-  endBattle: () => void;
+  nextTurn: () => void;
   
-  // Map settings
-  updateMapSettings: (settings: Partial<MapSettings>) => void;
-  setMapBackground: (background: string) => void;
-  setFogOfWar: (fogOfWar: boolean) => void;
-  setGridVisible: (gridVisible: boolean) => void;
-  setGridOpacity: (opacity: number) => void;
-  setGridSize: (size: number) => void;
-  setZoom: (zoom: number) => void;
-  setRevealRadius: (radius: number) => void;
+  // Настройки карты
+  setMapBackground: (url: string | null) => void;
+  setFogOfWar: (enabled: boolean) => void;
   revealCell: (row: number, col: number) => void;
   resetFogOfWar: () => void;
+  setGridVisible: (visible: boolean) => void;
+  setGridOpacity: (opacity: number) => void;
+  setGridSize: (size: { rows: number; cols: number }) => void;
+  setRevealRadius: (radius: number) => void;
+  setZoom: (zoom: number) => void;
   
-  // Other settings
-  isDM: boolean;
-  setIsDM: (isDM: boolean) => void;
-  showWebcams: boolean;
-  setShowWebcams: (show: boolean) => void;
-  
-  // Lighting
-  addLightSource: (light: any) => void;
+  // Новые методы для работы со светом
+  addLightSource: (lightSource: Omit<LightSource, "id">) => void;
   removeLightSource: (id: number) => void;
-  updateLightSource: (id: number, updates: any) => void;
+  updateLightSource: (id: number, updates: Partial<Omit<LightSource, "id">>) => void;
   setDynamicLighting: (enabled: boolean) => void;
-  attachLightToToken: (lightId: number, tokenId: number) => void;
+  attachLightToToken: (lightId: number, tokenId: number | undefined) => void;
   
-  // Selection
-  selectedTokenId: number | null;
-  selectToken: (id: number | null) => void;
+  // Общие настройки
+  setIsDM: (isDM: boolean) => void;
+  setShowWebcams: (show: boolean) => void;
 }
 
-export const useBattleStore = create<BattleState>()(
-  devtools(
-    persist(
-      (set, get) => ({
-        tokens: [],
-        initiative: [],
-        activeTokenId: null,
-        battleState: {
-          isActive: false,
-          round: 1
-        },
+const useBattleStore = create<BattleStore>((set, get) => ({
+  // Начальное состояние
+  tokens: [],
+  initiative: [],
+  battleState: {
+    isActive: false,
+    round: 0,
+    currentInitiativeIndex: -1,
+  },
+  selectedTokenId: null,
+  isDM: true, // По умолчанию режим DM
+  
+  // Настройки карты
+  mapSettings: {
+    fogOfWar: true,
+    revealedCells: {},
+    revealRadius: 3,
+    gridVisible: true,
+    gridOpacity: 0.5,
+    gridSize: { rows: 30, cols: 40 },
+    zoom: 1,
+    background: null,
+    lightSources: [],
+    isDynamicLighting: false,
+  },
+  
+  // Визуальные настройки
+  showWebcams: true,
+  
+  // Методы для управления токенами
+  addToken: (token) => {
+    set((state) => ({
+      tokens: [...state.tokens, token]
+    }));
+    
+    // Если бой активен, добавляем в инициативу
+    if (get().battleState.isActive) {
+      const roll = Math.floor(Math.random() * 20) + 1 + token.initiative;
+      const newInitiative = {
+        id: Date.now(),
+        tokenId: token.id,
+        name: token.name,
+        roll,
+        isActive: false,
+      };
+      
+      set((state) => {
+        const updatedInitiative = [...state.initiative, newInitiative]
+          .sort((a, b) => b.roll - a.roll);
+        
+        return { initiative: updatedInitiative };
+      });
+    }
+  },
+  
+  updateToken: (id, updates) => {
+    set((state) => ({
+      tokens: state.tokens.map(token => 
+        token.id === id ? { ...token, ...updates } : token
+      )
+    }));
+  },
+  
+  removeToken: (id) => {
+    set((state) => ({
+      tokens: state.tokens.filter(t => t.id !== id),
+      initiative: state.initiative.filter(i => i.tokenId !== id),
+      selectedTokenId: state.selectedTokenId === id ? null : state.selectedTokenId
+    }));
+  },
+  
+  updateTokenPosition: (id, x, y) => {
+    set((state) => ({
+      tokens: state.tokens.map(token => 
+        token.id === id ? { ...token, x, y } : token
+      )
+    }));
+  },
+  
+  updateTokenHP: (id, change) => {
+    set((state) => ({
+      tokens: state.tokens.map(token => {
+        if (token.id === id) {
+          const newHP = Math.max(0, Math.min(token.maxHp, token.hp + change));
+          return { ...token, hp: newHP };
+        }
+        return token;
+      })
+    }));
+  },
+  
+  selectToken: (id) => {
+    set({ selectedTokenId: id });
+  },
+  
+  // Методы для управления боем
+  startBattle: () => {
+    const state = get();
+    
+    if (state.tokens.length === 0) {
+      console.error("Нельзя начать сражение без участников");
+      return;
+    }
+    
+    // Генерируем инициативу
+    const initiativeRolls = state.tokens.map(token => {
+      const roll = Math.floor(Math.random() * 20) + 1 + token.initiative;
+      return {
+        id: Date.now() + token.id,
+        tokenId: token.id,
+        name: token.name,
+        roll,
+        isActive: false,
+      };
+    });
+    
+    const sortedInitiative = [...initiativeRolls].sort((a, b) => b.roll - a.roll);
+    
+    if (sortedInitiative.length > 0) {
+      sortedInitiative[0].isActive = true;
+    }
+    
+    set({
+      initiative: sortedInitiative,
+      battleState: {
+        isActive: true,
         round: 1,
-        selectedTokenId: null,
-        mapSettings: {
-          gridSize: 50,
-          width: 1500,
-          height: 1000,
-          showGrid: true,
-          gridVisible: true,
-          gridOpacity: 0.5,
-          fogOfWar: false,
-          revealRadius: 5,
-          zoom: 1,
-          revealedCells: [],
-          isDynamicLighting: false,
-          lightSources: []
-        },
-        isDM: true,
-        showWebcams: false,
-        
-        setTokens: (tokens: Token[]) => set({ tokens }),
-        
-        addToken: (token) => {
-          const tokens = get().tokens;
-          const newId = tokens.length > 0 
-            ? Math.max(...tokens.map(t => t.id)) + 1 
-            : 1;
-          
-          set({
-            tokens: [
-              ...tokens,
-              {
-                ...token,
-                id: newId,
-              },
-            ],
-          });
-        },
-        
-        removeToken: (tokenId) => {
-          set({
-            tokens: get().tokens.filter((token) => token.id !== tokenId),
-            initiative: get().initiative.filter((item) => item.tokenId !== tokenId),
-          });
-        },
-        
-        updateToken: (tokenId, updates) => {
-          set({
-            tokens: get().tokens.map((token) =>
-              token.id === tokenId ? { ...token, ...updates } : token
-            ),
-          });
-        },
-        
-        updateTokenPosition: (tokenId, x, y) => {
-          set({
-            tokens: get().tokens.map((token) =>
-              token.id === tokenId ? { ...token, x, y } : token
-            ),
-          });
-        },
-        
-        updateTokenHP: (tokenId, hp) => {
-          set({
-            tokens: get().tokens.map((token) =>
-              token.id === tokenId ? { ...token, hp } : token
-            ),
-          });
-        },
-        
-        setActiveTokenId: (tokenId) => set({ activeTokenId: tokenId }),
-        
-        selectToken: (id) => set({ selectedTokenId: id }),
-        
-        // Initiative
-        setInitiative: (initiative) => set({ initiative }),
-        
-        addToInitiative: (tokenId, roll) => {
-          const token = get().tokens.find((t) => t.id === tokenId);
-          if (!token) return;
-          
-          // Проверим, не добавлен ли уже этот токен в инициативу
-          const existingInitiative = get().initiative.find((i) => i.tokenId === tokenId);
-          if (existingInitiative) return;
-          
-          const initiative = get().initiative;
-          const newId = initiative.length > 0 
-            ? Math.max(...initiative.map(i => i.id)) + 1 
-            : 1;
-          
-          const newInitiative = [
-            ...initiative,
-            {
-              id: newId,
-              tokenId,
-              name: token.name,
-              roll,
-              isActive: false,
-            },
-          ].sort((a, b) => b.roll - a.roll);
-          
-          set({ initiative: newInitiative });
-        },
-        
-        removeFromInitiative: (initiativeId) => {
-          set({
-            initiative: get().initiative.filter((item) => item.id !== initiativeId),
-          });
-        },
-        
-        clearInitiative: () => set({ 
-          initiative: [], 
-          battleState: { isActive: false, round: 1 }, 
-          round: 1 
-        }),
-        
-        nextTurn: () => {
-          const initiative = get().initiative;
-          if (initiative.length === 0) return;
-          
-          let activeIndex = initiative.findIndex((item) => item.isActive);
-          
-          // Если активного нет или это последний в инициативе
-          if (activeIndex === -1 || activeIndex === initiative.length - 1) {
-            activeIndex = 0;
-            // Если это последний был, то следующий раунд
-            if (initiative.some((item) => item.isActive)) {
-              set({ 
-                round: get().round + 1,
-                battleState: { ...get().battleState, round: get().round + 1 }
-              });
-            }
-          } else {
-            activeIndex++;
-          }
-          
-          const newInitiative = initiative.map((item, i) => ({
-            ...item,
-            isActive: i === activeIndex,
-          }));
-          
-          set({ initiative: newInitiative });
-          
-          // Установим активный токен
-          const activeTokenId = newInitiative[activeIndex].tokenId;
-          set({ activeTokenId });
-        },
-        
-        startBattle: () => {
-          if (get().initiative.length === 0) return;
-          
-          // Активируем первого в инициативе
-          const newInitiative = get().initiative.map((item, i) => ({
-            ...item,
-            isActive: i === 0,
-          }));
-          
-          set({ 
-            initiative: newInitiative, 
-            battleState: { isActive: true, round: 1 },
-            round: 1,
-            // Установим активный токен
-            activeTokenId: newInitiative[0].tokenId
-          });
-        },
-        
-        pauseBattle: () => set({ 
-          battleState: { ...get().battleState, isActive: false } 
-        }),
-        
-        endBattle: () => set({ 
-          battleState: { isActive: false, round: 1 }, 
-          round: 1 
-        }),
-        
-        // Map settings
-        updateMapSettings: (settings) => {
-          set({
-            mapSettings: {
-              ...get().mapSettings,
-              ...settings,
-            },
-          });
-        },
-        
-        setMapBackground: (background) => {
-          set({
-            mapSettings: {
-              ...get().mapSettings,
-              background
-            }
-          });
-        },
-        
-        setFogOfWar: (fogOfWar) => {
-          set({
-            mapSettings: {
-              ...get().mapSettings,
-              fogOfWar
-            }
-          });
-        },
-        
-        setGridVisible: (gridVisible) => {
-          set({
-            mapSettings: {
-              ...get().mapSettings,
-              gridVisible
-            }
-          });
-        },
-        
-        setGridOpacity: (gridOpacity) => {
-          set({
-            mapSettings: {
-              ...get().mapSettings,
-              gridOpacity
-            }
-          });
-        },
-        
-        setGridSize: (gridSize) => {
-          set({
-            mapSettings: {
-              ...get().mapSettings,
-              gridSize
-            }
-          });
-        },
-        
-        setZoom: (zoom) => {
-          set({
-            mapSettings: {
-              ...get().mapSettings,
-              zoom
-            }
-          });
-        },
-        
-        setRevealRadius: (revealRadius) => {
-          set({
-            mapSettings: {
-              ...get().mapSettings,
-              revealRadius
-            }
-          });
-        },
-        
-        revealCell: (row, col) => {
-          const revealedCells = get().mapSettings.revealedCells || [];
-          const cellExists = revealedCells.some(c => c.row === row && c.col === col);
-          
-          if (!cellExists) {
-            set({
-              mapSettings: {
-                ...get().mapSettings,
-                revealedCells: [...revealedCells, { row, col }]
-              }
-            });
-          }
-        },
-        
-        resetFogOfWar: () => {
-          set({
-            mapSettings: {
-              ...get().mapSettings,
-              revealedCells: []
-            }
-          });
-        },
-        
-        // DM mode
-        setIsDM: (isDM) => set({ isDM }),
-        
-        // Webcams
-        setShowWebcams: (showWebcams) => set({ showWebcams }),
-        
-        // Lighting
-        addLightSource: (light) => {
-          const lightSources = get().mapSettings.lightSources || [];
-          const newId = lightSources.length > 0
-            ? Math.max(...lightSources.map(l => l.id)) + 1
-            : 1;
-            
-          set({
-            mapSettings: {
-              ...get().mapSettings,
-              lightSources: [
-                ...lightSources,
-                { ...light, id: newId }
-              ]
-            }
-          });
-        },
-        
-        removeLightSource: (id) => {
-          const lightSources = get().mapSettings.lightSources || [];
-          set({
-            mapSettings: {
-              ...get().mapSettings,
-              lightSources: lightSources.filter(l => l.id !== id)
-            }
-          });
-        },
-        
-        updateLightSource: (id, updates) => {
-          const lightSources = get().mapSettings.lightSources || [];
-          set({
-            mapSettings: {
-              ...get().mapSettings,
-              lightSources: lightSources.map(l => 
-                l.id === id ? { ...l, ...updates } : l
-              )
-            }
-          });
-        },
-        
-        setDynamicLighting: (isDynamicLighting) => {
-          set({
-            mapSettings: {
-              ...get().mapSettings,
-              isDynamicLighting
-            }
-          });
-        },
-        
-        attachLightToToken: (lightId, tokenId) => {
-          const lightSources = get().mapSettings.lightSources || [];
-          const token = get().tokens.find(t => t.id === tokenId);
-          
-          if (!token) return;
-          
-          set({
-            mapSettings: {
-              ...get().mapSettings,
-              lightSources: lightSources.map(l => 
-                l.id === lightId 
-                  ? { 
-                    ...l, 
-                    attachedToTokenId: tokenId,
-                    x: token.x,
-                    y: token.y
-                  } 
-                  : l
-              )
-            }
-          });
-        },
-      }),
-      {
-        name: 'battle-storage',
+        currentInitiativeIndex: 0,
       }
-    )
-  )
-);
+    });
+  },
+  
+  pauseBattle: () => {
+    set((state) => ({
+      battleState: {
+        ...state.battleState,
+        isActive: !state.battleState.isActive,
+      }
+    }));
+  },
+  
+  nextTurn: () => {
+    set((state) => {
+      if (!state.battleState.isActive || state.initiative.length === 0) {
+        return state;
+      }
+      
+      let nextIndex = (state.battleState.currentInitiativeIndex + 1) % state.initiative.length;
+      let newRound = state.battleState.round;
+      
+      if (nextIndex === 0) {
+        newRound++;
+      }
+      
+      const updatedInitiative = state.initiative.map((item, idx) => ({
+        ...item,
+        isActive: idx === nextIndex,
+      }));
+      
+      return {
+        initiative: updatedInitiative,
+        battleState: {
+          ...state.battleState,
+          round: newRound,
+          currentInitiativeIndex: nextIndex,
+        }
+      };
+    });
+  },
+  
+  // Методы для управления картой
+  setMapBackground: (url) => {
+    set((state) => ({
+      mapSettings: {
+        ...state.mapSettings,
+        background: url
+      }
+    }));
+  },
+  
+  setFogOfWar: (enabled) => {
+    set((state) => ({
+      mapSettings: {
+        ...state.mapSettings,
+        fogOfWar: enabled
+      }
+    }));
+  },
+  
+  revealCell: (row, col) => {
+    set((state) => {
+      if (!state.mapSettings.fogOfWar) return state;
+      
+      const newRevealed = { ...state.mapSettings.revealedCells };
+      const radius = state.mapSettings.revealRadius;
+      
+      for (let r = Math.max(0, row - radius); r <= Math.min(state.mapSettings.gridSize.rows - 1, row + radius); r++) {
+        for (let c = Math.max(0, col - radius); c <= Math.min(state.mapSettings.gridSize.cols - 1, col + radius); c++) {
+          const distance = Math.sqrt(Math.pow(r - row, 2) + Math.pow(c - col, 2));
+          if (distance <= radius) {
+            newRevealed[`${r}-${c}`] = true;
+          }
+        }
+      }
+      
+      return {
+        mapSettings: {
+          ...state.mapSettings,
+          revealedCells: newRevealed
+        }
+      };
+    });
+  },
+  
+  resetFogOfWar: () => {
+    set((state) => ({
+      mapSettings: {
+        ...state.mapSettings,
+        revealedCells: {}
+      }
+    }));
+  },
+  
+  setGridVisible: (visible) => {
+    set((state) => ({
+      mapSettings: {
+        ...state.mapSettings,
+        gridVisible: visible
+      }
+    }));
+  },
+  
+  setGridOpacity: (opacity) => {
+    set((state) => ({
+      mapSettings: {
+        ...state.mapSettings,
+        gridOpacity: opacity
+      }
+    }));
+  },
+  
+  setGridSize: (size) => {
+    set((state) => ({
+      mapSettings: {
+        ...state.mapSettings,
+        gridSize: size
+      }
+    }));
+  },
+  
+  setRevealRadius: (radius) => {
+    set((state) => ({
+      mapSettings: {
+        ...state.mapSettings,
+        revealRadius: radius
+      }
+    }));
+  },
+  
+  setZoom: (zoom) => {
+    set((state) => ({
+      mapSettings: {
+        ...state.mapSettings,
+        zoom
+      }
+    }));
+  },
+  
+  // Новые методы для работы со светом
+  addLightSource: (lightSource) => {
+    set((state) => ({
+      mapSettings: {
+        ...state.mapSettings,
+        lightSources: [...state.mapSettings.lightSources, { 
+          ...lightSource, 
+          id: Date.now() 
+        }]
+      }
+    }));
+  },
+  
+  removeLightSource: (id) => {
+    set((state) => ({
+      mapSettings: {
+        ...state.mapSettings,
+        lightSources: state.mapSettings.lightSources.filter(light => light.id !== id)
+      }
+    }));
+  },
+  
+  updateLightSource: (id, updates) => {
+    set((state) => ({
+      mapSettings: {
+        ...state.mapSettings,
+        lightSources: state.mapSettings.lightSources.map(light => 
+          light.id === id ? { ...light, ...updates } : light
+        )
+      }
+    }));
+  },
+  
+  setDynamicLighting: (enabled) => {
+    set((state) => ({
+      mapSettings: {
+        ...state.mapSettings,
+        isDynamicLighting: enabled
+      }
+    }));
+  },
+  
+  attachLightToToken: (lightId, tokenId) => {
+    set((state) => ({
+      mapSettings: {
+        ...state.mapSettings,
+        lightSources: state.mapSettings.lightSources.map(light => 
+          light.id === lightId ? { ...light, attachedToTokenId: tokenId } : light
+        )
+      }
+    }));
+  },
+  
+  // Общие настройки
+  setIsDM: (isDM) => {
+    set({ isDM });
+  },
+  
+  setShowWebcams: (show) => {
+    set({ showWebcams: show });
+  },
+}));
+
+export default useBattleStore;

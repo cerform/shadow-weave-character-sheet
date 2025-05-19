@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import BattleMap from './BattleMap';
 import FogOfWar from './FogOfWar';
@@ -5,7 +6,8 @@ import BattleGrid from './BattleGrid';
 import Token from './Token';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
-import { Token as TokenType, LightSource } from '@/types/battle';
+import { Token as TokenType, Initiative } from '@/stores/battleStore';
+import { LightSource } from '@/types/battle';
 
 interface EnhancedBattleMapProps {
   tokens: TokenType[];
@@ -15,7 +17,7 @@ interface EnhancedBattleMapProps {
   onUpdateTokenPosition: (id: number, x: number, y: number) => void;
   onSelectToken: (id: number | null) => void;
   selectedTokenId: number | null;
-  initiative: { id: number; tokenId: number; name: string; roll: number; isActive: boolean; }[];
+  initiative: Initiative[];
   battleActive: boolean;
   fogOfWar?: boolean;
   revealedCells?: { [key: string]: boolean };
@@ -333,7 +335,7 @@ const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
     type: token.type
   }));
 
-  // Обновляем ��сточники света, прикрепленные к токенам
+  // Обновляем источники света, прикрепленные к токенам
   const updatedLightSources = [...lightSources].map(light => {
     if (light.attachedToTokenId) {
       const token = tokens.find(t => t.id === light.attachedToTokenId);
@@ -505,8 +507,8 @@ const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
                   style={{
                     left: `${token.x}px`,
                     top: `${token.y}px`,
-                    width: `${30 * (typeof token.size === 'number' ? token.size : 1)}px`,
-                    height: `${30 * (typeof token.size === 'number' ? token.size : 1)}px`,
+                    width: `${30 * (token.size || 1)}px`,
+                    height: `${30 * (token.size || 1)}px`,
                     transform: 'translate(-50%, -50%)',
                     borderRadius: '50%',
                     overflow: 'hidden',

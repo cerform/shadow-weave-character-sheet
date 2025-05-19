@@ -1,7 +1,8 @@
+
 import { CharacterSpell } from '@/types/character';
+
 export const level2: CharacterSpell[] = [
   {
-    id: "level2-1",
     name: "Бесследное передвижение",
     level: 2,
     school: "Ограждение",
@@ -17,7 +18,6 @@ export const level2: CharacterSpell[] = [
     classes: ["Следопыт", "Друид", "Волшебник"]
   },
   {
-    id: "level2-2",
     name: "Благословение удачи",
     level: 2,
     school: "Очарование",
@@ -32,7 +32,6 @@ export const level2: CharacterSpell[] = [
     classes: ["Жрец", "Паладин"]
   },
   {
-    id: "level2-3",
     name: "Божественное оружие",
     level: 2,
     school: "Воплощение",
@@ -46,7 +45,6 @@ export const level2: CharacterSpell[] = [
     classes: ["Жрец"]
   },
   {
-    id: "level2-4",
     name: "Вечный огонь",
     level: 2,
     school: "Воплощение",
@@ -61,7 +59,6 @@ export const level2: CharacterSpell[] = [
     classes: ["Жрец", "Волшебник"]
   },
   {
-    id: "level2-5",
     name: "Видение невидимого",
     level: 2,
     school: "Прорицание",
@@ -76,7 +73,6 @@ export const level2: CharacterSpell[] = [
     classes: ["Бард", "Чародей", "Волшебник"]
   },
   {
-    id: "level2-6",
     name: "Вихрь искривления",
     level: 2,
     school: "Вызов",
@@ -90,7 +86,6 @@ export const level2: CharacterSpell[] = [
     classes: ["Чародей", "Волшебник", "Колдун"]
   },
   {
-    id: "level2-7",
     name: "Внушение",
     level: 2,
     school: "Очарование",
@@ -105,7 +100,6 @@ export const level2: CharacterSpell[] = [
     classes: ["Бард", "Колдун", "Волшебник"]
   },
   {
-    id: "level2-8",
     name: "Воздушный пузырь",
     level: 2,
     school: "Вызов",
@@ -118,7 +112,6 @@ export const level2: CharacterSpell[] = [
     classes: ["Друид", "Чародей", "Волшебник"]
   },
   {
-    id: "level2-9",
     name: "Волшебные уста",
     level: 2,
     school: "Иллюзия",
@@ -134,7 +127,6 @@ export const level2: CharacterSpell[] = [
     classes: ["Бард", "Волшебник"]
   },
   {
-    id: "level2-10",
     name: "Волшебный замок",
     level: 2,
     school: "Ограждение",
@@ -149,7 +141,6 @@ export const level2: CharacterSpell[] = [
     classes: ["Волшебник"]
   },
   {
-    id: "level2-11",
     name: "Воображаемая сила",
     level: 2,
     school: "Иллюзия",
@@ -165,7 +156,6 @@ export const level2: CharacterSpell[] = [
     classes: ["Бард", "Чародей", "Волшебник"]
   },
   {
-    id: "level2-12",
     name: "Гадание",
     level: 2,
     school: "Прорицание",
@@ -181,7 +171,6 @@ export const level2: CharacterSpell[] = [
     classes: ["Бард", "Жрец", "Друид", "Волшебник"]
   },
   {
-    id: "level2-13",
     name: "Глухота/слепота",
     level: 2,
     school: "Некромантия",
@@ -194,7 +183,6 @@ export const level2: CharacterSpell[] = [
     classes: ["Бард", "Жрец", "Чародей", "Волшебник"]
   },
   {
-    id: "level2-14",
     name: "Горящий клинок",
     level: 2,
     school: "Воплощение",
@@ -210,7 +198,6 @@ export const level2: CharacterSpell[] = [
     classes: ["Друид", "Чародей", "Волшебник"]
   },
   {
-    id: "level2-15",
     name: "Дребезги",
     level: 2,
     school: "Воплощение",
@@ -225,7 +212,6 @@ export const level2: CharacterSpell[] = [
     classes: ["Бард", "Чародей", "Колдун", "Волшебник"]
   },
   {
-    id: "level2-16",
     name: "Дубовая кора",
     level: 2,
     school: "Преобразование",
@@ -241,7 +227,6 @@ export const level2: CharacterSpell[] = [
     classes: ["Друид", "Следопыт"]
   },
   {
-    id: "level2-17",
     name: "Дыхание дракона",
     level: 2,
     school: "Преобразование",
@@ -257,7 +242,6 @@ export const level2: CharacterSpell[] = [
     classes: ["Чародей", "Волшебник"]
   },
   {
-    id: "level2-18",
     name: "Животные чувства",
     level: 2,
     school: "Прорицание",
@@ -272,7 +256,6 @@ export const level2: CharacterSpell[] = [
     classes: ["Друид", "Следопыт"]
   },
   {
-    id: "level2-19",
     name: "Завеса стрел",
     level: 2,
     school: "Вызов",
@@ -287,7 +270,6 @@ export const level2: CharacterSpell[] = [
     classes: ["Бард", "Волшебник"]
   },
   {
-    id: "level2-20",
     name: "Заимствованные знания",
     level: 2,
     school: "Прорицание",
@@ -302,7 +284,6 @@ export const level2: CharacterSpell[] = [
     classes: ["Бард", "Волшебник"]
   },
   {
-    id: "level2-21",
     name: "Защита от яда",
     level: 2,
     school: "Ограждение",
@@ -316,7 +297,6 @@ export const level2: CharacterSpell[] = [
     classes: ["Жрец", "Друид", "Паладин", "Следопыт"]
   },
   {
-    id: "level2-22",
     name: "Защитный ветер",
     level: 2,
     school: "Воплощение",
@@ -330,7 +310,6 @@ export const level2: CharacterSpell[] = [
     classes: ["Друид", "Следопыт", "Чародей", "Волшебник"]
   },
   {
-    id: "level2-23",
     name: "Земляная хватка Максимилиана",
     level: 2,
     school: "Преобразование",
@@ -346,7 +325,6 @@ export const level2: CharacterSpell[] = [
     classes: ["Волшебник"]
   },
   {
-    id: "level2-24",
     name: "Исцеляющий дух",
     level: 2,
     school: "Вызов",
@@ -361,7 +339,6 @@ export const level2: CharacterSpell[] = [
     classes: ["Друид", "Следопыт"]
   },
   {
-    id: "level2-25",
     name: "Карман на запястье",
     level: 2,
     school: "Преобразование",
@@ -376,7 +353,6 @@ export const level2: CharacterSpell[] = [
     classes: ["Волшебник"]
   },
   {
-    id: "level2-26",
     name: "Клеймящая кара",
     level: 2,
     school: "Воплощение",
@@ -390,7 +366,6 @@ export const level2: CharacterSpell[] = [
     classes: ["Паладин"]
   },
   {
-    id: "level2-27",
     name: "Корона безумия",
     level: 2,
     school: "Очарование",
@@ -405,7 +380,6 @@ export const level2: CharacterSpell[] = [
     classes: ["Бард", "Чародей", "Колдун", "Волшебник"]
   },
   {
-    id: "level2-28",
     name: "Левитация",
     level: 2,
     school: "Преобразование",
@@ -421,7 +395,6 @@ export const level2: CharacterSpell[] = [
     classes: ["Чародей", "Волшебник"]
   },
   {
-    id: "level2-29",
     name: "Лунный луч",
     level: 2,
     school: "Воплощение",
@@ -437,7 +410,6 @@ export const level2: CharacterSpell[] = [
     classes: ["Жрец", "Друид", "Паладин"]
   },
   {
-    id: "level2-30",
     name: "Луч слабости",
     level: 2,
     school: "Некромантия",
@@ -452,7 +424,6 @@ export const level2: CharacterSpell[] = [
     classes: ["Колдун", "Волшебник"]
   },
   {
-    id: "level2-31",
     name: "Магическое оружие",
     level: 2,
     school: "Преобразование",
@@ -467,7 +438,6 @@ export const level2: CharacterSpell[] = [
     classes: ["Волшебник", "Паладин", "Искуситель"]
   },
   {
-    id: "level2-32",
     name: "Малое восстановление",
     level: 2,
     school: "Ограждение",
@@ -481,7 +451,6 @@ export const level2: CharacterSpell[] = [
     classes: ["Бард", "Жрец", "Друид", "Паладин", "Следопыт"]
   },
   {
-    id: "level2-33",
     name: "Мельфова кислотная стрела",
     level: 2,
     school: "Воплощение",
@@ -496,7 +465,6 @@ export const level2: CharacterSpell[] = [
     classes: ["Волшебник"]
   },
   {
-    id: "level2-34",
     name: "Молебен лечения",
     level: 2,
     school: "Воплощение",
@@ -509,7 +477,6 @@ export const level2: CharacterSpell[] = [
     classes: ["Жрец", "Паладин"]
   },
   {
-    id: "level2-35",
     name: "Натайрово озорство",
     level: 2,
     school: "Преобразование",
@@ -524,7 +491,6 @@ export const level2: CharacterSpell[] = [
     classes: ["Бард", "Волшебник"]
   },
   {
-    id: "level2-36",
     name: "Небесные письмена",
     level: 2,
     school: "Иллюзия",
@@ -540,7 +506,6 @@ export const level2: CharacterSpell[] = [
     classes: ["Бард", "Друид", "Колдун", "Волшебник"]
   },
   {
-    id: "level2-37",
     name: "Невидимость",
     level: 2,
     school: "Иллюзия",
@@ -556,7 +521,6 @@ export const level2: CharacterSpell[] = [
     classes: ["Бард", "Чародей", "Колдун", "Волшебник"]
   },
   {
-    id: "level2-38",
     name: "Неподвижный предмет",
     level: 2,
     school: "Преобразование",
@@ -571,7 +535,6 @@ export const level2: CharacterSpell[] = [
     classes: ["Бард", "Чародей", "Волшебник", "Искуситель"]
   },
   {
-    id: "level2-39",
     name: "Нетленные останки",
     level: 2,
     school: "Некромантия",
@@ -587,7 +550,6 @@ export const level2: CharacterSpell[] = [
     classes: ["Жрец", "Друид", "Волшебник"]
   },
   {
-    id: "level2-40",
     name: "Нистулова ложная аура",
     level: 2,
     school: "Иллюзия",
@@ -602,7 +564,6 @@ export const level2: CharacterSpell[] = [
     classes: ["Волшебник"]
   },
   {
-    id: "level2-41",
     name: "Облако кинжалов",
     level: 2,
     school: "Вызов",
@@ -618,7 +579,6 @@ export const level2: CharacterSpell[] = [
     classes: ["Бард", "Чародей", "Волшебник", "Колдун"]
   },
   {
-    id: "level2-42",
     name: "Область истины",
     level: 2,
     school: "Очарование",
@@ -632,7 +592,6 @@ export const level2: CharacterSpell[] = [
     classes: ["Бард", "Жрец", "Паладин"]
   },
   {
-    id: "level2-43",
     name: "Обнаружение мыслей",
     level: 2,
     school: "Прорицание",
@@ -648,7 +607,6 @@ export const level2: CharacterSpell[] = [
     classes: ["Бард", "Чародей", "Волшебник"]
   },
   {
-    id: "level2-44",
     name: "Открывание",
     level: 2,
     school: "Преобразование",
@@ -661,7 +619,6 @@ export const level2: CharacterSpell[] = [
     classes: ["Бард", "Чародей", "Волшебник"]
   },
   {
-    id: "level2-45",
     name: "Отражения",
     level: 2,
     school: "Иллюзия",
@@ -675,7 +632,6 @@ export const level2: CharacterSpell[] = [
     classes: ["Волшебник", "Чародей"]
   },
   {
-    id: "level2-46",
     name: "Охраняющая связь",
     level: 2,
     school: "Ограждение",
@@ -690,7 +646,6 @@ export const level2: CharacterSpell[] = [
     classes: ["Жрец", "Паладин"]
   },
   {
-    id: "level2-47",
     name: "Палящий луч",
     level: 2,
     school: "Воплощение",
@@ -704,7 +659,6 @@ export const level2: CharacterSpell[] = [
     classes: ["Колдун", "Чародей", "Волшебник"]
   },
   {
-    id: "level2-48",
     name: "Паук",
     level: 2,
     school: "Преобразование",
@@ -720,7 +674,6 @@ export const level2: CharacterSpell[] = [
     classes: ["Чародей", "Волшебник", "Друид"]
   },
   {
-    id: "level2-49",
     name: "Паутина",
     level: 2,
     school: "Вызов",
@@ -736,7 +689,6 @@ export const level2: CharacterSpell[] = [
     classes: ["Чародей", "Волшебник"]
   },
   {
-    id: "level2-50",
     name: "Пекло Аганаззара",
     level: 2,
     school: "Воплощение",
@@ -751,7 +703,6 @@ export const level2: CharacterSpell[] = [
     classes: ["Волшебник", "Чародей"]
   },
   {
-    id: "level2-51",
     name: "Пиротехника",
     level: 2,
     school: "Преобразование",
@@ -765,7 +716,6 @@ export const level2: CharacterSpell[] = [
     classes: ["Бард", "Чародей", "Волшебник"]
   },
   {
-    id: "level2-52",
     name: "Подарок болтуна",
     level: 2,
     school: "Очарование",
@@ -780,7 +730,6 @@ export const level2: CharacterSpell[] = [
     classes: ["Бард", "Волшебник"]
   },
   {
-    id: "level2-53",
     name: "Подмога",
     level: 2,
     school: "Ограждение",
@@ -795,7 +744,6 @@ export const level2: CharacterSpell[] = [
     classes: ["Жрец", "Паладин"]
   },
   {
-    id: "level2-54",
     name: "Поиск животных или растений",
     level: 2,
     school: "Прорицание",
@@ -811,7 +759,6 @@ export const level2: CharacterSpell[] = [
     classes: ["Бард", "Друид", "Следопыт"]
   },
   {
-    id: "level2-55",
     name: "Поиск ловушек",
     level: 2,
     school: "Прорицание",
@@ -825,7 +772,6 @@ export const level2: CharacterSpell[] = [
     classes: ["Друид", "Жрец", "Следопыт"]
   },
   {
-    id: "level2-56",
     name: "Поиск предмета",
     level: 2,
     school: "Прорицание",
@@ -841,7 +787,6 @@ export const level2: CharacterSpell[] = [
     classes: ["Бард", "Жрец", "Друид", "Волшебник", "Паладин", "Следопыт"]
   },
   {
-    id: "level2-57",
     name: "Поиск скакуна",
     level: 2,
     school: "Вызов",
@@ -855,7 +800,6 @@ export const level2: CharacterSpell[] = [
     classes: ["Паладин", "Волшебник"]
   },
   {
-    id: "level2-58",
     name: "Порыв ветра",
     level: 2,
     school: "Воплощение",
@@ -871,7 +815,6 @@ export const level2: CharacterSpell[] = [
     classes: ["Друид", "Следопыт", "Чародей", "Волшебник"]
   },
   {
-    id: "level2-59",
     name: "Почтовое животное",
     level: 2,
     school: "Очарование",
@@ -887,7 +830,6 @@ export const level2: CharacterSpell[] = [
     classes: ["Бард", "Друид", "Следопыт"]
   },
   {
-    id: "level2-60",
     name: "Призыв духа зверя",
     level: 2,
     school: "Вызов",
@@ -903,7 +845,6 @@ export const level2: CharacterSpell[] = [
     classes: ["Друид", "Следопыт"]
   },
   {
-    id: "level2-61",
     name: "Пронзание разума",
     level: 2,
     school: "Психическая",
@@ -917,7 +858,6 @@ export const level2: CharacterSpell[] = [
     classes: ["Колдун", "Волшебник", "Чародей"]
   },
   {
-    id: "level2-62",
     name: "Психическая плеть Таши",
     level: 2,
     school: "Очарование",
@@ -931,7 +871,6 @@ export const level2: CharacterSpell[] = [
     classes: ["Чародей", "Волшебник", "Колдун"]
   },
   {
-    id: "level2-63",
     name: "Пылающий шар",
     level: 2,
     school: "Вызов",
@@ -947,7 +886,6 @@ export const level2: CharacterSpell[] = [
     classes: ["Друид", "Волшебник", "Чародей"]
   },
   {
-    id: "level2-64",
     name: "Пылевой вихрь",
     level: 2,
     school: "Вызов",
@@ -963,7 +901,6 @@ export const level2: CharacterSpell[] = [
     classes: ["Друид", "Чародей", "Волшебник"]
   },
   {
-    id: "level2-65",
     name: "Разбрасывание карт",
     level: 2,
     school: "Преобразование",
@@ -978,7 +915,6 @@ export const level2: CharacterSpell[] = [
     classes: ["Бард", "Волшебник"]
   },
   {
-    id: "level2-66",
     name: "Размытый образ",
     level: 2,
     school: "Иллюзия",
@@ -992,7 +928,6 @@ export const level2: CharacterSpell[] = [
     classes: ["Волшебник", "Чародей", "Искуситель"]
   },
   {
-    id: "level2-67",
     name: "Раскалённый металл",
     level: 2,
     school: "Преобразование",
@@ -1008,7 +943,6 @@ export const level2: CharacterSpell[] = [
     classes: ["Бард", "Друид", "Волшебник"]
   },
   {
-    id: "level2-68",
     name: "Речь златоуста",
     level: 2,
     school: "Преобразование",
@@ -1022,7 +956,6 @@ export const level2: CharacterSpell[] = [
     classes: ["Бард", "Колдун", "Волшебник"]
   },
   {
-    id: "level2-69",
     name: "Сверкающая монета Джима",
     level: 2,
     school: "Преобразование",
@@ -1036,7 +969,6 @@ export const level2: CharacterSpell[] = [
     classes: ["Волшебник"]
   },
   {
-    id: "level2-70",
     name: "Сковывающий лёд Раймы",
     level: 2,
     school: "Воплощение",
@@ -1050,7 +982,6 @@ export const level2: CharacterSpell[] = [
     classes: ["Друид", "Чародей", "Волшебник"]
   },
   {
-    id: "level2-71",
     name: "Смена обличья",
     level: 2,
     school: "Преобразование",
@@ -1065,7 +996,6 @@ export const level2: CharacterSpell[] = [
     classes: ["Друид", "Следопыт"]
   },
   {
-    id: "level2-72",
     name: "Снежный шквал Сниллока",
     level: 2,
     school: "Воплощение",
@@ -1080,7 +1010,6 @@ export const level2: CharacterSpell[] = [
     classes: ["Друид", "Чародей", "Волшебник"]
   },
   {
-    id: "level2-73",
     name: "Стая фамильяров",
     level: 2,
     school: "Вызов",
@@ -1095,7 +1024,6 @@ export const level2: CharacterSpell[] = [
     classes: ["Волшебник", "Колдун"]
   },
   {
-    id: "level2-74",
     name: "Тёмное зрение",
     level: 2,
     school: "Преобразование",
@@ -1110,7 +1038,6 @@ export const level2: CharacterSpell[] = [
     classes: ["Друид", "Следопыт", "Чародей", "Волшебник"]
   },
   {
-    id: "level2-75",
     name: "Теневой клинок",
     level: 2,
     school: "Иллюзия",
@@ -1125,7 +1052,6 @@ export const level2: CharacterSpell[] = [
     classes: ["Чародей", "Колдун", "Волшебник"]
   },
   {
-    id: "level2-76",
     name: "Тишина",
     level: 2,
     school: "Иллюзия",
@@ -1141,7 +1067,6 @@ export const level2: CharacterSpell[] = [
     classes: ["Бард", "Жрец", "Следопыт"]
   },
   {
-    id: "level2-77",
     name: "Трюк с верёвкой",
     level: 2,
     school: "Преобразование",
@@ -1156,7 +1081,6 @@ export const level2: CharacterSpell[] = [
     classes: ["Волшебник"]
   },
   {
-    id: "level2-78",
     name: "Туманный шаг",
     level: 2,
     school: "Вызов",
@@ -1169,7 +1093,6 @@ export const level2: CharacterSpell[] = [
     classes: ["Чародей", "Колдун", "Волшебник"]
   },
   {
-    id: "level2-79",
     name: "Тьма",
     level: 2,
     school: "Воплощение",
@@ -1184,7 +1107,6 @@ export const level2: CharacterSpell[] = [
     classes: ["Чародей", "Колдун", "Волшебник"]
   },
   {
-    id: "level2-80",
     name: "Увеличение/уменьшение",
     level: 2,
     school: "Преобразование",
@@ -1200,7 +1122,6 @@ export const level2: CharacterSpell[] = [
     classes: ["Чародей", "Волшебник"]
   },
   {
-    id: "level2-81",
     name: "Увлекательная прогулка",
     level: 2,
     school: "Очарование",
@@ -1214,7 +1135,6 @@ export const level2: CharacterSpell[] = [
     classes: ["Бард", "Следопыт"]
   },
   {
-    id: "level2-82",
     name: "Увядание и цветение",
     level: 2,
     school: "Преобразование",
@@ -1229,7 +1149,6 @@ export const level2: CharacterSpell[] = [
     classes: ["Друид"]
   },
   {
-    id: "level2-83",
     name: "Удержание личности",
     level: 2,
     school: "Очарование",
@@ -1245,7 +1164,6 @@ export const level2: CharacterSpell[] = [
     classes: ["Бард", "Друид", "Чародей", "Колдун", "Волшебник"]
   },
   {
-    id: "level2-84",
     name: "Узы земли",
     level: 2,
     school: "Преобразование",
@@ -1259,7 +1177,6 @@ export const level2: CharacterSpell[] = [
     classes: ["Друид", "Следопыт"]
   },
   {
-    id: "level2-85",
     name: "Улучшение характеристики",
     level: 2,
     school: "Преобразование",
@@ -1275,7 +1192,6 @@ export const level2: CharacterSpell[] = [
     classes: ["Бард", "Жрец", "Друид", "Чародей", "Волшебник"]
   },
   {
-    id: "level2-86",
     name: "Умиротворение",
     level: 2,
     school: "Очарование",
@@ -1290,7 +1206,6 @@ export const level2: CharacterSpell[] = [
     classes: ["Бард", "Жрец"]
   },
   {
-    id: "level2-87",
     name: "Чувство искажения",
     level: 2,
     school: "Иллюзия",
@@ -1306,7 +1221,6 @@ export const level2: CharacterSpell[] = [
     classes: ["Бард", "Чародей", "Волшебник"]
   },
   {
-    id: "level2-88",
     name: "Шипы",
     level: 2,
     school: "Преобразование",

@@ -256,36 +256,20 @@ export const createTestCharacter = async (): Promise<string> => {
     const testChar: Character = {
       id: "", // Пустая строка для нового персонажа
       name: `Тест ${new Date().toLocaleTimeString()}`,
-      class: 'Воин',
-      className: 'Воин',
+      class: 'Воин', // Используем class вместо className, чтобы соответствовать интерфейсу
+      className: 'Воин', // Оставляем для обратной совместимости
       race: 'Человек',
       level: 1,
-      background: '', 
-      alignment: 'Нейтральный',
-      abilities: {
-        STR: 10,
-        DEX: 10,
-        CON: 10,
-        INT: 10,
-        WIS: 10,
-        CHA: 10,
-        strength: 10,
-        dexterity: 10,
-        constitution: 10,
-        intelligence: 10,
-        wisdom: 10,
-        charisma: 10
-      },
-      experience: 0,
-      strength: 10,
+      experience: 0,  
+      strength: 10,   
       dexterity: 10,
       constitution: 10,
       intelligence: 10,
       wisdom: 10,
       charisma: 10,
-      maxHp: 10,
+      maxHp: 10,      
       currentHp: 10,
-      userId: userId,
+      userId: userId, 
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       stats: {
@@ -295,77 +279,7 @@ export const createTestCharacter = async (): Promise<string> => {
         intelligence: 10,
         wisdom: 10,
         charisma: 10
-      },
-      proficiencies: {
-        languages: [],
-        tools: [],
-        weapons: [],
-        armor: [],
-        skills: []
-      },
-      equipment: [],
-      features: [],
-      spells: [],
-      hp: {
-        current: 10,
-        max: 10,
-        temp: 0
-      },
-      gold: 0,
-      spellcasting: null,
-      proficiencyBonus: 2,
-      armorClass: 10,
-      initiative: 0,
-      speed: 30,
-      hitDice: {
-        total: 1,
-        value: 'd8',
-        used: 0
-      },
-      savingThrows: {
-        strength: false,
-        dexterity: false,
-        constitution: false,
-        intelligence: false,
-        wisdom: false,
-        charisma: false
-      },
-      skills: {},
-      personalityTraits: '',
-      ideals: '',
-      bonds: '',
-      flaws: '',
-      backstory: '',
-      money: {
-        cp: 0,
-        sp: 0,
-        ep: 0,
-        gp: 0,
-        pp: 0
-      },
-      resources: {},
-      spellSlots: {},
-      tempHp: 0,
-      deathSaves: {
-        successes: 0,
-        failures: 0
-      },
-      sorceryPoints: {
-        current: 0,
-        max: 0
-      },
-      lastDiceRoll: {
-        diceType: 'd20',
-        count: 1,
-        modifier: 0,
-        rolls: [0],
-        total: 0,
-        label: '',
-        timestamp: ''
-      },
-      notes: '',
-      image: '',
-      languages: []
+      }
     };
     
     const charId = await saveCharacter(testChar);

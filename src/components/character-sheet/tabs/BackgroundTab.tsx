@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Textarea } from "@/components/ui/textarea";
 import { Character } from '@/types/character';
@@ -52,9 +51,7 @@ const BackgroundTab: React.FC<BackgroundTabProps> = ({ character, onUpdate }) =>
         <Textarea
           placeholder="Опишите внешность вашего персонажа"
           value={character.appearance || ""}
-          onChange={(e) => {
-            onUpdate({ appearance: e.target.value });
-          }}
+          onChange={(e) => handleInputChange(e, 'appearance')}
         />
       </div>
       <div>
@@ -70,3 +67,4 @@ const BackgroundTab: React.FC<BackgroundTabProps> = ({ character, onUpdate }) =>
 };
 
 export default BackgroundTab;
+

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import CharacterBasicInfo from './CharacterBasicInfo';
 import CharacterRaceSelection from './CharacterRaceSelection';
@@ -116,7 +115,7 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
         return (
           <CharacterBackground 
             character={character} 
-            updateCharacter={updateCharacter}
+            onUpdate={updateCharacter}
             nextStep={nextStep}
             prevStep={prevStep}
           />

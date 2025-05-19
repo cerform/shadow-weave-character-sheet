@@ -1,7 +1,8 @@
+
 import { CharacterSpell } from '@/types/character';
+
 export const level7: CharacterSpell[] = [
   {
-    id: "level7-1",
     name: "Божественное слово",
     level: 7,
     school: "Воплощение",
@@ -16,7 +17,6 @@ export const level7: CharacterSpell[] = [
     material: false
   },
   {
-    id: "level7-2",
     name: "Великолепный особняк Морденкайнена",
     level: 7,
     school: "Вызов",
@@ -31,7 +31,6 @@ export const level7: CharacterSpell[] = [
     material: true
   },
   {
-    id: "level7-3",
     name: "Воскрешение",
     level: 7,
     school: "Некромантия",
@@ -46,7 +45,6 @@ export const level7: CharacterSpell[] = [
     material: true
   },
   {
-    id: "level7-4",
     name: "Драконоподобное превращение",
     level: 7,
     school: "Преобразование",
@@ -62,7 +60,6 @@ export const level7: CharacterSpell[] = [
     concentration: true
   },
   {
-    id: "level7-5",
     name: "Единство сущностей",
     level: 7,
     school: "Преобразование",
@@ -78,7 +75,6 @@ export const level7: CharacterSpell[] = [
     concentration: true
   },
   {
-    id: "level7-6",
     name: "Замедленный огненный шар",
     level: 7,
     school: "Воплощение",
@@ -94,7 +90,6 @@ export const level7: CharacterSpell[] = [
     concentration: true
   },
   {
-    id: "level7-7",
     name: "Знак",
     level: 7,
     school: "Ограждение",
@@ -109,7 +104,6 @@ export const level7: CharacterSpell[] = [
     material: true
   },
   {
-    id: "level7-8",
     name: "Изменение тяготения",
     level: 7,
     school: "Преобразование",
@@ -125,7 +119,6 @@ export const level7: CharacterSpell[] = [
     concentration: true
   },
   {
-    id: "level7-9",
     name: "Изоляция",
     level: 7,
     school: "Ограждение",
@@ -140,7 +133,6 @@ export const level7: CharacterSpell[] = [
     material: true
   },
   {
-    id: "level7-10",
     name: "Корона звёзд",
     level: 7,
     school: "Воплощение",
@@ -154,7 +146,6 @@ export const level7: CharacterSpell[] = [
     somatic: true
   },
   {
-    id: "level7-11",
     name: "Меч Морденкайнена",
     level: 7,
     school: "Воплощение",
@@ -170,7 +161,6 @@ export const level7: CharacterSpell[] = [
     concentration: true
   },
   {
-    id: "level7-12",
     name: "Огненная буря",
     level: 7,
     school: "Воплощение",
@@ -184,7 +174,6 @@ export const level7: CharacterSpell[] = [
     somatic: true
   },
   {
-    id: "level7-13",
     name: "Перст смерти",
     level: 7,
     school: "Некромантия",
@@ -198,7 +187,6 @@ export const level7: CharacterSpell[] = [
     somatic: true
   },
   {
-    id: "level7-14",
     name: "Подобие",
     level: 7,
     school: "Иллюзия",
@@ -213,7 +201,6 @@ export const level7: CharacterSpell[] = [
     material: true
   },
   {
-    id: "level7-15",
     name: "Призыв небожителя",
     level: 7,
     school: "Вызов",
@@ -228,7 +215,6 @@ export const level7: CharacterSpell[] = [
     concentration: true
   },
   {
-    id: "level7-16",
     name: "Проекция",
     level: 7,
     school: "Преобразование",
@@ -244,7 +230,6 @@ export const level7: CharacterSpell[] = [
     concentration: true
   },
   {
-    id: "level7-17",
     name: "Радужные брызги",
     level: 7,
     school: "Воплощение",
@@ -258,7 +243,6 @@ export const level7: CharacterSpell[] = [
     somatic: true
   },
   {
-    id: "level7-18",
     name: "Регенерация",
     level: 7,
     school: "Преобразование",
@@ -273,7 +257,6 @@ export const level7: CharacterSpell[] = [
     material: true
   },
   {
-    id: "level7-19",
     name: "Слово силы: боль",
     level: 7,
     school: "Очарование",
@@ -288,7 +271,6 @@ export const level7: CharacterSpell[] = [
     material: false
   },
   {
-    id: "level7-20",
     name: "Смерч",
     level: 7,
     school: "Вызов",
@@ -304,7 +286,6 @@ export const level7: CharacterSpell[] = [
     concentration: true
   },
   {
-    id: "level7-21",
     name: "Сон синей вуали",
     level: 7,
     school: "Очарование",
@@ -319,7 +300,6 @@ export const level7: CharacterSpell[] = [
     material: true
   },
   {
-    id: "level7-22",
     name: "Сотворение магена",
     level: 7,
     school: "Преобразование",
@@ -334,7 +314,6 @@ export const level7: CharacterSpell[] = [
     material: true
   },
   {
-    id: "level7-23",
     name: "Таинственный мираж",
     level: 7,
     school: "Иллюзия",
@@ -348,7 +327,6 @@ export const level7: CharacterSpell[] = [
     somatic: true
   },
   {
-    id: "level7-24",
     name: "Телепортация",
     level: 7,
     school: "Вызов",
@@ -363,7 +341,6 @@ export const level7: CharacterSpell[] = [
     material: false
   },
   {
-    id: "level7-25",
     name: "Узилище",
     level: 7,
     school: "Ограждение",
@@ -378,7 +355,6 @@ export const level7: CharacterSpell[] = [
     material: true
   },
   {
-    id: "level7-26",
     name: "Уход в иной мир",
     level: 7,
     school: "Вызов",
@@ -393,7 +369,6 @@ export const level7: CharacterSpell[] = [
     material: true
   },
   {
-    id: "level7-27",
     name: "Храм богов",
     level: 7,
     school: "Вызов",
@@ -408,7 +383,6 @@ export const level7: CharacterSpell[] = [
     material: true
   },
   {
-    id: "level7-28",
     name: "Эфирность",
     level: 7,
     school: "Преобразование",

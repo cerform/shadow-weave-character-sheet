@@ -1,5 +1,4 @@
 
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -18,7 +17,7 @@ const RestPanel: React.FC<RestPanelProps> = ({ character, onUpdate }) => {
   // Функция для короткого отдыха
   const handleShortRest = () => {
     // Обновляем ресурсы, которые восстанавливаются после короткого отдыха
-    const updatedResources = { ...(character.resources || {}) };
+    const updatedResources = { ...character.resources } || {};
     
     // Восстанавливаем ресурсы с типом short-rest или short
     if (character.resources) {
@@ -45,7 +44,7 @@ const RestPanel: React.FC<RestPanelProps> = ({ character, onUpdate }) => {
   // Функция для продолжительного отдыха
   const handleLongRest = () => {
     // Восстанавливаем все ресурсы
-    const updatedResources = { ...(character.resources || {}) };
+    const updatedResources = { ...character.resources } || {};
     
     if (character.resources) {
       Object.keys(character.resources).forEach(resourceKey => {
@@ -56,27 +55,51 @@ const RestPanel: React.FC<RestPanelProps> = ({ character, onUpdate }) => {
       });
     }
     
-    // Восстанавливаем здоровье персонажа до максимума
-    const updatedCharacter: Partial<Character> = {
-      currentHp: character.maxHp,
-      resources: updatedResources
-    };
+    // Восстанавливаем хит-поинты
+    const maxHp = character.maxHp || 0;
     
-    // Сбрасываем использованные кости хитов, если они есть
-    if (character.hitDice) {
-      updatedCharacter.hitDice = {
-        ...character.hitDice,
-        used: 0
+    // Восстанавливаем кости хитов (половину от максимума, минимум 1)
+    let updatedHitDice = character.hitDice;
+    if (updatedHitDice) {
+      const recoveredDice = Math.max(1, Math.floor(updatedHitDice.total / 2));
+      const newUsed = Math.max(0, updatedHitDice.used - recoveredDice);
+      updatedHitDice = { ...updatedHitDice, used: newUsed };
+    }
+    
+    // Восстанавливаем ячейки заклинаний
+    const updatedSpellSlots = { ...character.spellSlots };
+    if (character.spellSlots) {
+      Object.keys(character.spellSlots).forEach(level => {
+        const slot = character.spellSlots?.[Number(level)];
+        if (slot) {
+          updatedSpellSlots[Number(level)] = { ...slot, used: 0 };
+        }
+      });
+    }
+    
+    // Восстанавливаем очки колдовства (если есть)
+    let updatedSorceryPoints = character.sorceryPoints;
+    if (updatedSorceryPoints) {
+      updatedSorceryPoints = { 
+        max: updatedSorceryPoints.max,
+        current: updatedSorceryPoints.max
       };
     }
     
     // Обновляем персонажа
-    onUpdate(updatedCharacter);
+    onUpdate({
+      currentHp: maxHp,
+      temporaryHp: 0,
+      resources: updatedResources,
+      hitDice: updatedHitDice,
+      spellSlots: updatedSpellSlots,
+      sorceryPoints: updatedSorceryPoints
+    } as Partial<Character>);
     
     // Отправляем уведомление
     toast({
       title: "Продолжительный отдых",
-      description: "Персонаж полностью отдохнул и восстановил здоровье и все ресурсы.",
+      description: "Персонаж отдохнул и восстановил здоровье, ресурсы и половину костей хитов.",
     });
   };
   
@@ -85,30 +108,37 @@ const RestPanel: React.FC<RestPanelProps> = ({ character, onUpdate }) => {
       <CardHeader>
         <CardTitle>Отдых</CardTitle>
       </CardHeader>
-      <CardContent>
-        <div className="grid grid-cols-2 gap-4">
+      <CardContent className="space-y-4">
+        <div>
+          <h3 className="text-lg font-medium mb-2">Короткий отдых</h3>
+          <p className="text-sm text-muted-foreground mb-4">
+            Восстанавливает ресурсы, которые восстанавливаются после короткого отдыха, и дает возможность
+            использовать кости хитов для восстановления здоровья.
+          </p>
           <Button 
-            variant="outline"
+            variant="outline" 
             onClick={handleShortRest}
-            className="flex flex-col items-center gap-2 p-6"
+            className="w-full"
           >
-            <Moon className="h-8 w-8" />
-            <span>Короткий отдых</span>
-          </Button>
-          
-          <Button 
-            variant="outline"
-            onClick={handleLongRest}
-            className="flex flex-col items-center gap-2 p-6"
-          >
-            <Sun className="h-8 w-8" />
-            <span>Продолжительный отдых</span>
+            <Moon className="h-4 w-4 mr-2" />
+            Короткий отдых
           </Button>
         </div>
         
-        <p className="text-sm text-muted-foreground mt-4">
-          Короткий отдых восстанавливает некоторые ресурсы, продолжительный - все ресурсы и здоровье.
-        </p>
+        <div>
+          <h3 className="text-lg font-medium mb-2">Продолжительный отдых</h3>
+          <p className="text-sm text-muted-foreground mb-4">
+            Восстанавливает все здоровье, все ресурсы и половину максимального количества костей хитов (минимум 1).
+          </p>
+          <Button 
+            variant="default" 
+            onClick={handleLongRest}
+            className="w-full"
+          >
+            <Sun className="h-4 w-4 mr-2" />
+            Продолжительный отдых
+          </Button>
+        </div>
       </CardContent>
     </Card>
   );

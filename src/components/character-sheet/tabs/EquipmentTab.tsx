@@ -1,257 +1,292 @@
-import React, { useState } from 'react';
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Separator } from "@/components/ui/separator";
-import { Character, Item } from '@/types/character';
-import { Plus, Trash2, Coins, ShoppingBag } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+
+import React, { useState, useEffect } from 'react';
+import { Character } from '@/types/character';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Plus, X, Package } from 'lucide-react';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { classData } from '@/data/classes/index';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface EquipmentTabProps {
   character: Character;
+  equipment?: string[];
   onUpdate: (updates: Partial<Character>) => void;
 }
 
-const EquipmentTab: React.FC<EquipmentTabProps> = ({ character, onUpdate }) => {
-  const [newItem, setNewItem] = useState<Item>({ name: '', quantity: 1, type: 'misc' });
-  const [activeTab, setActiveTab] = useState('equipment');
-  const { toast } = useToast();
-
-  const handleAddItem = () => {
-    if (!newItem.name) {
-      toast({
-        title: "Ошибка",
-        description: "Введите название предмета",
-        variant: "destructive",
-      });
-      return;
+export const EquipmentTab: React.FC<EquipmentTabProps> = ({ character, equipment = [], onUpdate }) => {
+  const [newItem, setNewItem] = useState('');
+  const [availableEquipment, setAvailableEquipment] = useState<string[]>([]);
+  const [tab, setTab] = useState<string>('current');
+  
+  // Получаем доступное снаряжение в зависимости от класса и уровня
+  useEffect(() => {
+    if (!character.class) return;
+    
+    const characterClass = character.class.toLowerCase();
+    const classInfo = classData[characterClass];
+    
+    if (!classInfo) return;
+    
+    // Базовый список снаряжения в зависимости от класса
+    let baseEquipment: string[] = [];
+    
+    // Оружие в зависимости от владений
+    if (classInfo.weaponProficiencies.includes('martial')) {
+      baseEquipment = [...baseEquipment, 
+        'Длинный меч', 'Боевой топор', 'Рапира', 'Алебарда', 
+        'Двуручный меч', 'Кирка', 'Палица'
+      ];
     }
-
-    const updatedEquipment = [...(character.equipment || []), { ...newItem, id: `item-${Date.now()}` }];
+    
+    if (classInfo.weaponProficiencies.includes('simple')) {
+      baseEquipment = [...baseEquipment, 
+        'Кинжал', 'Дубинка', 'Метательное копье', 'Лёгкий арбалет',
+        'Ручной топор', 'Копьё', 'Праща'
+      ];
+    }
+    
+    // Доспехи в зависимости от владений
+    if (classInfo.armorProficiencies.includes('heavy')) {
+      baseEquipment = [...baseEquipment, 'Латы', 'Полулаты', 'Кольчужная рубаха'];
+    }
+    
+    if (classInfo.armorProficiencies.includes('medium')) {
+      baseEquipment = [...baseEquipment, 'Кольчуга', 'Чешуйчатый доспех', 'Полулаты'];
+    }
+    
+    if (classInfo.armorProficiencies.includes('light') || classInfo.armorProficiencies.includes('medium')) {
+      baseEquipment = [...baseEquipment, 'Кожаный доспех', 'Проклёпанная кожа'];
+    }
+    
+    // Щиты
+    if (classInfo.armorProficiencies.includes('shields')) {
+      baseEquipment = [...baseEquipment, 'Щит'];
+    }
+    
+    // Наборы инструментов
+    if (classInfo.toolProficiencies.length > 0) {
+      baseEquipment = [...baseEquipment, 'Набор инструментов', 'Воровские инструменты'];
+    }
+    
+    // Магические фокусировки для заклинателей
+    if (classInfo.spellcasting) {
+      baseEquipment = [...baseEquipment, 'Магическая фокусировка', 'Мешочек с компонентами'];
+      
+      // Книга заклинаний для волшебника
+      if (characterClass === 'волшебник') {
+        baseEquipment.push('Книга заклинаний');
+      }
+    }
+    
+    // Набор приключенца всегда доступен
+    baseEquipment.push('Набор путешественника', 'Набор исследователя подземелий');
+    
+    // Дополнительное снаряжение в зависимости от уровня
+    if (character.level && character.level >= 5) {
+      baseEquipment.push('Зелье лечения', 'Свиток защиты');
+    }
+    
+    if (character.level && character.level >= 10) {
+      baseEquipment.push('Зелье большого лечения', 'Кольцо защиты');
+    }
+    
+    if (character.level && character.level >= 15) {
+      baseEquipment.push('Зелье превосходного лечения', 'Плащ защиты');
+    }
+    
+    // Удаляем дубликаты
+    const uniqueEquipment = [...new Set(baseEquipment)];
+    setAvailableEquipment(uniqueEquipment);
+  }, [character.class, character.level]);
+  
+  // Обработка добавления снаряжения
+  const addItem = () => {
+    if (!newItem.trim()) return;
+    
+    let updatedEquipment: string[] = [];
+    
+    // Обрабатываем существующее снаряжение
+    if (Array.isArray(character.equipment)) {
+      updatedEquipment = [...character.equipment, newItem];
+    } else if (typeof character.equipment === 'object' && character.equipment) {
+      // Конвертируем объект в массив для упрощения
+      const existingItems: string[] = [];
+      if (character.equipment.weapons) existingItems.push(...character.equipment.weapons);
+      if (character.equipment.armor) existingItems.push(character.equipment.armor);
+      if (character.equipment.items) existingItems.push(...character.equipment.items);
+      
+      updatedEquipment = [...existingItems, newItem];
+    } else {
+      updatedEquipment = [newItem];
+    }
+    
     onUpdate({ equipment: updatedEquipment });
-    setNewItem({ name: '', quantity: 1, type: 'misc' });
+    setNewItem('');
   };
-
-  const handleRemoveItem = (itemId: string) => {
-    const updatedEquipment = (character.equipment || []).filter(item => item.id !== itemId);
+  
+  // Добавление предмета из списка доступного снаряжения
+  const addAvailableItem = (item: string) => {
+    if (!item) return;
+    
+    let updatedEquipment: string[] = [];
+    
+    // Обрабатываем существующее снаряжение
+    if (Array.isArray(character.equipment)) {
+      updatedEquipment = [...character.equipment, item];
+    } else if (typeof character.equipment === 'object' && character.equipment) {
+      // Конвертируем объект в массив для упрощения
+      const existingItems: string[] = [];
+      if (character.equipment.weapons) existingItems.push(...character.equipment.weapons);
+      if (character.equipment.armor) existingItems.push(character.equipment.armor);
+      if (character.equipment.items) existingItems.push(...character.equipment.items);
+      
+      updatedEquipment = [...existingItems, item];
+    } else {
+      updatedEquipment = [item];
+    }
+    
     onUpdate({ equipment: updatedEquipment });
   };
-
-  const handleCurrencyChange = (currency: keyof typeof character.money, value: string) => {
-    const numValue = parseInt(value) || 0;
-    const updatedMoney = { ...character.money, [currency]: numValue };
-    onUpdate({ money: updatedMoney });
+  
+  // Удаление предмета
+  const removeItem = (index: number) => {
+    let currentEquipment: string[] = [];
+    
+    if (Array.isArray(character.equipment)) {
+      currentEquipment = [...character.equipment];
+    } else if (typeof character.equipment === 'object' && character.equipment) {
+      if (character.equipment.weapons) currentEquipment.push(...character.equipment.weapons);
+      if (character.equipment.armor) currentEquipment.push(character.equipment.armor);
+      if (character.equipment.items) currentEquipment.push(...character.equipment.items);
+    } else {
+      return; // Нет снаряжения для удаления
+    }
+    
+    const updatedEquipment = [...currentEquipment];
+    updatedEquipment.splice(index, 1);
+    
+    onUpdate({ equipment: updatedEquipment });
   };
-
-  const getItemsByType = (type: string) => {
-    return (character.equipment || []).filter(item => item.type === type);
+  
+  // Получаем список предметов для отображения
+  const getEquipmentList = (): string[] => {
+    if (equipment && equipment.length > 0) {
+      return equipment;
+    }
+    
+    if (Array.isArray(character.equipment)) {
+      return character.equipment;
+    }
+    
+    if (typeof character.equipment === 'object' && character.equipment) {
+      const items: string[] = [];
+      if (character.equipment.weapons) items.push(...character.equipment.weapons);
+      if (character.equipment.armor) items.push(character.equipment.armor);
+      if (character.equipment.items) items.push(...character.equipment.items);
+      return items;
+    }
+    
+    return [];
   };
-
-  const weapons = getItemsByType('weapon');
-  const armor = getItemsByType('armor');
-  const misc = getItemsByType('misc');
-
+  
+  const equipmentList = getEquipmentList();
+  
   return (
-    <div className="space-y-4">
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="w-full">
-          <TabsTrigger value="equipment" className="flex-1">
-            <ShoppingBag className="mr-2 h-4 w-4" />
-            Снаряжение
-          </TabsTrigger>
-          <TabsTrigger value="currency" className="flex-1">
-            <Coins className="mr-2 h-4 w-4" />
-            Валюта
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="equipment" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Добавить предмет</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div className="md:col-span-2">
-                  <Label htmlFor="item-name">Название</Label>
-                  <Input
-                    id="item-name"
-                    value={newItem.name}
-                    onChange={(e) => setNewItem({ ...newItem, name: e.target.value })}
-                    placeholder="Название предмета"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="item-quantity">Количество</Label>
-                  <Input
-                    id="item-quantity"
-                    type="number"
-                    min="1"
-                    value={newItem.quantity}
-                    onChange={(e) => setNewItem({ ...newItem, quantity: parseInt(e.target.value) || 1 })}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="item-type">Тип</Label>
-                  <select
-                    id="item-type"
-                    className="w-full p-2 border rounded"
-                    value={newItem.type}
-                    onChange={(e) => setNewItem({ ...newItem, type: e.target.value })}
-                  >
-                    <option value="weapon">Оружие</option>
-                    <option value="armor">Броня</option>
-                    <option value="misc">Прочее</option>
-                  </select>
-                </div>
-              </div>
-              <Button onClick={handleAddItem} className="mt-4">
-                <Plus className="mr-2 h-4 w-4" /> Добавить
+    <Card>
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <CardTitle>Снаряжение</CardTitle>
+          <Package className="h-5 w-5 text-muted-foreground" />
+        </div>
+      </CardHeader>
+      <CardContent>
+        <Tabs value={tab} onValueChange={setTab}>
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="current">Текущее снаряжение</TabsTrigger>
+            <TabsTrigger value="available">Доступное снаряжение</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="current">
+            <div className="flex items-center space-x-2 mb-4">
+              <Input
+                placeholder="Добавить предмет снаряжения"
+                value={newItem}
+                onChange={(e) => setNewItem(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && addItem()}
+              />
+              <Button onClick={addItem} size="icon" disabled={!newItem.trim()}>
+                <Plus className="h-4 w-4" />
               </Button>
-            </CardContent>
-          </Card>
-
-          <div className="space-y-4">
-            <div>
-              <h3 className="text-lg font-semibold mb-2">Оружие</h3>
-              {weapons.length > 0 ? (
-                <div className="space-y-2">
-                  {weapons.map((item) => (
-                    <div key={item.id} className="flex items-center justify-between p-2 border rounded">
-                      <div>
-                        <span className="font-medium">{item.name}</span>
-                        {item.quantity > 1 && <span className="ml-2 text-sm">({item.quantity})</span>}
-                      </div>
-                      <Button variant="ghost" size="sm" onClick={() => handleRemoveItem(item.id as string)}>
-                        <Trash2 className="h-4 w-4" />
+            </div>
+            
+            <ScrollArea className="h-[300px]">
+              <div className="space-y-2">
+                {equipmentList.length === 0 ? (
+                  <p className="text-center text-muted-foreground py-4">
+                    У персонажа нет снаряжения
+                  </p>
+                ) : (
+                  equipmentList.map((item, index) => (
+                    <div
+                      key={index}
+                      className="flex justify-between items-center p-2 bg-muted rounded-md"
+                    >
+                      <span>{item}</span>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => removeItem(index)}
+                      >
+                        <X className="h-4 w-4" />
                       </Button>
                     </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-muted-foreground">Нет оружия</p>
-              )}
-            </div>
-
-            <Separator />
-
-            <div>
-              <h3 className="text-lg font-semibold mb-2">Броня</h3>
-              {armor.length > 0 ? (
-                <div className="space-y-2">
-                  {armor.map((item) => (
-                    <div key={item.id} className="flex items-center justify-between p-2 border rounded">
-                      <div>
-                        <span className="font-medium">{item.name}</span>
-                        {item.quantity > 1 && <span className="ml-2 text-sm">({item.quantity})</span>}
-                      </div>
-                      <Button variant="ghost" size="sm" onClick={() => handleRemoveItem(item.id as string)}>
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-muted-foreground">Нет брони</p>
-              )}
-            </div>
-
-            <Separator />
-
-            <div>
-              <h3 className="text-lg font-semibold mb-2">Прочие предметы</h3>
-              {misc.length > 0 ? (
-                <div className="space-y-2">
-                  {misc.map((item) => (
-                    <div key={item.id} className="flex items-center justify-between p-2 border rounded">
-                      <div>
-                        <span className="font-medium">{item.name}</span>
-                        {item.quantity > 1 && <span className="ml-2 text-sm">({item.quantity})</span>}
-                      </div>
-                      <Button variant="ghost" size="sm" onClick={() => handleRemoveItem(item.id as string)}>
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-muted-foreground">Нет предметов</p>
-              )}
-            </div>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="currency">
-          <Card>
-            <CardHeader>
-              <CardTitle>Валюта</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                <div>
-                  <Label htmlFor="cp">Медные (CP)</Label>
-                  <Input
-                    id="cp"
-                    type="number"
-                    min="0"
-                    value={character.money?.cp || 0}
-                    onChange={(e) => handleCurrencyChange('cp', e.target.value)}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="sp">Серебряные (SP)</Label>
-                  <Input
-                    id="sp"
-                    type="number"
-                    min="0"
-                    value={character.money?.sp || 0}
-                    onChange={(e) => handleCurrencyChange('sp', e.target.value)}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="ep">Электрум (EP)</Label>
-                  <Input
-                    id="ep"
-                    type="number"
-                    min="0"
-                    value={character.money?.ep || 0}
-                    onChange={(e) => handleCurrencyChange('ep', e.target.value)}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="gp">Золотые (GP)</Label>
-                  <Input
-                    id="gp"
-                    type="number"
-                    min="0"
-                    value={character.money?.gp || 0}
-                    onChange={(e) => handleCurrencyChange('gp', e.target.value)}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="pp">Платиновые (PP)</Label>
-                  <Input
-                    id="pp"
-                    type="number"
-                    min="0"
-                    value={character.money?.pp || 0}
-                    onChange={(e) => handleCurrencyChange('pp', e.target.value)}
-                  />
-                </div>
+                  ))
+                )}
               </div>
-              <div className="mt-4">
-                <p className="text-sm text-muted-foreground">
-                  Курс обмена: 1 PP = 10 GP = 20 EP = 100 SP = 1000 CP
-                </p>
+            </ScrollArea>
+          </TabsContent>
+          
+          <TabsContent value="available">
+            <div className="mb-3">
+              <p className="text-sm text-muted-foreground mb-2">
+                Доступное снаряжение на основе класса {character.class} и уровня {character.level}:
+              </p>
+            </div>
+            
+            <ScrollArea className="h-[300px]">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {availableEquipment.length === 0 ? (
+                  <p className="text-center text-muted-foreground py-4 col-span-2">
+                    Нет доступного снаряжения для текущего класса и уровня
+                  </p>
+                ) : (
+                  availableEquipment.map((item, index) => (
+                    <Badge
+                      key={index}
+                      className="py-2 px-3 hover:bg-primary cursor-pointer flex justify-between items-center"
+                      variant="outline" 
+                      onClick={() => addAvailableItem(item)}
+                    >
+                      <span>{item}</span>
+                      <Plus className="h-3 w-3 ml-2" />
+                    </Badge>
+                  ))
+                )}
               </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
-    </div>
+            </ScrollArea>
+          </TabsContent>
+        </Tabs>
+        
+        <Separator className="my-4" />
+        
+        <div className="text-sm text-muted-foreground">
+          <p>* Нажмите на предмет из доступного снаряжения, чтобы добавить его в свой инвентарь</p>
+        </div>
+      </CardContent>
+    </Card>
   );
 };
-
-export default EquipmentTab;

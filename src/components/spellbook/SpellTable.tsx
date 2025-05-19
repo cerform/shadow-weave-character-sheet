@@ -41,8 +41,7 @@ const SpellTable: React.FC<SpellTableProps> = ({ spells, onSpellClick, currentTh
   const formatClasses = (classes: string[] | string | undefined): string => {
     if (!classes) return "—";
     if (typeof classes === 'string') return classes;
-    if (Array.isArray(classes)) return classes.join(', ');
-    return "—";
+    return classes.join(', ');
   };
 
   return (
@@ -65,7 +64,7 @@ const SpellTable: React.FC<SpellTableProps> = ({ spells, onSpellClick, currentTh
           </TableRow>
         </TableHeader>
         <TableBody>
-          {!spells || spells.length === 0 ? (
+          {spells.length === 0 ? (
             <TableRow>
               <TableCell colSpan={9} className="text-center py-10 bg-black/20" style={{ color: currentTheme.textColor }}>
                 <div className="flex flex-col items-center">
@@ -83,49 +82,41 @@ const SpellTable: React.FC<SpellTableProps> = ({ spells, onSpellClick, currentTh
                 className="cursor-pointer hover:bg-black/40 transition-colors"
                 style={{ 
                   borderBottomColor: currentTheme.accent + '10',
+                  backgroundColor: index % 2 === 0 ? 'rgba(0, 0, 0, 0.2)' : 'transparent',
                 }}
               >
-                <TableCell style={{ color: currentTheme.textColor }}>
+                <TableCell className="font-medium" style={{ color: currentTheme.textColor }}>
                   {spell.name}
                 </TableCell>
                 <TableCell>
                   <Badge
-                    style={{
+                    style={{ 
                       backgroundColor: getLevelColor(spell.level),
-                      color: '#fff'
+                      color: '#fff',
                     }}
                   >
-                    {spell.level === 0 ? "Заговор" : spell.level}
+                    {getLevelName(spell.level)}
                   </Badge>
                 </TableCell>
-                <TableCell style={{ color: currentTheme.textColor }}>
-                  {spell.school}
-                </TableCell>
-                <TableCell className="hidden md:table-cell" style={{ color: currentTheme.textColor }}>
-                  {spell.castingTime}
-                </TableCell>
-                <TableCell className="hidden md:table-cell" style={{ color: currentTheme.textColor }}>
-                  {spell.range}
-                </TableCell>
-                <TableCell className="hidden lg:table-cell" style={{ color: currentTheme.textColor }}>
-                  {spell.components}
-                </TableCell>
-                <TableCell className="hidden lg:table-cell" style={{ color: currentTheme.textColor }}>
-                  {spell.duration}
-                </TableCell>
-                <TableCell className="hidden lg:table-cell" style={{ color: currentTheme.textColor }}>
-                  {formatClasses(spell.classes)}
-                </TableCell>
+                <TableCell style={{ color: currentTheme.textColor }}>{spell.school}</TableCell>
+                <TableCell className="hidden md:table-cell" style={{ color: currentTheme.textColor }}>{spell.castingTime || '—'}</TableCell>
+                <TableCell className="hidden md:table-cell" style={{ color: currentTheme.textColor }}>{spell.range || '—'}</TableCell>
+                <TableCell className="hidden lg:table-cell" style={{ color: currentTheme.textColor }}>{spell.components || '—'}</TableCell>
+                <TableCell className="hidden lg:table-cell" style={{ color: currentTheme.textColor }}>{spell.duration || '—'}</TableCell>
+                <TableCell className="hidden lg:table-cell" style={{ color: currentTheme.textColor }}>{formatClasses(spell.classes)}</TableCell>
                 <TableCell>
-                  <div className="flex items-center gap-1">
+                  <div className="flex gap-1">
                     {spell.ritual && (
-                      <Badge variant="outline" style={{ borderColor: currentTheme.accent }}>
-                        <Book className="h-3 w-3 mr-1" style={{ color: currentTheme.accent }} />
+                      <Badge variant="outline" className="px-1 flex items-center gap-1" style={{ borderColor: currentTheme.accent }}>
+                        <Book className="h-3 w-3" style={{ color: currentTheme.accent }} />
+                        <span style={{ color: currentTheme.accent }}>Р</span>
                       </Badge>
                     )}
+                    
                     {spell.concentration && (
-                      <Badge variant="outline" style={{ borderColor: currentTheme.accent }}>
-                        <Sparkles className="h-3 w-3 mr-1" style={{ color: currentTheme.accent }} />
+                      <Badge variant="outline" className="px-1 flex items-center gap-1" style={{ borderColor: currentTheme.accent }}>
+                        <Sparkles className="h-3 w-3" style={{ color: currentTheme.accent }} />
+                        <span style={{ color: currentTheme.accent }}>К</span>
                       </Badge>
                     )}
                   </div>
