@@ -1,3 +1,4 @@
+
 import { CharacterSpell } from '@/types/character';
 import { level0 } from './level0';
 // В полной реализации будут импорты для level1-level9
@@ -24,5 +25,8 @@ export function removeDuplicateSpells(spells: CharacterSpell[]): CharacterSpell[
   return Array.from(uniqueSpells.values());
 }
 
-// Экспортируем массив без дубликатов
+// Экспортируем массив без дубликатов как allSpells
 export const allSpells: CharacterSpell[] = removeDuplicateSpells(allSpellsWithDuplicates);
+
+// Добавляем еще один экспорт под именем spells для обратной совместимости
+export const spells: CharacterSpell[] = allSpells;

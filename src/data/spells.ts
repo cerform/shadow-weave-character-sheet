@@ -1,6 +1,6 @@
 
 // Импорт массивов заклинаний из разделенных файлов
-import { spells } from './spells/index';
+import { spells, allSpells } from './spells/index';
 export * from './spells/index';
 
 // Функция получения деталей заклинания по имени
