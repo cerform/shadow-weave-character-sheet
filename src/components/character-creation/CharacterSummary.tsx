@@ -62,6 +62,14 @@ const CharacterSummary: React.FC<CharacterSummaryProps> = ({ character }) => {
     
     return 'Нет особенностей';
   };
+
+  // Функция для безопасного получения профессий навыков
+  const getSkillProficiencies = () => {
+    if (typeof character.proficiencies === 'object' && !Array.isArray(character.proficiencies) && character.proficiencies?.skills) {
+      return character.proficiencies.skills;
+    }
+    return [];
+  };
   
   return (
     <Card className="w-full">
@@ -91,7 +99,7 @@ const CharacterSummary: React.FC<CharacterSummaryProps> = ({ character }) => {
               <h4 className="font-medium mb-1">Базовые параметры:</h4>
               <div className="space-y-1 text-sm">
                 <div>КД: {character.armorClass || '–'}</div>
-                <div>Инициатива: {character.initiative !== undefined ? character.initiative : '–'}</div>
+                <div>Инициатива: {character.initiative !== undefined ? `${character.initiative}` : '–'}</div>
                 <div>Скорость: {character.speed || '–'}</div>
                 <div>Максимум ХП: {character.maxHp || character.hitPoints?.maximum || '–'}</div>
                 <div>Бонус мастерства: +{character.proficiencyBonus || '–'}</div>
@@ -102,10 +110,7 @@ const CharacterSummary: React.FC<CharacterSummaryProps> = ({ character }) => {
           <div>
             <h4 className="font-medium mb-1">Владения и навыки:</h4>
             <p className="text-sm">
-              {character.proficiencies && typeof character.proficiencies === 'object' && !Array.isArray(character.proficiencies) && 
-                'skills' in character.proficiencies && character.proficiencies.skills ? 
-                formatList(character.proficiencies.skills) : 
-                'Нет навыков'}
+              {formatList(getSkillProficiencies())}
             </p>
           </div>
           

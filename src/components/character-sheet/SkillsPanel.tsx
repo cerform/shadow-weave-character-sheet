@@ -48,6 +48,17 @@ const SkillsPanel: React.FC<SkillsPanelProps> = ({ character, onUpdate }) => {
     return nameMap[skillKey] || skillKey;
   };
 
+  // Безопасное получение списка навыков, с которыми персонаж владеет
+  const getSkillProficiencies = (): string[] => {
+    if (!character.proficiencies) return [];
+    
+    if (Array.isArray(character.proficiencies)) {
+      return character.proficiencies;
+    }
+    
+    return character.proficiencies.skills || [];
+  };
+
   const toggleProficiency = (skillKey: string) => {
     // Получаем текущее значение навыка
     const currentSkills = character.skills || {};
@@ -80,30 +91,34 @@ const SkillsPanel: React.FC<SkillsPanelProps> = ({ character, onUpdate }) => {
       }
     };
     
-    // Обновляем персонажа
-    let updatedProficiencies = { 
-      ...character.proficiencies
-    };
+    // Обновляем персонажа - обрабатываем структуру proficiencies
+    let updatedProficiencies = { ...character.proficiencies } as any;
     
-    // Проверяем тип proficiencies и обновляем соответственно
-    if (typeof updatedProficiencies === 'object' && !Array.isArray(updatedProficiencies)) {
-      // Создаем массив навыков, если его нет
-      const skillsList = updatedProficiencies.skills || [];
-      
-      if (!currentSkill.proficient) {
-        // Добавляем навык в список владений
-        updatedProficiencies = {
-          ...updatedProficiencies,
-          skills: [...skillsList, skillKey]
-        };
-      } else {
-        // Удаляем навык из списка владений
-        updatedProficiencies = {
-          ...updatedProficiencies,
-          skills: skillsList.filter(skill => skill !== skillKey)
-        };
-      }
+    // Если proficiencies это массив, конвертируем его в объект
+    if (Array.isArray(character.proficiencies)) {
+      updatedProficiencies = {
+        skills: character.proficiencies || []
+      };
     }
+    
+    // Работаем с навыками
+    let skillsList = Array.isArray(updatedProficiencies.skills) 
+      ? [...updatedProficiencies.skills]
+      : [];
+    
+    if (!currentSkill.proficient) {
+      // Добавляем навык в список владений
+      skillsList.push(skillKey);
+    } else {
+      // Удаляем навык из списка владений
+      skillsList = skillsList.filter(skill => skill !== skillKey);
+    }
+    
+    // Обновляем список навыков в proficiencies
+    updatedProficiencies = {
+      ...updatedProficiencies,
+      skills: skillsList
+    };
     
     onUpdate({
       skills: updatedSkills,

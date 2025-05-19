@@ -82,11 +82,17 @@ export const deleteCharacter = async (id: string): Promise<void> => {
   localStorage.removeItem(`character_${id}`);
 };
 
-// Добавляем функцию saveCharacterToFirestore для обратной совместимости
+// Функция saveCharacterToFirestore для совместимости с Firebase
 export const saveCharacterToFirestore = async (character: Character): Promise<Character> => {
   console.warn('saveCharacterToFirestore вызван, но функция сохраняет только локально');
-  // Просто делегирует сохранение в локальное хранилище
-  return await updateCharacter(character);
+  
+  // Если у персонажа нет id, создаем новый
+  if (!character.id) {
+    return createCharacter(character);
+  }
+  
+  // Иначе обновляем существующий
+  return updateCharacter(character);
 };
 
 // Функция для создания уникального ID

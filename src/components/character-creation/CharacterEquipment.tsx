@@ -69,14 +69,13 @@ const CharacterEquipment: React.FC<CharacterEquipmentProps> = ({ character, onUp
   // Сохранение экипировки
   const saveEquipment = () => {
     // Создаем новый объект экипировки
-    // Исправляем на правильный тип данных
     const equipmentObj = {
       weapons,
       armor,
       items
     };
     
-    // Обновляем персонажа
+    // Обновляем персонажа с правильным типом
     onUpdate({ 
       equipment: equipmentObj as any, // Используем any для обхода проверки типов
       gold: gold

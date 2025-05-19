@@ -58,21 +58,22 @@ const CharacterReview: React.FC<CharacterReviewProps> = ({ character, prevStep, 
             userId: uid,
           };
           
-          const savedId = await saveCharacterToFirestore(characterToSave, uid);
+          // Исправляем вызов функции saveCharacterToFirestore
+          const savedCharacter = await saveCharacterToFirestore(characterToSave);
           
-          if (savedId) {
-            console.log('✅ Персонаж автоматически сохранен с ID:', savedId);
-            setCharacterId(savedId);
-            updateCharacter({ id: savedId });
+          if (savedCharacter && savedCharacter.id) {
+            console.log('✅ Персонаж автоматически сохранен с ID:', savedCharacter.id);
+            setCharacterId(savedCharacter.id);
+            updateCharacter({ id: savedCharacter.id });
             setAutoSaved(true);
             
             toast.success('Персонаж успешно сохранен!');
             
             // Также обновляем персонажа в контексте
-            setCharacter({...character, id: savedId, userId: uid});
+            setCharacter({...characterToSave, id: savedCharacter.id});
             
             // Сохраняем последний выбранный персонаж
-            localStorage.setItem('last-selected-character', savedId);
+            localStorage.setItem('last-selected-character', savedCharacter.id);
           }
         } catch (error) {
           console.error('❌ Ошибка при автосохранении персонажа:', error);
