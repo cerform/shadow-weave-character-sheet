@@ -180,13 +180,14 @@ const SpellDialog: React.FC<SpellDialogProps> = ({
                   spell.description.join('\n\n') : ''}
             </p>
             
-            {(spell.higherLevel || spell.higherLevels) && (
-              <>
-                <h4 className="text-sm text-gray-400 mt-4 mb-1">На более высоких уровнях</h4>
-                <p style={{ color: currentTheme.textColor }}>
-                  {spell.higherLevel || spell.higherLevels}
+            {/* На более высоких уровнях */}
+            {spell.higherLevels && (
+              <div className="mt-4">
+                <h4 className="text-sm font-medium">На более высоких уровнях:</h4>
+                <p className="text-sm text-muted-foreground">
+                  {spell.higherLevels}
                 </p>
-              </>
+              </div>
             )}
           </ScrollArea>
         </div>

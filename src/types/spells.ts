@@ -1,59 +1,33 @@
 
-import { CharacterSpell } from './character';
+import { CharacterSpell } from '@/types/character';
 
 export interface SpellData {
-  id: string | number;
+  id?: string | number;
   name: string;
   level: number;
-  school: string;
+  school?: string;
   castingTime?: string;
   range?: string;
   components?: string;
   duration?: string;
-  description: string | string[];
+  description?: string | string[];
   classes?: string[] | string;
+  source?: string;
   ritual?: boolean;
   concentration?: boolean;
   verbal?: boolean;
   somatic?: boolean;
   material?: boolean;
-  prepared?: boolean;
   materials?: string;
-  higherLevels?: string;
-  source?: string;
+  prepared?: boolean;
+  higherLevels?: string; // Используем higherLevels вместо higherLevel
 }
 
-// Функция для преобразования CharacterSpell в SpellData
-export function convertCharacterSpellToSpellData(spell: CharacterSpell): SpellData {
-  return {
-    id: spell.id || spell.name.toLowerCase().replace(/\s/g, '-'),
-    name: spell.name,
-    level: spell.level,
-    school: spell.school || '',
-    castingTime: spell.castingTime || '',
-    range: spell.range || '',
-    components: spell.components || '',
-    duration: spell.duration || '',
-    description: Array.isArray(spell.description) 
-      ? spell.description.join('\n') 
-      : (spell.description || ''),
-    classes: Array.isArray(spell.classes) 
-      ? spell.classes 
-      : (spell.classes ? [spell.classes] : []),
-    ritual: spell.ritual || false,
-    concentration: spell.concentration || false,
-    verbal: spell.verbal || false,
-    somatic: spell.somatic || false,
-    material: spell.material || false,
-    prepared: spell.prepared || false,
-    materials: spell.materials || '',
-    higherLevels: spell.higherLevel || spell.higherLevels || '',
-    source: spell.source || 'PHB'
-  };
-}
-
-// Функция для преобразования SpellData в CharacterSpell
-export function convertSpellDataToCharacterSpell(spell: SpellData): CharacterSpell {
+// Конвертер из CharacterSpell в SpellData
+export const convertCharacterSpellToSpellData = (spell: CharacterSpell): SpellData => {
+  // Преобразуем higherLevel в higherLevels для совместимости
+  let higherLevels = spell.higherLevels || spell.higherLevel;
+  
   return {
     id: spell.id,
     name: spell.name,
@@ -63,24 +37,72 @@ export function convertSpellDataToCharacterSpell(spell: SpellData): CharacterSpe
     range: spell.range,
     components: spell.components,
     duration: spell.duration,
-    description: typeof spell.description === 'string'
-      ? spell.description
-      : Array.isArray(spell.description) 
-        ? spell.description.join('\n') 
-        : '',
+    description: spell.description,
     classes: spell.classes,
+    source: spell.source,
     ritual: spell.ritual,
     concentration: spell.concentration,
     verbal: spell.verbal,
     somatic: spell.somatic,
     material: spell.material,
-    prepared: spell.prepared,
     materials: spell.materials,
-    higherLevel: spell.higherLevels
+    prepared: spell.prepared,
+    higherLevels
   };
-}
+};
 
-// Функция для преобразования массива заклинаний из CharacterSpell в SpellData
-export function convertSpellArray(spells: CharacterSpell[]): SpellData[] {
-  return spells.map(convertCharacterSpellToSpellData);
-}
+// Конвертер из SpellData в CharacterSpell
+export const convertSpellDataToCharacterSpell = (spell: SpellData): CharacterSpell => {
+  return {
+    id: spell.id,
+    name: spell.name,
+    level: spell.level,
+    school: spell.school,
+    castingTime: spell.castingTime,
+    range: spell.range,
+    components: spell.components,
+    duration: spell.duration,
+    description: spell.description,
+    classes: spell.classes,
+    source: spell.source,
+    ritual: spell.ritual,
+    concentration: spell.concentration,
+    verbal: spell.verbal,
+    somatic: spell.somatic,
+    material: spell.material,
+    materials: spell.materials,
+    prepared: spell.prepared,
+    higherLevels: spell.higherLevels
+  };
+};
+
+// Функция конвертации массива
+export const convertSpellArray = (spells: SpellData[] | CharacterSpell[]): CharacterSpell[] => {
+  return spells.map(spell => {
+    // Проверяем, является ли spell уже CharacterSpell
+    if ('higherLevels' in spell || 'higherLevel' in spell) {
+      return spell as CharacterSpell;
+    }
+    return convertSpellDataToCharacterSpell(spell as SpellData);
+  });
+};
+
+// Функция создания пустого заклинания
+export const createEmptySpell = (): SpellData => {
+  return {
+    name: '',
+    level: 0,
+    school: '',
+    castingTime: '',
+    range: '',
+    components: '',
+    duration: '',
+    description: '',
+    classes: [],
+    ritual: false,
+    concentration: false,
+    verbal: false,
+    somatic: false,
+    material: false
+  };
+};

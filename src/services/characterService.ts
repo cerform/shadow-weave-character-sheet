@@ -1,151 +1,95 @@
 
 import { Character } from '@/types/character';
-import { db } from '@/services/firebase/firestore';
-import { collection, doc, getDoc, setDoc, deleteDoc, query, where, getDocs } from 'firebase/firestore';
-import { getCurrentUid } from '@/utils/authHelpers';
 
-// Константы
-const CHARACTERS_COLLECTION = 'characters';
-
-// Функция сохранения персонажа
-export async function saveCharacter(character: Character): Promise<string> {
-  try {
-    console.log('saveCharacter: Начало сохранения персонажа:', character.name);
-    
-    // Проверка авторизации
-    const userId = getCurrentUid();
-    if (!userId) {
-      throw new Error('saveCharacter: Пользователь не авторизован');
-    }
-    
-    // Проверяем и устанавливаем userId
-    if (!character.userId) {
-      character.userId = userId;
-    }
-    
-    // Устанавливаем метки времени
-    if (!character.createdAt) {
-      character.createdAt = new Date().toISOString();
-    }
-    character.updatedAt = new Date().toISOString();
-    
-    // Если у персонажа уже есть id, используем его, иначе создаем новый
-    const characterId = character.id || doc(collection(db, CHARACTERS_COLLECTION)).id;
-    character.id = characterId;
-    
-    // Сохраняем в Firestore
-    await setDoc(doc(db, CHARACTERS_COLLECTION, characterId), character);
-    
-    console.log('saveCharacter: Персонаж успешно сохранен с ID:', characterId);
-    return characterId;
-  } catch (error) {
-    console.error('saveCharacter: Ошибка при сохранении персонажа:', error);
-    throw error;
+// Функция для создания нового персонажа
+export const createCharacter = async (character: Character): Promise<Character> => {
+  // Создаем копию персонажа с уникальным ID и датой создания
+  const newCharacter: Character = {
+    ...character,
+    id: character.id || crypto.randomUUID(),
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  };
+  
+  // Сохраняем в localStorage
+  if (newCharacter.id) {
+    localStorage.setItem(`character_${newCharacter.id}`, JSON.stringify(newCharacter));
   }
-}
+  
+  return newCharacter;
+};
 
-// Функция получения персонажа по ID
-export async function getCharacter(id: string): Promise<Character | null> {
-  try {
-    console.log('getCharacter: Получение персонажа с ID:', id);
-    
-    const docRef = doc(db, CHARACTERS_COLLECTION, id);
-    const docSnap = await getDoc(docRef);
-    
-    if (docSnap.exists()) {
-      const characterData = docSnap.data() as Character;
-      console.log('getCharacter: Персонаж успешно получен:', characterData.name);
-      return { ...characterData, id: docSnap.id };
-    } else {
-      console.log('getCharacter: Персонаж не найден');
-      return null;
-    }
-  } catch (error) {
-    console.error('getCharacter: Ошибка при получении персонажа:', error);
+// Функция для обновления персонажа
+export const updateCharacter = async (character: Character): Promise<Character> => {
+  if (!character.id) {
+    throw new Error("Персонаж должен иметь ID");
+  }
+  
+  // Обновляем дату изменения
+  const updatedCharacter: Character = {
+    ...character,
+    updatedAt: new Date().toISOString()
+  };
+  
+  // Сохраняем в localStorage
+  localStorage.setItem(`character_${character.id}`, JSON.stringify(updatedCharacter));
+  
+  return updatedCharacter;
+};
+
+// Функция для получения персонажа по ID
+export const getCharacterById = async (id: string): Promise<Character | null> => {
+  const characterJson = localStorage.getItem(`character_${id}`);
+  
+  if (!characterJson) {
     return null;
   }
-}
+  
+  return JSON.parse(characterJson) as Character;
+};
 
-// Функция удаления персонажа
-export async function deleteCharacter(id: string): Promise<void> {
-  try {
-    console.log('deleteCharacter: Удаление персонажа с ID:', id);
+// Функция для получения списка персонажей
+export const getAllCharacters = async (): Promise<Character[]> => {
+  const characters: Character[] = [];
+  
+  // Получаем все ключи из localStorage
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
     
-    // Проверка авторизации
-    const userId = getCurrentUid();
-    if (!userId) {
-      throw new Error('deleteCharacter: Пользователь не авторизован');
+    if (key && key.startsWith('character_')) {
+      try {
+        const characterJson = localStorage.getItem(key);
+        if (characterJson) {
+          const character = JSON.parse(characterJson) as Character;
+          characters.push(character);
+        }
+      } catch (error) {
+        console.error('Ошибка при чтении персонажа:', error);
+      }
     }
-    
-    // Проверяем, принадлежит ли персонаж текущему пользователю
-    const character = await getCharacter(id);
-    if (!character) {
-      throw new Error('deleteCharacter: Персонаж не найден');
-    }
-    
-    if (character.userId !== userId) {
-      throw new Error('deleteCharacter: У пользователя нет прав на удаление этого персонажа');
-    }
-    
-    // Удаляем персонажа
-    await deleteDoc(doc(db, CHARACTERS_COLLECTION, id));
-    
-    console.log('deleteCharacter: Персонаж успешно удален');
-  } catch (error) {
-    console.error('deleteCharacter: Ошибка при удалении персонажа:', error);
-    throw error;
   }
-}
+  
+  // Сортируем по дате обновления (сначала новые)
+  return characters.sort((a, b) => {
+    const dateA = a.updatedAt ? new Date(a.updatedAt).getTime() : 0;
+    const dateB = b.updatedAt ? new Date(b.updatedAt).getTime() : 0;
+    return dateB - dateA;
+  });
+};
 
-// Функция получения всех персонажей
-export async function getAllCharacters(): Promise<Character[]> {
-  try {
-    console.log('getAllCharacters: Получение всех персонажей');
-    
-    const querySnapshot = await getDocs(collection(db, CHARACTERS_COLLECTION));
-    const characters: Character[] = [];
-    
-    querySnapshot.forEach((doc) => {
-      characters.push({ ...doc.data(), id: doc.id } as Character);
-    });
-    
-    console.log(`getAllCharacters: Получено ${characters.length} персонажей`);
-    return characters;
-  } catch (error) {
-    console.error('getAllCharacters: Ошибка при получении персонажей:', error);
-    return [];
-  }
-}
+// Функция для удаления персонажа
+export const deleteCharacter = async (id: string): Promise<void> => {
+  localStorage.removeItem(`character_${id}`);
+};
 
-// Функция получения персонажей пользователя
-export async function getCharactersByUserId(userId: string): Promise<Character[]> {
-  try {
-    console.log('getCharactersByUserId: Получение персонажей для пользователя с ID:', userId);
-    
-    // Если userId не передан, выбрасываем ошибку
-    if (!userId) {
-      throw new Error('getCharactersByUserId: ID пользователя не передан');
-    }
-    
-    // Создаем запрос для получения персонажей конкретного пользователя
-    const q = query(collection(db, CHARACTERS_COLLECTION), where('userId', '==', userId));
-    
-    // Выполняем запрос
-    const querySnapshot = await getDocs(q);
-    
-    console.log('getCharactersByUserId: Найдено', querySnapshot.size, 'документов');
-    
-    // Обрабатываем полученные документы
-    const characters: Character[] = [];
-    querySnapshot.forEach((doc) => {
-      const data = doc.data() as Character;
-      characters.push({ ...data, id: doc.id });
-    });
-    
-    console.log('getCharactersByUserId: Обработано', characters.length, 'персонажей:', characters);
-    return characters;
-  } catch (error) {
-    console.error('getCharactersByUserId: Ошибка при получении персонажей пользователя:', error);
-    return [];
-  }
-}
+// Добавляем функцию saveCharacterToFirestore для обратной совместимости
+export const saveCharacterToFirestore = async (character: Character): Promise<Character> => {
+  console.warn('saveCharacterToFirestore вызван, но функция сохраняет только локально');
+  // Просто делегирует сохранение в локальное хранилище
+  return await updateCharacter(character);
+};
+
+// Функция для создания уникального ID
+export const generateCharacterId = (): string => {
+  return crypto.randomUUID();
+};

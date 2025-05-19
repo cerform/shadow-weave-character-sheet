@@ -48,7 +48,7 @@ export interface Character {
   maxHp?: number;
   currentHp?: number;
   tempHp?: number;
-  temporaryHp?: number;
+  temporaryHp?: number; // Добавляем для совместимости
   armorClass?: number;
   speed?: number;
   proficiencyBonus?: number;
@@ -58,7 +58,7 @@ export interface Character {
     tools?: string[];
     weapons?: string[];
     armor?: string[];
-    skills?: string[];
+    skills?: string[]; // Добавляем skills
   } | string[];
   // Добавляем поддержку обоих типов equipment
   equipment?: Item[] | {
@@ -88,7 +88,7 @@ export interface Character {
   personalityTraits?: string;
   appearance?: string;
   backstory?: string;
-  notes?: string;
+  notes?: string; // Добавляем поле для заметок
   raceFeatures?: {
     name: string;
     description: string;
@@ -121,8 +121,8 @@ export interface Character {
   intelligence?: number;
   wisdom?: number;
   charisma?: number;
-  initiative?: string | number;
-  lastDiceRoll?: {
+  initiative?: string | number; // Добавляем поле initiative
+  lastDiceRoll?: { // Добавляем поле для последнего броска костей
     diceType: string;
     count: number;
     modifier: number;
@@ -131,18 +131,18 @@ export interface Character {
     label: string;
     timestamp: string;
   };
-  hitDice?: {
+  hitDice?: { // Добавляем поле для костей хитов
     total: number;
     used: number;
     dieType: string;
     value: string;
   };
-  resources?: Record<string, {
+  resources?: Record<string, { // Добавляем поле для ресурсов
     max: number;
     used: number;
     recoveryType?: 'short' | 'long' | 'short-rest' | 'long-rest';
   }>;
-  sorceryPoints?: {
+  sorceryPoints?: { // Добавляем поле для очков колдовства
     max: number;
     current: number;
   };
