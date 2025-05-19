@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { SpellData } from '@/types/spells';
 import { calculateAvailableSpellsByClassAndLevel, convertSpellsForState } from '@/utils/spellUtils';
@@ -11,7 +10,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
 import { Button } from '@/components/ui/button';
-import { Character } from '@/types/character';
+import { Character, CharacterSpell } from '@/types/character';
 import NavigationButtons from './NavigationButtons';
 import { getAllSpells, getSpellsByClass } from '@/data/spells';
 import { useToast } from '@/hooks/use-toast';
@@ -269,22 +268,7 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
       addSpell(spell);
       
       // Также добавляем заклинание прямо в персонажа
-      const updatedSpells = [...(character.spells || [])];
-      updatedSpells.push({
-        id: spell.id,
-        name: spell.name,
-        level: spell.level,
-        school: spell.school,
-        castingTime: spell.castingTime,
-        range: spell.range,
-        components: spell.components,
-        duration: spell.duration,
-        description: spell.description,
-        classes: spell.classes,
-        prepared: true // По умолчанию заклинания подготовлены
-      });
-      
-      updateCharacter({ spells: updatedSpells });
+      addSpellToCharacter(spell);
       
       // Обновляем счетчики
       if (spell.level === 0) {
@@ -297,20 +281,13 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
       removeSpell(spell.id.toString());
       
       // Также удаляем заклинание из персонажа
-      if (character.spells) {
-        const updatedSpells = character.spells.filter(s => {
-          if (typeof s === 'string') return s !== spell.name;
-          return s.id !== spell.id && s.name !== spell.name;
-        });
-        
-        updateCharacter({ spells: updatedSpells });
-        
-        // Обновляем счетчики
-        if (spell.level === 0) {
-          setCantripsKnown(prev => Math.max(0, prev - 1));
-        } else {
-          setSpellsKnown(prev => Math.max(0, prev - 1));
-        }
+      removeSpellFromCharacter(spell);
+      
+      // Обновляем счетчики
+      if (spell.level === 0) {
+        setCantripsKnown(prev => Math.max(0, prev - 1));
+      } else {
+        setSpellsKnown(prev => Math.max(0, prev - 1));
       }
     }
   };
@@ -368,6 +345,86 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
       </div>
     );
   }
+
+  // Функция для добавления заклинания
+  const addSpellToCharacter = (spell: SpellData) => {
+    // Проверяем, есть ли заклинание уже у персонажа
+    const spellExists = character.spells && character.spells.some(s => {
+      if (typeof s === 'string') {
+        return s === spell.name;
+      }
+      return s.name === spell.name;
+    });
+
+    if (spellExists) return;
+
+    // Конвертируем SpellData в CharacterSpell
+    const newSpell: CharacterSpell = {
+      name: spell.name,
+      level: spell.level,
+      school: spell.school,
+      castingTime: spell.castingTime,
+      range: spell.range,
+      components: spell.components,
+      duration: spell.duration,
+      description: spell.description,
+      classes: spell.classes,
+      ritual: spell.ritual,
+      concentration: spell.concentration,
+      verbal: spell.verbal,
+      somatic: spell.somatic,
+      material: spell.material,
+      prepared: spell.level === 0 // Заговоры всегда подготовлены
+    };
+
+    // Добавляем заклинание к персонажу
+    const updatedSpells: CharacterSpell[] = [...(character.spells || [])];
+    
+    // Проверяем каждый элемент и преобразуем строки в CharacterSpell
+    const normalizedSpells: CharacterSpell[] = updatedSpells.map(spell => {
+      if (typeof spell === 'string') {
+        return {
+          name: spell,
+          level: 0,
+          prepared: true
+        };
+      }
+      return spell;
+    });
+    
+    normalizedSpells.push(newSpell);
+    
+    // Обновляем персонажа с нормализованными заклинаниями
+    updateCharacter({ spells: normalizedSpells });
+  };
+
+  // Функция для удаления заклинания
+  const removeSpellFromCharacter = (spellToRemove: SpellData) => {
+    if (!character.spells) return;
+
+    // Удаляем заклинание из списка
+    const updatedSpells = character.spells.filter(spell => {
+      if (typeof spell === 'string') {
+        return spell !== spellToRemove.name;
+      }
+      return spell.name !== spellToRemove.name;
+    });
+
+    // Преобразуем все элементы в CharacterSpell
+    const normalizedSpells: CharacterSpell[] = updatedSpells.map(spell => {
+      if (typeof spell === 'string') {
+        return {
+          name: spell,
+          level: 0,
+          prepared: true
+        };
+      }
+      return spell;
+    });
+
+    // Обновляем персонажа
+    updateCharacter({ spells: normalizedSpells });
+  };
 
   return (
     <div className="flex flex-col h-full">

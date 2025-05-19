@@ -3,9 +3,9 @@ export interface Character {
   id?: string;
   name: string;
   race?: string;
-  subrace?: string;  // Добавляем поле subrace
+  subrace?: string;  
   class?: string;
-  className?: string; // Добавляем альтернативное поле className
+  className?: string;
   subclass?: string;
   background?: string;
   level: number;
@@ -50,7 +50,7 @@ export interface Character {
   maxHp?: number;
   currentHp?: number;
   tempHp?: number;
-  temporaryHp?: number; // Добавляем для совместимости
+  temporaryHp?: number; 
   armorClass?: number;
   speed?: number;
   proficiencyBonus?: number;
@@ -60,7 +60,7 @@ export interface Character {
     tools?: string[];
     weapons?: string[];
     armor?: string[];
-    skills?: string[]; // Добавляем skills внутри proficiencies
+    skills?: string[];
   } | string[];
   // Добавляем поддержку обоих типов equipment
   equipment?: Item[] | {
@@ -69,7 +69,7 @@ export interface Character {
     items?: string[];
   };
   features?: Feature[] | string[];
-  spells?: CharacterSpell[] | string[];
+  spells?: (CharacterSpell | string)[];
   spellSlots?: Record<number, { max: number; used: number }>;
   money?: {
     cp?: number;
@@ -91,7 +91,7 @@ export interface Character {
   personalityTraits?: string;
   appearance?: string;
   backstory?: string;
-  notes?: string; // Добавляем поле для заметок
+  notes?: string;
   // Изменяем названия свойств для особенностей (расовых, классовых, черт и т.д.)
   raceFeatures?: {
     name: string;
@@ -126,9 +126,9 @@ export interface Character {
   // Added property for character image
   image?: string;
   // Пользовательские поля
-  gender?: string; // Добавляем поле gender
-  userId?: string; // Добавляем поле userId для связи с пользователем
-  abilityPointsUsed?: number; // Добавляем поле для отслеживания использованных очков
+  gender?: string;
+  userId?: string;
+  abilityPointsUsed?: number;
   // Добавляем поля для обратной совместимости
   strength?: number;
   dexterity?: number;
@@ -163,6 +163,23 @@ export interface Character {
     max: number;
     current: number;
   };
+  
+  // Добавляем поля для AbilitiesTab
+  savingThrowProficiencies?: string[];
+  skillProficiencies?: string[];
+  expertise?: string[];
+  skillBonuses?: Record<string, number>;
+  
+  // Поле для настройки заклинаний
+  spellcasting?: {
+    ability?: string;
+    saveDC?: number;
+    attackBonus?: number;
+    prepared?: boolean;
+  };
+  
+  // Дополнительные поля для хука useCharacterCreation
+  additionalClasses?: string[];
 }
 
 export interface CharacterSpell {
@@ -173,7 +190,7 @@ export interface CharacterSpell {
   range?: string;
   components?: string;
   duration?: string;
-  description?: string | string[]; // Поддерживает как строку, так и массив строк
+  description?: string | string[];
   classes?: string[] | string;
   source?: string;
   ritual?: boolean;
@@ -182,8 +199,7 @@ export interface CharacterSpell {
   somatic?: boolean;
   material?: boolean;
   prepared?: boolean;
-  higherLevel?: string;
-  higherLevels?: string;
+  higherLevels?: string; // используем только higherLevels, удаляем higherLevel
   id?: string | number;
   materials?: string;
 }

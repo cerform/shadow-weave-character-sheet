@@ -49,6 +49,9 @@ export const getCharacterById = async (id: string): Promise<Character | null> =>
   return JSON.parse(characterJson) as Character;
 };
 
+// Алиас для совместимости
+export const getCharacter = getCharacterById;
+
 // Функция для получения списка персонажей
 export const getAllCharacters = async (): Promise<Character[]> => {
   const characters: Character[] = [];
@@ -81,6 +84,30 @@ export const getAllCharacters = async (): Promise<Character[]> => {
 // Функция для удаления персонажа
 export const deleteCharacter = async (id: string): Promise<void> => {
   localStorage.removeItem(`character_${id}`);
+};
+
+// Функция для получения персонажей конкретного пользователя
+export const getCharactersByUserId = async (userId: string): Promise<Character[]> => {
+  const allCharacters = await getAllCharacters();
+  return allCharacters.filter(char => char.userId === userId);
+};
+
+// Функция saveCharacter для совместимости
+export const saveCharacter = async (character: Character): Promise<string> => {
+  // Добавляем поле userId, если его нет
+  if (!character.userId) {
+    character.userId = getCurrentUid();
+  }
+  
+  // Если у персонажа нет id, создаем новый
+  if (!character.id) {
+    const newCharacter = await createCharacter(character);
+    return newCharacter.id || '';
+  }
+  
+  // Иначе обновляем существующий
+  await updateCharacter(character);
+  return character.id;
 };
 
 // Функция saveCharacterToFirestore для совместимости с Firebase

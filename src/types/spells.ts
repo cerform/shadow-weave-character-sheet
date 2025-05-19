@@ -20,14 +20,11 @@ export interface SpellData {
   material?: boolean;
   materials?: string;
   prepared?: boolean;
-  higherLevels?: string; // Используем higherLevels вместо higherLevel
+  higherLevels?: string; // Используем только higherLevels, убираем higherLevel
 }
 
 // Конвертер из CharacterSpell в SpellData
 export const convertCharacterSpellToSpellData = (spell: CharacterSpell): SpellData => {
-  // Преобразуем higherLevel в higherLevels для совместимости
-  let higherLevels = spell.higherLevels || spell.higherLevel;
-  
   return {
     id: spell.id,
     name: spell.name,
@@ -47,7 +44,7 @@ export const convertCharacterSpellToSpellData = (spell: CharacterSpell): SpellDa
     material: spell.material,
     materials: spell.materials,
     prepared: spell.prepared,
-    higherLevels
+    higherLevels: spell.higherLevels
   };
 };
 
@@ -80,7 +77,7 @@ export const convertSpellDataToCharacterSpell = (spell: SpellData): CharacterSpe
 export const convertSpellArray = (spells: SpellData[] | CharacterSpell[]): CharacterSpell[] => {
   return spells.map(spell => {
     // Проверяем, является ли spell уже CharacterSpell
-    if ('higherLevels' in spell || 'higherLevel' in spell) {
+    if ('higherLevels' in spell) {
       return spell as CharacterSpell;
     }
     return convertSpellDataToCharacterSpell(spell as SpellData);

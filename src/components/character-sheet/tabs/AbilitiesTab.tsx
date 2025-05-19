@@ -1,654 +1,309 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+
+import React, { useState, useEffect } from 'react';
+import { useCharacter } from '@/contexts/CharacterContext';
 import { Character } from '@/types/character';
-import { calculateProficiencyBonus, getAbilityModifier } from '@/utils/characterUtils';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
-import { Badge } from "@/components/ui/badge";
-import { Check, Plus, Minus, Shield, Brain, Footprints } from 'lucide-react';
-import { useTheme } from '@/hooks/use-theme';
-import { themes } from '@/lib/themes';
-import { cn } from '@/lib/utils';
-import { useToast } from '@/hooks/use-toast';
-import { 
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { 
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { 
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { 
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { 
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { getAbilityModifier, calculateProficiencyBonus } from '@/utils/characterUtils';
+import { Check, Plus, Minus } from 'lucide-react';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface AbilitiesTabProps {
   character: Character;
-  onUpdate: (updates: Partial<Character>) => void;
 }
 
-const ABILITY_NAMES = {
-  strength: "Сила",
-  dexterity: "Ловкость",
-  constitution: "Телосложение",
-  intelligence: "Интеллект",
-  wisdom: "Мудрость",
-  charisma: "Харизма"
-};
-
-const ABILITY_DESCRIPTIONS = {
-  strength: "Физическая мощь, атлетизм и грубая сила",
-  dexterity: "Проворство, рефлексы и равновесие",
-  constitution: "Выносливость, жизненная сила и здоровье",
-  intelligence: "Память, рассудительность и дедукция",
-  wisdom: "Восприятие, интуиция и проницательность",
-  charisma: "Сила личности, убедительность и лидерство"
-};
-
-const SKILLS = {
-  acrobatics: { name: "Акробатика", ability: "dexterity" },
-  animalHandling: { name: "Обращение с животными", ability: "wisdom" },
-  arcana: { name: "Магия", ability: "intelligence" },
-  athletics: { name: "Атлетика", ability: "strength" },
-  deception: { name: "Обман", ability: "charisma" },
-  history: { name: "История", ability: "intelligence" },
-  insight: { name: "Проницательность", ability: "wisdom" },
-  intimidation: { name: "Запугивание", ability: "charisma" },
-  investigation: { name: "Расследование", ability: "intelligence" },
-  medicine: { name: "Медицина", ability: "wisdom" },
-  nature: { name: "Природа", ability: "intelligence" },
-  perception: { name: "Восприятие", ability: "wisdom" },
-  performance: { name: "Выступление", ability: "charisma" },
-  persuasion: { name: "Убеждение", ability: "charisma" },
-  religion: { name: "Религия", ability: "intelligence" },
-  sleightOfHand: { name: "Ловкость рук", ability: "dexterity" },
-  stealth: { name: "Скрытность", ability: "dexterity" },
-  survival: { name: "Выживание", ability: "wisdom" }
-};
-
-const AbilitiesTab: React.FC<AbilitiesTabProps> = ({ character, onUpdate }) => {
-  const [activeTab, setActiveTab] = useState("abilities");
-  const [editingSkill, setEditingSkill] = useState<string | null>(null);
-  const [skillBonus, setSkillBonus] = useState<number>(0);
-  const { toast } = useToast();
-  const { theme } = useTheme();
-  const themeKey = (theme || 'default') as keyof typeof themes;
-  const currentTheme = themes[themeKey] || themes.default;
-
-  // Вычисляем бонус мастерства
-  const proficiencyBonus = useMemo(() => {
-    return calculateProficiencyBonus(character.level || 1);
-  }, [character.level]);
-
-  // Обработчик изменения значения характеристики
-  const handleAbilityChange = (ability: string, value: number) => {
-    if (value < 1) value = 1;
-    if (value > 30) value = 30;
+const AbilitiesTab: React.FC<AbilitiesTabProps> = ({ character }) => {
+  const { updateCharacter } = useCharacter();
+  
+  // Список характеристик
+  const abilities = [
+    { key: 'strength', name: 'Сила', short: 'СИЛ', skills: ['Атлетика'] },
+    { key: 'dexterity', name: 'Ловкость', short: 'ЛОВ', skills: ['Акробатика', 'Ловкость рук', 'Скрытность'] },
+    { key: 'constitution', name: 'Телосложение', short: 'ТЕЛ', skills: [] },
+    { key: 'intelligence', name: 'Интеллект', short: 'ИНТ', skills: ['Анализ', 'История', 'Магия', 'Природа', 'Религия'] },
+    { key: 'wisdom', name: 'Мудрость', short: 'МДР', skills: ['Внимательность', 'Выживание', 'Медицина', 'Проницательность', 'Уход за животными'] },
+    { key: 'charisma', name: 'Харизма', short: 'ХАР', skills: ['Запугивание', 'Обман', 'Переговоры', 'Выступление'] },
+  ];
+  
+  // Список всех навыков
+  const allSkills = [
+    { name: 'Атлетика', ability: 'strength' },
+    { name: 'Акробатика', ability: 'dexterity' },
+    { name: 'Ловкость рук', ability: 'dexterity' },
+    { name: 'Скрытность', ability: 'dexterity' },
+    { name: 'Анализ', ability: 'intelligence' },
+    { name: 'История', ability: 'intelligence' },
+    { name: 'Магия', ability: 'intelligence' },
+    { name: 'Природа', ability: 'intelligence' },
+    { name: 'Религия', ability: 'intelligence' },
+    { name: 'Внимательность', ability: 'wisdom' },
+    { name: 'Выживание', ability: 'wisdom' },
+    { name: 'Медицина', ability: 'wisdom' },
+    { name: 'Проницательность', ability: 'wisdom' },
+    { name: 'Уход за животными', ability: 'wisdom' },
+    { name: 'Запугивание', ability: 'charisma' },
+    { name: 'Обман', ability: 'charisma' },
+    { name: 'Переговоры', ability: 'charisma' },
+    { name: 'Выступление', ability: 'charisma' },
+  ];
+  
+  // Инициализация состояний
+  const [savingThrows, setSavingThrows] = useState<string[]>([]);
+  const [skillProficiencies, setSkillProficiencies] = useState<string[]>([]);
+  const [expertise, setExpertise] = useState<string[]>([]);
+  const [skillBonuses, setSkillBonuses] = useState<Record<string, number>>({});
+  
+  // Загрузка данных из персонажа
+  useEffect(() => {
+    // Загрузка владения спасбросками
+    const savingThrowProficiencies = character.savingThrowProficiencies || [];
+    setSavingThrows(savingThrowProficiencies);
     
-    onUpdate({ [ability]: value });
-  };
-
-  // Обработчик переключения владения спасброском
-  const toggleSavingThrowProficiency = (ability: string) => {
-    const currentProficiencies = character.savingThrowProficiencies || [];
+    // Загрузка владения навыками
+    let skills: string[] = [];
+    if (character.proficiencies && typeof character.proficiencies === 'object' && 'skills' in character.proficiencies) {
+      skills = character.proficiencies.skills || [];
+    } else if (character.skillProficiencies) {
+      skills = character.skillProficiencies;
+    }
+    setSkillProficiencies(skills);
     
-    if (currentProficiencies.includes(ability)) {
-      onUpdate({
-        savingThrowProficiencies: currentProficiencies.filter(a => a !== ability)
+    // Загрузка экспертизы
+    setExpertise(character.expertise || []);
+    
+    // Загрузка бонусов навыков
+    setSkillBonuses(character.skillBonuses || {});
+  }, [character]);
+  
+  // Изменение владения спасброском
+  const toggleSavingThrow = (ability: string) => {
+    if (savingThrows.includes(ability)) {
+      updateCharacter({
+        savingThrowProficiencies: savingThrows.filter(a => a !== ability)
       });
     } else {
-      onUpdate({
-        savingThrowProficiencies: [...currentProficiencies, ability]
+      updateCharacter({
+        savingThrowProficiencies: [...savingThrows, ability]
       });
     }
   };
-
-  // Обработчик переключения владения навыком
+  
+  // Изменение владения навыком
   const toggleSkillProficiency = (skill: string) => {
-    const currentProficiencies = character.skillProficiencies || [];
-    const currentExpertise = character.expertise || [];
-    
-    // Если уже есть экспертиза, удаляем и навык и экспертизу
-    if (currentExpertise.includes(skill)) {
-      onUpdate({
-        skillProficiencies: currentProficiencies.filter(s => s !== skill),
-        expertise: currentExpertise.filter(s => s !== skill)
+    if (skillProficiencies.includes(skill)) {
+      updateCharacter({
+        skillProficiencies: skillProficiencies.filter(s => s !== skill)
       });
-    }
-    // Если есть владение, но нет экспертизы, добавляем экспертизу
-    else if (currentProficiencies.includes(skill)) {
-      onUpdate({
-        expertise: [...currentExpertise, skill]
-      });
-    }
-    // Если нет ни владения, ни экспертизы, добавляем владение
-    else {
-      onUpdate({
-        skillProficiencies: [...currentProficiencies, skill]
-      });
-    }
-  };
-
-  // Обработчик добавления бонуса к навыку
-  const addSkillBonus = (skill: string, bonus: number) => {
-    const currentBonuses = character.skillBonuses || {};
-    
-    onUpdate({
-      skillBonuses: {
-        ...currentBonuses,
-        [skill]: bonus
+      
+      if (expertise.includes(skill)) {
+        updateCharacter({
+          expertise: expertise.filter(s => s !== skill)
+        });
       }
+    } else {
+      updateCharacter({
+        skillProficiencies: [...skillProficiencies, skill]
+      });
+    }
+  };
+  
+  // Изменение экспертизы навыка
+  const toggleExpertise = (skill: string) => {
+    if (!skillProficiencies.includes(skill)) return; // Нельзя иметь экспертизу без владения
+    
+    if (expertise.includes(skill)) {
+      updateCharacter({
+        expertise: expertise.filter(s => s !== skill)
+      });
+    } else {
+      updateCharacter({
+        expertise: [...expertise, skill]
+      });
+    }
+  };
+  
+  // Изменение бонуса навыка
+  const updateSkillBonus = (skill: string, value: number) => {
+    const updatedBonuses = { ...skillBonuses, [skill]: value };
+    updateCharacter({
+      skillBonuses: updatedBonuses
     });
+  };
+  
+  // Расчёт бонуса характеристики
+  const getAbilityBonus = (abilityKey: string) => {
+    const value = character[abilityKey as keyof Character] as number || 
+                character.abilities?.[abilityKey as keyof typeof character.abilities] || 10;
+    return getAbilityModifier(value);
+  };
+  
+  // Расчёт бонуса спасброска
+  const getSavingThrowBonus = (ability: string) => {
+    const abilityBonus = getAbilityBonus(ability);
+    const profBonus = calculateProficiencyBonus(character.level);
     
-    setEditingSkill(null);
+    if (savingThrows.includes(ability)) {
+      return abilityBonus + profBonus;
+    }
     
-    toast({
-      title: "Бонус добавлен",
-      description: `Бонус ${bonus > 0 ? '+' : ''}${bonus} добавлен к навыку ${SKILLS[skill as keyof typeof SKILLS].name}`
-    });
+    return abilityBonus;
   };
-
-  // Получаем модификатор характеристики
-  const getModifier = (ability: string): number => {
-    const abilityScore = character[ability as keyof Character] as number || 10;
-    return getAbilityModifier(abilityScore);
-  };
-
-  // Получаем бонус спасброска
-  const getSavingThrowBonus = (ability: string): number => {
-    const abilityModifier = getModifier(ability);
-    const isProficient = character.savingThrowProficiencies?.includes(ability) || false;
+  
+  // Расчёт бонуса навыка
+  const getSkillBonus = (skill: string, abilityKey: string) => {
+    const abilityBonus = getAbilityBonus(abilityKey);
+    const profBonus = calculateProficiencyBonus(character.level);
+    const customBonus = skillBonuses[skill] || 0;
     
-    return abilityModifier + (isProficient ? proficiencyBonus : 0);
-  };
-
-  // Получаем бонус навыка
-  const getSkillBonus = (skill: string): number => {
-    const skillInfo = SKILLS[skill as keyof typeof SKILLS];
-    const abilityModifier = getModifier(skillInfo.ability);
-    const isProficient = character.skillProficiencies?.includes(skill) || false;
-    const isExpert = character.expertise?.includes(skill) || false;
-    const additionalBonus = character.skillBonuses?.[skill] || 0;
+    let total = abilityBonus + customBonus;
     
-    return abilityModifier + 
-           (isProficient ? proficiencyBonus : 0) + 
-           (isExpert ? proficiencyBonus : 0) + 
-           additionalBonus;
-  };
-
-  // Получаем статус владения навыком
-  const getSkillProficiencyStatus = (skill: string): 'none' | 'proficient' | 'expert' => {
-    const isProficient = character.skillProficiencies?.includes(skill) || false;
-    const isExpert = character.expertise?.includes(skill) || false;
+    if (expertise.includes(skill)) {
+      total += profBonus * 2;
+    } else if (skillProficiencies.includes(skill)) {
+      total += profBonus;
+    }
     
-    if (isExpert) return 'expert';
-    if (isProficient) return 'proficient';
-    return 'none';
+    return total;
   };
-
-  // Форматируем бонус для отображения
-  const formatBonus = (bonus: number): string => {
-    return bonus >= 0 ? `+${bonus}` : `${bonus}`;
-  };
-
+  
   return (
     <div className="space-y-6">
-      <Tabs defaultValue="abilities" value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid grid-cols-3">
-          <TabsTrigger value="abilities">Характеристики</TabsTrigger>
-          <TabsTrigger value="saves">Спасброски</TabsTrigger>
-          <TabsTrigger value="skills">Навыки</TabsTrigger>
-        </TabsList>
-        
-        {/* Вкладка характеристик */}
-        <TabsContent value="abilities" className="space-y-4">
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-            {Object.entries(ABILITY_NAMES).map(([ability, name]) => (
-              <Card key={ability} className="overflow-hidden">
-                <CardHeader className="p-3 bg-accent/10">
-                  <CardTitle className="text-center text-lg">{name}</CardTitle>
-                </CardHeader>
-                <CardContent className="p-4 text-center">
-                  <div className="flex justify-center items-center mb-2">
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="h-8 w-8 p-0 rounded-r-none"
-                      onClick={() => handleAbilityChange(ability, (character[ability as keyof Character] as number || 10) - 1)}
-                    >
-                      <Minus className="h-4 w-4" />
-                    </Button>
-                    <div className="px-4 py-1 border-y border-x-0 text-xl font-bold">
-                      {Number(character[ability as keyof Character]) || 10}
-                    </div>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="h-8 w-8 p-0 rounded-l-none"
-                      onClick={() => handleAbilityChange(ability, (character[ability as keyof Character] as number || 10) + 1)}
-                    >
-                      <Plus className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  <div className="text-2xl font-bold">
-                    {formatBonus(getModifier(ability))}
-                  </div>
-                  <div className="text-xs text-muted-foreground mt-2">
-                    {ABILITY_DESCRIPTIONS[ability as keyof typeof ABILITY_DESCRIPTIONS]}
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+      {/* Характеристики */}
+      <Card>
+        <CardContent className="pt-6">
+          <h3 className="text-xl font-medium mb-4">Характеристики</h3>
+          
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+            {abilities.map(ability => {
+              const value = character[ability.key as keyof Character] as number || 
+                          character.abilities?.[ability.key as keyof typeof character.abilities] || 10;
+              const modifier = getAbilityModifier(value);
+              const modifierDisplay = modifier >= 0 ? `+${modifier}` : `${modifier}`;
+              
+              return (
+                <div key={ability.key} className="text-center border rounded-lg p-3">
+                  <div className="text-sm text-gray-500">{ability.name}</div>
+                  <div className="text-3xl font-bold my-1">{value}</div>
+                  <div className="bg-accent/20 rounded-md py-1">{modifierDisplay}</div>
+                </div>
+              );
+            })}
           </div>
+        </CardContent>
+      </Card>
+      
+      {/* Спасброски */}
+      <Card>
+        <CardContent className="pt-6">
+          <h3 className="text-xl font-medium mb-4">Спасброски</h3>
           
-          {/* Properly render character skills as a ReactNode */}
-          {character.skills && typeof character.skills === 'object' && character.skills !== null ? (
-            <div className="space-y-2 mt-4">
-              <h4 className="text-sm font-medium">Character Skills:</h4>
-              {Object.entries(character.skills).map(([skill, value]) => (
-                <div key={skill} className="text-sm p-2 border rounded">
-                  <span className="font-medium">{skill}:</span>{' '}
-                  {typeof value === 'object' 
-                    ? JSON.stringify(value) 
-                    : String(value)}
-                </div>
-              ))}
-            </div>
-          ) : null}
-          
-          <Card>
-            <CardHeader className="p-3">
-              <CardTitle className="text-lg">Пассивные характеристики</CardTitle>
-            </CardHeader>
-            <CardContent className="p-4">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="flex flex-col items-center p-3 border rounded-md">
-                  <div className="text-sm text-muted-foreground">Пассивное восприятие</div>
-                  <div className="text-2xl font-bold">
-                    {10 + getSkillBonus('perception')}
-                  </div>
-                </div>
-                <div className="flex flex-col items-center p-3 border rounded-md">
-                  <div className="text-sm text-muted-foreground">Пассивное расследование</div>
-                  <div className="text-2xl font-bold">
-                    {10 + getSkillBonus('investigation')}
-                  </div>
-                </div>
-                <div className="flex flex-col items-center p-3 border rounded-md">
-                  <div className="text-sm text-muted-foreground">Пассивная проницательность</div>
-                  <div className="text-2xl font-bold">
-                    {10 + getSkillBonus('insight')}
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
-        {/* Вкладка спасбросков */}
-        <TabsContent value="saves">
-          <Card>
-            <CardHeader className="p-3">
-              <CardTitle className="flex items-center">
-                <Shield className="mr-2 h-5 w-5" />
-                Спасброски
-                <Badge className="ml-auto">Бонус мастерства: {formatBonus(proficiencyBonus)}</Badge>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-4">
-              <div className="space-y-2">
-                {Object.entries(ABILITY_NAMES).map(([ability, name]) => {
-                  const isProficient = character.savingThrowProficiencies?.includes(ability) || false;
-                  const bonus = getSavingThrowBonus(ability);
-                  
-                  return (
-                    <div 
-                      key={ability} 
-                      className={cn(
-                        "flex items-center p-2 rounded-md",
-                        isProficient ? "bg-accent/20" : "hover:bg-muted/50"
-                      )}
-                      onClick={() => toggleSavingThrowProficiency(ability)}
-                      style={{ cursor: 'pointer' }}
+          <div className="space-y-3">
+            {abilities.map(ability => {
+              const bonus = getSavingThrowBonus(ability.key);
+              const bonusDisplay = bonus >= 0 ? `+${bonus}` : `${bonus}`;
+              const isProficient = savingThrows.includes(ability.key);
+              
+              return (
+                <div key={`save-${ability.key}`} className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <Checkbox
+                      id={`save-${ability.key}`}
+                      checked={isProficient}
+                      onCheckedChange={() => toggleSavingThrow(ability.key)}
+                      className="mr-2"
+                    />
+                    <Label 
+                      htmlFor={`save-${ability.key}`}
+                      className={`${isProficient ? 'font-medium' : ''} cursor-pointer`}
                     >
-                      <div className={cn(
-                        "w-6 h-6 rounded-full flex items-center justify-center mr-3",
-                        isProficient ? "bg-primary text-primary-foreground" : "border"
-                      )}>
-                        {isProficient && <Check className="h-4 w-4" />}
+                      {ability.name}
+                    </Label>
+                  </div>
+                  <div className="font-medium">{bonusDisplay}</div>
+                </div>
+              );
+            })}
+          </div>
+        </CardContent>
+      </Card>
+      
+      {/* Навыки */}
+      <Card>
+        <CardContent className="pt-6">
+          <h3 className="text-xl font-medium mb-4">Навыки</h3>
+          
+          <ScrollArea className="h-[400px] pr-4">
+            <div className="space-y-3">
+              {allSkills.map(skill => {
+                const abilityKey = skill.ability;
+                const ability = abilities.find(a => a.key === abilityKey);
+                const isProficient = skillProficiencies.includes(skill.name);
+                const isExpert = expertise.includes(skill.name);
+                const bonus = getSkillBonus(skill.name, abilityKey);
+                const bonusDisplay = bonus >= 0 ? `+${bonus}` : `${bonus}`;
+                
+                return (
+                  <div key={`skill-${skill.name}`} className="flex items-center justify-between">
+                    <div className="flex items-center">
+                      <div className="flex space-x-2 mr-3 items-center">
+                        {/* Владение */}
+                        <Checkbox
+                          id={`prof-${skill.name}`}
+                          checked={isProficient}
+                          onCheckedChange={() => toggleSkillProficiency(skill.name)}
+                          className="mr-1"
+                        />
+                        
+                        {/* Экспертиза */}
+                        <Checkbox
+                          id={`exp-${skill.name}`}
+                          checked={isExpert}
+                          onCheckedChange={() => toggleExpertise(skill.name)}
+                          disabled={!isProficient}
+                          className={`${!isProficient ? 'opacity-50' : ''}`}
+                        />
                       </div>
-                      <div className="flex-1">
-                        <div className="font-medium">{name}</div>
-                        <div className="text-xs text-muted-foreground">
-                          {ABILITY_DESCRIPTIONS[ability as keyof typeof ABILITY_DESCRIPTIONS]}
-                        </div>
-                      </div>
-                      <div className="text-xl font-bold">
-                        {formatBonus(bonus)}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
-        {/* Вкладка навыков */}
-        <TabsContent value="skills">
-          <Card>
-            <CardHeader className="p-3">
-              <CardTitle className="flex items-center">
-                <Brain className="mr-2 h-5 w-5" />
-                Навыки
-                <Badge className="ml-auto">Бонус мастерства: {formatBonus(proficiencyBonus)}</Badge>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-0">
-              <ScrollArea className="h-[400px]">
-                <div className="p-4 space-y-1">
-                  {Object.entries(SKILLS).map(([skillKey, skill]) => {
-                    const profStatus = getSkillProficiencyStatus(skillKey);
-                    const bonus = getSkillBonus(skillKey);
-                    const additionalBonus = character.skillBonuses?.[skillKey] || 0;
-                    
-                    return (
-                      <div 
-                        key={skillKey} 
-                        className={cn(
-                          "flex items-center p-2 rounded-md",
-                          profStatus === 'expert' ? "bg-primary/20" : 
-                          profStatus === 'proficient' ? "bg-accent/20" : 
-                          "hover:bg-muted/50"
-                        )}
+                      
+                      <Label 
+                        htmlFor={`prof-${skill.name}`}
+                        className={`${isProficient ? 'font-medium' : ''} cursor-pointer flex-1`}
                       >
-                        <div 
-                          className={cn(
-                            "w-6 h-6 rounded-full flex items-center justify-center mr-3",
-                            profStatus === 'expert' ? "bg-primary text-primary-foreground" : 
-                            profStatus === 'proficient' ? "bg-accent text-accent-foreground" : 
-                            "border"
-                          )}
-                          onClick={() => toggleSkillProficiency(skillKey)}
-                          style={{ cursor: 'pointer' }}
-                        >
-                          {profStatus !== 'none' && <Check className="h-4 w-4" />}
-                          {profStatus === 'expert' && <span className="absolute -bottom-1 -right-1 text-xs bg-primary text-primary-foreground rounded-full w-3 h-3 flex items-center justify-center">+</span>}
-                        </div>
-                        <div className="flex-1">
-                          <div className="font-medium flex items-center">
-                            {skill.name}
-                            <span className="text-xs text-muted-foreground ml-2">
-                              ({ABILITY_NAMES[skill.ability as keyof typeof ABILITY_NAMES]})
-                            </span>
-                          </div>
-                        </div>
-                        <div className="flex items-center">
-                          {additionalBonus !== 0 && (
-                            <Badge variant="outline" className="mr-2">
-                              {formatBonus(additionalBonus)}
-                            </Badge>
-                          )}
-                          <div className="text-xl font-bold mr-2">
-                            {formatBonus(bonus)}
-                          </div>
-                          <Popover open={editingSkill === skillKey} onOpenChange={(open) => {
-                            if (open) setEditingSkill(skillKey);
-                            else setEditingSkill(null);
-                          }}>
-                            <PopoverTrigger asChild>
-                              <Button variant="ghost" size="sm">
-                                <Plus className="h-4 w-4" />
-                              </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-80">
-                              <div className="space-y-4">
-                                <h4 className="font-medium">Добавить бонус к навыку</h4>
-                                <div className="space-y-2">
-                                  <Label htmlFor="bonus">Бонус</Label>
-                                  <Input 
-                                    id="bonus" 
-                                    type="number" 
-                                    value={skillBonus} 
-                                    onChange={(e) => setSkillBonus(parseInt(e.target.value) || 0)}
-                                  />
-                                </div>
-                                <div className="flex justify-end">
-                                  <Button onClick={() => addSkillBonus(skillKey, skillBonus)}>
-                                    Добавить
-                                  </Button>
-                                </div>
-                              </div>
-                            </PopoverContent>
-                          </Popover>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </ScrollArea>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
-      
-      <Separator />
-      
-      {/* Секция особенностей и умений */}
-      <div className="space-y-4">
-        <h3 className="text-lg font-semibold flex items-center">
-          <Footprints className="mr-2 h-5 w-5" />
-          Особенности и умения
-        </h3>
-        
-        <Accordion type="multiple" className="w-full">
-          {/* Особенности расы */}
-          <AccordionItem value="race-features">
-            <AccordionTrigger>
-              Особенности расы
-              {character.race && <Badge variant="outline" className="ml-2">{character.race}</Badge>}
-            </AccordionTrigger>
-            <AccordionContent>
-              {character.raceFeatures && character.raceFeatures.length > 0 ? (
-                <div className="space-y-2">
-                  {character.raceFeatures.map((feature, index) => {
-                    // Проверяем, что feature является объектом и имеет свойство name
-                    if (feature && typeof feature === 'object' && 'name' in feature) {
-                      return (
-                        <div key={index} className="p-2 border rounded-md">
-                          <div className="font-medium">{feature.name}</div>
-                          {feature.description && (
-                            <div className="text-sm text-muted-foreground">
-                              {feature.description}
-                            </div>
-                          )}
-                        </div>
-                      );
-                    }
+                        {skill.name} <span className="text-gray-500 text-sm">({ability?.short})</span>
+                      </Label>
+                    </div>
                     
-                    // Для случая, когда feature является строкой
-                    if (typeof feature === 'string') {
-                      return (
-                        <div key={index} className="p-2 border rounded-md">
-                          {feature}
-                        </div>
-                      );
-                    }
-                    
-                    // Возвращаем null для невалидных данных
-                    return null;
-                  })}
-                </div>
-              ) : (
-                <div className="text-muted-foreground">
-                  Нет особенностей расы
-                </div>
-              )}
-            </AccordionContent>
-          </AccordionItem>
-          
-          {/* Особенности класса */}
-          <AccordionItem value="class-features">
-            <AccordionTrigger>
-              Особенности класса
-              {character.class && <Badge variant="outline" className="ml-2">{character.class}</Badge>}
-            </AccordionTrigger>
-            <AccordionContent>
-              {character.classFeatures && character.classFeatures.length > 0 ? (
-                <div className="space-y-2">
-                  {character.classFeatures.map((feature, index) => {
-                    // Проверяем, что feature является объектом и имеет свойство name
-                    if (feature && typeof feature === 'object' && 'name' in feature) {
-                      return (
-                        <div key={index} className="p-2 border rounded-md">
-                          <div className="font-medium">{feature.name}</div>
-                          {feature.description && (
-                            <div className="text-sm text-muted-foreground">
-                              {feature.description}
-                            </div>
-                          )}
-                        </div>
-                      );
-                    }
-                    
-                    // Для случая, когда feature является строкой
-                    if (typeof feature === 'string') {
-                      return (
-                        <div key={index} className="p-2 border rounded-md">
-                          {feature}
-                        </div>
-                      );
-                    }
-                    
-                    // Возвращаем null для невалидных данных
-                    return null;
-                  })}
-                </div>
-              ) : (
-                <div className="text-muted-foreground">
-                  Нет особенностей класса
-                </div>
-              )}
-            </AccordionContent>
-          </AccordionItem>
-          
-          {/* Особенности предыстории */}
-          <AccordionItem value="background-features">
-            <AccordionTrigger>
-              Особенности предыстории
-              {character.background && <Badge variant="outline" className="ml-2">{character.background}</Badge>}
-            </AccordionTrigger>
-            <AccordionContent>
-              {character.backgroundFeatures && character.backgroundFeatures.length > 0 ? (
-                <div className="space-y-2">
-                  {character.backgroundFeatures.map((feature, index) => {
-                    // Проверяем, что feature является объектом и имеет свойство name
-                    if (feature && typeof feature === 'object' && 'name' in feature) {
-                      return (
-                        <div key={index} className="p-2 border rounded-md">
-                          <div className="font-medium">{feature.name}</div>
-                          {feature.description && (
-                            <div className="text-sm text-muted-foreground">
-                              {feature.description}
-                            </div>
-                          )}
-                        </div>
-                      );
-                    }
-                    
-                    // Для случая, когда feature является строкой
-                    if (typeof feature === 'string') {
-                      return (
-                        <div key={index} className="p-2 border rounded-md">
-                          {feature}
-                        </div>
-                      );
-                    }
-                    
-                    // Возвращаем null для невалидных данных
-                    return null;
-                  })}
-                </div>
-              ) : (
-                <div className="text-muted-foreground">
-                  Нет особенностей предыстории
-                </div>
-              )}
-            </AccordionContent>
-          </AccordionItem>
-          
-          {/* Черты */}
-          <AccordionItem value="feats">
-            <AccordionTrigger>
-              Черты
-              {character.feats && <Badge variant="outline" className="ml-2">{character.feats.length}</Badge>}
-            </AccordionTrigger>
-            <AccordionContent>
-              {character.feats && character.feats.length > 0 ? (
-                <div className="space-y-2">
-                  {character.feats.map((feat, index) => {
-                    // Проверяем, что feat является объектом и имеет свойство name
-                    if (feat && typeof feat === 'object' && 'name' in feat) {
-                      return (
-                        <div key={index} className="p-2 border rounded-md">
-                          <div className="font-medium">{feat.name}</div>
-                          {feat.description && (
-                            <div className="text-sm text-muted-foreground">
-                              {feat.description}
-                            </div>
-                          )}
-                        </div>
-                      );
-                    }
-                    
-                    // Для случая, когда feat является строкой
-                    if (typeof feat === 'string') {
-                      return (
-                        <div key={index} className="p-2 border rounded-md">
-                          {feat}
-                        </div>
-                      );
-                    }
-                    
-                    // Возвращаем null для невалидных данных
-                    return null;
-                  })}
-                </div>
-              ) : (
-                <div className="text-muted-foreground">
-                  Нет черт
-                </div>
-              )}
-            </AccordionContent>
-          </AccordionItem>
-        </Accordion>
-      </div>
+                    {/* Бонус навыка */}
+                    <div className="flex items-center space-x-2">
+                      <Button 
+                        variant="outline" 
+                        size="icon" 
+                        className="h-6 w-6 p-0"
+                        onClick={() => updateSkillBonus(skill.name, (skillBonuses[skill.name] || 0) - 1)}
+                      >
+                        <Minus className="h-3 w-3" />
+                      </Button>
+                      
+                      <div className="font-medium w-10 text-center">{bonusDisplay}</div>
+                      
+                      <Button 
+                        variant="outline" 
+                        size="icon" 
+                        className="h-6 w-6 p-0"
+                        onClick={() => updateSkillBonus(skill.name, (skillBonuses[skill.name] || 0) + 1)}
+                      >
+                        <Plus className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </ScrollArea>
+        </CardContent>
+      </Card>
     </div>
   );
 };

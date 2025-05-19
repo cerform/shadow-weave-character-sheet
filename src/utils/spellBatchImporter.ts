@@ -1,5 +1,6 @@
 
 import { CharacterSpell } from '@/types/character';
+import { parseComponents } from './spellProcessors';
 
 // Функция для парсинга текстовых данных заклинаний
 export function importSpellsFromText(text: string, existingSpells: CharacterSpell[]): CharacterSpell[] {
@@ -167,3 +168,35 @@ function mergeAndDedupeSpells(spells: CharacterSpell[]): CharacterSpell[] {
   
   return Array.from(uniqueSpells.values());
 }
+
+// Экспортируем функции для совместимости с другими компонентами
+export const parseSpellEntry = (entry: string) => {
+  // Match pattern like [0] Name ABC
+  const match = entry.match(/\[(\d+)\]\s+(.+?)\s+([\w\.]*)$/);
+  
+  if (!match) return null;
+  
+  const level = parseInt(match[1], 10);
+  const name = match[2].trim();
+  const componentCode = match[3] || '';
+  
+  return {
+    name,
+    level,
+    components: parseComponents(componentCode)
+  };
+};
+
+export const processSpellBatch = (rawText: string) => {
+  const lines = rawText.split('\n').filter(line => line.trim().length > 0);
+  const results = [];
+  
+  for (const line of lines) {
+    const parsed = parseSpellEntry(line);
+    if (parsed) {
+      results.push(parsed);
+    }
+  }
+  
+  return results;
+};
