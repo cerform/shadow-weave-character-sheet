@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -29,6 +28,9 @@ const CharactersListPage: React.FC = () => {
   const themeKey = (theme || 'default') as keyof typeof themes;
   const currentTheme = themes[themeKey] || themes.default;
   const [diagnosticResults, setDiagnosticResults] = useState<any>(null);
+  const [characters, setCharacters] = useState<Character[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
   
   // При монтировании компонента обновляем список персонажей
   useEffect(() => {
@@ -89,6 +91,18 @@ const CharactersListPage: React.FC = () => {
       console.error('CharactersListPage: Ошибка при обновлении списка персонажей:', error);
     } finally {
       setIsRefreshing(false);
+    }
+  };
+
+  const handleDeleteCharacter = async (id: string) => {
+    try {
+      await deleteCharacter(id);
+      console.log('CharactersListPage: Персонаж удален успешно');
+    } catch (err) {
+      // Исправляем преобразование error для отображения
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      setError(errorMessage);
+      toast.error(`Ошибка при удалении персонажа: ${errorMessage}`);
     }
   };
 
@@ -196,7 +210,7 @@ const CharactersListPage: React.FC = () => {
               
               <CharactersTable
                 characters={characters || []}
-                onDelete={deleteCharacter}
+                onDelete={handleDeleteCharacter}
               />
             </>
           )}

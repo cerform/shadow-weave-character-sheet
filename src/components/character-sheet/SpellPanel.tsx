@@ -129,7 +129,7 @@ const SpellPanel: React.FC<SpellPanelProps> = ({ character, onUpdate, onSpellCli
           open={isModalOpen}
           onOpenChange={setIsModalOpen}
           character={character}
-          onUpdate={onUpdate}
+          onUpdateCharacter={onUpdate} // Передаем onUpdate как onUpdateCharacter
         />
       </Card>
     );
@@ -218,7 +218,7 @@ const SpellPanel: React.FC<SpellPanelProps> = ({ character, onUpdate, onSpellCli
         open={isModalOpen}
         onOpenChange={setIsModalOpen}
         character={character}
-        onUpdate={onUpdate}
+        onUpdateCharacter={onUpdate} // Передаем onUpdate как onUpdateCharacter
       />
     </Card>
   );

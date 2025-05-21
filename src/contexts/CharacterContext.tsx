@@ -44,7 +44,7 @@ const CharacterContext = createContext<CharacterContextType>({
 
 // Create provider component
 export const CharacterProvider = ({ children }: { children: ReactNode }) => {
-  const [character, setCharacter] = useState<Character | null>(null);
+  const [character, setCharacter] = useState<Character | null>(null); // Исправленный тип
   const [characters, setCharacters] = useState<Character[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);

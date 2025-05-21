@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { SpellData, convertCharacterSpellToSpellData, convertSpellArray } from '@/types/spells';
 import { CharacterSpell } from '@/types/character';
@@ -86,8 +85,8 @@ export const SpellbookProvider: React.FC<{ children: ReactNode }> = ({ children 
       // Преобразуем classes к массиву, если строка
       const spellClasses = typeof spell.classes === 'string' 
         ? [spell.classes.toLowerCase()] 
-        : (spell.classes || []).map((cls: string) => cls.toLowerCase());
-        
+        : (Array.isArray(spell.classes) ? spell.classes.map((cls: string) => cls.toLowerCase()) : []);
+      
       // Проверяем соответствие класса персонажа
       const isForClass = spellClasses.some(cls => {
         const characterClassLower = characterClass.toLowerCase();
@@ -270,7 +269,7 @@ export const SpellbookProvider: React.FC<{ children: ReactNode }> = ({ children 
     // Преобразуем classes к массиву
     const spellClasses = typeof spell.classes === 'string' 
       ? [spell.classes.toLowerCase()]
-      : (spell.classes || []).map(cls => typeof cls === 'string' ? cls.toLowerCase() : '');
+      : (Array.isArray(spell.classes) ? spell.classes.map((cls: string) => cls.toLowerCase()) : []);
     
     // Проверяем соответствие класса
     return spellClasses.some(cls => 

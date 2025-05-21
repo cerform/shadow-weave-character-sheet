@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Character } from "@/types/character";
 import { toast } from 'sonner';
@@ -84,7 +83,8 @@ export const useCharacterCreation = () => {
         }
 
         try {
-          const characterId = await saveCharacterToFirestore(character, uid);
+          // Исправляем вызов функции, передавая один аргумент
+          const characterId = await saveCharacterToFirestore({...character, userId: uid});
           if (characterId) {
             console.log("✅ Character auto-saved to Firestore with ID:", characterId);
             // Обновляем ID персонажа в локальном состоянии
@@ -265,7 +265,7 @@ export const useCharacterCreation = () => {
     }
     
     if (level + additionalLevels > 20) {
-      toast.error(`Общий уровень персонажа не может прев��шать 20. У вас уже есть ${additionalLevels} уровней в дополнительных классах.`);
+      toast.error(`Общий уровень персонажа не может превышать 20. У вас уже есть ${additionalLevels} уровней в дополнительных классах.`);
       return;
     }
     
@@ -283,12 +283,18 @@ export const useCharacterCreation = () => {
   };
   
   // Получаем все классы персонажа (основной + мультикласс)
-  const getAllClasses = (character: Character): string[] => {
-    const allClasses = [character.class];
+  const getAllClasses = (char: Character): string[] => {
+    if (typeof char.class !== 'string') {
+      return []; // Возвращаем пустой массив, если char.class не строка
+    }
     
-    if (character.additionalClasses && character.additionalClasses.length > 0) {
-      character.additionalClasses.forEach(cls => {
-        allClasses.push(cls.class);
+    const allClasses = [char.class];
+    
+    if (char.additionalClasses && char.additionalClasses.length > 0) {
+      char.additionalClasses.forEach(cls => {
+        if (cls.class) {
+          allClasses.push(cls.class);
+        }
       });
     }
     

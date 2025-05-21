@@ -5,6 +5,7 @@ interface SpellComponents {
   material?: boolean;
   materials?: string;
   ritual?: boolean;
+  concentration?: boolean; // Добавляем свойство концентрации
 }
 
 /**

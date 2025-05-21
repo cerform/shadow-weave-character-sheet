@@ -1,240 +1,116 @@
-
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, RefreshCw } from "lucide-react";
-import { Card } from "@/components/ui/card";
-import { useAuth } from '@/hooks/use-auth';
+import { useCharacter } from '@/contexts/CharacterContext';
+import { Character } from '@/types/character';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
-import OBSLayout from '@/components/OBSLayout';
-import IconOnlyNavigation from '@/components/navigation/IconOnlyNavigation';
-import { Character } from '@/types/character';
+import { deleteCharacter } from '@/services/characterService';
 import { toast } from 'sonner';
-import { useCharacter } from '@/contexts/CharacterContext';
-import { Skeleton } from '@/components/ui/skeleton';
-import CharacterNavigation from '@/components/characters/CharacterNavigation';
-import ErrorDisplay from '@/components/characters/ErrorDisplay';
-import InfoMessage from '@/components/ui/InfoMessage';
-import ErrorBoundary from '@/components/ErrorBoundary';
-import CharacterCard from '@/components/character/CharacterCard';
+import { getCurrentUid } from '@/utils/authHelpers';
 
-// Компонент плейсхолдера карточки во время загрузки
-const CardSkeleton = () => (
-  <Card className="overflow-hidden">
-    <div className="p-4 space-y-4">
-      <Skeleton className="h-6 w-3/4" />
-      <div className="space-y-3">
-        <Skeleton className="h-4 w-full" />
-        <Skeleton className="h-4 w-2/3" />
-        <Skeleton className="h-4 w-3/4" />
-      </div>
-      <div className="flex justify-between pt-4">
-        <Skeleton className="h-3 w-1/4" />
-        <Skeleton className="h-3 w-1/5" />
-      </div>
-    </div>
-  </Card>
-);
-
-// Главный компонент страницы
 const RecentCharactersPage: React.FC = () => {
-  const navigate = useNavigate();
-  const { isAuthenticated, user } = useAuth();
   const { theme } = useTheme();
+  const [characters, setCharacters] = useState<Character[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  const { getUserCharacters } = useCharacter();
+  
   const themeKey = (theme || 'default') as keyof typeof themes;
   const currentTheme = themes[themeKey] || themes.default;
-  
-  // Используем контекст персонажей
-  const { characters, loading, error, refreshCharacters } = useCharacter();
-  console.log('RecentCharactersPage: Персонажи из контекста:', characters?.length || 0);
-  
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [recentCharacters, setRecentCharacters] = useState<Character[]>([]);
-  
+
   useEffect(() => {
-    console.log('RecentCharactersPage: Компонент загружен');
-    
-    if (isAuthenticated) {
-      console.log('RecentCharactersPage: Пользователь авторизован, загружаем персонажей');
-      loadCharacters();
-    } else {
-      console.log('RecentCharactersPage: Пользователь не авторизован');
-    }
-  }, [isAuthenticated]);
-  
-  // При изменении списка персонажей обновляем недавних
+    const loadCharacters = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const uid = getCurrentUid();
+        if (uid) {
+          await getUserCharacters();
+        } else {
+          setError("Пожалуйста, войдите для просмотра ваших персонажей.");
+        }
+      } catch (err) {
+        setError("Не удалось загрузить персонажей. Пожалуйста, попробуйте позже.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadCharacters();
+  }, [getUserCharacters]);
+
   useEffect(() => {
-    console.log('RecentCharactersPage: Обновление списка персонажей, текущее количество:', characters.length);
-    
-    if (characters.length > 0) {
-      // Сортировка по дате обновления/создания (сначала новые)
-      const sortedCharacters = [...characters].sort((a, b) => {
-        const dateA = new Date(a.updatedAt || a.createdAt || 0).getTime();
-        const dateB = new Date(b.updatedAt || b.createdAt || 0).getTime();
-        return dateB - dateA;
-      });
-      
-      // Берём только 6 последних персонажей
-      const recent = sortedCharacters.slice(0, 6);
-      setRecentCharacters(recent);
-      console.log(`RecentCharactersPage: Получено ${sortedCharacters.length} персонажей, отображаем ${recent.length}`);
-    } else {
-      setRecentCharacters([]);
-    }
-  }, [characters]);
-  
-  // Функция загрузки персонажей через контекст
-  const loadCharacters = async () => {
+    // Update local state when characters from context change
+    // This ensures the component re-renders when the character list is updated elsewhere
+    const { characters: contextCharacters } = useCharacter();
+    setCharacters(contextCharacters);
+  }, [useCharacter]);
+
+  const handleDeleteCharacter = async (id: string) => {
     try {
-      setIsRefreshing(true);
-      console.log('RecentCharactersPage: Загружаем персонажей через контекст');
-      
-      await refreshCharacters();
-      toast.success('Персонажи успешно загружены');
-      
+      setLoading(true);
+      setError(null);
+      await deleteCharacter(id);
+      toast.success("Персонаж успешно удален");
+      // Refresh character list after deletion
+      await getUserCharacters();
     } catch (err) {
-      console.error('RecentCharactersPage: Ошибка при загрузке персонажей:', err);
-      toast.error('Не удалось загрузить персонажей');
+      // Исправляем преобразование error для отображения
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      setError(errorMessage);
+      toast.error(`Ошибка при удалении персонажа: ${errorMessage}`);
     } finally {
-      setIsRefreshing(false);
+      setLoading(false);
     }
   };
+  
+  if (loading) {
+    return <div className="text-center">Загрузка...</div>;
+  }
 
-  // Если пользователь не авторизован, предлагаем войти
-  if (!isAuthenticated) {
-    return (
-      <div className="min-h-screen p-6 flex flex-col justify-center items-center bg-gradient-to-br from-background to-background/80">
-        <div className="max-w-md text-center">
-          <h1 className="text-3xl font-bold mb-6">Требуется авторизация</h1>
-          <p className="mb-8">Для доступа к персонажам необходимо войти в систему</p>
-          <Button 
-            onClick={() => navigate('/auth', { state: { returnPath: '/recent-characters' } })}
-            className="w-full"
-          >
-            Войти
-          </Button>
-        </div>
-      </div>
-    );
+  if (error) {
+    return <div className="text-center text-red-500">{error}</div>;
   }
 
   return (
-    <ErrorBoundary>
-      <OBSLayout
-        topPanelContent={
-          <div className="flex justify-between items-center p-3">
-            <Button 
-              variant="ghost" 
-              onClick={() => navigate('/')}
-              className="gap-2"
-            >
-              <ArrowLeft size={16} />
-              На главную
-            </Button>
-            
-            <h1 
-              className="text-xl font-bold"
-              style={{ color: currentTheme.textColor }}
-            >
-              Недавние персонажи
-            </h1>
-            
-            <IconOnlyNavigation includeThemeSelector />
-          </div>
-        }
-      >
-        <div className="container mx-auto p-6 max-w-6xl">
-          {/* Навигация по страницам персонажей */}
-          <CharacterNavigation />
-          
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-bold" style={{ color: currentTheme.accent }}>
-              Недавно обновленные
-            </h2>
-            
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={loadCharacters}
-              disabled={loading || isRefreshing}
-              className="gap-2"
-            >
-              <RefreshCw size={16} className={loading || isRefreshing ? "animate-spin" : ""} />
-              Обновить
-            </Button>
-          </div>
-
-          {/* Отладочная информация */}
-          <div className="mb-4 p-3 bg-blue-900/20 rounded border border-blue-500/30">
-            <h3 className="text-blue-200 font-medium mb-2">Отладочная информация</h3>
-            <div className="text-sm text-muted-foreground">
-              <div>Загрузка: {loading ? "Да" : "Нет"}</div>
-              <div>Обновление: {isRefreshing ? "Да" : "Нет"}</div>
-              <div>Персонажей в контексте: {characters?.length || 0}</div>
-              <div>Отображаем персонажей: {recentCharacters?.length || 0}</div>
-            </div>
-          </div>
-
-          {/* Информационная панель */}
-          {isAuthenticated && !error && !loading && characters.length === 0 && (
-            <InfoMessage
-              variant="info"
-              title="Информация о загрузке"
-              message="В системе не найдено персонажей. Создайте нового персонажа, чтобы он появился здесь."
-              className="mb-6"
-            />
-          )}
-
-          {/* Загрузка */}
-          {loading && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {[...Array(6)].map((_, i) => (
-                <CardSkeleton key={i} />
-              ))}
-            </div>
-          )}
-          
-          {/* Ошибка */}
-          {error && !loading && (
-            <ErrorDisplay 
-              errorMessage={error}
-              onRetry={loadCharacters}
-            />
-          )}
-          
-          {/* Персонажи */}
-          {!loading && !error && recentCharacters.length > 0 && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {recentCharacters.map(character => {
-                if (!character || !character.id) return null;
-                
-                return (
-                  <CharacterCard 
-                    key={character.id}
-                    character={character}
-                    onClick={() => navigate(`/character/${character.id}`)}
-                  />
-                );
-              })}
-            </div>
-          )}
-          
-          {/* Пустое состояние */}
-          {!loading && !error && recentCharacters.length === 0 && (
-            <div className="text-center p-8 border border-border/50 rounded-lg bg-card/20">
-              <h3 className="text-xl font-medium mb-2">У вас пока нет персонажей</h3>
-              <p className="text-muted-foreground mb-4">
-                Создайте своего первого персонажа, чтобы начать приключение
-              </p>
-              <Button onClick={() => navigate('/character-creation')}>
-                Создать персонажа
-              </Button>
+    <div className="container mx-auto p-4">
+      <h1 className="text-2xl font-bold mb-4" style={{ color: currentTheme.textColor }}>
+        Недавние персонажи
+      </h1>
+      <ScrollArea className="rounded-md border w-full">
+        <div className="flex flex-col space-y-2 p-4">
+          {characters.length > 0 ? (
+            characters.map((character) => (
+              <Card key={character.id} style={{ backgroundColor: currentTheme.cardBackground, borderColor: currentTheme.borderColor }}>
+                <CardHeader>
+                  <CardTitle style={{ color: currentTheme.textColor }}>{character.name}</CardTitle>
+                  <CardDescription style={{ color: currentTheme.mutedTextColor }}>
+                    {character.race} {character.class} {character.level} уровень
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="flex justify-between items-center">
+                  <div>
+                    <Link to={`/character/${character.id}`}>
+                      <Button variant="secondary">Просмотреть</Button>
+                    </Link>
+                  </div>
+                  <Button variant="destructive" onClick={() => handleDeleteCharacter(character.id)}>
+                    Удалить
+                  </Button>
+                </CardContent>
+              </Card>
+            ))
+          ) : (
+            <div className="text-center" style={{ color: currentTheme.mutedTextColor }}>
+              Нет доступных персонажей.
             </div>
           )}
         </div>
-      </OBSLayout>
-    </ErrorBoundary>
+      </ScrollArea>
+    </div>
   );
 };
 

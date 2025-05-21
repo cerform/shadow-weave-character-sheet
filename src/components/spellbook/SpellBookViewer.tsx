@@ -1,427 +1,344 @@
-
-import React, { useState, useEffect, useMemo } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Badge } from '@/components/ui/badge';
-import { Search, Filter, BookOpen, Plus, Minus, Star, Download, Upload } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
+import { useTheme } from "@/hooks/use-theme";
+import { themes } from "@/lib/themes";
 import { SpellData } from '@/types/spells';
 import { useSpellbook } from '@/contexts/SpellbookContext';
-import SpellDetailView from './SpellDetailView';
-import { useTheme } from '@/hooks/use-theme';
-import { themes } from '@/lib/themes';
-import SpellImportModal from './SpellImportModal';
-import SpellDatabaseManager from './SpellDatabaseManager';
-import { useToast } from '@/hooks/use-toast';
-import { CharacterSpell } from '@/types/character';
-import { getSpellSchoolColor } from '@/utils/spellProcessors';
+import { SpellImportModal } from '@/components/spellbook';
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form"
+import { z } from "zod"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from "react-hook-form"
+import { BookOpen as BookOpenIcon, PlusCircle as PlusCircleIcon } from 'lucide-react';
+
+const formSchema = z.object({
+  name: z.string().min(2, {
+    message: "Имя должно содержать не менее 2 символов.",
+  }),
+  level: z.number().min(0).max(9),
+  school: z.string().min(2, {
+    message: "Школа должна содержать не менее 2 символов.",
+  }),
+  castingTime: z.string().min(2, {
+    message: "Время кастинга должно содержать не менее 2 символов.",
+  }),
+  range: z.string().min(2, {
+    message: "Дистанция должна содержать не менее 2 символов.",
+  }),
+  components: z.string().min(2, {
+    message: "Компоненты должны содержать не менее 2 символов.",
+  }),
+  duration: z.string().min(2, {
+    message: "Длительность должна содержать не менее 2 символов.",
+  }),
+  description: z.string().min(10, {
+    message: "Описание должно содержать не менее 10 символов.",
+  }),
+  classes: z.string().min(2, {
+    message: "Классы должны содержать не менее 2 символов.",
+  }),
+})
+
+const EmptyState = () => {
+  return (
+    <div className="flex flex-col items-center justify-center h-full p-8 text-center">
+      <div className="mb-4">
+        <BookOpenIcon className="h-16 w-16 text-muted-foreground" />
+      </div>
+      <h2 className="text-2xl font-bold">Ваша книга заклинаний пуста</h2>
+      <p className="text-muted-foreground mt-2 mb-6">
+        Добавьте заклинания из базы данных или импортируйте их
+      </p>
+      <Button>
+        <PlusCircleIcon className="mr-2 h-4 w-4" />
+        Добавить заклинание
+      </Button>
+    </div>
+  );
+};
 
 const SpellBookViewer: React.FC = () => {
   const { theme } = useTheme();
   const themeKey = (theme || 'default') as keyof typeof themes;
   const currentTheme = themes[themeKey] || themes.default;
+  const { selectedSpells, loadSpells, exportSpells, importSpells } = useSpellbook();
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const { toast } = useToast();
-  
-  const {
-    availableSpells,
-    selectedSpells,
-    addSpell,
-    removeSpell,
-    prepareSpell,
-    unprepareSpell,
-    loadSpells,
-    exportSpells,
-    importSpells,
-    loading
-  } = useSpellbook();
 
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedSpell, setSelectedSpell] = useState<SpellData | null>(null);
-  const [activeTab, setActiveTab] = useState('all');
-  const [showImportModal, setShowImportModal] = useState(false);
-  const [showDatabaseModal, setShowDatabaseModal] = useState(false);
-  const [filters, setFilters] = useState({
-    schools: [] as string[],
-    ritual: false,
-    concentration: false,
-    level: 'all'
-  });
-
-  // Load spells on component mount
   useEffect(() => {
-    if (loadSpells) {
-      loadSpells();
-    }
+    loadSpells();
   }, [loadSpells]);
 
-  // Filter spells based on search term and filters
-  const filteredSpells = useMemo(() => {
-    if (!availableSpells) return [];
-
-    let filtered = [...availableSpells];
-
-    // Filter by search term
-    if (searchTerm) {
-      const term = searchTerm.toLowerCase();
-      filtered = filtered.filter(spell => 
-        spell.name.toLowerCase().includes(term) || 
-        (spell.description && typeof spell.description === 'string' && spell.description.toLowerCase().includes(term)) ||
-        (spell.school && spell.school.toLowerCase().includes(term))
-      );
-    }
-
-    // Filter by tab
-    if (activeTab === 'my-spells') {
-      const selectedIds = selectedSpells.map(s => s.id);
-      filtered = filtered.filter(spell => selectedIds.includes(spell.id));
-    } else if (activeTab === 'prepared') {
-      const preparedIds = selectedSpells.filter(s => s.prepared).map(s => s.id);
-      filtered = filtered.filter(spell => preparedIds.includes(spell.id));
-    }
-
-    // Apply additional filters
-    if (filters.schools.length > 0) {
-      filtered = filtered.filter(spell => 
-        spell.school && filters.schools.includes(spell.school.toLowerCase())
-      );
-    }
-
-    if (filters.ritual) {
-      filtered = filtered.filter(spell => spell.ritual);
-    }
-
-    if (filters.concentration) {
-      filtered = filtered.filter(spell => spell.concentration);
-    }
-
-    if (filters.level !== 'all') {
-      const level = parseInt(filters.level, 10);
-      filtered = filtered.filter(spell => spell.level === level);
-    }
-
-    return filtered;
-  }, [availableSpells, searchTerm, activeTab, selectedSpells, filters]);
-
-  // Group spells by level for display
-  const spellsByLevel = useMemo(() => {
-    const grouped: Record<number, SpellData[]> = {};
-    
-    filteredSpells.forEach(spell => {
-      if (!grouped[spell.level]) {
-        grouped[spell.level] = [];
-      }
-      grouped[spell.level].push(spell);
-    });
-    
-    // Sort each level group by name
-    Object.keys(grouped).forEach(level => {
-      grouped[parseInt(level, 10)].sort((a, b) => a.name.localeCompare(b.name));
-    });
-    
-    return grouped;
-  }, [filteredSpells]);
-
-  // Get unique schools for filtering
-  const spellSchools = useMemo(() => {
-    if (!availableSpells) return [];
-    
-    const schools = new Set<string>();
-    availableSpells.forEach(spell => {
-      if (spell.school) {
-        schools.add(spell.school.toLowerCase());
-      }
-    });
-    
-    return Array.from(schools).sort();
-  }, [availableSpells]);
-
-  // Handle spell selection
-  const handleSelectSpell = (spell: SpellData) => {
-    setSelectedSpell(spell);
+  const handleImportSpells = (spells: any) => {
+    importSpells(spells);
+    setIsImportModalOpen(false);
   };
 
-  // Check if a spell is in the selected list
-  const isSpellSelected = (spellId: string | number): boolean => {
-    return selectedSpells.some(s => s.id === spellId);
-  };
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      name: "",
+      level: 0,
+      school: "",
+      castingTime: "",
+      range: "",
+      components: "",
+      duration: "",
+      description: "",
+      classes: "",
+    },
+  })
 
-  // Check if a spell is prepared
-  const isSpellPrepared = (spellId: string | number): boolean => {
-    const spell = selectedSpells.find(s => s.id === spellId);
-    return spell ? !!spell.prepared : false;
-  };
-
-  // Handle adding a spell to the spellbook
-  const handleAddSpell = (spell: SpellData) => {
-    if (isSpellSelected(spell.id)) {
-      toast({
-        title: "Уже добавлено",
-        description: "Это заклинание уже есть в вашей книге заклинаний"
-      });
-      return;
-    }
-    
-    addSpell(spell);
+  function onSubmit(values: z.infer<typeof formSchema>) {
     toast({
-      title: "Заклинание добавлено",
-      description: `${spell.name} добавлено в вашу книгу заклинаний`
-    });
-  };
-
-  // Handle removing a spell from the spellbook
-  const handleRemoveSpell = (spell: SpellData) => {
-    removeSpell(spell.id.toString());
-    toast({
-      title: "Заклинание удалено",
-      description: `${spell.name} удалено из вашей книги заклинаний`
-    });
-  };
-
-  // Handle preparing/unpreparing a spell
-  const handlePrepareSpell = (spell: SpellData) => {
-    if (isSpellPrepared(spell.id)) {
-      unprepareSpell(spell.id.toString());
-      toast({
-        title: "Заклинание не подготовлено",
-        description: `${spell.name} больше не подготовлено`
-      });
-    } else {
-      prepareSpell(spell.id.toString());
-      toast({
-        title: "Заклинание подготовлено",
-        description: `${spell.name} теперь подготовлено`
-      });
-    }
-  };
-
-  // Handle exporting spells
-  const handleExportSpells = () => {
-    if (selectedSpells.length === 0) {
-      toast({
-        title: "Нет заклинаний",
-        description: "У вас нет заклинаний для экспорта",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    exportSpells();
-    toast({
-      title: "Заклинания экспортированы",
-      description: "Ваши заклинания были экспортированы в JSON файл"
-    });
-  };
-
-  // Render level headers
-  const renderLevelHeader = (level: number) => {
-    const spellCount = spellsByLevel[level]?.length || 0;
-    
-    if (level === 0) {
-      return `Заговоры (${spellCount})`;
-    }
-    
-    return `${level} уровень (${spellCount})`;
-  };
-
-  // Render spell card
-  const renderSpellCard = (spell: SpellData) => {
-    const isOwned = isSpellSelected(spell.id);
-    const isPrepared = isSpellPrepared(spell.id);
-    
-    return (
-      <Card 
-        key={spell.id} 
-        className={`mb-2 cursor-pointer hover:bg-accent/10 transition-colors ${selectedSpell?.id === spell.id ? 'border-primary' : ''}`}
-        style={{ backgroundColor: currentTheme.cardBackground }}
-        onClick={() => handleSelectSpell(spell)}
-      >
-        <CardContent className="p-3 flex justify-between items-center">
-          <div>
-            <div className="font-medium" style={{ color: currentTheme.textColor }}>
-              {spell.name}
-            </div>
-            <div className="text-xs flex items-center gap-1" style={{ color: currentTheme.mutedTextColor }}>
-              <span>{spell.school || 'Универсальная'}</span>
-              {spell.ritual && <Badge variant="outline" className="text-xs py-0 px-1 h-4">Ритуал</Badge>}
-              {spell.concentration && <Badge variant="outline" className="text-xs py-0 px-1 h-4">Концентрация</Badge>}
-            </div>
-          </div>
-          
-          <div className="flex gap-1">
-            {isOwned ? (
-              <>
-                {spell.level > 0 && (
-                  <Button 
-                    size="icon" 
-                    variant={isPrepared ? "default" : "outline"} 
-                    className="h-7 w-7"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handlePrepareSpell(spell);
-                    }}
-                  >
-                    <Star className="h-3 w-3" />
-                  </Button>
-                )}
-                <Button 
-                  size="icon" 
-                  variant="destructive" 
-                  className="h-7 w-7"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleRemoveSpell(spell);
-                  }}
-                >
-                  <Minus className="h-3 w-3" />
-                </Button>
-              </>
-            ) : (
-              <Button 
-                size="icon" 
-                variant="outline" 
-                className="h-7 w-7"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleAddSpell(spell);
-                }}
-              >
-                <Plus className="h-3 w-3" />
-              </Button>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-    );
-  };
+      title: "Вы успешно создали заклинание!",
+      description: "Вы можете просмотреть его в своей книге заклинаний.",
+    })
+  }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-      {/* Left sidebar - spell list */}
-      <div className="md:col-span-1">
-        <Card className="h-full" style={{ backgroundColor: currentTheme.background }}>
-          <CardContent className="p-4 h-full flex flex-col">
-            <div className="mb-4 space-y-4">
-              <div className="flex items-center space-x-2">
-                <div className="relative flex-grow">
-                  <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Поиск заклинаний..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-8"
+    <div className="container mx-auto py-10">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold" style={{ color: currentTheme.textColor }}>
+          Книга заклинаний
+        </h1>
+        <div className="space-x-2">
+          <Button variant="outline" onClick={exportSpells}>
+            Экспорт
+          </Button>
+          <Button onClick={() => setIsImportModalOpen(true)}>
+            Импорт
+          </Button>
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button>Создать</Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[425px]">
+              <DialogHeader>
+                <DialogTitle>Создать заклинание</DialogTitle>
+                <DialogDescription>
+                  Создайте новое заклинание в своей книге заклинаний.
+                </DialogDescription>
+              </DialogHeader>
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+                  <FormField
+                    control={form.control}
+                    name="name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Имя</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Имя заклинания" {...field} />
+                        </FormControl>
+                        <FormDescription>
+                          Это имя, которое будет отображаться в вашей книге заклинаний.
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
                   />
-                </div>
-                <Button 
-                  variant="outline" 
-                  size="icon"
-                  onClick={() => setShowDatabaseModal(true)}
-                >
-                  <Filter className="h-4 w-4" />
-                </Button>
-              </div>
-              
-              <Tabs value={activeTab} onValueChange={setActiveTab}>
-                <TabsList className="grid grid-cols-3 w-full">
-                  <TabsTrigger value="all">Все</TabsTrigger>
-                  <TabsTrigger value="my-spells">Мои</TabsTrigger>
-                  <TabsTrigger value="prepared">Подготовленные</TabsTrigger>
-                </TabsList>
-              </Tabs>
-              
-              <div className="flex justify-between">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="text-xs"
-                  onClick={() => setShowImportModal(true)}
-                >
-                  <Upload className="h-3 w-3 mr-1" />
-                  Импорт
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="text-xs"
-                  onClick={handleExportSpells}
-                >
-                  <Download className="h-3 w-3 mr-1" />
-                  Экспорт
-                </Button>
-              </div>
-            </div>
-            
-            <ScrollArea className="flex-grow pr-4">
-              {loading ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  Загрузка заклинаний...
-                </div>
-              ) : filteredSpells.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  Заклинания не найдены
-                </div>
-              ) : (
-                <div className="space-y-6">
-                  {Object.keys(spellsByLevel)
-                    .map(Number)
-                    .sort((a, b) => a - b)
-                    .map(level => (
-                      <div key={level}>
-                        <h3 
-                          className="text-sm font-medium mb-2 pb-1 border-b"
-                          style={{ 
-                            borderColor: currentTheme.borderColor,
-                            color: currentTheme.textColor
-                          }}
-                        >
-                          {renderLevelHeader(level)}
-                        </h3>
-                        <div className="space-y-2">
-                          {spellsByLevel[level].map(spell => renderSpellCard(spell))}
-                        </div>
-                      </div>
-                    ))
-                  }
-                </div>
-              )}
-            </ScrollArea>
-          </CardContent>
-        </Card>
+                  <FormField
+                    control={form.control}
+                    name="level"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Уровень</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Уровень заклинания" type="number" {...field} />
+                        </FormControl>
+                        <FormDescription>
+                          Это уровень заклинания.
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="school"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Школа</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Школа заклинания" {...field} />
+                        </FormControl>
+                        <FormDescription>
+                          Это школа заклинания.
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="castingTime"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Время кастинга</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Время кастинга заклинания" {...field} />
+                        </FormControl>
+                        <FormDescription>
+                          Это время кастинга заклинания.
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="range"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Дистанция</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Дистанция заклинания" {...field} />
+                        </FormControl>
+                        <FormDescription>
+                          Это дистанция заклинания.
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="components"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Компоненты</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Компоненты заклинания" {...field} />
+                        </FormControl>
+                        <FormDescription>
+                          Это компоненты заклинания.
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="duration"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Длительность</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Длительность заклинания" {...field} />
+                        </FormControl>
+                        <FormDescription>
+                          Это длительность заклинания.
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="description"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Описание</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Описание заклинания" {...field} />
+                        </FormControl>
+                        <FormDescription>
+                          Это описание заклинания.
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="classes"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Классы</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Классы заклинания" {...field} />
+                        </FormControl>
+                        <FormDescription>
+                          Это классы, которые могут использовать это заклинание.
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <Button type="submit">Создать</Button>
+                </form>
+              </Form>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
-      
-      {/* Right side - spell details */}
-      <div className="md:col-span-2">
-        <SpellDetailView
-          spell={selectedSpell}
-          onPrepareSpell={handlePrepareSpell}
-          onAddSpell={handleAddSpell}
-          onRemoveSpell={handleRemoveSpell}
-          isOwned={selectedSpell ? isSpellSelected(selectedSpell.id) : false}
-          isPrepared={selectedSpell ? isSpellPrepared(selectedSpell.id) : false}
+      {selectedSpells.length === 0 ? (
+        <EmptyState />
+      ) : (
+        <ScrollArea className="rounded-md border">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-[100px]">Имя</TableHead>
+                <TableHead>Уровень</TableHead>
+                <TableHead>Школа</TableHead>
+                <TableHead>Время кастинга</TableHead>
+                <TableHead>Дистанция</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {selectedSpells.map((spell) => (
+                <TableRow key={spell.id}>
+                  <TableCell className="font-medium">{spell.name}</TableCell>
+                  <TableCell>{spell.level}</TableCell>
+                  <TableCell>{spell.school}</TableCell>
+                  <TableCell>{spell.castingTime}</TableCell>
+                  <TableCell>{spell.range}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </ScrollArea>
+      )}
+      {isImportModalOpen && (
+        <SpellImportModal
+          isOpen={isImportModalOpen}
+          onClose={() => setIsImportModalOpen(false)}
+          onImport={handleImportSpells}
         />
-      </div>
-      
-      {/* Import Modal */}
-      <SpellImportModal
-        isOpen={showImportModal}
-        onClose={() => setShowImportModal(false)}
-        onImport={(spells) => {
-          importSpells(spells);
-          setShowImportModal(false);
-        }}
-      />
-      
-      {/* Database Management Modal */}
-      <Dialog open={showDatabaseModal} onOpenChange={setShowDatabaseModal}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Управление базой заклинаний</DialogTitle>
-          </DialogHeader>
-          <SpellDatabaseManager onClose={() => setShowDatabaseModal(false)} />
-        </DialogContent>
-      </Dialog>
+      )}
     </div>
   );
 };

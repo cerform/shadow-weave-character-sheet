@@ -26,10 +26,17 @@ export const parseSpellEntry = (entry: string): {
   const name = match[2].trim();
   const componentCode = match[3] || '';
   
+  // Используем функцию parseComponents, но гарантируем наличие всех обязательных полей
+  const parsedComponents = parseComponents(componentCode);
   return {
     name,
     level,
-    components: parseComponents(componentCode)
+    components: {
+      verbal: parsedComponents.verbal || false,
+      somatic: parsedComponents.somatic || false, 
+      material: parsedComponents.material || false,
+      ritual: parsedComponents.ritual || false
+    }
   };
 };
 

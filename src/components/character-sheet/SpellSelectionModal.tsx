@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Character, CharacterSpell } from '@/types/character';
@@ -20,14 +21,14 @@ import { themes } from '@/lib/themes';
 interface SpellSelectionModalProps {
   character: Character;
   open: boolean;
-  onClose: () => void;
+  onOpenChange: React.Dispatch<React.SetStateAction<boolean>>; // Изменяем с onClose на onOpenChange
   onUpdateCharacter: (updates: Partial<Character>) => void;
 }
 
 const SpellSelectionModal: React.FC<SpellSelectionModalProps> = ({ 
   character, 
   open, 
-  onClose, 
+  onOpenChange, // Обновляем параметр
   onUpdateCharacter
 }) => {
   const { theme } = useTheme();
@@ -176,7 +177,7 @@ const SpellSelectionModal: React.FC<SpellSelectionModalProps> = ({
   }).length || 0;
 
   return (
-    <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle>Выбор заклинаний</DialogTitle>
