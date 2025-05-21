@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useCharacter } from '@/contexts/CharacterContext';
 import { Character } from '@/types/character';
 import { toast } from 'sonner';
+import { handleShortRest, handleLongRest } from '@/utils/restUtils';
 
 interface RestPanelProps {
   character: Character;
@@ -17,23 +18,14 @@ const RestPanel: React.FC<RestPanelProps> = ({ character, onUpdate }) => {
   const updateCharacter = onUpdate || contextUpdateCharacter;
 
   // Обработчик короткого отдыха
-  const handleShortRest = () => {
-    // Обновляем ресурсы с recoveryType 'short' или 'short-rest'
-    if (character.resources) {
-      const updatedResources = { ...character.resources };
-      Object.keys(updatedResources).forEach(key => {
-        const resource = updatedResources[key];
-        if (resource && (resource.recoveryType === 'short' || resource.recoveryType === 'short-rest')) {
-          updatedResources[key] = {
-            ...resource,
-            used: 0 // Сбрасываем использованные ресурсы
-          };
-        }
-      });
-      
-      // Обновляем персонажа
-      updateCharacter({ resources: updatedResources });
-    }
+  const handleShortRestClick = () => {
+    if (!character) return;
+    
+    // Используем утилиту для обработки короткого отдыха
+    const updates = handleShortRest(character);
+    
+    // Обновляем персонажа
+    updateCharacter(updates);
     
     toast.success("Короткий отдых завершён", {
       description: "Ваши ресурсы восстановлены."
@@ -41,53 +33,14 @@ const RestPanel: React.FC<RestPanelProps> = ({ character, onUpdate }) => {
   };
 
   // Обработчик длинного отдыха
-  const handleLongRest = () => {
-    // Обновляем все ресурсы
-    if (character.resources) {
-      const updatedResources = { ...character.resources };
-      Object.keys(updatedResources).forEach(key => {
-        const resource = updatedResources[key];
-        if (resource) {
-          updatedResources[key] = {
-            ...resource,
-            used: 0 // Сбрасываем все использованные ресурсы
-          };
-        }
-      });
-      
-      // Обновляем персонажа
-      updateCharacter({ resources: updatedResources });
-    }
-
-    // Обновляем кости хитов (восстанавливаем половину)
-    if (character.hitDice) {
-      const maxRecovery = Math.max(1, Math.floor(character.level / 2));
-      const currentUsed = character.hitDice.used || 0;
-      const newUsed = Math.max(0, currentUsed - maxRecovery);
-      
-      updateCharacter({
-        hitDice: {
-          ...character.hitDice,
-          used: newUsed
-        }
-      });
-    }
-
-    // Восстанавливаем хит-поинты до максимума
-    updateCharacter({
-      currentHp: character.maxHp,
-      tempHp: 0
-    });
-
-    // Восстанавливаем очки колдовства (для чародея)
-    if (character.sorceryPoints) {
-      updateCharacter({
-        sorceryPoints: {
-          ...character.sorceryPoints,
-          current: character.sorceryPoints.max
-        }
-      });
-    }
+  const handleLongRestClick = () => {
+    if (!character) return;
+    
+    // Используем утилиту для обработки длинного отдыха
+    const updates = handleLongRest(character);
+    
+    // Обновляем персонажа
+    updateCharacter(updates);
 
     toast.success("Длинный отдых завершён", {
       description: "Ваши ресурсы и здоровье полностью восстановлены."
@@ -102,14 +55,14 @@ const RestPanel: React.FC<RestPanelProps> = ({ character, onUpdate }) => {
         <div className="grid grid-cols-2 gap-4">
           <Button
             variant="outline"
-            onClick={handleShortRest}
+            onClick={handleShortRestClick}
             className="w-full"
           >
             Короткий отдых
           </Button>
           
           <Button
-            onClick={handleLongRest}
+            onClick={handleLongRestClick}
             className="w-full"
           >
             Длинный отдых

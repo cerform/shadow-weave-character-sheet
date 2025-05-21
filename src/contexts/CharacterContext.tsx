@@ -14,6 +14,13 @@ interface CharacterContextType {
   getAllCharacters: () => Promise<Character[]>;
   getCharactersByUserId: (userId: string) => Promise<Character[]>;
   deleteCharacter: (id: string) => Promise<void>;
+  // Add missing properties
+  saveCurrentCharacter: () => Promise<string>;
+  getUserCharacters: () => Promise<Character[]>;
+  loading: boolean;
+  error: Error | null;
+  characters: Character[];
+  refreshCharacters: () => Promise<void>;
 }
 
 // Create context with default values
@@ -26,11 +33,21 @@ const CharacterContext = createContext<CharacterContextType>({
   getAllCharacters: async () => [],
   getCharactersByUserId: async () => [],
   deleteCharacter: async () => {},
+  // Add default values for new properties
+  saveCurrentCharacter: async () => '',
+  getUserCharacters: async () => [],
+  loading: false,
+  error: null,
+  characters: [],
+  refreshCharacters: async () => {},
 });
 
 // Create provider component
 export const CharacterProvider = ({ children }: { children: ReactNode }) => {
   const [character, setCharacter] = useState<Character | null>(null);
+  const [characters, setCharacters] = useState<Character[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
   const { toast } = useToast();
 
   const updateCharacter = (updates: Partial<Character>) => {
@@ -95,6 +112,66 @@ export const CharacterProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  // Add new methods for the added properties
+  const saveCurrentCharacter = async (): Promise<string> => {
+    if (!character) {
+      toast({
+        title: "Ошибка сохранения",
+        description: "Нет активного персонажа для сохранения",
+        variant: "destructive"
+      });
+      return '';
+    }
+    
+    try {
+      setLoading(true);
+      const id = await saveCharacterToFirestore(character);
+      
+      toast({
+        title: "Успешно сохранено",
+        description: "Персонаж успешно сохранен"
+      });
+      
+      // Refresh the character list
+      refreshCharacters();
+      
+      return id || '';
+    } catch (error) {
+      console.error('Error saving current character:', error);
+      toast({
+        title: "Ошибка сохранения",
+        description: "Произошла ошибка при сохранении персонажа",
+        variant: "destructive"
+      });
+      return '';
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  const getUserCharacters = async (): Promise<Character[]> => {
+    try {
+      setLoading(true);
+      // Use any user ID retrieval logic you have
+      const userId = localStorage.getItem('userId') || '';
+      if (!userId) return [];
+      
+      const userChars = await getCharactersByUserId(userId);
+      setCharacters(userChars);
+      return userChars;
+    } catch (error) {
+      console.error('Error getting user characters:', error);
+      setError(error instanceof Error ? error : new Error('Unknown error'));
+      return [];
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  const refreshCharacters = async (): Promise<void> => {
+    return getUserCharacters().then(() => {});
+  };
+
   return (
     <CharacterContext.Provider
       value={{
@@ -105,7 +182,14 @@ export const CharacterProvider = ({ children }: { children: ReactNode }) => {
         getCharacterById: handleGetCharacterById,
         getAllCharacters: handleGetAllCharacters,
         getCharactersByUserId: handleGetCharactersByUserId,
-        deleteCharacter: handleDeleteCharacter
+        deleteCharacter: handleDeleteCharacter,
+        // Add new properties to context value
+        saveCurrentCharacter,
+        getUserCharacters,
+        loading,
+        error,
+        characters,
+        refreshCharacters
       }}
     >
       {children}

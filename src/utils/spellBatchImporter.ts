@@ -75,7 +75,7 @@ export const importSpellsFromText = (text: string, existingSpells: CharacterSpel
   }
 };
 
-// Function to process a batch of spells (placeholder for compatibility)
+// Function to process a batch of spells (providing compatibility with old code)
 export const processSpellBatch = (text: string, existingSpells: CharacterSpell[]): CharacterSpell[] => {
   return importSpellsFromText(text, existingSpells);
 };

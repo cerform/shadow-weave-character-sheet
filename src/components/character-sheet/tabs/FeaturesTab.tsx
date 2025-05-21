@@ -1,573 +1,402 @@
-
-import React, { useState } from 'react';
-import { Textarea } from "@/components/ui/textarea";
-import { Character } from '@/types/character';
+import React, { useState, useMemo } from 'react';
+import { Character, Feature } from '@/types/character';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Card, CardContent } from '@/components/ui/card';
+import { Plus, Trash2, Edit, Save, X } from 'lucide-react';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from "@/components/ui/button";
-import { ChevronDown, ChevronUp, PlusCircle } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { AspectRatio } from '@/components/ui/aspect-ratio';
 
 interface FeaturesTabProps {
   character: Character;
   onUpdate: (updates: Partial<Character>) => void;
 }
 
-// Интерфейс для функционала добавления новых особенностей
-interface NewFeature {
-  name: string;
-  description: string;
-  level?: number;
-  type: 'racial' | 'class' | 'background' | 'feat';
-}
-
 const FeaturesTab: React.FC<FeaturesTabProps> = ({ character, onUpdate }) => {
-  const [activeTab, setActiveTab] = useState<string>("all");
-  const [isAddingFeature, setIsAddingFeature] = useState(false);
-  const [newFeature, setNewFeature] = useState<NewFeature>({
+  const [filter, setFilter] = useState<string>('all');
+  const [newFeature, setNewFeature] = useState<Feature>({
     name: '',
+    source: 'class',
     description: '',
-    level: character.level || 1,
-    type: 'class'
+    level: character.level || 1
   });
+  const [editingFeature, setEditingFeature] = useState<Feature | null>(null);
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [activeTab, setActiveTab] = useState('features');
   
-  // Получение текущих особенностей из персонажа
-  const racialFeatures = character.raceFeatures || [];
-  const classFeatures = character.classFeatures || [];
-  const backgroundFeatures = character.backgroundFeatures || [];
-  const feats = character.feats || [];
-
-  // Обработчик изменения полей формы
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setNewFeature(prev => ({
-      ...prev,
-      [name]: name === 'level' ? parseInt(value, 10) : value
-    }));
+  // Safe conversion of features to ensure it's an array and with the right format
+  const normalizeFeatures = (features: any[] | string[] | undefined): Feature[] => {
+    if (!features || features.length === 0) return [];
+    
+    return features.map(feat => {
+      if (typeof feat === 'string') {
+        return {
+          name: feat,
+          source: 'Unknown',
+          description: ''
+        };
+      }
+      return feat as Feature;
+    });
   };
 
-  // Обработчик добавления новой особенности
+  const features = useMemo(() => {
+    return normalizeFeatures(character.features as any[]);
+  }, [character.features]);
+
+  const filteredFeatures = useMemo(() => {
+    if (filter === 'all') return features;
+    return features.filter(feature => feature.source === filter);
+  }, [features, filter]);
+
   const handleAddFeature = () => {
-    if (!newFeature.name || !newFeature.description) return;
+    if (!newFeature.name.trim()) return;
+
+    const updatedFeatures = [...features, { ...newFeature }];
+    onUpdate({ features: updatedFeatures });
     
-    const featureToAdd = {
-      name: newFeature.name,
-      description: newFeature.description,
-      level: newFeature.level
-    };
-    
-    let updatedCharacter: Partial<Character> = {};
-    
-    // Добавляем особенность в соответствующий массив
-    if (newFeature.type === 'racial') {
-      updatedCharacter.raceFeatures = [...racialFeatures, featureToAdd];
-    } else if (newFeature.type === 'class') {
-      updatedCharacter.classFeatures = [...classFeatures, featureToAdd];
-    } else if (newFeature.type === 'background') {
-      updatedCharacter.backgroundFeatures = [...backgroundFeatures, featureToAdd];
-    } else if (newFeature.type === 'feat') {
-      updatedCharacter.feats = [...feats, featureToAdd];
-    }
-    
-    // Обновляем персонажа
-    onUpdate(updatedCharacter);
-    
-    // Сбрасываем форму
+    // Reset form
     setNewFeature({
       name: '',
+      source: 'class',
       description: '',
-      level: character.level || 1,
-      type: 'class'
+      level: character.level || 1
     });
-    
-    setIsAddingFeature(false);
   };
 
-  // Главное поле для заметок о способностях (сохраняем оригинальный функционал)
-  const handleNotesChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const { name, value } = event.target;
-    onUpdate({ [name]: value });
+  const handleDeleteFeature = (index: number) => {
+    const updatedFeatures = [...features];
+    updatedFeatures.splice(index, 1);
+    onUpdate({ features: updatedFeatures });
   };
+
+  const handleEditFeature = (feature: Feature, index: number) => {
+    setEditingFeature({ ...feature });
+    setEditingIndex(index);
+  };
+
+  const handleSaveEdit = () => {
+    if (!editingFeature || editingIndex === null) return;
+
+    const updatedFeatures = [...features];
+    updatedFeatures[editingIndex] = editingFeature;
+    onUpdate({ features: updatedFeatures });
+    
+    // Reset editing state
+    setEditingFeature(null);
+    setEditingIndex(null);
+  };
+
+  const handleCancelEdit = () => {
+    setEditingFeature(null);
+    setEditingIndex(null);
+  };
+
+  // Handle racial traits
+  const raceFeatures = useMemo(() => {
+    return character.raceFeatures || [];
+  }, [character.raceFeatures]);
+
+  // Handle class features
+  const classFeatures = useMemo(() => {
+    return character.classFeatures || [];
+  }, [character.classFeatures]);
+
+  // Handle feats
+  const feats = useMemo(() => {
+    return character.feats || [];
+  }, [character.feats]);
+
+  // Handle background features
+  const backgroundFeatures = useMemo(() => {
+    return character.backgroundFeatures || [];
+  }, [character.backgroundFeatures]);
 
   return (
     <div className="space-y-6">
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid grid-cols-5">
-          <TabsTrigger value="all">Все</TabsTrigger>
-          <TabsTrigger value="racial">Расовые</TabsTrigger>
-          <TabsTrigger value="class">Классовые</TabsTrigger>
-          <TabsTrigger value="background">Предыстория</TabsTrigger>
-          <TabsTrigger value="notes">Заметки</TabsTrigger>
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="grid grid-cols-2 md:grid-cols-4 mb-4">
+          <TabsTrigger value="features">Особенности</TabsTrigger>
+          <TabsTrigger value="racial">Расовые черты</TabsTrigger>
+          <TabsTrigger value="class">Классовые умения</TabsTrigger>
+          <TabsTrigger value="feats">Черты</TabsTrigger>
         </TabsList>
         
-        {/* Все особенности */}
-        <TabsContent value="all" className="space-y-4">
-          {!isAddingFeature && (
-            <Button 
-              onClick={() => setIsAddingFeature(true)}
-              className="mb-4 bg-amber-600 hover:bg-amber-700"
-            >
-              <PlusCircle className="mr-2 h-4 w-4" />
-              Добавить особенность
-            </Button>
-          )}
+        <TabsContent value="features" className="space-y-4">
+          <div className="flex justify-between items-center">
+            <h3 className="text-lg font-semibold">Особенности персонажа</h3>
+            <Select value={filter} onValueChange={setFilter}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Фильтр" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Все особенности</SelectItem>
+                <SelectItem value="race">Расовые</SelectItem>
+                <SelectItem value="class">Классовые</SelectItem>
+                <SelectItem value="background">Предыстория</SelectItem>
+                <SelectItem value="feat">Черты</SelectItem>
+                <SelectItem value="item">Предметы</SelectItem>
+                <SelectItem value="other">Прочее</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
           
-          {isAddingFeature && (
-            <Card className="mb-6 border-amber-600/50">
-              <CardHeader>
-                <CardTitle>Добавление новой особенности</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <label className="block mb-1">Тип особенности</label>
-                  <select 
-                    name="type"
-                    value={newFeature.type}
-                    onChange={handleInputChange}
-                    className="w-full p-2 rounded bg-gray-800 border border-gray-700"
-                  >
-                    <option value="racial">Расовая особенность</option>
-                    <option value="class">Классовая особенность</option>
-                    <option value="background">Особенность предыстории</option>
-                    <option value="feat">Черта</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block mb-1">Название</label>
-                  <input 
-                    type="text"
-                    name="name"
-                    value={newFeature.name}
-                    onChange={handleInputChange}
-                    className="w-full p-2 rounded bg-gray-800 border border-gray-700"
-                    placeholder="Введите название особенности"
+          <ScrollArea className="h-[300px] rounded-md border p-4">
+            {filteredFeatures.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                Нет особенностей для отображения
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {filteredFeatures.map((feature, index) => (
+                  <Collapsible key={index} className="border rounded-lg overflow-hidden">
+                    <div className="flex justify-between items-center p-3 bg-muted/30">
+                      <div className="flex items-center gap-2">
+                        <CollapsibleTrigger className="flex-1 text-left font-medium">
+                          {feature.name}
+                        </CollapsibleTrigger>
+                        <Badge variant="outline" className="ml-2">
+                          {feature.source}
+                        </Badge>
+                        {feature.level && (
+                          <Badge variant="secondary" className="ml-1">
+                            Ур. {feature.level}
+                          </Badge>
+                        )}
+                      </div>
+                      
+                      <div className="flex items-center gap-1">
+                        <Button 
+                          variant="ghost" 
+                          size="icon"
+                          onClick={() => handleEditFeature(feature, index)}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="icon"
+                          onClick={() => handleDeleteFeature(index)}
+                        >
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </div>
+                    </div>
+                    
+                    <CollapsibleContent className="p-3 text-sm">
+                      {feature.description || "Нет описания"}
+                    </CollapsibleContent>
+                  </Collapsible>
+                ))}
+              </div>
+            )}
+          </ScrollArea>
+          
+          {editingFeature ? (
+            <Card>
+              <CardContent className="pt-6 space-y-4">
+                <h4 className="font-medium">Редактирование особенности</h4>
+                <div className="space-y-3">
+                  <Input 
+                    placeholder="Название особенности" 
+                    value={editingFeature.name}
+                    onChange={(e) => setEditingFeature({...editingFeature, name: e.target.value})}
                   />
-                </div>
-                {newFeature.type === 'class' && (
-                  <div>
-                    <label className="block mb-1">Уровень</label>
-                    <input 
-                      type="number"
-                      name="level"
-                      value={newFeature.level}
-                      onChange={handleInputChange}
-                      className="w-full p-2 rounded bg-gray-800 border border-gray-700"
-                      min="1"
-                      max="20"
+                  
+                  <div className="grid grid-cols-2 gap-3">
+                    <Select 
+                      value={editingFeature.source} 
+                      onValueChange={(value) => setEditingFeature({...editingFeature, source: value})}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Источник" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="race">Раса</SelectItem>
+                        <SelectItem value="class">Класс</SelectItem>
+                        <SelectItem value="background">Предыстория</SelectItem>
+                        <SelectItem value="feat">Черта</SelectItem>
+                        <SelectItem value="item">Предмет</SelectItem>
+                        <SelectItem value="other">Другое</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    
+                    <Input 
+                      type="number" 
+                      placeholder="Уровень" 
+                      value={editingFeature.level || ''}
+                      onChange={(e) => setEditingFeature({
+                        ...editingFeature, 
+                        level: e.target.value ? parseInt(e.target.value) : undefined
+                      })}
                     />
                   </div>
-                )}
-                <div>
-                  <label className="block mb-1">Описание</label>
+                  
                   <Textarea 
-                    name="description"
-                    value={newFeature.description}
-                    onChange={handleInputChange}
-                    className="w-full p-2 rounded bg-gray-800 border border-gray-700"
-                    placeholder="Опишите способность..."
+                    placeholder="Описание особенности" 
+                    value={editingFeature.description}
+                    onChange={(e) => setEditingFeature({...editingFeature, description: e.target.value})}
                     rows={4}
                   />
+                  
+                  <div className="flex justify-end gap-2">
+                    <Button variant="outline" onClick={handleCancelEdit}>
+                      <X className="h-4 w-4 mr-2" />
+                      Отмена
+                    </Button>
+                    <Button onClick={handleSaveEdit}>
+                      <Save className="h-4 w-4 mr-2" />
+                      Сохранить
+                    </Button>
+                  </div>
                 </div>
-                <div className="flex justify-end space-x-2">
-                  <Button 
-                    variant="outline"
-                    onClick={() => setIsAddingFeature(false)}
-                  >
-                    Отмена
-                  </Button>
-                  <Button 
-                    className="bg-amber-600 hover:bg-amber-700"
-                    onClick={handleAddFeature}
-                    disabled={!newFeature.name || !newFeature.description}
-                  >
-                    Добавить
+              </CardContent>
+            </Card>
+          ) : (
+            <Card>
+              <CardContent className="pt-6 space-y-4">
+                <h4 className="font-medium">Добавить новую особенность</h4>
+                <div className="space-y-3">
+                  <Input 
+                    placeholder="Название особенности" 
+                    value={newFeature.name}
+                    onChange={(e) => setNewFeature({...newFeature, name: e.target.value})}
+                  />
+                  
+                  <div className="grid grid-cols-2 gap-3">
+                    <Select 
+                      value={newFeature.source} 
+                      onValueChange={(value) => setNewFeature({...newFeature, source: value})}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Источник" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="race">Раса</SelectItem>
+                        <SelectItem value="class">Класс</SelectItem>
+                        <SelectItem value="background">Предыстория</SelectItem>
+                        <SelectItem value="feat">Черта</SelectItem>
+                        <SelectItem value="item">Предмет</SelectItem>
+                        <SelectItem value="other">Другое</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    
+                    <Input 
+                      type="number" 
+                      placeholder="Уровень" 
+                      value={newFeature.level || ''}
+                      onChange={(e) => setNewFeature({
+                        ...newFeature, 
+                        level: e.target.value ? parseInt(e.target.value) : undefined
+                      })}
+                    />
+                  </div>
+                  
+                  <Textarea 
+                    placeholder="Описание особенности" 
+                    value={newFeature.description}
+                    onChange={(e) => setNewFeature({...newFeature, description: e.target.value})}
+                    rows={4}
+                  />
+                  
+                  <Button onClick={handleAddFeature} className="w-full">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Добавить особенность
                   </Button>
                 </div>
               </CardContent>
             </Card>
           )}
-          
-          {/* Расовые особенности */}
-          {racialFeatures.length > 0 && (
-            <div className="mb-6">
-              <h3 className="text-xl font-semibold text-amber-400 mb-3">
-                Особенности расы {character.race}
-              </h3>
-              <div className="space-y-2">
-                {racialFeatures.map((feature, index) => (
-                  <Card key={index} className="bg-gray-800/70 border-gray-700">
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-amber-300 text-lg">{feature.name}</CardTitle>
-                    </CardHeader>
-                    <CardContent className="text-gray-200">
-                      <p className="whitespace-pre-line">{feature.description}</p>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </div>
-          )}
-          
-          {/* Классовые особенности */}
-          {classFeatures.length > 0 && (
-            <div className="mb-6">
-              <h3 className="text-xl font-semibold text-amber-400 mb-3">
-                Особенности класса {character.class}
-              </h3>
-              <div className="space-y-2">
-                {classFeatures.map((feature, index) => (
-                  <Card key={index} className="bg-gray-800/70 border-gray-700">
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-amber-300 text-lg">
-                        {feature.name} {feature.level ? `(Ур. ${feature.level})` : ''}
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="text-gray-200">
-                      <p className="whitespace-pre-line">{feature.description}</p>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </div>
-          )}
-          
-          {/* Особенности предыстории */}
-          {backgroundFeatures.length > 0 && (
-            <div className="mb-6">
-              <h3 className="text-xl font-semibold text-amber-400 mb-3">
-                Особенности предыстории {character.background}
-              </h3>
-              <div className="space-y-2">
-                {backgroundFeatures.map((feature, index) => (
-                  <Card key={index} className="bg-gray-800/70 border-gray-700">
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-amber-300 text-lg">{feature.name}</CardTitle>
-                    </CardHeader>
-                    <CardContent className="text-gray-200">
-                      <p className="whitespace-pre-line">{feature.description}</p>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </div>
-          )}
-          
-          {/* Черты персонажа */}
-          {feats.length > 0 && (
-            <div className="mb-6">
-              <h3 className="text-xl font-semibold text-amber-400 mb-3">
-                Черты персонажа
-              </h3>
-              <div className="space-y-2">
-                {feats.map((feat, index) => (
-                  <Card key={index} className="bg-gray-800/70 border-gray-700">
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-amber-300 text-lg">{feat.name}</CardTitle>
-                    </CardHeader>
-                    <CardContent className="text-gray-200">
-                      <p className="whitespace-pre-line">{feat.description}</p>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </div>
-          )}
-          
-          {/* Если нет особенностей */}
-          {racialFeatures.length === 0 && 
-           classFeatures.length === 0 && 
-           backgroundFeatures.length === 0 && 
-           feats.length === 0 && !isAddingFeature && (
-            <div className="p-8 text-center border border-gray-700 rounded-lg">
-              <p className="text-gray-400 mb-4">
-                У вашего персонажа пока нет добавленных особенностей или умений
-              </p>
-              <p className="text-gray-500">
-                Нажмите кнопку "Добавить особенность" чтобы добавить новые
-              </p>
-            </div>
-          )}
         </TabsContent>
         
-        {/* Расовые особенности */}
         <TabsContent value="racial" className="space-y-4">
-          {/* Кнопка добавления для расовых особенностей */}
-          {!isAddingFeature && (
-            <Button 
-              onClick={() => {
-                setNewFeature(prev => ({ ...prev, type: 'racial' }));
-                setIsAddingFeature(true);
-              }}
-              className="mb-4 bg-amber-600 hover:bg-amber-700"
-            >
-              <PlusCircle className="mr-2 h-4 w-4" />
-              Добавить расовую особенность
-            </Button>
-          )}
+          <h3 className="text-lg font-semibold">Расовые черты</h3>
           
-          {/* Форма добавления особенности */}
-          {isAddingFeature && newFeature.type === 'racial' && (
-            <Card className="mb-6 border-amber-600/50">
-              {/* ... контент формы для расовых особенностей (аналогично предыдущей) */}
-              <CardHeader>
-                <CardTitle>Добавление расовой особенности</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <label className="block mb-1">Название</label>
-                  <input 
-                    type="text"
-                    name="name"
-                    value={newFeature.name}
-                    onChange={handleInputChange}
-                    className="w-full p-2 rounded bg-gray-800 border border-gray-700"
-                    placeholder="Введите название особенности"
-                  />
-                </div>
-                <div>
-                  <label className="block mb-1">Описание</label>
-                  <Textarea 
-                    name="description"
-                    value={newFeature.description}
-                    onChange={handleInputChange}
-                    className="w-full p-2 rounded bg-gray-800 border border-gray-700"
-                    placeholder="Опишите способность..."
-                    rows={4}
-                  />
-                </div>
-                <div className="flex justify-end space-x-2">
-                  <Button 
-                    variant="outline"
-                    onClick={() => setIsAddingFeature(false)}
-                  >
-                    Отмена
-                  </Button>
-                  <Button 
-                    className="bg-amber-600 hover:bg-amber-700"
-                    onClick={handleAddFeature}
-                    disabled={!newFeature.name || !newFeature.description}
-                  >
-                    Добавить
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-          
-          {/* Список расовых особенностей */}
-          {racialFeatures.length > 0 ? (
-            <div className="space-y-2">
-              {racialFeatures.map((feature, index) => (
-                <Card key={index} className="bg-gray-800/70 border-gray-700">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-amber-300 text-lg">{feature.name}</CardTitle>
-                  </CardHeader>
-                  <CardContent className="text-gray-200">
-                    <p className="whitespace-pre-line">{feature.description}</p>
+          <div className="space-y-3">
+            {raceFeatures.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground border rounded-md">
+                Нет расовых черт для отображения
+              </div>
+            ) : (
+              raceFeatures.map((feature, index) => (
+                <Card key={index}>
+                  <CardContent className="pt-4">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h4 className="font-medium">{feature.name}</h4>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          {feature.description || "Нет описания"}
+                        </p>
+                      </div>
+                    </div>
                   </CardContent>
                 </Card>
-              ))}
-            </div>
-          ) : (
-            <div className="p-6 text-center border border-gray-700 rounded-lg">
-              <p className="text-gray-400">Нет расовых особенностей</p>
-            </div>
-          )}
+              ))
+            )}
+          </div>
         </TabsContent>
         
-        {/* Классовые особенности */}
         <TabsContent value="class" className="space-y-4">
-          {/* Кнопка и форма для классовых особенностей (аналогично расовым) */}
-          {!isAddingFeature && (
-            <Button 
-              onClick={() => {
-                setNewFeature(prev => ({ ...prev, type: 'class' }));
-                setIsAddingFeature(true);
-              }}
-              className="mb-4 bg-amber-600 hover:bg-amber-700"
-            >
-              <PlusCircle className="mr-2 h-4 w-4" />
-              Добавить классовую особенность
-            </Button>
-          )}
+          <h3 className="text-lg font-semibold">Классовые умения</h3>
           
-          {isAddingFeature && newFeature.type === 'class' && (
-            <Card className="mb-6 border-amber-600/50">
-              <CardHeader>
-                <CardTitle>Добавление классовой особенности</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <label className="block mb-1">Название</label>
-                  <input 
-                    type="text"
-                    name="name"
-                    value={newFeature.name}
-                    onChange={handleInputChange}
-                    className="w-full p-2 rounded bg-gray-800 border border-gray-700"
-                    placeholder="Введите название особенности"
-                  />
-                </div>
-                <div>
-                  <label className="block mb-1">Уровень</label>
-                  <input 
-                    type="number"
-                    name="level"
-                    value={newFeature.level}
-                    onChange={handleInputChange}
-                    className="w-full p-2 rounded bg-gray-800 border border-gray-700"
-                    min="1"
-                    max="20"
-                  />
-                </div>
-                <div>
-                  <label className="block mb-1">Описание</label>
-                  <Textarea 
-                    name="description"
-                    value={newFeature.description}
-                    onChange={handleInputChange}
-                    className="w-full p-2 rounded bg-gray-800 border border-gray-700"
-                    placeholder="Опишите способность..."
-                    rows={4}
-                  />
-                </div>
-                <div className="flex justify-end space-x-2">
-                  <Button 
-                    variant="outline"
-                    onClick={() => setIsAddingFeature(false)}
-                  >
-                    Отмена
-                  </Button>
-                  <Button 
-                    className="bg-amber-600 hover:bg-amber-700"
-                    onClick={handleAddFeature}
-                    disabled={!newFeature.name || !newFeature.description}
-                  >
-                    Добавить
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-          
-          {/* Список классовых особенностей */}
-          {classFeatures.length > 0 ? (
-            <div className="space-y-2">
-              {classFeatures.map((feature, index) => (
-                <Card key={index} className="bg-gray-800/70 border-gray-700">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-amber-300 text-lg">
-                      {feature.name} {feature.level ? `(Ур. ${feature.level})` : ''}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="text-gray-200">
-                    <p className="whitespace-pre-line">{feature.description}</p>
+          <div className="space-y-3">
+            {classFeatures.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground border rounded-md">
+                Нет классовых умений для отображения
+              </div>
+            ) : (
+              classFeatures.map((feature, index) => (
+                <Card key={index}>
+                  <CardContent className="pt-4">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <h4 className="font-medium">{feature.name}</h4>
+                          {feature.level && (
+                            <Badge variant="outline">Уровень {feature.level}</Badge>
+                          )}
+                        </div>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          {feature.description || "Нет описания"}
+                        </p>
+                      </div>
+                    </div>
                   </CardContent>
                 </Card>
-              ))}
-            </div>
-          ) : (
-            <div className="p-6 text-center border border-gray-700 rounded-lg">
-              <p className="text-gray-400">Нет классовых особенностей</p>
-            </div>
-          )}
+              ))
+            )}
+          </div>
         </TabsContent>
         
-        {/* Особенности предыстории */}
-        <TabsContent value="background" className="space-y-4">
-          {/* Кнопка и форма для особенностей предыстории (аналогично предыдущим) */}
-          {!isAddingFeature && (
-            <Button 
-              onClick={() => {
-                setNewFeature(prev => ({ ...prev, type: 'background' }));
-                setIsAddingFeature(true);
-              }}
-              className="mb-4 bg-amber-600 hover:bg-amber-700"
-            >
-              <PlusCircle className="mr-2 h-4 w-4" />
-              Добавить особенность предыстории
-            </Button>
-          )}
+        <TabsContent value="feats" className="space-y-4">
+          <h3 className="text-lg font-semibold">Черты</h3>
           
-          {isAddingFeature && newFeature.type === 'background' && (
-            <Card className="mb-6 border-amber-600/50">
-              <CardHeader>
-                <CardTitle>Добавление особенности предыстории</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <label className="block mb-1">Название</label>
-                  <input 
-                    type="text"
-                    name="name"
-                    value={newFeature.name}
-                    onChange={handleInputChange}
-                    className="w-full p-2 rounded bg-gray-800 border border-gray-700"
-                    placeholder="Введите название особенности"
-                  />
-                </div>
-                <div>
-                  <label className="block mb-1">Описание</label>
-                  <Textarea 
-                    name="description"
-                    value={newFeature.description}
-                    onChange={handleInputChange}
-                    className="w-full p-2 rounded bg-gray-800 border border-gray-700"
-                    placeholder="Опишите особенность..."
-                    rows={4}
-                  />
-                </div>
-                <div className="flex justify-end space-x-2">
-                  <Button 
-                    variant="outline"
-                    onClick={() => setIsAddingFeature(false)}
-                  >
-                    Отмена
-                  </Button>
-                  <Button 
-                    className="bg-amber-600 hover:bg-amber-700"
-                    onClick={handleAddFeature}
-                    disabled={!newFeature.name || !newFeature.description}
-                  >
-                    Добавить
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-          
-          {/* Список особенностей предыстории */}
-          {backgroundFeatures.length > 0 ? (
-            <div className="space-y-2">
-              {backgroundFeatures.map((feature, index) => (
-                <Card key={index} className="bg-gray-800/70 border-gray-700">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-amber-300 text-lg">{feature.name}</CardTitle>
-                  </CardHeader>
-                  <CardContent className="text-gray-200">
-                    <p className="whitespace-pre-line">{feature.description}</p>
+          <div className="space-y-3">
+            {feats.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground border rounded-md">
+                Нет черт для отображения
+              </div>
+            ) : (
+              feats.map((feat, index) => (
+                <Card key={index}>
+                  <CardContent className="pt-4">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h4 className="font-medium">{feat.name}</h4>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          {feat.description || "Нет описания"}
+                        </p>
+                      </div>
+                    </div>
                   </CardContent>
                 </Card>
-              ))}
-            </div>
-          ) : (
-            <div className="p-6 text-center border border-gray-700 rounded-lg">
-              <p className="text-gray-400">Нет особенностей предыстории</p>
-            </div>
-          )}
-        </TabsContent>
-        
-        {/* Заметки (оригинальный функционал) */}
-        <TabsContent value="notes">
-          <div className="grid gap-4">
-            <div>
-              <Textarea
-                name="features"
-                placeholder="Классовые особенности, умения и другие особенности персонажа..."
-                value={character.features || ""}
-                onChange={handleNotesChange}
-                className="min-h-[400px] bg-gray-800/50 border-gray-700 text-white"
-              />
-            </div>
+              ))
+            )}
           </div>
         </TabsContent>
       </Tabs>

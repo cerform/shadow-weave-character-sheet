@@ -1,77 +1,31 @@
 
+// Basic authentication helper functions
+
 /**
- * Получает текущий идентификатор пользователя
- * В локальной версии возвращает ID из localStorage или 'local-user'
+ * Get the current user ID from localStorage or other auth storage
  */
-export const getCurrentUid = (): string => {
-  // Попытка получить ID из localStorage
-  const storedUserId = localStorage.getItem('user_id');
-  
-  if (storedUserId) {
-    return storedUserId;
-  }
-  
-  // Если ID не найден, создаём новый и сохраняем
-  const newUserId = `local-user-${Date.now()}`;
-  localStorage.setItem('user_id', newUserId);
-  
-  return newUserId;
+export const getCurrentUid = (): string | null => {
+  // Get from localStorage (in a real app, you might get this from Firebase Auth or similar)
+  return localStorage.getItem('userId');
 };
 
 /**
- * Проверяет, аутентифицирован ли пользователь
+ * Check if a user is authenticated
  */
-export const isUserAuthenticated = (): boolean => {
-  // В локальной версии считаем пользователя аутентифицированным,
-  // если есть ID в localStorage
-  return !!localStorage.getItem('user_id');
+export const isAuthenticated = (): boolean => {
+  return !!getCurrentUid();
 };
 
 /**
- * Получает данные текущего пользователя
+ * Store the current user ID
  */
-export const getCurrentUser = () => {
-  const uid = getCurrentUid();
-  
-  // В локальной версии возвращаем минимальные данные
-  return {
-    uid,
-    displayName: 'Локальный пользователь',
-    email: null,
-    photoURL: null
-  };
+export const setCurrentUid = (uid: string): void => {
+  localStorage.setItem('userId', uid);
 };
 
 /**
- * Выход пользователя
+ * Clear the authentication data
  */
-export const signOut = async (): Promise<void> => {
-  // В локальной версии просто удаляем ID из localStorage
-  localStorage.removeItem('user_id');
-};
-
-/**
- * Аутентификация с помощью электронной почты и пароля
- */
-export const signInWithEmailAndPassword = async (email: string, password: string): Promise<any> => {
-  // В локальной версии просто сохраняем email как ID
-  const uid = `local-user-${email.replace(/[^a-zA-Z0-9]/g, '')}`;
-  localStorage.setItem('user_id', uid);
-  
-  return {
-    user: {
-      uid,
-      email,
-      displayName: email.split('@')[0],
-      photoURL: null
-    }
-  };
-};
-
-/**
- * Регистрация с помощью электронной почты и пароля
- */
-export const createUserWithEmailAndPassword = async (email: string, password: string): Promise<any> => {
-  // В локальной версии делаем то же самое, что и при входе
-  return signInWithEmailAndPassword(email, password);
+export const clearAuthData = (): void => {
+  localStorage.removeItem('userId');
 };

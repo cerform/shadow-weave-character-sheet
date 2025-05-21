@@ -201,7 +201,7 @@ export interface CharacterSpell {
   somatic?: boolean;
   material?: boolean;
   prepared?: boolean;
-  higherLevels?: string; // используем только higherLevels, удаляем higherLevel
+  higherLevels?: string; // используем только higherLevels
   id?: string | number;
   materials?: string;
 }

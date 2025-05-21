@@ -103,19 +103,19 @@ const SpellDetailView: React.FC<SpellDetailViewProps> = ({
               {spell.name}
             </h3>
             <div className="flex flex-wrap gap-2 mt-1">
-              <Badge variant="outline" style={{ borderColor: currentTheme.badgeColor, color: currentTheme.badgeColor }}>
+              <Badge variant="outline" style={{ borderColor: currentTheme.accent, color: currentTheme.accent }}>
                 {getLevelName(spell.level)}
               </Badge>
-              <Badge variant="outline" style={{ borderColor: currentTheme.badgeColor, color: currentTheme.badgeColor }}>
+              <Badge variant="outline" style={{ borderColor: currentTheme.accent, color: currentTheme.accent }}>
                 {formatSchool(spell.school)}
               </Badge>
               {spell.ritual && (
-                <Badge variant="outline" style={{ borderColor: currentTheme.accentColor, color: currentTheme.accentColor }}>
+                <Badge variant="outline" style={{ borderColor: currentTheme.accent, color: currentTheme.accent }}>
                   Ритуал
                 </Badge>
               )}
               {spell.concentration && (
-                <Badge variant="outline" style={{ borderColor: currentTheme.accentColor, color: currentTheme.accentColor }}>
+                <Badge variant="outline" style={{ borderColor: currentTheme.accent, color: currentTheme.accent }}>
                   Концентрация
                 </Badge>
               )}

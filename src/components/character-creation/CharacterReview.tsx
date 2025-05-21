@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Character } from '@/types/character';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -18,7 +17,7 @@ interface CharacterReviewProps {
 }
 
 const CharacterReview: React.FC<CharacterReviewProps> = ({ character, prevStep, updateCharacter, setCurrentStep }) => {
-  const { saveCurrentCharacter, setCharacter } = useCharacter();
+  const { setCharacter } = useCharacter();
   const navigate = useNavigate();
   const [isSaving, setIsSaving] = useState(false);
   const [autoSaved, setAutoSaved] = useState(false);
@@ -59,21 +58,21 @@ const CharacterReview: React.FC<CharacterReviewProps> = ({ character, prevStep, 
           };
           
           // Исправляем вызов функции saveCharacterToFirestore
-          const savedCharacter = await saveCharacterToFirestore(characterToSave);
+          const id = await saveCharacterToFirestore(characterToSave);
           
-          if (savedCharacter && savedCharacter.id) {
-            console.log('✅ Персонаж автоматически сохранен с ID:', savedCharacter.id);
-            setCharacterId(savedCharacter.id);
-            updateCharacter({ id: savedCharacter.id });
+          if (id) {
+            console.log('✅ Персонаж автоматически сохранен с ID:', id);
+            setCharacterId(id);
+            updateCharacter({ id: id });
             setAutoSaved(true);
             
             toast.success('Персонаж успешно сохранен!');
             
             // Также обновляем персонажа в контексте
-            setCharacter({...characterToSave, id: savedCharacter.id});
+            setCharacter({...characterToSave, id: id});
             
             // Сохраняем последний выбранный персонаж
-            localStorage.setItem('last-selected-character', savedCharacter.id);
+            localStorage.setItem('last-selected-character', id);
           }
         } catch (error) {
           console.error('❌ Ошибка при автосохранении персонажа:', error);
@@ -112,13 +111,13 @@ const CharacterReview: React.FC<CharacterReviewProps> = ({ character, prevStep, 
       setCharacter(characterToSave);
       
       // Затем сохраняем персонажа
-      await saveCurrentCharacter();
+      const id = await saveCharacterToFirestore(characterToSave);
       
       toast.success('Персонаж успешно сохранен');
       
       // Перенаправляем на страницу персонажа
-      if (characterId || character.id) {
-        navigate(`/character/${characterId || character.id}`);
+      if (id || character.id) {
+        navigate(`/character/${id || character.id}`);
       } else {
         navigate('/characters');
       }
