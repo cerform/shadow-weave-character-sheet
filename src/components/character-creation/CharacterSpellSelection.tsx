@@ -350,9 +350,6 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
   const addSpellToCharacter = (spell: SpellData) => {
     // Проверяем, есть ли заклинание уже у персонажа
     const spellExists = character.spells && character.spells.some(s => {
-      if (typeof s === 'string') {
-        return s === spell.name;
-      }
       return s.name === spell.name;
     });
 
@@ -379,23 +376,10 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
 
     // Добавляем заклинание к персонажу
     const updatedSpells: CharacterSpell[] = [...(character.spells || [])];
-    
-    // Проверяем каждый элемент и преобразуем строки в CharacterSpell
-    const normalizedSpells: CharacterSpell[] = updatedSpells.map(spell => {
-      if (typeof spell === 'string') {
-        return {
-          name: spell,
-          level: 0,
-          prepared: true
-        };
-      }
-      return spell;
-    });
-    
-    normalizedSpells.push(newSpell);
+    updatedSpells.push(newSpell);
     
     // Обновляем персонажа с нормализованными заклинаниями
-    updateCharacter({ spells: normalizedSpells });
+    updateCharacter({ spells: updatedSpells });
   };
 
   // Функция для удаления заклинания
@@ -404,26 +388,11 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
 
     // Удаляем заклинание из списка
     const updatedSpells = character.spells.filter(spell => {
-      if (typeof spell === 'string') {
-        return spell !== spellToRemove.name;
-      }
       return spell.name !== spellToRemove.name;
     });
 
-    // Преобразуем все элементы в CharacterSpell
-    const normalizedSpells: CharacterSpell[] = updatedSpells.map(spell => {
-      if (typeof spell === 'string') {
-        return {
-          name: spell,
-          level: 0,
-          prepared: true
-        };
-      }
-      return spell;
-    });
-
     // Обновляем персонажа
-    updateCharacter({ spells: normalizedSpells });
+    updateCharacter({ spells: updatedSpells });
   };
 
   return (

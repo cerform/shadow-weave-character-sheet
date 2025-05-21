@@ -69,7 +69,7 @@ export interface Character {
     items?: string[];
   };
   features?: Feature[] | string[];
-  spells?: (CharacterSpell | string)[];
+  spells?: CharacterSpell[];
   spellSlots?: Record<number, { max: number; used: number }>;
   money?: {
     cp?: number;
@@ -176,10 +176,12 @@ export interface Character {
     saveDC?: number;
     attackBonus?: number;
     prepared?: boolean;
+    preparedSpellsLimit?: number;
   };
   
   // Дополнительные поля для хука useCharacterCreation
   additionalClasses?: string[];
+  languages?: string[];
 }
 
 export interface CharacterSpell {

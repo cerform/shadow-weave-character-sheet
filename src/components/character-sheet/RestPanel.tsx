@@ -8,10 +8,13 @@ import { toast } from 'sonner';
 
 interface RestPanelProps {
   character: Character;
+  onUpdate?: (updates: Partial<Character>) => void;
 }
 
-const RestPanel: React.FC<RestPanelProps> = ({ character }) => {
-  const { updateCharacter } = useCharacter();
+const RestPanel: React.FC<RestPanelProps> = ({ character, onUpdate }) => {
+  // Use the provided onUpdate or fall back to the context's updateCharacter
+  const { updateCharacter: contextUpdateCharacter } = useCharacter();
+  const updateCharacter = onUpdate || contextUpdateCharacter;
 
   // Обработчик короткого отдыха
   const handleShortRest = () => {
@@ -32,8 +35,7 @@ const RestPanel: React.FC<RestPanelProps> = ({ character }) => {
       updateCharacter({ resources: updatedResources });
     }
     
-    toast({
-      title: "Короткий отдых завершён",
+    toast.success("Короткий отдых завершён", {
       description: "Ваши ресурсы восстановлены."
     });
   };
@@ -87,8 +89,7 @@ const RestPanel: React.FC<RestPanelProps> = ({ character }) => {
       });
     }
 
-    toast({
-      title: "Длинный отдых завершён",
+    toast.success("Длинный отдых завершён", {
       description: "Ваши ресурсы и здоровье полностью восстановлены."
     });
   };

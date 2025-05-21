@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useMemo } from 'react';
 import { SpellData } from '@/types/spells';
 import { allSpells } from '@/data/spells';
@@ -40,7 +39,7 @@ export const useSpellbook = (): UseSpellbookReturn => {
       material: spell.material || false,
       prepared: spell.prepared || false,
       materials: spell.materials || '',
-      higherLevels: spell.higherLevel || spell.higherLevels || '',
+      higherLevels: spell.higherLevels || '',
       source: spell.source || 'PHB'
     }));
   }, [allSpells]);

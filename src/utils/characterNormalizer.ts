@@ -1,81 +1,110 @@
 
 import { Character } from '@/types/character';
 
-/**
- * Нормализует данные персонажа, исправляя распространенные проблемы
- * @param character Исходный объект персонажа
- * @returns Нормализованные данные персонажа
- */
-export function normalizeCharacterData(character: Character): Character {
-  if (!character) return character;
-  
-  // Создаем копию объекта для модификации
+export const normalizeCharacterData = (character: Character): Character => {
+  // Create a copy to avoid mutating the original
   const normalized: Character = { ...character };
-  
-  // Убедимся, что обязательные поля существуют
-  normalized.name = normalized.name || 'Безымянный персонаж';
-  normalized.level = normalized.level ?? 1;
-  normalized.experience = normalized.experience ?? 0;
-  
-  // Разрешаем несоответствия между полями класса
-  if (normalized.class && !normalized.className) {
-    normalized.className = normalized.class;
-  } else if (!normalized.class && normalized.className) {
-    normalized.class = normalized.className;
+
+  // Ensure basic required fields
+  if (!normalized.name) {
+    normalized.name = 'Новый персонаж';
   }
   
-  // Нормализация данных о характеристиках
-  const abilities = ['strength', 'dexterity', 'constitution', 'intelligence', 'wisdom', 'charisma'];
-  
-  // Проверяем существование объекта stats
-  if (!normalized.stats) {
-    normalized.stats = {};
+  if (!normalized.level) {
+    normalized.level = 1;
   }
   
-  // Проходим по всем характеристикам
-  abilities.forEach(ability => {
-    // Если значение установлено напрямую в объекте персонажа, но отсутствует в stats
-    if (normalized[ability] !== undefined && normalized.stats[ability] === undefined) {
-      normalized.stats[ability] = normalized[ability];
-    } 
-    // Если значение в stats установлено, но отсутствует в корне объекта
-    else if (normalized.stats[ability] !== undefined && normalized[ability] === undefined) {
-      normalized[ability] = normalized.stats[ability];
-    }
-    
-    // Если значения различаются, приоритет у поля stats
-    if (normalized[ability] !== normalized.stats[ability] && normalized.stats[ability] !== undefined) {
-      normalized[ability] = normalized.stats[ability];
-    }
-  });
+  // Normalize abilities
+  if (!normalized.abilities) {
+    normalized.abilities = {
+      STR: 10,
+      DEX: 10,
+      CON: 10,
+      INT: 10,
+      WIS: 10,
+      CHA: 10,
+      strength: 10,
+      dexterity: 10,
+      constitution: 10,
+      intelligence: 10,
+      wisdom: 10,
+      charisma: 10
+    };
+  }
   
-  // Убедимся, что массивы инициализированы
-  if (!Array.isArray(normalized.equipment)) normalized.equipment = [];
-  if (!Array.isArray(normalized.features)) normalized.features = [];
-  if (!Array.isArray(normalized.spells)) normalized.spells = [];
-  if (!Array.isArray(normalized.languages)) normalized.languages = [];
-  if (!Array.isArray(normalized.proficiencies)) normalized.proficiencies = [];
+  // Set aliases if only one format exists
+  if (normalized.abilities && !normalized.stats) {
+    normalized.stats = {
+      strength: normalized.abilities.STR,
+      dexterity: normalized.abilities.DEX,
+      constitution: normalized.abilities.CON,
+      intelligence: normalized.abilities.INT,
+      wisdom: normalized.abilities.WIS,
+      charisma: normalized.abilities.CHA
+    };
+  }
   
-  // Проверяем наличие userId
-  if (!normalized.userId) {
-    console.warn(`Персонаж '${normalized.name}' не имеет userId`);
+  // Normalize proficiencies
+  if (!normalized.proficiencies) {
+    normalized.proficiencies = {
+      languages: [],
+      tools: [],
+      weapons: [],
+      armor: [],
+      skills: []
+    };
+  } else if (Array.isArray(normalized.proficiencies)) {
+    // Convert array format to object format
+    const profArray = normalized.proficiencies;
+    normalized.proficiencies = {
+      languages: profArray.filter(p => p.startsWith('language:')).map(p => p.replace('language:', '')),
+      tools: profArray.filter(p => p.startsWith('tool:')).map(p => p.replace('tool:', '')),
+      weapons: profArray.filter(p => p.startsWith('weapon:')).map(p => p.replace('weapon:', '')),
+      armor: profArray.filter(p => p.startsWith('armor:')).map(p => p.replace('armor:', '')),
+      skills: profArray.filter(p => p.startsWith('skill:')).map(p => p.replace('skill:', ''))
+    };
+  }
+  
+  // Normalize HP fields
+  if (normalized.maxHp !== undefined && normalized.hitPoints === undefined) {
+    normalized.hitPoints = {
+      maximum: normalized.maxHp,
+      current: normalized.currentHp || normalized.maxHp,
+      temporary: normalized.tempHp || normalized.temporaryHp || 0
+    };
+  }
+  
+  // Normalize skills
+  if (!normalized.skills) {
+    normalized.skills = {};
+  }
+  
+  // Normalize spells
+  if (normalized.spells) {
+    // Convert any string spells to CharacterSpell objects
+    normalized.spells = normalized.spells.map(spell => {
+      if (typeof spell === 'string') {
+        return {
+          name: spell,
+          level: 0, // Default to cantrip
+          prepared: true
+        };
+      }
+      return spell;
+    });
+  } else {
+    normalized.spells = [];
+  }
+  
+  // Normalize equipment
+  if (!normalized.equipment) {
+    normalized.equipment = [];
+  }
+  
+  // Ensure features is an array
+  if (!normalized.features) {
+    normalized.features = [];
   }
   
   return normalized;
-}
-
-/**
- * Нормализует массив персонажей
- * @param characters Массив персонажей
- * @returns Нормализованный массив персонажей
- */
-export function normalizeCharacters(characters: Character[]): Character[] {
-  if (!Array.isArray(characters)) {
-    console.error('normalizeCharacters: не массив', characters);
-    return [];
-  }
-  
-  return characters
-    .filter(char => char !== null && char !== undefined)
-    .map(normalizeCharacterData);
-}
+};
