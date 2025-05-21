@@ -1,271 +1,123 @@
 
 import { useState, useEffect } from 'react';
 import { Character } from '@/types/character';
-import { useToast } from "@/components/ui/use-toast";
-import { getCurrentUid } from '@/lib/supabase';
-import { saveCharacterToFirestore } from '@/services/characterService';
+import { useNavigate } from 'react-router-dom';
+import { createDefaultCharacter } from '@/utils/characterUtils';
+import { useCharacter } from '@/contexts/CharacterContext';
 
+// Определяем тип возвращаемых значений из хука
 export interface UseCharacterCreationReturn {
-  characterData: Character | null;
-  updateCharacterData: (updates: Partial<Character>) => void;
-  saveCharacter: () => Promise<Character | null>;
-  isCreating: boolean;
-  creationError: string | null;
-  rollAbilities: () => void;
-  rollAbility: (ability: string) => void;
-  assignRaceAbilityBonuses: () => void;
-  calculateModifiers: () => void;
-  resetCharacter: () => void;
-  // Добавляем недостающие свойства
+  currentStep: number;
+  setCurrentStep: (step: number) => void;
   character: Character;
   updateCharacter: (updates: Partial<Character>) => void;
-  isMagicClass: () => boolean;
+  createCharacter: () => void;
+  isMagicClass: boolean;
   convertToCharacter: (data: any) => Character;
+  nextStep: () => void;
+  prevStep: () => void;
 }
 
-const initialState: Character = {
-  name: '',
-  level: 1,
-  abilities: {
-    STR: 10,
-    DEX: 10,
-    CON: 10,
-    INT: 10,
-    WIS: 10,
-    CHA: 10,
-    strength: 10,
-    dexterity: 10,
-    constitution: 10,
-    intelligence: 10,
-    wisdom: 10,
-    charisma: 10
-  },
-  hitPoints: {
-    current: 0,
-    maximum: 0,
-    temporary: 0
-  }
-};
-
 export const useCharacterCreation = (): UseCharacterCreationReturn => {
-  const [characterData, setCharacterData] = useState<Character>(initialState);
-  const [isCreating, setIsCreating] = useState(false);
-  const [creationError, setCreationError] = useState<string | null>(null);
-  const { toast } = useToast();
+  const { saveCharacter } = useCharacter();
+  const navigate = useNavigate();
+  const [currentStep, setCurrentStep] = useState(1);
+  const [character, setCharacter] = useState<Character>(createDefaultCharacter());
 
-  // Update character data
-  const updateCharacterData = (updates: Partial<Character>) => {
-    setCharacterData(prev => ({ ...prev, ...updates }));
-  };
-
-  // Для совместимости с интерфейсом
-  const updateCharacter = updateCharacterData;
-  const character = characterData;
-
-  // Reset character
-  const resetCharacter = () => {
-    setCharacterData(initialState);
-  };
-
-  // Create and save character
-  const saveCharacter = async (): Promise<Character | null> => {
-    if (!characterData.name) {
-      toast({
-        title: "Ошибка создания персонажа",
-        description: "У персонажа должно быть имя",
-        variant: "destructive",
-      });
-      return null;
-    }
-
-    setIsCreating(true);
-    setCreationError(null);
-
-    try {
-      // Добавляем идентификатор пользователя
-      const userId = getCurrentUid();
-      const characterWithUserId = {
-        ...characterData,
-        userId,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      };
-
-      // Сохраняем персонажа через Firestore и получаем ID
-      const characterId = await saveCharacterToFirestore(characterWithUserId);
-
-      // Обновляем персонажа с ID
-      const newCharacter: Character = {
-        ...characterWithUserId,
-        id: characterId
-      };
-
-      toast({
-        title: "Персонаж создан",
-        description: `${newCharacter.name} успешно создан!`,
-      });
-
-      return newCharacter;
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Неизвестная ошибка';
-      setCreationError(errorMessage);
-      toast({
-        title: "Ошибка создания персонажа",
-        description: errorMessage,
-        variant: "destructive",
-      });
-      return null;
-    } finally {
-      setIsCreating(false);
-    }
-  };
-
-  // Roll abilities
-  const rollAbilities = () => {
-    const newAbilities = {
-      STR: rollAbilityScore(),
-      DEX: rollAbilityScore(),
-      CON: rollAbilityScore(),
-      INT: rollAbilityScore(),
-      WIS: rollAbilityScore(),
-      CHA: rollAbilityScore(),
-      // Добавляем алиасы для удобства
-      strength: 0,
-      dexterity: 0,
-      constitution: 0,
-      intelligence: 0,
-      wisdom: 0,
-      charisma: 0
-    };
-
-    // Копируем значения в алиасы
-    newAbilities.strength = newAbilities.STR;
-    newAbilities.dexterity = newAbilities.DEX;
-    newAbilities.constitution = newAbilities.CON;
-    newAbilities.intelligence = newAbilities.INT;
-    newAbilities.wisdom = newAbilities.WIS;
-    newAbilities.charisma = newAbilities.CHA;
-
-    setCharacterData(prev => ({
-      ...prev,
-      abilities: newAbilities
-    }));
-  };
-
-  // Roll individual ability
-  const rollAbility = (ability: string) => {
-    if (!characterData.abilities) return;
-
-    const newValue = rollAbilityScore();
-    const updatedAbilities = { ...characterData.abilities };
-
-    // Обновляем как основное свойство, так и алиас
-    switch (ability) {
-      case 'STR':
-        updatedAbilities.STR = newValue;
-        updatedAbilities.strength = newValue;
-        break;
-      case 'DEX':
-        updatedAbilities.DEX = newValue;
-        updatedAbilities.dexterity = newValue;
-        break;
-      case 'CON':
-        updatedAbilities.CON = newValue;
-        updatedAbilities.constitution = newValue;
-        break;
-      case 'INT':
-        updatedAbilities.INT = newValue;
-        updatedAbilities.intelligence = newValue;
-        break;
-      case 'WIS':
-        updatedAbilities.WIS = newValue;
-        updatedAbilities.wisdom = newValue;
-        break;
-      case 'CHA':
-        updatedAbilities.CHA = newValue;
-        updatedAbilities.charisma = newValue;
-        break;
-    }
-
-    setCharacterData(prev => ({
-      ...prev,
-      abilities: updatedAbilities
-    }));
-  };
-
-  // Assign race ability bonuses
-  const assignRaceAbilityBonuses = () => {
-    if (!characterData.race) return;
-
-    // Здесь была бы логика добавления расовых бонусов к характеристикам
-    // В зависимости от выбранной расы и подрасы
-  };
-
-  // Calculate ability modifiers
-  const calculateModifiers = () => {
-    // Здесь была бы логика расчета модификаторов характеристик
-  };
-
-  // Проверка, является ли класс магическим
-  const isMagicClass = (): boolean => {
-    if (!characterData.class) return false;
-    
-    const magicClasses = [
-      'Бард', 'Жрец', 'Друид', 'Волшебник', 'Колдун', 
-      'Чародей', 'Паладин', 'Следопыт'
-    ];
-    
-    return magicClasses.includes(characterData.class);
-  };
-
-  // Преобразование данных в Character
-  const convertToCharacter = (data: any): Character => {
-    return {
-      ...data,
-      id: data.id || '',
-      name: data.name || '',
-      level: Number(data.level) || 1,
-      abilities: data.abilities || initialState.abilities,
-      hitPoints: data.hitPoints || initialState.hitPoints
-    };
-  };
-
-  // Calculate hit points based on class and level
+  // При монтировании компонента инициализируем персонажа
   useEffect(() => {
-    if (!characterData.class || typeof characterData.level !== 'number') return;
+    // Проверяем, есть ли сохраненный процесс создания
+    const savedCharacterCreation = localStorage.getItem('character_creation_progress');
+    if (savedCharacterCreation) {
+      try {
+        const parsedData = JSON.parse(savedCharacterCreation);
+        setCharacter(parsedData.character);
+        setCurrentStep(parsedData.step);
+      } catch (error) {
+        console.error('Ошибка при загрузке процесса создания:', error);
+        // В случае ошибки используем дефолтные значения
+        setCharacter(createDefaultCharacter());
+      }
+    }
+  }, []);
 
-    // Здесь была бы логика расчета хитов в зависимости от класса и уровня
-  }, [characterData.class, characterData.level, characterData.abilities?.CON]);
+  // Сохраняем прогресс создания персонажа при каждом изменении
+  useEffect(() => {
+    // Сохраняем данные в localStorage
+    try {
+      localStorage.setItem('character_creation_progress', JSON.stringify({
+        character,
+        step: currentStep
+      }));
+    } catch (error) {
+      console.error('Ошибка при сохранении прогресса:', error);
+    }
+  }, [character, currentStep]);
+
+  // Проверяем, является ли выбранный класс магическим
+  const isMagicClass = !!character.class && ['Волшебник', 'Колдун', 'Чародей', 'Бард', 'Друид', 'Жрец', 'Паладин', 'Следопыт'].includes(character.class);
+
+  // Функция для обновления данных персонажа
+  const updateCharacter = (updates: Partial<Character>) => {
+    setCharacter(prev => ({ ...prev, ...updates }));
+  };
+
+  // Функция для создания персонажа
+  const createCharacter = () => {
+    try {
+      // Убедимся, что у персонажа есть имя
+      if (!character.name || character.name.trim() === '') {
+        alert('Пожалуйста, укажите имя персонажа');
+        return;
+      }
+
+      // Сохраняем персонажа
+      const savedCharacterId = saveCharacter(character);
+
+      // Очищаем данные о процессе создания
+      localStorage.removeItem('character_creation_progress');
+
+      // Переходим на страницу просмотра персонажа
+      if (savedCharacterId && savedCharacterId !== '') {
+        navigate(`/characters/${savedCharacterId}`);
+      } else {
+        console.error('Не удалось получить ID сохраненного персонажа');
+        navigate('/characters');
+      }
+    } catch (error) {
+      console.error('Ошибка при создании персонажа:', error);
+      alert('Произошла ошибка при создании персонажа');
+    }
+  };
+
+  // Функция для конвертации данных в объект Character
+  const convertToCharacter = (data: any): Character => {
+    // Простая реализация - копируем все свойства
+    return {
+      ...createDefaultCharacter(),
+      ...data,
+    };
+  };
+
+  // Функция для перехода к следующему шагу
+  const nextStep = () => {
+    setCurrentStep(prev => prev + 1);
+  };
+
+  // Функция для перехода к предыдущему шагу
+  const prevStep = () => {
+    setCurrentStep(prev => Math.max(1, prev - 1));
+  };
 
   return {
-    characterData,
-    updateCharacterData,
-    saveCharacter,
-    isCreating,
-    creationError,
-    rollAbilities,
-    rollAbility,
-    assignRaceAbilityBonuses,
-    calculateModifiers,
-    resetCharacter,
-    // Добавляем недостающие свойства для совместимости с интерфейсом
-    character: characterData,
-    updateCharacter: updateCharacterData,
+    currentStep,
+    setCurrentStep,
+    character,
+    updateCharacter,
+    createCharacter,
     isMagicClass,
-    convertToCharacter
+    convertToCharacter,
+    nextStep,
+    prevStep
   };
 };
-
-// Utility function to roll 4d6, drop lowest, sum the rest
-const rollAbilityScore = (): number => {
-  const rolls = [
-    Math.floor(Math.random() * 6) + 1,
-    Math.floor(Math.random() * 6) + 1,
-    Math.floor(Math.random() * 6) + 1,
-    Math.floor(Math.random() * 6) + 1
-  ];
-  rolls.sort((a, b) => a - b);
-  return rolls.slice(1).reduce((sum, roll) => sum + roll, 0);
-};
-
-export default useCharacterCreation;

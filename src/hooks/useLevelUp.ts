@@ -6,7 +6,7 @@ import { Character } from '@/types/character';
 import { useToast } from '@/hooks/use-toast';
 
 const useLevelUp = () => {
-  const { character, setCharacter, updateCharacter, saveCurrentCharacter } = useCharacter();
+  const { character, updateCharacter, saveCurrentCharacter } = useCharacter();
   const [isLevelingUp, setIsLevelingUp] = useState(false);
   const { toast } = useToast();
 
