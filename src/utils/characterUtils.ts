@@ -100,3 +100,11 @@ export const calculateAttackBonus = (
   const profBonus = isProficient ? calculateProficiencyBonus(character.level || 1) : 0;
   return abilityModifier + profBonus;
 };
+
+/**
+ * Вычисляет модификатор характеристики
+ * Это функция-алиас для getAbilityModifier для обеспечения совместимости
+ */
+export const calculateModifier = (score: number): number => {
+  return getAbilityModifier(score);
+};
