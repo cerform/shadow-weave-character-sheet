@@ -1,32 +1,34 @@
 
-import { CharacterSpell } from '@/types/character';
-import { level0 } from './level0';
-// В полной реализации будут импорты для level1-level9
+// Импортируем все заклинания
+import { level1 } from './level1';
+// Здесь могут быть другие импорты для других уровней заклинаний, например:
+// import { level0 } from './level0';
+// import { level2 } from './level2';
+// ...и т.д.
 
 // Объединяем все заклинания в один массив
-const allSpellsWithDuplicates: CharacterSpell[] = [
-  ...level0,
-  // Здесь будут другие уровни: ...level1, ...level2, и т.д.
+export const spells = [
+  ...level1,
+  // ...level0,
+  // ...level2,
+  // и другие уровни
 ];
 
-// Удаляем дубликаты заклинаний
-export function removeDuplicateSpells(spells: CharacterSpell[]): CharacterSpell[] {
-  const uniqueSpells = new Map<string, CharacterSpell>();
-  
-  spells.forEach(spell => {
-    if (spell && spell.name) {
-      const key = spell.name.toLowerCase();
-      if (!uniqueSpells.has(key)) {
-        uniqueSpells.set(key, spell);
-      }
-    }
-  });
-  
-  return Array.from(uniqueSpells.values());
-}
+// Экспортируем заклинания с группировкой по уровням
+export const spellsByLevel = {
+  1: level1,
+  // 0: level0,
+  // 2: level2,
+  // другие уровни
+};
 
-// Экспортируем массив без дубликатов как allSpells
-export const allSpells: CharacterSpell[] = removeDuplicateSpells(allSpellsWithDuplicates);
+// Дополнительно экспортируем по отдельности
+export { level1 };
 
-// Добавляем еще один экспорт под именем spells для обратной совместимости
-export const spells: CharacterSpell[] = allSpells;
+// Объединенный массив для экспорта всех заклинаний
+export const allSpells = [
+  ...level1,
+  // ...level0,
+  // ...level2,
+  // и другие уровни
+];

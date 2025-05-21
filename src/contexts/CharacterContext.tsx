@@ -1,173 +1,172 @@
 
-import { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
 import { Character } from '@/types/character';
-import { saveCharacterToFirestore, getCharacterById, getAllCharacters, deleteCharacter, getCharactersByUserId } from '@/services/characterService';
-import { useToast } from '@/hooks/use-toast';
+import { generateRandomId } from '@/utils/idGenerator';
+import { createDefaultCharacter } from '@/utils/characterUtils';
 
-// Define the context type
+// Тип для контекста персонажа
 interface CharacterContextType {
   character: Character | null;
-  setCharacter: (character: Character) => void;
-  updateCharacter: (updates: Partial<Character>) => void;
-  saveCharacter: (character: Character) => Promise<string>;
-  getCharacterById: (id: string) => Promise<Character | null>;
-  getAllCharacters: () => Promise<Character[]>;
-  getCharactersByUserId: (userId: string) => Promise<Character[]>;
-  deleteCharacter: (id: string) => Promise<void>;
-  saveCurrentCharacter: () => Promise<string>;
-  getUserCharacters: () => Promise<Character[]>;
-  loading: boolean;
-  error: Error | null;
+  setCharacter: (character: Character | null) => void;
+  selectedCharacterId: string | null;
+  setSelectedCharacterId: (id: string | null) => void;
+  saveCharacter: (character: Character) => void;
+  loadCharacter: (id: string) => Character | null;
+  deleteCharacter: (id: string) => void;
   characters: Character[];
-  refreshCharacters: () => Promise<void>;
+  updateCharacter: (updates: Partial<Character>) => void;
 }
 
-// Create context with default values
+// Создаем контекст с дефолтным значением
 const CharacterContext = createContext<CharacterContextType>({
   character: null,
   setCharacter: () => {},
-  updateCharacter: () => {},
-  saveCharacter: async () => '',
-  getCharacterById: async () => null,
-  getAllCharacters: async () => [],
-  getCharactersByUserId: async () => [],
-  deleteCharacter: async () => {},
-  saveCurrentCharacter: async () => '',
-  getUserCharacters: async () => [],
-  loading: false,
-  error: null,
+  selectedCharacterId: null,
+  setSelectedCharacterId: () => {},
+  saveCharacter: () => {},
+  loadCharacter: () => null,
+  deleteCharacter: () => {},
   characters: [],
-  refreshCharacters: async () => {},
+  updateCharacter: () => {},
 });
 
-// Create provider component
-export const CharacterProvider = ({ children }: { children: ReactNode }) => {
+// Хук для использования контекста персонажа
+export const useCharacter = () => useContext(CharacterContext);
+
+// Провайдер контекста персонажа
+interface CharacterProviderProps {
+  children: ReactNode;
+}
+
+export const CharacterProvider: React.FC<CharacterProviderProps> = ({ children }) => {
   const [character, setCharacter] = useState<Character | null>(null);
   const [characters, setCharacters] = useState<Character[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
-  const { toast } = useToast();
+  const [selectedCharacterId, setSelectedCharacterId] = useState<string | null>(null);
 
-  const updateCharacter = (updates: Partial<Character>) => {
-    if (!character) return;
+  // Загрузка списка персонажей из localStorage при монтировании
+  useEffect(() => {
+    const loadCharactersFromStorage = () => {
+      try {
+        // Получаем все ключи из localStorage
+        const keys = Object.keys(localStorage);
+        
+        // Фильтруем только те, которые начинаются с 'character_'
+        const characterKeys = keys.filter(key => key.startsWith('character_'));
+        
+        // Загружаем всех персонажей
+        const loadedCharacters: Character[] = [];
+        
+        for (const key of characterKeys) {
+          const savedCharacter = localStorage.getItem(key);
+          if (savedCharacter) {
+            try {
+              loadedCharacters.push(JSON.parse(savedCharacter) as Character);
+            } catch (e) {
+              console.error(`Ошибка при обработке персонажа из ${key}:`, e);
+            }
+          }
+        }
+        
+        setCharacters(loadedCharacters);
+        
+        // Загружаем последнего активного персонажа
+        const lastSelectedId = localStorage.getItem('last-selected-character');
+        if (lastSelectedId) {
+          setSelectedCharacterId(lastSelectedId);
+          const lastCharacter = loadedCharacters.find(c => c.id === lastSelectedId);
+          if (lastCharacter) {
+            setCharacter(lastCharacter);
+          }
+        }
+      } catch (error) {
+        console.error("Ошибка при загрузке персонажей:", error);
+      }
+    };
+    
+    loadCharactersFromStorage();
+  }, []);
 
-    const updatedCharacter = { ...character, ...updates };
-    setCharacter(updatedCharacter);
-  };
-
-  const handleSaveCharacter = async (char: Character): Promise<string> => {
+  // Сохранение персонажа в localStorage
+  const saveCharacter = (characterToSave: Character) => {
     try {
-      const id = await saveCharacterToFirestore(char);
-      return id || '';
-    } catch (error) {
-      console.error('Error saving character:', error);
-      toast({
-        title: "Ошибка при сохранении персонажа",
-        description: "Произошла ошибка при сохранении персонажа. Пожалуйста, попробуйте еще раз.",
-        variant: "destructive"
+      // Если у персонажа нет ID, создаем его
+      if (!characterToSave.id) {
+        characterToSave.id = generateRandomId();
+      }
+      
+      // Сохраняем персонажа в localStorage
+      localStorage.setItem(`character_${characterToSave.id}`, JSON.stringify(characterToSave));
+      
+      // Обновляем список персонажей
+      setCharacters(prev => {
+        const existingIndex = prev.findIndex(c => c.id === characterToSave.id);
+        if (existingIndex >= 0) {
+          return prev.map(c => c.id === characterToSave.id ? characterToSave : c);
+        } else {
+          return [...prev, characterToSave];
+        }
       });
-      return '';
-    }
-  };
-  
-  const handleGetCharacterById = async (id: string): Promise<Character | null> => {
-    try {
-      return await getCharacterById(id);
+      
+      // Если это активный персонаж, обновляем его
+      if (character && character.id === characterToSave.id) {
+        setCharacter(characterToSave);
+      }
+      
+      // Запоминаем ID последнего активного персонажа
+      localStorage.setItem('last-selected-character', characterToSave.id);
+      setSelectedCharacterId(characterToSave.id);
+      
+      return characterToSave;
     } catch (error) {
-      console.error('Error getting character:', error);
+      console.error("Ошибка при сохранении персонажа:", error);
       return null;
     }
   };
 
-  const handleGetAllCharacters = async (): Promise<Character[]> => {
+  // Загрузка персонажа из localStorage
+  const loadCharacter = (id: string) => {
     try {
-      return await getAllCharacters();
+      const savedCharacter = localStorage.getItem(`character_${id}`);
+      if (savedCharacter) {
+        const parsedCharacter = JSON.parse(savedCharacter) as Character;
+        setCharacter(parsedCharacter);
+        setSelectedCharacterId(id);
+        localStorage.setItem('last-selected-character', id);
+        return parsedCharacter;
+      }
+      return null;
     } catch (error) {
-      console.error('Error getting all characters:', error);
-      return [];
+      console.error(`Ошибка при загрузке персонажа с ID ${id}:`, error);
+      return null;
     }
   };
 
-  const handleGetCharactersByUserId = async (userId: string): Promise<Character[]> => {
+  // Удаление персонажа из localStorage
+  const deleteCharacter = (id: string) => {
     try {
-      return await getCharactersByUserId(userId);
-    } catch (error) {
-      console.error('Error getting user characters:', error);
-      return [];
-    }
-  };
-
-  const handleDeleteCharacter = async (id: string): Promise<void> => {
-    try {
-      await deleteCharacter(id);
-      // If the currently active character is being deleted, set character to null
-      if (character?.id === id) {
+      localStorage.removeItem(`character_${id}`);
+      
+      // Обновляем список персонажей
+      setCharacters(prev => prev.filter(c => c.id !== id));
+      
+      // Если удаляемый персонаж активен, сбрасываем активного персонажа
+      if (selectedCharacterId === id) {
+        setSelectedCharacterId(null);
         setCharacter(null);
+        localStorage.removeItem('last-selected-character');
       }
     } catch (error) {
-      console.error('Error deleting character:', error);
-      throw error;
+      console.error(`Ошибка при удалении персонажа с ID ${id}:`, error);
     }
   };
 
-  // Add new methods for the added properties
-  const saveCurrentCharacter = async (): Promise<string> => {
-    if (!character) {
-      toast({
-        title: "Ошибка сохранения",
-        description: "Нет активного персонажа для сохранения",
-        variant: "destructive"
-      });
-      return '';
-    }
+  // Обновление персонажа
+  const updateCharacter = (updates: Partial<Character>) => {
+    if (!character) return;
     
-    try {
-      setLoading(true);
-      const id = await saveCharacterToFirestore(character);
-      
-      toast({
-        title: "Успешно сохранено",
-        description: "Персонаж успешно сохранен"
-      });
-      
-      // Refresh the character list
-      refreshCharacters();
-      
-      return id || '';
-    } catch (error) {
-      console.error('Error saving current character:', error);
-      toast({
-        title: "Ошибка сохранения",
-        description: "Произошла ошибка при сохранении персонажа",
-        variant: "destructive"
-      });
-      return '';
-    } finally {
-      setLoading(false);
-    }
-  };
-  
-  const getUserCharacters = async (): Promise<Character[]> => {
-    try {
-      setLoading(true);
-      // Use any user ID retrieval logic you have
-      const userId = localStorage.getItem('userId') || '';
-      if (!userId) return [];
-      
-      const userChars = await getCharactersByUserId(userId);
-      setCharacters(userChars);
-      return userChars;
-    } catch (error: any) {
-      console.error('Error getting user characters:', error);
-      setError(error instanceof Error ? error : new Error('Unknown error'));
-      return [];
-    } finally {
-      setLoading(false);
-    }
-  };
-  
-  const refreshCharacters = async (): Promise<void> => {
-    return getUserCharacters().then(() => {});
+    const updatedCharacter = { ...character, ...updates };
+    setCharacter(updatedCharacter);
+    saveCharacter(updatedCharacter);
   };
 
   return (
@@ -175,23 +174,16 @@ export const CharacterProvider = ({ children }: { children: ReactNode }) => {
       value={{
         character,
         setCharacter,
-        updateCharacter,
-        saveCharacter: handleSaveCharacter,
-        getCharacterById: handleGetCharacterById,
-        getAllCharacters: handleGetAllCharacters,
-        getCharactersByUserId: handleGetCharactersByUserId,
-        deleteCharacter: handleDeleteCharacter,
-        saveCurrentCharacter,
-        getUserCharacters,
-        loading,
-        error,
+        selectedCharacterId,
+        setSelectedCharacterId,
+        saveCharacter,
+        loadCharacter,
+        deleteCharacter,
         characters,
-        refreshCharacters
+        updateCharacter,
       }}
     >
       {children}
     </CharacterContext.Provider>
   );
 };
-
-export const useCharacter = () => useContext(CharacterContext);

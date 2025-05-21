@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Character } from '@/types/character';
+import { Character, CharacterSpell } from '@/types/character';
 import { Button } from "@/components/ui/button";
 import { useSpellbook } from '@/hooks/spellbook';
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -31,7 +31,7 @@ const SpellsTab: React.FC<SpellsTabProps> = ({ character, onUpdateCharacter }) =
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
-  const [filteredSpells, setFilteredSpells] = useState<any[]>([]);
+  const [filteredSpells, setFilteredSpells] = useState<CharacterSpell[]>([]);
   const [loading, setLoading] = useState(false);
   
   // Prepare the character's spells when component mounts
@@ -46,14 +46,17 @@ const SpellsTab: React.FC<SpellsTabProps> = ({ character, onUpdateCharacter }) =
       return;
     }
     
-    let filtered = [...character.spells];
+    // Убедитесь, что все элементы в character.spells - объекты
+    const spellObjects = character.spells.filter(
+      (spell): spell is CharacterSpell => typeof spell !== 'string'
+    );
+    
+    let filtered = [...spellObjects];
     
     // Filter by search term
     if (searchTerm) {
       const searchLower = searchTerm.toLowerCase();
       filtered = filtered.filter(spell => {
-        if (typeof spell === 'string') return spell.toLowerCase().includes(searchLower);
-        
         return (
           spell.name.toLowerCase().includes(searchLower) ||
           (spell.school && spell.school.toLowerCase().includes(searchLower)) ||
@@ -66,16 +69,10 @@ const SpellsTab: React.FC<SpellsTabProps> = ({ character, onUpdateCharacter }) =
     // Filter by level
     if (activeTab !== 'all') {
       if (activeTab === 'prepared') {
-        filtered = filtered.filter(spell => {
-          if (typeof spell === 'string') return false;
-          return spell.prepared;
-        });
+        filtered = filtered.filter(spell => spell.prepared);
       } else {
         const level = activeTab === 'cantrips' ? 0 : parseInt(activeTab, 10);
-        filtered = filtered.filter(spell => {
-          if (typeof spell === 'string') return false;
-          return spell.level === level;
-        });
+        filtered = filtered.filter(spell => spell.level === level);
       }
     }
     
@@ -188,19 +185,14 @@ const SpellsTab: React.FC<SpellsTabProps> = ({ character, onUpdateCharacter }) =
             </div>
           ) : (
             <div className="grid gap-3">
-              {filteredSpells.map((spell, index) => {
-                // Пропускаем строковые значения
-                if (typeof spell === 'string') return null;
-                
-                return (
-                  <SpellCard 
-                    key={`${spell.name}-${index}`}
-                    spell={spell}
-                    onTogglePrepared={() => togglePrepared(spell.name)}
-                    onClick={() => handleOpenDetailModal(spell)}
-                  />
-                );
-              })}
+              {filteredSpells.map((spell, index) => (
+                <SpellCard 
+                  key={`${spell.name}-${index}`}
+                  spell={spell}
+                  onTogglePrepared={() => togglePrepared(spell.name)}
+                  onClick={() => handleOpenDetailModal(spell)}
+                />
+              ))}
             </div>
           )}
         </ScrollArea>

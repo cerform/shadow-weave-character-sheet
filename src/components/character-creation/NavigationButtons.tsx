@@ -11,6 +11,10 @@ export interface NavigationButtonsProps {
   showPrev?: boolean;
   showNext?: boolean;
   nextDisabled?: boolean;
+  allowNext?: boolean;
+  isFirstStep?: boolean;
+  nextStep?: () => void;
+  prevStep?: () => void;
 }
 
 const NavigationButtons: React.FC<NavigationButtonsProps> = ({
@@ -20,15 +24,27 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
   nextLabel = "Далее",
   showPrev = true,
   showNext = true,
-  nextDisabled = false
+  nextDisabled = false,
+  allowNext,
+  isFirstStep,
+  nextStep,
+  prevStep
 }) => {
+  // Используем переданные обработчики или резервные
+  const handlePrev = prevStep || onPrev;
+  const handleNext = nextStep || onNext;
+  
+  // Проверяем, должна ли кнопка "Далее" быть отключена
+  const isNextDisabled = nextDisabled || (allowNext !== undefined && !allowNext);
+  
   return (
     <div className="flex justify-between mt-6">
       {showPrev ? (
         <Button
           variant="outline"
-          onClick={onPrev}
+          onClick={handlePrev}
           className="flex items-center"
+          disabled={isFirstStep}
         >
           <ChevronLeft className="mr-2 h-4 w-4" />
           {prevLabel}
@@ -39,8 +55,8 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
 
       {showNext && (
         <Button
-          onClick={onNext}
-          disabled={nextDisabled}
+          onClick={handleNext}
+          disabled={isNextDisabled}
           className="flex items-center"
         >
           {nextLabel}
