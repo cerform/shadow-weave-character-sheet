@@ -125,7 +125,7 @@ const CharacterCreationPage: React.FC = () => {
         id: 9, 
         name: "Заклинания", 
         description: "Выбор заклинаний",
-        completed: !isMagicClass() || (!!character.spells && character.spells.length > 0)
+        completed: !isMagicClass || (!!character.spells && character.spells.length > 0)
       },
       { 
         id: 10, 
@@ -145,7 +145,7 @@ const CharacterCreationPage: React.FC = () => {
       }
       
       // Skip spells step if class isn't magical
-      if (step.id === 9 && !isMagicClass()) {
+      if (step.id === 9 && !isMagicClass) {
         return false;
       }
       

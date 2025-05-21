@@ -72,14 +72,14 @@ export const useCharacterCreation = (): UseCharacterCreationReturn => {
       }
 
       // Сохраняем персонажа
-      const savedCharacterId = saveCharacter(character);
+      const savedCharacter = saveCharacter(character);
 
       // Очищаем данные о процессе создания
       localStorage.removeItem('character_creation_progress');
 
       // Переходим на страницу просмотра персонажа
-      if (savedCharacterId && savedCharacterId !== '') {
-        navigate(`/characters/${savedCharacterId}`);
+      if (savedCharacter && savedCharacter.id) {
+        navigate(`/characters/${savedCharacter.id}`);
       } else {
         console.error('Не удалось получить ID сохраненного персонажа');
         navigate('/characters');
