@@ -1,89 +1,74 @@
 
-import { CharacterSpell } from '@/types/character';
-import { componentsToString } from './spellProcessors';
+import { CharacterSpell } from "@/types/character";
+import { SpellData } from "@/types/spells";
+import { componentsToString } from "./spellProcessors";
 
 /**
- * Преобразует объект заклинания в строковое представление
+ * Преобразует заклинание из базы данных в формат для персонажа
  */
-export function characterSpellToString(spell: CharacterSpell): string {
-  let result = `[${spell.level}] ${spell.name}`;
-  
-  // Добавляем компоненты, если они определены
-  const components = componentsToString({
+export const convertSpellToCharacterSpell = (spell: SpellData): CharacterSpell => {
+  return {
+    id: spell.id,
+    name: spell.name,
+    level: spell.level,
+    school: spell.school,
+    castingTime: spell.castingTime,
+    range: spell.range,
+    components: spell.components || componentsToString({
+      verbal: spell.verbal,
+      somatic: spell.somatic,
+      material: spell.material,
+      materials: spell.materials
+    }),
+    duration: spell.duration,
+    description: spell.description,
+    prepared: false,
+    ritual: spell.ritual,
+    concentration: spell.concentration,
     verbal: spell.verbal,
     somatic: spell.somatic,
     material: spell.material,
-    ritual: spell.ritual,
-    concentration: spell.concentration
-  });
-  
-  if (components) {
-    result += ` ${components}`;
-  }
-  
-  return result;
-}
+    materials: spell.materials,
+    classes: spell.classes,
+    source: spell.source,
+    higherLevels: spell.higherLevels
+  };
+};
+
+/**
+ * Считает количество подготовленных заклинаний
+ */
+export const countPreparedSpells = (spells: CharacterSpell[]): number => {
+  return spells.filter(spell => spell.prepared && spell.level > 0).length;
+};
 
 /**
  * Группирует заклинания по уровням
  */
-export function groupSpellsByLevel(spells: CharacterSpell[]): Record<number, CharacterSpell[]> {
-  const result: Record<number, CharacterSpell[]> = {};
+export const groupSpellsByLevel = (spells: CharacterSpell[]): Record<number, CharacterSpell[]> => {
+  const grouped: Record<number, CharacterSpell[]> = {};
   
-  for (const spell of spells) {
-    const level = spell.level;
-    if (!result[level]) {
-      result[level] = [];
+  spells.forEach(spell => {
+    if (!grouped[spell.level]) {
+      grouped[spell.level] = [];
     }
-    result[level].push(spell);
-  }
+    grouped[spell.level].push(spell);
+  });
   
-  return result;
-}
+  return grouped;
+};
 
 /**
- * Сортирует заклинания по уровню и затем по имени
+ * Сортирует заклинания по имени и по уровню
  */
-export function sortSpells(spells: CharacterSpell[]): CharacterSpell[] {
+export const sortSpells = (spells: CharacterSpell[]): CharacterSpell[] => {
   return [...spells].sort((a, b) => {
+    // Сначала сортируем по уровню
     if (a.level !== b.level) {
       return a.level - b.level;
     }
+    
+    // Затем по имени
     return a.name.localeCompare(b.name);
   });
-}
-
-/**
- * Фильтрует заклинания по заданным параметрам
- */
-export function filterSpells(spells: CharacterSpell[], {
-  searchTerm = '',
-  level,
-  prepared,
-  school,
-}: {
-  searchTerm?: string;
-  level?: number | number[];
-  prepared?: boolean;
-  school?: string | string[];
-} = {}): CharacterSpell[] {
-  return spells.filter(spell => {
-    // Фильтр по поисковому запросу
-    const matchesSearch = !searchTerm || spell.name.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    // Фильтр по уровню
-    const matchesLevel = level === undefined || 
-      (Array.isArray(level) ? level.includes(spell.level) : spell.level === level);
-    
-    // Фильтр по статусу подготовки
-    const matchesPrepared = prepared === undefined || spell.prepared === prepared;
-    
-    // Фильтр по школе
-    const matchesSchool = school === undefined || 
-      (Array.isArray(school) 
-        ? school.includes(spell.school || '')
-        : spell.school === school);
-    
-    return matchesSearch && matchesLevel && matchesPrepared && matchesSchool;
-  });
-}
+};
