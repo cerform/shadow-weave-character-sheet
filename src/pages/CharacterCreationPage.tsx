@@ -387,7 +387,7 @@ const CharacterCreationPage: React.FC = () => {
               rollAllAbilities={rollAllAbilities}
               rollSingleAbility={rollSingleAbility}
               abilityScorePoints={abilityScorePoints}
-              isMagicClass={isMagicClass()}
+              isMagicClass={isMagicClass}
               rollsHistory={rollsHistory}
               onLevelChange={handleLevelChange}
               maxAbilityScore={maxAbilityScore}
