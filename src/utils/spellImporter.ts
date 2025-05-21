@@ -26,16 +26,17 @@ export const parseSpellEntry = (entry: string): {
   const name = match[2].trim();
   const componentCode = match[3] || '';
   
-  // Используем функцию parseComponents, но гарантируем наличие всех обязательных полей
-  const parsedComponents = parseComponents(componentCode);
+  // Используем функцию parseComponents, но обеспечиваем правильную структуру
+  const components = parseComponents(componentCode);
+  
   return {
     name,
     level,
     components: {
-      verbal: parsedComponents.verbal,
-      somatic: parsedComponents.somatic, 
-      material: parsedComponents.material,
-      ritual: parsedComponents.ritual || false
+      verbal: components.verbal || false,
+      somatic: components.somatic || false,
+      material: components.material || false,
+      ritual: components.ritual || false
     }
   };
 };

@@ -44,7 +44,7 @@ const CharacterContext = createContext<CharacterContextType>({
 
 // Create provider component
 export const CharacterProvider = ({ children }: { children: ReactNode }) => {
-  const [character, setCharacter] = useState<Character | null>(null); // Исправленный тип
+  const [character, setCharacter] = useState<Character | null>(null);
   const [characters, setCharacters] = useState<Character[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
@@ -159,7 +159,7 @@ export const CharacterProvider = ({ children }: { children: ReactNode }) => {
       const userChars = await getCharactersByUserId(userId);
       setCharacters(userChars);
       return userChars;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error getting user characters:', error);
       setError(error instanceof Error ? error : new Error('Unknown error'));
       return [];

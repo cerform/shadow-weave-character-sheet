@@ -37,8 +37,8 @@ const SpellDatabaseManager: React.FC = () => {
         return;
       }
       
-      // Второй аргумент может быть null или userId
-      await saveSpellToDatabase(parsedSpell, null);
+      // Передаем null как userId (второй аргумент)
+      const spellId = await saveSpellToDatabase(parsedSpell, null);
       
       toast({
         title: "Заклинание добавлено",

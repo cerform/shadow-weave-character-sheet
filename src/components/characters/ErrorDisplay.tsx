@@ -1,10 +1,8 @@
 
-import React, { useState } from 'react';
-import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
-import { AlertTriangle, ChevronDown, ChevronUp, RefreshCw } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { useAuth } from '@/hooks/use-auth';
+import React from 'react';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { AlertTriangle } from "lucide-react";
 
 interface ErrorDisplayProps {
   errorMessage: string;
@@ -15,90 +13,51 @@ interface ErrorDisplayProps {
 const ErrorDisplay: React.FC<ErrorDisplayProps> = ({ 
   errorMessage, 
   onRetry,
-  technicalDetails
+  technicalDetails 
 }) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const { user } = useAuth();
-  
-  // Попробуем извлечь полезную информацию из сообщения ошибки
-  let suggestedAction = '';
-  
-  if (errorMessage.includes('permission') || errorMessage.includes('unauthorized')) {
-    suggestedAction = 'Проверьте, что вы авторизованы и обладаете необходимыми правами доступа.';
-  } else if (errorMessage.includes('network') || errorMessage.includes('connection')) {
-    suggestedAction = 'Проверьте подключение к интернету и повторите попытку.';
-  } else if (errorMessage.includes('not found')) {
-    suggestedAction = 'Возможно, запрашиваемый ресурс был удален или перемещен.';
-  } else if (errorMessage.includes('timeout')) {
-    suggestedAction = 'Превышено время ожидания ответа. Повторите попытку позже.';
-  } else {
-    suggestedAction = 'Обновите страницу или повторите последнее действие.';
-  }
-
   return (
-    <Alert variant="destructive" className="mb-6">
-      <AlertTriangle className="h-4 w-4" />
-      <AlertTitle>Ошибка</AlertTitle>
-      <AlertDescription className="space-y-4">
-        <p>{errorMessage}</p>
+    <Card className="border-red-800/30 bg-black/30">
+      <CardHeader className="bg-red-950/30 border-b border-red-800/30">
+        <div className="flex items-start gap-4">
+          <AlertTriangle className="h-7 w-7 text-red-500 mt-1" />
+          <div>
+            <CardTitle className="text-red-400">Ошибка при загрузке данных</CardTitle>
+            <p className="text-sm text-red-300/70 mt-1">
+              {errorMessage}
+            </p>
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent className="pt-6">
+        <p className="text-muted-foreground mb-4">
+          Произошла ошибка при попытке загрузить данные. Пожалуйста, повторите попытку или обратитесь к разработчикам, если проблема сохраняется.
+        </p>
         
-        {suggestedAction && (
-          <div className="text-sm p-2 bg-red-950/30 border border-red-800 rounded">
-            <strong>Рекомендация:</strong> {suggestedAction}
+        {technicalDetails && (
+          <div className="mt-6 border-t border-red-900/30 pt-4">
+            <h4 className="text-sm font-medium text-red-400 mb-2">Технические детали</h4>
+            <pre className="text-xs bg-black/20 p-3 rounded overflow-auto max-h-[200px]">
+              {typeof technicalDetails === 'string' 
+                ? technicalDetails 
+                : JSON.stringify(technicalDetails, null, 2)
+              }
+            </pre>
           </div>
         )}
-        
-        {(technicalDetails || user) && (
-          <Collapsible open={isOpen} onOpenChange={setIsOpen} className="w-full mt-2">
-            <CollapsibleTrigger asChild>
-              <Button 
-                variant="outline" 
-                size="sm"
-                className="flex items-center gap-2 bg-transparent border-red-800 hover:bg-red-900/30 text-xs"
-              >
-                {isOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-                Техническая информация
-              </Button>
-            </CollapsibleTrigger>
-            <CollapsibleContent>
-              <div className="p-3 mt-2 bg-black/40 border border-red-900 rounded text-xs">
-                <div className="mb-2">
-                  <strong>Пользователь:</strong> {user?.displayName || 'Неизвестно'}
-                </div>
-                <div className="mb-2">
-                  <strong>ID пользователя:</strong> {user?.uid || 'Неизвестно'}
-                </div>
-                <div className="mb-2">
-                  <strong>Время:</strong> {new Date().toLocaleString()}
-                </div>
-                <div className="mb-2">
-                  <strong>URL:</strong> {window.location.href}
-                </div>
-                {technicalDetails && (
-                  <pre className="whitespace-pre-wrap mt-2 p-2 bg-black/40 text-red-400 rounded">
-                    {typeof technicalDetails === 'string' 
-                      ? technicalDetails 
-                      : JSON.stringify(technicalDetails, null, 2)}
-                  </pre>
-                )}
-              </div>
-            </CollapsibleContent>
-          </Collapsible>
-        )}
-        
-        {onRetry && (
+      </CardContent>
+      
+      {onRetry && (
+        <CardFooter className="border-t border-red-900/30 bg-red-950/10">
           <Button 
-            variant="outline" 
-            size="sm" 
+            variant="outline"
             onClick={onRetry}
-            className="w-fit flex items-center gap-2"
+            className="border-red-900/30 hover:bg-red-900/20 hover:text-red-300"
           >
-            <RefreshCw size={14} />
-            Повторить
+            Попробовать снова
           </Button>
-        )}
-      </AlertDescription>
-    </Alert>
+        </CardFooter>
+      )}
+    </Card>
   );
 };
 

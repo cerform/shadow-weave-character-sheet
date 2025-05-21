@@ -1,9 +1,11 @@
+
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Plus, RefreshCw, AlertTriangle } from "lucide-react";
 import { useAuth } from '@/hooks/use-auth';
 import { useCharacter } from '@/contexts/CharacterContext';
+import { Character } from '@/types/character';
 import CharactersTable from "@/components/characters/CharactersTable";
 import OBSLayout from '@/components/OBSLayout';
 import IconOnlyNavigation from '@/components/navigation/IconOnlyNavigation';
@@ -28,9 +30,6 @@ const CharactersListPage: React.FC = () => {
   const themeKey = (theme || 'default') as keyof typeof themes;
   const currentTheme = themes[themeKey] || themes.default;
   const [diagnosticResults, setDiagnosticResults] = useState<any>(null);
-  const [characters, setCharacters] = useState<Character[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
   
   // При монтировании компонента обновляем список персонажей
   useEffect(() => {
@@ -101,7 +100,6 @@ const CharactersListPage: React.FC = () => {
     } catch (err) {
       // Исправляем преобразование error для отображения
       const errorMessage = err instanceof Error ? err.message : String(err);
-      setError(errorMessage);
       toast.error(`Ошибка при удалении персонажа: ${errorMessage}`);
     }
   };
@@ -173,7 +171,7 @@ const CharactersListPage: React.FC = () => {
           {/* Обработка ошибок */}
           {error && !loading && (
             <ErrorDisplay 
-              errorMessage={error} 
+              errorMessage={typeof error === 'string' ? error : error.message} 
               onRetry={refreshCharacters} 
               technicalDetails={diagnosticResults}
             />

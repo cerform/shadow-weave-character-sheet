@@ -1,74 +1,48 @@
 
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useTheme } from "@/hooks/use-theme";
 import { themes } from "@/lib/themes";
-import { SpellData } from '@/types/spells';
 import { useSpellbook } from '@/contexts/SpellbookContext';
 import SpellImportModal from './SpellImportModal';
-import {
-  Table,
-  TableBody,
-  TableCaption,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form"
-import { z } from "zod"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm } from "react-hook-form"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
 import { BookOpen as BookOpenIcon, PlusCircle as PlusCircleIcon } from 'lucide-react';
 
 const formSchema = z.object({
   name: z.string().min(2, {
-    message: "Имя должно содержать не менее 2 символов.",
+    message: "Имя должно содержать не менее 2 символов."
   }),
   level: z.number().min(0).max(9),
   school: z.string().min(2, {
-    message: "Школа должна содержать не менее 2 символов.",
+    message: "Школа должна содержать не менее 2 символов."
   }),
   castingTime: z.string().min(2, {
-    message: "Время кастинга должно содержать не менее 2 символов.",
+    message: "Время кастинга должно содержать не менее 2 символов."
   }),
   range: z.string().min(2, {
-    message: "Дистанция должна содержать не менее 2 символов.",
+    message: "Дистанция должна содержать не менее 2 символов."
   }),
   components: z.string().min(2, {
-    message: "Компоненты должны содержать не менее 2 символов.",
+    message: "Компоненты должны содержать не менее 2 символов."
   }),
   duration: z.string().min(2, {
-    message: "Длительность должна содержать не менее 2 символов.",
+    message: "Длительность должна содержать не менее 2 символов."
   }),
   description: z.string().min(10, {
-    message: "Описание должно содержать не менее 10 символов.",
+    message: "Описание должно содержать не менее 10 символов."
   }),
   classes: z.string().min(2, {
-    message: "Классы должны содержать не менее 2 символов.",
-  }),
-})
+    message: "Классы должны содержать не менее 2 символов."
+  })
+});
 
 const EmptyState = () => {
   return (
@@ -106,7 +80,7 @@ const SpellBookViewer: React.FC = () => {
     setIsImportModalOpen(false);
   };
 
-  const form = useForm<z.infer<typeof formSchema>>({
+  const form = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: "",
@@ -117,155 +91,160 @@ const SpellBookViewer: React.FC = () => {
       components: "",
       duration: "",
       description: "",
-      classes: "",
-    },
-  })
+      classes: ""
+    }
+  });
 
   function onSubmit(values: z.infer<typeof formSchema>) {
     toast({
       title: "Вы успешно создали заклинание!",
-      description: "Вы можете просмотреть его в своей книге заклинаний.",
-    })
+      description: "Вы можете просмотреть его в своей книге заклинаний."
+    });
   }
 
   return (
     <div className="container mx-auto py-10">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold" style={{ color: currentTheme.textColor }}>
+        <h1 
+          className="text-3xl font-bold"
+          style={{ color: currentTheme.textColor }}
+        >
           Книга заклинаний
         </h1>
         <div className="space-x-2">
-          <Button variant="outline" onClick={exportSpells}>
+          <Button
+            variant="outline"
+            onClick={exportSpells}
+          >
             Экспорт
           </Button>
-          <Button onClick={() => setIsImportModalOpen(true)}>
+          <Button
+            onClick={() => setIsImportModalOpen(true)}
+          >
             Импорт
           </Button>
           <Dialog>
             <DialogTrigger asChild>
               <Button>Создать</Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px]">
+            <DialogContent className="sm:max-w-[625px]">
               <DialogHeader>
-                <DialogTitle>Создать заклинание</DialogTitle>
+                <DialogTitle>Создать новое заклинание</DialogTitle>
                 <DialogDescription>
-                  Создайте новое заклинание в своей книге заклинаний.
+                  Заполните информацию о заклинании. Нажмите сохранить, когда закончите.
                 </DialogDescription>
               </DialogHeader>
               <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-                  <FormField
-                    control={form.control}
-                    name="name"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Имя</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Имя заклинания" {...field} />
-                        </FormControl>
-                        <FormDescription>
-                          Это имя, которое будет отображаться в вашей книге заклинаний.
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="level"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Уровень</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Уровень заклинания" type="number" {...field} />
-                        </FormControl>
-                        <FormDescription>
-                          Это уровень заклинания.
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="school"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Школа</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Школа заклинания" {...field} />
-                        </FormControl>
-                        <FormDescription>
-                          Это школа заклинания.
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="castingTime"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Время кастинга</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Время кастинга заклинания" {...field} />
-                        </FormControl>
-                        <FormDescription>
-                          Это время кастинга заклинания.
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="range"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Дистанция</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Дистанция заклинания" {...field} />
-                        </FormControl>
-                        <FormDescription>
-                          Это дистанция заклинания.
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="components"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Компоненты</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Компоненты заклинания" {...field} />
-                        </FormControl>
-                        <FormDescription>
-                          Это компоненты заклинания.
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="duration"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Длительность</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Длительность заклинания" {...field} />
-                        </FormControl>
-                        <FormDescription>
-                          Это длительность заклинания.
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                  {/* Основная информация о заклинании */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="name"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Название</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Магическая стрела" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="level"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Уровень</FormLabel>
+                          <FormControl>
+                            <Input 
+                              type="number" 
+                              placeholder="1" 
+                              {...field} 
+                              onChange={e => field.onChange(+e.target.value)} 
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  {/* Школа и время накладывания */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="school"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Школа</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Воплощение" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="castingTime"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Время накладывания</FormLabel>
+                          <FormControl>
+                            <Input placeholder="1 действие" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  {/* Дальность, компоненты, длительность */}
+                  <div className="grid grid-cols-3 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="range"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Дальность</FormLabel>
+                          <FormControl>
+                            <Input placeholder="120 футов" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="components"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Компоненты</FormLabel>
+                          <FormControl>
+                            <Input placeholder="В, С" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="duration"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Длительность</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Мгновенная" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  {/* Описание */}
                   <FormField
                     control={form.control}
                     name="description"
@@ -273,15 +252,18 @@ const SpellBookViewer: React.FC = () => {
                       <FormItem>
                         <FormLabel>Описание</FormLabel>
                         <FormControl>
-                          <Input placeholder="Описание заклинания" {...field} />
+                          <textarea 
+                            className="flex min-h-[120px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                            placeholder="Опишите действие заклинания..." 
+                            {...field} 
+                          />
                         </FormControl>
-                        <FormDescription>
-                          Это описание заклинания.
-                        </FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
+
+                  {/* Классы */}
                   <FormField
                     control={form.control}
                     name="classes"
@@ -289,56 +271,74 @@ const SpellBookViewer: React.FC = () => {
                       <FormItem>
                         <FormLabel>Классы</FormLabel>
                         <FormControl>
-                          <Input placeholder="Классы заклинания" {...field} />
+                          <Input placeholder="Волшебник, Чародей" {...field} />
                         </FormControl>
                         <FormDescription>
-                          Это классы, которые могут использовать это заклинание.
+                          Перечислите через запятую классы, которые могут использовать это заклинание.
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-                  <Button type="submit">Создать</Button>
+
+                  <div className="flex justify-end">
+                    <Button type="submit">Создать заклинание</Button>
+                  </div>
                 </form>
               </Form>
             </DialogContent>
           </Dialog>
         </div>
       </div>
+
+      <SpellImportModal
+        open={isImportModalOpen}
+        onOpenChange={setIsImportModalOpen}
+        onImport={handleImportSpells}
+      />
+
       {selectedSpells.length === 0 ? (
         <EmptyState />
       ) : (
-        <ScrollArea className="rounded-md border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-[100px]">Имя</TableHead>
-                <TableHead>Уровень</TableHead>
-                <TableHead>Школа</TableHead>
-                <TableHead>Время кастинга</TableHead>
-                <TableHead>Дистанция</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {selectedSpells.map((spell) => (
-                <TableRow key={spell.id}>
-                  <TableCell className="font-medium">{spell.name}</TableCell>
-                  <TableCell>{spell.level}</TableCell>
-                  <TableCell>{spell.school}</TableCell>
-                  <TableCell>{spell.castingTime}</TableCell>
-                  <TableCell>{spell.range}</TableCell>
+        <div className="bg-card rounded-md shadow">
+          <div className="p-4">
+            <Input 
+              placeholder="Поиск заклинаний..." 
+              className="max-w-sm mb-4"
+            />
+          </div>
+          <ScrollArea className="h-[500px]">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Название</TableHead>
+                  <TableHead>Ур.</TableHead>
+                  <TableHead>Школа</TableHead>
+                  <TableHead>Время накладывания</TableHead>
+                  <TableHead>Дистанция</TableHead>
+                  <TableHead>Компоненты</TableHead>
+                  <TableHead>Длительность</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </ScrollArea>
-      )}
-      {isImportModalOpen && (
-        <SpellImportModal
-          isOpen={isImportModalOpen}
-          onClose={() => setIsImportModalOpen(false)}
-          onImport={handleImportSpells}
-        />
+              </TableHeader>
+              <TableBody>
+                {selectedSpells.map((spell) => (
+                  <TableRow 
+                    key={spell.id} 
+                    className="hover:bg-muted/50 cursor-pointer"
+                  >
+                    <TableCell className="font-medium">{spell.name}</TableCell>
+                    <TableCell>{spell.level}</TableCell>
+                    <TableCell>{spell.school}</TableCell>
+                    <TableCell>{spell.castingTime}</TableCell>
+                    <TableCell>{spell.range}</TableCell>
+                    <TableCell>{spell.components}</TableCell>
+                    <TableCell>{spell.duration}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </ScrollArea>
+        </div>
       )}
     </div>
   );
