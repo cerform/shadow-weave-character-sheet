@@ -2,22 +2,24 @@
 import { CharacterSpell } from '@/types/character';
 import { parseComponents } from './spellProcessors';
 
+interface SpellComponents {
+  verbal: boolean;
+  somatic: boolean;
+  material: boolean;
+  ritual: boolean;
+}
+
 /**
- * Parses a spell entry from the raw text format
- * Format: [level] name components
- * Example: [0] Брызги кислоты ВС.
+ * Парсит запись заклинания из сырого текстового формата
+ * Формат: [уровень] название компоненты
+ * Пример: [0] Брызги кислоты ВС.
  */
 export const parseSpellEntry = (entry: string): {
   name: string;
   level: number;
-  components: {
-    verbal: boolean;
-    somatic: boolean;
-    material: boolean;
-    ritual: boolean;
-  };
+  components: SpellComponents;
 } | null => {
-  // Match pattern like [0] Name ABC
+  // Ищем шаблон типа [0] Название ВСМ
   const match = entry.match(/\[(\d+)\]\s+(.+?)\s+([\w\.]*)$/);
   
   if (!match) return null;
@@ -26,7 +28,7 @@ export const parseSpellEntry = (entry: string): {
   const name = match[2].trim();
   const componentCode = match[3] || '';
   
-  // Используем функцию parseComponents, но обеспечиваем правильную структуру
+  // Используем функцию parseComponents для обработки кодов компонентов
   const components = parseComponents(componentCode);
   
   return {
@@ -42,17 +44,12 @@ export const parseSpellEntry = (entry: string): {
 };
 
 /**
- * Batch process multiple spell entries from raw text
+ * Пакетная обработка нескольких записей заклинаний из сырого текста
  */
 export const processSpellEntries = (rawText: string): Array<{
   name: string;
   level: number;
-  components: {
-    verbal: boolean;
-    somatic: boolean;
-    material: boolean;
-    ritual: boolean;
-  };
+  components: SpellComponents;
 }> => {
   const lines = rawText.split('\n').filter(line => line.trim().length > 0);
   const results = [];
@@ -68,19 +65,14 @@ export const processSpellEntries = (rawText: string): Array<{
 };
 
 /**
- * Updates existing spell collection with component information from parsed entries
+ * Обновляет существующую коллекцию заклинаний информацией о компонентах из разобранных записей
  */
 export const updateSpellsWithComponents = (
   spells: CharacterSpell[], 
   parsedEntries: Array<{
     name: string;
     level: number;
-    components: {
-      verbal: boolean;
-      somatic: boolean;
-      material: boolean;
-      ritual: boolean;
-    };
+    components: SpellComponents;
   }>
 ): CharacterSpell[] => {
   const updatedSpells = [...spells];

@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Character, CharacterSpell } from '@/types/character';
 import { useSpellbook } from '@/contexts/SpellbookContext';
 import { SpellData } from '@/types/spells';
@@ -17,37 +17,59 @@ import { toast } from 'sonner';
 import { calculateAvailableSpellsByClassAndLevel } from '@/utils/spellUtils';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
+import { getAllSpells, getSpellsByClass } from '@/data/spells';
 
 interface SpellSelectionModalProps {
   character: Character;
   open: boolean;
-  onOpenChange: React.Dispatch<React.SetStateAction<boolean>>; // Изменяем с onClose на onOpenChange
+  onOpenChange: (open: boolean) => void;
   onUpdateCharacter: (updates: Partial<Character>) => void;
 }
 
 const SpellSelectionModal: React.FC<SpellSelectionModalProps> = ({ 
   character, 
   open, 
-  onOpenChange, // Обновляем параметр
+  onOpenChange,
   onUpdateCharacter
 }) => {
   const { theme } = useTheme();
   const themeKey = (theme || 'default') as keyof typeof themes;
   const currentTheme = themes[themeKey] || themes.default;
   
-  const { availableSpells, loadSpellsForCharacter } = useSpellbook();
+  const { loadSpells } = useSpellbook();
+  const [availableSpells, setAvailableSpells] = useState<SpellData[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredSpells, setFilteredSpells] = useState<SpellData[]>([]);
   const [activeTab, setActiveTab] = useState('all');
   const [batchImportText, setBatchImportText] = useState('');
   const [importMode, setImportMode] = useState(false);
+  const [loading, setLoading] = useState(false);
   
   // Load spells when modal opens
   useEffect(() => {
     if (open && character.class) {
-      loadSpellsForCharacter(character.class, character.level || 1);
+      loadSpells();
+      // Загружаем заклинания для класса
+      if (character.class) {
+        setLoading(true);
+        const spells = getSpellsByClass(character.class);
+        const formattedSpells: SpellData[] = spells.map(spell => ({
+          id: spell.id || `spell-${spell.name.replace(/\s+/g, '-').toLowerCase()}`,
+          name: spell.name,
+          level: spell.level,
+          school: spell.school || '',
+          castingTime: spell.castingTime || '',
+          range: spell.range || '',
+          components: spell.components || '',
+          duration: spell.duration || '',
+          description: spell.description || '',
+          classes: spell.classes || []
+        }));
+        setAvailableSpells(formattedSpells);
+        setLoading(false);
+      }
     }
-  }, [open, character.class, character.level, loadSpellsForCharacter]);
+  }, [open, character.class, loadSpells]);
   
   // Filter spells based on search term and active tab
   useEffect(() => {
@@ -78,7 +100,7 @@ const SpellSelectionModal: React.FC<SpellSelectionModalProps> = ({
   
   // Get unique spell levels for tabs
   const spellLevels = React.useMemo(() => {
-    if (!availableSpells) return [];
+    if (!availableSpells || availableSpells.length === 0) return [];
     return [...new Set(availableSpells.map(spell => spell.level))].sort((a, b) => a - b);
   }, [availableSpells]);
   
@@ -176,6 +198,20 @@ const SpellSelectionModal: React.FC<SpellSelectionModalProps> = ({
     return s.level > 0;
   }).length || 0;
 
+  // Группировка заклинаний по уровням для меток на вкладках
+  const spellCountsByLevel = React.useMemo(() => {
+    if (!availableSpells || availableSpells.length === 0) return {};
+    
+    return availableSpells.reduce((acc: Record<string, number>, spell) => {
+      const level = spell.level;
+      if (level !== undefined) {
+        const levelStr = level.toString();
+        acc[levelStr] = (acc[levelStr] || 0) + 1;
+      }
+      return acc;
+    }, {});
+  }, [availableSpells]);
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
@@ -202,7 +238,7 @@ const SpellSelectionModal: React.FC<SpellSelectionModalProps> = ({
         {importMode ? (
           <div className="space-y-4">
             <Textarea
-              placeholder="Вставьте список заклинаний, по одному на строку..."
+              placeholder="Вставьте список заклинаний, по одному на строке..."
               value={batchImportText}
               onChange={(e) => setBatchImportText(e.target.value)}
               className="min-h-[200px]"
@@ -227,20 +263,28 @@ const SpellSelectionModal: React.FC<SpellSelectionModalProps> = ({
 
             <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col overflow-hidden">
               <TabsList className="mb-2 flex flex-wrap">
-                <TabsTrigger value="all">Все</TabsTrigger>
-                <TabsTrigger value="cantrips">Заговоры</TabsTrigger>
-                {spellLevels.filter(level => level > 0).map(level => (
+                <TabsTrigger value="all">
+                  Все ({availableSpells.length})
+                </TabsTrigger>
+                <TabsTrigger value="cantrips">
+                  Заговоры ({spellCountsByLevel['0'] || 0})
+                </TabsTrigger>
+                {spellLevels.filter(level => typeof level === 'number' && level > 0).map(level => (
                   <TabsTrigger key={`level-${level}`} value={String(level)}>
-                    {level} уровень
+                    {level} уровень ({spellCountsByLevel[level.toString()] || 0})
                   </TabsTrigger>
                 ))}
               </TabsList>
 
               <ScrollArea className="flex-1">
                 <div className="space-y-2 p-1">
-                  {filteredSpells.length === 0 ? (
+                  {loading ? (
                     <div className="text-center py-8 text-muted-foreground">
-                      {availableSpells?.length === 0 
+                      Загрузка заклинаний...
+                    </div>
+                  ) : filteredSpells.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                      {availableSpells.length === 0 
                         ? 'Нет доступных заклинаний для этого класса' 
                         : 'Нет заклинаний, соответствующих фильтру'}
                     </div>

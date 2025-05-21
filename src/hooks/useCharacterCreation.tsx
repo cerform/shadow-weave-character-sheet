@@ -1,10 +1,11 @@
+
 import { useState, useEffect } from 'react';
 import { Character } from '@/types/character';
 import { useToast } from "@/components/ui/use-toast";
-import { createCharacter, getCurrentUid } from '@/lib/supabase';
+import { getCurrentUid } from '@/lib/supabase';
 import { saveCharacterToFirestore } from '@/services/characterService';
 
-interface UseCharacterCreationReturn {
+export interface UseCharacterCreationReturn {
   characterData: Character | null;
   updateCharacterData: (updates: Partial<Character>) => void;
   saveCharacter: () => Promise<Character | null>;
@@ -15,6 +16,11 @@ interface UseCharacterCreationReturn {
   assignRaceAbilityBonuses: () => void;
   calculateModifiers: () => void;
   resetCharacter: () => void;
+  // Добавляем недостающие свойства
+  character: Character;
+  updateCharacter: (updates: Partial<Character>) => void;
+  isMagicClass: () => boolean;
+  convertToCharacter: (data: any) => Character;
 }
 
 const initialState: Character = {
@@ -51,6 +57,10 @@ export const useCharacterCreation = (): UseCharacterCreationReturn => {
   const updateCharacterData = (updates: Partial<Character>) => {
     setCharacterData(prev => ({ ...prev, ...updates }));
   };
+
+  // Для совместимости с интерфейсом
+  const updateCharacter = updateCharacterData;
+  const character = characterData;
 
   // Reset character
   const resetCharacter = () => {
@@ -196,6 +206,30 @@ export const useCharacterCreation = (): UseCharacterCreationReturn => {
     // Здесь была бы логика расчета модификаторов характеристик
   };
 
+  // Проверка, является ли класс магическим
+  const isMagicClass = (): boolean => {
+    if (!characterData.class) return false;
+    
+    const magicClasses = [
+      'Бард', 'Жрец', 'Друид', 'Волшебник', 'Колдун', 
+      'Чародей', 'Паладин', 'Следопыт'
+    ];
+    
+    return magicClasses.includes(characterData.class);
+  };
+
+  // Преобразование данных в Character
+  const convertToCharacter = (data: any): Character => {
+    return {
+      ...data,
+      id: data.id || '',
+      name: data.name || '',
+      level: Number(data.level) || 1,
+      abilities: data.abilities || initialState.abilities,
+      hitPoints: data.hitPoints || initialState.hitPoints
+    };
+  };
+
   // Calculate hit points based on class and level
   useEffect(() => {
     if (!characterData.class || typeof characterData.level !== 'number') return;
@@ -213,7 +247,12 @@ export const useCharacterCreation = (): UseCharacterCreationReturn => {
     rollAbility,
     assignRaceAbilityBonuses,
     calculateModifiers,
-    resetCharacter
+    resetCharacter,
+    // Добавляем недостающие свойства для совместимости с интерфейсом
+    character: characterData,
+    updateCharacter: updateCharacterData,
+    isMagicClass,
+    convertToCharacter
   };
 };
 

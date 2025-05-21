@@ -1,6 +1,7 @@
+
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { SpellData } from '@/types/spells';
-import { calculateAvailableSpellsByClassAndLevel, convertSpellsForState } from '@/utils/spellUtils';
+import { calculateAvailableSpellsByClassAndLevel } from '@/utils/spellUtils';
 import { useCharacter } from '@/contexts/CharacterContext';
 import { useSpellbook } from '@/contexts/SpellbookContext';
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -40,7 +41,7 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
   const { theme } = useTheme();
   const themeKey = (theme || 'default') as keyof typeof themes;
   const currentTheme = themes[themeKey] || themes.default;
-  const { selectedSpells, availableSpells: contextAvailableSpells, addSpell, removeSpell, getSpellLimits, getSelectedSpellCount, saveCharacterSpells, loadSpellsForCharacter } = useSpellbook();
+  const { selectedSpells, loadSpells } = useSpellbook();
   const { toast } = useToast();
   
   // Use props or derived values
@@ -64,9 +65,6 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
       
       try {
         console.log(`Loading spells for ${effectiveClass} (level ${effectiveLevel})`);
-        
-        // Принудительно загружаем заклинания из контекста
-        loadSpellsForCharacter(effectiveClass, effectiveLevel);
         
         // Резервная загрузка заклинаний напрямую из данных
         const classSpells = getSpellsByClass(effectiveClass);
@@ -107,7 +105,7 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
         }, 500);
       }
     }
-  }, [effectiveClass, effectiveLevel, loadSpellsForCharacter, loadedSuccessfully, loadAttempts]);
+  }, [effectiveClass, effectiveLevel, loadAttempts, loadedSuccessfully]);
 
   // Пересчитываем количество известных заклинаний при каждом изменении списка заклинаний
   useEffect(() => {
@@ -162,7 +160,7 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
 
   // Определяем список заклинаний для отображения - используем все доступные источники
   const spellsToFilter = useMemo(() => {
-    // Приоритет: 1. пропсы, 2. загруженные напрямую, 3. контекст
+    // Приоритет: 1. пропсы, 2. загруженные напрямую
     if (propAvailableSpells && propAvailableSpells.length > 0) {
       return propAvailableSpells;
     } 
@@ -171,12 +169,8 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
       return internalAvailableSpells;
     }
     
-    if (contextAvailableSpells && contextAvailableSpells.length > 0) {
-      return contextAvailableSpells;
-    }
-    
     return [];
-  }, [propAvailableSpells, contextAvailableSpells, internalAvailableSpells]);
+  }, [propAvailableSpells, internalAvailableSpells]);
 
   // Фильтрация по поисковому запросу и активной вкладке
   useEffect(() => {
@@ -215,7 +209,7 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
     
     // Фильтрация по выбранному уровню (вкладке)
     if (activeTab !== 'all') {
-      const level = activeTab === 'cantrips' ? 0 : Number(activeTab);
+      const level = activeTab === 'cantrips' ? 0 : parseInt(activeTab, 10);
       filtered = filtered.filter(spell => spell.level === level);
     }
     
@@ -264,9 +258,6 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
         return;
       }
       
-      // Добавляем заклинание в контекст
-      addSpell(spell);
-      
       // Также добавляем заклинание прямо в персонажа
       addSpellToCharacter(spell);
       
@@ -277,9 +268,6 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
         setSpellsKnown(prev => prev + 1);
       }
     } else {
-      // Удаляем заклинание из контекста
-      removeSpell(spell.id.toString());
-      
       // Также удаляем заклинание из персонажа
       removeSpellFromCharacter(spell);
       
@@ -294,7 +282,6 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
 
   // Обработчик сохранения и перехода к следующему шагу
   const handleSaveAndContinue = () => {
-    saveCharacterSpells();
     if (nextStep) nextStep();
   };
 
@@ -308,9 +295,11 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
   const spellCountsByLevel = useMemo(() => {
     if (!spellsToFilter || spellsToFilter.length === 0) return {};
     
-    return spellsToFilter.reduce((acc: Record<number, number>, spell) => {
+    return spellsToFilter.reduce((acc: Record<string, number>, spell) => {
       const level = spell.level;
-      acc[level] = (acc[level] || 0) + 1;
+      if (level !== undefined) {
+        acc[level.toString()] = (acc[level.toString()] || 0) + 1;
+      }
       return acc;
     }, {});
   }, [spellsToFilter]);
@@ -350,6 +339,7 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
   const addSpellToCharacter = (spell: SpellData) => {
     // Проверяем, есть ли заклинание уже у персонажа
     const spellExists = character.spells && character.spells.some(s => {
+      if (typeof s === 'string') return s === spell.name;
       return s.name === spell.name;
     });
 
@@ -388,6 +378,7 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
 
     // Удаляем заклинание из списка
     const updatedSpells = character.spells.filter(spell => {
+      if (typeof spell === 'string') return spell !== spellToRemove.name;
       return spell.name !== spellToRemove.name;
     });
 
@@ -402,10 +393,10 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
         <p className="text-sm text-muted-foreground" style={{color: currentTheme.mutedTextColor}}>
           Уровень: {effectiveLevel}, Класс: {effectiveClass}
           <br />
-          <span className={cantripsKnown >= cantripsCount ? "text-red-500 font-bold" : ""}>
+          <span className={Number(cantripsKnown) >= cantripsCount ? "text-red-500 font-bold" : ""}>
             Известно заговоров: {cantripsKnown}/{cantripsCount}
           </span>, 
-          <span className={spellsKnown >= knownSpells ? "text-red-500 font-bold" : ""}> 
+          <span className={Number(spellsKnown) >= knownSpells ? "text-red-500 font-bold" : ""}> 
             Известно заклинаний: {spellsKnown}/{knownSpells}
           </span>, 
           Макс. уровень заклинаний: {maxSpellLevel}
@@ -429,71 +420,70 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
               Все ({spellsToFilter.length})
             </TabsTrigger>
             <TabsTrigger value="cantrips">
-              Заговоры ({spellCountsByLevel[0] || 0})
+              Заговоры ({spellCountsByLevel['0'] || 0})
             </TabsTrigger>
-            {spellLevels.filter(level => level > 0).map(level => (
+            {spellLevels.filter(level => typeof level === 'number' && level > 0).map(level => (
               <TabsTrigger key={`level-${level}`} value={String(level)}>
-                {level} уровень ({spellCountsByLevel[level] || 0})
+                {level} уровень ({spellCountsByLevel[String(level)] || 0})
               </TabsTrigger>
             ))}
           </TabsList>
+
+          <ScrollArea className="flex-1 h-[400px]">
+            <div className="space-y-2 p-1">
+              {filteredSpells.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  {spellsToFilter.length === 0 
+                    ? 'Нет доступных заклинаний для этого класса' 
+                    : 'Нет заклинаний, соответствующих фильтру'}
+                </div>
+              ) : (
+                filteredSpells.map(spell => {
+                  const known = isSpellKnown(spell);
+                  return (
+                    <Card 
+                      key={spell.id || spell.name}
+                      style={{
+                        backgroundColor: known ? `${currentTheme.accent}20` : currentTheme.cardBackground,
+                        borderColor: known ? currentTheme.accent : currentTheme.borderColor
+                      }}
+                    >
+                      <CardContent className="p-3 flex justify-between items-center">
+                        <div>
+                          <div className="font-medium">{spell.name}</div>
+                          <div className="flex items-center gap-2 text-xs">
+                            <Badge variant="outline" className="text-xs">
+                              {spell.level === 0 ? 'Заговор' : `${spell.level} уровень`}
+                            </Badge>
+                            {spell.school && (
+                              <span className="text-muted-foreground">{spell.school}</span>
+                            )}
+                          </div>
+                        </div>
+                        
+                        <Button 
+                          variant={known ? "ghost" : "outline"}
+                          size="sm"
+                          onClick={() => handleSpellChange(spell, !known)}
+                        >
+                          {known ? 'Изучено' : 'Добавить'}
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  );
+                })
+              )}
+            </div>
+          </ScrollArea>
         </Tabs>
       </div>
 
-      <ScrollArea className="flex-1">
-        <div className="space-y-2">
-          {loading ? (
-            <div className="text-center py-4 text-muted-foreground">
-              Загрузка заклинаний...
-            </div>
-          ) : filteredSpells.length === 0 ? (
-            <div className="text-center py-4 text-muted-foreground">
-              {spellsToFilter.length === 0 
-                ? `Нет доступных заклинаний для класса ${effectiveClass}` 
-                : "Заклинания не найдены по запросу"}
-            </div>
-          ) : (
-            filteredSpells.map((spell) => {
-              const isAdded = isSpellKnown(spell);
-              const canAdd = spell.level === 0 
-                ? cantripsKnown < cantripsCount 
-                : spellsKnown < knownSpells;
-              
-              return (
-                <Card key={spell.id || spell.name} style={{backgroundColor: currentTheme.cardBackground, borderColor: currentTheme.accent}}>
-                  <CardContent className="flex items-center justify-between p-3">
-                    <div style={{color: currentTheme.textColor}}>
-                      <div className="font-medium">{spell.name}</div>
-                      <div className="text-xs">
-                        {spell.school || "Универсальная"}, {spell.level === 0 ? 'Заговор' : `${spell.level} уровень`}
-                      </div>
-                    </div>
-                    <Button
-                      variant={isAdded ? "default" : "outline"}
-                      disabled={!isAdded && !canAdd}
-                      onClick={() => handleSpellChange(spell, !isAdded)}
-                      style={{
-                        backgroundColor: isAdded ? currentTheme.accent : currentTheme.background,
-                        color: isAdded ? currentTheme.background : currentTheme.accent,
-                      }}
-                    >
-                      {isAdded ? 'Известно' : 'Изучить'}
-                    </Button>
-                  </CardContent>
-                </Card>
-              );
-            })
-          )}
-        </div>
-      </ScrollArea>
-
       {nextStep && prevStep && (
-        <div className="mt-4">
+        <div className="mt-auto pt-4">
           <NavigationButtons 
-            onPrev={prevStep} 
+            onPrev={prevStep}
             onNext={handleSaveAndContinue}
-            nextLabel="Сохранить и продолжить"
-            allowNext={!loading}
+            nextDisabled={false}
           />
         </div>
       )}

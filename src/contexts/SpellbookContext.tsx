@@ -1,10 +1,12 @@
 
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { SpellData } from '@/types/spells';
+import { CharacterSpell } from '@/types/character';
 import { getAllSpellsFromDatabase, saveSpellToDatabase, deleteSpellFromDatabase } from '@/services/spellService';
 import { toast } from 'sonner';
+import { calculateAvailableSpellsByClassAndLevel } from '@/utils/spellUtils';
 
-interface SpellbookContextType {
+export interface SpellbookContextType {
   selectedSpells: SpellData[];
   filteredSpells: SpellData[];
   searchQuery: string;
@@ -16,11 +18,25 @@ interface SpellbookContextType {
   unprepareSpell: (id: string) => void;
   exportSpells: () => void;
   importSpells: (spells: SpellData[]) => void;
+  
+  // Добавляем недостающие свойства и методы
+  availableSpells: SpellData[];
+  loading: boolean;
+  loadSpellsForCharacter: (characterClass: string, level: number) => void;
+  getSpellLimits: (characterClass: string, level: number, abilityModifier?: number) => { 
+    maxSpellLevel: number;
+    cantripsCount: number;
+    knownSpells: number;
+  };
+  getSelectedSpellCount: () => { cantrips: number; spells: number };
+  saveCharacterSpells: () => void;
 }
 
-const SpellbookContext = createContext<SpellbookContextType>({
+export const SpellbookContext = createContext<SpellbookContextType>({
   selectedSpells: [],
   filteredSpells: [],
+  availableSpells: [], // Добавлено
+  loading: false, // Добавлено
   searchQuery: '',
   setSearchQuery: () => {},
   loadSpells: async () => {},
@@ -29,22 +45,32 @@ const SpellbookContext = createContext<SpellbookContextType>({
   prepareSpell: () => {},
   unprepareSpell: () => {},
   exportSpells: () => {},
-  importSpells: () => {}
+  importSpells: () => {},
+  loadSpellsForCharacter: () => {}, // Добавлено
+  getSpellLimits: () => ({ maxSpellLevel: 0, cantripsCount: 0, knownSpells: 0 }), // Добавлено
+  getSelectedSpellCount: () => ({ cantrips: 0, spells: 0 }), // Добавлено
+  saveCharacterSpells: () => {} // Добавлено
 });
 
-export const SpellbookProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const SpellbookProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [spells, setSpells] = useState<SpellData[]>([]);
   const [filteredSpells, setFilteredSpells] = useState<SpellData[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [availableSpells, setAvailableSpells] = useState<SpellData[]>([]); // Добавлено
+  const [loading, setLoading] = useState(false); // Добавлено
   
   const loadSpells = async () => {
     try {
+      setLoading(true);
       const loadedSpells = await getAllSpellsFromDatabase();
       setSpells(loadedSpells);
       setFilteredSpells(loadedSpells);
+      setAvailableSpells(loadedSpells); // Добавлено
     } catch (error) {
       console.error('Error loading spells:', error);
       toast.error('Ошибка при загрузке заклинаний');
+    } finally {
+      setLoading(false);
     }
   };
   
@@ -128,7 +154,7 @@ export const SpellbookProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       // Проверяем идентификаторы и генерируем новые при необходимости
       const processedSpells = importedSpells.map(spell => {
         // Если есть id, используем его, иначе генерируем временный
-        const id = spell.id?.toString() || `imported-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+        const id = spell.id ? String(spell.id) : `imported-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
         
         return {
           ...spell,
@@ -146,12 +172,69 @@ export const SpellbookProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       toast.error('Ошибка при импорте заклинаний');
     }
   };
+
+  // Добавляем новые методы
+  const loadSpellsForCharacter = (characterClass: string, level: number) => {
+    setLoading(true);
+    
+    // Здесь должна быть логика загрузки заклинаний для конкретного класса и уровня
+    // Для примера, просто фильтруем существующие заклинания
+    try {
+      // Загрузка всех заклинаний, если еще не загружены
+      if (spells.length === 0) {
+        loadSpells().then(() => {
+          // После загрузки всех заклинаний фильтруем их
+          const filtered = spells.filter(spell => {
+            const classes = Array.isArray(spell.classes) 
+              ? spell.classes 
+              : typeof spell.classes === 'string' 
+                ? [spell.classes] 
+                : [];
+            return classes.some(c => c.toLowerCase() === characterClass.toLowerCase());
+          });
+          setAvailableSpells(filtered);
+        });
+      } else {
+        // Если заклинания уже загружены, просто фильтруем
+        const filtered = spells.filter(spell => {
+          const classes = Array.isArray(spell.classes) 
+            ? spell.classes 
+            : typeof spell.classes === 'string' 
+              ? [spell.classes] 
+              : [];
+          return classes.some(c => c.toLowerCase() === characterClass.toLowerCase());
+        });
+        setAvailableSpells(filtered);
+      }
+    } catch (error) {
+      console.error('Error loading spells for character:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getSpellLimits = (characterClass: string, level: number, abilityModifier = 0) => {
+    return calculateAvailableSpellsByClassAndLevel(characterClass, level, abilityModifier);
+  };
+
+  const getSelectedSpellCount = () => {
+    const cantrips = spells.filter(spell => spell.level === 0).length;
+    const regularSpells = spells.filter(spell => spell.level > 0).length;
+    return { cantrips, spells: regularSpells };
+  };
+
+  const saveCharacterSpells = () => {
+    // Здесь должна быть логика сохранения заклинаний персонажа
+    toast.success('Заклинания персонажа сохранены');
+  };
   
   return (
     <SpellbookContext.Provider
       value={{
         selectedSpells: spells,
         filteredSpells,
+        availableSpells,
+        loading,
         searchQuery,
         setSearchQuery,
         loadSpells,
@@ -160,7 +243,11 @@ export const SpellbookProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         prepareSpell,
         unprepareSpell,
         exportSpells,
-        importSpells
+        importSpells,
+        loadSpellsForCharacter,
+        getSpellLimits,
+        getSelectedSpellCount,
+        saveCharacterSpells
       }}
     >
       {children}

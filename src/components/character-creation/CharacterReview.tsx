@@ -1,118 +1,120 @@
 
-import React, { useState } from 'react';
-import { Button } from "@/components/ui/button";
-import { useCharacter } from '@/contexts/CharacterContext';
-import { useCharacterCreation } from '@/hooks/useCharacterCreation';
-import { useNavigate } from 'react-router-dom';
-import { toast } from '@/components/ui/use-toast';
+import React from 'react';
 import { Character } from '@/types/character';
+import { Button } from '@/components/ui/button';
+import { useNavigate } from 'react-router-dom';
+import { useToast } from '@/hooks/use-toast';
 
-const CharacterReview: React.FC = () => {
-  const { character, saveCharacter } = useCharacter();
-  const { characterData } = useCharacterCreation();
+interface CharacterReviewProps {
+  character: Character;
+  prevStep?: () => void;
+  updateCharacter: (updates: Partial<Character>) => void;
+  setCurrentStep: (step: number) => void;
+}
+
+const CharacterReview: React.FC<CharacterReviewProps> = ({ 
+  character, 
+  prevStep, 
+  updateCharacter,
+  setCurrentStep 
+}) => {
   const navigate = useNavigate();
-  const [saving, setSaving] = useState(false);
-  const [characterId, setCharacterId] = useState<string>('');
-  const [savedCharacter, setSavedCharacter] = useState<Character | null>(null);
-
+  const { toast } = useToast();
+  
+  // Обработчик сохранения персонажа
   const handleSaveCharacter = async () => {
-    if (!characterData) {
-      toast({
-        title: "Ошибка сохранения",
-        description: "Отсутствуют данные персонажа"
-      });
-      return;
-    }
-
+    // Здесь должна быть логика сохранения персонажа
     try {
-      setSaving(true);
-      // Сохраняем персонажа в базу данных
-      const id = await saveCharacter(characterData);
-      setCharacterId(id);
-      setSavedCharacter(characterData);
-
-      toast({
-        title: "Персонаж создан!",
-        description: "Ваш персонаж был успешно сохранен."
-      });
+      // Имитация сохранения для примера
+      setTimeout(() => {
+        toast({
+          title: "Персонаж сохранен",
+          description: `${character.name} успешно сохранен!`,
+        });
+        navigate('/characters');
+      }, 1000);
     } catch (error) {
       toast({
-        variant: "destructive",
-        title: "Ошибка при создании персонажа",
-        description: "Произошла ошибка при сохранении персонажа."
+        title: "Ошибка сохранения",
+        description: "Произошла ошибка при сохранении персонажа",
+        variant: "destructive"
       });
-    } finally {
-      setSaving(false);
     }
   };
-
-  const handleViewCharacter = () => {
-    if (characterId && savedCharacter) {
-      navigate(`/character/${characterId}`);
-    }
+  
+  // Функция для отображения характеристик персонажа
+  const renderAbilityScores = () => {
+    if (!character.abilities) return null;
+    
+    return (
+      <div className="grid grid-cols-3 gap-2">
+        <div className="text-center">
+          <div className="font-bold">СИЛ</div>
+          <div>{character.abilities.STR || character.abilities.strength || 10}</div>
+        </div>
+        <div className="text-center">
+          <div className="font-bold">ЛОВ</div>
+          <div>{character.abilities.DEX || character.abilities.dexterity || 10}</div>
+        </div>
+        <div className="text-center">
+          <div className="font-bold">ТЕЛ</div>
+          <div>{character.abilities.CON || character.abilities.constitution || 10}</div>
+        </div>
+        <div className="text-center">
+          <div className="font-bold">ИНТ</div>
+          <div>{character.abilities.INT || character.abilities.intelligence || 10}</div>
+        </div>
+        <div className="text-center">
+          <div className="font-bold">МДР</div>
+          <div>{character.abilities.WIS || character.abilities.wisdom || 10}</div>
+        </div>
+        <div className="text-center">
+          <div className="font-bold">ХАР</div>
+          <div>{character.abilities.CHA || character.abilities.charisma || 10}</div>
+        </div>
+      </div>
+    );
   };
-
+  
   return (
     <div className="space-y-6">
-      <div className="bg-card rounded-lg p-6 shadow">
-        <h2 className="text-2xl font-bold mb-4">Обзор персонажа</h2>
-        <div className="grid md:grid-cols-2 gap-6">
+      <h2 className="text-2xl font-bold">Просмотр персонажа</h2>
+      
+      <div className="grid md:grid-cols-2 gap-6">
+        <div className="space-y-4">
           <div>
-            <h3 className="text-xl font-semibold mb-2">Основная информация</h3>
-            <div className="space-y-2">
-              <p><strong>Имя:</strong> {characterData?.name}</p>
-              <p><strong>Раса:</strong> {characterData?.race}</p>
-              <p><strong>Подраса:</strong> {characterData?.subrace || '—'}</p>
-              <p><strong>Класс:</strong> {characterData?.class}</p>
-              <p><strong>Подкласс:</strong> {characterData?.subclass || '—'}</p>
-              <p><strong>Уровень:</strong> {characterData?.level}</p>
-              <p><strong>Предыстория:</strong> {characterData?.background || '—'}</p>
-              <p><strong>Мировоззрение:</strong> {characterData?.alignment || '—'}</p>
-            </div>
-          </div>
-          <div>
-            <h3 className="text-xl font-semibold mb-2">Характеристики</h3>
-            <div className="space-y-2">
-              <p><strong>Сила:</strong> {characterData?.abilities?.STR}</p>
-              <p><strong>Ловкость:</strong> {characterData?.abilities?.DEX}</p>
-              <p><strong>Телосложение:</strong> {characterData?.abilities?.CON}</p>
-              <p><strong>Интеллект:</strong> {characterData?.abilities?.INT}</p>
-              <p><strong>Мудрость:</strong> {characterData?.abilities?.WIS}</p>
-              <p><strong>Харизма:</strong> {characterData?.abilities?.CHA}</p>
-            </div>
+            <h3 className="font-semibold">Основные сведения</h3>
+            <p>Имя: {character.name || "Не указано"}</p>
+            <p>Раса: {character.race || "Не указано"}</p>
+            {character.subrace && <p>Подраса: {character.subrace}</p>}
+            <p>Класс: {character.class || "Не указано"}</p>
+            <p>Уровень: {character.level || 1}</p>
+            <p>Предыстория: {character.background || "Не указано"}</p>
           </div>
         </div>
-
-        <div className="mt-6">
-          <h3 className="text-xl font-semibold mb-2">Здоровье</h3>
-          <p><strong>Максимальные хиты:</strong> {characterData?.hitPoints?.maximum}</p>
+        
+        <div className="space-y-4">
+          <div>
+            <h3 className="font-semibold">Характеристики</h3>
+            {renderAbilityScores()}
+          </div>
+          
+          <div>
+            <h3 className="font-semibold">Здоровье</h3>
+            <p>Максимум HP: {character.hitPoints?.maximum || character.maxHp || 0}</p>
+          </div>
         </div>
-
-        <div className="mt-6 space-y-2">
-          <h3 className="text-xl font-semibold mb-2">Особенности и умения</h3>
-          <ul className="list-disc pl-5">
-            {Array.isArray(characterData?.features) && characterData.features.map((feature, index) => (
-              <li key={index}>
-                {typeof feature === 'string' ? feature : `${feature.name} (${feature.source})`}
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        <div className="mt-6 flex gap-4 justify-end">
-          {!characterId ? (
-            <Button 
-              onClick={handleSaveCharacter} 
-              disabled={saving}
-            >
-              {saving ? 'Сохранение...' : 'Завершить создание'}
-            </Button>
-          ) : (
-            <Button onClick={handleViewCharacter}>
-              Перейти к листу персонажа
-            </Button>
-          )}
-        </div>
+      </div>
+      
+      <div className="flex justify-between mt-8">
+        {prevStep && (
+          <Button onClick={prevStep} variant="outline">
+            Назад
+          </Button>
+        )}
+        <Button onClick={handleSaveCharacter}>
+          Сохранить персонажа
+        </Button>
       </div>
     </div>
   );

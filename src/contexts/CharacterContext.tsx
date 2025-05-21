@@ -14,7 +14,6 @@ interface CharacterContextType {
   getAllCharacters: () => Promise<Character[]>;
   getCharactersByUserId: (userId: string) => Promise<Character[]>;
   deleteCharacter: (id: string) => Promise<void>;
-  // Add missing properties
   saveCurrentCharacter: () => Promise<string>;
   getUserCharacters: () => Promise<Character[]>;
   loading: boolean;
@@ -33,7 +32,6 @@ const CharacterContext = createContext<CharacterContextType>({
   getAllCharacters: async () => [],
   getCharactersByUserId: async () => [],
   deleteCharacter: async () => {},
-  // Add default values for new properties
   saveCurrentCharacter: async () => '',
   getUserCharacters: async () => [],
   loading: false,
@@ -183,7 +181,6 @@ export const CharacterProvider = ({ children }: { children: ReactNode }) => {
         getAllCharacters: handleGetAllCharacters,
         getCharactersByUserId: handleGetCharactersByUserId,
         deleteCharacter: handleDeleteCharacter,
-        // Add new properties to context value
         saveCurrentCharacter,
         getUserCharacters,
         loading,
