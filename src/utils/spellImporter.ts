@@ -32,9 +32,9 @@ export const parseSpellEntry = (entry: string): {
     name,
     level,
     components: {
-      verbal: parsedComponents.verbal || false,
-      somatic: parsedComponents.somatic || false, 
-      material: parsedComponents.material || false,
+      verbal: parsedComponents.verbal,
+      somatic: parsedComponents.somatic, 
+      material: parsedComponents.material,
       ritual: parsedComponents.ritual || false
     }
   };

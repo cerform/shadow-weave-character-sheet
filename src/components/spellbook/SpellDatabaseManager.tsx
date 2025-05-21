@@ -37,8 +37,7 @@ const SpellDatabaseManager: React.FC = () => {
         return;
       }
       
-      // Исправляем вызов функции, добавляя null в качестве второго аргумента
-      // или изменяем сигнатуру функции saveSpellToDatabase
+      // Второй аргумент может быть null или userId
       await saveSpellToDatabase(parsedSpell, null);
       
       toast({

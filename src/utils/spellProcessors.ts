@@ -1,11 +1,11 @@
 
 interface SpellComponents {
-  verbal?: boolean;
-  somatic?: boolean;
-  material?: boolean;
+  verbal: boolean;
+  somatic: boolean;
+  material: boolean;
   materials?: string;
   ritual?: boolean;
-  concentration?: boolean; // Добавляем свойство концентрации
+  concentration?: boolean;
 }
 
 /**
@@ -93,6 +93,7 @@ export const parseComponents = (componentsStr: string): SpellComponents => {
   const somatic = componentsStr.includes('С');
   const material = componentsStr.includes('М');
   const ritual = componentsStr.includes('ритуал');
+  const concentration = componentsStr.includes('концентрация');
   
   // Extract material components if available
   let materials = '';
@@ -101,7 +102,7 @@ export const parseComponents = (componentsStr: string): SpellComponents => {
     materials = match ? match[1] : '';
   }
   
-  return { verbal, somatic, material, materials, ritual };
+  return { verbal, somatic, material, materials, ritual, concentration };
 };
 
 // Import getAbilityModifier for the calculateModifier function

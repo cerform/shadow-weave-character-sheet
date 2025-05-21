@@ -42,7 +42,7 @@ const SpellImportModal: React.FC<SpellImportModalProps> = ({ isOpen, onClose, on
       
       onImport(spells);
       setImportText('');
-      onClose(); // Добавляем закрытие модального окна после успешного импорта
+      onClose(); // Закрываем модальное окно после успешного импорта
     } catch (error) {
       console.error('Import error:', error);
       toast({

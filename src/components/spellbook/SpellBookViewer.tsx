@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,7 +10,7 @@ import { useTheme } from "@/hooks/use-theme";
 import { themes } from "@/lib/themes";
 import { SpellData } from '@/types/spells';
 import { useSpellbook } from '@/contexts/SpellbookContext';
-import { SpellImportModal } from '@/components/spellbook';
+import SpellImportModal from './SpellImportModal';
 import {
   Table,
   TableBody,
