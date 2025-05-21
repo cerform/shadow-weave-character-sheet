@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -51,7 +52,9 @@ const SpellBookViewer: React.FC = () => {
 
   // Load spells on component mount
   useEffect(() => {
-    loadSpells();
+    if (loadSpells) {
+      loadSpells();
+    }
   }, [loadSpells]);
 
   // Filter spells based on search term and filters
@@ -402,7 +405,7 @@ const SpellBookViewer: React.FC = () => {
       
       {/* Import Modal */}
       <SpellImportModal
-        open={showImportModal}
+        isOpen={showImportModal}
         onClose={() => setShowImportModal(false)}
         onImport={(spells) => {
           importSpells(spells);

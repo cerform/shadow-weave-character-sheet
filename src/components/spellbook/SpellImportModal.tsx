@@ -1,105 +1,85 @@
 
 import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
-import { parseSpellEntry, processSpellBatch } from '@/utils/spellBatchImporter';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import { CharacterSpell } from '@/types/character';
+import { useToast } from '@/hooks/use-toast';
 
 interface SpellImportModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onImport: (spells: CharacterSpell[]) => void;
 }
 
-const SpellImportModal: React.FC<SpellImportModalProps> = ({
-  isOpen,
-  onClose
-}) => {
+const SpellImportModal: React.FC<SpellImportModalProps> = ({ isOpen, onClose, onImport }) => {
   const [importText, setImportText] = useState('');
-  const [processing, setProcessing] = useState(false);
   const { toast } = useToast();
 
   const handleImport = () => {
-    if (!importText.trim()) {
-      toast({
-        title: "Ошибка импорта",
-        description: "Введите данные для импорта",
-        variant: "destructive"
-      });
-      return;
-    }
-
     try {
-      setProcessing(true);
-      // Обрабатываем заклинания из текста
-      const processed = processSpellBatch(importText);
+      let spells: CharacterSpell[] = [];
       
-      // Здесь будет логика сохранения заклинаний
-      // В реальном приложении тут может быть сохранение в БД или localStorage
+      try {
+        // Try to parse as JSON first
+        spells = JSON.parse(importText);
+      } catch (jsonError) {
+        // If not valid JSON, try as spell batch format
+        try {
+          const spellsWithoutPrepared = JSON.parse(importText);
+          spells = spellsWithoutPrepared.map((spell: any) => ({
+            ...spell,
+            prepared: true
+          }));
+        } catch (error) {
+          throw new Error('Неверный формат данных');
+        }
+      }
       
-      toast({
-        title: "Заклинания импортированы",
-        description: `Успешно обработано ${processed.length} заклинаний`,
-        variant: "default"
-      });
+      if (!Array.isArray(spells)) {
+        throw new Error('Данные должны быть массивом заклинаний');
+      }
       
-      // Закрываем модальное окно и очищаем текст
+      onImport(spells);
       setImportText('');
-      onClose();
     } catch (error) {
-      console.error('Ошибка импорта заклинаний:', error);
+      console.error('Import error:', error);
       toast({
-        title: "Ошибка обработки",
-        description: "Не удалось импортировать заклинания. Проверьте формат данных.",
-        variant: "destructive"
+        title: 'Ошибка импорта',
+        description: error instanceof Error ? error.message : 'Не удалось импортировать заклинания',
+        variant: 'destructive'
       });
-    } finally {
-      setProcessing(false);
     }
   };
 
-  // Пример формата для импорта
-  const importExample = `[0] Брызги кислоты ВС.
-[1] Благословение ВСМ
-[2] Вечный огонь ВСМ`;
-
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>Импорт заклинаний</DialogTitle>
         </DialogHeader>
         
         <div className="space-y-4">
-          <div>
-            <p className="text-sm text-muted-foreground mb-2">
-              Вставьте список заклинаний в формате:
-            </p>
-            <pre className="bg-accent/10 p-2 rounded text-xs">
-              {importExample}
-            </pre>
-            <p className="text-xs text-muted-foreground mt-2">
-              [уровень] название компоненты
-            </p>
-          </div>
+          <p className="text-sm text-muted-foreground">
+            Вставьте JSON-данные заклинаний для импорта в вашу книгу заклинаний.
+          </p>
           
-          <Textarea
-            placeholder="Вставьте заклинания здесь..."
+          <Textarea 
             value={importText}
-            onChange={(e) => setImportText(e.target.value)}
+            onChange={e => setImportText(e.target.value)}
+            placeholder="Вставьте JSON-данные заклинаний здесь..."
             className="min-h-[200px]"
           />
+          
+          <div className="flex justify-end space-x-2">
+            <Button variant="outline" onClick={onClose}>
+              Отмена
+            </Button>
+            <Button onClick={handleImport}>
+              Импортировать
+            </Button>
+          </div>
         </div>
-        
-        <DialogFooter>
-          <Button variant="outline" onClick={onClose}>Отмена</Button>
-          <Button 
-            onClick={handleImport} 
-            disabled={processing || !importText.trim()}
-          >
-            {processing ? "Импорт..." : "Импортировать"}
-          </Button>
-        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

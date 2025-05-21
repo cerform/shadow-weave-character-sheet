@@ -4,6 +4,7 @@ interface SpellComponents {
   somatic?: boolean;
   material?: boolean;
   materials?: string;
+  ritual?: boolean;
 }
 
 /**
@@ -74,3 +75,33 @@ export const getSpellSchoolColor = (school: string = ''): string => {
   const normalizedSchool = school.toLowerCase();
   return schoolColors[normalizedSchool] || schoolColors.universal;
 };
+
+/**
+ * Вычисляет модификатор характеристики
+ * Это функция-алиас для getAbilityModifier для обеспечения совместимости
+ */
+export const calculateModifier = (score: number): number => {
+  return getAbilityModifier(score);
+};
+
+/**
+ * Парсит компоненты из строкового формата (В, С, М)
+ */
+export const parseComponents = (componentsStr: string): SpellComponents => {
+  const verbal = componentsStr.includes('В');
+  const somatic = componentsStr.includes('С');
+  const material = componentsStr.includes('М');
+  const ritual = componentsStr.includes('ритуал');
+  
+  // Extract material components if available
+  let materials = '';
+  if (material && componentsStr.includes('(')) {
+    const match = componentsStr.match(/М\s*\((.*?)\)/);
+    materials = match ? match[1] : '';
+  }
+  
+  return { verbal, somatic, material, materials, ritual };
+};
+
+// Import getAbilityModifier for the calculateModifier function
+import { getAbilityModifier } from '@/utils/characterUtils';

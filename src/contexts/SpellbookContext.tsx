@@ -19,6 +19,13 @@ interface SpellbookContextType {
   saveCharacterSpells: () => void;
   isSpellAvailableForClass: (spell: SpellData) => boolean;
   loadSpellsForCharacter: (characterClass: string, level: number) => void;
+  // New functions needed by SpellBookViewer
+  prepareSpell: (spellId: string) => void;
+  unprepareSpell: (spellId: string) => void;
+  loadSpells: () => void;
+  exportSpells: () => void;
+  importSpells: (spells: CharacterSpell[]) => void;
+  loading: boolean;
 }
 
 export const SpellbookContext = createContext<SpellbookContextType>({
@@ -33,11 +40,19 @@ export const SpellbookContext = createContext<SpellbookContextType>({
   saveCharacterSpells: () => {},
   isSpellAvailableForClass: () => false,
   loadSpellsForCharacter: () => {},
+  // New functions needed by SpellBookViewer
+  prepareSpell: () => {},
+  unprepareSpell: () => {},
+  loadSpells: () => {},
+  exportSpells: () => {},
+  importSpells: () => {},
+  loading: false
 });
 
 export const SpellbookProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [selectedSpells, setSelectedSpells] = useState<SpellData[]>([]);
   const [availableSpells, setAvailableSpells] = useState<SpellData[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
   const { character, updateCharacter } = useCharacter();
   const { toast } = useToast();
 
@@ -329,6 +344,212 @@ export const SpellbookProvider: React.FC<{ children: ReactNode }> = ({ children 
     });
   };
 
+  // Новые функции для SpellBookViewer
+  const prepareSpell = (spellId: string) => {
+    if (!character || !character.spells) return;
+    
+    // Находим заклинание в списке выбранных
+    const selectedSpellIndex = selectedSpells.findIndex(s => s.id === spellId);
+    
+    if (selectedSpellIndex >= 0) {
+      const updatedSpells = [...selectedSpells];
+      updatedSpells[selectedSpellIndex] = {
+        ...updatedSpells[selectedSpellIndex],
+        prepared: true
+      };
+      
+      setSelectedSpells(updatedSpells);
+      
+      // Обновляем в персонаже
+      if (updateCharacter && Array.isArray(character.spells)) {
+        const characterSpellIndex = character.spells.findIndex(s => 
+          typeof s === 'object' && (s.id === spellId || s.name === updatedSpells[selectedSpellIndex].name)
+        );
+        
+        if (characterSpellIndex >= 0) {
+          const updatedCharacterSpells = [...character.spells];
+          
+          if (typeof updatedCharacterSpells[characterSpellIndex] === 'object') {
+            updatedCharacterSpells[characterSpellIndex] = {
+              ...updatedCharacterSpells[characterSpellIndex] as CharacterSpell,
+              prepared: true
+            };
+            
+            updateCharacter({ spells: updatedCharacterSpells });
+          }
+        }
+      }
+    }
+  };
+  
+  const unprepareSpell = (spellId: string) => {
+    if (!character || !character.spells) return;
+    
+    // Находим заклинание в списке выбранных
+    const selectedSpellIndex = selectedSpells.findIndex(s => s.id === spellId);
+    
+    if (selectedSpellIndex >= 0) {
+      const updatedSpells = [...selectedSpells];
+      updatedSpells[selectedSpellIndex] = {
+        ...updatedSpells[selectedSpellIndex],
+        prepared: false
+      };
+      
+      setSelectedSpells(updatedSpells);
+      
+      // Обновляем в персонаже
+      if (updateCharacter && Array.isArray(character.spells)) {
+        const characterSpellIndex = character.spells.findIndex(s => 
+          typeof s === 'object' && (s.id === spellId || s.name === updatedSpells[selectedSpellIndex].name)
+        );
+        
+        if (characterSpellIndex >= 0) {
+          const updatedCharacterSpells = [...character.spells];
+          
+          if (typeof updatedCharacterSpells[characterSpellIndex] === 'object') {
+            updatedCharacterSpells[characterSpellIndex] = {
+              ...updatedCharacterSpells[characterSpellIndex] as CharacterSpell,
+              prepared: false
+            };
+            
+            updateCharacter({ spells: updatedCharacterSpells });
+          }
+        }
+      }
+    }
+  };
+  
+  // Загрузка всех заклинаний
+  const loadSpells = () => {
+    setLoading(true);
+    try {
+      if (character && character.class) {
+        loadSpellsForCharacter(character.class, character.level || 1);
+      } else {
+        // Если нет персонажа, загружаем все заклинания
+        const allSpells = getAllSpells();
+        const spellDataArray = allSpells.map(spell => ({
+          id: spell.id || `spell-${spell.name.replace(/\s+/g, '-').toLowerCase()}`,
+          name: spell.name,
+          level: spell.level,
+          school: spell.school || 'Универсальная',
+          castingTime: spell.castingTime || '1 действие',
+          range: spell.range || 'Касание',
+          components: spell.components || '',
+          duration: spell.duration || 'Мгновенная',
+          description: spell.description || '',
+          classes: spell.classes || [],
+          ritual: spell.ritual || false,
+          concentration: spell.concentration || false
+        } as SpellData));
+        
+        setAvailableSpells(spellDataArray);
+      }
+    } catch (error) {
+      console.error('Error loading spells:', error);
+      toast({
+        title: 'Ошибка загрузки',
+        description: 'Не удалось загрузить заклинания',
+        variant: 'destructive'
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  // Экспорт заклинаний в JSON
+  const exportSpells = () => {
+    if (selectedSpells.length === 0) {
+      toast({
+        title: 'Нет заклинаний',
+        description: 'У вас нет заклинаний для экспорта',
+        variant: 'destructive'
+      });
+      return;
+    }
+    
+    try {
+      const jsonData = JSON.stringify(selectedSpells, null, 2);
+      const blob = new Blob([jsonData], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'my-spells.json';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      
+      toast({
+        title: 'Заклинания экспортированы',
+        description: 'Заклинания успешно экспортированы в JSON файл'
+      });
+    } catch (error) {
+      console.error('Error exporting spells:', error);
+      toast({
+        title: 'Ошибка экспорта',
+        description: 'Не удалось экспортировать заклинания',
+        variant: 'destructive'
+      });
+    }
+  };
+  
+  // Импорт заклинаний из JSON
+  const importSpells = (spells: CharacterSpell[]) => {
+    try {
+      if (!Array.isArray(spells) || spells.length === 0) {
+        throw new Error('Неверный формат данных');
+      }
+      
+      // Преобразуем импортированные заклинания в SpellData
+      const importedSpellData = spells.map(spell => convertCharacterSpellToSpellData(spell));
+      
+      // Объединяем с существующими заклинаниями
+      const updatedSpells = [...selectedSpells];
+      
+      importedSpellData.forEach(spell => {
+        // Добавляем только если такого еще нет
+        if (!updatedSpells.some(s => s.id === spell.id || s.name === spell.name)) {
+          updatedSpells.push(spell);
+        }
+      });
+      
+      setSelectedSpells(updatedSpells);
+      
+      // Обновляем заклинания в персонаже, если есть
+      if (character && updateCharacter) {
+        const characterSpells = updatedSpells.map(spell => ({
+          id: spell.id.toString(),
+          name: spell.name,
+          level: spell.level,
+          school: spell.school,
+          castingTime: spell.castingTime,
+          range: spell.range,
+          components: spell.components,
+          duration: spell.duration,
+          description: spell.description,
+          classes: spell.classes,
+          prepared: spell.prepared || true
+        }));
+        
+        updateCharacter({ spells: characterSpells });
+      }
+      
+      toast({
+        title: 'Заклинания импортированы',
+        description: `Импортировано ${importedSpellData.length} заклинаний`
+      });
+    } catch (error) {
+      console.error('Error importing spells:', error);
+      toast({
+        title: 'Ошибка импорта',
+        description: 'Не удалось импортировать заклинания',
+        variant: 'destructive'
+      });
+    }
+  };
+
   return (
     <SpellbookContext.Provider
       value={{
@@ -343,6 +564,13 @@ export const SpellbookProvider: React.FC<{ children: ReactNode }> = ({ children 
         saveCharacterSpells,
         isSpellAvailableForClass,
         loadSpellsForCharacter,
+        // Add new functions
+        prepareSpell,
+        unprepareSpell,
+        loadSpells,
+        exportSpells,
+        importSpells,
+        loading
       }}
     >
       {children}
