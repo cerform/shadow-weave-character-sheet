@@ -26,6 +26,13 @@ export interface UseSpellbookReturn {
   getSchoolBadgeColor: (school: string) => string;
   formatClasses: (classes: string[] | string | undefined) => string;
   importSpellsFromText?: (text: string, existingSpells: CharacterSpell[]) => CharacterSpell[];
+  isRitualOnly: boolean;
+  isConcentrationOnly: boolean;
+  toggleRitualOnly: () => void;
+  toggleConcentrationOnly: () => void;
+  advancedFiltersOpen: boolean;
+  toggleAdvancedFilters: () => void;
+  loadSpells: () => SpellData[];
 }
 
 // Используем правильный синтаксис для экспорта типа
