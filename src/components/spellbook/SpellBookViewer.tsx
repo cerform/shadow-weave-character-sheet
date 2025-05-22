@@ -100,7 +100,7 @@ const SpellBookViewer: React.FC = () => {
             </div>
             
             <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="flex flex-wrap bg-black/50">
+              <TabsList className="flex flex-wrap bg-black/50 h-auto py-1">
                 <TabsTrigger value="all" className="data-[state=active]:bg-purple-700">Все</TabsTrigger>
                 {spellLevels.map((level) => (
                   <TabsTrigger 
