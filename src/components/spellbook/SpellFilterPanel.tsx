@@ -1,9 +1,15 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { X } from 'lucide-react';
+import { X, ChevronDown, ChevronUp, Check } from 'lucide-react';
+import { 
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Checkbox } from '@/components/ui/checkbox';
 
 interface SpellFilterPanelProps {
   activeLevel: number[];
@@ -34,6 +40,10 @@ const SpellFilterPanel: React.FC<SpellFilterPanelProps> = ({
   getBadgeColor,
   getSchoolBadgeColor
 }) => {
+  const [levelDropdownOpen, setLevelDropdownOpen] = useState(false);
+  const [schoolDropdownOpen, setSchoolDropdownOpen] = useState(false);
+  const [classDropdownOpen, setClassDropdownOpen] = useState(false);
+
   return (
     <div className="filter-panel bg-card/80 backdrop-blur-md p-4 rounded-lg mb-6 animate-in fade-in-50 slide-in-from-top-5">
       <div className="flex justify-between items-center mb-4">
@@ -52,59 +62,190 @@ const SpellFilterPanel: React.FC<SpellFilterPanelProps> = ({
         <div>
           <h4 className="text-sm font-medium mb-2">Уровень</h4>
           <div className="flex flex-wrap gap-2">
-            {allLevels.map(level => (
-              <Badge
-                key={`level-filter-${level}`}
-                variant={activeLevel.includes(level) ? "default" : "outline"}
-                className="spell-filter-badge cursor-pointer"
-                style={activeLevel.includes(level) ? {
-                  backgroundColor: getBadgeColor(level),
-                  color: '#fff'
-                } : {}}
-                onClick={() => toggleLevel(level)}
-              >
-                {level === 0 ? 'Заговор' : level}
-              </Badge>
-            ))}
+            <Popover open={levelDropdownOpen} onOpenChange={setLevelDropdownOpen}>
+              <PopoverTrigger asChild>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="flex items-center justify-between w-full"
+                >
+                  Выбрать уровни ({activeLevel.length})
+                  {levelDropdownOpen ? <ChevronUp className="ml-2 h-4 w-4" /> : <ChevronDown className="ml-2 h-4 w-4" />}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-56 p-0" align="start">
+                <div className="p-2 max-h-60 overflow-auto">
+                  {allLevels.map(level => (
+                    <div key={`level-select-${level}`} className="flex items-center space-x-2 p-2 hover:bg-accent/50 rounded-md">
+                      <Checkbox 
+                        id={`level-${level}`} 
+                        checked={activeLevel.includes(level)}
+                        onCheckedChange={() => toggleLevel(level)}
+                      />
+                      <label 
+                        htmlFor={`level-${level}`}
+                        className="flex-grow cursor-pointer text-sm font-medium"
+                      >
+                        {level === 0 ? 'Заговор' : `Уровень ${level}`}
+                      </label>
+                      {activeLevel.includes(level) && (
+                        <Badge 
+                          variant="default" 
+                          className="ml-auto"
+                          style={{
+                            backgroundColor: getBadgeColor(level),
+                            color: '#fff'
+                          }}
+                        >
+                          <Check className="h-3 w-3" />
+                        </Badge>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </PopoverContent>
+            </Popover>
+            
+            <div className="flex flex-wrap gap-2 mt-2">
+              {activeLevel.map(level => (
+                <Badge
+                  key={`level-filter-${level}`}
+                  variant="default"
+                  className="spell-filter-badge cursor-pointer"
+                  style={{
+                    backgroundColor: getBadgeColor(level),
+                    color: '#fff'
+                  }}
+                  onClick={() => toggleLevel(level)}
+                >
+                  {level === 0 ? 'Заговор' : level}
+                  <X className="ml-1 h-3 w-3" />
+                </Badge>
+              ))}
+            </div>
           </div>
         </div>
         
         <div>
           <h4 className="text-sm font-medium mb-2">Школа</h4>
           <div className="flex flex-wrap gap-2">
-            {allSchools.map(school => (
-              <Badge
-                key={`school-filter-${school}`}
-                variant={activeSchool.includes(school) ? "default" : "outline"}
-                className="spell-filter-badge cursor-pointer"
-                style={activeSchool.includes(school) ? {
-                  backgroundColor: getSchoolBadgeColor(school),
-                  color: '#fff'
-                } : {
-                  borderColor: getSchoolBadgeColor(school),
-                  color: activeSchool.includes(school) ? '#fff' : getSchoolBadgeColor(school)
-                }}
-                onClick={() => toggleSchool(school)}
-              >
-                {school}
-              </Badge>
-            ))}
+            <Popover open={schoolDropdownOpen} onOpenChange={setSchoolDropdownOpen}>
+              <PopoverTrigger asChild>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="flex items-center justify-between w-full"
+                >
+                  Выбрать школы ({activeSchool.length})
+                  {schoolDropdownOpen ? <ChevronUp className="ml-2 h-4 w-4" /> : <ChevronDown className="ml-2 h-4 w-4" />}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-64 p-0" align="start">
+                <div className="p-2 max-h-60 overflow-auto">
+                  {allSchools.map(school => (
+                    <div key={`school-select-${school}`} className="flex items-center space-x-2 p-2 hover:bg-accent/50 rounded-md">
+                      <Checkbox 
+                        id={`school-${school}`} 
+                        checked={activeSchool.includes(school)}
+                        onCheckedChange={() => toggleSchool(school)}
+                      />
+                      <label 
+                        htmlFor={`school-${school}`}
+                        className="flex-grow cursor-pointer text-sm font-medium"
+                      >
+                        {school}
+                      </label>
+                      {activeSchool.includes(school) && (
+                        <Badge 
+                          variant="default" 
+                          className="ml-auto"
+                          style={{
+                            backgroundColor: getSchoolBadgeColor(school),
+                            color: '#fff'
+                          }}
+                        >
+                          <Check className="h-3 w-3" />
+                        </Badge>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </PopoverContent>
+            </Popover>
+            
+            <div className="flex flex-wrap gap-2 mt-2">
+              {activeSchool.map(school => (
+                <Badge
+                  key={`school-filter-${school}`}
+                  variant="default"
+                  className="spell-filter-badge cursor-pointer"
+                  style={{
+                    backgroundColor: getSchoolBadgeColor(school),
+                    color: '#fff'
+                  }}
+                  onClick={() => toggleSchool(school)}
+                >
+                  {school}
+                  <X className="ml-1 h-3 w-3" />
+                </Badge>
+              ))}
+            </div>
           </div>
         </div>
         
         <div>
           <h4 className="text-sm font-medium mb-2">Класс</h4>
           <div className="flex flex-wrap gap-2">
-            {allClasses.map(cls => (
-              <Badge
-                key={`class-filter-${cls}`}
-                variant={activeClass.includes(cls) ? "default" : "outline"}
-                className="spell-filter-badge cursor-pointer"
-                onClick={() => toggleClass(cls)}
-              >
-                {cls}
-              </Badge>
-            ))}
+            <Popover open={classDropdownOpen} onOpenChange={setClassDropdownOpen}>
+              <PopoverTrigger asChild>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="flex items-center justify-between w-full"
+                >
+                  Выбрать классы ({activeClass.length})
+                  {classDropdownOpen ? <ChevronUp className="ml-2 h-4 w-4" /> : <ChevronDown className="ml-2 h-4 w-4" />}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-64 p-0" align="start">
+                <div className="p-2 max-h-60 overflow-auto">
+                  {allClasses.map(cls => (
+                    <div key={`class-select-${cls}`} className="flex items-center space-x-2 p-2 hover:bg-accent/50 rounded-md">
+                      <Checkbox 
+                        id={`class-${cls}`} 
+                        checked={activeClass.includes(cls)}
+                        onCheckedChange={() => toggleClass(cls)}
+                      />
+                      <label 
+                        htmlFor={`class-${cls}`}
+                        className="flex-grow cursor-pointer text-sm font-medium"
+                      >
+                        {cls}
+                      </label>
+                      {activeClass.includes(cls) && (
+                        <Badge variant="default" className="ml-auto">
+                          <Check className="h-3 w-3" />
+                        </Badge>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </PopoverContent>
+            </Popover>
+            
+            <div className="flex flex-wrap gap-2 mt-2">
+              {activeClass.map(cls => (
+                <Badge
+                  key={`class-filter-${cls}`}
+                  variant="default"
+                  className="spell-filter-badge cursor-pointer"
+                  onClick={() => toggleClass(cls)}
+                >
+                  {cls}
+                  <X className="ml-1 h-3 w-3" />
+                </Badge>
+              ))}
+            </div>
           </div>
         </div>
       </div>

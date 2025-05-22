@@ -1,7 +1,8 @@
+
 import { useState, useEffect, useMemo } from 'react';
 import { SpellData } from '@/types/spells';
 import { allSpells } from '@/data/spells';
-import { filterSpellsByText, filterSpellsByLevel, filterSpellsBySchool, filterSpellsByClass } from './filterUtils';
+import { filterSpellsByText, filterSpellsByLevel, filterSpellsBySchool, filterSpellsByClass, filterSpellsByRitual, filterSpellsByConcentration } from './filterUtils';
 import { UseSpellbookReturn } from './types';
 import { CharacterSpell } from '@/types/character';
 import { importSpellsFromText } from '@/utils/spellBatchImporter';
@@ -14,6 +15,9 @@ export const useSpellbook = (): UseSpellbookReturn => {
   const [activeClass, setActiveClass] = useState<string[]>([]);
   const [selectedSpell, setSelectedSpell] = useState<SpellData | null>(null);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [isRitualOnly, setIsRitualOnly] = useState<boolean>(false);
+  const [isConcentrationOnly, setIsConcentrationOnly] = useState<boolean>(false);
+  const [advancedFiltersOpen, setAdvancedFiltersOpen] = useState<boolean>(false);
 
   // Convert CharacterSpell[] to SpellData[]
   const spells: SpellData[] = useMemo(() => {
@@ -91,8 +95,18 @@ export const useSpellbook = (): UseSpellbookReturn => {
       result = filterSpellsByClass(result, activeClass);
     }
 
+    // Apply ritual filter
+    if (isRitualOnly) {
+      result = filterSpellsByRitual(result, true);
+    }
+
+    // Apply concentration filter
+    if (isConcentrationOnly) {
+      result = filterSpellsByConcentration(result, true);
+    }
+
     return result;
-  }, [spells, searchTerm, activeLevel, activeSchool, activeClass]);
+  }, [spells, searchTerm, activeLevel, activeSchool, activeClass, isRitualOnly, isConcentrationOnly]);
 
   // Theme setup
   const currentTheme = {
@@ -147,11 +161,25 @@ export const useSpellbook = (): UseSpellbookReturn => {
     });
   };
 
+  const toggleRitualOnly = () => {
+    setIsRitualOnly(prev => !prev);
+  };
+
+  const toggleConcentrationOnly = () => {
+    setIsConcentrationOnly(prev => !prev);
+  };
+
+  const toggleAdvancedFilters = () => {
+    setAdvancedFiltersOpen(prev => !prev);
+  };
+
   const clearFilters = () => {
     setSearchTerm('');
     setActiveLevel([]);
     setActiveSchool([]);
     setActiveClass([]);
+    setIsRitualOnly(false);
+    setIsConcentrationOnly(false);
   };
 
   const getBadgeColor = (level: number) => {
@@ -179,7 +207,15 @@ export const useSpellbook = (): UseSpellbookReturn => {
       'Evocation': 'bg-red-700',
       'Illusion': 'bg-purple-700',
       'Necromancy': 'bg-green-700', 
-      'Transmutation': 'bg-orange-700'
+      'Transmutation': 'bg-orange-700',
+      'Ограждение': 'bg-blue-700',
+      'Вызов': 'bg-yellow-700',
+      'Прорицание': 'bg-cyan-700',
+      'Очарование': 'bg-pink-700',
+      'Воплощение': 'bg-red-700',
+      'Иллюзия': 'bg-purple-700',
+      'Некромантия': 'bg-green-700', 
+      'Преобразование': 'bg-orange-700'
     };
     return colors[school] || 'bg-gray-700';
   };
@@ -204,6 +240,11 @@ export const useSpellbook = (): UseSpellbookReturn => {
     }
   };
 
+  const loadSpells = () => {
+    console.info(`Загружено заклинаний: ${spells.length}`);
+    return spells;
+  };
+
   return {
     filteredSpells,
     searchTerm,
@@ -226,6 +267,13 @@ export const useSpellbook = (): UseSpellbookReturn => {
     getBadgeColor,
     getSchoolBadgeColor,
     formatClasses,
-    importSpellsFromText: importSpellsFromTextWrapper
+    importSpellsFromText: importSpellsFromTextWrapper,
+    isRitualOnly,
+    isConcentrationOnly,
+    toggleRitualOnly,
+    toggleConcentrationOnly,
+    advancedFiltersOpen,
+    toggleAdvancedFilters,
+    loadSpells
   };
 };
