@@ -1,345 +1,222 @@
 
 import React, { useState, useEffect } from 'react';
+import { getAllSpells } from '@/data/spells';
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
-import { useToast } from "@/hooks/use-toast";
-import { useTheme } from "@/hooks/use-theme";
-import { themes } from "@/lib/themes";
-import { useSpellbook } from '@/contexts/SpellbookContext';
-import SpellImportModal from './SpellImportModal';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { BookOpen as BookOpenIcon, PlusCircle as PlusCircleIcon } from 'lucide-react';
-
-const formSchema = z.object({
-  name: z.string().min(2, {
-    message: "Имя должно содержать не менее 2 символов."
-  }),
-  level: z.number().min(0).max(9),
-  school: z.string().min(2, {
-    message: "Школа должна содержать не менее 2 символов."
-  }),
-  castingTime: z.string().min(2, {
-    message: "Время кастинга должно содержать не менее 2 символов."
-  }),
-  range: z.string().min(2, {
-    message: "Дистанция должна содержать не менее 2 символов."
-  }),
-  components: z.string().min(2, {
-    message: "Компоненты должны содержать не менее 2 символов."
-  }),
-  duration: z.string().min(2, {
-    message: "Длительность должна содержать не менее 2 символов."
-  }),
-  description: z.string().min(10, {
-    message: "Описание должно содержать не менее 10 символов."
-  }),
-  classes: z.string().min(2, {
-    message: "Классы должны содержать не менее 2 символов."
-  })
-});
-
-const EmptyState = () => {
-  return (
-    <div className="flex flex-col items-center justify-center h-full p-8 text-center">
-      <div className="mb-4">
-        <BookOpenIcon className="h-16 w-16 text-muted-foreground" />
-      </div>
-      <h2 className="text-2xl font-bold">Ваша книга заклинаний пуста</h2>
-      <p className="text-muted-foreground mt-2 mb-6">
-        Добавьте заклинания из базы данных или импортируйте их
-      </p>
-      <Button>
-        <PlusCircleIcon className="mr-2 h-4 w-4" />
-        Добавить заклинание
-      </Button>
-    </div>
-  );
-};
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Search, Filter, Book } from "lucide-react";
+import { CharacterSpell } from '@/types/character';
 
 const SpellBookViewer: React.FC = () => {
-  const { theme } = useTheme();
-  const themeKey = (theme || 'default') as keyof typeof themes;
-  const currentTheme = themes[themeKey] || themes.default;
-  const { selectedSpells, loadSpells, exportSpells, importSpells } = useSpellbook();
-  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const { toast } = useToast();
+  const [spells, setSpells] = useState<CharacterSpell[]>([]);
+  const [filteredSpells, setFilteredSpells] = useState<CharacterSpell[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [activeTab, setActiveTab] = useState('all');
+  const [selectedSpell, setSelectedSpell] = useState<CharacterSpell | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
+  // Загрузка заклинаний
   useEffect(() => {
-    loadSpells();
-  }, [loadSpells]);
+    try {
+      const loadedSpells = getAllSpells();
+      console.log('Загружено заклинаний:', loadedSpells.length);
+      setSpells(loadedSpells);
+      setFilteredSpells(loadedSpells);
+      setIsLoading(false);
+    } catch (error) {
+      console.error('Ошибка при загрузке заклинаний:', error);
+      setIsLoading(false);
+    }
+  }, []);
 
-  const handleImportSpells = (spells: any) => {
-    importSpells(spells);
-    setIsImportModalOpen(false);
+  // Фильтрация заклинаний
+  useEffect(() => {
+    let result = [...spells];
+
+    // Поиск по тексту
+    if (searchTerm) {
+      result = result.filter(spell => 
+        spell.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (spell.description && spell.description.toString().toLowerCase().includes(searchTerm.toLowerCase()))
+      );
+    }
+
+    // Фильтр по вкладкам (уровням)
+    if (activeTab !== 'all') {
+      const level = parseInt(activeTab);
+      if (!isNaN(level)) {
+        result = result.filter(spell => spell.level === level);
+      }
+    }
+
+    setFilteredSpells(result);
+  }, [searchTerm, activeTab, spells]);
+
+  // Получение всех уникальных уровней заклинаний
+  const spellLevels = [...new Set(spells.map(spell => spell.level))].sort((a, b) => a - b);
+
+  // Обработчик выбора заклинания
+  const handleSelectSpell = (spell: CharacterSpell) => {
+    setSelectedSpell(spell);
   };
 
-  const form = useForm({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      name: "",
-      level: 0,
-      school: "",
-      castingTime: "",
-      range: "",
-      components: "",
-      duration: "",
-      description: "",
-      classes: ""
-    }
-  });
-
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    toast({
-      title: "Вы успешно создали заклинание!",
-      description: "Вы можете просмотреть его в своей книге заклинаний."
-    });
-  }
+  // Получение цвета бейджа для уровня заклинания
+  const getSpellLevelBadge = (level: number) => {
+    if (level === 0) return "bg-gray-600 hover:bg-gray-700";
+    return `bg-blue-${600 + level * 50} hover:bg-blue-${600 + level * 50 + 100}`;
+  };
 
   return (
-    <div className="container mx-auto py-10">
-      <div className="flex justify-between items-center mb-6">
-        <h1 
-          className="text-3xl font-bold"
-          style={{ color: currentTheme.textColor }}
-        >
-          Книга заклинаний
-        </h1>
-        <div className="space-x-2">
-          <Button
-            variant="outline"
-            onClick={exportSpells}
-          >
-            Экспорт
-          </Button>
-          <Button
-            onClick={() => setIsImportModalOpen(true)}
-          >
-            Импорт
-          </Button>
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button>Создать</Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[625px]">
-              <DialogHeader>
-                <DialogTitle>Создать новое заклинание</DialogTitle>
-                <DialogDescription>
-                  Заполните информацию о заклинании. Нажмите сохранить, когда закончите.
-                </DialogDescription>
-              </DialogHeader>
-              <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                  {/* Основная информация о заклинании */}
+    <div className="container mx-auto p-4">
+      <Card className="mb-6">
+        <CardHeader className="pb-2">
+          <CardTitle>Поиск заклинаний</CardTitle>
+          <CardDescription>Найдите заклинания из Книги игрока D&D 5e</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col space-y-4">
+            <div className="flex items-center space-x-2">
+              <Search className="h-4 w-4 opacity-50" />
+              <Input
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Название заклинания, описание..."
+                className="flex-grow"
+              />
+            </div>
+            
+            <Tabs value={activeTab} onValueChange={setActiveTab}>
+              <TabsList className="flex flex-wrap">
+                <TabsTrigger value="all">Все</TabsTrigger>
+                {spellLevels.map((level) => (
+                  <TabsTrigger key={`level-${level}`} value={level.toString()}>
+                    {level === 0 ? 'Заговоры' : `${level} уровень`}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+            </Tabs>
+          </div>
+        </CardContent>
+      </Card>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="md:col-span-1">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle>Список заклинаний</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ScrollArea className="h-[500px] pr-4">
+                {isLoading ? (
+                  <div className="flex justify-center items-center h-40">
+                    <p>Загрузка заклинаний...</p>
+                  </div>
+                ) : filteredSpells.length > 0 ? (
+                  <div className="space-y-2">
+                    {filteredSpells.map((spell) => (
+                      <Button
+                        key={spell.id || spell.name}
+                        variant={selectedSpell?.id === spell.id ? "default" : "outline"}
+                        className="w-full justify-between text-left"
+                        onClick={() => handleSelectSpell(spell)}
+                      >
+                        <span>{spell.name}</span>
+                        <Badge variant="outline">
+                          {spell.level === 0 ? 'Заговор' : `${spell.level} ур.`}
+                        </Badge>
+                      </Button>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center h-40">
+                    <p>Заклинания не найдены</p>
+                  </div>
+                )}
+              </ScrollArea>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="md:col-span-2">
+          <Card className="h-full">
+            <CardHeader>
+              <CardTitle>
+                {selectedSpell ? selectedSpell.name : "Выберите заклинание"}
+              </CardTitle>
+              {selectedSpell && (
+                <div className="flex flex-wrap gap-2 mt-2">
+                  <Badge variant={selectedSpell.level === 0 ? "outline" : "default"}>
+                    {selectedSpell.level === 0 ? 'Заговор' : `${selectedSpell.level} уровень`}
+                  </Badge>
+                  {selectedSpell.school && (
+                    <Badge variant="secondary">{selectedSpell.school}</Badge>
+                  )}
+                  {selectedSpell.classes && Array.isArray(selectedSpell.classes) && 
+                    selectedSpell.classes.map((cls, index) => (
+                      <Badge key={index} variant="outline">{cls}</Badge>
+                    ))
+                  }
+                  {selectedSpell.classes && !Array.isArray(selectedSpell.classes) && (
+                    <Badge variant="outline">{selectedSpell.classes}</Badge>
+                  )}
+                </div>
+              )}
+            </CardHeader>
+            <CardContent>
+              {selectedSpell ? (
+                <div className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="name"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Название</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Магическая стрела" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="level"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Уровень</FormLabel>
-                          <FormControl>
-                            <Input 
-                              type="number" 
-                              placeholder="1" 
-                              {...field} 
-                              onChange={e => field.onChange(+e.target.value)} 
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-
-                  {/* Школа и время накладывания */}
-                  <div className="grid grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="school"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Школа</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Воплощение" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="castingTime"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Время накладывания</FormLabel>
-                          <FormControl>
-                            <Input placeholder="1 действие" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-
-                  {/* Дальность, компоненты, длительность */}
-                  <div className="grid grid-cols-3 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="range"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Дальность</FormLabel>
-                          <FormControl>
-                            <Input placeholder="120 футов" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="components"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Компоненты</FormLabel>
-                          <FormControl>
-                            <Input placeholder="В, С" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="duration"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Длительность</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Мгновенная" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-
-                  {/* Описание */}
-                  <FormField
-                    control={form.control}
-                    name="description"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Описание</FormLabel>
-                        <FormControl>
-                          <textarea 
-                            className="flex min-h-[120px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                            placeholder="Опишите действие заклинания..." 
-                            {...field} 
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
+                    {selectedSpell.castingTime && (
+                      <div>
+                        <h4 className="font-medium text-sm">Время накладывания:</h4>
+                        <p>{selectedSpell.castingTime}</p>
+                      </div>
                     )}
-                  />
-
-                  {/* Классы */}
-                  <FormField
-                    control={form.control}
-                    name="classes"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Классы</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Волшебник, Чародей" {...field} />
-                        </FormControl>
-                        <FormDescription>
-                          Перечислите через запятую классы, которые могут использовать это заклинание.
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
+                    {selectedSpell.range && (
+                      <div>
+                        <h4 className="font-medium text-sm">Дистанция:</h4>
+                        <p>{selectedSpell.range}</p>
+                      </div>
                     )}
-                  />
-
-                  <div className="flex justify-end">
-                    <Button type="submit">Создать заклинание</Button>
+                    {selectedSpell.components && (
+                      <div>
+                        <h4 className="font-medium text-sm">Компоненты:</h4>
+                        <p>{selectedSpell.components}</p>
+                      </div>
+                    )}
+                    {selectedSpell.duration && (
+                      <div>
+                        <h4 className="font-medium text-sm">Длительность:</h4>
+                        <p>{selectedSpell.duration}</p>
+                      </div>
+                    )}
                   </div>
-                </form>
-              </Form>
-            </DialogContent>
-          </Dialog>
+                  <div>
+                    <h4 className="font-medium text-sm">Описание:</h4>
+                    <p className="mt-2 whitespace-pre-line">
+                      {selectedSpell.description}
+                    </p>
+                  </div>
+                  {selectedSpell.higherLevels && (
+                    <div>
+                      <h4 className="font-medium text-sm">На более высоких уровнях:</h4>
+                      <p className="mt-2">{selectedSpell.higherLevels}</p>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center h-64 text-center text-muted-foreground">
+                  <Book className="h-12 w-12 mb-4 opacity-30" />
+                  <p>Выберите заклинание из списка слева, чтобы увидеть подробное описание</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </div>
       </div>
-
-      <SpellImportModal
-        open={isImportModalOpen}
-        onOpenChange={setIsImportModalOpen}
-        onImport={handleImportSpells}
-      />
-
-      {selectedSpells.length === 0 ? (
-        <EmptyState />
-      ) : (
-        <div className="bg-card rounded-md shadow">
-          <div className="p-4">
-            <Input 
-              placeholder="Поиск заклинаний..." 
-              className="max-w-sm mb-4"
-            />
-          </div>
-          <ScrollArea className="h-[500px]">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Название</TableHead>
-                  <TableHead>Ур.</TableHead>
-                  <TableHead>Школа</TableHead>
-                  <TableHead>Время накладывания</TableHead>
-                  <TableHead>Дистанция</TableHead>
-                  <TableHead>Компоненты</TableHead>
-                  <TableHead>Длительность</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {selectedSpells.map((spell) => (
-                  <TableRow 
-                    key={spell.id} 
-                    className="hover:bg-muted/50 cursor-pointer"
-                  >
-                    <TableCell className="font-medium">{spell.name}</TableCell>
-                    <TableCell>{spell.level}</TableCell>
-                    <TableCell>{spell.school}</TableCell>
-                    <TableCell>{spell.castingTime}</TableCell>
-                    <TableCell>{spell.range}</TableCell>
-                    <TableCell>{spell.components}</TableCell>
-                    <TableCell>{spell.duration}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </ScrollArea>
-        </div>
-      )}
     </div>
   );
 };

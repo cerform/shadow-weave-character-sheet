@@ -45,11 +45,15 @@ export const getSpellsByLevel = (level: number) => {
 
 // Функция для получения всех заклинаний для определенного класса
 export const getSpellsByClass = (className: string) => {
+  const lowerClassName = className.toLowerCase();
+  
   return spells.filter(spell => {
     if (Array.isArray(spell.classes)) {
-      return spell.classes.some(c => c.toLowerCase() === className.toLowerCase());
+      return spell.classes.some(c => 
+        typeof c === 'string' && c.toLowerCase() === lowerClassName
+      );
     } else if (typeof spell.classes === 'string') {
-      return spell.classes.toLowerCase() === className.toLowerCase();
+      return spell.classes.toLowerCase() === lowerClassName;
     }
     return false;
   });
