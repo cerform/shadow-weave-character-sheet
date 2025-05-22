@@ -19,7 +19,7 @@ export interface SpellbookContextType {
   exportSpells: () => void;
   importSpells: (spells: SpellData[]) => void;
   
-  // Добавляем недостающие свойства и методы
+  // Добавляем недостающие свойства
   availableSpells: SpellData[];
   loading: boolean;
   loadSpellsForCharacter: (characterClass: string, level: number) => void;
@@ -30,13 +30,35 @@ export interface SpellbookContextType {
   };
   getSelectedSpellCount: () => { cantrips: number; spells: number };
   saveCharacterSpells: () => void;
+  
+  // Добавляем свойства для SpellbookPage
+  searchTerm: string;
+  setSearchTerm: (term: string) => void;
+  activeLevel: number[];
+  activeSchool: string[];
+  activeClass: string[];
+  allLevels: number[];
+  allSchools: string[];
+  allClasses: string[];
+  toggleLevel: (level: number) => void;
+  toggleSchool: (school: string) => void;
+  toggleClass: (className: string) => void;
+  clearFilters: () => void;
+  getBadgeColor: (level: number) => string;
+  getSchoolBadgeColor: (school: string) => string;
+  isRitualOnly: boolean;
+  isConcentrationOnly: boolean;
+  toggleRitualOnly: () => void;
+  toggleConcentrationOnly: () => void;
+  advancedFiltersOpen: boolean;
+  toggleAdvancedFilters: () => void;
 }
 
 export const SpellbookContext = createContext<SpellbookContextType>({
   selectedSpells: [],
   filteredSpells: [],
-  availableSpells: [], // Добавлено
-  loading: false, // Добавлено
+  availableSpells: [],
+  loading: false,
   searchQuery: '',
   setSearchQuery: () => {},
   loadSpells: async () => {},
@@ -46,10 +68,32 @@ export const SpellbookContext = createContext<SpellbookContextType>({
   unprepareSpell: () => {},
   exportSpells: () => {},
   importSpells: () => {},
-  loadSpellsForCharacter: () => {}, // Добавлено
-  getSpellLimits: () => ({ maxSpellLevel: 0, cantripsCount: 0, knownSpells: 0 }), // Добавлено
-  getSelectedSpellCount: () => ({ cantrips: 0, spells: 0 }), // Добавлено
-  saveCharacterSpells: () => {} // Добавлено
+  loadSpellsForCharacter: () => {},
+  getSpellLimits: () => ({ maxSpellLevel: 0, cantripsCount: 0, knownSpells: 0 }),
+  getSelectedSpellCount: () => ({ cantrips: 0, spells: 0 }),
+  saveCharacterSpells: () => {},
+  
+  // Добавляем начальные значения для свойств SpellbookPage
+  searchTerm: '',
+  setSearchTerm: () => {},
+  activeLevel: [],
+  activeSchool: [],
+  activeClass: [],
+  allLevels: [],
+  allSchools: [],
+  allClasses: [],
+  toggleLevel: () => {},
+  toggleSchool: () => {},
+  toggleClass: () => {},
+  clearFilters: () => {},
+  getBadgeColor: () => '',
+  getSchoolBadgeColor: () => '',
+  isRitualOnly: false,
+  isConcentrationOnly: false,
+  toggleRitualOnly: () => {},
+  toggleConcentrationOnly: () => {},
+  advancedFiltersOpen: false,
+  toggleAdvancedFilters: () => {}
 });
 
 export const SpellbookProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
@@ -247,7 +291,29 @@ export const SpellbookProvider: React.FC<{ children: ReactNode }> = ({ children 
         loadSpellsForCharacter,
         getSpellLimits,
         getSelectedSpellCount,
-        saveCharacterSpells
+        saveCharacterSpells,
+        
+        // Добавляем отсутствующие свойства, используем заглушки
+        searchTerm: searchQuery,
+        setSearchTerm: setSearchQuery,
+        activeLevel: [],
+        activeSchool: [],
+        activeClass: [],
+        allLevels: [],
+        allSchools: [],
+        allClasses: [],
+        toggleLevel: () => {},
+        toggleSchool: () => {},
+        toggleClass: () => {},
+        clearFilters: () => {},
+        getBadgeColor: () => 'bg-gray-700',
+        getSchoolBadgeColor: () => 'bg-gray-700',
+        isRitualOnly: false,
+        isConcentrationOnly: false,
+        toggleRitualOnly: () => {},
+        toggleConcentrationOnly: () => {},
+        advancedFiltersOpen: false,
+        toggleAdvancedFilters: () => {}
       }}
     >
       {children}

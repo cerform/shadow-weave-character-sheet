@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { useSpellbook } from '@/hooks/spellbook';
+import { useSpellbook } from '@/hooks/spellbook/useSpellbook';
 import { useTheme } from '@/hooks/use-theme';
 import ThemeSelector from '@/components/ThemeSelector';
 import NavigationButtons from '@/components/ui/NavigationButtons';
