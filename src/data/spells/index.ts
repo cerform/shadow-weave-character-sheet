@@ -5,11 +5,16 @@ import { level1 } from './level1';
 import { level2 } from './level2';
 import { level3 } from './level3';
 import { level4 } from './level4';
+import { level4Part2 } from './level4_part2';
+import { level4Part3 } from './level4_part3';
 import { level5 } from './level5';
 import { level6 } from './level6';
 import { level7 } from './level7';
 import { level8 } from './level8';
 import { level9 } from './level9';
+
+// Объединяем все заклинания 4-го уровня
+const combinedLevel4 = [...level4, ...level4Part2, ...level4Part3];
 
 // Собираем все заклинания в единый массив
 export const spells = [
@@ -17,7 +22,7 @@ export const spells = [
   ...level1,
   ...level2,
   ...level3,
-  ...level4,
+  ...combinedLevel4,
   ...level5,
   ...level6,
   ...level7,
@@ -31,7 +36,7 @@ export {
   level1,
   level2,
   level3,
-  level4,
+  combinedLevel4 as level4,
   level5,
   level6,
   level7,
@@ -54,7 +59,7 @@ export const getSpellsByLevel = (level: number) => {
     case 3:
       return level3;
     case 4:
-      return level4;
+      return combinedLevel4;
     case 5:
       return level5;
     case 6:
