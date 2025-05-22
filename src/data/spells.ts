@@ -11,6 +11,7 @@ export const getSpellDetails = (spellName: string) => {
 
 // Функция получения всех заклинаний
 export const getAllSpells = () => {
+  console.log('Загружено заклинаний:', spells.length);
   return spells;
 };
 
