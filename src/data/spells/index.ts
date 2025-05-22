@@ -1,6 +1,6 @@
 
 // Импортируем все массивы заклинаний по уровням
-import { level0 as cantrips } from './level0';
+import { cantrips } from './level0';
 import { level1 } from './level1';
 // Здесь будем добавлять остальные уровни по мере их создания
 // import { level2 } from './level2';
