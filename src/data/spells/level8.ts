@@ -1,8 +1,7 @@
-
 import { CharacterSpell } from '@/types/character';
-
 export const level8: CharacterSpell[] = [
   {
+    id: "level8-1",
     name: "Антипатия/симпатия",
     level: 8,
     school: "Очарование",
@@ -19,6 +18,7 @@ export const level8: CharacterSpell[] = [
     classes: ["Друид", "Волшебник"]
   },
   {
+    id: "level8-2",
     name: "Аура святости",
     level: 8,
     school: "Ограждение",
@@ -35,6 +35,7 @@ export const level8: CharacterSpell[] = [
     classes: ["Жрец", "Паладин"]
   },
   {
+    id: "level8-3",
     name: "Брешь в реальности",
     level: 8,
     school: "Вызов",
@@ -51,6 +52,7 @@ export const level8: CharacterSpell[] = [
     classes: ["Волшебник", "Чародей"]
   },
   {
+    id: "level8-4",
     name: "Власть над погодой",
     level: 8,
     school: "Преобразование",
@@ -67,6 +69,7 @@ export const level8: CharacterSpell[] = [
     classes: ["Друид", "Жрец", "Волшебник"]
   },
   {
+    id: "level8-5",
     name: "Воспламеняющаяся туча",
     level: 8,
     school: "Вызов",
@@ -83,6 +86,7 @@ export const level8: CharacterSpell[] = [
     classes: ["Чародей", "Волшебник"]
   },
   {
+    id: "level8-6",
     name: "Двойник",
     level: 8,
     school: "Иллюзия",
@@ -99,6 +103,7 @@ export const level8: CharacterSpell[] = [
     classes: ["Бард", "Волшебник"]
   },
   {
+    id: "level8-7",
     name: "Демиплан",
     level: 8,
     school: "Вызов",
@@ -115,6 +120,7 @@ export const level8: CharacterSpell[] = [
     classes: ["Волшебник", "Колдун"]
   },
   {
+    id: "level8-8",
     name: "Землетрясение",
     level: 8,
     school: "Воплощение",
@@ -131,6 +137,7 @@ export const level8: CharacterSpell[] = [
     classes: ["Жрец", "Друид", "Чародей"]
   },
   {
+    id: "level8-9",
     name: "Иллюзорный дракон",
     level: 8,
     school: "Иллюзия",
@@ -147,6 +154,7 @@ export const level8: CharacterSpell[] = [
     classes: ["Волшебник"]
   },
   {
+    id: "level8-10",
     name: "Лабиринт",
     level: 8,
     school: "Вызов",
@@ -163,6 +171,7 @@ export const level8: CharacterSpell[] = [
     classes: ["Волшебник"]
   },
   {
+    id: "level8-11",
     name: "Могучая крепость",
     level: 8,
     school: "Преобразование",
@@ -179,6 +188,7 @@ export const level8: CharacterSpell[] = [
     classes: ["Волшебник"]
   },
   {
+    id: "level8-12",
     name: "Находчивость",
     level: 8,
     school: "Прорицание",
@@ -195,6 +205,7 @@ export const level8: CharacterSpell[] = [
     classes: ["Волшебник", "Жрец", "Друид", "Бард"]
   },
   {
+    id: "level8-13",
     name: "Одуряющая тьма",
     level: 8,
     school: "Некромантия",
@@ -211,6 +222,7 @@ export const level8: CharacterSpell[] = [
     classes: ["Колдун"]
   },
   {
+    id: "level8-14",
     name: "Подчинение чудовища",
     level: 8,
     school: "Очарование",
@@ -227,6 +239,7 @@ export const level8: CharacterSpell[] = [
     classes: ["Чародей", "Колдун", "Волшебник"]
   },
   {
+    id: "level8-15",
     name: "Превращение в животных",
     level: 8,
     school: "Преобразование",
@@ -243,6 +256,7 @@ export const level8: CharacterSpell[] = [
     classes: ["Друид", "чародей", "Волшебник"]
   },
   {
+    id: "level8-16",
     name: "Преграда магии",
     level: 8,
     school: "Ограждение",
@@ -259,6 +273,7 @@ export const level8: CharacterSpell[] = [
     classes: ["Волшебник"]
   },
   {
+    id: "level8-17",
     name: "Слабоумие",
     level: 8,
     school: "Очарование",
@@ -275,6 +290,7 @@ export const level8: CharacterSpell[] = [
     classes: ["Волшебник", "Бард", "Друид", "Колдун"]
   },
   {
+    id: "level8-18",
     name: "Слово силы: ошеломление",
     level: 8,
     school: "Очарование",
@@ -291,6 +307,7 @@ export const level8: CharacterSpell[] = [
     classes: ["Волшебник", "Чародей", "Колдун", "Бард"]
   },
   {
+    id: "level8-19",
     name: "Сокрытие разума",
     level: 8,
     school: "Ограждение",
@@ -307,6 +324,7 @@ export const level8: CharacterSpell[] = [
     classes: ["Бард", "Волшебник"]
   },
   {
+    id: "level8-20",
     name: "Солнечный ожог",
     level: 8,
     school: "Воплощение",
@@ -323,6 +341,7 @@ export const level8: CharacterSpell[] = [
     classes: ["Друид", "Чародей", "Волшебник"]
   },
   {
+    id: "level8-21",
     name: "Телепатия",
     level: 8,
     school: "Прорицание",
@@ -339,6 +358,7 @@ export const level8: CharacterSpell[] = [
     classes: ["Волшебник"]
   },
   {
+    id: "level8-22",
     name: "Тёмная звезда",
     level: 8,
     school: "Воплощение",
@@ -355,6 +375,7 @@ export const level8: CharacterSpell[] = [
     classes: ["Волшебник"]
   },
   {
+    id: "level8-23",
     name: "Ужасное увядание Аби-Далзима",
     level: 8,
     school: "Некромантия",
@@ -371,6 +392,7 @@ export const level8: CharacterSpell[] = [
     classes: ["Волшебник", "Чародей"]
   },
   {
+    id: "level8-24",
     name: "Цунами",
     level: 8,
     school: "Воплощение",
@@ -387,4 +409,3 @@ export const level8: CharacterSpell[] = [
     classes: ["Друид"]
   }
 ];
-

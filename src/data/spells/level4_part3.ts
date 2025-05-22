@@ -1,8 +1,7 @@
-
 import { CharacterSpell } from '@/types/character';
-
 export const level4Part3: CharacterSpell[] = [
   {
+    id: "level4p3-1",
     name: "Призыв духа стихии",
     level: 4,
     school: "Вызов",
@@ -19,6 +18,7 @@ export const level4Part3: CharacterSpell[] = [
     classes: ["Друид", "Волшебник", "Следопыт"]
   },
   {
+    id: "level4p3-2",
     name: "Призыв лесных обитателей",
     level: 4,
     school: "Вызов",
@@ -35,6 +35,7 @@ export const level4Part3: CharacterSpell[] = [
     classes: ["Друид", "Следопыт"]
   },
   {
+    id: "level4p3-3",
     name: "Призыв малых элементалей",
     level: 4,
     school: "Вызов",
@@ -51,6 +52,7 @@ export const level4Part3: CharacterSpell[] = [
     classes: ["Друид", "Волшебник"]
   },
   {
+    id: "level4p3-4",
     name: "Принуждение",
     level: 4,
     school: "Очарование",
@@ -67,6 +69,7 @@ export const level4Part3: CharacterSpell[] = [
     classes: ["Бард", "Жрец", "Колдун"]
   },
   {
+    id: "level4p3-5",
     name: "Проклятие стихии",
     level: 4,
     school: "Преобразование",
@@ -83,6 +86,7 @@ export const level4Part3: CharacterSpell[] = [
     classes: ["Друид", "Волшебник", "Чародей", "Колдун"]
   },
   {
+    id: "level4p3-6",
     name: "Психическое копьё Раулотима",
     level: 4,
     school: "Воплощение",
@@ -99,6 +103,7 @@ export const level4Part3: CharacterSpell[] = [
     classes: ["Волшебник", "Чародей"]
   },
   {
+    id: "level4p3-7",
     name: "Свобода перемещения",
     level: 4,
     school: "Ограждение",
@@ -115,6 +120,7 @@ export const level4Part3: CharacterSpell[] = [
     classes: ["Бард", "Жрец", "Друид", "Следопыт", "Искуситель"]
   },
   {
+    id: "level4p3-8",
     name: "Смятение",
     level: 4,
     school: "Очарование",
@@ -131,6 +137,7 @@ export const level4Part3: CharacterSpell[] = [
     classes: ["Бард", "Волшебник", "Друид", "Чародей"]
   },
   {
+    id: "level4p3-9",
     name: "Страж веры",
     level: 4,
     school: "Вызов",
@@ -147,6 +154,7 @@ export const level4Part3: CharacterSpell[] = [
     classes: ["Жрец", "Паладин"]
   },
   {
+    id: "level4p3-10",
     name: "Страж природы",
     level: 4,
     school: "Преобразование",
@@ -163,6 +171,7 @@ export const level4Part3: CharacterSpell[] = [
     classes: ["Друид", "Следопыт"]
   },
   {
+    id: "level4p3-11",
     name: "Сфера бури",
     level: 4,
     school: "Воплощение",
@@ -179,6 +188,7 @@ export const level4Part3: CharacterSpell[] = [
     classes: ["Друид", "Волшебник", "Чародей"]
   },
   {
+    id: "level4p3-12",
     name: "Усыхание",
     level: 4,
     school: "Некромантия",
@@ -195,6 +205,7 @@ export const level4Part3: CharacterSpell[] = [
     classes: ["Друид", "Волшебник", "Чародей", "Колдун"]
   },
   {
+    id: "level4p3-13",
     name: "Центр притяжения",
     level: 4,
     school: "Преобразование",
@@ -211,6 +222,7 @@ export const level4Part3: CharacterSpell[] = [
     classes: ["Колдун", "Волшебник"]
   },
   {
+    id: "level4p3-14",
     name: "Цепкая лоза",
     level: 4,
     school: "Вызов",
@@ -227,6 +239,7 @@ export const level4Part3: CharacterSpell[] = [
     classes: ["Друид", "Следопыт"]
   },
   {
+    id: "level4p3-15",
     name: "Эвардовы чёрные щупальца",
     level: 4,
     school: "Вызов",
