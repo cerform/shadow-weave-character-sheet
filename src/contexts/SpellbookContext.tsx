@@ -1,10 +1,11 @@
 
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { SpellData } from '@/types/spells';
 import { CharacterSpell } from '@/types/character';
 import { getAllSpellsFromDatabase, saveSpellToDatabase, deleteSpellFromDatabase } from '@/services/spellService';
 import { toast } from 'sonner';
 import { calculateAvailableSpellsByClassAndLevel } from '@/utils/spellUtils';
+import { filterSpellsByText } from '@/hooks/spellbook/filterUtils';
 
 export interface SpellbookContextType {
   selectedSpells: SpellData[];
@@ -100,8 +101,130 @@ export const SpellbookProvider: React.FC<{ children: ReactNode }> = ({ children 
   const [spells, setSpells] = useState<SpellData[]>([]);
   const [filteredSpells, setFilteredSpells] = useState<SpellData[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
-  const [availableSpells, setAvailableSpells] = useState<SpellData[]>([]); // Добавлено
-  const [loading, setLoading] = useState(false); // Добавлено
+  const [availableSpells, setAvailableSpells] = useState<SpellData[]>([]); 
+  const [loading, setLoading] = useState(false);
+  
+  // Добавляем состояния для фильтрации
+  const [activeLevel, setActiveLevel] = useState<number[]>([]);
+  const [activeSchool, setActiveSchool] = useState<string[]>([]);
+  const [activeClass, setActiveClass] = useState<string[]>([]);
+  const [isRitualOnly, setIsRitualOnly] = useState(false);
+  const [isConcentrationOnly, setIsConcentrationOnly] = useState(false);
+  const [advancedFiltersOpen, setAdvancedFiltersOpen] = useState(false);
+  
+  // Получаем уникальные значения для фильтров из имеющихся заклинаний
+  const allLevels = React.useMemo(() => {
+    const levels = [...new Set(spells.map(spell => spell.level))];
+    return levels.sort((a, b) => a - b);
+  }, [spells]);
+
+  const allSchools = React.useMemo(() => {
+    const schools = [...new Set(spells.map(spell => spell.school))].filter(Boolean);
+    return schools.sort() as string[];
+  }, [spells]);
+
+  const allClasses = React.useMemo(() => {
+    const classes = new Set<string>();
+    spells.forEach(spell => {
+      if (Array.isArray(spell.classes)) {
+        spell.classes.forEach(cls => classes.add(cls));
+      } else if (typeof spell.classes === 'string') {
+        classes.add(spell.classes);
+      }
+    });
+    return [...classes].sort();
+  }, [spells]);
+  
+  // Функции для работы с фильтрами
+  const toggleLevel = (level: number) => {
+    setActiveLevel(prev => {
+      if (prev.includes(level)) {
+        return prev.filter(l => l !== level);
+      } else {
+        return [...prev, level];
+      }
+    });
+  };
+
+  const toggleSchool = (school: string) => {
+    setActiveSchool(prev => {
+      if (prev.includes(school)) {
+        return prev.filter(s => s !== school);
+      } else {
+        return [...prev, school];
+      }
+    });
+  };
+
+  const toggleClass = (className: string) => {
+    setActiveClass(prev => {
+      if (prev.includes(className)) {
+        return prev.filter(c => c !== className);
+      } else {
+        return [...prev, className];
+      }
+    });
+  };
+
+  const toggleRitualOnly = () => {
+    setIsRitualOnly(prev => !prev);
+  };
+
+  const toggleConcentrationOnly = () => {
+    setIsConcentrationOnly(prev => !prev);
+  };
+
+  const toggleAdvancedFilters = () => {
+    setAdvancedFiltersOpen(prev => !prev);
+  };
+
+  const clearFilters = () => {
+    setSearchQuery('');
+    setActiveLevel([]);
+    setActiveSchool([]);
+    setActiveClass([]);
+    setIsRitualOnly(false);
+    setIsConcentrationOnly(false);
+  };
+
+  // Функции для цветов бейджей
+  const getBadgeColor = (level: number) => {
+    const colors = {
+      0: 'bg-gray-700',
+      1: 'bg-blue-700',
+      2: 'bg-green-700',
+      3: 'bg-yellow-700',
+      4: 'bg-orange-700',
+      5: 'bg-red-700',
+      6: 'bg-purple-700',
+      7: 'bg-pink-700',
+      8: 'bg-indigo-700',
+      9: 'bg-teal-700'
+    };
+    return colors[level as keyof typeof colors] || 'bg-gray-700';
+  };
+
+  const getSchoolBadgeColor = (school: string) => {
+    const colors: { [key: string]: string } = {
+      'Abjuration': 'bg-blue-700',
+      'Conjuration': 'bg-yellow-700',
+      'Divination': 'bg-cyan-700',
+      'Enchantment': 'bg-pink-700',
+      'Evocation': 'bg-red-700',
+      'Illusion': 'bg-purple-700',
+      'Necromancy': 'bg-green-700', 
+      'Transmutation': 'bg-orange-700',
+      'Ограждение': 'bg-blue-700',
+      'Вызов': 'bg-yellow-700',
+      'Прорицание': 'bg-cyan-700',
+      'Очарование': 'bg-pink-700',
+      'Воплощение': 'bg-red-700',
+      'Иллюзия': 'bg-purple-700',
+      'Некромантия': 'bg-green-700', 
+      'Преобразование': 'bg-orange-700'
+    };
+    return colors[school] || 'bg-gray-700';
+  };
   
   const loadSpells = async () => {
     try {
@@ -109,7 +232,7 @@ export const SpellbookProvider: React.FC<{ children: ReactNode }> = ({ children 
       const loadedSpells = await getAllSpellsFromDatabase();
       setSpells(loadedSpells);
       setFilteredSpells(loadedSpells);
-      setAvailableSpells(loadedSpells); // Добавлено
+      setAvailableSpells(loadedSpells);
     } catch (error) {
       console.error('Error loading spells:', error);
       toast.error('Ошибка при загрузке заклинаний');
@@ -117,6 +240,49 @@ export const SpellbookProvider: React.FC<{ children: ReactNode }> = ({ children 
       setLoading(false);
     }
   };
+  
+  // Загрузим заклинания при первом монтировании
+  useEffect(() => {
+    loadSpells();
+  }, []);
+
+  useEffect(() => {
+    // Применяем фильтры при изменении критериев поиска
+    let filtered = [...spells];
+    
+    if (searchQuery) {
+      filtered = filterSpellsByText(filtered, searchQuery);
+    }
+    
+    if (activeLevel.length > 0) {
+      filtered = filtered.filter(spell => activeLevel.includes(spell.level));
+    }
+    
+    if (activeSchool.length > 0) {
+      filtered = filtered.filter(spell => spell.school && activeSchool.includes(spell.school));
+    }
+    
+    if (activeClass.length > 0) {
+      filtered = filtered.filter(spell => {
+        if (Array.isArray(spell.classes)) {
+          return spell.classes.some(cls => activeClass.includes(cls));
+        } else if (typeof spell.classes === 'string') {
+          return activeClass.includes(spell.classes);
+        }
+        return false;
+      });
+    }
+    
+    if (isRitualOnly) {
+      filtered = filtered.filter(spell => spell.ritual);
+    }
+    
+    if (isConcentrationOnly) {
+      filtered = filtered.filter(spell => spell.concentration);
+    }
+    
+    setFilteredSpells(filtered);
+  }, [spells, searchQuery, activeLevel, activeSchool, activeClass, isRitualOnly, isConcentrationOnly]);
   
   const addSpell = async (spell: SpellData) => {
     try {
@@ -293,27 +459,27 @@ export const SpellbookProvider: React.FC<{ children: ReactNode }> = ({ children 
         getSelectedSpellCount,
         saveCharacterSpells,
         
-        // Добавляем отсутствующие свойства, используем заглушки
+        // Добавляем отсутствующие свойства для SpellbookPage
         searchTerm: searchQuery,
         setSearchTerm: setSearchQuery,
-        activeLevel: [],
-        activeSchool: [],
-        activeClass: [],
-        allLevels: [],
-        allSchools: [],
-        allClasses: [],
-        toggleLevel: () => {},
-        toggleSchool: () => {},
-        toggleClass: () => {},
-        clearFilters: () => {},
-        getBadgeColor: () => 'bg-gray-700',
-        getSchoolBadgeColor: () => 'bg-gray-700',
-        isRitualOnly: false,
-        isConcentrationOnly: false,
-        toggleRitualOnly: () => {},
-        toggleConcentrationOnly: () => {},
-        advancedFiltersOpen: false,
-        toggleAdvancedFilters: () => {}
+        activeLevel,
+        activeSchool,
+        activeClass,
+        allLevels,
+        allSchools,
+        allClasses,
+        toggleLevel,
+        toggleSchool,
+        toggleClass,
+        clearFilters,
+        getBadgeColor,
+        getSchoolBadgeColor,
+        isRitualOnly,
+        isConcentrationOnly,
+        toggleRitualOnly,
+        toggleConcentrationOnly,
+        advancedFiltersOpen,
+        toggleAdvancedFilters
       }}
     >
       {children}

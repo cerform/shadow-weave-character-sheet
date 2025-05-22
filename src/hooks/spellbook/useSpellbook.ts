@@ -46,7 +46,7 @@ export const useSpellbook = (): UseSpellbookReturn => {
       higherLevels: spell.higherLevels || '',
       source: spell.source || 'PHB'
     }));
-  }, [allSpells]);
+  }, []);
 
   // Get unique values for filters
   const allLevels = useMemo(() => {
