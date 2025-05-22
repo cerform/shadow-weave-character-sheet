@@ -42,3 +42,20 @@ export const getSpellsByLevel = (level: number) => {
       return [];
   }
 };
+
+// Функция для получения всех заклинаний для определенного класса
+export const getSpellsByClass = (className: string) => {
+  return spells.filter(spell => {
+    if (Array.isArray(spell.classes)) {
+      return spell.classes.some(c => c.toLowerCase() === className.toLowerCase());
+    } else if (typeof spell.classes === 'string') {
+      return spell.classes.toLowerCase() === className.toLowerCase();
+    }
+    return false;
+  });
+};
+
+// Функция для получения всех заклинаний
+export const getAllSpells = () => {
+  return spells;
+};
