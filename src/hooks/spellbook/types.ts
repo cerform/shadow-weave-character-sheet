@@ -33,9 +33,30 @@ export interface UseSpellbookReturn {
   advancedFiltersOpen: boolean;
   toggleAdvancedFilters: () => void;
   loadSpells: () => SpellData[];
+  
+  // Расширенные фильтры
+  verbalComponent: boolean | null;
+  setVerbalComponent: (value: boolean | null) => void;
+  somaticComponent: boolean | null;
+  setSomaticComponent: (value: boolean | null) => void;
+  materialComponent: boolean | null;
+  setMaterialComponent: (value: boolean | null) => void;
+  castingTimes: string[];
+  activeCastingTimes: string[];
+  toggleCastingTime: (time: string) => void;
+  rangeTypes: string[];
+  activeRangeTypes: string[];
+  toggleRangeType: (range: string) => void;
+  durationTypes: string[];
+  activeDurationTypes: string[];
+  toggleDurationType: (duration: string) => void;
+  sources: string[];
+  activeSources: string[];
+  toggleSource: (source: string) => void;
+  clearAdvancedFilters: () => void;
 }
 
-// Используем правильный синтаксис для экспорта типа
+// Экспортируем также тип SpellData
 export type { SpellData };
 
 // Interface for filter state
@@ -46,6 +67,13 @@ export interface SpellFilters {
   ritual: boolean;
   concentration: boolean;
   searchText: string;
+  verbalComponent: boolean | null;
+  somaticComponent: boolean | null;
+  materialComponent: boolean | null;
+  castingTimes: string[];
+  rangeTypes: string[];
+  durationTypes: string[];
+  sources: string[];
 }
 
 // Interface for spell components

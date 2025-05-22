@@ -53,9 +53,15 @@ export const filterSpellsByText = (spells: SpellData[], searchText: string): Spe
       // Проверка высших уровней
       const higherLevelsMatch = spell.higherLevels?.toLowerCase().includes(word);
       
+      // Проверка материальных компонентов
+      const materialsMatch = spell.materials?.toLowerCase().includes(word);
+      
+      // Проверка источника
+      const sourceMatch = spell.source?.toLowerCase().includes(word);
+      
       return nameMatch || descriptionMatch || schoolMatch || componentsMatch || 
              castingTimeMatch || rangeMatch || durationMatch || classesMatch || 
-             higherLevelsMatch;
+             higherLevelsMatch || materialsMatch || sourceMatch;
     });
   });
 };
@@ -126,6 +132,89 @@ export const filterSpellsByComponents = (
     
     return matches;
   });
+};
+
+// Новая функция для фильтрации по времени накладывания
+export const filterSpellsByCastingTime = (spells: SpellData[], castingTimes: string[]): SpellData[] => {
+  if (!castingTimes.length) return spells;
+  
+  // Возможные шаблоны для сравнения
+  const patterns = {
+    'action': /действие|action/i,
+    'bonus': /бонусное действие|bonus action/i,
+    'reaction': /реакция|reaction/i,
+    'minute': /минут|minute/i,
+    'hour': /час|hour/i
+  };
+  
+  return spells.filter(spell => {
+    if (!spell.castingTime) return false;
+    
+    return castingTimes.some(timeType => {
+      const pattern = patterns[timeType as keyof typeof patterns];
+      if (pattern) {
+        return pattern.test(spell.castingTime);
+      }
+      return false;
+    });
+  });
+};
+
+// Новая функция для фильтрации по дистанции
+export const filterSpellsByRange = (spells: SpellData[], ranges: string[]): SpellData[] => {
+  if (!ranges.length) return spells;
+  
+  const patterns = {
+    'self': /на себя|self/i,
+    'touch': /касание|touch/i,
+    'short': /[1-6][0]? фут|[1-6][0]? ft/i,
+    'medium': /[7-9][0-9] фут|[7-9][0-9] ft|1[0-4][0-9] фут|1[0-4][0-9] ft/i,
+    'long': /[3-9][0][0]+ фут|[3-9][0][0]+ ft|[1-9] миль|[1-9] mile/i
+  };
+  
+  return spells.filter(spell => {
+    if (!spell.range) return false;
+    
+    return ranges.some(rangeType => {
+      const pattern = patterns[rangeType as keyof typeof patterns];
+      if (pattern) {
+        return pattern.test(spell.range);
+      }
+      return false;
+    });
+  });
+};
+
+// Новая функция для фильтрации по длительности
+export const filterSpellsByDuration = (spells: SpellData[], durations: string[]): SpellData[] => {
+  if (!durations.length) return spells;
+  
+  const patterns = {
+    'instant': /мгновенная|instantaneous/i,
+    'round': /раунд|round/i,
+    'minute': /минут|minute/i,
+    'hour': /час|hour/i,
+    'day': /день|сутки|day/i,
+    'permanent': /постоянная|permanent/i
+  };
+  
+  return spells.filter(spell => {
+    if (!spell.duration) return false;
+    
+    return durations.some(durationType => {
+      const pattern = patterns[durationType as keyof typeof patterns];
+      if (pattern) {
+        return pattern.test(spell.duration);
+      }
+      return false;
+    });
+  });
+};
+
+// Новая функция для фильтрации по источнику
+export const filterSpellsBySource = (spells: SpellData[], sources: string[]): SpellData[] => {
+  if (!sources.length) return spells;
+  return spells.filter(spell => spell.source && sources.includes(spell.source));
 };
 
 // Функция для проверки совпадения заклинания с фильтрами для быстрого поиска

@@ -2,13 +2,25 @@
 import { useState, useEffect, useMemo } from 'react';
 import { SpellData } from '@/types/spells';
 import { allSpells } from '@/data/spells';
-import { filterSpellsByText, filterSpellsByLevel, filterSpellsBySchool, filterSpellsByClass, filterSpellsByRitual, filterSpellsByConcentration } from './filterUtils';
+import { 
+  filterSpellsByText, 
+  filterSpellsByLevel, 
+  filterSpellsBySchool, 
+  filterSpellsByClass, 
+  filterSpellsByRitual, 
+  filterSpellsByConcentration,
+  filterSpellsByComponents,
+  filterSpellsByCastingTime,
+  filterSpellsByRange,
+  filterSpellsByDuration,
+  filterSpellsBySource
+} from './filterUtils';
 import { UseSpellbookReturn } from './types';
 import { CharacterSpell } from '@/types/character';
 import { importSpellsFromText } from '@/utils/spellBatchImporter';
 
 export const useSpellbook = (): UseSpellbookReturn => {
-  // State for filtered spells
+  // Базовые фильтры
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [activeLevel, setActiveLevel] = useState<number[]>([]);
   const [activeSchool, setActiveSchool] = useState<string[]>([]);
@@ -18,6 +30,21 @@ export const useSpellbook = (): UseSpellbookReturn => {
   const [isRitualOnly, setIsRitualOnly] = useState<boolean>(false);
   const [isConcentrationOnly, setIsConcentrationOnly] = useState<boolean>(false);
   const [advancedFiltersOpen, setAdvancedFiltersOpen] = useState<boolean>(false);
+  
+  // Расширенные фильтры
+  const [verbalComponent, setVerbalComponent] = useState<boolean | null>(null);
+  const [somaticComponent, setSomaticComponent] = useState<boolean | null>(null);
+  const [materialComponent, setMaterialComponent] = useState<boolean | null>(null);
+  const [activeCastingTimes, setActiveCastingTimes] = useState<string[]>([]);
+  const [activeRangeTypes, setActiveRangeTypes] = useState<string[]>([]);
+  const [activeDurationTypes, setActiveDurationTypes] = useState<string[]>([]);
+  const [activeSources, setActiveSources] = useState<string[]>([]);
+
+  // Доступные значения для расширенных фильтров
+  const castingTimes = ['action', 'bonus', 'reaction', 'minute', 'hour'];
+  const rangeTypes = ['self', 'touch', 'short', 'medium', 'long'];
+  const durationTypes = ['instant', 'round', 'minute', 'hour', 'day', 'permanent'];
+  const sources = ['PHB', 'XGE', 'TCE', 'SCAG', 'EE', 'AI', 'WGE', 'IDRotF', 'FTD', 'SCC', 'UA', 'HB'];
 
   // Convert CharacterSpell[] to SpellData[]
   const spells: SpellData[] = useMemo(() => {
@@ -71,42 +98,73 @@ export const useSpellbook = (): UseSpellbookReturn => {
     return [...classes].sort();
   }, [spells]);
 
-  // Enhanced filter spells based on all active filters with more precise logic
+  // Enhanced filter spells based on all active filters
   const filteredSpells = useMemo(() => {
     let result = [...spells];
 
-    // Apply text search filter with enhanced logic for partial matches
+    // Базовые фильтры
     if (searchTerm) {
       result = filterSpellsByText(result, searchTerm);
     }
 
-    // Apply level filter with multi-select support
     if (activeLevel.length > 0) {
       result = filterSpellsByLevel(result, activeLevel);
     }
 
-    // Apply school filter with multi-select support
     if (activeSchool.length > 0) {
       result = filterSpellsBySchool(result, activeSchool);
     }
 
-    // Apply class filter with multi-select and better handling of array classes
     if (activeClass.length > 0) {
       result = filterSpellsByClass(result, activeClass);
     }
 
-    // Apply ritual filter
     if (isRitualOnly) {
       result = filterSpellsByRitual(result, true);
     }
 
-    // Apply concentration filter
     if (isConcentrationOnly) {
       result = filterSpellsByConcentration(result, true);
     }
+    
+    // Расширенные фильтры
+    if (verbalComponent !== null || somaticComponent !== null || materialComponent !== null) {
+      result = filterSpellsByComponents(result, verbalComponent, somaticComponent, materialComponent);
+    }
+    
+    if (activeCastingTimes.length > 0) {
+      result = filterSpellsByCastingTime(result, activeCastingTimes);
+    }
+    
+    if (activeRangeTypes.length > 0) {
+      result = filterSpellsByRange(result, activeRangeTypes);
+    }
+    
+    if (activeDurationTypes.length > 0) {
+      result = filterSpellsByDuration(result, activeDurationTypes);
+    }
+    
+    if (activeSources.length > 0) {
+      result = filterSpellsBySource(result, activeSources);
+    }
 
     return result;
-  }, [spells, searchTerm, activeLevel, activeSchool, activeClass, isRitualOnly, isConcentrationOnly]);
+  }, [
+    spells, 
+    searchTerm, 
+    activeLevel, 
+    activeSchool, 
+    activeClass, 
+    isRitualOnly, 
+    isConcentrationOnly,
+    verbalComponent,
+    somaticComponent,
+    materialComponent,
+    activeCastingTimes,
+    activeRangeTypes,
+    activeDurationTypes,
+    activeSources
+  ]);
 
   // Theme setup
   const currentTheme = {
@@ -178,6 +236,50 @@ export const useSpellbook = (): UseSpellbookReturn => {
   const toggleAdvancedFilters = () => {
     setAdvancedFiltersOpen(prev => !prev);
   };
+  
+  // Toggle casting time filter
+  const toggleCastingTime = (time: string) => {
+    setActiveCastingTimes(prev => {
+      if (prev.includes(time)) {
+        return prev.filter(t => t !== time);
+      } else {
+        return [...prev, time];
+      }
+    });
+  };
+  
+  // Toggle range filter
+  const toggleRangeType = (range: string) => {
+    setActiveRangeTypes(prev => {
+      if (prev.includes(range)) {
+        return prev.filter(r => r !== range);
+      } else {
+        return [...prev, range];
+      }
+    });
+  };
+  
+  // Toggle duration filter
+  const toggleDurationType = (duration: string) => {
+    setActiveDurationTypes(prev => {
+      if (prev.includes(duration)) {
+        return prev.filter(d => d !== duration);
+      } else {
+        return [...prev, duration];
+      }
+    });
+  };
+  
+  // Toggle source filter
+  const toggleSource = (source: string) => {
+    setActiveSources(prev => {
+      if (prev.includes(source)) {
+        return prev.filter(s => s !== source);
+      } else {
+        return [...prev, source];
+      }
+    });
+  };
 
   // Clear all filters at once
   const clearFilters = () => {
@@ -187,6 +289,18 @@ export const useSpellbook = (): UseSpellbookReturn => {
     setActiveClass([]);
     setIsRitualOnly(false);
     setIsConcentrationOnly(false);
+    clearAdvancedFilters();
+  };
+  
+  // Clear only advanced filters
+  const clearAdvancedFilters = () => {
+    setVerbalComponent(null);
+    setSomaticComponent(null);
+    setMaterialComponent(null);
+    setActiveCastingTimes([]);
+    setActiveRangeTypes([]);
+    setActiveDurationTypes([]);
+    setActiveSources([]);
   };
 
   // Enhanced color mapping for level badges
@@ -240,7 +354,7 @@ export const useSpellbook = (): UseSpellbookReturn => {
     return classes.toString();
   };
 
-  // Функция импорта заклинаний из текста
+  // Импорт заклинаний из текста
   const importSpellsFromTextWrapper = (text: string, existingSpells: CharacterSpell[]): CharacterSpell[] => {
     try {
       return importSpellsFromText(text, existingSpells);
@@ -250,6 +364,7 @@ export const useSpellbook = (): UseSpellbookReturn => {
     }
   };
 
+  // Загрузка заклинаний
   const loadSpells = () => {
     console.info(`Загружено заклинаний: ${spells.length}`);
     return spells;
@@ -284,6 +399,27 @@ export const useSpellbook = (): UseSpellbookReturn => {
     toggleConcentrationOnly,
     advancedFiltersOpen,
     toggleAdvancedFilters,
-    loadSpells
+    loadSpells,
+    
+    // Расширенные фильтры
+    verbalComponent,
+    setVerbalComponent,
+    somaticComponent,
+    setSomaticComponent,
+    materialComponent,
+    setMaterialComponent,
+    castingTimes,
+    activeCastingTimes,
+    toggleCastingTime,
+    rangeTypes,
+    activeRangeTypes,
+    toggleRangeType,
+    durationTypes,
+    activeDurationTypes,
+    toggleDurationType,
+    sources,
+    activeSources,
+    toggleSource,
+    clearAdvancedFilters
   };
 };
