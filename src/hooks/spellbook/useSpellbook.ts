@@ -71,26 +71,26 @@ export const useSpellbook = (): UseSpellbookReturn => {
     return [...classes].sort();
   }, [spells]);
 
-  // Filter spells based on all active filters
+  // Enhanced filter spells based on all active filters with more precise logic
   const filteredSpells = useMemo(() => {
     let result = [...spells];
 
-    // Apply text search filter
+    // Apply text search filter with enhanced logic for partial matches
     if (searchTerm) {
       result = filterSpellsByText(result, searchTerm);
     }
 
-    // Apply level filter
+    // Apply level filter with multi-select support
     if (activeLevel.length > 0) {
       result = filterSpellsByLevel(result, activeLevel);
     }
 
-    // Apply school filter
+    // Apply school filter with multi-select support
     if (activeSchool.length > 0) {
       result = filterSpellsBySchool(result, activeSchool);
     }
 
-    // Apply class filter
+    // Apply class filter with multi-select and better handling of array classes
     if (activeClass.length > 0) {
       result = filterSpellsByClass(result, activeClass);
     }
@@ -131,6 +131,7 @@ export const useSpellbook = (): UseSpellbookReturn => {
     }, 200);
   };
 
+  // Enhanced toggle level handler with multi-select
   const toggleLevel = (level: number) => {
     setActiveLevel(prev => {
       if (prev.includes(level)) {
@@ -141,6 +142,7 @@ export const useSpellbook = (): UseSpellbookReturn => {
     });
   };
 
+  // Enhanced toggle school handler with multi-select
   const toggleSchool = (school: string) => {
     setActiveSchool(prev => {
       if (prev.includes(school)) {
@@ -151,6 +153,7 @@ export const useSpellbook = (): UseSpellbookReturn => {
     });
   };
 
+  // Enhanced toggle class handler with multi-select
   const toggleClass = (className: string) => {
     setActiveClass(prev => {
       if (prev.includes(className)) {
@@ -161,18 +164,22 @@ export const useSpellbook = (): UseSpellbookReturn => {
     });
   };
 
+  // Toggle ritual filter
   const toggleRitualOnly = () => {
     setIsRitualOnly(prev => !prev);
   };
 
+  // Toggle concentration filter
   const toggleConcentrationOnly = () => {
     setIsConcentrationOnly(prev => !prev);
   };
 
+  // Toggle advanced filters panel
   const toggleAdvancedFilters = () => {
     setAdvancedFiltersOpen(prev => !prev);
   };
 
+  // Clear all filters at once
   const clearFilters = () => {
     setSearchTerm('');
     setActiveLevel([]);
@@ -182,6 +189,7 @@ export const useSpellbook = (): UseSpellbookReturn => {
     setIsConcentrationOnly(false);
   };
 
+  // Enhanced color mapping for level badges
   const getBadgeColor = (level: number) => {
     const colors = {
       0: 'bg-gray-700',
@@ -198,6 +206,7 @@ export const useSpellbook = (): UseSpellbookReturn => {
     return colors[level as keyof typeof colors] || 'bg-gray-700';
   };
 
+  // Enhanced color mapping for school badges
   const getSchoolBadgeColor = (school: string) => {
     const colors: { [key: string]: string } = {
       'Abjuration': 'bg-blue-700',
@@ -220,6 +229,7 @@ export const useSpellbook = (): UseSpellbookReturn => {
     return colors[school] || 'bg-gray-700';
   };
 
+  // Enhanced class formatter to handle different class formats
   const formatClasses = (classes: string[] | string | undefined): string => {
     if (!classes) return '';
     

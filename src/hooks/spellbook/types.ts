@@ -37,3 +37,21 @@ export interface UseSpellbookReturn {
 
 // Используем правильный синтаксис для экспорта типа
 export type { SpellData };
+
+// Interface for filter state
+export interface SpellFilters {
+  levels: number[];
+  schools: string[];
+  classes: string[];
+  ritual: boolean;
+  concentration: boolean;
+  searchText: string;
+}
+
+// Interface for spell components
+export interface SpellComponents {
+  verbal: boolean;
+  somatic: boolean;
+  material: boolean;
+  materials?: string;
+}
