@@ -83,12 +83,12 @@ const SpellbookPage: React.FC = () => {
     clearAdvancedFilters
   } = useSpellbook();
 
-  // Получение общего количества активных фильтров
+  // Безопасное получение общего количества активных фильтров
   const getTotalActiveFilters = () => {
     let count = 0;
-    count += (activeLevel || []).length;
-    count += (activeSchool || []).length;
-    count += (activeClass || []).length;
+    count += Array.isArray(activeLevel) ? activeLevel.length : 0;
+    count += Array.isArray(activeSchool) ? activeSchool.length : 0;
+    count += Array.isArray(activeClass) ? activeClass.length : 0;
     if (isRitualOnly) count++;
     if (isConcentrationOnly) count++;
     
@@ -96,29 +96,30 @@ const SpellbookPage: React.FC = () => {
     if (verbalComponent !== null) count++;
     if (somaticComponent !== null) count++;
     if (materialComponent !== null) count++;
-    count += (activeCastingTimes || []).length;
-    count += (activeRangeTypes || []).length;
-    count += (activeDurationTypes || []).length;
-    count += (activeSources || []).length;
+    count += Array.isArray(activeCastingTimes) ? activeCastingTimes.length : 0;
+    count += Array.isArray(activeRangeTypes) ? activeRangeTypes.length : 0;
+    count += Array.isArray(activeDurationTypes) ? activeDurationTypes.length : 0;
+    count += Array.isArray(activeSources) ? activeSources.length : 0;
     
     return count;
   };
   
-  // Получение количества активных расширенных фильтров
+  // Безопасное получение количества активных расширенных фильтров
   const getAdvancedFiltersCount = () => {
     let count = 0;
     if (verbalComponent !== null) count++;
     if (somaticComponent !== null) count++;
     if (materialComponent !== null) count++;
-    count += (activeCastingTimes || []).length;
-    count += (activeRangeTypes || []).length;
-    count += (activeDurationTypes || []).length;
-    count += (activeSources || []).length;
+    count += Array.isArray(activeCastingTimes) ? activeCastingTimes.length : 0;
+    count += Array.isArray(activeRangeTypes) ? activeRangeTypes.length : 0;
+    count += Array.isArray(activeDurationTypes) ? activeDurationTypes.length : 0;
+    count += Array.isArray(activeSources) ? activeSources.length : 0;
     return count;
   };
 
   const totalFiltersCount = getTotalActiveFilters();
   const advancedFiltersCount = getAdvancedFiltersCount();
+  const basicFiltersCount = totalFiltersCount - advancedFiltersCount;
 
   return (
     <BackgroundWrapper>
@@ -171,9 +172,9 @@ const SpellbookPage: React.FC = () => {
                         <TabsList className="grid grid-cols-2 mb-4">
                           <TabsTrigger value="basic">
                             Основные
-                            {((activeLevel || []).length + (activeSchool || []).length + (activeClass || []).length + (isRitualOnly ? 1 : 0) + (isConcentrationOnly ? 1 : 0)) > 0 && (
+                            {basicFiltersCount > 0 && (
                               <Badge variant="outline" className="ml-2">
-                                {(activeLevel || []).length + (activeSchool || []).length + (activeClass || []).length + (isRitualOnly ? 1 : 0) + (isConcentrationOnly ? 1 : 0)}
+                                {basicFiltersCount}
                               </Badge>
                             )}
                           </TabsTrigger>
@@ -189,23 +190,23 @@ const SpellbookPage: React.FC = () => {
                         
                         <TabsContent value="basic">
                           <SpellFilterPanel 
-                            activeLevel={activeLevel || []}
-                            activeSchool={activeSchool || []}
-                            activeClass={activeClass || []}
-                            allLevels={allLevels || []}
-                            allSchools={allSchools || []}
-                            allClasses={allClasses || []}
+                            activeLevel={Array.isArray(activeLevel) ? activeLevel : []}
+                            activeSchool={Array.isArray(activeSchool) ? activeSchool : []}
+                            activeClass={Array.isArray(activeClass) ? activeClass : []}
+                            allLevels={Array.isArray(allLevels) ? allLevels : []}
+                            allSchools={Array.isArray(allSchools) ? allSchools : []}
+                            allClasses={Array.isArray(allClasses) ? allClasses : []}
                             toggleLevel={toggleLevel}
                             toggleSchool={toggleSchool}
                             toggleClass={toggleClass}
                             clearFilters={clearFilters}
                             getBadgeColor={getBadgeColor}
                             getSchoolBadgeColor={getSchoolBadgeColor}
-                            isRitualOnly={isRitualOnly || false}
-                            isConcentrationOnly={isConcentrationOnly || false}
+                            isRitualOnly={Boolean(isRitualOnly)}
+                            isConcentrationOnly={Boolean(isConcentrationOnly)}
                             toggleRitualOnly={toggleRitualOnly}
                             toggleConcentrationOnly={toggleConcentrationOnly}
-                            advancedFiltersOpen={advancedFiltersOpen || false}
+                            advancedFiltersOpen={Boolean(advancedFiltersOpen)}
                             toggleAdvancedFilters={toggleAdvancedFilters}
                           />
                         </TabsContent>
@@ -218,17 +219,17 @@ const SpellbookPage: React.FC = () => {
                             setVerbalComponent={setVerbalComponent}
                             setSomaticComponent={setSomaticComponent}
                             setMaterialComponent={setMaterialComponent}
-                            castingTimes={castingTimes || []}
-                            activeCastingTimes={activeCastingTimes || []}
+                            castingTimes={Array.isArray(castingTimes) ? castingTimes : []}
+                            activeCastingTimes={Array.isArray(activeCastingTimes) ? activeCastingTimes : []}
                             toggleCastingTime={toggleCastingTime}
-                            rangeTypes={rangeTypes || []}
-                            activeRangeTypes={activeRangeTypes || []}
+                            rangeTypes={Array.isArray(rangeTypes) ? rangeTypes : []}
+                            activeRangeTypes={Array.isArray(activeRangeTypes) ? activeRangeTypes : []}
                             toggleRangeType={toggleRangeType}
-                            durationTypes={durationTypes || []}
-                            activeDurationTypes={activeDurationTypes || []}
+                            durationTypes={Array.isArray(durationTypes) ? durationTypes : []}
+                            activeDurationTypes={Array.isArray(activeDurationTypes) ? activeDurationTypes : []}
                             toggleDurationType={toggleDurationType}
-                            sources={sources || []}
-                            activeSources={activeSources || []}
+                            sources={Array.isArray(sources) ? sources : []}
+                            activeSources={Array.isArray(activeSources) ? activeSources : []}
                             toggleSource={toggleSource}
                             clearAdvancedFilters={clearAdvancedFilters}
                           />
@@ -249,7 +250,7 @@ const SpellbookPage: React.FC = () => {
             
             {(totalFiltersCount > 0) && (
               <div className="flex flex-wrap gap-2 mb-4">
-                {(activeLevel || []).map(level => (
+                {Array.isArray(activeLevel) && activeLevel.map(level => (
                   <Badge
                     key={`active-level-${level}`}
                     variant="secondary"
@@ -268,7 +269,7 @@ const SpellbookPage: React.FC = () => {
                   </Badge>
                 ))}
                 
-                {(activeSchool || []).map(school => (
+                {Array.isArray(activeSchool) && activeSchool.map(school => (
                   <Badge
                     key={`active-school-${school}`}
                     variant="secondary"
@@ -287,7 +288,7 @@ const SpellbookPage: React.FC = () => {
                   </Badge>
                 ))}
                 
-                {(activeClass || []).map(cls => (
+                {Array.isArray(activeClass) && activeClass.map(cls => (
                   <Badge
                     key={`active-class-${cls}`}
                     variant="secondary"
@@ -372,12 +373,12 @@ const SpellbookPage: React.FC = () => {
                   </Badge>
                 )}
                 
-                {(activeCastingTimes || []).length > 0 && (
+                {Array.isArray(activeCastingTimes) && activeCastingTimes.length > 0 && (
                   <Badge
                     variant="outline"
                     className="flex items-center gap-1 border-indigo-400 text-indigo-400"
                   >
-                    Время накладывания: {(activeCastingTimes || []).length}
+                    Время накладывания: {activeCastingTimes.length}
                     <X
                       size={14}
                       className="ml-1 cursor-pointer"
@@ -386,12 +387,12 @@ const SpellbookPage: React.FC = () => {
                   </Badge>
                 )}
                 
-                {(activeRangeTypes || []).length > 0 && (
+                {Array.isArray(activeRangeTypes) && activeRangeTypes.length > 0 && (
                   <Badge
                     variant="outline"
                     className="flex items-center gap-1 border-pink-400 text-pink-400"
                   >
-                    Дистанция: {(activeRangeTypes || []).length}
+                    Дистанция: {activeRangeTypes.length}
                     <X
                       size={14}
                       className="ml-1 cursor-pointer"
@@ -400,12 +401,12 @@ const SpellbookPage: React.FC = () => {
                   </Badge>
                 )}
                 
-                {(activeDurationTypes || []).length > 0 && (
+                {Array.isArray(activeDurationTypes) && activeDurationTypes.length > 0 && (
                   <Badge
                     variant="outline"
                     className="flex items-center gap-1 border-teal-400 text-teal-400"
                   >
-                    Длительность: {(activeDurationTypes || []).length}
+                    Длительность: {activeDurationTypes.length}
                     <X
                       size={14}
                       className="ml-1 cursor-pointer"
@@ -414,12 +415,12 @@ const SpellbookPage: React.FC = () => {
                   </Badge>
                 )}
                 
-                {(activeSources || []).length > 0 && (
+                {Array.isArray(activeSources) && activeSources.length > 0 && (
                   <Badge
                     variant="outline"
                     className="flex items-center gap-1 border-gray-400 text-gray-400"
                   >
-                    Источник: {(activeSources || []).length}
+                    Источник: {activeSources.length}
                     <X
                       size={14}
                       className="ml-1 cursor-pointer"
