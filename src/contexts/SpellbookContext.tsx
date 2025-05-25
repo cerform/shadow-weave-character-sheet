@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { SpellData } from '@/types/spells';
 import { CharacterSpell } from '@/types/character';
@@ -53,6 +52,27 @@ export interface SpellbookContextType {
   toggleConcentrationOnly: () => void;
   advancedFiltersOpen: boolean;
   toggleAdvancedFilters: () => void;
+  
+  // Расширенные фильтры
+  verbalComponent: boolean | null;
+  setVerbalComponent: (value: boolean | null) => void;
+  somaticComponent: boolean | null;
+  setSomaticComponent: (value: boolean | null) => void;
+  materialComponent: boolean | null;
+  setMaterialComponent: (value: boolean | null) => void;
+  castingTimes: string[];
+  activeCastingTimes: string[];
+  toggleCastingTime: (time: string) => void;
+  rangeTypes: string[];
+  activeRangeTypes: string[];
+  toggleRangeType: (range: string) => void;
+  durationTypes: string[];
+  activeDurationTypes: string[];
+  toggleDurationType: (duration: string) => void;
+  sources: string[];
+  activeSources: string[];
+  toggleSource: (source: string) => void;
+  clearAdvancedFilters: () => void;
 }
 
 export const SpellbookContext = createContext<SpellbookContextType>({
@@ -94,7 +114,28 @@ export const SpellbookContext = createContext<SpellbookContextType>({
   toggleRitualOnly: () => {},
   toggleConcentrationOnly: () => {},
   advancedFiltersOpen: false,
-  toggleAdvancedFilters: () => {}
+  toggleAdvancedFilters: () => {},
+  
+  // Расширенные фильтры
+  verbalComponent: null,
+  setVerbalComponent: () => {},
+  somaticComponent: null,
+  setSomaticComponent: () => {},
+  materialComponent: null,
+  setMaterialComponent: () => {},
+  castingTimes: [],
+  activeCastingTimes: [],
+  toggleCastingTime: () => {},
+  rangeTypes: [],
+  activeRangeTypes: [],
+  toggleRangeType: () => {},
+  durationTypes: [],
+  activeDurationTypes: [],
+  toggleDurationType: () => {},
+  sources: [],
+  activeSources: [],
+  toggleSource: () => {},
+  clearAdvancedFilters: () => {}
 });
 
 export const SpellbookProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
@@ -111,6 +152,21 @@ export const SpellbookProvider: React.FC<{ children: ReactNode }> = ({ children 
   const [isRitualOnly, setIsRitualOnly] = useState(false);
   const [isConcentrationOnly, setIsConcentrationOnly] = useState(false);
   const [advancedFiltersOpen, setAdvancedFiltersOpen] = useState(false);
+  
+  // Расширенные фильтры
+  const [verbalComponent, setVerbalComponent] = useState<boolean | null>(null);
+  const [somaticComponent, setSomaticComponent] = useState<boolean | null>(null);
+  const [materialComponent, setMaterialComponent] = useState<boolean | null>(null);
+  const [activeCastingTimes, setActiveCastingTimes] = useState<string[]>([]);
+  const [activeRangeTypes, setActiveRangeTypes] = useState<string[]>([]);
+  const [activeDurationTypes, setActiveDurationTypes] = useState<string[]>([]);
+  const [activeSources, setActiveSources] = useState<string[]>([]);
+
+  // Доступные значения для расширенных фильтров
+  const castingTimes = ['action', 'bonus', 'reaction', 'minute', 'hour'];
+  const rangeTypes = ['self', 'touch', 'short', 'medium', 'long'];
+  const durationTypes = ['instant', 'round', 'minute', 'hour', 'day', 'permanent'];
+  const sources = ['PHB', 'XGE', 'TCE', 'SCAG', 'EE', 'AI', 'WGE', 'IDRotF', 'FTD', 'SCC', 'UA', 'HB'];
   
   // Получаем уникальные значения для фильтров из имеющихся заклинаний
   const allLevels = React.useMemo(() => {
@@ -178,6 +234,57 @@ export const SpellbookProvider: React.FC<{ children: ReactNode }> = ({ children 
     setAdvancedFiltersOpen(prev => !prev);
   };
 
+  // Toggle функции для расширенных фильтров
+  const toggleCastingTime = (time: string) => {
+    setActiveCastingTimes(prev => {
+      if (prev.includes(time)) {
+        return prev.filter(t => t !== time);
+      } else {
+        return [...prev, time];
+      }
+    });
+  };
+
+  const toggleRangeType = (range: string) => {
+    setActiveRangeTypes(prev => {
+      if (prev.includes(range)) {
+        return prev.filter(r => r !== range);
+      } else {
+        return [...prev, range];
+      }
+    });
+  };
+
+  const toggleDurationType = (duration: string) => {
+    setActiveDurationTypes(prev => {
+      if (prev.includes(duration)) {
+        return prev.filter(d => d !== duration);
+      } else {
+        return [...prev, duration];
+      }
+    });
+  };
+
+  const toggleSource = (source: string) => {
+    setActiveSources(prev => {
+      if (prev.includes(source)) {
+        return prev.filter(s => s !== source);
+      } else {
+        return [...prev, source];
+      }
+    });
+  };
+
+  const clearAdvancedFilters = () => {
+    setVerbalComponent(null);
+    setSomaticComponent(null);
+    setMaterialComponent(null);
+    setActiveCastingTimes([]);
+    setActiveRangeTypes([]);
+    setActiveDurationTypes([]);
+    setActiveSources([]);
+  };
+
   const clearFilters = () => {
     setSearchQuery('');
     setActiveLevel([]);
@@ -185,6 +292,7 @@ export const SpellbookProvider: React.FC<{ children: ReactNode }> = ({ children 
     setActiveClass([]);
     setIsRitualOnly(false);
     setIsConcentrationOnly(false);
+    clearAdvancedFilters();
   };
 
   // Функции для цветов бейджей
@@ -479,7 +587,28 @@ export const SpellbookProvider: React.FC<{ children: ReactNode }> = ({ children 
         toggleRitualOnly,
         toggleConcentrationOnly,
         advancedFiltersOpen,
-        toggleAdvancedFilters
+        toggleAdvancedFilters,
+        
+        // Расширенные фильтры
+        verbalComponent,
+        setVerbalComponent,
+        somaticComponent,
+        setSomaticComponent,
+        materialComponent,
+        setMaterialComponent,
+        castingTimes,
+        activeCastingTimes,
+        toggleCastingTime,
+        rangeTypes,
+        activeRangeTypes,
+        toggleRangeType,
+        durationTypes,
+        activeDurationTypes,
+        toggleDurationType,
+        sources,
+        activeSources,
+        toggleSource,
+        clearAdvancedFilters
       }}
     >
       {children}
