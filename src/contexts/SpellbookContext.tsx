@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { SpellData } from '@/types/spells';
 import { CharacterSpell } from '@/types/character';
@@ -73,6 +74,10 @@ export interface SpellbookContextType {
   activeSources: string[];
   toggleSource: (source: string) => void;
   clearAdvancedFilters: () => void;
+  
+  // Добавляем недостающие методы для сохраненных фильтров
+  applySavedFilters: (filters: any) => void;
+  getCurrentFilters: () => any;
 }
 
 export const SpellbookContext = createContext<SpellbookContextType>({
