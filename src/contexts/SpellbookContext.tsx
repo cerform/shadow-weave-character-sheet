@@ -4,7 +4,7 @@ import { CharacterSpell } from '@/types/character';
 import { getAllSpellsFromDatabase, saveSpellToDatabase, deleteSpellFromDatabase } from '@/services/spellService';
 import { toast } from 'sonner';
 import { calculateAvailableSpellsByClassAndLevel } from '@/utils/spellUtils';
-import { filterSpellsByText } from '@/hooks/spellbook/filterUtils';
+import { useFuzzySearch } from '@/hooks/spellbook/useFuzzySearch';
 
 export interface SpellbookContextType {
   selectedSpells: SpellData[];
@@ -191,6 +191,9 @@ export const SpellbookProvider: React.FC<{ children: ReactNode }> = ({ children 
     return [...classes].sort();
   }, [spells]);
   
+  // Используем fuzzy search для улучшенного поиска
+  const fuzzySearchResults = useFuzzySearch(spells, searchQuery);
+  
   // Функции для работы с фильтрами
   const toggleLevel = (level: number) => {
     setActiveLevel(prev => {
@@ -354,13 +357,45 @@ export const SpellbookProvider: React.FC<{ children: ReactNode }> = ({ children 
     loadSpells();
   }, []);
 
+  // Функция для применения сохраненных фильтров
+  const applySavedFilters = (savedFilters: any) => {
+    setSearchQuery(savedFilters.searchTerm || '');
+    setActiveLevel(savedFilters.activeLevel || []);
+    setActiveSchool(savedFilters.activeSchool || []);
+    setActiveClass(savedFilters.activeClass || []);
+    setIsRitualOnly(savedFilters.isRitualOnly || false);
+    setIsConcentrationOnly(savedFilters.isConcentrationOnly || false);
+    setVerbalComponent(savedFilters.verbalComponent || null);
+    setSomaticComponent(savedFilters.somaticComponent || null);
+    setMaterialComponent(savedFilters.materialComponent || null);
+    setActiveCastingTimes(savedFilters.activeCastingTimes || []);
+    setActiveRangeTypes(savedFilters.activeRangeTypes || []);
+    setActiveDurationTypes(savedFilters.activeDurationTypes || []);
+    setActiveSources(savedFilters.activeSources || []);
+    
+    toast.success('Фильтры применены');
+  };
+
+  // Получаем текущие фильтры для сохранения
+  const getCurrentFilters = () => ({
+    searchTerm: searchQuery,
+    activeLevel,
+    activeSchool,
+    activeClass,
+    isRitualOnly,
+    isConcentrationOnly,
+    verbalComponent,
+    somaticComponent,
+    materialComponent,
+    activeCastingTimes,
+    activeRangeTypes,
+    activeDurationTypes,
+    activeSources
+  });
+
   useEffect(() => {
     // Применяем фильтры при изменении критериев поиска
-    let filtered = [...spells];
-    
-    if (searchQuery) {
-      filtered = filterSpellsByText(filtered, searchQuery);
-    }
+    let filtered = searchQuery ? fuzzySearchResults : [...spells];
     
     if (activeLevel.length > 0) {
       filtered = filtered.filter(spell => activeLevel.includes(spell.level));
@@ -389,8 +424,81 @@ export const SpellbookProvider: React.FC<{ children: ReactNode }> = ({ children 
       filtered = filtered.filter(spell => spell.concentration);
     }
     
+    // Применяем расширенные фильтры
+    if (verbalComponent !== null) {
+      filtered = filtered.filter(spell => spell.verbal === verbalComponent);
+    }
+    
+    if (somaticComponent !== null) {
+      filtered = filtered.filter(spell => spell.somatic === somaticComponent);
+    }
+    
+    if (materialComponent !== null) {
+      filtered = filtered.filter(spell => spell.material === materialComponent);
+    }
+    
+    // Фильтры времени накладывания, дистанции, длительности, источника остаются прежними
+    if (activeCastingTimes.length > 0) {
+      const patterns = {
+        'action': /действие|action/i,
+        'bonus': /бонусное действие|bonus action/i,
+        'reaction': /реакция|reaction/i,
+        'minute': /минут|minute/i,
+        'hour': /час|hour/i
+      };
+      
+      filtered = filtered.filter(spell => {
+        if (!spell.castingTime) return false;
+        return activeCastingTimes.some(timeType => {
+          const pattern = patterns[timeType as keyof typeof patterns];
+          return pattern && pattern.test(spell.castingTime);
+        });
+      });
+    }
+    
+    if (activeRangeTypes.length > 0) {
+      const patterns = {
+        'self': /на себя|self/i,
+        'touch': /касание|touch/i,
+        'short': /[1-6][0]? фут|[1-6][0]? ft/i,
+        'medium': /[7-9][0-9] фут|[7-9][0-9] ft|1[0-4][0-9] фут|1[0-4][0-9] ft/i,
+        'long': /[3-9][0][0]+ фут|[3-9][0][0]+ ft|[1-9] миль|[1-9] mile/i
+      };
+      
+      filtered = filtered.filter(spell => {
+        if (!spell.range) return false;
+        return activeRangeTypes.some(rangeType => {
+          const pattern = patterns[rangeType as keyof typeof patterns];
+          return pattern && pattern.test(spell.range);
+        });
+      });
+    }
+    
+    if (activeDurationTypes.length > 0) {
+      const patterns = {
+        'instant': /мгновенная|instantaneous/i,
+        'round': /раунд|round/i,
+        'minute': /минут|minute/i,
+        'hour': /час|hour/i,
+        'day': /день|сутки|day/i,
+        'permanent': /постоянная|permanent/i
+      };
+      
+      filtered = filtered.filter(spell => {
+        if (!spell.duration) return false;
+        return activeDurationTypes.some(durationType => {
+          const pattern = patterns[durationType as keyof typeof patterns];
+          return pattern && pattern.test(spell.duration);
+        });
+      });
+    }
+    
+    if (activeSources.length > 0) {
+      filtered = filtered.filter(spell => spell.source && activeSources.includes(spell.source));
+    }
+    
     setFilteredSpells(filtered);
-  }, [spells, searchQuery, activeLevel, activeSchool, activeClass, isRitualOnly, isConcentrationOnly]);
+  }, [spells, fuzzySearchResults, searchQuery, activeLevel, activeSchool, activeClass, isRitualOnly, isConcentrationOnly, verbalComponent, somaticComponent, materialComponent, activeCastingTimes, activeRangeTypes, activeDurationTypes, activeSources]);
   
   const addSpell = async (spell: SpellData) => {
     try {
@@ -608,7 +716,11 @@ export const SpellbookProvider: React.FC<{ children: ReactNode }> = ({ children 
         sources,
         activeSources,
         toggleSource,
-        clearAdvancedFilters
+        clearAdvancedFilters,
+        
+        // Добавляем новые функции для работы с сохраненными фильтрами
+        applySavedFilters,
+        getCurrentFilters
       }}
     >
       {children}

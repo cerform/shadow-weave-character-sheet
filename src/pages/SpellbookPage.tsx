@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useSpellbook } from '@/contexts/SpellbookContext';
 import { useTheme } from '@/hooks/use-theme';
@@ -9,9 +8,10 @@ import BackgroundWrapper from '@/components/layout/BackgroundWrapper';
 import SpellBookViewer from '@/components/spellbook/SpellBookViewer';
 import SpellFilterPanel from '@/components/spellbook/SpellFilterPanel';
 import AdvancedFilters from '@/components/spellbook/AdvancedFilters';
+import SavedFiltersManager from '@/components/spellbook/SavedFiltersManager';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, SlidersHorizontal, X, Filter } from 'lucide-react';
+import { Search, SlidersHorizontal, X, Filter, Bookmark } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
 import { 
   Sheet,
@@ -35,9 +35,7 @@ import {
 
 const SpellbookPage: React.FC = () => {
   const { themeStyles } = useTheme();
-  const [showFilters, setShowFilters] = useState(false);
   const [filterTab, setFilterTab] = useState("basic");
-  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   
   const {
     searchTerm,
@@ -80,7 +78,11 @@ const SpellbookPage: React.FC = () => {
     sources,
     activeSources,
     toggleSource,
-    clearAdvancedFilters
+    clearAdvancedFilters,
+    
+    // Добавляем новые функции
+    applySavedFilters,
+    getCurrentFilters
   } = useSpellbook();
 
   // Безопасное получение общего количества активных фильтров
@@ -141,13 +143,37 @@ const SpellbookPage: React.FC = () => {
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
                 <Input
                   className="pl-10 pr-4 w-full"
-                  placeholder="Поиск заклинаний..."
+                  placeholder="Поиск заклинаний... (поддерживается нечеткий поиск и синонимы)"
                   value={searchTerm || ''}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </div>
               
               <div className="flex items-center gap-2">
+                <Sheet>
+                  <SheetTrigger asChild>
+                    <Button variant="outline" className="flex gap-2">
+                      <Bookmark size={16} />
+                      <span>Сохраненные</span>
+                    </Button>
+                  </SheetTrigger>
+                  <SheetContent className="overflow-y-auto">
+                    <SheetHeader>
+                      <SheetTitle>Сохраненные фильтры</SheetTitle>
+                      <SheetDescription>
+                        Управление сохраненными наборами фильтров
+                      </SheetDescription>
+                    </SheetHeader>
+                    <div className="py-4">
+                      <SavedFiltersManager
+                        currentFilters={getCurrentFilters()}
+                        onApplyFilters={applySavedFilters}
+                        onClearFilters={clearFilters}
+                      />
+                    </div>
+                  </SheetContent>
+                </Sheet>
+                
                 <Sheet>
                   <SheetTrigger asChild>
                     <Button variant="outline" className="flex gap-2">
