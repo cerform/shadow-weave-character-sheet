@@ -1,88 +1,33 @@
 
-import React, { useState } from 'react';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
+import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { X, Check, Filter, Clock, Move, Hourglass, BookMarked } from 'lucide-react';
-import { useTheme } from '@/hooks/use-theme';
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
+import { X, Clock, MapPin, Timer, Book, Volume2, Hand, Package } from 'lucide-react';
 
 interface AdvancedFiltersProps {
-  // Компоненты
   verbalComponent: boolean | null;
   somaticComponent: boolean | null;
   materialComponent: boolean | null;
   setVerbalComponent: (value: boolean | null) => void;
   setSomaticComponent: (value: boolean | null) => void;
   setMaterialComponent: (value: boolean | null) => void;
-  
-  // Время накладывания
   castingTimes: string[];
   activeCastingTimes: string[];
   toggleCastingTime: (time: string) => void;
-  
-  // Дистанция
   rangeTypes: string[];
   activeRangeTypes: string[];
   toggleRangeType: (range: string) => void;
-  
-  // Длительность
   durationTypes: string[];
   activeDurationTypes: string[];
   toggleDurationType: (duration: string) => void;
-  
-  // Источники
   sources: string[];
   activeSources: string[];
   toggleSource: (source: string) => void;
-  
-  // Сброс фильтров
   clearAdvancedFilters: () => void;
 }
-
-// Функция для перевода названий фильтров
-const translateFilterLabel = (key: string): string => {
-  const translations: Record<string, string> = {
-    // Время накладывания
-    'action': 'Действие',
-    'bonus': 'Бонусное действие',
-    'reaction': 'Реакция',
-    'minute': 'Минуты',
-    'hour': 'Часы',
-    
-    // Дистанция
-    'self': 'На себя',
-    'touch': 'Касание',
-    'short': 'Ближняя (до 60 футов)',
-    'medium': 'Средняя (до 150 футов)',
-    'long': 'Дальняя (300+ футов)',
-    
-    // Длительность
-    'instant': 'Мгновенная',
-    'round': 'Раунды',
-    'day': 'Дни',
-    'permanent': 'Постоянная',
-    
-    // Источники
-    'PHB': 'Книга игрока',
-    'XGE': 'Руководство Занатара',
-    'TCE': 'Котёл Таши',
-    'SCAG': 'Путеводитель по Побережью Меча',
-    'EE': 'Стихийное зло',
-    'AI': 'Приключения в Забытых Королевствах',
-    'WGE': 'Путеводитель Хозяина по Эберрону',
-    'IDRotF': 'Иссилден: Долина Ледяного Ветра',
-    'FTD': 'Сокровищница Физбана',
-    'SCC': 'Руководство по Сильверквилл Кампусу',
-    'UA': 'Unearthed Arcana',
-    'HB': 'Homebrew'
-  };
-  
-  return translations[key] || key;
-};
 
 const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({
   verbalComponent,
@@ -105,280 +50,271 @@ const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({
   toggleSource,
   clearAdvancedFilters
 }) => {
-  const { themeStyles } = useTheme();
-  const [activeTab, setActiveTab] = useState("components");
-  
-  // Получаем количество активных фильтров
-  const getActiveFiltersCount = () => {
-    let count = 0;
-    if (verbalComponent !== null) count++;
-    if (somaticComponent !== null) count++;
-    if (materialComponent !== null) count++;
-    count += activeCastingTimes.length;
-    count += activeRangeTypes.length;
-    count += activeDurationTypes.length;
-    count += activeSources.length;
-    return count;
+  const castingTimeLabels = {
+    'action': 'Действие',
+    'bonus': 'Бонусное действие',
+    'reaction': 'Реакция',
+    'minute': 'Минуты',
+    'hour': 'Часы'
   };
-  
-  const activeFiltersCount = getActiveFiltersCount();
-  
+
+  const rangeTypeLabels = {
+    'self': 'На себя',
+    'touch': 'Касание',
+    'short': 'Ближняя (до 60 фт)',
+    'medium': 'Средняя (60-150 фт)',
+    'long': 'Дальняя (150+ фт)'
+  };
+
+  const durationTypeLabels = {
+    'instant': 'Мгновенная',
+    'round': 'Раунды',
+    'minute': 'Минуты',
+    'hour': 'Часы',
+    'day': 'Дни',
+    'permanent': 'Постоянная'
+  };
+
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <h3 className="text-lg font-medium flex items-center">
-          <Filter className="mr-2 h-5 w-5" style={{ color: themeStyles?.accent }} />
-          Расширенные фильтры
-        </h3>
-        
-        {activeFiltersCount > 0 && (
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={clearAdvancedFilters}
-            className="h-8 px-2"
-          >
-            Сбросить ({activeFiltersCount}) <X className="ml-1 h-3 w-3" />
-          </Button>
-        )}
+    <div className="space-y-6">
+      {/* Компоненты заклинаний */}
+      <div>
+        <h4 className="font-semibold mb-3 flex items-center">
+          <Volume2 className="w-4 h-4 mr-2" />
+          Компоненты заклинаний
+        </h4>
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <Label className="flex items-center space-x-2">
+              <Volume2 className="w-4 h-4" />
+              <span>Вербальный (В)</span>
+            </Label>
+            <div className="flex space-x-1">
+              <Button
+                variant={verbalComponent === true ? "default" : "outline"}
+                size="sm"
+                onClick={() => setVerbalComponent(verbalComponent === true ? null : true)}
+              >
+                Да
+              </Button>
+              <Button
+                variant={verbalComponent === false ? "default" : "outline"}
+                size="sm"
+                onClick={() => setVerbalComponent(verbalComponent === false ? null : false)}
+              >
+                Нет
+              </Button>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between">
+            <Label className="flex items-center space-x-2">
+              <Hand className="w-4 h-4" />
+              <span>Соматический (С)</span>
+            </Label>
+            <div className="flex space-x-1">
+              <Button
+                variant={somaticComponent === true ? "default" : "outline"}
+                size="sm"
+                onClick={() => setSomaticComponent(somaticComponent === true ? null : true)}
+              >
+                Да
+              </Button>
+              <Button
+                variant={somaticComponent === false ? "default" : "outline"}
+                size="sm"
+                onClick={() => setSomaticComponent(somaticComponent === false ? null : false)}
+              >
+                Нет
+              </Button>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between">
+            <Label className="flex items-center space-x-2">
+              <Package className="w-4 h-4" />
+              <span>Материальный (М)</span>
+            </Label>
+            <div className="flex space-x-1">
+              <Button
+                variant={materialComponent === true ? "default" : "outline"}
+                size="sm"
+                onClick={() => setMaterialComponent(materialComponent === true ? null : true)}
+              >
+                Да
+              </Button>
+              <Button
+                variant={materialComponent === false ? "default" : "outline"}
+                size="sm"
+                onClick={() => setMaterialComponent(materialComponent === false ? null : false)}
+              >
+                Нет
+              </Button>
+            </div>
+          </div>
+        </div>
       </div>
-      
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid grid-cols-4 mb-4">
-          <TabsTrigger value="components">Компоненты</TabsTrigger>
-          <TabsTrigger value="casting">Сотворение</TabsTrigger>
-          <TabsTrigger value="range">Дистанция</TabsTrigger>
-          <TabsTrigger value="other">Прочее</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="components" className="space-y-4 py-2">
-          <h4 className="text-sm font-medium mb-2">Компоненты заклинания</h4>
-          
-          <div className="space-y-4">
-            <div className="flex items-center space-x-2">
-              <Checkbox 
-                id="verbal-checkbox" 
-                checked={verbalComponent === true}
-                onCheckedChange={(checked) => {
-                  if (checked === 'indeterminate') return;
-                  if (verbalComponent === true) {
-                    setVerbalComponent(null); // сброс фильтра
-                  } else {
-                    setVerbalComponent(true); // включение фильтра
-                  }
-                }}
-              />
-              <Label htmlFor="verbal-checkbox" className="cursor-pointer">Вербальный (В)</Label>
-            </div>
-            
-            <div className="flex items-center space-x-2">
-              <Checkbox 
-                id="somatic-checkbox" 
-                checked={somaticComponent === true}
-                onCheckedChange={(checked) => {
-                  if (checked === 'indeterminate') return;
-                  if (somaticComponent === true) {
-                    setSomaticComponent(null); // сброс фильтра
-                  } else {
-                    setSomaticComponent(true); // включение фильтра
-                  }
-                }}
-              />
-              <Label htmlFor="somatic-checkbox" className="cursor-pointer">Соматический (С)</Label>
-            </div>
-            
-            <div className="flex items-center space-x-2">
-              <Checkbox 
-                id="material-checkbox" 
-                checked={materialComponent === true}
-                onCheckedChange={(checked) => {
-                  if (checked === 'indeterminate') return;
-                  if (materialComponent === true) {
-                    setMaterialComponent(null); // сброс фильтра
-                  } else {
-                    setMaterialComponent(true); // включение фильтра
-                  }
-                }}
-              />
-              <Label htmlFor="material-checkbox" className="cursor-pointer">Материальный (М)</Label>
-            </div>
-          </div>
-        </TabsContent>
-        
-        <TabsContent value="casting" className="space-y-4 py-2">
-          <div className="space-y-3">
-            <div className="flex items-center">
-              <Clock className="mr-2 h-4 w-4" style={{ color: themeStyles?.accent }} />
-              <h4 className="text-sm font-medium">Время накладывания</h4>
-            </div>
-            
-            <ScrollArea className="h-[200px] pr-3">
-              {castingTimes.map(timeType => (
-                <div key={`casting-time-${timeType}`} className="flex items-center space-x-2 mb-2">
-                  <Checkbox 
-                    id={`casting-time-${timeType}`} 
-                    checked={activeCastingTimes.includes(timeType)}
-                    onCheckedChange={() => toggleCastingTime(timeType)}
-                  />
-                  <Label 
-                    htmlFor={`casting-time-${timeType}`}
-                    className="cursor-pointer"
-                  >
-                    {translateFilterLabel(timeType)}
-                  </Label>
-                </div>
-              ))}
-            </ScrollArea>
-            
-            {activeCastingTimes.length > 0 && (
-              <div className="flex flex-wrap gap-2 mt-2">
-                {activeCastingTimes.map(timeType => (
-                  <Badge
-                    key={`active-casting-${timeType}`}
-                    variant="outline"
-                    className="flex items-center cursor-pointer"
-                    onClick={() => toggleCastingTime(timeType)}
-                  >
-                    {translateFilterLabel(timeType)}
-                    <X className="ml-1 h-3 w-3" />
-                  </Badge>
-                ))}
-              </div>
-            )}
-          </div>
-        </TabsContent>
-        
-        <TabsContent value="range" className="space-y-4 py-2">
-          <div className="space-y-3">
-            <div className="flex items-center">
-              <Move className="mr-2 h-4 w-4" style={{ color: themeStyles?.accent }} />
-              <h4 className="text-sm font-medium">Дистанция</h4>
-            </div>
-            
-            <ScrollArea className="h-[200px] pr-3">
-              {rangeTypes.map(rangeType => (
-                <div key={`range-type-${rangeType}`} className="flex items-center space-x-2 mb-2">
-                  <Checkbox 
-                    id={`range-type-${rangeType}`} 
-                    checked={activeRangeTypes.includes(rangeType)}
-                    onCheckedChange={() => toggleRangeType(rangeType)}
-                  />
-                  <Label 
-                    htmlFor={`range-type-${rangeType}`}
-                    className="cursor-pointer"
-                  >
-                    {translateFilterLabel(rangeType)}
-                  </Label>
-                </div>
-              ))}
-            </ScrollArea>
-            
-            {activeRangeTypes.length > 0 && (
-              <div className="flex flex-wrap gap-2 mt-2">
-                {activeRangeTypes.map(rangeType => (
-                  <Badge
-                    key={`active-range-${rangeType}`}
-                    variant="outline"
-                    className="flex items-center cursor-pointer"
-                    onClick={() => toggleRangeType(rangeType)}
-                  >
-                    {translateFilterLabel(rangeType)}
-                    <X className="ml-1 h-3 w-3" />
-                  </Badge>
-                ))}
-              </div>
-            )}
-          </div>
-        </TabsContent>
-        
-        <TabsContent value="other" className="space-y-4 py-2">
-          <div className="space-y-4">
-            {/* Длительность */}
-            <div className="space-y-3">
-              <div className="flex items-center">
-                <Hourglass className="mr-2 h-4 w-4" style={{ color: themeStyles?.accent }} />
-                <h4 className="text-sm font-medium">Длительность</h4>
-              </div>
-              
-              <ScrollArea className="h-[100px] pr-3">
-                {durationTypes.map(durationType => (
-                  <div key={`duration-type-${durationType}`} className="flex items-center space-x-2 mb-2">
-                    <Checkbox 
-                      id={`duration-type-${durationType}`} 
-                      checked={activeDurationTypes.includes(durationType)}
-                      onCheckedChange={() => toggleDurationType(durationType)}
-                    />
-                    <Label 
-                      htmlFor={`duration-type-${durationType}`}
-                      className="cursor-pointer"
-                    >
-                      {translateFilterLabel(durationType)}
-                    </Label>
-                  </div>
-                ))}
-              </ScrollArea>
-              
-              {activeDurationTypes.length > 0 && (
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {activeDurationTypes.map(durationType => (
-                    <Badge
-                      key={`active-duration-${durationType}`}
-                      variant="outline"
-                      className="flex items-center cursor-pointer"
-                      onClick={() => toggleDurationType(durationType)}
-                    >
-                      {translateFilterLabel(durationType)}
-                      <X className="ml-1 h-3 w-3" />
-                    </Badge>
-                  ))}
-                </div>
-              )}
-            </div>
-            
-            {/* Источники */}
-            <div className="space-y-3">
-              <div className="flex items-center">
-                <BookMarked className="mr-2 h-4 w-4" style={{ color: themeStyles?.accent }} />
-                <h4 className="text-sm font-medium">Источники</h4>
-              </div>
-              
-              <ScrollArea className="h-[100px] pr-3">
-                {sources.map(source => (
-                  <div key={`source-${source}`} className="flex items-center space-x-2 mb-2">
-                    <Checkbox 
-                      id={`source-${source}`} 
-                      checked={activeSources.includes(source)}
-                      onCheckedChange={() => toggleSource(source)}
-                    />
-                    <Label 
-                      htmlFor={`source-${source}`}
-                      className="cursor-pointer"
-                    >
-                      {translateFilterLabel(source)}
-                    </Label>
-                  </div>
-                ))}
-              </ScrollArea>
-              
-              {activeSources.length > 0 && (
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {activeSources.map(source => (
-                    <Badge
-                      key={`active-source-${source}`}
-                      variant="outline"
-                      className="flex items-center cursor-pointer"
-                      onClick={() => toggleSource(source)}
-                    >
-                      {translateFilterLabel(source)}
-                      <X className="ml-1 h-3 w-3" />
-                    </Badge>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-        </TabsContent>
-      </Tabs>
+
+      <Separator />
+
+      {/* Время накладывания */}
+      <div>
+        <h4 className="font-semibold mb-3 flex items-center">
+          <Clock className="w-4 h-4 mr-2" />
+          Время накладывания
+        </h4>
+        <div className="grid grid-cols-1 gap-2">
+          {castingTimes.map((time) => {
+            const isActive = activeCastingTimes.includes(time);
+            const label = castingTimeLabels[time as keyof typeof castingTimeLabels] || time;
+            return (
+              <Button
+                key={`casting-time-${time}`}
+                variant={isActive ? "default" : "outline"}
+                size="sm"
+                onClick={() => toggleCastingTime(time)}
+                className="justify-start"
+              >
+                {label}
+              </Button>
+            );
+          })}
+        </div>
+      </div>
+
+      <Separator />
+
+      {/* Дистанция */}
+      <div>
+        <h4 className="font-semibold mb-3 flex items-center">
+          <MapPin className="w-4 h-4 mr-2" />
+          Дистанция
+        </h4>
+        <div className="grid grid-cols-1 gap-2">
+          {rangeTypes.map((range) => {
+            const isActive = activeRangeTypes.includes(range);
+            const label = rangeTypeLabels[range as keyof typeof rangeTypeLabels] || range;
+            return (
+              <Button
+                key={`range-${range}`}
+                variant={isActive ? "default" : "outline"}
+                size="sm"
+                onClick={() => toggleRangeType(range)}
+                className="justify-start"
+              >
+                {label}
+              </Button>
+            );
+          })}
+        </div>
+      </div>
+
+      <Separator />
+
+      {/* Длительность */}
+      <div>
+        <h4 className="font-semibold mb-3 flex items-center">
+          <Timer className="w-4 h-4 mr-2" />
+          Длительность
+        </h4>
+        <div className="grid grid-cols-1 gap-2">
+          {durationTypes.map((duration) => {
+            const isActive = activeDurationTypes.includes(duration);
+            const label = durationTypeLabels[duration as keyof typeof durationTypeLabels] || duration;
+            return (
+              <Button
+                key={`duration-${duration}`}
+                variant={isActive ? "default" : "outline"}
+                size="sm"
+                onClick={() => toggleDurationType(duration)}
+                className="justify-start"
+              >
+                {label}
+              </Button>
+            );
+          })}
+        </div>
+      </div>
+
+      <Separator />
+
+      {/* Источники */}
+      <div>
+        <h4 className="font-semibold mb-3 flex items-center">
+          <Book className="w-4 h-4 mr-2" />
+          Источники
+        </h4>
+        <div className="grid grid-cols-3 gap-2">
+          {sources.map((source) => {
+            const isActive = activeSources.includes(source);
+            return (
+              <Button
+                key={`source-${source}`}
+                variant={isActive ? "default" : "outline"}
+                size="sm"
+                onClick={() => toggleSource(source)}
+              >
+                {source}
+              </Button>
+            );
+          })}
+        </div>
+      </div>
+
+      <Separator />
+
+      {/* Кнопка сброса расширенных фильтров */}
+      <Button 
+        variant="outline" 
+        className="w-full" 
+        onClick={clearAdvancedFilters}
+      >
+        <X className="w-4 h-4 mr-2" />
+        Сбросить расширенные фильтры
+      </Button>
+
+      {/* Индикатор активных расширенных фильтров */}
+      {(verbalComponent !== null || somaticComponent !== null || materialComponent !== null || 
+        activeCastingTimes.length > 0 || activeRangeTypes.length > 0 || 
+        activeDurationTypes.length > 0 || activeSources.length > 0) && (
+        <div className="flex flex-wrap gap-1">
+          {verbalComponent !== null && (
+            <Badge variant="outline" className="border-green-400 text-green-400">
+              В: {verbalComponent ? 'Да' : 'Нет'}
+            </Badge>
+          )}
+          {somaticComponent !== null && (
+            <Badge variant="outline" className="border-yellow-400 text-yellow-400">
+              С: {somaticComponent ? 'Да' : 'Нет'}
+            </Badge>
+          )}
+          {materialComponent !== null && (
+            <Badge variant="outline" className="border-orange-400 text-orange-400">
+              М: {materialComponent ? 'Да' : 'Нет'}
+            </Badge>
+          )}
+          {activeCastingTimes.length > 0 && (
+            <Badge variant="outline">
+              Время: {activeCastingTimes.length}
+            </Badge>
+          )}
+          {activeRangeTypes.length > 0 && (
+            <Badge variant="outline">
+              Дистанция: {activeRangeTypes.length}
+            </Badge>
+          )}
+          {activeDurationTypes.length > 0 && (
+            <Badge variant="outline">
+              Длительность: {activeDurationTypes.length}
+            </Badge>
+          )}
+          {activeSources.length > 0 && (
+            <Badge variant="outline">
+              Источников: {activeSources.length}
+            </Badge>
+          )}
+        </div>
+      )}
     </div>
   );
 };
