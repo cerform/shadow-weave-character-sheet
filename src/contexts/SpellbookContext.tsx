@@ -1,4 +1,5 @@
 
+
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { SpellData } from '@/types/spells';
 import { CharacterSpell } from '@/types/character';
@@ -140,7 +141,11 @@ export const SpellbookContext = createContext<SpellbookContextType>({
   sources: [],
   activeSources: [],
   toggleSource: () => {},
-  clearAdvancedFilters: () => {}
+  clearAdvancedFilters: () => {},
+  
+  // Добавляем недостающие методы в начальное значение
+  applySavedFilters: () => {},
+  getCurrentFilters: () => ({})
 });
 
 export const SpellbookProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
