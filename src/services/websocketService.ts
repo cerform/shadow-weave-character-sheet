@@ -207,7 +207,6 @@ class WebSocketService {
   getConnectionStatus() {
     if (!this.socket) return 'disconnected';
     if (this.socket.connected) return 'connected';
-    if (this.socket.connecting) return 'connecting';
     return 'disconnected';
   }
 }
