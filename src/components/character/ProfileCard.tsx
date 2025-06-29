@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import { UserType } from "@/types/auth";
 import { Input } from "@/components/ui/input";
-import { Theme } from "@/lib/themes";
+import { themes } from "@/lib/themes";
 import { AvatarSelector } from "./AvatarSelector";
 import { Shield, Mail } from "lucide-react";
 
@@ -23,8 +23,9 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
 }) => {
   const [isEditingName, setIsEditingName] = useState(false);
   
-  const themeKey = (user?.isDM ? 'warlock' : 'default') as keyof typeof import('@/lib/themes').themes;
-  const theme = import('@/lib/themes').then(m => m.themes[themeKey] || m.themes.default);
+  // Use the appropriate theme based on user role
+  const themeKey = (user?.isDM ? 'warlock' : 'default') as keyof typeof themes;
+  const theme = themes[themeKey] || themes.default;
   
   return (
     <div 
@@ -45,14 +46,7 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
             avatarUrl={avatarUrl} 
             setAvatarUrl={setAvatarUrl} 
             username={username}
-            theme={{
-              accent: '#8B5A2B',
-              textColor: '#FFFFFF',
-              background: '#000000',
-              foreground: '#FFFFFF',
-              primary: '#8B5A2B',
-              cardBackground: 'rgba(0, 0, 0, 0.7)'
-            }} 
+            theme={theme}
           />
           
           <div className="w-full space-y-4">
