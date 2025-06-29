@@ -23,26 +23,46 @@ class WebSocketService {
   private messageCallbacks: ((message: SocketMessage) => void)[] = [];
   private diceCallbacks: ((roll: DiceRoll) => void)[] = [];
   private playerUpdateCallbacks: ((players: any[]) => void)[] = [];
+  private connectionAttempts = 0;
+  private maxRetries = 5;
 
-  connect(url: string = 'http://localhost:4000') {
+  connect(url: string = 'http://localhost:3001') {
     if (this.socket?.connected) {
+      console.log('WebSocket уже подключен');
       return;
     }
 
+    console.log('Подключение к WebSocket серверу:', url);
+    
     this.socket = io(url, {
       autoConnect: true,
-      transports: ['websocket', 'polling']
+      transports: ['websocket', 'polling'],
+      timeout: 20000,
+      reconnection: true,
+      reconnectionAttempts: this.maxRetries,
+      reconnectionDelay: 1000
     });
 
     this.socket.on('connect', () => {
-      console.log('Connected to WebSocket server');
+      console.log('✅ Подключен к WebSocket серверу');
+      this.connectionAttempts = 0;
     });
 
-    this.socket.on('disconnect', () => {
-      console.log('Disconnected from WebSocket server');
+    this.socket.on('disconnect', (reason) => {
+      console.log('❌ Отключен от WebSocket сервера:', reason);
+    });
+
+    this.socket.on('connect_error', (error) => {
+      console.error('❌ Ошибка подключения к WebSocket:', error);
+      this.connectionAttempts++;
+      
+      if (this.connectionAttempts >= this.maxRetries) {
+        console.error('Превышено максимальное количество попыток подключения');
+      }
     });
 
     this.socket.on('chatMessage', (data) => {
+      console.log('Получено сообщение чата:', data);
       const message: SocketMessage = {
         id: Date.now().toString(),
         type: 'chat',
@@ -54,6 +74,7 @@ class WebSocketService {
     });
 
     this.socket.on('diceResult', (data) => {
+      console.log('Получен результат броска:', data);
       const roll: DiceRoll = {
         type: data.diceType,
         result: data.result,
@@ -65,12 +86,14 @@ class WebSocketService {
     });
 
     this.socket.on('updatePlayers', (players) => {
+      console.log('Обновление игроков:', players);
       this.playerUpdateCallbacks.forEach(callback => callback(players));
     });
   }
 
   disconnect() {
     if (this.socket) {
+      console.log('Отключение от WebSocket сервера');
       this.socket.disconnect();
       this.socket = null;
       this.currentRoom = null;
@@ -79,13 +102,15 @@ class WebSocketService {
 
   createRoom(nickname: string): Promise<string> {
     return new Promise((resolve, reject) => {
-      if (!this.socket) {
-        reject('Not connected to server');
+      if (!this.socket || !this.socket.connected) {
+        reject('Нет соединения с сервером');
         return;
       }
 
+      console.log('Создание комнаты для:', nickname);
       this.socket.emit('createRoom', nickname, (response: { roomCode: string }) => {
         this.currentRoom = response.roomCode;
+        console.log('✅ Комната создана:', response.roomCode);
         resolve(response.roomCode);
       });
     });
@@ -93,39 +118,48 @@ class WebSocketService {
 
   joinRoom(roomCode: string, nickname: string): Promise<boolean> {
     return new Promise((resolve, reject) => {
-      if (!this.socket) {
-        reject('Not connected to server');
+      if (!this.socket || !this.socket.connected) {
+        reject('Нет соединения с сервером');
         return;
       }
 
+      console.log('Присоединение к комнате:', roomCode, 'как:', nickname);
       this.socket.emit('joinRoom', { roomCode, nickname }, (response: { success: boolean; message?: string }) => {
         if (response.success) {
           this.currentRoom = roomCode;
+          console.log('✅ Успешно присоединился к комнате:', roomCode);
           resolve(true);
         } else {
-          reject(response.message || 'Failed to join room');
+          console.error('❌ Не удалось присоединиться к комнате:', response.message);
+          reject(response.message || 'Не удалось присоединиться к комнате');
         }
       });
     });
   }
 
   sendMessage(message: string, nickname: string) {
-    if (this.socket && this.currentRoom) {
+    if (this.socket && this.socket.connected && this.currentRoom) {
+      console.log('Отправка сообщения:', message, 'от:', nickname);
       this.socket.emit('chatMessage', {
         roomCode: this.currentRoom,
         nickname,
         message
       });
+    } else {
+      console.warn('Не удается отправить сообщение: нет соединения или комнаты');
     }
   }
 
   rollDice(diceType: string, nickname: string) {
-    if (this.socket && this.currentRoom) {
+    if (this.socket && this.socket.connected && this.currentRoom) {
+      console.log('Бросок кубика:', diceType, 'от:', nickname);
       this.socket.emit('rollDice', {
         roomCode: this.currentRoom,
         nickname,
         diceType
       });
+    } else {
+      console.warn('Не удается выполнить бросок: нет соединения или комнаты');
     }
   }
 
@@ -168,6 +202,13 @@ class WebSocketService {
 
   isConnected() {
     return this.socket?.connected || false;
+  }
+
+  getConnectionStatus() {
+    if (!this.socket) return 'disconnected';
+    if (this.socket.connected) return 'connected';
+    if (this.socket.connecting) return 'connecting';
+    return 'disconnected';
   }
 }
 
