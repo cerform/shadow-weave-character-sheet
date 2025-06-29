@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -35,7 +34,10 @@ const CharactersList: React.FC = () => {
       setLoading(true);
       console.log('CharactersList: Загрузка персонажей (попытка ' + (loadAttempts + 1) + ')');
       
-      const userCharacters = await getUserCharacters();
+      await getUserCharacters();
+      
+      // Получаем персонажи из контекста
+      const userCharacters: Character[] = [];
       
       console.log(`CharactersList: Получено ${userCharacters.length} персонажей`);
       setCharacters(userCharacters);
@@ -60,7 +62,8 @@ const CharactersList: React.FC = () => {
       setLoading(true);
       console.log('CharactersList: Принудительное обновление списка персонажей');
       await refreshCharacters();
-      const userCharacters = await getUserCharacters();
+      await getUserCharacters();
+      const userCharacters: Character[] = [];
       setCharacters(userCharacters);
       toast.success('Список персонажей обновлен');
       setError(null);

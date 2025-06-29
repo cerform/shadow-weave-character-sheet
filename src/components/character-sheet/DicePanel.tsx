@@ -72,7 +72,7 @@ const DicePanel: React.FC<DicePanelProps> = ({
     const abilityScore = character[ability.toLowerCase() as keyof Character] as number;
     const abilityMod = getModifierFromAbilityScore(abilityScore);
     
-    rollDice(20, 1, abilityMod, `Проверка ${getAbilityLabel(ability)}`);
+    rollDice(20, 1, Number(abilityMod), `Проверка ${getAbilityLabel(ability)}`);
   };
   
   const getAbilityLabel = (ability: string): string => {

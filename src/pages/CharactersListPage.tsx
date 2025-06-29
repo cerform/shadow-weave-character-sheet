@@ -99,7 +99,7 @@ const CharactersListPage: React.FC = () => {
       console.log('CharactersListPage: Персонаж удален успешно');
     } catch (err) {
       // Исправляем преобразование error для отображения
-      const errorMessage = err instanceof Error ? err.message : String(err);
+      const errorMessage = typeof err === 'string' ? err : (err as Error)?.message || 'Неизвестная ошибка';
       toast.error(`Ошибка при удалении персонажа: ${errorMessage}`);
     }
   };

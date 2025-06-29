@@ -5,7 +5,6 @@ import { Save } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Character } from '@/types/character';
 import { useCharacter } from '@/contexts/CharacterContext';
-import { saveCharacterToFirestore } from '@/services/characterService';
 
 interface SaveCharacterButtonProps {
   character: Character;
@@ -18,7 +17,7 @@ const SaveCharacterButton: React.FC<SaveCharacterButtonProps> = ({
 }) => {
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
-  const { setCharacter } = useCharacter();
+  const { setCharacter, saveCharacter } = useCharacter();
 
   const handleSave = async () => {
     if (!character) return;
@@ -30,9 +29,9 @@ const SaveCharacterButton: React.FC<SaveCharacterButtonProps> = ({
       if (onSave) {
         await onSave();
       } else {
-        // Default save action: set character in context and save to Firestore
+        // Default save action: set character in context and save
         setCharacter(character);
-        await saveCharacterToFirestore(character);
+        saveCharacter(character);
         
         // Also store to localStorage as backup
         localStorage.setItem(`character_${character.id}`, JSON.stringify(character));

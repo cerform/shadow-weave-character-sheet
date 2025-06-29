@@ -28,7 +28,7 @@ const CharactersPageDebugger: React.FC = () => {
     }
     
     if (error) {
-      possibleErrors.push(`Ошибка при загрузке персонажей: ${error instanceof Error ? error.message : String(error)}`);
+      possibleErrors.push(`Ошибка при загрузке персонажей: ${typeof error === 'string' ? error : 'Неизвестная ошибка'}`);
     }
     
     if (loading) {
@@ -53,7 +53,7 @@ const CharactersPageDebugger: React.FC = () => {
         toast.error(`Обнаружена проблема: ${results.error}`);
       }
     } catch (e) {
-      const errorMessage = e instanceof Error ? e.message : 'Неизвестная ошибка диагностики';
+      const errorMessage = typeof e === 'string' ? e : (e as Error)?.message || 'Неизвестная ошибка диагностики';
       toast.error(`Ошибка при запуске диагностики: ${errorMessage}`);
     } finally {
       setIsChecking(false);
@@ -127,14 +127,7 @@ const CharactersPageDebugger: React.FC = () => {
                   <div>
                     <p className="text-sm font-medium text-red-500 mb-1">Ошибка загрузки:</p>
                     <pre className="text-xs bg-black/20 p-2 rounded overflow-auto max-h-24">
-                      {error instanceof Error ? (
-                        <>
-                          {error.message}
-                          {error.stack && <div className="mt-2 text-muted-foreground">{error.stack}</div>}
-                        </>
-                      ) : (
-                        String(error)
-                      )}
+                      {typeof error === 'string' ? error : 'Неизвестная ошибка'}
                     </pre>
                   </div>
                 </>
