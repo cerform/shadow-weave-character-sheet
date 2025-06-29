@@ -1,43 +1,20 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { useCharacter } from '@/contexts/CharacterContext';
-import { Character } from '@/types/character';
 import { useToast } from '@/hooks/use-toast';
-import { useSocket } from '@/contexts/SocketContext';
 import { ArrowLeft } from 'lucide-react';
+import PlayerSessionClient from '@/components/session/PlayerSessionClient';
 
 const JoinSessionPage: React.FC = () => {
   const navigate = useNavigate();
   const [sessionCode, setSessionCode] = useState('');
   const [playerName, setPlayerName] = useState('');
-  const [isConnecting, setIsConnecting] = useState(false);
-  const { setCharacter } = useCharacter();
+  const [isJoined, setIsJoined] = useState(false);
   const { toast } = useToast();
-  const { connect, isConnected, sessionData } = useSocket();
-  
-  useEffect(() => {
-    // Загружаем имя игрока из localStorage, если оно есть
-    const savedPlayerName = localStorage.getItem('player-name');
-    if (savedPlayerName) {
-      setPlayerName(savedPlayerName);
-    }
-  }, []);
-  
-  useEffect(() => {
-    if (isConnected && sessionData) {
-      setIsConnecting(false);
-      toast({
-        title: "Успешно!",
-        description: `Вы подключились к сессии ${sessionData.name}`,
-      });
-      navigate('/character-sheet');
-    }
-  }, [isConnected, sessionData, navigate, toast]);
   
   const handleJoinSession = () => {
     if (!sessionCode || !playerName) {
@@ -49,38 +26,28 @@ const JoinSessionPage: React.FC = () => {
       return;
     }
     
-    setIsConnecting(true);
-    
-    // Сохраняем имя игрока в localStorage
-    localStorage.setItem('player-name', playerName);
-    
-    // Retrieve character ID from localStorage
-    const lastSelectedCharacterId = localStorage.getItem('last-selected-character');
-    
-    try {
-      // Используем обновленный метод connect с новой сигнатурой
-      connect(sessionCode, playerName, lastSelectedCharacterId);
-      
-      // Store session info in localStorage
-      localStorage.setItem('active-session', JSON.stringify({
-        sessionCode,
-        playerName,
-        characterId: lastSelectedCharacterId
-      }));
-    } catch (error) {
-      console.error("Ошибка при подключении:", error);
-      setIsConnecting(false);
-      toast({
-        title: "Ошибка подключения",
-        description: "Не удалось подключиться к сессии. Проверьте код сессии и попробуйте снова.",
-        variant: "destructive",
-      });
-    }
+    setIsJoined(true);
   };
   
-  const handleGoBack = () => {
-    navigate('/');
+  const handleLeaveSession = () => {
+    setIsJoined(false);
+    setSessionCode('');
+    setPlayerName('');
   };
+
+  if (isJoined) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 p-4">
+        <div className="max-w-7xl mx-auto">
+          <PlayerSessionClient 
+            roomCode={sessionCode}
+            playerName={playerName}
+            onLeave={handleLeaveSession}
+          />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex items-center justify-center h-screen">
@@ -97,7 +64,7 @@ const JoinSessionPage: React.FC = () => {
               id="sessionCode"
               placeholder="XXXXXX"
               value={sessionCode}
-              onChange={(e) => setSessionCode(e.target.value)}
+              onChange={(e) => setSessionCode(e.target.value.toUpperCase())}
             />
           </div>
           <div className="grid gap-2">
@@ -112,15 +79,12 @@ const JoinSessionPage: React.FC = () => {
           </div>
         </CardContent>
         <CardFooter className="flex justify-between">
-          <Button variant="ghost" onClick={handleGoBack}>
+          <Button variant="ghost" onClick={() => navigate('/')}>
             <ArrowLeft className="mr-2 h-4 w-4" />
             Назад
           </Button>
-          <Button 
-            onClick={handleJoinSession} 
-            disabled={isConnecting}
-          >
-            {isConnecting ? "Подключение..." : "Присоединиться"}
+          <Button onClick={handleJoinSession}>
+            Присоединиться
           </Button>
         </CardFooter>
       </Card>

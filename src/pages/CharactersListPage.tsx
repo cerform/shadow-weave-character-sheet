@@ -97,9 +97,9 @@ const CharactersListPage: React.FC = () => {
     try {
       await deleteCharacter(id);
       console.log('CharactersListPage: Персонаж удален успешно');
-    } catch (err) {
-      // Исправляем типизацию ошибки
-      const errorMessage = err instanceof Error ? err.message : 'Неизвестная ошибка';
+    } catch (error) {
+      // Правильно обрабатываем ошибку без использования message
+      const errorMessage = error instanceof Error ? error.message : String(error);
       toast.error(`Ошибка при удалении персонажа: ${errorMessage}`);
     }
   };
