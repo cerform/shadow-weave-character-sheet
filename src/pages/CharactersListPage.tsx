@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -98,7 +97,7 @@ const CharactersListPage: React.FC = () => {
       await deleteCharacter(id);
       console.log('CharactersListPage: Персонаж удален успешно');
     } catch (error) {
-      // Правильно обрабатываем ошибку без использования message
+      // Правильно обрабатываем ошибку
       const errorMessage = error instanceof Error ? error.message : String(error);
       toast.error(`Ошибка при удалении персонажа: ${errorMessage}`);
     }
