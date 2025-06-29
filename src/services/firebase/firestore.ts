@@ -14,6 +14,9 @@ import {
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
+// Экспортируем db для использования в других компонентах
+export { db };
+
 // Пользователи
 export const getUserData = async (userId: string) => {
   try {
