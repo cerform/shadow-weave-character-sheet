@@ -1,134 +1,87 @@
 
 import { Character } from '@/types/character';
-import { getCurrentUid } from '@/utils/authHelpers';
 
-// Функция для создания нового персонажа
-export const createCharacter = async (character: Character): Promise<Character> => {
-  // Создаем копию персонажа с уникальным ID и датой создания
-  const newCharacter: Character = {
-    ...character,
-    id: character.id || crypto.randomUUID(),
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  };
-  
-  // Сохраняем в localStorage
-  if (newCharacter.id) {
-    localStorage.setItem(`character_${newCharacter.id}`, JSON.stringify(newCharacter));
+// Временная реализация сервиса персонажей с использованием localStorage
+// В будущем можно заменить на работу с базой данных
+
+export const saveCharacter = (character: Character): Character => {
+  try {
+    // Генерируем ID если его нет
+    if (!character.id) {
+      character.id = `char_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    }
+
+    // Добавляем временные метки
+    const now = new Date().toISOString();
+    character.updatedAt = now;
+    if (!character.createdAt) {
+      character.createdAt = now;
+    }
+
+    // Сохраняем в localStorage
+    localStorage.setItem(`character_${character.id}`, JSON.stringify(character));
+    
+    // Обновляем список персонажей пользователя
+    const userId = character.userId;
+    if (userId) {
+      const userCharactersKey = `user_characters_${userId}`;
+      const existingCharacters = JSON.parse(localStorage.getItem(userCharactersKey) || '[]');
+      const characterIndex = existingCharacters.findIndex((c: Character) => c.id === character.id);
+      
+      if (characterIndex >= 0) {
+        existingCharacters[characterIndex] = character;
+      } else {
+        existingCharacters.push(character);
+      }
+      
+      localStorage.setItem(userCharactersKey, JSON.stringify(existingCharacters));
+    }
+
+    return character;
+  } catch (error) {
+    console.error('Ошибка сохранения персонажа:', error);
+    throw new Error('Не удалось сохранить персонажа');
   }
-  
-  return newCharacter;
 };
 
-// Функция для обновления персонажа
-export const updateCharacter = async (character: Character): Promise<Character> => {
-  if (!character.id) {
-    throw new Error("Персонаж должен иметь ID");
-  }
-  
-  // Обновляем дату изменения
-  const updatedCharacter: Character = {
-    ...character,
-    updatedAt: new Date().toISOString()
-  };
-  
-  // Сохраняем в localStorage
-  localStorage.setItem(`character_${character.id}`, JSON.stringify(updatedCharacter));
-  
-  return updatedCharacter;
-};
-
-// Функция для получения персонажа по ID
 export const getCharacterById = async (id: string): Promise<Character | null> => {
-  const characterJson = localStorage.getItem(`character_${id}`);
-  
-  if (!characterJson) {
+  try {
+    const stored = localStorage.getItem(`character_${id}`);
+    return stored ? JSON.parse(stored) : null;
+  } catch (error) {
+    console.error('Ошибка загрузки персонажа:', error);
     return null;
   }
-  
-  return JSON.parse(characterJson) as Character;
 };
 
-// Алиас для совместимости
-export const getCharacter = getCharacterById;
-
-// Функция для получения списка персонажей
-export const getAllCharacters = async (): Promise<Character[]> => {
-  const characters: Character[] = [];
-  
-  // Получаем все ключи из localStorage
-  for (let i = 0; i < localStorage.length; i++) {
-    const key = localStorage.key(i);
-    
-    if (key && key.startsWith('character_')) {
-      try {
-        const characterJson = localStorage.getItem(key);
-        if (characterJson) {
-          const character = JSON.parse(characterJson) as Character;
-          characters.push(character);
-        }
-      } catch (error) {
-        console.error('Ошибка при чтении персонажа:', error);
-      }
-    }
-  }
-  
-  // Сортируем по дате обновления (сначала новые)
-  return characters.sort((a, b) => {
-    const dateA = a.updatedAt ? new Date(a.updatedAt).getTime() : 0;
-    const dateB = b.updatedAt ? new Date(b.updatedAt).getTime() : 0;
-    return dateB - dateA;
-  });
-};
-
-// Функция для удаления персонажа
-export const deleteCharacter = async (id: string): Promise<void> => {
-  localStorage.removeItem(`character_${id}`);
-};
-
-// Функция для получения персонажей конкретного пользователя
 export const getCharactersByUserId = async (userId: string): Promise<Character[]> => {
-  const allCharacters = await getAllCharacters();
-  return allCharacters.filter(char => char.userId === userId);
+  try {
+    const userCharactersKey = `user_characters_${userId}`;
+    const stored = localStorage.getItem(userCharactersKey);
+    return stored ? JSON.parse(stored) : [];
+  } catch (error) {
+    console.error('Ошибка загрузки персонажей пользователя:', error);
+    return [];
+  }
 };
 
-// Функция saveCharacter для совместимости
-export const saveCharacter = async (character: Character): Promise<string> => {
-  // Добавляем поле userId, если его нет
-  if (!character.userId) {
-    character.userId = getCurrentUid();
+export const deleteCharacter = async (id: string): Promise<void> => {
+  try {
+    // Получаем персонажа для получения userId
+    const character = await getCharacterById(id);
+    
+    // Удаляем из localStorage
+    localStorage.removeItem(`character_${id}`);
+    
+    // Обновляем список персонажей пользователя
+    if (character?.userId) {
+      const userCharactersKey = `user_characters_${character.userId}`;
+      const existingCharacters = JSON.parse(localStorage.getItem(userCharactersKey) || '[]');
+      const filteredCharacters = existingCharacters.filter((c: Character) => c.id !== id);
+      localStorage.setItem(userCharactersKey, JSON.stringify(filteredCharacters));
+    }
+  } catch (error) {
+    console.error('Ошибка удаления персонажа:', error);
+    throw new Error('Не удалось удалить персонажа');
   }
-  
-  // Если у персонажа нет id, создаем новый
-  if (!character.id) {
-    const newCharacter = await createCharacter(character);
-    return newCharacter.id || '';
-  }
-  
-  // Иначе обновляем существующий
-  await updateCharacter(character);
-  return character.id;
-};
-
-// Функция saveCharacterToFirestore для совместимости с Firebase
-export const saveCharacterToFirestore = async (character: Character): Promise<Character> => {
-  console.warn('saveCharacterToFirestore вызван, но функция сохраняет только локально');
-  
-  // Добавляем поле userId, если его нет
-  if (!character.userId) {
-    character.userId = getCurrentUid();
-  }
-  
-  // Если у персонажа нет id, создаем новый
-  if (!character.id) {
-    return createCharacter(character);
-  }
-  
-  // Иначе обновляем существующий
-  return updateCharacter(character);
-};
-
-// Функция для создания уникального ID
-export const generateCharacterId = (): string => {
-  return crypto.randomUUID();
 };

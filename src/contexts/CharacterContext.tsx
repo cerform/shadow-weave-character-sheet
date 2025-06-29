@@ -7,12 +7,17 @@ import { getCurrentUid } from '@/utils/authHelpers';
 
 interface CharacterContextType {
   characters: Character[];
+  character: Character | null;
   loading: boolean;
   error: string | null;
+  setCharacter: (character: Character | null) => void;
+  updateCharacter: (updates: Partial<Character>) => void;
   saveCharacter: (character: Character) => Character;
   deleteCharacter: (id: string) => Promise<void>;
   getUserCharacters: () => Promise<void>;
   getCharacterById: (id: string) => Promise<Character | null>;
+  refreshCharacters: () => Promise<void>;
+  saveCurrentCharacter: () => Promise<void>;
 }
 
 const CharacterContext = createContext<CharacterContextType | undefined>(undefined);
@@ -27,8 +32,20 @@ export const useCharacter = () => {
 
 export const CharacterProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [characters, setCharacters] = useState<Character[]>([]);
+  const [character, setCharacterState] = useState<Character | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const setCharacter = useCallback((character: Character | null) => {
+    setCharacterState(character);
+  }, []);
+
+  const updateCharacter = useCallback((updates: Partial<Character>) => {
+    setCharacterState(prev => {
+      if (!prev) return null;
+      return { ...prev, ...updates };
+    });
+  }, []);
 
   const saveCharacter = useCallback((character: Character): Character => {
     try {
@@ -57,6 +74,24 @@ export const CharacterProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       throw err;
     }
   }, []);
+
+  const saveCurrentCharacter = useCallback(async () => {
+    if (!character) {
+      toast.error('Нет персонажа для сохранения');
+      return;
+    }
+    
+    try {
+      setLoading(true);
+      saveCharacter(character);
+      toast.success('Текущий персонаж сохранен');
+    } catch (err) {
+      console.error('Ошибка сохранения текущего персонажа:', err);
+      toast.error('Ошибка при сохранении персонажа');
+    } finally {
+      setLoading(false);
+    }
+  }, [character, saveCharacter]);
 
   const deleteCharacter = useCallback(async (id: string) => {
     try {
@@ -90,6 +125,10 @@ export const CharacterProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }
   }, []);
 
+  const refreshCharacters = useCallback(async () => {
+    await getUserCharacters();
+  }, [getUserCharacters]);
+
   const getCharacterById = useCallback(async (id: string): Promise<Character | null> => {
     try {
       return await characterService.getCharacterById(id);
@@ -103,12 +142,17 @@ export const CharacterProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     <CharacterContext.Provider
       value={{
         characters,
+        character,
         loading,
         error,
+        setCharacter,
+        updateCharacter,
         saveCharacter,
         deleteCharacter,
         getUserCharacters,
         getCharacterById,
+        refreshCharacters,
+        saveCurrentCharacter,
       }}
     >
       {children}
