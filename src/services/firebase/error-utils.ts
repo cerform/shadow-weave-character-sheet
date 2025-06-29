@@ -1,67 +1,67 @@
 
-import { FirebaseError } from 'firebase/app';
-
-export interface DetailedAuthError extends Error {
-  code?: string;
-  context?: string;
-  originalError?: FirebaseError;
+export interface DetailedAuthError {
+  code: string;
+  message: string;
+  details: string;
+  action: string;
 }
 
-// Функция для логирования ошибок Firebase Auth с детальной информацией
-export const logAuthError = (context: string, error: FirebaseError): DetailedAuthError => {
-  // Создаем подробное описание ошибки
-  const detailedError: DetailedAuthError = new Error(
-    getReadableAuthErrorMessage(error) || error.message
-  );
+export const logAuthError = (operation: string, error: any): DetailedAuthError => {
+  const errorCode = error.code || 'unknown';
+  const errorMessage = error.message || 'Неизвестная ошибка';
   
-  detailedError.name = "AuthError";
-  detailedError.code = error.code;
-  detailedError.context = context;
-  detailedError.originalError = error;
-  
-  // Логируем ошибку с контекстом
-  console.error(`[AUTH ERROR] ${context}:`, {
-    message: detailedError.message,
-    code: error.code,
-    originalError: error
-  });
-  
-  return detailedError;
-};
+  const errorMap: Record<string, { message: string; action: string }> = {
+    'auth/user-not-found': {
+      message: 'Пользователь с таким email не найден',
+      action: 'Проверьте правильность email или зарегистрируйтесь'
+    },
+    'auth/wrong-password': {
+      message: 'Неверный пароль',
+      action: 'Проверьте правильность пароля или восстановите его'
+    },
+    'auth/email-already-in-use': {
+      message: 'Пользователь с таким email уже существует',
+      action: 'Войдите в существующий аккаунт или используйте другой email'
+    },
+    'auth/weak-password': {
+      message: 'Пароль слишком простой',
+      action: 'Используйте пароль длиной не менее 6 символов'
+    },
+    'auth/invalid-email': {
+      message: 'Неверный формат email',
+      action: 'Проверьте правильность ввода email адреса'
+    },
+    'auth/popup-blocked': {
+      message: 'Всплывающее окно заблокировано браузером',
+      action: 'Разрешите всплывающие окна для этого сайта и попроб��йте снова'
+    },
+    'auth/popup-closed-by-user': {
+      message: 'Окно авторизации было закрыто',
+      action: 'Попробуйте войти снова и не закрывайте окно авторизации'
+    },
+    'auth/cancelled-popup-request': {
+      message: 'Запрос авторизации был отменен',
+      action: 'Попробуйте войти снова'
+    }
+  };
 
-// Преобразует код ошибки Firebase Auth в читаемое сообщение
-export const getReadableAuthErrorMessage = (error: FirebaseError): string => {
-  const errorCode = error.code;
-  
-  // Коды ошибок Firebase Auth: https://firebase.google.com/docs/auth/admin/errors
-  switch (errorCode) {
-    case 'auth/email-already-in-use':
-      return 'Этот email уже используется другой учетной записью';
-    case 'auth/invalid-email':
-      return 'Неверный формат email';
-    case 'auth/user-disabled':
-      return 'Эта учетная запись отключена';
-    case 'auth/user-not-found':
-      return 'Пользователь с таким email не найден';
-    case 'auth/wrong-password':
-      return 'Неверный пароль';
-    case 'auth/weak-password':
-      return 'Пароль должен содержать не менее 6 символов';
-    case 'auth/popup-closed-by-user':
-      return 'Вход отменен. Окно авторизации было закрыто до завершения';
-    case 'auth/popup-blocked':
-      return 'Браузер заблокировал всплывающее окно. Пожалуйста, разрешите всплывающие окна для этого сайта';
-    case 'auth/cancelled-popup-request':
-      return 'Запрос авторизации был отменен';
-    case 'auth/account-exists-with-different-credential':
-      return 'Email уже используется другим способом входа. Попробуйте войти используя другой метод';
-    case 'auth/network-request-failed':
-      return 'Проблема с сетевым подключением. Проверьте подключение к интернету';
-    case 'auth/timeout':
-      return 'Время запроса истекло. Проверьте подключение к интернету';
-    case 'auth/too-many-requests':
-      return 'Слишком много неудачных попыток входа. Попробуйте позже';
-    default:
-      return error.message;
-  }
+  const errorInfo = errorMap[errorCode] || {
+    message: errorMessage,
+    action: 'Обратитесь в службу поддержки если проблема повторяется'
+  };
+
+  const detailedError: DetailedAuthError = {
+    code: errorCode,
+    message: errorInfo.message,
+    details: `${operation}: ${errorMessage}`,
+    action: errorInfo.action
+  };
+
+  console.error(`[AUTH ERROR] ${operation}:`, {
+    code: errorCode,
+    message: errorMessage,
+    details: detailedError
+  });
+
+  return detailedError;
 };

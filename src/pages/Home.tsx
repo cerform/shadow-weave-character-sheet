@@ -1,212 +1,220 @@
 
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Link, useNavigate } from 'react-router-dom';
-import { Book, BookOpen, Scroll, User, UserPlus, Shield, Users, Dices } from "lucide-react";
-import { useAuth } from '@/hooks/use-auth';
-import IconOnlyNavigation from '@/components/navigation/IconOnlyNavigation';
-import BackgroundWrapper from '@/components/layout/BackgroundWrapper';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { BookOpen, Users, Scroll, Dice6, Shield, UserPlus } from 'lucide-react';
 import ProfilePreview from '@/components/home/ProfilePreview';
-import CharactersList from '@/components/home/CharactersList';
+import { useAuth } from '@/hooks/use-auth';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
 
 const Home = () => {
-  const { currentUser, isAuthenticated } = useAuth();
-  const isDM = currentUser?.isDM;
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
   const { theme } = useTheme();
-  const currentThemeId = theme || 'default';
-  const currentTheme = themes[currentThemeId as keyof typeof themes] || themes.default;
+  
+  const themeKey = (theme || 'default') as keyof typeof themes;
+  const currentTheme = themes[themeKey] || themes.default;
 
-  const handleNavigation = (path: string) => {
-    console.log('Home: Переход на страницу', path);
-    navigate(path);
+  const navigateToAuth = () => {
+    console.log("Home: Переход на страницу /auth");
+    navigate('/auth');
   };
 
+  const quickActions = [
+    {
+      icon: Users,
+      title: "Управление персонажами",
+      description: "Создавайте и управляйте своими персонажами D&D",
+      href: "/character-management",
+      color: currentTheme.accent
+    },
+    {
+      icon: BookOpen,
+      title: "Книга заклинаний",
+      description: "Изучайте и организуйте заклинания D&D 5e",
+      href: "/spellbook",
+      color: "#8B5CF6"
+    },
+    {
+      icon: Scroll,
+      title: "Справочник D&D",
+      description: "Полный справочник по заклинаниям D&D",
+      href: "/dnd-spells", 
+      color: "#F59E0B"
+    },
+    {
+      icon: Shield,
+      title: "Экран мастера",
+      description: "Инструменты для мастера подземелий",
+      href: "/dm",
+      color: "#EF4444",
+      requiresAuth: true
+    }
+  ];
+
   return (
-    <BackgroundWrapper>
-      <div className="min-h-screen p-6">
-        <div className="container mx-auto max-w-7xl">
-          <header className="flex justify-between items-center mb-12">
-            <div>
-              <h1 
-                className="font-philosopher text-4xl md:text-5xl font-bold" 
-                style={{ 
-                  color: currentTheme.textColor,
-                  textShadow: `0 0 10px ${currentTheme.accent}80`
-                }}
+    <div 
+      className="min-h-screen p-6"
+      style={{ 
+        background: `linear-gradient(135deg, ${currentTheme.background} 0%, ${currentTheme.background}CC 100%)`,
+        color: currentTheme.textColor
+      }}
+    >
+      <div className="container mx-auto max-w-6xl">
+        {/* Header */}
+        <div className="text-center mb-12">
+          <h1 
+            className="text-4xl md:text-6xl font-bold mb-4"
+            style={{ color: currentTheme.accent }}
+          >
+            Shadow Weave
+          </h1>
+          <p 
+            className="text-xl md:text-2xl mb-8"
+            style={{ color: `${currentTheme.textColor}80` }}
+          >
+            Управление персонажами D&D 5e
+          </p>
+          
+          {!isAuthenticated && (
+            <Button 
+              onClick={navigateToAuth}
+              size="lg"
+              className="gap-2"
+              style={{
+                backgroundColor: currentTheme.accent,
+                color: currentTheme.buttonText || '#FFFFFF'
+              }}
+            >
+              <UserPlus className="h-5 w-5" />
+              Начать приключение
+            </Button>
+          )}
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Profile Preview */}
+          <ProfilePreview />
+          
+          {/* Quick Actions */}
+          <div className="lg:col-span-2">
+            <h2 
+              className="text-2xl font-bold mb-6"
+              style={{ color: currentTheme.textColor }}
+            >
+              Быстрые действия
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {quickActions.map((action, index) => {
+                const Icon = action.icon;
+                const isDisabled = action.requiresAuth && !isAuthenticated;
+                
+                return (
+                  <Card 
+                    key={index}
+                    className={`hover:shadow-lg transition-all duration-200 cursor-pointer bg-black/50 backdrop-blur-sm border ${
+                      isDisabled ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105'
+                    }`}
+                    style={{ borderColor: `${action.color}50` }}
+                    onClick={() => {
+                      if (isDisabled) {
+                        navigateToAuth();
+                      } else {
+                        navigate(action.href);
+                      }
+                    }}
+                  >
+                    <CardHeader>
+                      <div className="flex items-center gap-3">
+                        <Icon 
+                          className="h-8 w-8" 
+                          style={{ color: action.color }}
+                        />
+                        <CardTitle 
+                          className="text-lg"
+                          style={{ color: currentTheme.textColor }}
+                        >
+                          {action.title}
+                        </CardTitle>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <CardDescription style={{ color: `${currentTheme.textColor}70` }}>
+                        {action.description}
+                        {isDisabled && (
+                          <span className="block mt-2 text-sm" style={{ color: action.color }}>
+                            Требуется авторизация
+                          </span>
+                        )}
+                      </CardDescription>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        {/* Features Preview */}
+        <div className="mt-16">
+          <h2 
+            className="text-3xl font-bold text-center mb-8"
+            style={{ color: currentTheme.textColor }}
+          >
+            Возможности приложения
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="text-center">
+              <Dice6 
+                className="h-16 w-16 mx-auto mb-4" 
+                style={{ color: currentTheme.accent }}
+              />
+              <h3 
+                className="text-xl font-semibold mb-2"
+                style={{ color: currentTheme.textColor }}
               >
-                Dungeons & Dragons 5e
-              </h1>
-              <p className="text-lg text-gray-300 mt-2">
-                Погрузитесь в мир приключений и фэнтези
+                3D Кости
+              </h3>
+              <p style={{ color: `${currentTheme.textColor}70` }}>
+                Реалистичные 3D кости для бросков
               </p>
             </div>
-            <IconOnlyNavigation includeThemeSelector />
-          </header>
-
-          <main>
-            {/* Профиль пользователя (если авторизован) */}
-            {isAuthenticated && <ProfilePreview />}
-
-            {/* Список персонажей пользователя */}
-            {isAuthenticated && <CharactersList />}
-
-            {/* Основные карточки */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-12">
-              {/* Создать персонажа */}
-              <Card className="bg-emerald-900/40 backdrop-blur-sm border-emerald-500/30 shadow-lg overflow-hidden group hover:shadow-emerald-500/20 transition-all duration-300">
-                <CardHeader className="pb-4">
-                  <div className="rounded-full bg-emerald-500/20 w-12 h-12 flex items-center justify-center mb-2">
-                    <UserPlus className="h-6 w-6 text-emerald-400" />
-                  </div>
-                  <CardTitle className="text-xl text-white">Создать персонажа</CardTitle>
-                  <CardDescription className="text-gray-300">
-                    Создание нового персонажа
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="text-sm text-gray-300">
-                  <p>Создайте нового персонажа, выберите расу, класс, предысторию и распределите характеристики.</p>
-                </CardContent>
-                <CardFooter>
-                  <Button 
-                    className="w-full bg-emerald-600 hover:bg-emerald-700 text-white btn-magic"
-                    onClick={() => handleNavigation('/character-creation')}
-                  >
-                    ПЕРЕЙТИ
-                  </Button>
-                </CardFooter>
-              </Card>
-
-              {/* Книга заклинаний */}
-              <Card className="bg-violet-900/40 backdrop-blur-sm border-violet-500/30 shadow-lg overflow-hidden group hover:shadow-violet-500/20 transition-all duration-300">
-                <CardHeader className="pb-4">
-                  <div className="rounded-full bg-violet-500/20 w-12 h-12 flex items-center justify-center mb-2">
-                    <Scroll className="h-6 w-6 text-violet-400" />
-                  </div>
-                  <CardTitle className="text-xl text-white">Книга заклинаний</CardTitle>
-                  <CardDescription className="text-gray-300">
-                    Изучение и поиск заклинаний
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="text-sm text-gray-300">
-                  <p>Просматривайте список всех заклинаний, фильтруйте их по уровню, классу и школе магии.</p>
-                </CardContent>
-                <CardFooter>
-                  <Button 
-                    className="w-full bg-violet-600 hover:bg-violet-700 text-white btn-magic"
-                    onClick={() => handleNavigation('/spellbook')}
-                  >
-                    ПЕРЕЙТИ
-                  </Button>
-                </CardFooter>
-              </Card>
-
-              {/* Игра */}
-              <Card className="bg-red-900/40 backdrop-blur-sm border-red-500/30 shadow-lg overflow-hidden group hover:shadow-red-500/20 transition-all duration-300">
-                <CardHeader className="pb-4">
-                  <div className="rounded-full bg-red-500/20 w-12 h-12 flex items-center justify-center mb-2">
-                    <Dices className="h-6 w-6 text-red-400" />
-                  </div>
-                  <CardTitle className="text-xl text-white">Игра</CardTitle>
-                  <CardDescription className="text-gray-300">
-                    Присоединиться к сессии
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="text-sm text-gray-300">
-                  <p>Присоединяйтесь к игровым сессиям, используя код приглашения от Мастера Подземелий.</p>
-                </CardContent>
-                <CardFooter>
-                  <Button 
-                    className="w-full bg-red-600 hover:bg-red-700 text-white btn-magic"
-                    onClick={() => handleNavigation('/join-session')}
-                  >
-                    ПЕРЕЙТИ
-                  </Button>
-                </CardFooter>
-              </Card>
-
-              {/* Справочник */}
-              <Card className="bg-pink-900/40 backdrop-blur-sm border-pink-500/30 shadow-lg overflow-hidden group hover:shadow-pink-500/20 transition-all duration-300">
-                <CardHeader className="pb-4">
-                  <div className="rounded-full bg-pink-500/20 w-12 h-12 flex items-center justify-center mb-2">
-                    <BookOpen className="h-6 w-6 text-pink-400" />
-                  </div>
-                  <CardTitle className="text-xl text-white">Справочник</CardTitle>
-                  <CardDescription className="text-gray-300">
-                    Расы, классы, предыстории
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="text-sm text-gray-300">
-                  <p>Изучайте информацию о расах, классах и предысториях персонажей мира D&D.</p>
-                </CardContent>
-                <CardFooter>
-                  <Button 
-                    className="w-full bg-pink-600 hover:bg-pink-700 text-white btn-magic"
-                    onClick={() => handleNavigation('/handbook')}
-                  >
-                    ПЕРЕЙТИ
-                  </Button>
-                </CardFooter>
-              </Card>
-
-              {/* Панель мастера (только для DM) */}
-              {isDM && (
-                <Card className="bg-indigo-900/40 backdrop-blur-sm border-indigo-500/30 shadow-lg overflow-hidden group hover:shadow-indigo-500/20 transition-all duration-300">
-                  <CardHeader className="pb-4">
-                    <div className="rounded-full bg-indigo-500/20 w-12 h-12 flex items-center justify-center mb-2">
-                      <Shield className="h-6 w-6 text-indigo-400" />
-                    </div>
-                    <CardTitle className="text-xl text-white">Панель Мастера</CardTitle>
-                    <CardDescription className="text-gray-300">
-                      Управление сессиями
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="text-sm text-gray-300">
-                    <p>Создавайте и управляйте игровыми сессиями как Мастер Подземелий.</p>
-                  </CardContent>
-                  <CardFooter>
-                    <Button 
-                      className="w-full bg-indigo-600 hover:bg-indigo-700 text-white btn-magic"
-                      onClick={() => handleNavigation('/dm')}
-                    >
-                      ПЕРЕЙТИ
-                    </Button>
-                  </CardFooter>
-                </Card>
-              )}
+            <div className="text-center">
+              <BookOpen 
+                className="h-16 w-16 mx-auto mb-4" 
+                style={{ color: currentTheme.accent }}
+              />
+              <h3 
+                className="text-xl font-semibold mb-2"
+                style={{ color: currentTheme.textColor }}
+              >
+                Полная база заклинаний
+              </h3>
+              <p style={{ color: `${currentTheme.textColor}70` }}>
+                Все заклинания D&D 5e с детальными описаниями
+              </p>
             </div>
-
-            {/* Секция для неавторизованных пользователей */}
-            {!isAuthenticated && (
-              <div className="mt-12 p-6 bg-black/60 backdrop-blur-sm rounded-lg border border-purple-500/30 shadow-lg">
-                <h2 className="font-philosopher text-2xl text-center mb-4">Начните свое приключение</h2>
-                <p className="text-center text-gray-300 mb-6">
-                  Войдите или зарегистрируйтесь, чтобы создавать и сохранять персонажей, присоединяться к игровым сессиям и многое другое.
-                </p>
-                <div className="flex justify-center gap-4">
-                  <Button 
-                    className="bg-purple-600 hover:bg-purple-700 text-white btn-magic"
-                    onClick={() => handleNavigation('/auth')}
-                  >
-                    <User className="h-4 w-4 mr-2" /> Войти
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    className="border-purple-500/50 hover:bg-purple-500/20 btn-magic"
-                    onClick={() => handleNavigation('/auth')}
-                  >
-                    <UserPlus className="h-4 w-4 mr-2" /> Регистрация
-                  </Button>
-                </div>
-              </div>
-            )}
-          </main>
+            <div className="text-center">
+              <Users 
+                className="h-16 w-16 mx-auto mb-4" 
+                style={{ color: currentTheme.accent }}
+              />
+              <h3 
+                className="text-xl font-semibold mb-2"
+                style={{ color: currentTheme.textColor }}
+              >
+                Многопользовательский режим
+              </h3>
+              <p style={{ color: `${currentTheme.textColor}70` }}>
+                Игра в команде с друзьями онлайн
+              </p>
+            </div>
+          </div>
         </div>
       </div>
-    </BackgroundWrapper>
+    </div>
   );
 };
 
