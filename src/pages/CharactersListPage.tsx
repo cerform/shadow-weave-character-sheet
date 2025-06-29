@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -85,8 +86,10 @@ const CharactersListPage: React.FC = () => {
       console.log('CharactersListPage: Начинаем обновление списка персонажей');
       await getUserCharacters();
       console.log('CharactersListPage: Список персонажей обновлен успешно');
-    } catch (error) {
-      console.error('CharactersListPage: Ошибка при обновлении списка персонажей:', error);
+    } catch (err) {
+      console.error('CharactersListPage: Ошибка при обновлении списка персонажей:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Неизвестная ошибка';
+      toast.error(`Ошибка при обновлении списка персонажей: ${errorMessage}`);
     } finally {
       setIsRefreshing(false);
     }
@@ -170,7 +173,7 @@ const CharactersListPage: React.FC = () => {
           {/* Обработка ошибок */}
           {error && !loading && (
             <ErrorDisplay 
-              errorMessage={typeof error === 'string' ? error : error.message} 
+              errorMessage={typeof error === 'string' ? error : (error as Error).message} 
               onRetry={refreshCharacters} 
               technicalDetails={diagnosticResults}
             />
