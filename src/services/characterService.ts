@@ -1,149 +1,202 @@
 
+import { 
+  collection, 
+  doc, 
+  getDoc, 
+  getDocs, 
+  setDoc, 
+  updateDoc, 
+  deleteDoc, 
+  query, 
+  where, 
+  orderBy 
+} from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 import { Character } from '@/types/character';
+import { getCurrentUid } from '@/utils/authHelpers';
 
-// Временная реализация сервиса персонажей с использованием localStorage
-// В будущем можно заменить на работу с базой данных
+// Коллекция персонажей в Firestore
+const CHARACTERS_COLLECTION = 'characters';
 
+// Получение всех персонажей пользователя
+export const getUserCharacters = async (userId: string): Promise<Character[]> => {
+  try {
+    console.log('characterService: Загрузка персонажей для пользователя:', userId);
+    
+    const charactersRef = collection(db, CHARACTERS_COLLECTION);
+    const q = query(
+      charactersRef,
+      where('userId', '==', userId),
+      orderBy('updatedAt', 'desc')
+    );
+    
+    const querySnapshot = await getDocs(q);
+    const characters: Character[] = [];
+    
+    querySnapshot.forEach((doc) => {
+      const data = doc.data() as Character;
+      characters.push({
+        ...data,
+        id: doc.id
+      });
+    });
+    
+    console.log('characterService: Загружено персонажей:', characters.length);
+    return characters;
+  } catch (error) {
+    console.error('characterService: Ошибка получения персонажей:', error);
+    throw new Error('Не удалось загрузить персонажей');
+  }
+};
+
+// Получение персонажа по ID
+export const getCharacterById = async (characterId: string): Promise<Character | null> => {
+  try {
+    console.log('characterService: Загрузка персонажа по ID:', characterId);
+    
+    const characterRef = doc(db, CHARACTERS_COLLECTION, characterId);
+    const characterSnapshot = await getDoc(characterRef);
+    
+    if (characterSnapshot.exists()) {
+      const data = characterSnapshot.data() as Character;
+      const character = {
+        ...data,
+        id: characterSnapshot.id
+      };
+      console.log('characterService: Персонаж загружен:', character.name);
+      return character;
+    } else {
+      console.log('characterService: Персонаж не найден');
+      return null;
+    }
+  } catch (error) {
+    console.error('characterService: Ошибка получения персонажа:', error);
+    throw new Error('Не удалось загрузить персонажа');
+  }
+};
+
+// Сохранение персонажа (локально с ID)
 export const saveCharacter = (character: Character): Character => {
   try {
     // Генерируем ID если его нет
     if (!character.id) {
-      character.id = `char_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      character.id = `character_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     }
-
-    // Добавляем временные метки
+    
+    // Добавляем userId если его нет
+    if (!character.userId) {
+      character.userId = getCurrentUid();
+    }
+    
+    // Обновляем временные метки
     const now = new Date().toISOString();
-    character.updatedAt = now;
     if (!character.createdAt) {
       character.createdAt = now;
     }
-
-    // Сохраняем в localStorage
+    character.updatedAt = now;
+    
+    // Сохраняем в localStorage как резервную копию
     localStorage.setItem(`character_${character.id}`, JSON.stringify(character));
     
-    // Обновляем список персонажей пользователя
-    const userId = character.userId;
-    if (userId) {
-      const userCharactersKey = `user_characters_${userId}`;
-      const existingCharacters = JSON.parse(localStorage.getItem(userCharactersKey) || '[]');
-      const characterIndex = existingCharacters.findIndex((c: Character) => c.id === character.id);
-      
-      if (characterIndex >= 0) {
-        existingCharacters[characterIndex] = character;
-      } else {
-        existingCharacters.push(character);
-      }
-      
-      localStorage.setItem(userCharactersKey, JSON.stringify(existingCharacters));
-    }
-
-    // Создаем резервную копию
-    createBackup(character);
-
     return character;
   } catch (error) {
-    console.error('Ошибка сохранения персонажа:', error);
+    console.error('characterService: Ошибка сохранения персонажа:', error);
     throw new Error('Не удалось сохранить персонажа');
   }
 };
 
-export const getCharacterById = async (id: string): Promise<Character | null> => {
+// Сохранение персонажа в Firestore
+export const saveCharacterToFirestore = async (character: Character): Promise<Character> => {
   try {
-    const stored = localStorage.getItem(`character_${id}`);
-    return stored ? JSON.parse(stored) : null;
+    console.log('characterService: Сохранение персонажа в Firestore:', character.name);
+    
+    // Подготавливаем данные для сохранения
+    const characterData = {
+      ...character,
+      userId: character.userId || getCurrentUid(),
+      updatedAt: new Date().toISOString(),
+      createdAt: character.createdAt || new Date().toISOString()
+    };
+    
+    let docRef;
+    if (character.id) {
+      // Обновляем существующего персонажа
+      docRef = doc(db, CHARACTERS_COLLECTION, character.id);
+      await setDoc(docRef, characterData, { merge: true });
+    } else {
+      // Создаем нового персонажа
+      docRef = doc(collection(db, CHARACTERS_COLLECTION));
+      await setDoc(docRef, characterData);
+    }
+    
+    const savedCharacter = {
+      ...characterData,
+      id: docRef.id
+    };
+    
+    console.log('characterService: Персонаж сохранен в Firestore:', savedCharacter.id);
+    return savedCharacter;
   } catch (error) {
-    console.error('Ошибка загрузки персонажа:', error);
-    return null;
+    console.error('characterService: Ошибка сохранения в Firestore:', error);
+    throw new Error('Не удалось сохранить персонажа в базу данных');
   }
 };
 
-export const getCharactersByUserId = async (userId: string): Promise<Character[]> => {
+// Удаление персонажа
+export const deleteCharacter = async (characterId: string): Promise<void> => {
   try {
-    const userCharactersKey = `user_characters_${userId}`;
-    const stored = localStorage.getItem(userCharactersKey);
-    return stored ? JSON.parse(stored) : [];
-  } catch (error) {
-    console.error('Ошибка загрузки персонажей пользователя:', error);
-    return [];
-  }
-};
-
-export const deleteCharacter = async (id: string): Promise<void> => {
-  try {
-    // Получаем персонажа для получения userId
-    const character = await getCharacterById(id);
+    console.log('characterService: Удаление персонажа:', characterId);
+    
+    const characterRef = doc(db, CHARACTERS_COLLECTION, characterId);
+    await deleteDoc(characterRef);
     
     // Удаляем из localStorage
-    localStorage.removeItem(`character_${id}`);
+    localStorage.removeItem(`character_${characterId}`);
     
-    // Удаляем резервные копии
-    localStorage.removeItem(`character_backup_${id}`);
-    localStorage.removeItem(`character_autosave_${id}`);
-    
-    // Обновляем список персонажей пользователя
-    if (character?.userId) {
-      const userCharactersKey = `user_characters_${character.userId}`;
-      const existingCharacters = JSON.parse(localStorage.getItem(userCharactersKey) || '[]');
-      const filteredCharacters = existingCharacters.filter((c: Character) => c.id !== id);
-      localStorage.setItem(userCharactersKey, JSON.stringify(filteredCharacters));
-    }
+    console.log('characterService: Персонаж удален');
   } catch (error) {
-    console.error('Ошибка удаления персонажа:', error);
+    console.error('characterService: Ошибка удаления персонажа:', error);
     throw new Error('Не удалось удалить персонажа');
   }
 };
 
-// Новые функции для работы с резервными копиями
-export const createBackup = (character: Character): void => {
-  try {
-    const backupData = {
-      character,
-      timestamp: new Date().toISOString(),
-      version: '1.0'
-    };
-    
-    localStorage.setItem(`character_backup_${character.id}`, JSON.stringify(backupData));
-  } catch (error) {
-    console.error('Ошибка создания резервной копии:', error);
+// Получение резервных копий из localStorage
+export const getAllBackups = (): Array<{ id: string; character: Character; timestamp: string }> => {
+  const backups: Array<{ id: string; character: Character; timestamp: string }> = [];
+  
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key && key.startsWith('character_backup_')) {
+      try {
+        const data = JSON.parse(localStorage.getItem(key) || '');
+        if (data.character) {
+          backups.push({
+            id: key.replace('character_backup_', ''),
+            character: data.character,
+            timestamp: data.timestamp
+          });
+        }
+      } catch (error) {
+        console.warn('Ошибка чтения резервной копии:', key, error);
+      }
+    }
   }
+  
+  return backups.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 };
 
-export const restoreFromBackup = (id: string): Character | null => {
+// Восстановление из резервной копии
+export const restoreFromBackup = (backupId: string): Character | null => {
   try {
-    const backup = localStorage.getItem(`character_backup_${id}`);
-    if (backup) {
-      const backupData = JSON.parse(backup);
-      return backupData.character;
+    const key = `character_backup_${backupId}`;
+    const data = localStorage.getItem(key);
+    if (data) {
+      const backup = JSON.parse(data);
+      return backup.character;
     }
     return null;
   } catch (error) {
     console.error('Ошибка восстановления из резервной копии:', error);
     return null;
-  }
-};
-
-export const getAllBackups = (): Array<{ id: string; character: Character; timestamp: string }> => {
-  try {
-    const backups: Array<{ id: string; character: Character; timestamp: string }> = [];
-    
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (key?.startsWith('character_backup_')) {
-        const backup = localStorage.getItem(key);
-        if (backup) {
-          const backupData = JSON.parse(backup);
-          backups.push({
-            id: key.replace('character_backup_', ''),
-            character: backupData.character,
-            timestamp: backupData.timestamp
-          });
-        }
-      }
-    }
-    
-    return backups.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-  } catch (error) {
-    console.error('Ошибка получения списка резервных копий:', error);
-    return [];
   }
 };

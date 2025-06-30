@@ -58,85 +58,123 @@ export const CharacterProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       
       // Обновляем локальный список
       setCharacters(prev => {
-        const existing = prev.find(c => c.id === character.id);
-        if (existing) {
-          return prev.map(c => c.id === character.id ? character : c);
+        const existingIndex = prev.findIndex(c => c.id === savedCharacter.id);
+        if (existingIndex >= 0) {
+          const updated = [...prev];
+          updated[existingIndex] = savedCharacter;
+          return updated;
         } else {
-          return [...prev, character];
+          return [...prev, savedCharacter];
         }
       });
 
-      toast.success('Персонаж сохранен');
-      return character;
-    } catch (err) {
-      console.error('Ошибка сохранения персонажа:', err);
-      toast.error('Ошибка при сохранении персонажа');
-      throw err;
+      // Обновляем текущего персонажа если это он
+      if (character.id === savedCharacter.id) {
+        setCharacterState(savedCharacter);
+      }
+
+      return savedCharacter;
+    } catch (error) {
+      console.error('Ошибка сохранения персонажа:', error);
+      throw error;
     }
   }, []);
-
-  const saveCurrentCharacter = useCallback(async () => {
-    if (!character) {
-      toast.error('Нет персонажа для сохранения');
-      return;
-    }
-    
-    try {
-      setLoading(true);
-      saveCharacter(character);
-      toast.success('Текущий персонаж сохранен');
-    } catch (err) {
-      console.error('Ошибка сохранения текущего персонажа:', err);
-      toast.error('Ошибка при сохранении персонажа');
-    } finally {
-      setLoading(false);
-    }
-  }, [character, saveCharacter]);
 
   const deleteCharacter = useCallback(async (id: string) => {
     try {
       setLoading(true);
+      setError(null);
+      
       await characterService.deleteCharacter(id);
+      
+      // Обновляем локальный список
       setCharacters(prev => prev.filter(c => c.id !== id));
+      
+      // Если удаляемый персонаж текущий, очищаем его
+      if (character?.id === id) {
+        setCharacterState(null);
+      }
+      
       toast.success('Персонаж удален');
     } catch (err) {
-      console.error('Ошибка удаления персонажа:', err);
-      toast.error('Ошибка при удалении персонажа');
+      const errorMessage = err instanceof Error ? err.message : 'Ошибка удаления персонажа';
+      setError(errorMessage);
       throw err;
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [character]);
 
   const getUserCharacters = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
-      const uid = getCurrentUid();
-      if (uid) {
-        const userCharacters = await characterService.getCharactersByUserId(uid);
-        setCharacters(userCharacters);
+      
+      const userId = getCurrentUid();
+      if (!userId) {
+        throw new Error('Пользователь не авторизован');
       }
+
+      console.log('CharacterContext: Загрузка персонажей для пользователя:', userId);
+      const userCharacters = await characterService.getUserCharacters(userId);
+      console.log('CharacterContext: Получено персонажей:', userCharacters.length);
+      
+      setCharacters(userCharacters);
     } catch (err) {
-      console.error('Ошибка загрузки персонажей:', err);
-      setError(err instanceof Error ? err.message : 'Неизвестная ошибка');
+      const errorMessage = err instanceof Error ? err.message : 'Ошибка загрузки персонажей';
+      console.error('CharacterContext: Ошибка загрузки персонажей:', err);
+      setError(errorMessage);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const getCharacterById = useCallback(async (id: string): Promise<Character | null> => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const foundCharacter = await characterService.getCharacterById(id);
+      
+      if (foundCharacter) {
+        setCharacterState(foundCharacter);
+        return foundCharacter;
+      }
+      
+      return null;
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Ошибка загрузки персонажа';
+      setError(errorMessage);
+      throw err;
     } finally {
       setLoading(false);
     }
   }, []);
 
   const refreshCharacters = useCallback(async () => {
+    console.log('CharacterContext: Принудительное обновление списка персонажей');
     await getUserCharacters();
   }, [getUserCharacters]);
 
-  const getCharacterById = useCallback(async (id: string): Promise<Character | null> => {
-    try {
-      return await characterService.getCharacterById(id);
-    } catch (err) {
-      console.error('Ошибка загрузки персонажа:', err);
-      return null;
+  const saveCurrentCharacter = useCallback(async () => {
+    if (!character) {
+      throw new Error('Нет текущего персонажа для сохранения');
     }
-  }, []);
+    
+    try {
+      setLoading(true);
+      await characterService.saveCharacterToFirestore(character);
+      toast.success('Персонаж сохранен');
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Ошибка сохранения персонажа';
+      setError(errorMessage);
+      toast.error(errorMessage);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, [character]);
 
   return (
     <CharacterContext.Provider
@@ -152,7 +190,7 @@ export const CharacterProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         getUserCharacters,
         getCharacterById,
         refreshCharacters,
-        saveCurrentCharacter,
+        saveCurrentCharacter
       }}
     >
       {children}
