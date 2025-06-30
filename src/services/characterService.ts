@@ -37,6 +37,9 @@ export const saveCharacter = (character: Character): Character => {
       localStorage.setItem(userCharactersKey, JSON.stringify(existingCharacters));
     }
 
+    // Создаем резервную копию
+    createBackup(character);
+
     return character;
   } catch (error) {
     console.error('Ошибка сохранения персонажа:', error);
@@ -73,6 +76,10 @@ export const deleteCharacter = async (id: string): Promise<void> => {
     // Удаляем из localStorage
     localStorage.removeItem(`character_${id}`);
     
+    // Удаляем резервные копии
+    localStorage.removeItem(`character_backup_${id}`);
+    localStorage.removeItem(`character_autosave_${id}`);
+    
     // Обновляем список персонажей пользователя
     if (character?.userId) {
       const userCharactersKey = `user_characters_${character.userId}`;
@@ -83,5 +90,60 @@ export const deleteCharacter = async (id: string): Promise<void> => {
   } catch (error) {
     console.error('Ошибка удаления персонажа:', error);
     throw new Error('Не удалось удалить персонажа');
+  }
+};
+
+// Новые функции для работы с резервными копиями
+export const createBackup = (character: Character): void => {
+  try {
+    const backupData = {
+      character,
+      timestamp: new Date().toISOString(),
+      version: '1.0'
+    };
+    
+    localStorage.setItem(`character_backup_${character.id}`, JSON.stringify(backupData));
+  } catch (error) {
+    console.error('Ошибка создания резервной копии:', error);
+  }
+};
+
+export const restoreFromBackup = (id: string): Character | null => {
+  try {
+    const backup = localStorage.getItem(`character_backup_${id}`);
+    if (backup) {
+      const backupData = JSON.parse(backup);
+      return backupData.character;
+    }
+    return null;
+  } catch (error) {
+    console.error('Ошибка восстановления из резервной копии:', error);
+    return null;
+  }
+};
+
+export const getAllBackups = (): Array<{ id: string; character: Character; timestamp: string }> => {
+  try {
+    const backups: Array<{ id: string; character: Character; timestamp: string }> = [];
+    
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key?.startsWith('character_backup_')) {
+        const backup = localStorage.getItem(key);
+        if (backup) {
+          const backupData = JSON.parse(backup);
+          backups.push({
+            id: key.replace('character_backup_', ''),
+            character: backupData.character,
+            timestamp: backupData.timestamp
+          });
+        }
+      }
+    }
+    
+    return backups.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+  } catch (error) {
+    console.error('Ошибка получения списка резервных копий:', error);
+    return [];
   }
 };
