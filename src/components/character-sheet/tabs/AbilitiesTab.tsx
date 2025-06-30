@@ -53,7 +53,20 @@ const AbilitiesTab: React.FC<AbilitiesTabProps> = ({ character, onUpdateCharacte
   // Обновление персонажа при изменении данных
   useEffect(() => {
     const updatedCharacter = {
-      abilities: abilities,
+      abilities: {
+        STR: abilities.strength,
+        DEX: abilities.dexterity,
+        CON: abilities.constitution,
+        INT: abilities.intelligence,
+        WIS: abilities.wisdom,
+        CHA: abilities.charisma,
+        strength: abilities.strength,
+        dexterity: abilities.dexterity,
+        constitution: abilities.constitution,
+        intelligence: abilities.intelligence,
+        wisdom: abilities.wisdom,
+        charisma: abilities.charisma
+      },
       strength: abilities.strength,
       dexterity: abilities.dexterity,
       constitution: abilities.constitution,
