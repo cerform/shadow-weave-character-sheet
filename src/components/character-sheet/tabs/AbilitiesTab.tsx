@@ -246,8 +246,18 @@ const AbilitiesTab: React.FC<AbilitiesTabProps> = ({ character, onUpdateCharacte
           <ScrollArea className="h-[400px] pr-4">
             <div className="space-y-2">
               {skillDefinitions.map((skill) => {
-                const bonus = getSkillBonus(skill.name, skill.ability as AbilityName);
+                const skillAbility = skill.ability as AbilityName;
+                const bonus = getSkillBonus(skill.name, skillAbility);
                 const skillInfo = skills[skill.name] || { proficient: false };
+                
+                const abilityAbbreviations: Record<AbilityName, string> = {
+                  strength: 'Сил',
+                  dexterity: 'Лов',
+                  constitution: 'Тел',
+                  intelligence: 'Инт',
+                  wisdom: 'Мдр',
+                  charisma: 'Хар'
+                };
                 
                 return (
                   <div key={skill.name} className="flex items-center justify-between p-2 border rounded">
@@ -260,12 +270,7 @@ const AbilitiesTab: React.FC<AbilitiesTabProps> = ({ character, onUpdateCharacte
                       <Label htmlFor={`skill-${skill.name}`} className="flex-1">
                         {skill.name} 
                         <span className="text-muted-foreground ml-1">
-                          ({skill.ability === 'strength' ? 'Сил' :
-                            skill.ability === 'dexterity' ? 'Лов' :
-                            skill.ability === 'constitution' ? 'Тел' :
-                            skill.ability === 'intelligence' ? 'Инт' :
-                            skill.ability === 'wisdom' ? 'Мдр' :
-                            skill.ability === 'charisma' ? 'Хар' : skill.ability})
+                          ({abilityAbbreviations[skillAbility]})
                         </span>
                       </Label>
                     </div>
