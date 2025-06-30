@@ -2,13 +2,28 @@
 import React from 'react';
 import { Character } from '@/types/character';
 import { Card, CardContent } from '@/components/ui/card';
-import { getAbilityModifierString } from '@/utils/abilityUtils';
+import { 
+  calculateAbilityModifier, 
+  formatModifier,
+  calculateProficiencyBonusByLevel 
+} from '@/utils/characterCalculations';
 
 interface CharacterSummaryProps {
   character: Character;
 }
 
 const CharacterSummary: React.FC<CharacterSummaryProps> = ({ character }) => {
+  const abilities = {
+    strength: character.strength || character.abilities?.strength || 10,
+    dexterity: character.dexterity || character.abilities?.dexterity || 10,
+    constitution: character.constitution || character.abilities?.constitution || 10,
+    intelligence: character.intelligence || character.abilities?.intelligence || 10,
+    wisdom: character.wisdom || character.abilities?.wisdom || 10,
+    charisma: character.charisma || character.abilities?.charisma || 10
+  };
+
+  const proficiencyBonus = calculateProficiencyBonusByLevel(character.level);
+
   // Функция форматирования списков для отображения
   const formatList = (list: string[] | undefined | null): string => {
     if (!list || list.length === 0) return 'Нет';
@@ -19,13 +34,10 @@ const CharacterSummary: React.FC<CharacterSummaryProps> = ({ character }) => {
   const formatEquipment = () => {
     if (!character.equipment) return 'Нет экипировки';
     
-    // Обрабатываем оба возможных типа equipment
     if (Array.isArray(character.equipment)) {
-      // Массив Item объектов
       const names = character.equipment.map(item => item.name);
       return names.length ? names.join(', ') : 'Нет экипировки';
     } else {
-      // Объект с weapons, armor, items
       const equipParts = [];
       const equip = character.equipment as { weapons?: string[], armor?: string, items?: string[] };
       
@@ -51,10 +63,8 @@ const CharacterSummary: React.FC<CharacterSummaryProps> = ({ character }) => {
     
     if (Array.isArray(character.features)) {
       if (typeof character.features[0] === 'string') {
-        // Массив строк
         return character.features.length ? character.features.join(', ') : 'Нет особенностей';
       } else {
-        // Массив Feature объектов
         const featureNames = character.features.map((feature: any) => feature.name);
         return featureNames.length ? featureNames.join(', ') : 'Нет особенностей';
       }
@@ -63,7 +73,6 @@ const CharacterSummary: React.FC<CharacterSummaryProps> = ({ character }) => {
     return 'Нет особенностей';
   };
 
-  // Функция для безопасного получения профессий навыков
   const getSkillProficiencies = (): string[] => {
     if (!character.proficiencies) return [];
     
@@ -87,25 +96,25 @@ const CharacterSummary: React.FC<CharacterSummaryProps> = ({ character }) => {
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <h4 className="font-medium mb-1">Характеристики:</h4>
+              <h4 className="font-medium mb-2">Характеристики:</h4>
               <div className="grid grid-cols-2 gap-2 text-sm">
-                <div>СИЛ: {character.abilities?.strength || character.strength || '–'} ({getAbilityModifierString(character.abilities?.strength || character.strength)})</div>
-                <div>ЛОВ: {character.abilities?.dexterity || character.dexterity || '–'} ({getAbilityModifierString(character.abilities?.dexterity || character.dexterity)})</div>
-                <div>ТЕЛ: {character.abilities?.constitution || character.constitution || '–'} ({getAbilityModifierString(character.abilities?.constitution || character.constitution)})</div>
-                <div>ИНТ: {character.abilities?.intelligence || character.intelligence || '–'} ({getAbilityModifierString(character.abilities?.intelligence || character.intelligence)})</div>
-                <div>МДР: {character.abilities?.wisdom || character.wisdom || '–'} ({getAbilityModifierString(character.abilities?.wisdom || character.wisdom)})</div>
-                <div>ХАР: {character.abilities?.charisma || character.charisma || '–'} ({getAbilityModifierString(character.abilities?.charisma || character.charisma)})</div>
+                <div>СИЛ: {abilities.strength} ({formatModifier(calculateAbilityModifier(abilities.strength))})</div>
+                <div>ЛОВ: {abilities.dexterity} ({formatModifier(calculateAbilityModifier(abilities.dexterity))})</div>
+                <div>ТЕЛ: {abilities.constitution} ({formatModifier(calculateAbilityModifier(abilities.constitution))})</div>
+                <div>ИНТ: {abilities.intelligence} ({formatModifier(calculateAbilityModifier(abilities.intelligence))})</div>
+                <div>МДР: {abilities.wisdom} ({formatModifier(calculateAbilityModifier(abilities.wisdom))})</div>
+                <div>ХАР: {abilities.charisma} ({formatModifier(calculateAbilityModifier(abilities.charisma))})</div>
               </div>
             </div>
             
             <div>
-              <h4 className="font-medium mb-1">Базовые параметры:</h4>
+              <h4 className="font-medium mb-2">Базовые параметры:</h4>
               <div className="space-y-1 text-sm">
-                <div>КД: {character.armorClass || '–'}</div>
-                <div>Инициатива: {character.initiative !== undefined ? `+${character.initiative}` : '–'}</div>
-                <div>Скорость: {character.speed || '–'}</div>
+                <div>КД: {character.armorClass || (10 + calculateAbilityModifier(abilities.dexterity))}</div>
+                <div>Инициатива: {formatModifier(calculateAbilityModifier(abilities.dexterity))}</div>
+                <div>Скорость: {character.speed || '30 футов'}</div>
                 <div>Максимум ХП: {character.maxHp || character.hitPoints?.maximum || '–'}</div>
-                <div>Бонус мастерства: +{character.proficiencyBonus || '–'}</div>
+                <div>Бонус мастерства: +{proficiencyBonus}</div>
               </div>
             </div>
           </div>
