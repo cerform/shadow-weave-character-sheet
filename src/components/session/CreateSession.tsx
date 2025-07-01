@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useTheme } from "@/hooks/use-theme";
 import { Button } from "@/components/ui/button";
@@ -40,13 +41,14 @@ const CreateSession: React.FC<CreateSessionProps> = ({ onRoomCreated }) => {
     
     try {
       setIsCreating(true);
-      // Создаем сессию через SessionStore (асинхронно)
-      const newSession = createSession(sessionName);
+      
+      // Подключаемся к сокетам
+      socketService.connect();
+      
+      // Создаем сессию через socket service
+      const newSession = await socketService.createSession(sessionName, nickname);
       
       if (newSession && newSession.code) {
-        // Подключаемся к сокетам, если используются
-        socketService.connect(newSession.code, nickname);
-        
         // Вызываем колбэк с кодом комнаты
         onRoomCreated(newSession.code);
         
