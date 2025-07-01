@@ -1,4 +1,3 @@
-
 import { 
   collection, 
   doc, 
@@ -48,6 +47,9 @@ export const getUserCharacters = async (userId: string): Promise<Character[]> =>
     throw new Error('Не удалось загрузить персонажей');
   }
 };
+
+// Алиас для обратной совместимости
+export const getCharactersByUserId = getUserCharacters;
 
 // Получение персонажа по ID
 export const getCharacterById = async (characterId: string): Promise<Character | null> => {
