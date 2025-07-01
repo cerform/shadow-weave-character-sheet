@@ -6,12 +6,14 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { useCharacter } from '@/contexts/CharacterContext';
 import { useNavigate } from 'react-router-dom';
 import { socketService, GameSession, SessionPlayer, SessionMessage, DiceRollResult } from '@/services/socket';
-import { Users, MessageSquare, Dice6, LogOut, Crown, User } from 'lucide-react';
+import { Users, MessageSquare, Dice6, LogOut, Crown, User, Map } from 'lucide-react';
 import DicePanel from '@/components/character-sheet/DicePanel';
+import BattleMapPanel from '@/components/battle/BattleMapPanel';
 
 interface PlayerSessionPanelProps {
   sessionCode?: string;
@@ -27,6 +29,7 @@ const PlayerSessionPanel: React.FC<PlayerSessionPanelProps> = ({ sessionCode: in
   const [newMessage, setNewMessage] = useState('');
   const [isConnected, setIsConnected] = useState(false);
   const [isJoining, setIsJoining] = useState(false);
+  const [activeTab, setActiveTab] = useState('session');
   const { character, updateCharacter } = useCharacter();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -201,150 +204,173 @@ const PlayerSessionPanel: React.FC<PlayerSessionPanelProps> = ({ sessionCode: in
 
   return (
     <div className="max-w-7xl mx-auto p-6">
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Информация о сессии и персонаже */}
-        <div className="lg:col-span-2 space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <User className="h-5 w-5 text-blue-500" />
-                  {currentSession.name}
-                </div>
-                <div className="flex items-center gap-2">
-                  <Badge variant="outline">{sessionCode}</Badge>
-                  <Button onClick={leaveSession} variant="destructive" size="sm">
-                    <LogOut className="h-4 w-4 mr-2" />
-                    Выйти
-                  </Button>
-                </div>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground">
-                Играем как: <strong>{playerName}</strong>
-              </p>
-            </CardContent>
-          </Card>
-
-          {/* Персонаж */}
-          {character && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Мой персонаж</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
-                  <div className="text-center">
-                    <p className="text-sm text-muted-foreground">Здоровье</p>
-                    <p className="text-xl font-bold">{character.currentHp}/{character.maxHp}</p>
-                  </div>
-                  <div className="text-center">
-                    <p className="text-sm text-muted-foreground">Класс доспеха</p>
-                    <p className="text-xl font-bold">{character.armorClass}</p>
-                  </div>
-                  <div className="text-center">
-                    <p className="text-sm text-muted-foreground">Инициатива</p>
-                    <p className="text-xl font-bold">{character.initiative}</p>
-                  </div>
-                  <div className="text-center">
-                    <p className="text-sm text-muted-foreground">Уровень</p>
-                    <p className="text-xl font-bold">{character.level}</p>
-                  </div>
-                </div>
-                <Button 
-                  onClick={() => navigate('/character-sheet')}
-                  variant="outline" 
-                  className="w-full"
-                >
-                  Открыть полный лист персонажа
-                </Button>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Кубики */}
-          {character && (
-            <DicePanel 
-              character={character} 
-              onUpdate={handleCharacterUpdate}
-              onDiceRoll={handleDiceRoll}
-            />
-          )}
-
-          {/* Игроки */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Users className="h-5 w-5" />
-                Участники ({players.length})
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                {players.map((player) => (
-                  <div key={player.id} className="flex items-center justify-between p-2 border rounded">
-                    <div className="flex items-center gap-2">
-                      <div className={`w-2 h-2 rounded-full ${player.isOnline ? 'bg-green-500' : 'bg-gray-400'}`} />
-                      <span className="font-medium">{player.name}</span>
-                      {player.isDM && <Crown className="h-4 w-4 text-yellow-500" />}
-                    </div>
-                    <Badge variant={player.isOnline ? "default" : "secondary"}>
-                      {player.isOnline ? "Онлайн" : "Оффлайн"}
-                    </Badge>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+        <div className="flex items-center justify-between">
+          <TabsList className="grid w-fit grid-cols-2">
+            <TabsTrigger value="session" className="flex items-center gap-2">
+              <User className="h-4 w-4" />
+              Сессия
+            </TabsTrigger>
+            <TabsTrigger value="battle" className="flex items-center gap-2">
+              <Map className="h-4 w-4" />
+              Боевая карта
+            </TabsTrigger>
+          </TabsList>
+          
+          <div className="flex items-center gap-2">
+            <Badge variant="outline">{sessionCode}</Badge>
+            <Button onClick={leaveSession} variant="destructive" size="sm">
+              <LogOut className="h-4 w-4 mr-2" />
+              Выйти
+            </Button>
+          </div>
         </div>
 
-        {/* Чат */}
-        <div>
-          <Card className="h-[600px] flex flex-col">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <MessageSquare className="h-5 w-5" />
-                Чат игры
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="flex-grow flex flex-col">
-              <ScrollArea className="flex-grow mb-4">
-                <div className="space-y-2">
-                  {messages.map((message) => (
-                    <div key={message.id} className="p-2 rounded bg-muted/30">
-                      <div className="flex justify-between text-sm">
-                        <span className="font-medium">{message.sender}</span>
-                        <span className="text-muted-foreground">
-                          {new Date(message.timestamp).toLocaleTimeString()}
-                        </span>
+        <TabsContent value="session" className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Информация о сессии и персонаже */}
+            <div className="lg:col-span-2 space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <User className="h-5 w-5 text-blue-500" />
+                    {currentSession.name}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-muted-foreground">
+                    Играем как: <strong>{playerName}</strong>
+                  </p>
+                </CardContent>
+              </Card>
+
+              {/* Персонаж */}
+              {character && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Мой персонаж</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
+                      <div className="text-center">
+                        <p className="text-sm text-muted-foreground">Здоровье</p>
+                        <p className="text-xl font-bold">{character.currentHp}/{character.maxHp}</p>
                       </div>
-                      <p className="mt-1">{message.content}</p>
-                      {message.type === 'dice' && (
-                        <Dice6 className="h-4 w-4 inline ml-2 text-blue-500" />
-                      )}
+                      <div className="text-center">
+                        <p className="text-sm text-muted-foreground">Класс доспеха</p>
+                        <p className="text-xl font-bold">{character.armorClass}</p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-sm text-muted-foreground">Инициатива</p>
+                        <p className="text-xl font-bold">{character.initiative}</p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-sm text-muted-foreground">Уровень</p>
+                        <p className="text-xl font-bold">{character.level}</p>
+                      </div>
                     </div>
-                  ))}
-                </div>
-              </ScrollArea>
-              
-              <Separator className="my-2" />
-              
-              <div className="flex gap-2">
-                <Input
-                  placeholder="Ваше сообщение..."
-                  value={newMessage}
-                  onChange={(e) => setNewMessage(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
+                    <Button 
+                      onClick={() => navigate('/character-sheet')}
+                      variant="outline" 
+                      className="w-full"
+                    >
+                      Открыть полный лист персонажа
+                    </Button>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Кубики */}
+              {character && (
+                <DicePanel 
+                  character={character} 
+                  onUpdate={handleCharacterUpdate}
+                  onDiceRoll={handleDiceRoll}
                 />
-                <Button onClick={sendMessage} disabled={!newMessage.trim()}>
-                  Отправить
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
+              )}
+
+              {/* Игроки */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Users className="h-5 w-5" />
+                    Участники ({players.length})
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    {players.map((player) => (
+                      <div key={player.id} className="flex items-center justify-between p-2 border rounded">
+                        <div className="flex items-center gap-2">
+                          <div className={`w-2 h-2 rounded-full ${player.isOnline ? 'bg-green-500' : 'bg-gray-400'}`} />
+                          <span className="font-medium">{player.name}</span>
+                          {player.isDM && <Crown className="h-4 w-4 text-yellow-500" />}
+                        </div>
+                        <Badge variant={player.isOnline ? "default" : "secondary"}>
+                          {player.isOnline ? "Онлайн" : "Оффлайн"}
+                        </Badge>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Чат */}
+            <div>
+              <Card className="h-[600px] flex flex-col">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <MessageSquare className="h-5 w-5" />
+                    Чат игры
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="flex-grow flex flex-col">
+                  <ScrollArea className="flex-grow mb-4">
+                    <div className="space-y-2">
+                      {messages.map((message) => (
+                        <div key={message.id} className="p-2 rounded bg-muted/30">
+                          <div className="flex justify-between text-sm">
+                            <span className="font-medium">{message.sender}</span>
+                            <span className="text-muted-foreground">
+                              {new Date(message.timestamp).toLocaleTimeString()}
+                            </span>
+                          </div>
+                          <p className="mt-1">{message.content}</p>
+                          {message.type === 'dice' && (
+                            <Dice6 className="h-4 w-4 inline ml-2 text-blue-500" />
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </ScrollArea>
+                  
+                  <Separator className="my-2" />
+                  
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="Ваше сообщение..."
+                      value={newMessage}
+                      onChange={(e) => setNewMessage(e.target.value)}
+                      onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
+                    />
+                    <Button onClick={sendMessage} disabled={!newMessage.trim()}>
+                      Отправить
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="battle">
+          <BattleMapPanel 
+            isDM={false} 
+            sessionId={currentSession.id}
+          />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
