@@ -1,4 +1,3 @@
-
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { socketService } from '@/services/socket';
 
@@ -22,6 +21,7 @@ interface BattleCanvasProps {
   tokens: Token[];
   onTokenMove?: (tokenId: string, x: number, y: number) => void;
   onTokenAdd?: (token: Omit<Token, 'id'>) => void;
+  onTokenSelect?: (tokenId: string | null) => void;
 }
 
 const BattleCanvas: React.FC<BattleCanvasProps> = ({
@@ -31,7 +31,8 @@ const BattleCanvas: React.FC<BattleCanvasProps> = ({
   isDM = false,
   tokens = [],
   onTokenMove,
-  onTokenAdd
+  onTokenAdd,
+  onTokenSelect
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [selectedToken, setSelectedToken] = useState<string | null>(null);
@@ -168,6 +169,8 @@ const BattleCanvas: React.FC<BattleCanvasProps> = ({
 
     if (token) {
       setSelectedToken(token.id);
+      onTokenSelect?.(token.id);
+      
       if (isDM || token.type === 'player') {
         setIsDragging(true);
         setDragOffset({
@@ -177,21 +180,23 @@ const BattleCanvas: React.FC<BattleCanvasProps> = ({
       }
     } else {
       setSelectedToken(null);
-      // Если DM кликнул по пустому месту, можно добавить новый токен
-      if (isDM && onTokenAdd) {
+      onTokenSelect?.(null);
+      
+      // Только DM может добавлять токены кликом по пустому месту
+      if (isDM && onTokenAdd && !isDragging) {
         const snapped = snapToGrid(pos.x, pos.y);
         const newToken: Omit<Token, 'id'> = {
           name: 'Новый токен',
           x: snapped.x,
           y: snapped.y,
-          color: '#FF0000',
+          color: '#FF6B6B',
           size: 1,
           type: 'npc'
         };
         onTokenAdd(newToken);
       }
     }
-  }, [getMousePos, getTokenAt, isDM, onTokenAdd, snapToGrid]);
+  }, [getMousePos, getTokenAt, isDM, onTokenAdd, onTokenSelect, snapToGrid, isDragging]);
 
   // Обработчик движения мыши
   const handleMouseMove = useCallback((e: MouseEvent) => {
@@ -234,13 +239,13 @@ const BattleCanvas: React.FC<BattleCanvasProps> = ({
   }, [handleMouseDown, handleMouseMove, handleMouseUp]);
 
   return (
-    <div className="battle-canvas-container border rounded-lg overflow-hidden bg-white">
+    <div className="battle-canvas-container border rounded-lg overflow-hidden bg-white shadow-lg">
       <canvas
         ref={canvasRef}
         width={width}
         height={height}
-        className="cursor-crosshair"
-        style={{ display: 'block' }}
+        className="cursor-crosshair block"
+        style={{ maxWidth: '100%', height: 'auto' }}
       />
     </div>
   );

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { socketService } from '@/services/socket';
 import BattleCanvas from './BattleCanvas';
 import TokenManager from './TokenManager';
-import { Map, Users, Swords } from 'lucide-react';
+import { Map, Users, Swords, Plus } from 'lucide-react';
 
 interface Token {
   id: string;
@@ -129,30 +128,50 @@ const BattleMapPanel: React.FC<BattleMapPanelProps> = ({
   const addTestTokens = () => {
     const testTokens: Omit<Token, 'id'>[] = [
       {
-        name: 'Игрок 1',
+        name: 'Воин',
         x: 120,
         y: 120,
-        color: '#0066FF',
+        color: '#3B82F6',
         size: 1,
         type: 'player',
-        hp: 25,
+        hp: 35,
+        maxHp: 35
+      },
+      {
+        name: 'Маг',
+        x: 180,
+        y: 120,
+        color: '#8B5CF6',
+        size: 1,
+        type: 'player',
+        hp: 22,
         maxHp: 25
       },
       {
-        name: 'Орк',
+        name: 'Орк-воин',
         x: 300,
         y: 180,
-        color: '#FF0000',
+        color: '#EF4444',
         size: 1,
         type: 'monster',
         hp: 15,
         maxHp: 15
       },
       {
+        name: 'Гоблин',
+        x: 360,
+        y: 240,
+        color: '#F59E0B',
+        size: 1,
+        type: 'monster',
+        hp: 7,
+        maxHp: 7
+      },
+      {
         name: 'Торговец',
         x: 480,
         y: 120,
-        color: '#00AA00',
+        color: '#10B981',
         size: 1,
         type: 'npc'
       }
@@ -218,13 +237,14 @@ const BattleMapPanel: React.FC<BattleMapPanelProps> = ({
               {isBattleActive && (
                 <Badge variant="destructive" className="animate-pulse">
                   <Swords className="h-3 w-3 mr-1" />
-                  Бой
+                  Бой активен
                 </Badge>
               )}
             </div>
             {isDM && (
               <div className="flex items-center gap-2">
                 <Button size="sm" variant="outline" onClick={addTestTokens}>
+                  <Plus className="h-4 w-4 mr-1" />
                   Тест
                 </Button>
                 <Button size="sm" variant="outline" onClick={clearMap}>
@@ -268,6 +288,7 @@ const BattleMapPanel: React.FC<BattleMapPanelProps> = ({
             tokens={tokens}
             onTokenMove={handleTokenMove}
             onTokenAdd={isDM ? handleTokenAdd : undefined}
+            onTokenSelect={setSelectedTokenId}
           />
         </div>
 
