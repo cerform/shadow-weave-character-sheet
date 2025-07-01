@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,6 +9,7 @@ import { Token } from '@/stores/battleStore';
 interface DicePanelProps {
   character: Character;
   onUpdate: (updates: Partial<Character>) => void;
+  onDiceRoll?: (dice: string, result: number, modifier: number) => void;
   compactMode?: boolean;
   isDM?: boolean;
   tokens?: Token[];
@@ -20,6 +20,7 @@ interface DicePanelProps {
 const DicePanel: React.FC<DicePanelProps> = ({ 
   character, 
   onUpdate, 
+  onDiceRoll,
   compactMode = false,
   isDM = false,
   tokens = [],
@@ -31,32 +32,24 @@ const DicePanel: React.FC<DicePanelProps> = ({
   const [modifier, setModifier] = useState<number>(0);
   const [rollLabel, setRollLabel] = useState<string>('');
   const [isRolling, setIsRolling] = useState(false);
+  const [lastRoll, setLastRoll] = useState<{ dice: string, result: number, total: number } | null>(null);
   
   const diceTypes = [4, 6, 8, 10, 12, 20, 100];
   
-  const rollDice = (sides: number, count: number, mod: number, label: string) => {
-    setIsRolling(true);
+  const rollDice = (sides: number, modifier: number = 0) => {
+    const result = Math.floor(Math.random() * sides) + 1;
+    const total = result + modifier;
+    const diceNotation = `d${sides}`;
+    
+    setLastRoll({ dice: diceNotation, result, total });
+    
+    // Вызываем колбэк если он передан
+    if (onDiceRoll) {
+      onDiceRoll(diceNotation, result, modifier);
+    }
     
     // Simulate dice rolling delay
     setTimeout(() => {
-      const rolls = Array(count).fill(0).map(() => Math.floor(Math.random() * sides) + 1);
-      const total = rolls.reduce((sum, roll) => sum + roll, 0) + mod;
-      
-      const newRoll = {
-        diceType: `d${sides}`,
-        count: count,
-        modifier: mod,
-        rolls: rolls,
-        total: total,
-        label: label || `${count}d${sides}${mod >= 0 ? '+' + mod : mod}`,
-        timestamp: new Date().toISOString()
-      };
-      
-      // Обновить интерфейс Character, чтобы включить lastDiceRoll
-      onUpdate({ 
-        lastDiceRoll: newRoll 
-      } as Partial<Character>);
-      
       setIsRolling(false);
     }, 600);
   };
@@ -65,14 +58,14 @@ const DicePanel: React.FC<DicePanelProps> = ({
     if (diceCount <= 0) return;
     
     const label = rollLabel.trim() || `${diceCount}d${diceSides}${modifier >= 0 ? '+' + modifier : modifier}`;
-    rollDice(diceSides, diceCount, modifier, label);
+    rollDice(diceSides, modifier);
   };
   
   const handleAbilityCheck = (ability: string) => {
     const abilityScore = character[ability.toLowerCase() as keyof Character] as number;
     const abilityMod = getModifierFromAbilityScore(abilityScore);
     
-    rollDice(20, 1, Number(abilityMod), `Проверка ${getAbilityLabel(ability)}`);
+    rollDice(20, Number(abilityMod));
   };
   
   const getAbilityLabel = (ability: string): string => {
@@ -89,31 +82,28 @@ const DicePanel: React.FC<DicePanelProps> = ({
   
   // Format the dice roll result for display
   const formatRollResult = () => {
-    if (!character.lastDiceRoll) return null;
+    if (!lastRoll) return null;
     
-    const { diceType, count, modifier, rolls, total, label } = character.lastDiceRoll;
+    const { dice, result, total } = lastRoll;
     const modifierStr = modifier >= 0 ? `+${modifier}` : `${modifier}`;
     
     return (
       <div className="text-center my-2 p-2 bg-muted/20 rounded-md">
-        <p className="text-sm text-muted-foreground">{label}</p>
+        <p className="text-sm text-muted-foreground">{dice}</p>
         <div className="flex items-center justify-center gap-1 flex-wrap">
-          {rolls.map((roll, i) => (
-            <span
-              key={i}
-              className={`inline-block px-2 py-1 rounded text-sm font-medium ${
-                roll === parseInt(diceType.slice(1)) ? 'bg-success text-success-foreground' :
-                roll === 1 ? 'bg-destructive text-destructive-foreground' :
-                'bg-secondary text-secondary-foreground'
-              }`}
-            >
-              {roll}
-            </span>
-          ))}
+          <span
+            className={`inline-block px-2 py-1 rounded text-sm font-medium ${
+              result === parseInt(dice.slice(1)) ? 'bg-success text-success-foreground' :
+              result === 1 ? 'bg-destructive text-destructive-foreground' :
+              'bg-secondary text-secondary-foreground'
+            }`}
+          >
+            {result}
+          </span>
         </div>
         {count > 1 || modifier !== 0 ? (
           <p className="text-sm mt-1">
-            {rolls.join(' + ')} {modifier !== 0 ? modifierStr : ''} = <span className="font-bold">{total}</span>
+            {result} {modifier !== 0 ? modifierStr : ''} = <span className="font-bold">{total}</span>
           </p>
         ) : (
           <p className="text-sm mt-1">
@@ -136,7 +126,7 @@ const DicePanel: React.FC<DicePanelProps> = ({
               key={sides}
               variant="secondary"
               size="sm"
-              onClick={() => rollDice(sides, 1, 0, `d${sides}`)}
+              onClick={() => rollDice(sides, 0)}
               disabled={isRolling}
               className="text-xs"
             >
@@ -251,7 +241,7 @@ const DicePanel: React.FC<DicePanelProps> = ({
               key={sides}
               variant="secondary"
               size="sm"
-              onClick={() => rollDice(sides, 1, 0, `d${sides}`)}
+              onClick={() => rollDice(sides, 0)}
               disabled={isRolling}
               className="text-xs sm:text-sm"
             >

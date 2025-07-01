@@ -1,146 +1,255 @@
 
-import io, { Socket } from 'socket.io-client';
+import { io, Socket } from 'socket.io-client';
+import { Character } from '@/types/character';
 
-// Определение типов для результатов бросков кубиков
-export interface DiceResult {
-  nickname: string;
-  userId?: string;
+export interface SessionMessage {
+  id: string;
+  type: 'chat' | 'dice' | 'system' | 'character_update';
+  sender: string;
+  content: any;
+  timestamp: string;
+  sessionId: string;
+}
+
+export interface DiceRollResult {
+  id: string;
+  playerId: string;
+  playerName: string;
   diceType: string;
   result: number;
-  timestamp?: number;
+  modifier: number;
+  total: number;
+  timestamp: string;
 }
 
-// Определение типов для сообщений чата
-export interface ChatMessage {
-  roomCode: string;
-  userId?: string;
-  username?: string;
-  message: string;
-  timestamp?: number;
+export interface SessionPlayer {
+  id: string;
+  name: string;
+  character?: Character;
+  isOnline: boolean;
+  isDM: boolean;
 }
 
-// Определение API сервера с поддержкой резервного значения
-const SERVER_URL = import.meta.env.VITE_SERVER_URL || 'http://localhost:3001';
+export interface GameSession {
+  id: string;
+  name: string;
+  code: string;
+  dmId: string;
+  players: SessionPlayer[];
+  isActive: boolean;
+  createdAt: string;
+  battleMap?: {
+    width: number;
+    height: number;
+    tokens: any[];
+  };
+}
 
-// Определяем настройки для сокета
-const socketOptions = {
-  autoConnect: false,          // Отключаем автоподключение
-  reconnection: true,          // Включаем переподключение
-  reconnectionAttempts: 3,     // Ограничиваем количество попыток
-  reconnectionDelay: 1000,     // Интервал между попытками (1 секунда)
-  timeout: 5000,               // Таймаут подключения (5 секунд)
-  transports: ['websocket', 'polling'], // Разрешаем WebSocket и polling
-  secure: true                 // Используем защищенное соединение если доступно
-};
+class SocketService {
+  private socket: Socket | null = null;
+  private currentSession: GameSession | null = null;
+  private messageCallbacks: ((message: SessionMessage) => void)[] = [];
+  private diceCallbacks: ((roll: DiceRollResult) => void)[] = [];
+  private sessionUpdateCallbacks: ((session: GameSession) => void)[] = [];
+  private playerUpdateCallbacks: ((players: SessionPlayer[]) => void)[] = [];
 
-// Создание экземпляра Socket.io с улучшенными настройками
-export const socket: Socket = io(SERVER_URL, socketOptions);
+  connect() {
+    if (this.socket?.connected) return;
 
-// Регистрируем слушатели событий сокета
-socket.on('connect', () => {
-  console.log('[SOCKET] Соединение установлено, ID:', socket.id);
-});
+    console.log('🔌 Подключение к серверу...');
+    this.socket = io('http://localhost:3001', {
+      transports: ['websocket', 'polling'],
+      reconnection: true,
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000
+    });
 
-socket.on('connect_error', (error) => {
-  console.error('[SOCKET] Ошибка соединения:', error);
-});
+    this.setupEventListeners();
+  }
 
-socket.on('disconnect', (reason) => {
-  console.log('[SOCKET] Соединение закрыто. Причина:', reason);
-});
+  private setupEventListeners() {
+    if (!this.socket) return;
 
-// Сервис для работы с сокетами с улучшенной обработкой ошибок
-export const socketService = {
-  connect: (sessionCode: string, playerName: string, characterId?: string) => {
-    // Проверяем, что сокет не подключен, прежде чем пытаться подключиться
-    if (!socket.connected) {
-      try {
-        console.log(`[SOCKET] Начало подключения к сессии ${sessionCode}`);
-        
-        // Регистрируем одноразовый обработчик успешного подключения
-        const connectHandler = () => {
-          console.log(`[SOCKET] Подключено к сессии ${sessionCode}`);
-          socket.emit('joinRoom', { roomCode: sessionCode, nickname: playerName, characterId });
-        };
-        
-        socket.once('connect', connectHandler);
-        
-        // Устанавливаем таймаут для соединения
-        setTimeout(() => {
-          socket.off('connect', connectHandler);
-          if (!socket.connected) {
-            console.error('[SOCKET] Таймаут подключения');
-          }
-        }, 5000); // 5-секундный таймаут
-        
-        socket.connect();
-        return true;
-      } catch (error) {
-        console.error("[SOCKET] Ошибка при подключении сокета:", error);
-        return false;
+    this.socket.on('connect', () => {
+      console.log('✅ Подключен к серверу');
+    });
+
+    this.socket.on('disconnect', () => {
+      console.log('❌ Отключен от сервера');
+    });
+
+    this.socket.on('session:created', (session: GameSession) => {
+      console.log('🎯 Сессия создана:', session);
+      this.currentSession = session;
+      this.sessionUpdateCallbacks.forEach(callback => callback(session));
+    });
+
+    this.socket.on('session:joined', (data: { session: GameSession; player: SessionPlayer }) => {
+      console.log('👥 Игрок присоединился:', data.player.name);
+      this.currentSession = data.session;
+      this.sessionUpdateCallbacks.forEach(callback => callback(data.session));
+      this.playerUpdateCallbacks.forEach(callback => callback(data.session.players));
+    });
+
+    this.socket.on('session:message', (message: SessionMessage) => {
+      console.log('💬 Получено сообщение:', message);
+      this.messageCallbacks.forEach(callback => callback(message));
+    });
+
+    this.socket.on('session:dice_roll', (roll: DiceRollResult) => {
+      console.log('🎲 Результат броска:', roll);
+      this.diceCallbacks.forEach(callback => callback(roll));
+    });
+
+    this.socket.on('session:player_update', (players: SessionPlayer[]) => {
+      console.log('🔄 Обновление игроков:', players);
+      if (this.currentSession) {
+        this.currentSession.players = players;
+        this.sessionUpdateCallbacks.forEach(callback => callback(this.currentSession!));
       }
-    }
-    return socket.connected; // Возвращаем текущее состояние соединения
-  },
+      this.playerUpdateCallbacks.forEach(callback => callback(players));
+    });
 
-  disconnect: () => {
-    // Проверяем, что сокет подключен, прежде чем пытаться отключиться
-    if (socket.connected) {
-      try {
-        socket.disconnect();
-        console.log('[SOCKET] Отключено');
-        return true;
-      } catch (error) {
-        console.error('[SOCKET] Ошибка при отключении:', error);
-        return false;
+    this.socket.on('error', (error: any) => {
+      console.error('❌ Ошибка сокета:', error);
+    });
+  }
+
+  // DM методы
+  createSession(name: string, dmName: string, character?: Character): Promise<GameSession> {
+    return new Promise((resolve, reject) => {
+      if (!this.socket?.connected) {
+        reject(new Error('Нет соединения с сервером'));
+        return;
       }
-    }
-    return true;
-  },
 
-  sendChatMessage: (message: string) => {
-    if (socket.connected) {
-      socket.emit('chatMessage', { message });
-      return true;
-    } else {
-      console.warn("[SOCKET] Нельзя отправить сообщение: сокет не подключен");
-      return false;
-    }
-  },
+      this.socket.emit('session:create', { name, dmName, character }, (response: any) => {
+        if (response.success) {
+          this.currentSession = response.session;
+          resolve(response.session);
+        } else {
+          reject(new Error(response.error || 'Ошибка создания сессии'));
+        }
+      });
+    });
+  }
 
-  sendRoll: (formula: string, reason?: string) => {
-    if (socket.connected) {
-      socket.emit('rollDice', { formula, reason });
-      return true;
-    } else {
-      console.warn("[SOCKET] Нельзя отправить бросок: сокет не подключен");
-      return false;
-    }
-  },
+  // Player методы
+  joinSession(code: string, playerName: string, character?: Character): Promise<GameSession> {
+    return new Promise((resolve, reject) => {
+      if (!this.socket?.connected) {
+        reject(new Error('Нет соединения с сервером'));
+        return;
+      }
 
-  updateToken: (token: any) => {
-    if (socket.connected) {
-      socket.emit('updateToken', token);
-      return true;
-    } else {
-      console.warn("[SOCKET] Нельзя обновить токен: сокет не подключен");
-      return false;
-    }
-  },
-  
-  // Улучшенная проверка состояния соединения
-  isConnected: () => {
-    return socket && socket.connected;
-  },
-  
-  on: (event: string, callback: (...args: any[]) => void) => {
-    socket.on(event, callback);
-    return () => socket.off(event, callback);
-  },
-  
-  off: (event: string, callback?: (...args: any[]) => void) => {
-    socket.off(event, callback);
-  },
-};
+      this.socket.emit('session:join', { code, playerName, character }, (response: any) => {
+        if (response.success) {
+          this.currentSession = response.session;
+          resolve(response.session);
+        } else {
+          reject(new Error(response.error || 'Ошибка подключения к сессии'));
+        }
+      });
+    });
+  }
 
-export default socketService;
+  // Общие методы
+  sendMessage(content: string, type: 'chat' | 'system' = 'chat') {
+    if (!this.socket?.connected || !this.currentSession) return;
+
+    const message: Partial<SessionMessage> = {
+      type,
+      content,
+      sessionId: this.currentSession.id,
+      timestamp: new Date().toISOString()
+    };
+
+    this.socket.emit('session:send_message', message);
+  }
+
+  rollDice(diceType: string, modifier: number = 0, reason?: string) {
+    if (!this.socket?.connected || !this.currentSession) return;
+
+    this.socket.emit('session:roll_dice', {
+      sessionId: this.currentSession.id,
+      diceType,
+      modifier,
+      reason,
+      timestamp: new Date().toISOString()
+    });
+  }
+
+  updateCharacter(character: Character) {
+    if (!this.socket?.connected || !this.currentSession) return;
+
+    this.socket.emit('session:update_character', {
+      sessionId: this.currentSession.id,
+      character,
+      timestamp: new Date().toISOString()
+    });
+  }
+
+  endSession() {
+    if (!this.socket?.connected || !this.currentSession) return;
+
+    this.socket.emit('session:end', { sessionId: this.currentSession.id });
+    this.currentSession = null;
+  }
+
+  disconnect() {
+    if (this.socket) {
+      this.socket.disconnect();
+      this.socket = null;
+      this.currentSession = null;
+    }
+  }
+
+  // Подписки на события
+  onMessage(callback: (message: SessionMessage) => void) {
+    this.messageCallbacks.push(callback);
+  }
+
+  onDiceRoll(callback: (roll: DiceRollResult) => void) {
+    this.diceCallbacks.push(callback);
+  }
+
+  onSessionUpdate(callback: (session: GameSession) => void) {
+    this.sessionUpdateCallbacks.push(callback);
+  }
+
+  onPlayerUpdate(callback: (players: SessionPlayer[]) => void) {
+    this.playerUpdateCallbacks.push(callback);
+  }
+
+  // Отписки
+  removeMessageListener(callback: (message: SessionMessage) => void) {
+    const index = this.messageCallbacks.indexOf(callback);
+    if (index > -1) this.messageCallbacks.splice(index, 1);
+  }
+
+  removeDiceListener(callback: (roll: DiceRollResult) => void) {
+    const index = this.diceCallbacks.indexOf(callback);
+    if (index > -1) this.diceCallbacks.splice(index, 1);
+  }
+
+  removeSessionUpdateListener(callback: (session: GameSession) => void) {
+    const index = this.sessionUpdateCallbacks.indexOf(callback);
+    if (index > -1) this.sessionUpdateCallbacks.splice(index, 1);
+  }
+
+  removePlayerUpdateListener(callback: (players: SessionPlayer[]) => void) {
+    const index = this.playerUpdateCallbacks.indexOf(callback);
+    if (index > -1) this.playerUpdateCallbacks.splice(index, 1);
+  }
+
+  // Геттеры
+  getCurrentSession() {
+    return this.currentSession;
+  }
+
+  isConnected() {
+    return this.socket?.connected || false;
+  }
+}
+
+export const socketService = new SocketService();
