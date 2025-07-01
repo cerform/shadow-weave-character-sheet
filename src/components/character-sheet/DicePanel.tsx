@@ -57,7 +57,6 @@ const DicePanel: React.FC<DicePanelProps> = ({
   const handleCustomRoll = () => {
     if (diceCount <= 0) return;
     
-    const label = rollLabel.trim() || `${diceCount}d${diceSides}${modifier >= 0 ? '+' + modifier : modifier}`;
     rollDice(diceSides, modifier);
   };
   
@@ -66,18 +65,6 @@ const DicePanel: React.FC<DicePanelProps> = ({
     const abilityMod = getModifierFromAbilityScore(abilityScore);
     
     rollDice(20, Number(abilityMod));
-  };
-  
-  const getAbilityLabel = (ability: string): string => {
-    const abilityLabels: Record<string, string> = {
-      strength: 'Силы',
-      dexterity: 'Ловкости',
-      constitution: 'Телосложения',
-      intelligence: 'Интеллекта',
-      wisdom: 'Мудрости',
-      charisma: 'Харизмы'
-    };
-    return abilityLabels[ability.toLowerCase()] || ability;
   };
   
   // Format the dice roll result for display
@@ -101,7 +88,7 @@ const DicePanel: React.FC<DicePanelProps> = ({
             {result}
           </span>
         </div>
-        {count > 1 || modifier !== 0 ? (
+        {diceCount > 1 || modifier !== 0 ? (
           <p className="text-sm mt-1">
             {result} {modifier !== 0 ? modifierStr : ''} = <span className="font-bold">{total}</span>
           </p>
