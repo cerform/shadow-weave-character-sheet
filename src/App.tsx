@@ -7,10 +7,10 @@ import { CharacterProvider } from '@/contexts/CharacterContext';
 import { SessionProvider } from '@/contexts/SessionContext';
 import { SocketProvider } from '@/contexts/SocketContext';
 import { Toaster } from '@/components/ui/toaster';
-import NavigationButtons from '@/components/NavigationButtons';
+import NavigationButtons from '@/components/ui/NavigationButtons';
 import HomePage from '@/pages/HomePage';
 import CharacterCreationPage from '@/pages/CharacterCreationPage';
-import CharacterListPage from '@/pages/CharacterListPage';
+import CharactersListPage from '@/pages/CharactersListPage';
 import CharacterSheetPage from '@/pages/CharacterSheetPage';
 import AuthPage from '@/pages/AuthPage';
 import DMPanel from '@/components/session/DMPanel';
@@ -32,7 +32,7 @@ function App() {
                     <Route path="/" element={<HomePage />} />
                     <Route path="/auth" element={<AuthPage />} />
                     <Route path="/character" element={<CharacterCreationPage />} />
-                    <Route path="/characters" element={<CharacterListPage />} />
+                    <Route path="/characters" element={<CharactersListPage />} />
                     <Route path="/character/:id" element={<CharacterSheetPage />} />
                     <Route path="/dm" element={<DMPanel />} />
                     <Route path="/dm/session/:sessionId" element={<DMSessionPage />} />

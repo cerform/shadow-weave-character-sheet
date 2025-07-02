@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { BattleToken } from '@/services/socket';
-import { Plus, Trash2, Edit, Users, Monster, User } from 'lucide-react';
+import { Plus, Trash2, Edit, Users, Skull, User } from 'lucide-react';
 
 interface TokenManagerProps {
   tokens: BattleToken[];
@@ -61,7 +61,7 @@ const TokenManager: React.FC<TokenManagerProps> = ({
   const getTypeIcon = (type: BattleToken['type']) => {
     switch (type) {
       case 'player': return <User className="h-4 w-4" />;
-      case 'monster': return <Monster className="h-4 w-4" />;
+      case 'monster': return <Skull className="h-4 w-4" />;
       default: return <Users className="h-4 w-4" />;
     }
   };
@@ -111,7 +111,7 @@ const TokenManager: React.FC<TokenManagerProps> = ({
                     <SelectContent>
                       <SelectItem value="player">🛡️ Игрок</SelectItem>
                       <SelectItem value="npc">👤 NPC</SelectItem>
-                      <SelectItem value="monster">👹 Монстр</SelectItem>
+                      <SelectItem value="monster">💀 Монстр</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
