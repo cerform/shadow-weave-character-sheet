@@ -103,6 +103,8 @@ const DMPanel: React.FC = () => {
       console.log('DMPanel: Сессия создана успешно:', session);
       
       setCurrentSession(session);
+      setSessionName(''); // Очищаем поле ввода
+      
       toast({
         title: "Сессия создана",
         description: `Код сессии: ${session.code}`,
@@ -149,8 +151,24 @@ const DMPanel: React.FC = () => {
     });
   };
 
-  // Показываем форму создания сессии только если сессии нет И не происходит создание
-  if (!currentSession && !isCreating) {
+  // Если идет создание сессии - показываем загрузку
+  if (isCreating) {
+    return (
+      <div className="max-w-4xl mx-auto p-6">
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-center space-x-2">
+              <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full"></div>
+              <span>Создание сессии...</span>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Если нет активной сессии - показываем форму создания
+  if (!currentSession) {
     return (
       <div className="max-w-4xl mx-auto p-6">
         <Card>
@@ -173,7 +191,7 @@ const DMPanel: React.FC = () => {
             <Button 
               onClick={createSession} 
               className="w-full"
-              disabled={!isConnected}
+              disabled={!isConnected || isCreating}
             >
               <Play className="h-4 w-4 mr-2" />
               {isConnected ? 'Создать сессию' : 'Подключение...'}
@@ -189,23 +207,7 @@ const DMPanel: React.FC = () => {
     );
   }
 
-  // Показываем загрузку во время создания сессии
-  if (isCreating) {
-    return (
-      <div className="max-w-4xl mx-auto p-6">
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-center space-x-2">
-              <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full"></div>
-              <span>Создание сессии...</span>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  // Основной интерфейс мастера
+  // Основной интерфейс мастера - показываем всегда когда есть сессия
   return (
     <div className="max-w-7xl mx-auto p-6">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
@@ -227,7 +229,7 @@ const DMPanel: React.FC = () => {
           
           <div className="flex items-center gap-4">
             <Badge variant="default" className="text-lg px-3 py-1">
-              {currentSession?.code}
+              {currentSession.code}
               <Button
                 size="sm"
                 variant="ghost"
@@ -252,7 +254,7 @@ const DMPanel: React.FC = () => {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Crown className="h-5 w-5 text-yellow-500" />
-                    {currentSession?.name}
+                    {currentSession.name}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -353,12 +355,10 @@ const DMPanel: React.FC = () => {
         </TabsContent>
 
         <TabsContent value="battle">
-          {currentSession && (
-            <BattleMapPanel 
-              isDM={true} 
-              sessionId={currentSession.id}
-            />
-          )}
+          <BattleMapPanel 
+            isDM={true} 
+            sessionId={currentSession.id}
+          />
         </TabsContent>
 
         <TabsContent value="tools">
