@@ -5,40 +5,55 @@
 
 @layer base {
   :root {
-    --background: #121212;
-    --foreground: #1a1a1a;
-    --primary: #8B5A2B;
-    --accent: #8B5A2B;
-    --text-color: #FFFFFF;
-    --card-bg: rgba(0, 0, 0, 0.85);
-    --border-color: #8B5A2B;
-    
+    --background: 240 10% 3.9%;
+    --foreground: 0 0% 98%;
+    --card: 240 10% 3.9%;
+    --card-foreground: 0 0% 98%;
+    --popover: 240 10% 3.9%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 0 0% 98%;
+    --primary-foreground: 240 5.9% 10%;
+    --secondary: 240 3.7% 15.9%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 240 3.7% 15.9%;
+    --muted-foreground: 240 5% 64.9%;
+    --accent: 240 3.7% 15.9%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
     --border: 240 3.7% 15.9%;
     --input: 240 3.7% 15.9%;
-    --ring: var(--accent);
-    --radius: 0.75rem;
+    --ring: 240 4.9% 83.9%;
+    --radius: 0.5rem;
   }
+}
 
+@layer base {
   * {
-    @apply border-border selection:bg-white/10 selection:text-white;
+    @apply border-border;
   }
   
   body {
-    @apply bg-background text-foreground antialiased;
-    background-color: var(--background) !important;
+    @apply bg-background text-foreground;
+    background-color: #0a0a0a !important;
     background-image: url('/lovable-uploads/fedf4d87-93ed-4c26-a401-c2ced1b62cdd.png');
     background-size: cover;
     background-position: center;
     background-attachment: fixed;
     background-repeat: no-repeat;
-    color: var(--text-color) !important;
+    min-height: 100vh;
+  }
+  
+  html {
+    min-height: 100vh;
+    background-color: #0a0a0a;
   }
 }
 
 /* Стили для различных тем */
 .theme-default {
   --background: #121212;
-  --foreground: #1a1a1a;
+  --foreground: #ffffff;
   --primary: #8B5A2B;
   --accent: #8B5A2B;
   --text-color: #FFFFFF;
@@ -48,7 +63,7 @@
 
 .theme-warlock {
   --background: #1E1A2B;
-  --foreground: #2A1E40;
+  --foreground: #ffffff;
   --primary: #9061F9;
   --accent: #9061F9;
   --text-color: #FFFFFF;
@@ -58,7 +73,7 @@
 
 .theme-wizard {
   --background: #152238;
-  --foreground: #1E3054;
+  --foreground: #ffffff;
   --primary: #3B82F6;
   --accent: #3B82F6;
   --text-color: #FFFFFF;
@@ -68,7 +83,7 @@
 
 .theme-druid {
   --background: #1B2D25;
-  --foreground: #1E3A2B;
+  --foreground: #ffffff;
   --primary: #10B981;
   --accent: #10B981;
   --text-color: #FFFFFF;
@@ -78,7 +93,7 @@
 
 .theme-warrior {
   --background: #321E1E;
-  --foreground: #4A2A2A;
+  --foreground: #ffffff;
   --primary: #F43F5E;
   --accent: #F43F5E;
   --text-color: #FFFFFF;
@@ -88,7 +103,7 @@
 
 .theme-bard {
   --background: #322815;
-  --foreground: #403219;
+  --foreground: #ffffff;
   --primary: #F59E0B;
   --accent: #F59E0B;
   --text-color: #FFFFFF;
@@ -112,4 +127,14 @@ button, .btn {
 button:hover, .btn:hover {
   background-color: rgba(var(--accent), 0.3) !important;
   box-shadow: 0 0 10px var(--accent) !important;
+}
+
+/* Обеспечиваем фон для всех страниц */
+#root {
+  min-height: 100vh;
+  background-color: #0a0a0a;
+}
+
+.min-h-screen {
+  background-color: transparent !important;
 }

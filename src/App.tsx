@@ -13,6 +13,7 @@ import CharacterCreationPage from '@/pages/CharacterCreationPage';
 import CharactersListPage from '@/pages/CharactersListPage';
 import CharacterSheetPage from '@/pages/CharacterSheetPage';
 import AuthPage from '@/pages/AuthPage';
+import UserProfilePage from '@/pages/UserProfilePage';
 import DMPanel from '@/components/session/DMPanel';
 import PlayerSessionPage from '@/pages/PlayerSessionPage';
 import BattlePage from '@/pages/BattlePage';
@@ -31,6 +32,7 @@ function App() {
                   <Routes>
                     <Route path="/" element={<HomePage />} />
                     <Route path="/auth" element={<AuthPage />} />
+                    <Route path="/profile" element={<UserProfilePage />} />
                     <Route path="/character" element={<CharacterCreationPage />} />
                     <Route path="/characters" element={<CharactersListPage />} />
                     <Route path="/character/:id" element={<CharacterSheetPage />} />
