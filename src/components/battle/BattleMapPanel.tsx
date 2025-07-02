@@ -1,23 +1,12 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { socketService } from '@/services/socket';
+import { socketService, BattleToken } from '@/services/socket';
 import BattleCanvas from './BattleCanvas';
 import TokenManager from './TokenManager';
-import { Map, Users, Swords, Plus } from 'lucide-react';
-
-interface Token {
-  id: string;
-  name: string;
-  x: number;
-  y: number;
-  color: string;
-  size: number;
-  type: 'player' | 'npc' | 'monster';
-  hp?: number;
-  maxHp?: number;
-}
+import { Map, Users, Swords, Plus, Shield, Zap } from 'lucide-react';
 
 interface BattleMapPanelProps {
   isDM?: boolean;
@@ -28,36 +17,72 @@ const BattleMapPanel: React.FC<BattleMapPanelProps> = ({
   isDM = false,
   sessionId
 }) => {
-  const [tokens, setTokens] = useState<Token[]>([]);
+  const [tokens, setTokens] = useState<BattleToken[]>([]);
   const [selectedTokenId, setSelectedTokenId] = useState<string | null>(null);
   const [isBattleActive, setIsBattleActive] = useState(false);
 
+  useEffect(() => {
+    // Подписываемся на события боевой карты
+    const handleBattleEvent = (data: any) => {
+      console.log('⚔️ Событие боевой карты:', data.type);
+      
+      switch (data.type) {
+        case 'token_add':
+          setTokens(prev => [...prev, data.token]);
+          break;
+        case 'token_move':
+          setTokens(prev => prev.map(token =>
+            token.id === data.tokenId ? { ...token, x: data.x, y: data.y } : token
+          ));
+          break;
+        case 'token_update':
+          setTokens(prev => prev.map(token =>
+            token.id === data.tokenId ? { ...token, ...data.updates } : token
+          ));
+          break;
+        case 'token_delete':
+          setTokens(prev => prev.filter(token => token.id !== data.tokenId));
+          if (selectedTokenId === data.tokenId) {
+            setSelectedTokenId(null);
+          }
+          break;
+        case 'battle_state_change':
+          setIsBattleActive(data.active);
+          break;
+        case 'battle_clear':
+          setTokens([]);
+          setSelectedTokenId(null);
+          break;
+      }
+    };
+
+    socketService.onBattleEvent(handleBattleEvent);
+    
+    return () => {
+      socketService.removeBattleListener(handleBattleEvent);
+    };
+  }, [selectedTokenId]);
+
   // Добавление нового токена
-  const handleTokenAdd = (tokenData: Omit<Token, 'id'>) => {
-    const newToken: Token = {
+  const handleTokenAdd = (tokenData: Omit<BattleToken, 'id'>) => {
+    const newToken: BattleToken = {
       ...tokenData,
       id: Date.now().toString() + Math.random().toString(36).substr(2, 9)
     };
     
-    setTokens(prev => [...prev, newToken]);
-    
-    // Отправляем обновление через сокеты
-    if (sessionId) {
-      socketService.sendMessage(JSON.stringify({
-        type: 'battle_token_add',
-        token: newToken
-      }), 'system');
+    if (isDM) {
+      socketService.addBattleToken(newToken);
     }
   };
 
   // Обновление токена
-  const handleTokenUpdate = (tokenId: string, updates: Partial<Token>) => {
+  const handleTokenUpdate = (tokenId: string, updates: Partial<BattleToken>) => {
     setTokens(prev => prev.map(token => 
       token.id === tokenId ? { ...token, ...updates } : token
     ));
     
-    // Отправляем обновление через сокеты
-    if (sessionId) {
+    // Отправляем через сокеты только если это DM
+    if (isDM && sessionId) {
       socketService.sendMessage(JSON.stringify({
         type: 'battle_token_update',
         tokenId,
@@ -68,30 +93,25 @@ const BattleMapPanel: React.FC<BattleMapPanelProps> = ({
 
   // Перемещение токена
   const handleTokenMove = (tokenId: string, x: number, y: number) => {
-    setTokens(prev => prev.map(token => 
-      token.id === tokenId ? { ...token, x, y } : token
-    ));
-    
-    // Отправляем обновление через сокеты
-    if (sessionId) {
-      socketService.sendMessage(JSON.stringify({
-        type: 'battle_token_move',
-        tokenId,
-        x,
-        y
-      }), 'system');
+    // Разрешаем игрокам двигать только свои токены
+    const token = tokens.find(t => t.id === tokenId);
+    if (!isDM && token?.type !== 'player') {
+      return; // Игрок не может двигать не свои токены
     }
+
+    socketService.moveBattleToken(tokenId, x, y);
   };
 
-  // Удаление токена
+  // Удаление токена (только DM)
   const handleTokenDelete = (tokenId: string) => {
+    if (!isDM) return;
+    
     setTokens(prev => prev.filter(token => token.id !== tokenId));
     
     if (selectedTokenId === tokenId) {
       setSelectedTokenId(null);
     }
     
-    // Отправляем обновление через сокеты
     if (sessionId) {
       socketService.sendMessage(JSON.stringify({
         type: 'battle_token_delete',
@@ -100,20 +120,31 @@ const BattleMapPanel: React.FC<BattleMapPanelProps> = ({
     }
   };
 
-  // Начало/окончание боя
+  // Начало/окончание боя (только DM)
   const toggleBattle = () => {
-    setIsBattleActive(!isBattleActive);
+    if (!isDM) return;
+    
+    const newState = !isBattleActive;
+    setIsBattleActive(newState);
     
     if (sessionId) {
       socketService.sendMessage(JSON.stringify({
         type: 'battle_state_change',
-        active: !isBattleActive
+        active: newState
       }), 'system');
+      
+      // Отправляем системное сообщение
+      socketService.sendMessage(
+        newState ? '⚔️ **Бой начался!** Все на позиции!' : '🏁 **Бой завершен!** Можно расслабиться.',
+        'system'
+      );
     }
   };
 
-  // Очистка карты
+  // Очистка карты (только DM)
   const clearMap = () => {
+    if (!isDM) return;
+    
     setTokens([]);
     setSelectedTokenId(null);
     
@@ -126,9 +157,11 @@ const BattleMapPanel: React.FC<BattleMapPanelProps> = ({
 
   // Добавление тестовых токенов (только для DM)
   const addTestTokens = () => {
-    const testTokens: Omit<Token, 'id'>[] = [
+    if (!isDM) return;
+    
+    const testTokens: Omit<BattleToken, 'id'>[] = [
       {
-        name: 'Воин',
+        name: '🛡️ Паладин',
         x: 120,
         y: 120,
         color: '#3B82F6',
@@ -138,7 +171,7 @@ const BattleMapPanel: React.FC<BattleMapPanelProps> = ({
         maxHp: 35
       },
       {
-        name: 'Маг',
+        name: '🔮 Волшебник',
         x: 180,
         y: 120,
         color: '#8B5CF6',
@@ -148,9 +181,19 @@ const BattleMapPanel: React.FC<BattleMapPanelProps> = ({
         maxHp: 25
       },
       {
-        name: 'Орк-воин',
-        x: 300,
-        y: 180,
+        name: '🏹 Следопыт',
+        x: 240,
+        y: 120,
+        color: '#10B981',
+        size: 1,
+        type: 'player',
+        hp: 28,
+        maxHp: 30
+      },
+      {
+        name: '⚔️ Орк-воин',
+        x: 360,
+        y: 240,
         color: '#EF4444',
         size: 1,
         type: 'monster',
@@ -158,9 +201,9 @@ const BattleMapPanel: React.FC<BattleMapPanelProps> = ({
         maxHp: 15
       },
       {
-        name: 'Гоблин',
-        x: 360,
-        y: 240,
+        name: '🗡️ Гоблин-лучник',
+        x: 420,
+        y: 180,
         color: '#F59E0B',
         size: 1,
         type: 'monster',
@@ -168,62 +211,19 @@ const BattleMapPanel: React.FC<BattleMapPanelProps> = ({
         maxHp: 7
       },
       {
-        name: 'Торговец',
+        name: '🐉 Молодой дракон',
         x: 480,
-        y: 120,
-        color: '#10B981',
-        size: 1,
-        type: 'npc'
+        y: 300,
+        color: '#DC2626',
+        size: 2,
+        type: 'monster',
+        hp: 75,
+        maxHp: 75
       }
     ];
     
     testTokens.forEach(tokenData => handleTokenAdd(tokenData));
   };
-
-  // Слушаем сообщения о боевой карте
-  useEffect(() => {
-    const handleBattleMessage = (message: any) => {
-      if (message.type !== 'system') return;
-      
-      try {
-        const data = JSON.parse(message.content);
-        
-        switch (data.type) {
-          case 'battle_token_add':
-            setTokens(prev => [...prev, data.token]);
-            break;
-          case 'battle_token_update':
-            setTokens(prev => prev.map(token =>
-              token.id === data.tokenId ? { ...token, ...data.updates } : token
-            ));
-            break;
-          case 'battle_token_move':
-            setTokens(prev => prev.map(token =>
-              token.id === data.tokenId ? { ...token, x: data.x, y: data.y } : token
-            ));
-            break;
-          case 'battle_token_delete':
-            setTokens(prev => prev.filter(token => token.id !== data.tokenId));
-            break;
-          case 'battle_state_change':
-            setIsBattleActive(data.active);
-            break;
-          case 'battle_clear':
-            setTokens([]);
-            setSelectedTokenId(null);
-            break;
-        }
-      } catch (error) {
-        // Не системное сообщение, игнорируем
-      }
-    };
-
-    socketService.onMessage(handleBattleMessage);
-    
-    return () => {
-      socketService.removeMessageListener(handleBattleMessage);
-    };
-  }, []);
 
   return (
     <div className="space-y-4">
@@ -233,7 +233,7 @@ const BattleMapPanel: React.FC<BattleMapPanelProps> = ({
           <CardTitle className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Map className="h-5 w-5" />
-              <span>Боевая карта</span>
+              <span>⚔️ Боевая карта</span>
               {isBattleActive && (
                 <Badge variant="destructive" className="animate-pulse">
                   <Swords className="h-3 w-3 mr-1" />
@@ -248,14 +248,24 @@ const BattleMapPanel: React.FC<BattleMapPanelProps> = ({
                   Тест
                 </Button>
                 <Button size="sm" variant="outline" onClick={clearMap}>
-                  Очистить
+                  🗑️ Очистить
                 </Button>
                 <Button
                   size="sm"
                   variant={isBattleActive ? "destructive" : "default"}
                   onClick={toggleBattle}
                 >
-                  {isBattleActive ? "Завершить бой" : "Начать бой"}
+                  {isBattleActive ? (
+                    <>
+                      <Shield className="h-4 w-4 mr-1" />
+                      Завершить бой
+                    </>
+                  ) : (
+                    <>
+                      <Swords className="h-4 w-4 mr-1" />
+                      Начать бой
+                    </>
+                  )}
                 </Button>
               </div>
             )}
@@ -269,7 +279,12 @@ const BattleMapPanel: React.FC<BattleMapPanelProps> = ({
             </div>
             {selectedTokenId && (
               <Badge variant="outline">
-                Выбран: {tokens.find(t => t.id === selectedTokenId)?.name}
+                🎯 Выбран: {tokens.find(t => t.id === selectedTokenId)?.name}
+              </Badge>
+            )}
+            {!isDM && (
+              <Badge variant="secondary">
+                👁️ Режим игрока
               </Badge>
             )}
           </div>
@@ -303,6 +318,55 @@ const BattleMapPanel: React.FC<BattleMapPanelProps> = ({
               onTokenAdd={handleTokenAdd}
               onTokenSelect={setSelectedTokenId}
             />
+          </div>
+        )}
+
+        {/* Информация для игроков */}
+        {!isDM && (
+          <div className="lg:col-span-1">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="h-5 w-5" />
+                  Ваши персонажи
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  {tokens.filter(t => t.type === 'player').map(token => (
+                    <div
+                      key={token.id}
+                      className={`p-2 border rounded cursor-pointer transition-colors ${
+                        selectedTokenId === token.id ? 'border-primary bg-primary/10' : 'hover:bg-muted/50'
+                      }`}
+                      onClick={() => setSelectedTokenId(token.id)}
+                    >
+                      <div className="flex items-center gap-2">
+                        <div
+                          className="w-4 h-4 rounded-full border"
+                          style={{ backgroundColor: token.color }}
+                        />
+                        <span className="text-sm font-medium">{token.name}</span>
+                      </div>
+                      {token.hp !== undefined && (
+                        <div className="mt-1">
+                          <Badge variant="outline" className="text-xs">
+                            ❤️ {token.hp}/{token.maxHp}
+                          </Badge>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+                
+                {tokens.filter(t => t.type === 'player').length === 0 && (
+                  <div className="text-center py-4 text-muted-foreground">
+                    <Users className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                    <p className="text-sm">Нет ваших персонажей на карте</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           </div>
         )}
       </div>
