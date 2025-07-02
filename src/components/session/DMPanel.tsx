@@ -22,26 +22,32 @@ const DMPanel: React.FC = () => {
   const [newMessage, setNewMessage] = useState('');
   const [isConnected, setIsConnected] = useState(false);
   const [activeTab, setActiveTab] = useState('session');
+  const [isCreating, setIsCreating] = useState(false);
   const { character } = useCharacter();
   const { toast } = useToast();
 
   useEffect(() => {
+    console.log('DMPanel: Инициализация компонента');
     socketService.connect();
 
     const handleSessionUpdate = (session: GameSession) => {
+      console.log('DMPanel: Получено обновление сессии:', session);
       setCurrentSession(session);
       setPlayers(session.players);
     };
 
     const handlePlayerUpdate = (updatedPlayers: SessionPlayer[]) => {
+      console.log('DMPanel: Обновлены игроки:', updatedPlayers);
       setPlayers(updatedPlayers);
     };
 
     const handleMessage = (message: SessionMessage) => {
+      console.log('DMPanel: Получено сообщение:', message);
       setMessages(prev => [...prev, message]);
     };
 
     const handleDiceRoll = (roll: DiceRollResult) => {
+      console.log('DMPanel: Получен результат броска:', roll);
       setDiceRolls(prev => [...prev, roll]);
       // Добавляем сообщение о броске в чат
       const diceMessage: SessionMessage = {
@@ -60,7 +66,16 @@ const DMPanel: React.FC = () => {
     socketService.onMessage(handleMessage);
     socketService.onDiceRoll(handleDiceRoll);
 
-    setIsConnected(socketService.isConnected());
+    const connectionStatus = socketService.isConnected();
+    console.log('DMPanel: Статус подключения:', connectionStatus);
+    setIsConnected(connectionStatus);
+
+    // Проверяем, есть ли уже активная сессия
+    const existingSession = socketService.getCurrentSession();
+    if (existingSession) {
+      console.log('DMPanel: Найдена существующая сессия:', existingSession);
+      setCurrentSession(existingSession);
+    }
 
     return () => {
       socketService.removeSessionUpdateListener(handleSessionUpdate);
@@ -81,18 +96,26 @@ const DMPanel: React.FC = () => {
     }
 
     try {
+      console.log('DMPanel: Создание сессии с названием:', sessionName);
+      setIsCreating(true);
+      
       const session = await socketService.createSession(sessionName, 'Мастер', character || undefined);
+      console.log('DMPanel: Сессия создана успешно:', session);
+      
       setCurrentSession(session);
       toast({
         title: "Сессия создана",
         description: `Код сессии: ${session.code}`,
       });
     } catch (error) {
+      console.error('DMPanel: Ошибка создания сессии:', error);
       toast({
         title: "Ошибка",
         description: error instanceof Error ? error.message : "Не удалось создать сессию",
         variant: "destructive"
       });
+    } finally {
+      setIsCreating(false);
     }
   };
 
@@ -114,6 +137,7 @@ const DMPanel: React.FC = () => {
   };
 
   const endSession = () => {
+    console.log('DMPanel: Завершение сессии');
     socketService.endSession();
     setCurrentSession(null);
     setPlayers([]);
@@ -125,7 +149,8 @@ const DMPanel: React.FC = () => {
     });
   };
 
-  if (!currentSession) {
+  // Показываем форму создания сессии только если сессии нет И не происходит создание
+  if (!currentSession && !isCreating) {
     return (
       <div className="max-w-4xl mx-auto p-6">
         <Card>
@@ -164,6 +189,23 @@ const DMPanel: React.FC = () => {
     );
   }
 
+  // Показываем загрузку во время создания сессии
+  if (isCreating) {
+    return (
+      <div className="max-w-4xl mx-auto p-6">
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-center space-x-2">
+              <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full"></div>
+              <span>Создание сессии...</span>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Основной интерфейс мастера
   return (
     <div className="max-w-7xl mx-auto p-6">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
@@ -185,7 +227,7 @@ const DMPanel: React.FC = () => {
           
           <div className="flex items-center gap-4">
             <Badge variant="default" className="text-lg px-3 py-1">
-              {currentSession.code}
+              {currentSession?.code}
               <Button
                 size="sm"
                 variant="ghost"
@@ -210,7 +252,7 @@ const DMPanel: React.FC = () => {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Crown className="h-5 w-5 text-yellow-500" />
-                    {currentSession.name}
+                    {currentSession?.name}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -311,10 +353,12 @@ const DMPanel: React.FC = () => {
         </TabsContent>
 
         <TabsContent value="battle">
-          <BattleMapPanel 
-            isDM={true} 
-            sessionId={currentSession.id}
-          />
+          {currentSession && (
+            <BattleMapPanel 
+              isDM={true} 
+              sessionId={currentSession.id}
+            />
+          )}
         </TabsContent>
 
         <TabsContent value="tools">
