@@ -109,7 +109,7 @@ const HandbookPage: React.FC = () => {
     <BackgroundWrapper>
       {/* Навигационная панель */}
       <div className="p-4 flex items-center justify-between">
-        <NavigationButtons className="flex-shrink-0" />
+        <div />
         <ThemeSelector />
       </div>
       

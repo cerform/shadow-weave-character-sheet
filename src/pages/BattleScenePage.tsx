@@ -307,7 +307,7 @@ const BattleScenePage = () => {
         </div>
         <div className="text-lg font-semibold">D&D Сцена боя</div>
         <div className="flex gap-2">
-          <NavigationButtons className="!flex-row" />
+          <div />
         </div>
       </div>
       

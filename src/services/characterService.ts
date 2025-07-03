@@ -25,8 +25,7 @@ export const getUserCharacters = async (userId: string): Promise<Character[]> =>
     const charactersRef = collection(db, CHARACTERS_COLLECTION);
     const q = query(
       charactersRef,
-      where('userId', '==', userId),
-      orderBy('updatedAt', 'desc')
+      where('userId', '==', userId)
     );
     
     const querySnapshot = await getDocs(q);

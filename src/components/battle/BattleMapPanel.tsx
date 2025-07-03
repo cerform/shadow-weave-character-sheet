@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { socketService, BattleToken } from '@/services/socket';
 import BattleCanvas from './BattleCanvas';
 import TokenManager from './TokenManager';
+import MapUploader from '../session/MapUploader';
 import { Map, Users, Swords, Plus, Shield, Zap } from 'lucide-react';
 
 interface BattleMapPanelProps {
@@ -20,6 +21,7 @@ const BattleMapPanel: React.FC<BattleMapPanelProps> = ({
   const [tokens, setTokens] = useState<BattleToken[]>([]);
   const [selectedTokenId, setSelectedTokenId] = useState<string | null>(null);
   const [isBattleActive, setIsBattleActive] = useState(false);
+  const [mapBackground, setMapBackground] = useState<string | null>(null);
 
   useEffect(() => {
     // Подписываемся на события боевой карты
@@ -309,7 +311,7 @@ const BattleMapPanel: React.FC<BattleMapPanelProps> = ({
 
         {/* Панель управления токенами */}
         {isDM && (
-          <div className="lg:col-span-1">
+          <div className="lg:col-span-1 space-y-4">
             <TokenManager
               tokens={tokens}
               selectedTokenId={selectedTokenId}
@@ -317,6 +319,10 @@ const BattleMapPanel: React.FC<BattleMapPanelProps> = ({
               onTokenDelete={handleTokenDelete}
               onTokenAdd={handleTokenAdd}
               onTokenSelect={setSelectedTokenId}
+            />
+            <MapUploader 
+              onMapUpload={setMapBackground}
+              currentMap={mapBackground}
             />
           </div>
         )}

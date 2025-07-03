@@ -187,7 +187,7 @@ const TopPanel: React.FC<TopPanelProps> = ({
             <span>Раунд: {battleState.round}</span>
           )}
         </div>
-        <NavigationButtons className="!flex-row" />
+        <div />
       </div>
     </div>
   );
