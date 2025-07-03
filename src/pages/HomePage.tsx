@@ -8,7 +8,7 @@ import { Users, UserPlus, Swords, Shield } from "lucide-react";
 
 const HomePage: React.FC = () => {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+    <div className="min-h-screen">
       {/* Hero Section */}
       <div className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-r from-purple-800/20 to-blue-800/20" />
@@ -75,7 +75,7 @@ const HomePage: React.FC = () => {
               </CardContent>
               <CardFooter className="flex justify-center">
                 <Button asChild size="lg" variant="outline" className="border-blue-600 text-blue-400 hover:bg-blue-600/10">
-                  <Link to="/join-session">
+                  <Link to="/session">
                     <UserPlus className="mr-2 h-5 w-5" />
                     Присоединиться
                   </Link>
