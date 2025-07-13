@@ -14,8 +14,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 const CharactersList: React.FC = () => {
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
-  const { getUserCharacters, loading: contextLoading, refreshCharacters, deleteCharacter } = useCharacter();
-  const [characters, setCharacters] = useState<Character[]>([]);
+  const { characters, getUserCharacters, loading: contextLoading, refreshCharacters, deleteCharacter } = useCharacter();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [loadAttempts, setLoadAttempts] = useState(0);
@@ -35,16 +34,12 @@ const CharactersList: React.FC = () => {
       console.log('CharactersList: Загрузка персонажей (попытка ' + (loadAttempts + 1) + ')');
       
       await getUserCharacters();
-      
-      // Получаем персонажи из контекста
-      const userCharacters: Character[] = [];
-      
-      console.log(`CharactersList: Получено ${userCharacters.length} персонажей`);
-      setCharacters(userCharacters);
+      console.log(`CharactersList: Персонажи загружены`);
+      setError(null);
       setError(null);
       
       // Если персонажи не загрузились и попыток было мало, повторить
-      if (userCharacters.length === 0 && loadAttempts < 2) {
+      if (characters.length === 0 && loadAttempts < 2) {
         console.log('CharactersList: Нет персонажей, будет предпринята повторная попытка');
         setLoadAttempts(prev => prev + 1);
       }
@@ -62,9 +57,6 @@ const CharactersList: React.FC = () => {
       setLoading(true);
       console.log('CharactersList: Принудительное обновление списка персонажей');
       await refreshCharacters();
-      await getUserCharacters();
-      const userCharacters: Character[] = [];
-      setCharacters(userCharacters);
       toast.success('Список персонажей обновлен');
       setError(null);
     } catch (err) {
@@ -111,9 +103,7 @@ const CharactersList: React.FC = () => {
       setDeletingId(characterToDelete);
       await deleteCharacter(characterToDelete);
       toast.success('Персонаж успешно удален');
-      // Обновляем список персонажей после удаления
-      const updatedCharacters = characters.filter(char => char.id !== characterToDelete);
-      setCharacters(updatedCharacters);
+      // Список персонажей автоматически обновится через контекст
     } catch (err) {
       console.error('Ошибка при удалении персонажа:', err);
       toast.error('Не удалось удалить персонажа');
