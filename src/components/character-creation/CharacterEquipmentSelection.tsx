@@ -16,32 +16,27 @@ const EQUIPMENT_CATEGORIES = {
   tools: "Инструменты",
 };
 
-// Базовое снаряжение по категориям
+// Базовое снаряжение по категориям с классификацией доспехов
 const BASIC_EQUIPMENT = {
-  weapons: [
-    "Длинный меч",
-    "Короткий меч",
-    "Длинный лук",
-    "Короткий лук",
-    "Кинжал",
-    "Боевой топор",
-    "Булава",
-    "Посох",
-    "Рапира",
-    "Арбалет",
-  ],
-  armor: [
-    "Кожаный доспех",
-    "Кольчуга",
-    "Латы",
-    "Щит",
-  ],
+  weapons: {
+    simple: ["Кинжал", "Дубинка", "Дротик", "Метательное копьё", "Булава", "Посох", "Лёгкий арбалет"],
+    martial: ["Длинный меч", "Короткий меч", "Длинный лук", "Короткий лук", "Боевой топор", "Рапира", "Арбалет", "Двуручный топор", "Боевой молот"]
+  },
+  armor: {
+    light: ["Мягкий кожаный доспех", "Кожаный доспех", "Проклёпанная кожа"],
+    medium: ["Шкуры", "Кольчужная рубаха", "Чешуйчатый доспех", "Нагрудник", "Полулаты"],
+    heavy: ["Кольчатый доспех", "Кольчуга", "Ламеллярный доспех", "Латы"],
+    shields: ["Щит"]
+  },
   accessories: [
     "Мешочек с компонентами",
     "Священный символ",
     "Амулет защиты",
     "Кольцо невидимости",
     "Плащ эльфийской работы",
+    "Магическая фокусировка",
+    "Книга заклинаний",
+    "Фокусировка друида"
   ],
   packs: [
     "Набор авантюриста",
@@ -51,6 +46,8 @@ const BASIC_EQUIPMENT = {
     "Набор священника",
     "Набор путешественника",
     "Набор учёного",
+    "Набор взломщика",
+    "Набор артиста"
   ],
   tools: [
     "Инструменты вора",
@@ -58,99 +55,112 @@ const BASIC_EQUIPMENT = {
     "Инструменты алхимика",
     "Инструменты ремесленника",
     "Набор травника",
+    "Инструменты изобретателя"
   ],
 };
 
-// Снаряжение, специфичное для классов
-const CLASS_EQUIPMENT = {
+// Владения классов
+const CLASS_PROFICIENCIES = {
   "Бард": {
-    weapons: ["Рапира", "Длинный меч", "Короткий меч", "Кинжал"],
-    accessories: ["Музыкальный инструмент", "Мешочек с компонентами"],
-    packs: ["Набор дипломата", "Набор артиста"],
+    armor: ["light"],
+    weapons: ["simple", "hand_crossbows", "longswords", "rapiers", "shortswords"],
+    shields: false
   },
   "Жрец": {
-    weapons: ["Булава", "Боевой молот", "Лёгкий арбалет"],
-    armor: ["Кольчуга", "Чешуйчатый доспех", "Щит"],
-    accessories: ["Священный символ"],
-    packs: ["Набор священника", "Набор путешественника"],
+    armor: ["light", "medium"],
+    weapons: ["simple"],
+    shields: true
   },
   "Волшебник": {
-    weapons: ["Посох", "Кинжал", "Лёгкий арбалет"],
-    accessories: ["Мешочек с компонентами", "Книга заклинаний", "Магическая фокусировка"],
-    packs: ["Набор учёного", "Набор путешественника"],
+    armor: [],
+    weapons: ["daggers", "darts", "slings", "quarterstaffs", "light_crossbows"],
+    shields: false
   },
   "Воин": {
-    weapons: ["Длинный меч", "Длинный лук", "Боевой топор", "Копьё", "Арбалет"],
-    armor: ["Кольчуга", "Кожаный доспех", "Щит"],
-    packs: ["Набор путешественника", "Набор исследователя"],
+    armor: ["light", "medium", "heavy"],
+    weapons: ["simple", "martial"],
+    shields: true
   },
   "Плут": {
-    weapons: ["Рапира", "Короткий меч", "Короткий лук", "Кинжал", "Ручной арбалет"],
-    armor: ["Кожаный доспех"],
-    tools: ["Инструменты вора"],
-    packs: ["Набор взломщика", "Набор исследователя", "Набор артиста"],
+    armor: ["light"],
+    weapons: ["simple", "hand_crossbows", "longswords", "rapiers", "shortswords"],
+    shields: false
   },
   "Варвар": {
-    weapons: ["Двуручный топор", "Боевой топор", "Метательное копьё"],
-    packs: ["Набор исследователя"],
+    armor: ["light", "medium"],
+    weapons: ["simple", "martial"],
+    shields: true
   },
   "Паладин": {
-    weapons: ["Длинный меч", "Боевой молот", "Метательное копьё"],
-    armor: ["Кольчуга", "Щит"],
-    accessories: ["Священный символ"],
-    packs: ["Набор священника", "Набор путешественника"],
+    armor: ["light", "medium", "heavy"],
+    weapons: ["simple", "martial"],
+    shields: true
   },
   "Колдун": {
-    weapons: ["Кинжал", "Посох", "Лёгкий арбалет"],
-    armor: ["Кожаный доспех"],
-    accessories: ["Мешочек с компонентами", "Магическая фокусировка"],
-    packs: ["Набор учёного", "Набор подземелья"],
+    armor: ["light"],
+    weapons: ["simple"],
+    shields: false
   },
   "Друид": {
-    weapons: ["Серп", "Дубинка", "Копьё", "Кинжал"],
-    armor: ["Кожаный доспех", "Щит"],
-    accessories: ["Фокусировка друида"],
-    tools: ["Набор травника"],
-    packs: ["Набор путешественника"],
+    armor: ["light", "medium"],
+    weapons: ["clubs", "daggers", "darts", "javelins", "maces", "quarterstaffs", "scimitars", "sickles", "slings", "spears"],
+    shields: true
   },
   "Чародей": {
-    weapons: ["Кинжал", "Посох", "Лёгкий арбалет"],
-    accessories: ["Магическая фокусировка", "Мешочек с компонентами"],
-    packs: ["Набор путешественника", "Набор дипломата"],
+    armor: [],
+    weapons: ["daggers", "darts", "slings", "quarterstaffs", "light_crossbows"],
+    shields: false
   },
   "Следопыт": {
-    weapons: ["Короткий меч", "Длинный лук", "Короткий лук"],
-    armor: ["Чешуйчатый доспех", "Кожаный доспех"],
-    packs: ["Набор путешественника", "Набор исследователя"],
+    armor: ["light", "medium"],
+    weapons: ["simple", "martial"],
+    shields: true
   },
   "Монах": {
-    weapons: ["Короткий меч", "Посох", "Кинжал", "Дротик"],
-    packs: ["Набор путешественника", "Набор подземелья"],
+    armor: [],
+    weapons: ["simple", "shortswords"],
+    shields: false
   },
   "Изобретатель": {
-    weapons: ["Кинжал", "Лёгкий арбалет"],
-    armor: ["Кожаный доспех", "Щит"],
-    tools: ["Инструменты изобретателя", "Инструменты вора"],
-    accessories: ["Магическая фокусировка", "Мешочек с компонентами"],
-    packs: ["Набор путешественника"],
+    armor: ["light", "medium"],
+    weapons: ["simple", "firearms"],
+    shields: true
   }
 };
 
 // Функция для получения доступного снаряжения для выбранного класса
 const getAvailableEquipmentForClass = (className: string) => {
-  const classEquipment = CLASS_EQUIPMENT[className as keyof typeof CLASS_EQUIPMENT] || {};
+  const classProficiencies = CLASS_PROFICIENCIES[className as keyof typeof CLASS_PROFICIENCIES];
+  if (!classProficiencies) return {};
+
   const result: Record<string, string[]> = {};
 
-  // Для каждой категории берем базовое снаряжение и добавляем специфичное для класса
-  Object.entries(EQUIPMENT_CATEGORIES).forEach(([key, value]) => {
-    const categoryKey = key as keyof typeof BASIC_EQUIPMENT;
-    const classItems = classEquipment[categoryKey] || [];
-    const baseItems = BASIC_EQUIPMENT[categoryKey] || [];
-    
-    // Объединяем и удаляем дубликаты
-    const uniqueItems = Array.from(new Set([...classItems, ...baseItems]));
-    result[key] = uniqueItems;
+  // Оружие
+  const availableWeapons: string[] = [];
+  if (classProficiencies.weapons.includes("simple")) {
+    availableWeapons.push(...BASIC_EQUIPMENT.weapons.simple);
+  }
+  if (classProficiencies.weapons.includes("martial")) {
+    availableWeapons.push(...BASIC_EQUIPMENT.weapons.martial);
+  }
+  result.weapons = [...new Set(availableWeapons)];
+
+  // Доспехи
+  const availableArmor: string[] = [];
+  classProficiencies.armor.forEach(armorType => {
+    if (armorType === "light") availableArmor.push(...BASIC_EQUIPMENT.armor.light);
+    if (armorType === "medium") availableArmor.push(...BASIC_EQUIPMENT.armor.medium);
+    if (armorType === "heavy") availableArmor.push(...BASIC_EQUIPMENT.armor.heavy);
   });
+  if (classProficiencies.shields) {
+    availableArmor.push(...BASIC_EQUIPMENT.armor.shields);
+  }
+  result.armor = availableArmor;
+
+  // Остальные категории доступны всем
+  result.accessories = BASIC_EQUIPMENT.accessories;
+  result.packs = BASIC_EQUIPMENT.packs;
+  result.tools = BASIC_EQUIPMENT.tools;
 
   return result;
 };
@@ -229,18 +239,27 @@ const CharacterEquipmentSelection: React.FC<CharacterEquipmentSelectionProps> = 
 
   // Рендер секции с предметами
   const renderEquipmentSection = (category: string, items: string[]) => {
+    if (!items || items.length === 0) return null;
+    
     return (
       <div className="mb-6" key={category}>
-        <h3 className="text-lg font-semibold text-amber-500 mb-3">{EQUIPMENT_CATEGORIES[category as keyof typeof EQUIPMENT_CATEGORIES]}</h3>
+        <h3 className="text-lg font-semibold text-amber-500 mb-3">
+          {EQUIPMENT_CATEGORIES[category as keyof typeof EQUIPMENT_CATEGORIES]}
+          {category === 'armor' && (
+            <span className="text-sm text-gray-400 ml-2">
+              (доступно для {classDetails?.name || 'этого класса'})
+            </span>
+          )}
+        </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
           {items.map((item) => (
             <button
               key={item}
               className={`
-                px-4 py-2 rounded-md text-left border transition-colors
+                px-4 py-2 rounded-md text-left border transition-colors animate-fade-in
                 ${isItemSelected(item)
                   ? "bg-amber-900/30 border-amber-600 text-amber-300"
-                  : "bg-gray-800/50 border-gray-700 text-gray-300 hover:bg-gray-800"}
+                  : "bg-gray-800/50 border-gray-700 text-gray-300 hover:bg-gray-800 hover-scale"}
               `}
               onClick={() => toggleItem(item)}
             >
