@@ -9,7 +9,7 @@ import { Save } from 'lucide-react';
 import { getAllRaces, getSubracesForRace } from '@/data/races';
 import { getAllClasses } from '@/data/classes';
 import { getAllBackgrounds } from '@/data/backgrounds';
-import { createCharacter } from '@/lib/supabase';
+import { useCharacter } from '@/contexts/CharacterContext';
 import { getCurrentUid } from '@/utils/authHelpers';
 import FloatingDiceButton from '@/components/dice/FloatingDiceButton';
 import { useTheme } from '@/hooks/use-theme';
@@ -22,6 +22,7 @@ import IconOnlyNavigation from '@/components/navigation/IconOnlyNavigation';
 const CharacterCreationPage: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { saveCharacter } = useCharacter();
   const { character, updateCharacter, isMagicClass, convertToCharacter } = useCharacterCreation();
   const [races] = useState(getAllRaces());
   const [classes] = useState(getAllClasses());
@@ -288,15 +289,15 @@ const CharacterCreationPage: React.FC = () => {
       // Prepare character for saving
       const characterToSave = convertToCharacter(character);
 
-      // Save character to database
-      const newCharacter = await createCharacter(characterToSave);
+      // Save character using Firebase
+      const savedCharacter = await saveCharacter(characterToSave);
 
-      if (newCharacter) {
+      if (savedCharacter) {
         toast({
           title: "Персонаж сохранен!",
           description: "Ваш персонаж успешно сохранен.",
         });
-        navigate(`/character-sheet/${newCharacter.id}`);
+        navigate(`/character-sheet/${savedCharacter.id}`);
       } else {
         toast({
           title: "Ошибка сохранения",

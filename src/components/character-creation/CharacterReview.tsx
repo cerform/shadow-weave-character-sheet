@@ -4,6 +4,7 @@ import { Character } from '@/types/character';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
+import { useCharacter } from '@/contexts/CharacterContext';
 
 interface CharacterReviewProps {
   character: Character;
@@ -20,20 +21,22 @@ const CharacterReview: React.FC<CharacterReviewProps> = ({
 }) => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { saveCharacter } = useCharacter();
   
   // Обработчик сохранения персонажа
   const handleSaveCharacter = async () => {
-    // Здесь должна быть логика сохранения персонажа
     try {
-      // Имитация сохранения для примера
-      setTimeout(() => {
-        toast({
-          title: "Персонаж сохранен",
-          description: `${character.name} успешно сохранен!`,
-        });
-        navigate('/characters');
-      }, 1000);
+      console.log('Сохранение персонажа:', character);
+      const savedCharacter = await saveCharacter(character);
+      
+      toast({
+        title: "Персонаж сохранен",
+        description: `${character.name} успешно сохранен!`,
+      });
+      
+      navigate(`/character-sheet/${savedCharacter.id}`);
     } catch (error) {
+      console.error('Ошибка сохранения персонажа:', error);
       toast({
         title: "Ошибка сохранения",
         description: "Произошла ошибка при сохранении персонажа",
