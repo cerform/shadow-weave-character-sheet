@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { 
   BookMarked, BookOpen, Users, Shield, UserPlus, Swords 
 } from 'lucide-react';
+import ThemeSelector from '@/components/ThemeSelector';
 
 const HomePage = () => {
   return (
@@ -13,13 +14,18 @@ const HomePage = () => {
       <div className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-secondary/20" />
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
-          <div className="text-center">
-            <h1 className="text-4xl md:text-6xl font-bold text-foreground mb-6 font-philosopher">
-              D&D Character Manager
-            </h1>
-            <p className="text-xl text-muted-foreground mb-8 max-w-3xl mx-auto">
-              Создавайте персонажей, управляйте сессиями и погружайтесь в мир приключений
-            </p>
+          <div className="flex justify-between items-start mb-8">
+            <div className="text-center flex-1">
+              <h1 className="text-4xl md:text-6xl font-bold text-foreground mb-6 font-philosopher">
+                D&D Character Manager
+              </h1>
+              <p className="text-xl text-muted-foreground mb-8 max-w-3xl mx-auto">
+                Создавайте персонажей, управляйте сессиями и погружайтесь в мир приключений
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <ThemeSelector />
+            </div>
           </div>
         </div>
       </div>
