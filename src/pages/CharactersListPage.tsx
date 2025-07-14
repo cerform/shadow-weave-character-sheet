@@ -146,26 +146,27 @@ const CharactersListPage: React.FC = () => {
     <ErrorBoundary>
       <OBSLayout
         topPanelContent={
-          <div className="flex justify-between items-center p-3">
-            <h1 className="text-xl font-bold text-foreground">
-              Персонажи
+          <div className="flex justify-between items-center p-3 bg-arcane">
+            <h1 className="text-xl font-bold text-foreground font-arcane-header text-mystical">
+              ✨ Персонажи
             </h1>
             <IconOnlyNavigation includeThemeSelector />
           </div>
         }
       >
         <div className="container mx-auto p-6 max-w-5xl">
-          {/* Статус базы данных */}
-          <div className="mb-4 p-3 bg-orange-900/20 border border-orange-600/30 rounded-lg text-sm">
-            <p className="text-orange-400 font-bold">⚠️ Realtime Database (Permission Denied)</p>
-            <p><strong>Статус:</strong> Fallback на localStorage активен</p>
+          {/* Статус новой темы */}
+          <div className="mb-4 p-3 bg-purple-900/20 border border-purple-600/30 rounded-lg text-sm">
+            <p className="text-purple-400 font-bold font-arcane-header">✨ Arcane Elegance Theme Active</p>
+            <p><strong>Статус:</strong> Новая тема применена</p>
+            <p><strong>Шрифты:</strong> Cinzel (заголовки) + Uncial Antiqua (текст)</p>
             <p><strong>Загрузка:</strong> {loading ? 'Идёт...' : 'Завершена'}</p>
             <p><strong>Персонажей:</strong> {characters?.length || 0}</p>
             <p><strong>Авторизован:</strong> {isAuthenticated ? 'Да' : 'Нет'}</p>
-            <p><strong>User ID:</strong> {user?.uid || 'Отсутствует'}</p>
-            <p><strong>База данных:</strong> localStorage (локальная)</p>
-            <p className="text-xs mt-2 text-orange-300">
-              Система автоматически переключилась на локальное хранение из-за проблем с правами доступа к Realtime Database.
+            <p><strong>База данных:</strong> localStorage (fallback активен)</p>
+            <p className="text-xs mt-2 text-purple-300 font-uncial">
+              Мистическая тема с элегантным дизайном и текстурой пергамента активирована. 
+              Fallback на localStorage из-за проблем с правами доступа к Realtime Database.
             </p>
             {error && <p><strong>Ошибка:</strong> {typeof error === 'string' ? error : (error as Error).message}</p>}
           </div>
@@ -174,8 +175,8 @@ const CharactersListPage: React.FC = () => {
           <CharacterNavigation />
           
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-bold text-accent">
-              Список персонажей
+            <h2 className="text-2xl font-bold text-accent font-arcane-header animate-mystical">
+              📜 Список персонажей
             </h2>
             <div className="flex gap-2">
               <Button

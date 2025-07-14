@@ -1,6 +1,4 @@
-/* === Fantasy UI Theme CSS === */
-@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Uncial+Antiqua&display=swap');
-
+/* === Arcane Elegance Fantasy Theme === */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -9,119 +7,76 @@
   :root {
     --font-header: 'Cinzel', serif;
     --font-body: 'Uncial Antiqua', cursive;
-    
-    /* Глубокие, атмосферные цвета в стиле Baldur's Gate */
-    --bg-default: #0a0710;
-    --bg-secondary: #12101a;
-    --bg-panel: linear-gradient(145deg, 
-      rgba(25, 22, 32, 0.95), 
-      rgba(35, 32, 42, 0.9));
-    --bg-glow: radial-gradient(ellipse at center, 
-      rgba(60, 45, 80, 0.06), 
-      transparent 70%);
-    
-    /* Приглушённые, благородные цвета */
-    --text-main: #e8ddd0;
-    --text-secondary: #c7b8a8;
-    --text-muted: #a89685;
-    
-    /* Мягкие акценты вместо ярких */
-    --accent-gold: #d4bc7a; /* Тёплое золото */
-    --accent-bronze: #b8956f; /* Бронза */
-    --accent-emerald: #6b8e6b; /* Изумруд */
-    --accent-crimson: #a85965; /* Алый */
-    
-    --primary-accent: var(--accent-gold);
-    --border-main: #6b5d4f;
-    --border-subtle: #4a3f35;
-    
-    /* Пергаментная текстура */
-    --parchment-texture: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cdefs%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='1' stitchTiles='stitch'/%3E%3C/filter%3E%3C/defs%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.03'/%3E%3C/svg%3E");
 
-    /* Semantic colors - более элегантные */
-    --background: 10 7 16;
-    --foreground: 232 221 208;
-    --card: 30 27 37;
-    --card-foreground: 232 221 208;
-    --popover: 30 27 37;
-    --popover-foreground: 232 221 208;
-    --primary: 212 188 122; /* Золото */
-    --primary-foreground: 25 22 32;
-    --secondary: 107 93 79; /* Бронза */
-    --secondary-foreground: 232 221 208;
-    --muted: 55 47 62;
-    --muted-foreground: 168 150 133;
-    --accent: 212 188 122;
-    --accent-foreground: 25 22 32;
-    --destructive: 168 89 101;
-    --destructive-foreground: 232 221 208;
-    --border: 107 93 79;
-    --input: 55 47 62;
-    --ring: 212 188 122;
-    --radius: 0.5rem;
+    /* Arcane Elegance Color Palette (HSL values) */
+    --color-bg: 267 41% 11%;        /* #1a1423 */
+    --color-bg-secondary: 259 29% 21%; /* #2d223c */
+    --color-bg-tertiary: 255 29% 26%;  /* #3a2b52 */
+    --color-panel-border: 273 74% 71%; /* #a874f1 */
+    --color-text: 273 100% 97%;      /* #f3ecff */
+    --color-accent: 274 100% 85%;    /* #d1aaff */
+    --color-accent-soft: 271 100% 78%; /* #b890ff */
+    --color-btn-bg: 273 29% 21%;     /* #34203b */
+    --color-btn-border: 276 84% 76%; /* #bb8cf5 */
+    --color-btn-hover: 274 100% 86%; /* #d9b5ff */
 
-    /* Chart colors for spells/stats */
-    --chart-1: 159 122 234; /* Arcane */
-    --chart-2: 99 102 241;  /* Mystic */
-    --chart-3: 251 191 36;  /* Divine */
-    --chart-4: 34 197 94;   /* Nature */
-    --chart-5: 239 68 68;   /* Elemental */
+    /* Semantic tokens for Tailwind */
+    --background: var(--color-bg);
+    --foreground: var(--color-text);
+    --card: var(--color-bg-secondary);
+    --card-foreground: var(--color-text);
+    --popover: var(--color-bg-secondary);
+    --popover-foreground: var(--color-text);
+    --primary: var(--color-accent);
+    --primary-foreground: 267 41% 11%;
+    --secondary: var(--color-bg-tertiary);
+    --secondary-foreground: var(--color-text);
+    --muted: var(--color-bg-tertiary);
+    --muted-foreground: 273 50% 80%;
+    --accent: var(--color-accent);
+    --accent-foreground: 267 41% 11%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: var(--color-text);
+    --border: var(--color-panel-border);
+    --input: var(--color-bg-tertiary);
+    --ring: var(--color-accent);
+    --chart-1: var(--color-accent);
+    --chart-2: var(--color-btn-border);
+    --chart-3: var(--color-panel-border);
+    --chart-4: var(--color-accent-soft);
+    --chart-5: 280 70% 65%;
+    --radius: 0.75rem;
+
+    /* Parchment texture pattern */
+    --parchment-texture: url("https://www.transparenttextures.com/patterns/parchment.png");
   }
 
-  /* Тематические варианты - более благородные цвета */
-  [data-theme="arcane"] {
-    --bg-default: #0c0a12;
-    --bg-panel: linear-gradient(145deg, rgba(30, 25, 45, 0.9), rgba(40, 35, 55, 0.8));
-    --primary-accent: #8a7fc8;
-    --border-main: #5d5280;
-    --background: 12 10 18;
-    --primary: 138 127 200;
-    --secondary: 93 82 128;
-    --accent: 138 127 200;
-  }
-
-  [data-theme="forest"] {
-    --bg-default: #0a0f0a;
-    --bg-panel: linear-gradient(145deg, rgba(25, 40, 25, 0.9), rgba(35, 50, 35, 0.8));
-    --primary-accent: #7a9a7a;
-    --border-main: #5a7a5a;
-    --background: 10 15 10;
-    --primary: 122 154 122;
-    --secondary: 90 122 90;
-    --accent: 122 154 122;
-  }
-
-  [data-theme="inferno"] {
-    --bg-default: #100a08;
-    --bg-panel: linear-gradient(145deg, rgba(40, 25, 20, 0.9), rgba(50, 35, 30, 0.8));
-    --primary-accent: #c8856b;
-    --border-main: #a0654f;
-    --background: 16 10 8;
-    --primary: 200 133 107;
-    --secondary: 160 101 79;
-    --accent: 200 133 107;
-  }
-
-  [data-theme="underdark"] {
-    --bg-default: #050505;
-    --bg-panel: linear-gradient(145deg, rgba(15, 15, 25, 0.9), rgba(25, 25, 35, 0.8));
-    --primary-accent: #6b5a8a;
-    --border-main: #4a3d5f;
-    --background: 5 5 5;
-    --primary: 107 90 138;
-    --secondary: 74 61 95;
-    --accent: 107 90 138;
-  }
-
-  [data-theme="divine"] {
-    --bg-default: #0f0f0a;
-    --bg-panel: linear-gradient(145deg, rgba(40, 40, 30, 0.9), rgba(50, 50, 40, 0.8));
-    --primary-accent: #c8b875;
-    --border-main: #a09060;
-    --background: 15 15 10;
-    --primary: 200 184 117;
-    --secondary: 160 144 96;
-    --accent: 200 184 117;
+  .dark {
+    /* Dark mode inherits the same arcane theme */
+    --background: var(--color-bg);
+    --foreground: var(--color-text);
+    --card: var(--color-bg-secondary);
+    --card-foreground: var(--color-text);
+    --popover: var(--color-bg-secondary);
+    --popover-foreground: var(--color-text);
+    --primary: var(--color-accent);
+    --primary-foreground: 267 41% 11%;
+    --secondary: var(--color-bg-tertiary);
+    --secondary-foreground: var(--color-text);
+    --muted: var(--color-bg-tertiary);
+    --muted-foreground: 273 50% 80%;
+    --accent: var(--color-accent);
+    --accent-foreground: 267 41% 11%;
+    --destructive: 0 62% 30%;
+    --destructive-foreground: var(--color-text);
+    --border: var(--color-panel-border);
+    --input: var(--color-bg-tertiary);
+    --ring: var(--color-accent);
+    --chart-1: var(--color-accent);
+    --chart-2: var(--color-btn-border);
+    --chart-3: var(--color-panel-border);
+    --chart-4: var(--color-accent-soft);
+    --chart-5: 280 70% 65%;
   }
 }
 
@@ -131,240 +86,100 @@
   }
   
   body {
-    background: var(--bg-default), var(--parchment-texture);
-    color: var(--text-main);
+    @apply bg-background text-foreground;
+    background-image: var(--parchment-texture);
     font-family: var(--font-body);
+    transition: all 0.3s ease;
     min-height: 100vh;
-    position: relative;
-    /* Добавляем тонкий gradient overlay для глубины */
-    background-image: 
-      radial-gradient(circle at 25% 25%, rgba(60, 45, 80, 0.05) 0%, transparent 50%),
-      radial-gradient(circle at 75% 75%, rgba(80, 60, 45, 0.03) 0%, transparent 50%),
-      var(--parchment-texture);
   }
 
-  h1, h2, h3 {
+  h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-header);
-    /* Очень мягкое свечение без яркости */
-    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
-    color: var(--text-main);
+    text-shadow: 0 0 6px hsl(var(--color-accent-soft) / 0.5);
+    letter-spacing: 1px;
     font-weight: 600;
-    letter-spacing: 0.025em;
-  }
-
-  .container {
-    padding: 2rem;
-    background: var(--bg-glow);
-  }
-
-  /* Элегантные карточки с благородной эстетикой */
-  .card {
-    border: 1px solid var(--border-main);
-    background: var(--bg-panel), var(--parchment-texture);
-    /* Элегантная тень без кислотного свечения */
-    box-shadow: 
-      0 4px 16px rgba(0, 0, 0, 0.4),
-      0 1px 3px rgba(0, 0, 0, 0.2),
-      inset 0 1px 0 rgba(255, 255, 255, 0.03);
-    padding: 1.5rem;
-    border-radius: 6px;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    position: relative;
-    overflow: hidden;
-  }
-
-  /* Деликатные декоративные углы */
-  .card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(135deg, 
-      transparent 40%, 
-      rgba(212, 188, 122, 0.02) 50%, 
-      transparent 60%);
-    transform: translateX(-100%);
-    transition: transform 1s ease;
-    pointer-events: none;
-  }
-
-  /* Угловые акценты в стиле RPG интерфейсов */
-  .card::after {
-    content: '';
-    position: absolute;
-    top: 8px;
-    left: 8px;
-    width: 16px;
-    height: 16px;
-    border-top: 2px solid var(--primary-accent);
-    border-left: 2px solid var(--primary-accent);
-    opacity: 0.6;
-  }
-
-  .card:hover {
-    transform: translateY(-3px);
-    box-shadow: 
-      0 8px 32px rgba(0, 0, 0, 0.5),
-      0 4px 8px rgba(0, 0, 0, 0.3),
-      inset 0 1px 0 rgba(255, 255, 255, 0.05),
-      0 0 0 1px var(--primary-accent);
-    border-color: var(--primary-accent);
-  }
-
-  .card:hover::before {
-    transform: translateX(100%);
-  }
-
-  /* Стильные кнопки с неоновой рамкой */
-  .btn-glow {
-    background: linear-gradient(145deg, 
-      rgba(25, 22, 32, 0.8), 
-      rgba(35, 32, 42, 0.9));
-    border: 1px solid var(--primary-accent);
-    color: var(--primary-accent);
-    font-weight: 500;
-    padding: 0.75rem 1.5rem;
-    border-radius: 4px;
-    /* Тонкая неоновая обводка без яркого пятна */
-    box-shadow: 
-      0 0 0 1px rgba(212, 188, 122, 0.2),
-      0 2px 8px rgba(0, 0, 0, 0.3),
-      inset 0 1px 0 rgba(255, 255, 255, 0.03);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    font-family: var(--font-header);
-    position: relative;
-    overflow: hidden;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    font-size: 0.875rem;
-  }
-
-  .btn-glow:hover {
-    background: linear-gradient(145deg, 
-      rgba(35, 32, 42, 0.9), 
-      rgba(45, 42, 52, 0.95));
-    color: var(--text-main);
-    /* Усиление рамки без кислотного свечения */
-    box-shadow: 
-      0 0 0 2px var(--primary-accent),
-      0 4px 16px rgba(0, 0, 0, 0.4),
-      inset 0 1px 0 rgba(255, 255, 255, 0.05);
-    transform: translateY(-1px);
-    border-color: var(--primary-accent);
-  }
-
-  /* Деликатный shine эффект */
-  .btn-glow::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, 
-      transparent, 
-      rgba(212, 188, 122, 0.1), 
-      transparent);
-    transition: left 0.8s ease;
-  }
-
-  .btn-glow:hover::before {
-    left: 100%;
-  }
-
-  /* === Theme Selector Dropdown === */
-  .theme-selector {
-    position: absolute;
-    top: 1rem;
-    right: 1rem;
-    background: #1c112d;
-    border: 2px solid var(--accent);
-    padding: 0.5rem;
-    border-radius: 8px;
-    color: var(--text-main);
-    font-family: var(--font-body);
-    box-shadow: 0 0 15px var(--glow);
-  }
-
-  .theme-selector select {
-    background: #1c112d;
-    color: var(--accent);
-    border: none;
-    font-family: var(--font-body);
-    font-size: 1rem;
-  }
-
-  /* Animated mystical background effect */
-  body::before {
-    content: '';
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: 
-      radial-gradient(circle at 25% 25%, hsl(var(--primary) / 0.05) 0%, transparent 50%),
-      radial-gradient(circle at 75% 75%, hsl(var(--secondary) / 0.05) 0%, transparent 50%);
-    animation: mysticalFlow 20s ease-in-out infinite;
-    pointer-events: none;
-    z-index: -1;
-  }
-
-  @keyframes mysticalFlow {
-    0%, 100% { 
-      transform: translateX(0) translateY(0) scale(1);
-      opacity: 0.3;
-    }
-    33% { 
-      transform: translateX(-20px) translateY(-10px) scale(1.1);
-      opacity: 0.5;
-    }
-    66% { 
-      transform: translateX(15px) translateY(20px) scale(0.9);
-      opacity: 0.4;
-    }
-  }
-  
-  /* Fantasy Typography */
-  .font-fantasy-title {
-    font-family: 'Cinzel', serif;
-    font-weight: 700;
-    letter-spacing: 0.05em;
-  }
-
-  .font-fantasy-heading {
-    font-family: 'Cinzel', serif;
-    font-weight: 600;
-    letter-spacing: 0.025em;
-  }
-
-  .font-fantasy-body {
-    font-family: 'MedievalSharp', cursive;
-    letter-spacing: 0.01em;
-  }
-
-  .font-creepy {
-    font-family: 'Creepster', cursive;
-  }
-
-  .font-ancient {
-    font-family: 'Uncial Antiqua', cursive;
   }
 }
 
 @layer components {
-  /* Magic Card Styles */
+  /* Arcane Card Styles */
+  .card-arcane {
+    @apply bg-card border-2 border-border rounded-xl p-6;
+    background: linear-gradient(135deg, 
+      hsl(var(--color-bg-secondary)), 
+      hsl(var(--color-bg-tertiary)));
+    box-shadow: 0 0 15px hsl(var(--color-accent-soft) / 0.3);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  .card-arcane:hover {
+    transform: scale(1.02);
+    box-shadow: 0 0 25px hsl(var(--color-accent) / 0.4);
+  }
+
+  /* Arcane Button Styles */
+  .btn-arcane {
+    font-family: var(--font-header);
+    @apply bg-secondary border-2 border-border text-accent px-5 py-2 rounded-lg cursor-pointer;
+    box-shadow: 0 0 10px hsl(var(--color-accent-soft) / 0.3);
+    transition: all 0.3s ease;
+    font-weight: 600;
+  }
+
+  .btn-arcane:hover {
+    background: hsl(var(--color-btn-hover));
+    color: hsl(267 41% 11%);
+    box-shadow: 0 0 20px hsl(var(--color-accent) / 0.5);
+  }
+
+  /* Mystical Glow Effect */
+  .mystical-glow {
+    filter: drop-shadow(0 0 8px hsl(var(--color-accent) / 0.6));
+  }
+
+  /* Arcane Border */
+  .border-arcane {
+    border: 2px solid hsl(var(--color-panel-border));
+    box-shadow: inset 0 0 10px hsl(var(--color-accent-soft) / 0.2);
+  }
+
+  /* Arcane Background */
+  .bg-arcane {
+    background: linear-gradient(135deg, 
+      hsl(var(--color-bg-secondary)), 
+      hsl(var(--color-bg-tertiary)));
+  }
+
+  /* Text with mystical glow */
+  .text-mystical {
+    text-shadow: 0 0 8px hsl(var(--color-accent) / 0.8);
+    color: hsl(var(--color-accent));
+  }
+
+  /* Theme Selector */
+  .theme-selector {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: hsl(var(--color-btn-bg));
+    border: 2px solid hsl(var(--color-btn-border));
+    border-radius: 10px;
+    padding: 0.5rem;
+    color: hsl(var(--color-text));
+    box-shadow: 0 0 15px hsl(var(--color-accent-soft) / 0.3);
+  }
+
+  .theme-selector select {
+    background: transparent;
+    border: none;
+    color: hsl(var(--color-accent));
+    font-family: var(--font-body);
+    font-size: 1rem;
+  }
+
+  /* Enhanced Magic Card */
   .magic-card {
-    @apply bg-card/80 backdrop-blur-md border-2 border-border/50 rounded-lg p-6;
-    background: linear-gradient(145deg, 
-      hsl(var(--card) / 0.8) 0%, 
-      hsl(var(--muted) / 0.6) 100%);
-    box-shadow: 
-      0 0 20px hsl(var(--primary) / 0.2),
-      inset 0 1px 0 hsl(var(--foreground) / 0.1);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    @apply card-arcane;
     position: relative;
     overflow: hidden;
   }
@@ -378,117 +193,104 @@
     bottom: 0;
     background: linear-gradient(45deg, 
       transparent 40%, 
-      hsl(var(--primary) / 0.1) 50%, 
+      hsl(var(--color-accent) / 0.1) 50%, 
       transparent 60%);
     transform: translateX(-100%);
     transition: transform 0.6s ease;
-  }
-
-  .magic-card:hover {
-    transform: translateY(-8px) scale(1.02);
-    box-shadow: 
-      0 20px 40px hsl(var(--primary) / 0.3),
-      0 0 30px hsl(var(--accent) / 0.2),
-      inset 0 1px 0 hsl(var(--foreground) / 0.2);
-    border-color: hsl(var(--primary) / 0.8);
+    pointer-events: none;
   }
 
   .magic-card:hover::before {
     transform: translateX(100%);
   }
 
-  /* Glowing Button Styles */
-  .btn-magic {
-    @apply relative overflow-hidden;
+  /* Fantasy Typography */
+  .font-fantasy-title {
+    font-family: var(--font-header);
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-shadow: 0 0 10px hsl(var(--color-accent) / 0.4);
+  }
+
+  .font-fantasy-heading {
+    font-family: var(--font-header);
+    font-weight: 600;
+    letter-spacing: 0.025em;
+  }
+
+  .font-fantasy-body {
+    font-family: var(--font-body);
+    letter-spacing: 0.01em;
+  }
+
+  /* Glowing Input Styles */
+  .input-arcane {
+    @apply bg-input border-2 border-border rounded-lg px-4 py-2 text-foreground;
+    box-shadow: inset 0 0 10px hsl(var(--color-bg) / 0.5);
+    transition: all 0.3s ease;
+  }
+
+  .input-arcane:focus {
+    @apply border-accent ring-2 ring-accent ring-opacity-50;
+    box-shadow: 
+      inset 0 0 10px hsl(var(--color-bg) / 0.5),
+      0 0 15px hsl(var(--color-accent) / 0.3);
+  }
+
+  /* Arcane Navigation */
+  .nav-arcane {
+    @apply bg-card border border-border rounded-lg p-4;
     background: linear-gradient(135deg, 
-      hsl(var(--primary)) 0%, 
-      hsl(var(--secondary)) 100%);
-    box-shadow: 
-      0 0 20px hsl(var(--primary) / 0.4),
-      inset 0 1px 0 hsl(var(--foreground) / 0.2);
-    transition: all 0.3s ease;
+      hsl(var(--color-bg-secondary) / 0.8), 
+      hsl(var(--color-bg-tertiary) / 0.6));
+    backdrop-filter: blur(10px);
   }
 
-  .btn-magic::before {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 0;
-    height: 0;
-    background: radial-gradient(circle, 
-      hsl(var(--accent) / 0.4) 0%, 
-      transparent 70%);
-    transition: all 0.3s ease;
-    transform: translate(-50%, -50%);
+  /* Arcane Table */
+  .table-arcane {
+    @apply bg-card border border-border rounded-lg overflow-hidden;
+    background: linear-gradient(135deg, 
+      hsl(var(--color-bg-secondary) / 0.9), 
+      hsl(var(--color-bg-tertiary) / 0.7));
   }
 
-  .btn-magic:hover {
-    transform: scale(1.05);
-    box-shadow: 
-      0 0 30px hsl(var(--primary) / 0.6),
-      0 0 50px hsl(var(--accent) / 0.3),
-      inset 0 1px 0 hsl(var(--foreground) / 0.3);
+  .table-arcane th {
+    @apply bg-secondary text-secondary-foreground px-4 py-3 font-medium border-b border-border;
+    font-family: var(--font-header);
+    letter-spacing: 0.5px;
   }
 
-  .btn-magic:hover::before {
-    width: 300px;
-    height: 300px;
+  .table-arcane td {
+    @apply px-4 py-3 border-b border-border;
   }
 
-  /* Мягкое текстовое свечение */
-  .text-glow {
-    text-shadow: 
-      0 0 4px rgba(168, 144, 117, 0.4),
-      0 0 8px rgba(168, 144, 117, 0.2);
+  .table-arcane tr:hover {
+    background: hsl(var(--color-accent) / 0.05);
   }
 
-  /* Улучшенный Theme Orb */
-  .theme-orb {
-    @apply w-12 h-12 rounded-full border cursor-pointer transition-all duration-300;
-    background: radial-gradient(circle at 30% 30%, 
-      var(--accent), 
-      var(--glow));
-    border-color: rgba(168, 144, 117, 0.4);
-    box-shadow: 
-      0 2px 8px rgba(0, 0, 0, 0.3),
-      0 0 0 1px rgba(168, 144, 117, 0.2);
-  }
-
-  .theme-orb:hover {
-    transform: scale(1.05);
-    box-shadow: 
-      0 4px 16px rgba(0, 0, 0, 0.4),
-      0 0 0 2px rgba(168, 144, 117, 0.4),
-      0 0 12px rgba(168, 144, 117, 0.3);
-  }
-
-  /* Navigation glow effects */
-  .nav-glow {
-    transition: all 0.3s ease;
-  }
-
-  .nav-glow:hover {
-    box-shadow: 0 0 20px hsl(var(--primary) / 0.4);
-    background: hsl(var(--primary) / 0.1);
+  /* Mystical Badge */
+  .badge-arcane {
+    @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-medium;
+    background: hsl(var(--color-accent) / 0.2);
+    color: hsl(var(--color-accent));
+    border: 1px solid hsl(var(--color-accent) / 0.3);
+    box-shadow: 0 0 8px hsl(var(--color-accent) / 0.2);
   }
 }
 
 @layer utilities {
-  .animate-glow {
-    animation: glow 2s ease-in-out infinite alternate;
+  .animate-mystical {
+    animation: mystical 3s ease-in-out infinite;
   }
 
-  @keyframes glow {
-    from {
-      text-shadow: 
-        0 0 2px rgba(168, 144, 117, 0.3),
-        0 0 4px rgba(168, 144, 117, 0.2);
+  @keyframes mystical {
+    0%, 100% {
+      text-shadow: 0 0 6px hsl(var(--color-accent) / 0.5);
     }
-    to {
+    50% {
       text-shadow: 
-        0 0 6px rgba(168, 144, 117, 0.5),
-        0 0 12px rgba(168, 144, 117, 0.3);
+        0 0 10px hsl(var(--color-accent) / 0.8),
+        0 0 20px hsl(var(--color-accent) / 0.4);
     }
   }
 
@@ -501,37 +303,24 @@
     50% { transform: translateY(-10px); }
   }
 
-  .animate-pulse-glow {
-    animation: pulseGlow 3s ease-in-out infinite;
+  .animate-glow-pulse {
+    animation: glowPulse 2s ease-in-out infinite alternate;
   }
 
-  @keyframes pulseGlow {
-    0%, 100% { 
-      box-shadow: 0 0 8px rgba(168, 144, 117, 0.2);
+  @keyframes glowPulse {
+    from {
+      box-shadow: 0 0 15px hsl(var(--color-accent-soft) / 0.3);
     }
-    50% { 
-      box-shadow: 0 0 16px rgba(168, 144, 117, 0.4);
-    }
-  }
-
-  /* Animation Delays */
-  .animation-delay-1000 { animation-delay: 1s; }
-  .animation-delay-2000 { animation-delay: 2s; }
-  .animation-delay-3000 { animation-delay: 3s; }
-
-  /* Мягкие мистические анимации */
-  @keyframes mystical-glow {
-    0% {
-      filter: drop-shadow(0 0 3px rgba(168, 144, 117, 0.3));
-      transform: scale(1);
-    }
-    100% {
-      filter: drop-shadow(0 0 8px rgba(168, 144, 117, 0.5));
-      transform: scale(1.02);
+    to {
+      box-shadow: 0 0 25px hsl(var(--color-accent) / 0.5);
     }
   }
 
-  .mystical-rune {
-    animation: mystical-glow 4s ease-in-out infinite alternate;
+  /* Background pattern overlay */
+  .bg-mystical-pattern {
+    background-image: 
+      radial-gradient(circle at 25% 25%, hsl(var(--color-accent) / 0.05) 0%, transparent 50%),
+      radial-gradient(circle at 75% 75%, hsl(var(--color-accent-soft) / 0.05) 0%, transparent 50%),
+      var(--parchment-texture);
   }
 }

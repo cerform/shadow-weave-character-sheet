@@ -78,14 +78,22 @@ export default {
         },
       },
       fontFamily: {
-        philosopher: ['Philosopher', 'sans-serif'],
-        cormorant: ['Cormorant', 'serif'],
-        // D&D Fantasy Fonts
+        // Arcane Elegance Fonts
+        'arcane-header': ['Cinzel', 'serif'],
+        'arcane-body': ['Uncial Antiqua', 'cursive'],
+        'cinzel': ['Cinzel', 'serif'],
+        'uncial': ['Uncial Antiqua', 'cursive'],
+        
+        // Legacy D&D Fantasy Fonts
         'fantasy-title': ['Cinzel', 'serif'],
         'fantasy-heading': ['Cinzel', 'serif'], 
         'fantasy-body': ['MedievalSharp', 'cursive'],
         'creepy': ['Creepster', 'cursive'],
-        'ancient': ['Uncial Antiqua', 'cursive']
+        'ancient': ['Uncial Antiqua', 'cursive'],
+        
+        // Other fonts
+        philosopher: ['Philosopher', 'sans-serif'],
+        cormorant: ['Cormorant', 'serif'],
       },
       borderRadius: {
         lg: "var(--radius)",
