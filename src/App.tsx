@@ -23,6 +23,7 @@ import HandbookPage from '@/pages/HandbookPage';
 import SpellbookPage from '@/pages/SpellbookPage';
 import DebugPage from '@/pages/DebugPage';
 import NotFound from '@/pages/NotFound';
+import CharacterManagementPage from '@/pages/CharacterManagementPage';
 import BackgroundWrapper from '@/components/layout/BackgroundWrapper';
 import FloatingSpellWidget from '@/components/spellbook/FloatingSpellWidget';
 
@@ -45,6 +46,7 @@ function App() {
                     <Route path="/character" element={<CharacterCreationPage />} />
                     <Route path="/characters" element={<CharactersListPage />} />
                     <Route path="/recent-characters" element={<CharactersListPage />} />
+                    <Route path="/character-management" element={<CharacterManagementPage />} />
                     <Route path="/character/:id" element={<CharacterSheetPage />} />
                     <Route path="/character-sheet/:id" element={<CharacterSheetPage />} />
                     <Route path="/dm" element={<DMPanel />} />
