@@ -55,15 +55,59 @@ export const getUserCharacters = async (userId: string) => {
 
 export const saveCharacter = async (characterData: any) => {
   try {
-    const charRef = doc(collection(db, 'characters'));
-    await setDoc(charRef, {
-      ...characterData,
-      createdAt: new Date(),
-      updatedAt: new Date()
-    });
-    return charRef.id;
+    let charRef;
+    
+    if (characterData.id) {
+      // Обновляем существующего персонажа
+      charRef = doc(db, 'characters', characterData.id);
+      await setDoc(charRef, {
+        ...characterData,
+        updatedAt: new Date()
+      }, { merge: true });
+      return characterData.id;
+    } else {
+      // Создаем нового персонажа
+      charRef = doc(collection(db, 'characters'));
+      await setDoc(charRef, {
+        ...characterData,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      });
+      return charRef.id;
+    }
   } catch (error) {
     console.error('Ошибка сохранения персонажа:', error);
+    throw error;
+  }
+};
+
+export const updateCharacter = async (characterId: string, data: any) => {
+  try {
+    await updateDoc(doc(db, 'characters', characterId), {
+      ...data,
+      updatedAt: new Date()
+    });
+  } catch (error) {
+    console.error('Ошибка обновления персонажа:', error);
+    throw error;
+  }
+};
+
+export const deleteCharacter = async (characterId: string) => {
+  try {
+    await deleteDoc(doc(db, 'characters', characterId));
+  } catch (error) {
+    console.error('Ошибка удаления персонажа:', error);
+    throw error;
+  }
+};
+
+export const getCharacterById = async (characterId: string) => {
+  try {
+    const charDoc = await getDoc(doc(db, 'characters', characterId));
+    return charDoc.exists() ? { id: charDoc.id, ...charDoc.data() } : null;
+  } catch (error) {
+    console.error('Ошибка получения персонажа:', error);
     throw error;
   }
 };
