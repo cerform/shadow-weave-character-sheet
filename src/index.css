@@ -9,35 +9,47 @@
   :root {
     --font-header: 'Cinzel', serif;
     --font-body: 'Uncial Antiqua', cursive;
-    --bg-default: #0c0c1c;
-    --bg-panel: linear-gradient(135deg, #1e1e2e, #28283e);
-    --bg-glow: radial-gradient(circle at center, rgba(125, 94, 255, 0.2), transparent 70%);
-    --text-main: #f0e6ff;
-    --accent: #c084fc;
-    --glow: #b97fff;
-    --border-gold: #d6b374;
-    --danger: #e94e77;
+    
+    /* Более мягкие и атмосферные цвета */
+    --bg-default: #0f0d15;
+    --bg-panel: linear-gradient(145deg, 
+      rgba(28, 25, 35, 0.95), 
+      rgba(38, 35, 45, 0.85));
+    --bg-glow: radial-gradient(circle at center, 
+      rgba(85, 65, 120, 0.08), 
+      transparent 60%);
+    
+    /* Мягкие цвета текста */
+    --text-main: #e8ddd0;
+    --text-secondary: #c7b8a8;
+    --accent: #d6c9a0; /* Мягкий золотисто-бежевый вместо ярко-жёлтого */
+    --glow: #a89075; /* Тёплое свечение */
+    --border-gold: #8b7355; /* Приглушённое золото */
+    --danger: #b85450; /* Мягкий красный */
+    
+    /* Пергаментная текстура для карточек */
+    --card-texture: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.02'%3E%3Ccircle cx='3' cy='3' r='1'/%3E%3Ccircle cx='13' cy='13' r='1'/%3E%3Ccircle cx='33' cy='5' r='1'/%3E%3Ccircle cx='3' cy='23' r='1'/%3E%3Ccircle cx='43' cy='15' r='1'/%3E%3Ccircle cx='25' cy='25' r='1'/%3E%3Ccircle cx='15' cy='35' r='1'/%3E%3Ccircle cx='45' cy='45' r='1'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
 
-    /* Semantic color system */
-    --background: 12 12 28;
-    --foreground: 240 230 255;
-    --card: 30 30 46;
-    --card-foreground: 240 230 255;
-    --popover: 30 30 46;
-    --popover-foreground: 240 230 255;
-    --primary: 277 84 252;
-    --primary-foreground: 28 17 45;
-    --secondary: 214 179 116;
-    --secondary-foreground: 28 17 45;
-    --muted: 46 46 62;
-    --muted-foreground: 200 180 210;
-    --accent: 277 84 252;
-    --accent-foreground: 28 17 45;
-    --destructive: 350 89 60;
-    --destructive-foreground: 240 230 255;
-    --border: 214 179 116;
-    --input: 46 46 62;
-    --ring: 277 84 252;
+    /* Semantic color system - более мягкие тона */
+    --background: 15 13 21;
+    --foreground: 232 221 208;
+    --card: 35 32 42;
+    --card-foreground: 232 221 208;
+    --popover: 35 32 42;
+    --popover-foreground: 232 221 208;
+    --primary: 42 35 27; /* Тёплый коричневый */
+    --primary-foreground: 232 221 208;
+    --secondary: 139 115 85; /* Мягкий золотистый */
+    --secondary-foreground: 35 32 42;
+    --muted: 55 52 62;
+    --muted-foreground: 199 184 168;
+    --accent: 214 201 160; /* Мягкий бежевый */
+    --accent-foreground: 35 32 42;
+    --destructive: 184 84 80;
+    --destructive-foreground: 232 221 208;
+    --border: 139 115 85;
+    --input: 55 52 62;
+    --ring: 168 144 117;
     --radius: 0.75rem;
 
     /* Chart colors for spells/stats */
@@ -48,65 +60,65 @@
     --chart-5: 239 68 68;   /* Elemental */
   }
 
-  /* Fantasy Theme Variants */
+  /* Fantasy Theme Variants - более атмосферные */
   [data-theme="arcane"] {
-    --bg-default: #1c112d;
-    --bg-panel: linear-gradient(135deg, #2e1b4e, #3e2b5e);
-    --accent: #b97fff;
-    --glow: #c084fc;
-    --border-gold: #8b5cf6;
-    --background: 28 17 45;
-    --primary: 277 84 252;
-    --secondary: 260 35 58;
-    --accent: 277 84 252;
+    --bg-default: #1a1625;
+    --bg-panel: linear-gradient(145deg, rgba(45, 35, 65, 0.9), rgba(55, 45, 75, 0.8));
+    --accent: #9d8df1;
+    --glow: #7c6bb8;
+    --border-gold: #8b7bd1;
+    --background: 26 22 37;
+    --primary: 157 141 241;
+    --secondary: 124 107 184;
+    --accent: 157 141 241;
   }
 
   [data-theme="forest"] {
-    --bg-default: #102410;
-    --bg-panel: linear-gradient(135deg, #1e3e1e, #2e4e2e);
-    --accent: #88cc88;
-    --glow: #90ee90;
-    --border-gold: #90ee90;
-    --background: 142 25 15;
-    --primary: 142 30 40;
-    --secondary: 80 25 35;
-    --accent: 142 30 40;
+    --bg-default: #141a14;
+    --bg-panel: linear-gradient(145deg, rgba(35, 55, 35, 0.9), rgba(45, 65, 45, 0.8));
+    --accent: #a8c9a8;
+    --glow: #7eb17e;
+    --border-gold: #8fb88f;
+    --background: 20 26 20;
+    --primary: 168 201 168;
+    --secondary: 126 177 126;
+    --accent: 168 201 168;
   }
 
   [data-theme="inferno"] {
-    --bg-default: #220000;
-    --bg-panel: linear-gradient(135deg, #3e1e1e, #4e2e2e);
-    --accent: #ff4444;
-    --glow: #ff6666;
-    --border-gold: #ff8c42;
-    --background: 15 30 18;
-    --primary: 15 40 45;
-    --secondary: 25 35 40;
-    --accent: 15 40 45;
+    --bg-default: #1a110e;
+    --bg-panel: linear-gradient(145deg, rgba(55, 35, 25, 0.9), rgba(65, 45, 35, 0.8));
+    --accent: #d4907a;
+    --glow: #b8725f;
+    --border-gold: #c2865e;
+    --background: 26 17 14;
+    --primary: 212 144 122;
+    --secondary: 184 114 95;
+    --accent: 212 144 122;
   }
 
   [data-theme="underdark"] {
-    --bg-default: #0a0a0a;
-    --bg-panel: linear-gradient(135deg, #1a1a1a, #2a2a2a);
-    --accent: #6b46c1;
-    --glow: #8b5cf6;
-    --border-gold: #a855f7;
-    --background: 280 25 12;
-    --primary: 280 30 40;
-    --secondary: 260 25 35;
-    --accent: 280 30 40;
+    --bg-default: #0e0e0e;
+    --bg-panel: linear-gradient(145deg, rgba(25, 25, 35, 0.9), rgba(35, 35, 45, 0.8));
+    --accent: #8b6bb8;
+    --glow: #6b4d88;
+    --border-gold: #7a5b9f;
+    --background: 14 14 14;
+    --primary: 139 107 184;
+    --secondary: 107 77 136;
+    --accent: 139 107 184;
   }
 
   [data-theme="divine"] {
-    --bg-default: #1a1a2e;
-    --bg-panel: linear-gradient(135deg, #2e2e4e, #3e3e5e);
-    --accent: #ffd700;
-    --glow: #ffed4e;
-    --border-gold: #fbbf24;
-    --background: 45 25 18;
-    --primary: 45 35 50;
-    --secondary: 42 30 45;
-    --accent: 45 35 50;
+    --bg-default: #1a1a16;
+    --bg-panel: linear-gradient(145deg, rgba(55, 55, 45, 0.9), rgba(65, 65, 55, 0.8));
+    --accent: #d1c47a;
+    --glow: #b8a85f;
+    --border-gold: #c2b574;
+    --background: 26 26 22;
+    --primary: 209 196 122;
+    --secondary: 184 168 95;
+    --accent: 209 196 122;
   }
 }
 
@@ -116,7 +128,7 @@
   }
   
   body {
-    background: var(--bg-default);
+    background: var(--bg-default), var(--card-texture);
     color: var(--text-main);
     font-family: var(--font-body);
     min-height: 100vh;
@@ -125,7 +137,9 @@
 
   h1, h2, h3 {
     font-family: var(--font-header);
-    text-shadow: 0 0 5px var(--glow);
+    /* Более мягкое свечение */
+    text-shadow: 0 0 8px rgba(168, 144, 117, 0.3);
+    color: var(--text-main);
   }
 
   .container {
@@ -133,36 +147,97 @@
     background: var(--bg-glow);
   }
 
+  /* Улучшенные карточки с пергаментной текстурой */
   .card {
-    border: 2px solid var(--border-gold);
-    background: var(--bg-panel);
-    box-shadow: 0 0 10px var(--glow);
+    border: 1px solid var(--border-gold);
+    background: var(--bg-panel), var(--card-texture);
+    /* Мягкая тень без резкого свечения */
+    box-shadow: 
+      0 4px 12px rgba(0, 0, 0, 0.3),
+      0 1px 3px rgba(168, 144, 117, 0.1);
     padding: 1.5rem;
-    border-radius: 12px;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border-radius: 8px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, 
+      transparent 30%, 
+      rgba(168, 144, 117, 0.05) 50%, 
+      transparent 70%);
+    transform: translateX(-100%);
+    transition: transform 0.8s ease;
   }
 
   .card:hover {
-    transform: scale(1.03);
-    box-shadow: 0 0 20px var(--accent);
+    transform: translateY(-2px);
+    box-shadow: 
+      0 8px 25px rgba(0, 0, 0, 0.4),
+      0 2px 8px rgba(168, 144, 117, 0.2);
+    border-color: var(--accent);
   }
 
+  .card:hover::before {
+    transform: translateX(100%);
+  }
+
+  /* Улучшенные кнопки с неоновой обводкой */
   .btn-glow {
-    background-color: transparent;
-    border: 2px solid var(--accent);
+    background: linear-gradient(145deg, 
+      rgba(168, 144, 117, 0.1), 
+      rgba(139, 115, 85, 0.1));
+    border: 1px solid var(--accent);
     color: var(--accent);
-    font-weight: bold;
-    padding: 0.5rem 1.25rem;
-    border-radius: 8px;
-    box-shadow: 0 0 10px var(--accent);
-    transition: all 0.3s ease;
+    font-weight: 600;
+    padding: 0.75rem 1.5rem;
+    border-radius: 6px;
+    /* Тонкая неоновая обводка вместо яркого пятна */
+    box-shadow: 
+      0 0 0 1px rgba(168, 144, 117, 0.3),
+      0 2px 4px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     font-family: var(--font-header);
+    position: relative;
+    overflow: hidden;
   }
 
   .btn-glow:hover {
-    background-color: var(--accent);
-    color: #1c112d;
-    box-shadow: 0 0 20px var(--accent), inset 0 0 10px #ffffffaa;
+    background: linear-gradient(145deg, 
+      rgba(168, 144, 117, 0.2), 
+      rgba(139, 115, 85, 0.15));
+    color: var(--text-main);
+    /* Мягкое усиление свечения */
+    box-shadow: 
+      0 0 0 2px rgba(168, 144, 117, 0.5),
+      0 4px 12px rgba(0, 0, 0, 0.3),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    transform: translateY(-1px);
+  }
+
+  .btn-glow::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, 
+      transparent, 
+      rgba(168, 144, 117, 0.2), 
+      transparent);
+    transition: left 0.6s ease;
+  }
+
+  .btn-glow:hover::before {
+    left: 100%;
   }
 
   /* === Theme Selector Dropdown === */
@@ -327,31 +402,31 @@
     height: 300px;
   }
 
-  /* Mystical Text Glow */
+  /* Мягкое текстовое свечение */
   .text-glow {
     text-shadow: 
-      0 0 10px hsl(var(--primary) / 0.5),
-      0 0 20px hsl(var(--primary) / 0.3),
-      0 0 30px hsl(var(--primary) / 0.1);
+      0 0 4px rgba(168, 144, 117, 0.4),
+      0 0 8px rgba(168, 144, 117, 0.2);
   }
 
-  /* Theme Selector Orb */
+  /* Улучшенный Theme Orb */
   .theme-orb {
-    @apply w-12 h-12 rounded-full border-2 cursor-pointer transition-all duration-300;
+    @apply w-12 h-12 rounded-full border cursor-pointer transition-all duration-300;
     background: radial-gradient(circle at 30% 30%, 
-      hsl(var(--primary)) 0%, 
-      hsl(var(--secondary)) 70%);
+      var(--accent), 
+      var(--glow));
+    border-color: rgba(168, 144, 117, 0.4);
     box-shadow: 
-      0 0 15px hsl(var(--primary) / 0.4),
-      inset 0 2px 4px hsl(var(--foreground) / 0.1);
+      0 2px 8px rgba(0, 0, 0, 0.3),
+      0 0 0 1px rgba(168, 144, 117, 0.2);
   }
 
   .theme-orb:hover {
-    transform: scale(1.1);
+    transform: scale(1.05);
     box-shadow: 
-      0 0 25px hsl(var(--primary) / 0.6),
-      0 0 40px hsl(var(--accent) / 0.3),
-      inset 0 2px 6px hsl(var(--foreground) / 0.2);
+      0 4px 16px rgba(0, 0, 0, 0.4),
+      0 0 0 2px rgba(168, 144, 117, 0.4),
+      0 0 12px rgba(168, 144, 117, 0.3);
   }
 
   /* Navigation glow effects */
@@ -373,14 +448,13 @@
   @keyframes glow {
     from {
       text-shadow: 
-        0 0 5px hsl(var(--primary) / 0.5),
-        0 0 10px hsl(var(--primary) / 0.3);
+        0 0 2px rgba(168, 144, 117, 0.3),
+        0 0 4px rgba(168, 144, 117, 0.2);
     }
     to {
       text-shadow: 
-        0 0 10px hsl(var(--primary) / 0.8),
-        0 0 20px hsl(var(--primary) / 0.5),
-        0 0 30px hsl(var(--primary) / 0.3);
+        0 0 6px rgba(168, 144, 117, 0.5),
+        0 0 12px rgba(168, 144, 117, 0.3);
     }
   }
 
@@ -399,10 +473,10 @@
 
   @keyframes pulseGlow {
     0%, 100% { 
-      box-shadow: 0 0 20px hsl(var(--primary) / 0.3);
+      box-shadow: 0 0 8px rgba(168, 144, 117, 0.2);
     }
     50% { 
-      box-shadow: 0 0 40px hsl(var(--primary) / 0.6);
+      box-shadow: 0 0 16px rgba(168, 144, 117, 0.4);
     }
   }
 
@@ -411,19 +485,19 @@
   .animation-delay-2000 { animation-delay: 2s; }
   .animation-delay-3000 { animation-delay: 3s; }
 
-  /* Mystical animations */
+  /* Мягкие мистические анимации */
   @keyframes mystical-glow {
     0% {
-      filter: drop-shadow(0 0 5px var(--glow));
+      filter: drop-shadow(0 0 3px rgba(168, 144, 117, 0.3));
       transform: scale(1);
     }
     100% {
-      filter: drop-shadow(0 0 15px var(--accent));
-      transform: scale(1.05);
+      filter: drop-shadow(0 0 8px rgba(168, 144, 117, 0.5));
+      transform: scale(1.02);
     }
   }
 
   .mystical-rune {
-    animation: mystical-glow 3s ease-in-out infinite alternate;
+    animation: mystical-glow 4s ease-in-out infinite alternate;
   }
 }
