@@ -115,16 +115,16 @@ const CharacterManagementPage: React.FC = () => {
             </div>
           </div>
           
-          {loading && <LoadingState />}
+          {(loading || isRefreshing) && <LoadingState />}
           
-          {error && !loading && (
+          {error && !loading && !isRefreshing && (
             <ErrorDisplay 
               errorMessage={typeof error === 'string' ? error : (error as Error).message} 
               onRetry={refreshCharacters} 
             />
           )}
           
-          {!loading && !error && (
+          {!loading && !isRefreshing && !error && (
             <CharactersTable
               characters={characters || []}
               onDelete={handleDeleteCharacter}
