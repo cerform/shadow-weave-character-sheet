@@ -9,8 +9,6 @@ import { Character } from '@/types/character';
 import CharactersTable from "@/components/characters/CharactersTable";
 import OBSLayout from '@/components/OBSLayout';
 import IconOnlyNavigation from '@/components/navigation/IconOnlyNavigation';
-import { useTheme } from '@/hooks/use-theme';
-import { themes } from '@/lib/themes';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import CharacterNavigation from '@/components/characters/CharacterNavigation';
 import CharactersPageDebugger from '@/components/debug/CharactersPageDebugger';
@@ -27,9 +25,6 @@ const CharactersListPage: React.FC = () => {
   const { isAuthenticated, user } = useAuth();
   const [isRefreshing, setIsRefreshing] = useState(false);
   const { characters, loading, error, deleteCharacter, getUserCharacters } = useCharacter();
-  const { theme } = useTheme();
-  const themeKey = (theme || 'default') as keyof typeof themes;
-  const currentTheme = themes[themeKey] || themes.default;
   const [diagnosticResults, setDiagnosticResults] = useState<any>(null);
   
   // Мемоизированные функции для предотвращения перерендеров
@@ -147,7 +142,7 @@ const CharactersListPage: React.FC = () => {
       <OBSLayout
         topPanelContent={
           <div className="flex justify-between items-center p-3">
-            <h1 className="text-xl font-bold" style={{ color: currentTheme.textColor }}>
+            <h1 className="text-xl font-bold text-foreground">
               Персонажи
             </h1>
             <IconOnlyNavigation includeThemeSelector />
@@ -163,7 +158,7 @@ const CharactersListPage: React.FC = () => {
           <CharacterNavigation />
           
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-bold" style={{ color: currentTheme.accent }}>
+            <h2 className="text-2xl font-bold text-accent">
               Список персонажей
             </h2>
             <div className="flex gap-2">
@@ -209,9 +204,9 @@ const CharactersListPage: React.FC = () => {
             <>
               {/* Если есть результаты диагностики и они содержат ошибки */}
               {diagnosticResults && !diagnosticResults.success && (
-                <Card className="mb-6 bg-amber-900/20 border-amber-500/30">
+                <Card className="mb-6 bg-muted border-muted-foreground/30">
                   <CardHeader className="pb-2">
-                    <CardTitle className="flex items-center gap-2 text-amber-400">
+                    <CardTitle className="flex items-center gap-2 text-foreground">
                       <AlertTriangle size={18} />
                       Проблемы с загрузкой данных
                     </CardTitle>
@@ -220,8 +215,8 @@ const CharactersListPage: React.FC = () => {
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-amber-200 mb-2">{diagnosticResults.error}</p>
-                    <pre className="whitespace-pre-wrap text-xs bg-black/40 p-3 rounded max-h-40 overflow-auto">
+                    <p className="text-muted-foreground mb-2">{diagnosticResults.error}</p>
+                    <pre className="whitespace-pre-wrap text-xs bg-muted/50 p-3 rounded max-h-40 overflow-auto">
                       {JSON.stringify(diagnosticResults.debug, null, 2)}
                     </pre>
                   </CardContent>

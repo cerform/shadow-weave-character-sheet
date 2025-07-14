@@ -7,8 +7,6 @@ import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@
 import { Eye, Edit, Trash2, Loader2, AlertCircle } from "lucide-react";
 import { Character } from '@/types/character';
 import { toast } from 'sonner';
-import { useTheme } from '@/hooks/use-theme';
-import { themes } from '@/lib/themes';
 import DebugPanel from '@/components/debug/DebugPanel';
 import { validateCharacters } from '@/utils/debugUtils';
 
@@ -20,9 +18,6 @@ interface CharactersTableProps {
 const CharactersTable: React.FC<CharactersTableProps> = ({ characters, onDelete }) => {
   const navigate = useNavigate();
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const { theme } = useTheme();
-  const themeKey = (theme || 'default') as keyof typeof themes;
-  const currentTheme = themes[themeKey] || themes.default;
   const [validationReport, setValidationReport] = useState<any>(null);
   
   // Валидация массива персонажей при монтировании/обновлении
@@ -82,18 +77,18 @@ const CharactersTable: React.FC<CharactersTableProps> = ({ characters, onDelete 
   if (!Array.isArray(characters)) {
     console.error('CharactersTable: characters не является массивом:', characters);
     return (
-      <Card className="bg-black/50 backdrop-blur-sm">
+      <Card className="bg-card/80 backdrop-blur-sm border-destructive">
         <CardHeader>
-          <CardTitle className="text-red-500">Ошибка данных</CardTitle>
+          <CardTitle className="text-destructive">Ошибка данных</CardTitle>
           <CardDescription>Формат данных персонажей некорректный</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="p-4 bg-red-950/30 border border-red-800 rounded">
+          <div className="p-4 bg-destructive/10 border border-destructive/30 rounded">
             <p className="mb-2 flex items-center gap-2">
-              <AlertCircle size={18} className="text-red-500" />
+              <AlertCircle size={18} className="text-destructive" />
               Данные о персонажах не являются массивом
             </p>
-            <pre className="text-xs bg-black/50 p-2 rounded overflow-auto max-h-40">
+            <pre className="text-xs bg-muted/50 p-2 rounded overflow-auto max-h-40">
               {typeof characters === 'object' 
                 ? JSON.stringify(characters, null, 2) 
                 : `Тип данных: ${typeof characters}`}
@@ -118,9 +113,9 @@ const CharactersTable: React.FC<CharactersTableProps> = ({ characters, onDelete 
   if (characters.length === 0) {
     console.log('CharactersTable: Персонажи не найдены');
     return (
-      <Card className="bg-black/50 backdrop-blur-sm">
+      <Card className="bg-card/80 backdrop-blur-sm">
         <CardHeader>
-          <CardTitle style={{ color: currentTheme.textColor }}>Список персонажей</CardTitle>
+          <CardTitle className="text-foreground">Список персонажей</CardTitle>
           <CardDescription>У вас пока нет персонажей</CardDescription>
         </CardHeader>
         <CardContent>
@@ -137,13 +132,13 @@ const CharactersTable: React.FC<CharactersTableProps> = ({ characters, onDelete 
   if (validCharacters.length === 0) {
     console.warn('CharactersTable: Все персонажи невалидны (без ID)');
     return (
-      <Card className="bg-black/50 backdrop-blur-sm">
+      <Card className="bg-card/80 backdrop-blur-sm">
         <CardHeader>
-          <CardTitle style={{ color: currentTheme.textColor }}>Список персонажей</CardTitle>
+          <CardTitle className="text-foreground">Список персонажей</CardTitle>
           <CardDescription>Проблема с данными персонажей</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="mb-4 p-3 bg-yellow-900/30 border border-yellow-600/50 rounded">
+          <div className="mb-4 p-3 bg-muted border border-muted-foreground/20 rounded">
             <p>Возникла проблема с загрузкой данных персонажей. Они получены, но в некорректном формате.</p>
           </div>
           
@@ -170,9 +165,9 @@ const CharactersTable: React.FC<CharactersTableProps> = ({ characters, onDelete 
   const hasInvalidCharacters = characters.length > validCharacters.length;
 
   return (
-    <Card className="bg-black/50 backdrop-blur-sm">
+    <Card className="bg-card/80 backdrop-blur-sm">
       <CardHeader>
-        <CardTitle style={{ color: currentTheme.textColor }}>Список персонажей</CardTitle>
+        <CardTitle className="text-foreground">Список персонажей</CardTitle>
         <CardDescription>Всего персонажей: {validCharacters.length}</CardDescription>
       </CardHeader>
       <CardContent>
@@ -186,8 +181,8 @@ const CharactersTable: React.FC<CharactersTableProps> = ({ characters, onDelete 
         )}
         
         {hasInvalidCharacters && (
-          <div className="mb-4 p-3 bg-yellow-900/30 border border-yellow-600/50 rounded">
-            <p className="text-yellow-200 text-sm">
+          <div className="mb-4 p-3 bg-muted border border-muted-foreground/20 rounded">
+            <p className="text-muted-foreground text-sm">
               Внимание: {characters.length - validCharacters.length} из {characters.length} персонажей не отображаются из-за отсутствия ID
             </p>
           </div>
@@ -234,7 +229,7 @@ const CharactersTable: React.FC<CharactersTableProps> = ({ characters, onDelete 
                     size="sm" 
                     onClick={() => handleDelete(character.id!)}
                     disabled={deletingId === character.id}
-                    className="text-red-500 hover:text-red-700"
+                    className="text-destructive hover:text-destructive/70"
                     title="Удалить"
                   >
                     {deletingId === character.id ? (

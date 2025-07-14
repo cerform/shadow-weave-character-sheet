@@ -53,6 +53,11 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        // D&D specific colors
+        "dnd-gold": "hsl(var(--dnd-gold))",
+        "dnd-red": "hsl(var(--dnd-red))",
+        "dnd-green": "hsl(var(--dnd-green))",
+        "dnd-blue": "hsl(var(--dnd-blue))",
         theme: {
           shadow: {
             primary: "#7f00ff",

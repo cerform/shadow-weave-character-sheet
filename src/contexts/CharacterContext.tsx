@@ -1,9 +1,9 @@
 
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useCallback } from 'react';
 import { Character } from '@/types/character';
-import * as characterService from '@/services/characterService';
+import { useCharacterState } from '@/hooks/useCharacterState';
+import { useCharacterOperations } from '@/hooks/useCharacterOperations';
 import { toast } from 'sonner';
-import { getCurrentUid } from '@/utils/authHelpers';
 
 interface CharacterContextType {
   characters: Character[];
@@ -32,159 +32,91 @@ export const useCharacter = () => {
 };
 
 export const CharacterProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [characters, setCharacters] = useState<Character[]>([]);
-  const [character, setCharacterState] = useState<Character | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const state = useCharacterState();
+  const operations = useCharacterOperations();
 
-  const setCharacter = useCallback((character: Character | null) => {
-    setCharacterState(character);
-  }, []);
-
-  const updateCharacter = useCallback((updates: Partial<Character>) => {
-    setCharacterState(prev => {
-      if (!prev) return null;
-      return { ...prev, ...updates };
-    });
-  }, []);
-
+  // Обертки для интеграции с операциями
   const saveCharacter = useCallback(async (character: Character): Promise<Character> => {
     try {
-      setLoading(true);
-      setError(null);
+      state.setLoading(true);
+      state.clearError();
       
-      // Добавляем userId если его нет
-      if (!character.userId) {
-        character.userId = getCurrentUid();
-      }
-
-      // Сначала сохраняем локально как резервную копию
-      const localCharacter = characterService.saveCharacter(character);
+      const savedCharacter = await operations.saveCharacter(character);
       
-      try {
-        // Затем пытаемся сохранить в Firestore с retry
-        const savedCharacter = await characterService.saveCharacterToFirestore(localCharacter);
-        
-        // Обновляем локальный список
-        setCharacters(prev => {
-          const existingIndex = prev.findIndex(c => c.id === savedCharacter.id);
-          if (existingIndex >= 0) {
-            const updated = [...prev];
-            updated[existingIndex] = savedCharacter;
-            return updated;
-          } else {
-            return [...prev, savedCharacter];
-          }
-        });
-
-        // Обновляем текущего персонажа если это он
-        if (character.id === savedCharacter.id) {
-          setCharacterState(savedCharacter);
-        }
-
-        return savedCharacter;
-      } catch (firestoreError) {
-        console.warn('Ошибка сохранения в Firestore, используем локальную копию:', firestoreError);
-        
-        // Если Firestore недоступен, используем локальную копию
-        setCharacters(prev => {
-          const existingIndex = prev.findIndex(c => c.id === localCharacter.id);
-          if (existingIndex >= 0) {
-            const updated = [...prev];
-            updated[existingIndex] = localCharacter;
-            return updated;
-          } else {
-            return [...prev, localCharacter];
-          }
-        });
-
-        if (character.id === localCharacter.id) {
-          setCharacterState(localCharacter);
-        }
-
-        return localCharacter;
+      // Обновляем локальный список
+      state.addCharacter(savedCharacter);
+      
+      // Обновляем текущего персонажа если это он
+      if (state.character?.id === savedCharacter.id) {
+        state.setCharacter(savedCharacter);
       }
+      
+      return savedCharacter;
     } catch (error) {
-      console.error('Критическая ошибка сохранения персонажа:', error);
-      setError(error instanceof Error ? error.message : 'Неизвестная ошибка');
+      const errorMessage = error instanceof Error ? error.message : 'Неизвестная ошибка';
+      state.setError(errorMessage);
       throw error;
     } finally {
-      setLoading(false);
+      state.setLoading(false);
     }
-  }, []);
+  }, [state, operations]);
 
   const deleteCharacter = useCallback(async (id: string) => {
     try {
-      setLoading(true);
-      setError(null);
+      state.setLoading(true);
+      state.clearError();
       
-      await characterService.deleteCharacter(id);
+      await operations.deleteCharacter(id);
       
       // Обновляем локальный список
-      setCharacters(prev => prev.filter(c => c.id !== id));
-      
-      // Если удаляемый персонаж текущий, очищаем его
-      if (character?.id === id) {
-        setCharacterState(null);
-      }
-      
-      toast.success('Персонаж удален');
+      state.removeCharacter(id);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Ошибка удаления персонажа';
-      setError(errorMessage);
+      state.setError(errorMessage);
       throw err;
     } finally {
-      setLoading(false);
+      state.setLoading(false);
     }
-  }, [character]);
+  }, [state, operations]);
 
   const getUserCharacters = useCallback(async () => {
     try {
-      setLoading(true);
-      setError(null);
+      state.setLoading(true);
+      state.clearError();
       
-      const userId = getCurrentUid();
-      if (!userId) {
-        throw new Error('Пользователь не авторизован');
-      }
-
-      console.log('CharacterContext: Загрузка персонажей для пользователя:', userId);
-      
-      // Используем сервис, который уже содержит fallback логику
-      const userCharacters = await characterService.getUserCharacters(userId);
-      console.log('CharacterContext: Получено персонажей:', userCharacters.length);
-      setCharacters(userCharacters);
+      const userCharacters = await operations.getUserCharacters();
+      state.setCharacters(userCharacters);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Ошибка загрузки персонажей';
       console.error('CharacterContext: Ошибка загрузки персонажей:', err);
-      setError(errorMessage);
-      setCharacters([]); // Устанавливаем пустой массив при ошибке
+      state.setError(errorMessage);
+      state.setCharacters([]); // Устанавливаем пустой массив при ошибке
     } finally {
-      setLoading(false);
+      state.setLoading(false);
     }
-  }, []);
+  }, [state, operations]);
 
   const getCharacterById = useCallback(async (id: string): Promise<Character | null> => {
     try {
-      setLoading(true);
-      setError(null);
+      state.setLoading(true);
+      state.clearError();
       
-      const foundCharacter = await characterService.getCharacterById(id);
+      const foundCharacter = await operations.getCharacterById(id);
       
       if (foundCharacter) {
-        setCharacterState(foundCharacter);
+        state.setCharacter(foundCharacter);
         return foundCharacter;
       }
       
       return null;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Ошибка загрузки персонажа';
-      setError(errorMessage);
+      state.setError(errorMessage);
       throw err;
     } finally {
-      setLoading(false);
+      state.setLoading(false);
     }
-  }, []);
+  }, [state, operations]);
 
   const refreshCharacters = useCallback(async () => {
     console.log('CharacterContext: Принудительное обновление списка персонажей');
@@ -192,33 +124,31 @@ export const CharacterProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   }, [getUserCharacters]);
 
   const saveCurrentCharacter = useCallback(async () => {
-    if (!character) {
+    if (!state.character) {
       throw new Error('Нет текущего персонажа для сохранения');
     }
     
     try {
-      setLoading(true);
-      await characterService.saveCharacterToFirestore(character);
-      toast.success('Персонаж сохранен');
+      state.setLoading(true);
+      await operations.saveCurrentCharacter(state.character);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Ошибка сохранения персонажа';
-      setError(errorMessage);
-      toast.error(errorMessage);
+      state.setError(errorMessage);
       throw err;
     } finally {
-      setLoading(false);
+      state.setLoading(false);
     }
-  }, [character]);
+  }, [state, operations]);
 
   return (
     <CharacterContext.Provider
       value={{
-        characters,
-        character,
-        loading,
-        error,
-        setCharacter,
-        updateCharacter,
+        characters: state.characters,
+        character: state.character,
+        loading: state.loading,
+        error: state.error,
+        setCharacter: state.setCharacter,
+        updateCharacter: state.updateCharacter,
         saveCharacter,
         deleteCharacter,
         getUserCharacters,
