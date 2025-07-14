@@ -23,25 +23,56 @@ export const getUserCharacters = async (userId: string): Promise<Character[]> =>
   try {
     console.log('characterService: Загрузка персонажей для пользователя:', userId);
     
-    const charactersRef = collection(db, CHARACTERS_COLLECTION);
-    const q = query(
-      charactersRef,
-      where('userId', '==', userId)
-    );
-    
-    const querySnapshot = await getDocs(q);
-    const characters: Character[] = [];
-    
-    querySnapshot.forEach((doc) => {
-      const data = doc.data() as Character;
-      characters.push({
-        ...data,
-        id: doc.id
+    try {
+      // Сначала пытаемся загрузить из Firestore
+      const charactersRef = collection(db, CHARACTERS_COLLECTION);
+      const q = query(
+        charactersRef,
+        where('userId', '==', userId)
+      );
+      
+      const querySnapshot = await getDocs(q);
+      const characters: Character[] = [];
+      
+      querySnapshot.forEach((doc) => {
+        const data = doc.data() as Character;
+        characters.push({
+          ...data,
+          id: doc.id
+        });
       });
-    });
+      
+      console.log('characterService: Загружено персонажей из Firestore:', characters.length);
+      
+      // Если нашли персонажей в Firestore, возвращаем их
+      if (characters.length > 0) {
+        return characters;
+      }
+    } catch (firestoreError) {
+      console.warn('characterService: Ошибка загрузки из Firestore, используем localStorage:', firestoreError);
+    }
     
-    console.log('characterService: Загружено персонажей:', characters.length);
-    return characters;
+    // Fallback на localStorage
+    const localCharacters: Character[] = [];
+    
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith('character_') && !key.includes('backup')) {
+        try {
+          const characterData = JSON.parse(localStorage.getItem(key) || '');
+          if (characterData && characterData.userId === userId) {
+            // Нормализуем характеристики при загрузке
+            const normalizedCharacter = normalizeCharacterAbilities(characterData);
+            localCharacters.push(normalizedCharacter);
+          }
+        } catch (parseError) {
+          console.warn('characterService: Ошибка парсинга персонажа из localStorage:', key, parseError);
+        }
+      }
+    }
+    
+    console.log('characterService: Загружено персонажей из localStorage:', localCharacters.length);
+    return localCharacters;
   } catch (error) {
     console.error('characterService: Ошибка получения персонажей:', error);
     throw new Error('Не удалось загрузить персонажей');
@@ -56,24 +87,45 @@ export const getCharacterById = async (characterId: string): Promise<Character |
   try {
     console.log('characterService: Загрузка персонажа по ID:', characterId);
     
-    const characterRef = doc(db, CHARACTERS_COLLECTION, characterId);
-    const characterSnapshot = await getDoc(characterRef);
-    
-    if (characterSnapshot.exists()) {
-      const data = characterSnapshot.data() as Character;
-      const character = {
-        ...data,
-        id: characterSnapshot.id
-      };
+    try {
+      // Сначала пытаемся загрузить из Firestore
+      const characterRef = doc(db, CHARACTERS_COLLECTION, characterId);
+      const characterSnapshot = await getDoc(characterRef);
       
-      // Нормализуем характеристики при загрузке
-      const normalizedCharacter = normalizeCharacterAbilities(character);
-      console.log('characterService: Персонаж загружен и нормализован:', normalizedCharacter.name);
-      return normalizedCharacter;
-    } else {
-      console.log('characterService: Персонаж не найден');
-      return null;
+      if (characterSnapshot.exists()) {
+        const data = characterSnapshot.data() as Character;
+        const character = {
+          ...data,
+          id: characterSnapshot.id
+        };
+        
+        // Нормализуем характеристики при загрузке
+        const normalizedCharacter = normalizeCharacterAbilities(character);
+        console.log('characterService: Персонаж загружен из Firestore и нормализован:', normalizedCharacter.name);
+        return normalizedCharacter;
+      }
+    } catch (firestoreError) {
+      console.warn('characterService: Ошибка загрузки из Firestore, проверяем localStorage:', firestoreError);
     }
+    
+    // Fallback на localStorage
+    const localKey = `character_${characterId}`;
+    const localData = localStorage.getItem(localKey);
+    
+    if (localData) {
+      try {
+        const characterData = JSON.parse(localData);
+        // Нормализуем характеристики при загрузке
+        const normalizedCharacter = normalizeCharacterAbilities(characterData);
+        console.log('characterService: Персонаж загружен из localStorage и нормализован:', normalizedCharacter.name);
+        return normalizedCharacter;
+      } catch (parseError) {
+        console.warn('characterService: Ошибка парсинга персонажа из localStorage:', parseError);
+      }
+    }
+    
+    console.log('characterService: Персонаж не найден ни в Firestore, ни в localStorage');
+    return null;
   } catch (error) {
     console.error('characterService: Ошибка получения персонажа:', error);
     throw new Error('Не удалось загрузить персонажа');
