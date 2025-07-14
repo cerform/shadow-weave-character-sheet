@@ -155,13 +155,15 @@ const CharactersListPage: React.FC = () => {
         }
       >
         <div className="container mx-auto p-6 max-w-5xl">
-          {/* Отладочная информация */}
-          <div className="mb-4 p-3 bg-muted/50 rounded-lg text-sm">
+          {/* Отладочная информация - миграция на Realtime Database */}
+          <div className="mb-4 p-3 bg-green-900/20 border border-green-600/30 rounded-lg text-sm">
+            <p className="text-green-400 font-bold">✅ Переключение на Realtime Database</p>
             <p><strong>Состояние загрузки:</strong> {loading ? 'Загружается...' : 'Завершено'}</p>
             <p><strong>Есть ошибка:</strong> {error ? 'Да' : 'Нет'}</p>
             <p><strong>Количество персонажей:</strong> {characters?.length || 0}</p>
             <p><strong>Авторизован:</strong> {isAuthenticated ? 'Да' : 'Нет'}</p>
             <p><strong>User ID:</strong> {user?.uid || 'Отсутствует'}</p>
+            <p><strong>База данных:</strong> Realtime Database (https://shadow-char-default-rtdb.europe-west1.firebasedatabase.app/)</p>
             {error && <p><strong>Ошибка:</strong> {typeof error === 'string' ? error : (error as Error).message}</p>}
           </div>
           

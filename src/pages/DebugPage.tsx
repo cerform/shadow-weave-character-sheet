@@ -1,6 +1,6 @@
 
 import React from 'react';
-import FirebaseDebugger from '@/components/debug/FirebaseDebugger';
+// import FirebaseDebugger from '@/components/debug/FirebaseDebugger';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeft } from 'lucide-react';
@@ -23,7 +23,12 @@ const DebugPage: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 gap-8">
-        <FirebaseDebugger />
+        {/* <FirebaseDebugger /> */}
+        <div className="bg-green-900/20 border border-green-600/30 rounded-lg p-6">
+          <h2 className="text-xl font-bold mb-4 text-green-400">🔄 Миграция на Realtime Database</h2>
+          <p>Система успешно переключена на Firebase Realtime Database.</p>
+          <p className="mt-2">URL базы данных: <code className="bg-black/50 px-2 py-1 rounded">https://shadow-char-default-rtdb.europe-west1.firebasedatabase.app/</code></p>
+        </div>
         
         <div className="bg-black/70 rounded-lg p-6 border">
           <h2 className="text-xl font-bold mb-4">Информация о проекте</h2>

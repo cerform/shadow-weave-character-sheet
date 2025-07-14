@@ -1,23 +1,25 @@
 import { 
-  collection, 
-  doc, 
-  getDoc, 
-  getDocs, 
-  setDoc, 
-  updateDoc, 
-  deleteDoc, 
-  query, 
-  where, 
-  orderBy 
-} from 'firebase/firestore';
+  ref, 
+  get, 
+  set, 
+  push, 
+  remove,
+  query,
+  orderByChild,
+  equalTo,
+  DataSnapshot
+} from 'firebase/database';
 import { db } from '@/lib/firebase';
 import { Character } from '@/types/character';
 import { getCurrentUid } from '@/utils/authHelpers';
 import { normalizeCharacterAbilities } from '@/utils/characterNormalizer';
 import { LocalCharacterStore } from './characterStorage';
 
-// Коллекция персонажей в Firestore
-const CHARACTERS_COLLECTION = 'characters';
+// Базовый путь для персонажей в Realtime Database
+const CHARACTERS_PATH = 'characters';
+
+// Генерация уникального ID для персонажа
+const generateCharacterId = () => `character_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
 // Получение всех персонажей пользователя
 export const getUserCharacters = async (userId?: string): Promise<Character[]> => {
@@ -33,29 +35,39 @@ export const getUserCharacters = async (userId?: string): Promise<Character[]> =
       return localCharacters;
     }
     
-    console.log('characterService: Пытаемся загрузить из Firestore для пользователя:', uid);
+    console.log('characterService: Загружаем из Realtime Database для пользователя:', uid);
     
     try {
-      // Сначала пытаемся загрузить из Firestore
-      const charactersRef = collection(db, CHARACTERS_COLLECTION);
-      const q = query(
-        charactersRef,
-        where('userId', '==', uid)
-      );
+      // Получаем всех персонажей и фильтруем по userId
+      const charactersRef = ref(db, CHARACTERS_PATH);
+      const snapshot = await get(charactersRef);
       
-      const querySnapshot = await getDocs(q);
       const characters: Character[] = [];
       
-      querySnapshot.forEach((doc) => {
-        const data = doc.data() as Character;
-        const normalizedCharacter = normalizeCharacterAbilities({
-          ...data,
-          id: doc.id
+      if (snapshot.exists()) {
+        const charactersData = snapshot.val();
+        
+        // Фильтруем персонажей по userId
+        Object.keys(charactersData).forEach((characterId) => {
+          const characterData = charactersData[characterId];
+          if (characterData.userId === uid) {
+            const normalizedCharacter = normalizeCharacterAbilities({
+              ...characterData,
+              id: characterId
+            });
+            characters.push(normalizedCharacter);
+          }
         });
-        characters.push(normalizedCharacter);
-      });
+        
+        // Сортируем по дате обновления (новые сначала)
+        characters.sort((a, b) => {
+          const dateA = new Date(a.updatedAt || a.createdAt || 0).getTime();
+          const dateB = new Date(b.updatedAt || b.createdAt || 0).getTime();
+          return dateB - dateA;
+        });
+      }
       
-      console.log('characterService: Загружено персонажей из Firestore:', characters.length);
+      console.log('characterService: Загружено персонажей из Realtime Database:', characters.length);
       
       // Синхронизируем с localStorage (сохраняем как резервные копии)
       characters.forEach(character => {
@@ -67,8 +79,8 @@ export const getUserCharacters = async (userId?: string): Promise<Character[]> =
       });
       
       return characters;
-    } catch (firestoreError) {
-      console.warn('characterService: Ошибка загрузки из Firestore, используем localStorage:', firestoreError);
+    } catch (databaseError) {
+      console.warn('characterService: Ошибка загрузки из Realtime Database, используем localStorage:', databaseError);
       
       // Fallback на localStorage
       return LocalCharacterStore.getAll(uid);
@@ -89,25 +101,25 @@ export const getCharacterById = async (characterId: string): Promise<Character |
     console.log('characterService: Загрузка персонажа по ID:', characterId);
     
     try {
-      // Сначала пытаемся загрузить из Firestore
-      const characterRef = doc(db, CHARACTERS_COLLECTION, characterId);
-      const characterSnapshot = await getDoc(characterRef);
+      // Сначала пытаемся загрузить из Realtime Database
+      const characterRef = ref(db, `${CHARACTERS_PATH}/${characterId}`);
+      const snapshot = await get(characterRef);
       
-      if (characterSnapshot.exists()) {
-        const data = characterSnapshot.data() as Character;
+      if (snapshot.exists()) {
+        const data = snapshot.val();
         const character = normalizeCharacterAbilities({
           ...data,
-          id: characterSnapshot.id
+          id: characterId
         });
         
         // Сохраняем в localStorage как резервную копию
         localStorage.setItem(`character_${character.id}`, JSON.stringify(character));
         
-        console.log('characterService: Персонаж загружен из Firestore:', character.name);
+        console.log('characterService: Персонаж загружен из Realtime Database:', character.name);
         return character;
       }
-    } catch (firestoreError) {
-      console.warn('characterService: Ошибка загрузки из Firestore, проверяем localStorage:', firestoreError);
+    } catch (databaseError) {
+      console.warn('characterService: Ошибка загрузки из Realtime Database, проверяем localStorage:', databaseError);
     }
     
     // Fallback на localStorage
@@ -117,7 +129,7 @@ export const getCharacterById = async (characterId: string): Promise<Character |
       return character;
     }
     
-    console.log('characterService: Персонаж не найден ни в Firestore, ни в localStorage');
+    console.log('characterService: Персонаж не найден ни в Realtime Database, ни в localStorage');
     return null;
   } catch (error) {
     console.error('characterService: Ошибка получения персонажа:', error);
@@ -145,8 +157,8 @@ export const saveCharacter = (character: Character): Character => {
   }
 };
 
-// Сохранение персонажа в Firestore с fallback на localStorage
-export const saveCharacterToFirestore = async (character: Character, retryCount = 3): Promise<Character> => {
+// Сохранение персонажа в Realtime Database с fallback на localStorage
+export const saveCharacterToDatabase = async (character: Character, retryCount = 3): Promise<Character> => {
   const uid = getCurrentUid();
   
   // Если пользователь не авторизован, сохраняем только локально
@@ -157,7 +169,7 @@ export const saveCharacterToFirestore = async (character: Character, retryCount 
 
   const attempt = async (attemptNumber: number): Promise<Character> => {
     try {
-      console.log(`characterService: Сохранение персонажа в Firestore (попытка ${attemptNumber}):`, character.name);
+      console.log(`characterService: Сохранение персонажа в Realtime Database (попытка ${attemptNumber}):`, character.name);
       
       // Нормализуем характеристики перед сохранением
       const normalizedCharacter = normalizeCharacterAbilities(character);
@@ -170,29 +182,29 @@ export const saveCharacterToFirestore = async (character: Character, retryCount 
         createdAt: normalizedCharacter.createdAt || new Date().toISOString()
       };
       
-      let docRef;
-      if (character.id && character.id.startsWith('character_')) {
-        // Обновляем существующего персонажа
-        docRef = doc(db, CHARACTERS_COLLECTION, character.id);
-        await setDoc(docRef, characterData, { merge: true });
-      } else {
-        // Создаем нового персонажа
-        docRef = doc(collection(db, CHARACTERS_COLLECTION));
-        await setDoc(docRef, characterData);
+      let characterId = character.id;
+      
+      if (!characterId || !characterId.startsWith('character_')) {
+        // Создаем нового персонажа с новым ID
+        characterId = generateCharacterId();
       }
+      
+      // Сохраняем в Realtime Database
+      const characterRef = ref(db, `${CHARACTERS_PATH}/${characterId}`);
+      await set(characterRef, characterData);
       
       const savedCharacter = {
         ...characterData,
-        id: docRef.id
+        id: characterId
       };
       
       // Сохраняем в localStorage как резервную копию
       LocalCharacterStore.save(savedCharacter);
       
-      console.log('characterService: Персонаж сохранен в Firestore:', savedCharacter.id);
+      console.log('characterService: Персонаж сохранен в Realtime Database:', savedCharacter.id);
       return savedCharacter;
     } catch (error) {
-      console.error(`characterService: Ошибка сохранения в Firestore (попытка ${attemptNumber}):`, error);
+      console.error(`characterService: Ошибка сохранения в Realtime Database (попытка ${attemptNumber}):`, error);
       
       if (attemptNumber < retryCount) {
         // Ждем перед повторной попыткой (exponential backoff)
@@ -204,7 +216,7 @@ export const saveCharacterToFirestore = async (character: Character, retryCount 
       } else {
         // Если все попытки неудачны, сохраняем локально
         const localCharacter = saveCharacter(character);
-        console.warn('characterService: Сохранение в Firestore не удалось, сохранено локально');
+        console.warn('characterService: Сохранение в Realtime Database не удалось, сохранено локально');
         return localCharacter;
       }
     }
@@ -213,6 +225,9 @@ export const saveCharacterToFirestore = async (character: Character, retryCount 
   return attempt(1);
 };
 
+// Обновленный алиас для сохранения в базу данных
+export const saveCharacterToFirestore = saveCharacterToDatabase;
+
 // Удаление персонажа
 export const deleteCharacter = async (characterId: string): Promise<void> => {
   try {
@@ -220,14 +235,14 @@ export const deleteCharacter = async (characterId: string): Promise<void> => {
     
     const uid = getCurrentUid();
     
-    // Пытаемся удалить из Firestore только если пользователь авторизован
+    // Пытаемся удалить из Realtime Database только если пользователь авторизован
     if (uid) {
       try {
-        const characterRef = doc(db, CHARACTERS_COLLECTION, characterId);
-        await deleteDoc(characterRef);
-        console.log('characterService: Персонаж удален из Firestore');
-      } catch (firestoreError) {
-        console.warn('characterService: Ошибка удаления из Firestore:', firestoreError);
+        const characterRef = ref(db, `${CHARACTERS_PATH}/${characterId}`);
+        await remove(characterRef);
+        console.log('characterService: Персонаж удален из Realtime Database');
+      } catch (databaseError) {
+        console.warn('characterService: Ошибка удаления из Realtime Database:', databaseError);
       }
     }
     
