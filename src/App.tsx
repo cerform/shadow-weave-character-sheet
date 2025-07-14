@@ -44,6 +44,7 @@ function App() {
                     <Route path="/character-creation" element={<CharacterCreationPage />} />
                     <Route path="/character" element={<CharacterCreationPage />} />
                     <Route path="/characters" element={<CharactersListPage />} />
+                    <Route path="/recent-characters" element={<CharactersListPage />} />
                     <Route path="/character/:id" element={<CharacterSheetPage />} />
                     <Route path="/character-sheet/:id" element={<CharacterSheetPage />} />
                     <Route path="/dm" element={<DMPanel />} />

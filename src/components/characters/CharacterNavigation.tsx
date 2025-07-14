@@ -17,6 +17,15 @@ const CharacterNavigation: React.FC = () => {
   return (
     <div className="flex flex-wrap gap-2 mb-6">
       <Button 
+        variant={isActivePath('/') ? "default" : "outline"} 
+        size="sm"
+        onClick={() => navigate('/')}
+        className="rounded-full"
+      >
+        Главная
+      </Button>
+      
+      <Button 
         variant={isActivePath('/recent-characters') ? "default" : "outline"} 
         size="sm"
         onClick={() => navigate('/recent-characters')}

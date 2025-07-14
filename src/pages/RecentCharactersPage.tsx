@@ -4,17 +4,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { useCharacter } from '@/contexts/CharacterContext';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { useTheme } from '@/hooks/use-theme';
-import { themes } from '@/lib/themes';
 import { toast } from 'sonner';
 import { getCurrentUid } from '@/utils/authHelpers';
+import CharacterNavigation from '@/components/characters/CharacterNavigation';
 
 const RecentCharactersPage: React.FC = () => {
-  const { theme } = useTheme();
   const { characters, loading, error, getUserCharacters, deleteCharacter } = useCharacter();
-  
-  const themeKey = (theme || 'default') as keyof typeof themes;
-  const currentTheme = themes[themeKey] || themes.default;
 
   useEffect(() => {
     const loadCharacters = async () => {
@@ -42,26 +37,32 @@ const RecentCharactersPage: React.FC = () => {
   };
   
   if (loading) {
-    return <div className="text-center">Загрузка...</div>;
+    return <div className="text-center text-foreground">Загрузка...</div>;
   }
 
   if (error) {
-    return <div className="text-center text-red-500">{error}</div>;
+    return <div className="text-center text-destructive">{error}</div>;
   }
+
+  // Показываем только 5 последних персонажей
+  const recentCharacters = characters.slice(0, 5);
 
   return (
     <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4" style={{ color: currentTheme.textColor }}>
+      <CharacterNavigation />
+      
+      <h1 className="text-2xl font-bold mb-4 text-foreground">
         Недавние персонажи
       </h1>
-      <ScrollArea className="rounded-md border w-full">
+      
+      <ScrollArea className="rounded-md border border-border w-full">
         <div className="flex flex-col space-y-2 p-4">
-          {characters.length > 0 ? (
-            characters.map((character) => (
-              <Card key={character.id} style={{ backgroundColor: currentTheme.cardBackground, borderColor: currentTheme.borderColor }}>
+          {recentCharacters.length > 0 ? (
+            recentCharacters.map((character) => (
+              <Card key={character.id} className="bg-card border-border">
                 <CardHeader>
-                  <CardTitle style={{ color: currentTheme.textColor }}>{character.name}</CardTitle>
-                  <CardDescription style={{ color: currentTheme.mutedTextColor }}>
+                  <CardTitle className="text-foreground">{character.name}</CardTitle>
+                  <CardDescription className="text-muted-foreground">
                     {character.race} {character.class} {character.level} уровень
                   </CardDescription>
                 </CardHeader>
@@ -78,7 +79,7 @@ const RecentCharactersPage: React.FC = () => {
               </Card>
             ))
           ) : (
-            <div className="text-center" style={{ color: currentTheme.mutedTextColor }}>
+            <div className="text-center text-muted-foreground">
               Нет доступных персонажей.
             </div>
           )}
