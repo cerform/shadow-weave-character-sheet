@@ -24,13 +24,16 @@ const CharacterContext = createContext<CharacterContextType | undefined>(undefin
 
 export const useCharacter = () => {
   const context = useContext(CharacterContext);
+  console.log('useCharacter: context =', context);
   if (!context) {
+    console.error('useCharacter: CharacterContext is undefined!');
     throw new Error('useCharacter must be used within a CharacterProvider');
   }
   return context;
 };
 
 export const CharacterProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  console.log('CharacterProvider: Создание провайдера');
   const [characters, setCharacters] = useState<Character[]>([]);
   const [character, setCharacterState] = useState<Character | null>(null);
   const [loading, setLoading] = useState(false);
@@ -235,6 +238,7 @@ export const CharacterProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }
   }, [character]);
 
+  console.log('CharacterProvider: Рендеринг провайдера с контекстом');
   return (
     <CharacterContext.Provider
       value={{
