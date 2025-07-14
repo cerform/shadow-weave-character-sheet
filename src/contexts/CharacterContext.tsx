@@ -150,41 +150,15 @@ export const CharacterProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
       console.log('CharacterContext: Загрузка персонажей для пользователя:', userId);
       
-      try {
-        const userCharacters = await characterService.getUserCharacters(userId);
-        console.log('CharacterContext: Получено персонажей:', userCharacters.length);
-        setCharacters(userCharacters);
-      } catch (firestoreError) {
-        console.warn('CharacterContext: Ошибка загрузки из Firestore, используем localStorage:', firestoreError);
-        
-        // Fallback на localStorage если Firestore недоступен
-        const localCharacters: Character[] = [];
-        for (let i = 0; i < localStorage.length; i++) {
-          const key = localStorage.key(i);
-          if (key && key.startsWith('character_') && !key.includes('backup')) {
-            try {
-              const characterData = JSON.parse(localStorage.getItem(key) || '');
-              if (characterData.userId === userId) {
-                localCharacters.push(characterData);
-              }
-            } catch (parseError) {
-              console.warn('Ошибка парсинга персонажа из localStorage:', key, parseError);
-            }
-          }
-        }
-        
-        console.log('CharacterContext: Загружено персонажей из localStorage:', localCharacters.length);
-        setCharacters(localCharacters);
-        
-        if (localCharacters.length === 0) {
-          throw firestoreError;
-        }
-      }
+      // Используем сервис, который уже содержит fallback логику
+      const userCharacters = await characterService.getUserCharacters(userId);
+      console.log('CharacterContext: Получено персонажей:', userCharacters.length);
+      setCharacters(userCharacters);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Ошибка загрузки персонажей';
-      console.error('CharacterContext: Критическая ошибка загрузки персонажей:', err);
+      console.error('CharacterContext: Ошибка загрузки персонажей:', err);
       setError(errorMessage);
-      throw err;
+      setCharacters([]); // Устанавливаем пустой массив при ошибке
     } finally {
       setLoading(false);
     }

@@ -19,6 +19,7 @@ import ErrorDisplay from '@/components/characters/ErrorDisplay';
 import LoadingState from '@/components/characters/LoadingState';
 import { toast } from 'sonner';
 import { diagnoseCharacterLoading } from '@/utils/characterLoadingDebug';
+import { debugCharacterLoading, inspectLocalStorage } from '@/utils/localStorageDebug';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 
 const CharactersListPage: React.FC = () => {
@@ -46,6 +47,22 @@ const CharactersListPage: React.FC = () => {
       setIsRefreshing(false);
     }
   }, [getUserCharacters]);
+
+  const debugLocalStorage = useCallback(async () => {
+    try {
+      console.log('CharactersListPage: Запуск отладки localStorage');
+      inspectLocalStorage();
+      
+      if (user?.uid) {
+        const debugResults = await debugCharacterLoading(user.uid);
+        console.log('Результаты отладки:', debugResults);
+        toast.success(`Найдено ${debugResults.userCharacters} персонажей пользователя (${debugResults.validCharacters} валидных)`);
+      }
+    } catch (error) {
+      console.error('Ошибка отладки localStorage:', error);
+      toast.error('Ошибка отладки localStorage');
+    }
+  }, [user?.uid]);
 
   const runDiagnostics = useCallback(async () => {
     try {
@@ -150,6 +167,13 @@ const CharactersListPage: React.FC = () => {
               Список персонажей
             </h2>
             <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={debugLocalStorage}
+              >
+                🔍 Debug localStorage
+              </Button>
               <Button
                 variant="outline"
                 size="sm"
