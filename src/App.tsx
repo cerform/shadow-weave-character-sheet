@@ -24,6 +24,7 @@ import SpellbookPage from '@/pages/SpellbookPage';
 import DebugPage from '@/pages/DebugPage';
 import NotFound from '@/pages/NotFound';
 import BackgroundWrapper from '@/components/layout/BackgroundWrapper';
+import FloatingSpellWidget from '@/components/spellbook/FloatingSpellWidget';
 
 function App() {
   return (
@@ -54,10 +55,11 @@ function App() {
                     <Route path="/handbook" element={<HandbookPage />} />
                     <Route path="/spellbook" element={<SpellbookPage />} />
                     <Route path="/debug" element={<DebugPage />} />
-                    <Route path="*" element={<NotFound />} />
-                  </Routes>
-                  <Toaster />
-                </BackgroundWrapper>
+                     <Route path="*" element={<NotFound />} />
+                   </Routes>
+                   <Toaster />
+                   <FloatingSpellWidget />
+                 </BackgroundWrapper>
               </Router>
               </SocketProvider>
             </SessionProvider>
