@@ -223,10 +223,10 @@ const CharactersListPage: React.FC = () => {
           </div>
           
           {/* Обработка состояния загрузки */}
-          {loading && <LoadingState />}
+          {(loading || isRefreshing) && <LoadingState />}
           
           {/* Обработка ошибок */}
-          {error && !loading && (
+          {error && !loading && !isRefreshing && (
             <ErrorDisplay 
               errorMessage={typeof error === 'string' ? error : (error as Error).message} 
               onRetry={refreshCharacters} 
@@ -235,7 +235,7 @@ const CharactersListPage: React.FC = () => {
           )}
           
           {/* Отображение данных после загрузки */}
-          {!loading && !error && (
+          {!loading && !isRefreshing && !error && (
             <>
               {/* Если есть результаты диагностики и они содержат ошибки */}
               {diagnosticResults && !diagnosticResults.success && (
