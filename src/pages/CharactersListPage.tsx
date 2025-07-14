@@ -155,15 +155,18 @@ const CharactersListPage: React.FC = () => {
         }
       >
         <div className="container mx-auto p-6 max-w-5xl">
-          {/* Отладочная информация - миграция на Realtime Database */}
-          <div className="mb-4 p-3 bg-green-900/20 border border-green-600/30 rounded-lg text-sm">
-            <p className="text-green-400 font-bold">✅ Переключение на Realtime Database</p>
-            <p><strong>Состояние загрузки:</strong> {loading ? 'Загружается...' : 'Завершено'}</p>
-            <p><strong>Есть ошибка:</strong> {error ? 'Да' : 'Нет'}</p>
-            <p><strong>Количество персонажей:</strong> {characters?.length || 0}</p>
+          {/* Статус базы данных */}
+          <div className="mb-4 p-3 bg-orange-900/20 border border-orange-600/30 rounded-lg text-sm">
+            <p className="text-orange-400 font-bold">⚠️ Realtime Database (Permission Denied)</p>
+            <p><strong>Статус:</strong> Fallback на localStorage активен</p>
+            <p><strong>Загрузка:</strong> {loading ? 'Идёт...' : 'Завершена'}</p>
+            <p><strong>Персонажей:</strong> {characters?.length || 0}</p>
             <p><strong>Авторизован:</strong> {isAuthenticated ? 'Да' : 'Нет'}</p>
             <p><strong>User ID:</strong> {user?.uid || 'Отсутствует'}</p>
-            <p><strong>База данных:</strong> Realtime Database (https://shadow-char-default-rtdb.europe-west1.firebasedatabase.app/)</p>
+            <p><strong>База данных:</strong> localStorage (локальная)</p>
+            <p className="text-xs mt-2 text-orange-300">
+              Система автоматически переключилась на локальное хранение из-за проблем с правами доступа к Realtime Database.
+            </p>
             {error && <p><strong>Ошибка:</strong> {typeof error === 'string' ? error : (error as Error).message}</p>}
           </div>
           
@@ -175,6 +178,23 @@ const CharactersListPage: React.FC = () => {
               Список персонажей
             </h2>
             <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={async () => {
+                  try {
+                    const { realtimeDb } = await import('@/lib/firebase');
+                    const { ref, get } = await import('firebase/database');
+                    const testRef = ref(realtimeDb, 'test');
+                    await get(testRef);
+                    toast.success('✅ Realtime Database подключение работает!');
+                  } catch (error) {
+                    toast.error(`❌ Ошибка подключения: ${(error as Error).message}`);
+                  }
+                }}
+              >
+                🔗 Тест Database
+              </Button>
               <Button
                 variant="outline"
                 size="sm"
