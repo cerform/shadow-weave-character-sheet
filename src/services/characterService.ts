@@ -106,41 +106,61 @@ export const saveCharacter = (character: Character): Character => {
   }
 };
 
-// Сохранение персонажа в Firestore
-export const saveCharacterToFirestore = async (character: Character): Promise<Character> => {
-  try {
-    console.log('characterService: Сохранение персонажа в Firestore:', character.name);
-    
-    // Подготавливаем данные для сохранения
-    const characterData = {
-      ...character,
-      userId: character.userId || getCurrentUid(),
-      updatedAt: new Date().toISOString(),
-      createdAt: character.createdAt || new Date().toISOString()
-    };
-    
-    let docRef;
-    if (character.id) {
-      // Обновляем существующего персонажа
-      docRef = doc(db, CHARACTERS_COLLECTION, character.id);
-      await setDoc(docRef, characterData, { merge: true });
-    } else {
-      // Создаем нового персонажа
-      docRef = doc(collection(db, CHARACTERS_COLLECTION));
-      await setDoc(docRef, characterData);
+// Сохранение персонажа в Firestore с retry механизмом
+export const saveCharacterToFirestore = async (character: Character, retryCount = 3): Promise<Character> => {
+  const attempt = async (attemptNumber: number): Promise<Character> => {
+    try {
+      console.log(`characterService: Сохранение персонажа в Firestore (попытка ${attemptNumber}):`, character.name);
+      
+      // Подготавливаем данные для сохранения
+      const characterData = {
+        ...character,
+        userId: character.userId || getCurrentUid(),
+        updatedAt: new Date().toISOString(),
+        createdAt: character.createdAt || new Date().toISOString()
+      };
+      
+      let docRef;
+      if (character.id) {
+        // Обновляем существующего персонажа
+        docRef = doc(db, CHARACTERS_COLLECTION, character.id);
+        await setDoc(docRef, characterData, { merge: true });
+      } else {
+        // Создаем нового персонажа
+        docRef = doc(collection(db, CHARACTERS_COLLECTION));
+        await setDoc(docRef, characterData);
+      }
+      
+      const savedCharacter = {
+        ...characterData,
+        id: docRef.id
+      };
+      
+      // Сохраняем в localStorage как резервную копию
+      localStorage.setItem(`character_${savedCharacter.id}`, JSON.stringify(savedCharacter));
+      
+      console.log('characterService: Персонаж сохранен в Firestore:', savedCharacter.id);
+      return savedCharacter;
+    } catch (error) {
+      console.error(`characterService: Ошибка сохранения в Firestore (попытка ${attemptNumber}):`, error);
+      
+      if (attemptNumber < retryCount) {
+        // Ждем перед повторной попыткой (exponential backoff)
+        const delay = Math.pow(2, attemptNumber - 1) * 1000;
+        console.log(`characterService: Повторная попытка через ${delay}ms`);
+        
+        await new Promise(resolve => setTimeout(resolve, delay));
+        return attempt(attemptNumber + 1);
+      } else {
+        // Если все попытки неудачны, сохраняем локально
+        const localCharacter = saveCharacter(character);
+        console.warn('characterService: Сохранение в Firestore не удалось, сохранено локально');
+        throw new Error('Не удалось сохранить персонажа в базу данных, сохранено локально');
+      }
     }
-    
-    const savedCharacter = {
-      ...characterData,
-      id: docRef.id
-    };
-    
-    console.log('characterService: Персонаж сохранен в Firestore:', savedCharacter.id);
-    return savedCharacter;
-  } catch (error) {
-    console.error('characterService: Ошибка сохранения в Firestore:', error);
-    throw new Error('Не удалось сохранить персонажа в базу данных');
-  }
+  };
+  
+  return attempt(1);
 };
 
 // Удаление персонажа

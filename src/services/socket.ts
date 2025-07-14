@@ -288,8 +288,47 @@ class SocketService {
     }
 
     return new Promise((resolve, reject) => {
+      // Mock режим для разработки
       if (!this.socket?.connected) {
-        reject(new Error('Нет соединения с сервером'));
+        console.log('🎮 Mock: Присоединение к сессии');
+        const mockSession: GameSession = {
+          id: 'mock-session-' + code,
+          name: `Сессия ${code}`,
+          code,
+          dmId: 'mock-dm-id',
+          dmName: 'Mock DM',
+          players: [{
+            id: 'mock-player-id',
+            name: playerName,
+            character,
+            isOnline: true,
+            isDM: false,
+            joinedAt: new Date().toISOString()
+          }],
+          isActive: true,
+          createdAt: new Date().toISOString(),
+          messages: [],
+          diceRolls: [],
+          battleMap: {
+            width: 800,
+            height: 600,
+            gridSize: 25,
+            tokens: [],
+            isActive: false
+          },
+          initiative: {
+            order: [],
+            currentTurn: 0,
+            round: 1
+          },
+          notes: [],
+          handouts: []
+        };
+        
+        this.currentSession = mockSession;
+        console.log('👥 Mock: Присоединился к сессии:', mockSession.name);
+        
+        setTimeout(() => resolve(mockSession), 300);
         return;
       }
 
@@ -430,7 +469,7 @@ class SocketService {
 
   isConnected(): boolean {
     // В режиме разработки возвращаем true для mock-соединения
-    if (process.env.NODE_ENV === 'development' && !this.socket?.connected) {
+    if (process.env.NODE_ENV === 'development') {
       return true;
     }
     return this.socket?.connected || false;

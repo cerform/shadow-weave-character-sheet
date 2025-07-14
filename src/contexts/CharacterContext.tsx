@@ -49,38 +49,66 @@ export const CharacterProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   const saveCharacter = useCallback(async (character: Character): Promise<Character> => {
     try {
+      setLoading(true);
+      setError(null);
+      
       // Добавляем userId если его нет
       if (!character.userId) {
         character.userId = getCurrentUid();
       }
 
-      // Сначала сохраняем локально
+      // Сначала сохраняем локально как резервную копию
       const localCharacter = characterService.saveCharacter(character);
       
-      // Затем пытаемся сохранить в Firestore
-      const savedCharacter = await characterService.saveCharacterToFirestore(localCharacter);
-      
-      // Обновляем локальный список
-      setCharacters(prev => {
-        const existingIndex = prev.findIndex(c => c.id === savedCharacter.id);
-        if (existingIndex >= 0) {
-          const updated = [...prev];
-          updated[existingIndex] = savedCharacter;
-          return updated;
-        } else {
-          return [...prev, savedCharacter];
+      try {
+        // Затем пытаемся сохранить в Firestore с retry
+        const savedCharacter = await characterService.saveCharacterToFirestore(localCharacter);
+        
+        // Обновляем локальный список
+        setCharacters(prev => {
+          const existingIndex = prev.findIndex(c => c.id === savedCharacter.id);
+          if (existingIndex >= 0) {
+            const updated = [...prev];
+            updated[existingIndex] = savedCharacter;
+            return updated;
+          } else {
+            return [...prev, savedCharacter];
+          }
+        });
+
+        // Обновляем текущего персонажа если это он
+        if (character.id === savedCharacter.id) {
+          setCharacterState(savedCharacter);
         }
-      });
 
-      // Обновляем текущего персонажа если это он
-      if (character.id === savedCharacter.id) {
-        setCharacterState(savedCharacter);
+        return savedCharacter;
+      } catch (firestoreError) {
+        console.warn('Ошибка сохранения в Firestore, используем локальную копию:', firestoreError);
+        
+        // Если Firestore недоступен, используем локальную копию
+        setCharacters(prev => {
+          const existingIndex = prev.findIndex(c => c.id === localCharacter.id);
+          if (existingIndex >= 0) {
+            const updated = [...prev];
+            updated[existingIndex] = localCharacter;
+            return updated;
+          } else {
+            return [...prev, localCharacter];
+          }
+        });
+
+        if (character.id === localCharacter.id) {
+          setCharacterState(localCharacter);
+        }
+
+        return localCharacter;
       }
-
-      return savedCharacter;
     } catch (error) {
-      console.error('Ошибка сохранения персонажа:', error);
+      console.error('Критическая ошибка сохранения персонажа:', error);
+      setError(error instanceof Error ? error.message : 'Неизвестная ошибка');
       throw error;
+    } finally {
+      setLoading(false);
     }
   }, []);
 
@@ -120,13 +148,40 @@ export const CharacterProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       }
 
       console.log('CharacterContext: Загрузка персонажей для пользователя:', userId);
-      const userCharacters = await characterService.getUserCharacters(userId);
-      console.log('CharacterContext: Получено персонажей:', userCharacters.length);
       
-      setCharacters(userCharacters);
+      try {
+        const userCharacters = await characterService.getUserCharacters(userId);
+        console.log('CharacterContext: Получено персонажей:', userCharacters.length);
+        setCharacters(userCharacters);
+      } catch (firestoreError) {
+        console.warn('CharacterContext: Ошибка загрузки из Firestore, используем localStorage:', firestoreError);
+        
+        // Fallback на localStorage если Firestore недоступен
+        const localCharacters: Character[] = [];
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key && key.startsWith('character_') && !key.includes('backup')) {
+            try {
+              const characterData = JSON.parse(localStorage.getItem(key) || '');
+              if (characterData.userId === userId) {
+                localCharacters.push(characterData);
+              }
+            } catch (parseError) {
+              console.warn('Ошибка парсинга персонажа из localStorage:', key, parseError);
+            }
+          }
+        }
+        
+        console.log('CharacterContext: Загружено персонажей из localStorage:', localCharacters.length);
+        setCharacters(localCharacters);
+        
+        if (localCharacters.length === 0) {
+          throw firestoreError;
+        }
+      }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Ошибка загрузки персонажей';
-      console.error('CharacterContext: Ошибка загрузки персонажей:', err);
+      console.error('CharacterContext: Критическая ошибка загрузки персонажей:', err);
       setError(errorMessage);
       throw err;
     } finally {

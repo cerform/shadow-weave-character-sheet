@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Plus, RefreshCw, AlertTriangle } from "lucide-react";
@@ -31,56 +31,8 @@ const CharactersListPage: React.FC = () => {
   const currentTheme = themes[themeKey] || themes.default;
   const [diagnosticResults, setDiagnosticResults] = useState<any>(null);
   
-  // При монтировании компонента обновляем список персонажей
-  useEffect(() => {
-    if (isAuthenticated) {
-      refreshCharacters();
-    }
-  }, [isAuthenticated]);
-  
-  // Отладочная информация
-  useEffect(() => {
-    console.log('CharactersListPage: Монтирование компонента');
-    console.log('CharactersListPage: isAuthenticated =', isAuthenticated);
-    console.log('CharactersListPage: Количество персонажей =', characters?.length || 0);
-    console.log('CharactersListPage: userId =', user?.uid);
-    
-    return () => {
-      console.log('CharactersListPage: Размонтирование компонента');
-    };
-  }, []);
-  
-  // При изменении списка персонажей выводим отладочную информацию
-  useEffect(() => {
-    console.log('CharactersListPage: Обновление списка персонажей, количество:', characters?.length || 0);
-    if (error) {
-      console.error('CharactersListPage: Ошибка:', error);
-    }
-  }, [characters, error]);
-  
-  // Запускаем диагностику при возникновении ошибки
-  useEffect(() => {
-    if (error) {
-      runDiagnostics();
-    }
-  }, [error]);
-  
-  const runDiagnostics = async () => {
-    try {
-      console.log('CharactersListPage: Запуск диагностики');
-      const results = await diagnoseCharacterLoading();
-      console.log('CharactersListPage: Результаты диагностики:', results);
-      setDiagnosticResults(results);
-      
-      if (!results.success) {
-        toast.error('Диагностика выявила проблемы с загрузкой данных');
-      }
-    } catch (e) {
-      console.error('CharactersListPage: Ошибка диагностики:', e);
-    }
-  };
-  
-  const refreshCharacters = async () => {
+  // Мемоизированные функции для предотвращения перерендеров
+  const refreshCharacters = useCallback(async () => {
     try {
       setIsRefreshing(true);
       console.log('CharactersListPage: Начинаем обновление списка персонажей');
@@ -93,9 +45,57 @@ const CharactersListPage: React.FC = () => {
     } finally {
       setIsRefreshing(false);
     }
-  };
+  }, [getUserCharacters]);
 
-  const handleDeleteCharacter = async (id: string) => {
+  const runDiagnostics = useCallback(async () => {
+    try {
+      console.log('CharactersListPage: Запуск диагностики');
+      const results = await diagnoseCharacterLoading();
+      console.log('CharactersListPage: Результаты диагностики:', results);
+      setDiagnosticResults(results);
+      
+      if (!results.success) {
+        toast.error('Диагностика выявила проблемы с загрузкой данных');
+      }
+    } catch (e) {
+      console.error('CharactersListPage: Ошибка диагностики:', e);
+    }
+  }, []);
+
+  // При монтировании компонента обновляем список персонажей с debounce
+  useEffect(() => {
+    let mounted = true;
+    
+    const loadCharacters = async () => {
+      if (isAuthenticated && mounted) {
+        refreshCharacters();
+      }
+    };
+
+    const timeoutId = setTimeout(loadCharacters, 100);
+    
+    return () => {
+      mounted = false;
+      clearTimeout(timeoutId);
+    };
+  }, [isAuthenticated, refreshCharacters]);
+  
+  // Запускаем диагностику при возникновении ошибки с debounce
+  useEffect(() => {
+    let timeoutId: NodeJS.Timeout;
+    
+    if (error) {
+      timeoutId = setTimeout(() => {
+        runDiagnostics();
+      }, 300);
+    }
+    
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+    };
+  }, [error, runDiagnostics]);
+  
+  const handleDeleteCharacter = useCallback(async (id: string) => {
     try {
       await deleteCharacter(id);
       console.log('CharactersListPage: Персонаж удален успешно');
@@ -104,7 +104,8 @@ const CharactersListPage: React.FC = () => {
       const errorMessage = err instanceof Error ? err.message : 'Неизвестная ошибка';
       toast.error(`Ошибка при удалении персонажа: ${errorMessage}`);
     }
-  };
+  }, [deleteCharacter]);
+
 
   // Если пользователь не авторизован, предлагаем авторизоваться
   if (!isAuthenticated) {
