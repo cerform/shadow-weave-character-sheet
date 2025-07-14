@@ -3,7 +3,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import CharactersList from '@/components/home/CharactersList';
+
 import { Users, UserPlus, Swords, Shield } from "lucide-react";
 
 const HomePage: React.FC = () => {
@@ -181,8 +181,18 @@ const HomePage: React.FC = () => {
           </div>
         </div>
 
-        {/* Characters List */}
-        <CharactersList />
+        {/* Characters List - moved to dedicated page */}
+        <div className="text-center">
+          <p className="text-gray-400 mb-4">
+            Ваши персонажи доступны на отдельной странице
+          </p>
+          <Button asChild size="lg" variant="outline">
+            <Link to="/characters">
+              <Users className="mr-2 h-5 w-5" />
+              Перейти к персонажам
+            </Link>
+          </Button>
+        </div>
       </div>
     </div>
   );
