@@ -1,36 +1,125 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    --background: 222 84% 5%;
-    --foreground: 210 40% 98%;
-    --card: 222 84% 5%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222 84% 5%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 210 40% 98%;
-    --primary-foreground: 222 84% 5%;
-    --secondary: 217 33% 17%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217 33% 17%;
-    --muted-foreground: 215 20% 65%;
-    --accent: 217 33% 17%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 63% 31%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217 33% 17%;
-    --input: 217 33% 17%;
-    --ring: 212 27% 84%;
-    --radius: 0.5rem;
+    /* Arcane Theme (Default) - Mystical Purple & Gold */
+    --background: 16 16 30; /* Deep mystical dark */
+    --foreground: 250 250 255; /* Moonlight white */
+    --card: 20 15 25; /* Dark parchment */
+    --card-foreground: 245 245 250;
+    --popover: 20 15 25;
+    --popover-foreground: 245 245 250;
     
-    /* D&D specific colors */
-    --dnd-gold: 45 93% 58%;
-    --dnd-red: 348 83% 47%;
-    --dnd-green: 142 76% 36%;
-    --dnd-blue: 221 83% 53%;
+    /* Primary - Arcane Purple */
+    --primary: 159 122 234; /* Mystical purple */
+    --primary-foreground: 255 255 255;
+    
+    /* Secondary - Moonlit Blue */
+    --secondary: 99 102 241; /* Enchanted blue */
+    --secondary-foreground: 255 255 255;
+    
+    /* Accent - Golden Magic */
+    --accent: 251 191 36; /* Golden glow */
+    --accent-foreground: 30 30 30;
+    
+    /* Destructive - Dragon Fire */
+    --destructive: 239 68 68; /* Dragon red */
+    --destructive-foreground: 255 255 255;
+    
+    /* Borders and separators */
+    --border: 75 40 85; /* Mystical border */
+    --input: 75 40 85;
+    --ring: 159 122 234; /* Primary glow */
+    --radius: 0.75rem;
+    
+    /* Muted elements */
+    --muted: 30 25 35;
+    --muted-foreground: 156 163 175;
+    
+    /* Chart colors for spells/stats */
+    --chart-1: 159 122 234; /* Arcane */
+    --chart-2: 99 102 241;  /* Mystic */
+    --chart-3: 251 191 36;  /* Divine */
+    --chart-4: 34 197 94;   /* Nature */
+    --chart-5: 239 68 68;   /* Elemental */
+  }
+
+  /* Forest Theme - Nature Magic */
+  [data-theme="forest"] {
+    --background: 10 25 10;
+    --foreground: 220 255 220;
+    --card: 15 30 15;
+    --card-foreground: 220 255 220;
+    --primary: 34 197 94; /* Forest green */
+    --primary-foreground: 255 255 255;
+    --secondary: 101 163 13; /* Moss green */
+    --secondary-foreground: 255 255 255;
+    --accent: 250 204 21; /* Sunlight yellow */
+    --accent-foreground: 30 30 30;
+    --border: 45 85 45;
+    --input: 45 85 45;
+    --ring: 34 197 94;
+    --muted: 20 40 20;
+    --muted-foreground: 156 163 175;
+  }
+
+  /* Inferno Theme - Fire & Destruction */
+  [data-theme="inferno"] {
+    --background: 25 5 5;
+    --foreground: 255 220 220;
+    --card: 30 10 10;
+    --card-foreground: 255 220 220;
+    --primary: 239 68 68; /* Dragon fire */
+    --primary-foreground: 255 255 255;
+    --secondary: 251 146 60; /* Molten orange */
+    --secondary-foreground: 255 255 255;
+    --accent: 251 191 36; /* Golden flame */
+    --accent-foreground: 30 30 30;
+    --border: 85 40 40;
+    --input: 85 40 40;
+    --ring: 239 68 68;
+    --muted: 40 20 20;
+    --muted-foreground: 156 163 175;
+  }
+
+  /* Underdark Theme - Deep Purple & Shadow */
+  [data-theme="underdark"] {
+    --background: 5 5 15;
+    --foreground: 200 200 255;
+    --card: 10 10 20;
+    --card-foreground: 200 200 255;
+    --primary: 124 58 237; /* Deep purple */
+    --primary-foreground: 255 255 255;
+    --secondary: 67 56 202; /* Dark violet */
+    --secondary-foreground: 255 255 255;
+    --accent: 168 85 247; /* Magic purple */
+    --accent-foreground: 30 30 30;
+    --border: 40 40 85;
+    --input: 40 40 85;
+    --ring: 124 58 237;
+    --muted: 20 20 40;
+    --muted-foreground: 156 163 175;
+  }
+
+  /* Divine Theme - Holy Gold & Light */
+  [data-theme="divine"] {
+    --background: 25 25 15;
+    --foreground: 255 255 230;
+    --card: 30 30 20;
+    --card-foreground: 255 255 230;
+    --primary: 251 191 36; /* Holy gold */
+    --primary-foreground: 30 30 30;
+    --secondary: 245 158 11; /* Divine amber */
+    --secondary-foreground: 30 30 30;
+    --accent: 255 255 255; /* Pure light */
+    --accent-foreground: 30 30 30;
+    --border: 85 85 45;
+    --input: 85 85 45;
+    --ring: 251 191 36;
+    --muted: 40 40 30;
+    --muted-foreground: 156 163 175;
   }
 }
 
@@ -41,106 +130,238 @@
   
   body {
     @apply bg-background text-foreground;
-    background-color: #0a0a0a !important;
-    background-image: url('/lovable-uploads/fedf4d87-93ed-4c26-a401-c2ced1b62cdd.png');
-    background-size: cover;
-    background-position: center;
-    background-attachment: fixed;
-    background-repeat: no-repeat;
+    background: 
+      radial-gradient(circle at 20% 80%, hsl(var(--primary) / 0.1) 0%, transparent 50%),
+      radial-gradient(circle at 80% 20%, hsl(var(--accent) / 0.1) 0%, transparent 50%),
+      linear-gradient(135deg, 
+        hsl(var(--background)) 0%, 
+        hsl(var(--background)) 40%,
+        hsl(var(--muted)) 100%);
     min-height: 100vh;
+    position: relative;
+  }
+
+  /* Animated mystical background effect */
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: 
+      radial-gradient(circle at 25% 25%, hsl(var(--primary) / 0.05) 0%, transparent 50%),
+      radial-gradient(circle at 75% 75%, hsl(var(--secondary) / 0.05) 0%, transparent 50%);
+    animation: mysticalFlow 20s ease-in-out infinite;
+    pointer-events: none;
+    z-index: -1;
+  }
+
+  @keyframes mysticalFlow {
+    0%, 100% { 
+      transform: translateX(0) translateY(0) scale(1);
+      opacity: 0.3;
+    }
+    33% { 
+      transform: translateX(-20px) translateY(-10px) scale(1.1);
+      opacity: 0.5;
+    }
+    66% { 
+      transform: translateX(15px) translateY(20px) scale(0.9);
+      opacity: 0.4;
+    }
   }
   
-  html {
-    min-height: 100vh;
-    background-color: #0a0a0a;
+  /* Fantasy Typography */
+  .font-fantasy-title {
+    font-family: 'Cinzel', serif;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+  }
+
+  .font-fantasy-heading {
+    font-family: 'Cinzel', serif;
+    font-weight: 600;
+    letter-spacing: 0.025em;
+  }
+
+  .font-fantasy-body {
+    font-family: 'MedievalSharp', cursive;
+    letter-spacing: 0.01em;
+  }
+
+  .font-creepy {
+    font-family: 'Creepster', cursive;
+  }
+
+  .font-ancient {
+    font-family: 'Uncial Antiqua', cursive;
   }
 }
 
-/* Стили для различных тем */
-.theme-default {
-  --background: #121212;
-  --foreground: #ffffff;
-  --primary: #8B5A2B;
-  --accent: #8B5A2B;
-  --text-color: #FFFFFF;
-  --card-bg: rgba(0, 0, 0, 0.85);
-  --border-color: #8B5A2B;
+@layer components {
+  /* Magic Card Styles */
+  .magic-card {
+    @apply bg-card/80 backdrop-blur-md border-2 border-border/50 rounded-lg p-6;
+    background: linear-gradient(145deg, 
+      hsl(var(--card) / 0.8) 0%, 
+      hsl(var(--muted) / 0.6) 100%);
+    box-shadow: 
+      0 0 20px hsl(var(--primary) / 0.2),
+      inset 0 1px 0 hsl(var(--foreground) / 0.1);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .magic-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, 
+      transparent 40%, 
+      hsl(var(--primary) / 0.1) 50%, 
+      transparent 60%);
+    transform: translateX(-100%);
+    transition: transform 0.6s ease;
+  }
+
+  .magic-card:hover {
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: 
+      0 20px 40px hsl(var(--primary) / 0.3),
+      0 0 30px hsl(var(--accent) / 0.2),
+      inset 0 1px 0 hsl(var(--foreground) / 0.2);
+    border-color: hsl(var(--primary) / 0.8);
+  }
+
+  .magic-card:hover::before {
+    transform: translateX(100%);
+  }
+
+  /* Glowing Button Styles */
+  .btn-magic {
+    @apply relative overflow-hidden;
+    background: linear-gradient(135deg, 
+      hsl(var(--primary)) 0%, 
+      hsl(var(--secondary)) 100%);
+    box-shadow: 
+      0 0 20px hsl(var(--primary) / 0.4),
+      inset 0 1px 0 hsl(var(--foreground) / 0.2);
+    transition: all 0.3s ease;
+  }
+
+  .btn-magic::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    background: radial-gradient(circle, 
+      hsl(var(--accent) / 0.4) 0%, 
+      transparent 70%);
+    transition: all 0.3s ease;
+    transform: translate(-50%, -50%);
+  }
+
+  .btn-magic:hover {
+    transform: scale(1.05);
+    box-shadow: 
+      0 0 30px hsl(var(--primary) / 0.6),
+      0 0 50px hsl(var(--accent) / 0.3),
+      inset 0 1px 0 hsl(var(--foreground) / 0.3);
+  }
+
+  .btn-magic:hover::before {
+    width: 300px;
+    height: 300px;
+  }
+
+  /* Mystical Text Glow */
+  .text-glow {
+    text-shadow: 
+      0 0 10px hsl(var(--primary) / 0.5),
+      0 0 20px hsl(var(--primary) / 0.3),
+      0 0 30px hsl(var(--primary) / 0.1);
+  }
+
+  /* Theme Selector Orb */
+  .theme-orb {
+    @apply w-12 h-12 rounded-full border-2 cursor-pointer transition-all duration-300;
+    background: radial-gradient(circle at 30% 30%, 
+      hsl(var(--primary)) 0%, 
+      hsl(var(--secondary)) 70%);
+    box-shadow: 
+      0 0 15px hsl(var(--primary) / 0.4),
+      inset 0 2px 4px hsl(var(--foreground) / 0.1);
+  }
+
+  .theme-orb:hover {
+    transform: scale(1.1);
+    box-shadow: 
+      0 0 25px hsl(var(--primary) / 0.6),
+      0 0 40px hsl(var(--accent) / 0.3),
+      inset 0 2px 6px hsl(var(--foreground) / 0.2);
+  }
+
+  /* Navigation glow effects */
+  .nav-glow {
+    transition: all 0.3s ease;
+  }
+
+  .nav-glow:hover {
+    box-shadow: 0 0 20px hsl(var(--primary) / 0.4);
+    background: hsl(var(--primary) / 0.1);
+  }
 }
 
-.theme-warlock {
-  --background: #1E1A2B;
-  --foreground: #ffffff;
-  --primary: #9061F9;
-  --accent: #9061F9;
-  --text-color: #FFFFFF;
-  --card-bg: rgba(20, 15, 30, 0.9);
-  --border-color: #9061F9;
-}
+@layer utilities {
+  .animate-glow {
+    animation: glow 2s ease-in-out infinite alternate;
+  }
 
-.theme-wizard {
-  --background: #152238;
-  --foreground: #ffffff;
-  --primary: #3B82F6;
-  --accent: #3B82F6;
-  --text-color: #FFFFFF;
-  --card-bg: rgba(15, 25, 40, 0.9);
-  --border-color: #3B82F6;
-}
+  @keyframes glow {
+    from {
+      text-shadow: 
+        0 0 5px hsl(var(--primary) / 0.5),
+        0 0 10px hsl(var(--primary) / 0.3);
+    }
+    to {
+      text-shadow: 
+        0 0 10px hsl(var(--primary) / 0.8),
+        0 0 20px hsl(var(--primary) / 0.5),
+        0 0 30px hsl(var(--primary) / 0.3);
+    }
+  }
 
-.theme-druid {
-  --background: #1B2D25;
-  --foreground: #ffffff;
-  --primary: #10B981;
-  --accent: #10B981;
-  --text-color: #FFFFFF;
-  --card-bg: rgba(15, 30, 25, 0.9);
-  --border-color: #10B981;
-}
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
 
-.theme-warrior {
-  --background: #321E1E;
-  --foreground: #ffffff;
-  --primary: #F43F5E;
-  --accent: #F43F5E;
-  --text-color: #FFFFFF;
-  --card-bg: rgba(35, 20, 20, 0.9);
-  --border-color: #F43F5E;
-}
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+  }
 
-.theme-bard {
-  --background: #322815;
-  --foreground: #ffffff;
-  --primary: #F59E0B;
-  --accent: #F59E0B;
-  --text-color: #FFFFFF;
-  --card-bg: rgba(35, 28, 15, 0.9);
-  --border-color: #F59E0B;
-}
+  .animate-pulse-glow {
+    animation: pulseGlow 3s ease-in-out infinite;
+  }
 
-/* Стили для карточек */
-.card {
-  background-color: var(--card-bg) !important;
-  border-color: var(--border-color) !important;
-  color: var(--text-color) !important;
-}
+  @keyframes pulseGlow {
+    0%, 100% { 
+      box-shadow: 0 0 20px hsl(var(--primary) / 0.3);
+    }
+    50% { 
+      box-shadow: 0 0 40px hsl(var(--primary) / 0.6);
+    }
+  }
 
-/* Стили для кнопок */
-button, .btn {
-  border-color: var(--accent) !important;
-  color: var(--text-color) !important;
-}
-
-button:hover, .btn:hover {
-  background-color: rgba(var(--accent), 0.3) !important;
-  box-shadow: 0 0 10px var(--accent) !important;
-}
-
-/* Обеспечиваем фон для всех страниц */
-#root {
-  min-height: 100vh;
-  background-color: #0a0a0a;
-}
-
-.min-h-screen {
-  background-color: transparent !important;
+  /* Animation Delays */
+  .animation-delay-1000 { animation-delay: 1s; }
+  .animation-delay-2000 { animation-delay: 2s; }
+  .animation-delay-3000 { animation-delay: 3s; }
 }

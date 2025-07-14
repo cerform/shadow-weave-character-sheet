@@ -79,7 +79,13 @@ export default {
       },
       fontFamily: {
         philosopher: ['Philosopher', 'sans-serif'],
-        cormorant: ['Cormorant', 'serif']
+        cormorant: ['Cormorant', 'serif'],
+        // D&D Fantasy Fonts
+        'fantasy-title': ['Cinzel', 'serif'],
+        'fantasy-heading': ['Cinzel', 'serif'], 
+        'fantasy-body': ['MedievalSharp', 'cursive'],
+        'creepy': ['Creepster', 'cursive'],
+        'ancient': ['Uncial Antiqua', 'cursive']
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -123,6 +129,20 @@ export default {
           '0%': { backgroundPosition: '0% 50%' },
           '50%': { backgroundPosition: '100% 50%' },
           '100%': { backgroundPosition: '0% 50%' }
+        },
+        mysticalFlow: {
+          '0%, 100%': { 
+            transform: 'translateX(0) translateY(0) scale(1)',
+            opacity: '0.3'
+          },
+          '33%': { 
+            transform: 'translateX(-20px) translateY(-10px) scale(1.1)',
+            opacity: '0.5'
+          },
+          '66%': { 
+            transform: 'translateX(15px) translateY(20px) scale(0.9)',
+            opacity: '0.4'
+          }
         }
       },
       animation: {
@@ -134,7 +154,8 @@ export default {
         'float': 'float 6s ease-in-out infinite',
         'breathe': 'breathe 8s ease-in-out infinite',
         'shimmer': 'shimmer 2s linear infinite',
-        'magic-border': 'magicBorder 3s ease infinite'
+        'magic-border': 'magicBorder 3s ease infinite',
+        'mystical-flow': 'mysticalFlow 20s ease-in-out infinite'
       },
       zIndex: {
         '60': '60',
