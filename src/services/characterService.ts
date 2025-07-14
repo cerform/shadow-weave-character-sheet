@@ -9,7 +9,7 @@ import {
   equalTo,
   DataSnapshot
 } from 'firebase/database';
-import { db } from '@/lib/firebase';
+import { realtimeDb } from '@/lib/firebase';
 import { Character } from '@/types/character';
 import { getCurrentUid } from '@/utils/authHelpers';
 import { normalizeCharacterAbilities } from '@/utils/characterNormalizer';
@@ -39,7 +39,7 @@ export const getUserCharacters = async (userId?: string): Promise<Character[]> =
     
     try {
       // Получаем всех персонажей и фильтруем по userId
-      const charactersRef = ref(db, CHARACTERS_PATH);
+      const charactersRef = ref(realtimeDb, CHARACTERS_PATH);
       const snapshot = await get(charactersRef);
       
       const characters: Character[] = [];
@@ -102,7 +102,7 @@ export const getCharacterById = async (characterId: string): Promise<Character |
     
     try {
       // Сначала пытаемся загрузить из Realtime Database
-      const characterRef = ref(db, `${CHARACTERS_PATH}/${characterId}`);
+      const characterRef = ref(realtimeDb, `${CHARACTERS_PATH}/${characterId}`);
       const snapshot = await get(characterRef);
       
       if (snapshot.exists()) {
@@ -190,7 +190,7 @@ export const saveCharacterToDatabase = async (character: Character, retryCount =
       }
       
       // Сохраняем в Realtime Database
-      const characterRef = ref(db, `${CHARACTERS_PATH}/${characterId}`);
+      const characterRef = ref(realtimeDb, `${CHARACTERS_PATH}/${characterId}`);
       await set(characterRef, characterData);
       
       const savedCharacter = {
@@ -238,7 +238,7 @@ export const deleteCharacter = async (characterId: string): Promise<void> => {
     // Пытаемся удалить из Realtime Database только если пользователь авторизован
     if (uid) {
       try {
-        const characterRef = ref(db, `${CHARACTERS_PATH}/${characterId}`);
+        const characterRef = ref(realtimeDb, `${CHARACTERS_PATH}/${characterId}`);
         await remove(characterRef);
         console.log('characterService: Персонаж удален из Realtime Database');
       } catch (databaseError) {
