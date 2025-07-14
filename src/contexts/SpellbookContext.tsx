@@ -350,13 +350,36 @@ export const SpellbookProvider: React.FC<{ children: ReactNode }> = ({ children 
   const loadSpells = async () => {
     try {
       setLoading(true);
-      const loadedSpells = await getAllSpellsFromDatabase();
-      setSpells(loadedSpells);
-      setFilteredSpells(loadedSpells);
-      setAvailableSpells(loadedSpells);
+      console.log('SpellbookContext: Загрузка заклинаний');
+      
+      // Сначала загружаем статические заклинания
+      const { getAllSpells } = await import('@/data/spells/index');
+      const staticSpells = getAllSpells();
+      console.log('SpellbookContext: Загружено статических заклинаний:', staticSpells.length);
+      
+      if (staticSpells.length > 0) {
+        setSpells(staticSpells);
+        setFilteredSpells(staticSpells);
+        setAvailableSpells(staticSpells);
+      }
+      
+      // Пытаемся дополнить данными из БД
+      try {
+        const dbSpells = await getAllSpellsFromDatabase();
+        if (dbSpells.length > 0) {
+          const combinedSpells = [...staticSpells, ...dbSpells];
+          setSpells(combinedSpells);
+          setFilteredSpells(combinedSpells);
+          setAvailableSpells(combinedSpells);
+          console.log('SpellbookContext: Итого заклинаний:', combinedSpells.length);
+        }
+      } catch (dbError) {
+        console.warn('SpellbookContext: БД недоступна, используем статические данные');
+      }
+      
     } catch (error) {
-      console.error('Error loading spells:', error);
-      toast.error('Ошибка при загрузке заклинаний');
+      console.error('SpellbookContext: Ошибка загрузки:', error);
+      toast.error('Ошибка загрузки заклинаний');
     } finally {
       setLoading(false);
     }
