@@ -56,18 +56,18 @@ const FantasyThemeSelector: React.FC = () => {
 
   const handleThemeChange = (themeName: string) => {
     setCurrentTheme(themeName);
+    
+    // Используем themeManager для применения темы
     document.documentElement.setAttribute('data-theme', themeName);
+    localStorage.setItem('selected-theme', themeName);
+    
     setIsOpen(false);
-    
-    // Сохраняем выбранную тему
-    localStorage.setItem('fantasy-theme', themeName);
-    
     console.log(`🎨 Тема изменена на: ${themeName}`);
   };
 
   // Загружаем сохраненную тему при инициализации
   React.useEffect(() => {
-    const savedTheme = localStorage.getItem('fantasy-theme') || 'arcane';
+    const savedTheme = localStorage.getItem('selected-theme') || 'default';
     setCurrentTheme(savedTheme);
     document.documentElement.setAttribute('data-theme', savedTheme);
   }, []);
