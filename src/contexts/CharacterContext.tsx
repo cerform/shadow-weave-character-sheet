@@ -3,7 +3,6 @@ import React, { createContext, useContext, useCallback } from 'react';
 import { Character } from '@/types/character';
 import { useCharacterState } from '@/hooks/useCharacterState';
 import { useCharacterOperations } from '@/hooks/useCharacterOperations';
-import { toast } from 'sonner';
 
 interface CharacterContextType {
   characters: Character[];
