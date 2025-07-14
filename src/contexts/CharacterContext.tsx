@@ -1,8 +1,9 @@
 
-import React, { createContext, useContext, useCallback } from 'react';
+import React, { createContext, useContext, useCallback, useEffect } from 'react';
 import { Character } from '@/types/character';
 import { useCharacterState } from '@/hooks/useCharacterState';
 import { useCharacterOperations } from '@/hooks/useCharacterOperations';
+import { subscribeToCharacters, unsubscribeAll } from '@/services/characterService';
 
 interface CharacterContextType {
   characters: Character[];
@@ -33,6 +34,25 @@ export const useCharacter = () => {
 export const CharacterProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const state = useCharacterState();
   const operations = useCharacterOperations();
+
+  // 🔥 Инициализируем реалтайм подписку при монтировании
+  useEffect(() => {
+    console.log('CharacterContext: Инициализация реалтайм подписки');
+    
+    const unsubscribe = subscribeToCharacters((characters) => {
+      console.log('CharacterContext: Получены персонажи через подписку:', characters.length);
+      state.setCharacters(characters);
+    });
+
+    // Очистка подписки при размонтировании
+    return () => {
+      console.log('CharacterContext: Очистка реалтайм подписки');
+      if (unsubscribe) {
+        unsubscribe();
+      }
+      unsubscribeAll();
+    };
+  }, [state]);
 
   // Обертки для интеграции с операциями
   const saveCharacter = useCallback(async (character: Character): Promise<Character> => {
