@@ -29,8 +29,10 @@ const CharactersListPage: React.FC = () => {
     try {
       setIsRefreshing(true);
       console.log('CharactersListPage: Начинаем обновление списка персонажей');
+      console.log('CharactersListPage: Текущее состояние loading:', loading);
       await getUserCharacters();
       console.log('CharactersListPage: Список персонажей обновлен успешно');
+      console.log('CharactersListPage: Новое состояние loading:', loading);
     } catch (err) {
       console.error('CharactersListPage: Ошибка при обновлении списка персонажей:', err);
       const errorMessage = err instanceof Error ? err.message : 'Неизвестная ошибка';
@@ -38,7 +40,7 @@ const CharactersListPage: React.FC = () => {
     } finally {
       setIsRefreshing(false);
     }
-  }, [getUserCharacters]);
+  }, [getUserCharacters, loading]);
 
   const debugLocalStorage = useCallback(async () => {
     try {
@@ -77,7 +79,11 @@ const CharactersListPage: React.FC = () => {
     
     const loadCharacters = async () => {
       if (isAuthenticated && mounted) {
+        console.log('CharactersListPage: Вызываем refreshCharacters в useEffect');
+        console.log('CharactersListPage: isAuthenticated:', isAuthenticated, 'mounted:', mounted);
         refreshCharacters();
+      } else {
+        console.log('CharactersListPage: Пропускаем загрузку - isAuthenticated:', isAuthenticated, 'mounted:', mounted);
       }
     };
 
@@ -146,6 +152,16 @@ const CharactersListPage: React.FC = () => {
         }
       >
         <div className="container mx-auto p-6 max-w-5xl">
+          {/* Отладочная информация */}
+          <div className="mb-4 p-3 bg-muted/50 rounded-lg text-sm">
+            <p><strong>Состояние загрузки:</strong> {loading ? 'Загружается...' : 'Завершено'}</p>
+            <p><strong>Есть ошибка:</strong> {error ? 'Да' : 'Нет'}</p>
+            <p><strong>Количество персонажей:</strong> {characters?.length || 0}</p>
+            <p><strong>Авторизован:</strong> {isAuthenticated ? 'Да' : 'Нет'}</p>
+            <p><strong>User ID:</strong> {user?.uid || 'Отсутствует'}</p>
+            {error && <p><strong>Ошибка:</strong> {typeof error === 'string' ? error : (error as Error).message}</p>}
+          </div>
+          
           {/* Навигация по страницам персонажей */}
           <CharacterNavigation />
           

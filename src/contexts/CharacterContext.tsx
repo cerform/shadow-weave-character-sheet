@@ -80,17 +80,21 @@ export const CharacterProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   const getUserCharacters = useCallback(async () => {
     try {
+      console.log('CharacterContext: Начинаем загрузку персонажей. Устанавливаем loading = true');
       state.setLoading(true);
       state.clearError();
       
       const userCharacters = await operations.getUserCharacters();
+      console.log('CharacterContext: Получены персонажи:', userCharacters.length);
       state.setCharacters(userCharacters);
+      console.log('CharacterContext: Персонажи установлены в состояние');
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Ошибка загрузки персонажей';
       console.error('CharacterContext: Ошибка загрузки персонажей:', err);
       state.setError(errorMessage);
       state.setCharacters([]); // Устанавливаем пустой массив при ошибке
     } finally {
+      console.log('CharacterContext: Завершаем загрузку. Устанавливаем loading = false');
       state.setLoading(false);
     }
   }, [state, operations]);

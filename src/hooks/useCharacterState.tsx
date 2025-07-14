@@ -5,8 +5,13 @@ import { Character } from '@/types/character';
 export const useCharacterState = () => {
   const [characters, setCharacters] = useState<Character[]>([]);
   const [character, setCharacterState] = useState<Character | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoadingState] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const setLoading = (value: boolean) => {
+    console.log('useCharacterState: setLoading вызван с значением:', value);
+    setLoadingState(value);
+  };
 
   const setCharacter = useCallback((character: Character | null) => {
     setCharacterState(character);

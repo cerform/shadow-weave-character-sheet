@@ -28,8 +28,12 @@ export const getUserCharacters = async (userId?: string): Promise<Character[]> =
     // Если нет userId, работаем только с localStorage
     if (!uid) {
       console.log('characterService: Пользователь не авторизован, используем localStorage');
-      return LocalCharacterStore.getAll();
+      const localCharacters = LocalCharacterStore.getAll();
+      console.log('characterService: Загружено из localStorage:', localCharacters.length, 'персонажей');
+      return localCharacters;
     }
+    
+    console.log('characterService: Пытаемся загрузить из Firestore для пользователя:', uid);
     
     try {
       // Сначала пытаемся загрузить из Firestore
