@@ -29,10 +29,8 @@ const CharactersListPage: React.FC = () => {
     try {
       setIsRefreshing(true);
       console.log('CharactersListPage: Начинаем обновление списка персонажей');
-      console.log('CharactersListPage: Текущее состояние loading:', loading);
       await getUserCharacters();
       console.log('CharactersListPage: Список персонажей обновлен успешно');
-      console.log('CharactersListPage: Новое состояние loading:', loading);
     } catch (err) {
       console.error('CharactersListPage: Ошибка при обновлении списка персонажей:', err);
       const errorMessage = err instanceof Error ? err.message : 'Неизвестная ошибка';
@@ -40,7 +38,7 @@ const CharactersListPage: React.FC = () => {
     } finally {
       setIsRefreshing(false);
     }
-  }, [getUserCharacters, loading]);
+  }, [getUserCharacters]);
 
   const debugLocalStorage = useCallback(async () => {
     try {
@@ -73,27 +71,32 @@ const CharactersListPage: React.FC = () => {
     }
   }, []);
 
-  // При монтировании компонента обновляем список персонажей с debounce
+  // При монтировании компонента обновляем список персонажей
   useEffect(() => {
     let mounted = true;
     
     const loadCharacters = async () => {
       if (isAuthenticated && mounted) {
-        console.log('CharactersListPage: Вызываем refreshCharacters в useEffect');
-        console.log('CharactersListPage: isAuthenticated:', isAuthenticated, 'mounted:', mounted);
-        refreshCharacters();
-      } else {
-        console.log('CharactersListPage: Пропускаем загрузку - isAuthenticated:', isAuthenticated, 'mounted:', mounted);
+        console.log('CharactersListPage: Вызываем getUserCharacters напрямую в useEffect');
+        try {
+          setIsRefreshing(true);
+          await getUserCharacters();
+        } catch (err) {
+          console.error('CharactersListPage: Ошибка при загрузке персонажей:', err);
+          const errorMessage = err instanceof Error ? err.message : 'Неизвестная ошибка';
+          toast.error(`Ошибка при загрузке персонажей: ${errorMessage}`);
+        } finally {
+          setIsRefreshing(false);
+        }
       }
     };
 
-    const timeoutId = setTimeout(loadCharacters, 100);
+    loadCharacters();
     
     return () => {
       mounted = false;
-      clearTimeout(timeoutId);
     };
-  }, [isAuthenticated, refreshCharacters]);
+  }, [isAuthenticated, getUserCharacters]);
   
   // Запускаем диагностику при возникновении ошибки с debounce
   useEffect(() => {
