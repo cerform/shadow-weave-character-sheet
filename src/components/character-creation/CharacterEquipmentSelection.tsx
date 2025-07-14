@@ -131,11 +131,20 @@ const CLASS_PROFICIENCIES = {
 // Функция для получения доступного снаряжения для выбранного класса
 const getAvailableEquipmentForClass = (className: string) => {
   const classProficiencies = CLASS_PROFICIENCIES[className as keyof typeof CLASS_PROFICIENCIES];
-  if (!classProficiencies) return {};
+  if (!classProficiencies) {
+    // Если класс не найден, показываем только базовое снаряжение
+    return {
+      weapons: [...BASIC_EQUIPMENT.weapons.simple],
+      armor: [...BASIC_EQUIPMENT.armor.light],
+      accessories: BASIC_EQUIPMENT.accessories,
+      packs: BASIC_EQUIPMENT.packs,
+      tools: BASIC_EQUIPMENT.tools
+    };
+  }
 
   const result: Record<string, string[]> = {};
 
-  // Оружие
+  // Оружие - только разрешенное для класса
   const availableWeapons: string[] = [];
   if (classProficiencies.weapons.includes("simple")) {
     availableWeapons.push(...BASIC_EQUIPMENT.weapons.simple);
@@ -143,9 +152,22 @@ const getAvailableEquipmentForClass = (className: string) => {
   if (classProficiencies.weapons.includes("martial")) {
     availableWeapons.push(...BASIC_EQUIPMENT.weapons.martial);
   }
+  // Добавляем специфичные виды оружия для определенных классов
+  if (classProficiencies.weapons.includes("hand_crossbows")) {
+    availableWeapons.push("Ручной арбалет");
+  }
+  if (classProficiencies.weapons.includes("longswords")) {
+    availableWeapons.push("Длинный меч");
+  }
+  if (classProficiencies.weapons.includes("rapiers")) {
+    availableWeapons.push("Рапира");
+  }
+  if (classProficiencies.weapons.includes("shortswords")) {
+    availableWeapons.push("Короткий меч");
+  }
   result.weapons = [...new Set(availableWeapons)];
 
-  // Доспехи
+  // Доспехи - только разрешенные для класса
   const availableArmor: string[] = [];
   classProficiencies.armor.forEach(armorType => {
     if (armorType === "light") availableArmor.push(...BASIC_EQUIPMENT.armor.light);
@@ -157,10 +179,43 @@ const getAvailableEquipmentForClass = (className: string) => {
   }
   result.armor = availableArmor;
 
-  // Остальные категории доступны всем
-  result.accessories = BASIC_EQUIPMENT.accessories;
-  result.packs = BASIC_EQUIPMENT.packs;
-  result.tools = BASIC_EQUIPMENT.tools;
+  // Ограничиваем аксессуары в зависимости от класса
+  const availableAccessories = BASIC_EQUIPMENT.accessories.filter(item => {
+    // Магические предметы только для магических классов
+    if (item.includes("Магическая") || item.includes("заклинаний") || item.includes("компонентами")) {
+      return ["Волшебник", "Чародей", "Колдун", "Жрец", "Бард", "Друид", "Паладин", "Следопыт"].includes(className);
+    }
+    // Священные символы только для божественных классов
+    if (item.includes("Священный")) {
+      return ["Жрец", "Паладин"].includes(className);
+    }
+    // Фокусировка друида только для друидов
+    if (item.includes("друида")) {
+      return className === "Друид";
+    }
+    return true;
+  });
+  result.accessories = availableAccessories;
+
+  // Ограничиваем наборы снаряжения
+  const availablePacks = BASIC_EQUIPMENT.packs.filter(pack => {
+    if (pack.includes("священника")) return ["Жрец", "Паладин"].includes(className);
+    if (pack.includes("взломщика")) return ["Плут"].includes(className);
+    if (pack.includes("артиста")) return ["Бард"].includes(className);
+    if (pack.includes("учёного")) return ["Волшебник", "Изобретатель"].includes(className);
+    return true;
+  });
+  result.packs = availablePacks;
+
+  // Ограничиваем инструменты
+  const availableTools = BASIC_EQUIPMENT.tools.filter(tool => {
+    if (tool.includes("вора")) return className === "Плут";
+    if (tool.includes("алхимика")) return ["Волшебник", "Изобретатель"].includes(className);
+    if (tool.includes("изобретателя")) return className === "Изобретатель";
+    if (tool.includes("травника")) return ["Друид", "Следопыт"].includes(className);
+    return true;
+  });
+  result.tools = availableTools;
 
   return result;
 };

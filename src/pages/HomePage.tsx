@@ -133,6 +133,54 @@ const HomePage: React.FC = () => {
           </div>
         </div>
 
+        {/* Books Section */}
+        <div className="mb-12">
+          <h2 className="text-3xl font-bold text-white mb-8 text-center font-philosopher">
+            Справочники
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+            <Card className="shadow-lg border border-indigo-700/30 bg-black/30 backdrop-blur-sm hover:shadow-indigo-700/10 hover:border-indigo-700/50 transition-all duration-300">
+              <CardHeader className="text-center">
+                <Users className="h-12 w-12 mx-auto mb-4 text-indigo-400" />
+                <CardTitle className="text-2xl text-white">
+                  Книга правил игрока
+                </CardTitle>
+                <CardDescription className="text-gray-300">
+                  Справочник по классам, расам и правилам
+                </CardDescription>
+              </CardHeader>
+              <CardFooter className="flex justify-center">
+                <Button asChild size="lg" variant="outline" className="border-indigo-600 text-indigo-400 hover:bg-indigo-600/10">
+                  <Link to="/handbook">
+                    <Users className="mr-2 h-5 w-5" />
+                    Открыть справочник
+                  </Link>
+                </Button>
+              </CardFooter>
+            </Card>
+
+            <Card className="shadow-lg border border-pink-700/30 bg-black/30 backdrop-blur-sm hover:shadow-pink-700/10 hover:border-pink-700/50 transition-all duration-300">
+              <CardHeader className="text-center">
+                <Swords className="h-12 w-12 mx-auto mb-4 text-pink-400" />
+                <CardTitle className="text-2xl text-white">
+                  Книга заклинаний
+                </CardTitle>
+                <CardDescription className="text-gray-300">
+                  База данных всех заклинаний D&D 5e
+                </CardDescription>
+              </CardHeader>
+              <CardFooter className="flex justify-center">
+                <Button asChild size="lg" variant="outline" className="border-pink-600 text-pink-400 hover:bg-pink-600/10">
+                  <Link to="/spellbook">
+                    <Swords className="mr-2 h-5 w-5" />
+                    Книга заклинаний
+                  </Link>
+                </Button>
+              </CardFooter>
+            </Card>
+          </div>
+        </div>
+
         {/* Characters List */}
         <CharactersList />
       </div>

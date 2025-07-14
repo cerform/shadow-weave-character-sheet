@@ -11,7 +11,7 @@ export interface UseCharacterCreationReturn {
   setCurrentStep: (step: number) => void;
   character: Character;
   updateCharacter: (updates: Partial<Character>) => void;
-  createCharacter: () => void;
+  createCharacter: () => Promise<void>;
   isMagicClass: boolean;
   convertToCharacter: (data: any) => Character;
   nextStep: () => void;
@@ -63,7 +63,7 @@ export const useCharacterCreation = (): UseCharacterCreationReturn => {
   };
 
   // Функция для создания персонажа
-  const createCharacter = () => {
+  const createCharacter = async () => {
     try {
       // Убедимся, что у персонажа есть имя
       if (!character.name || character.name.trim() === '') {
@@ -72,7 +72,7 @@ export const useCharacterCreation = (): UseCharacterCreationReturn => {
       }
 
       // Сохраняем персонажа
-      const savedCharacter = saveCharacter(character);
+      const savedCharacter = await saveCharacter(character);
 
       // Очищаем данные о процессе создания
       localStorage.removeItem('character_creation_progress');

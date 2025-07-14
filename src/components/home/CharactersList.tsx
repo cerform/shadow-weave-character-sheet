@@ -114,18 +114,23 @@ const CharactersList: React.FC = () => {
     }
   };
 
-  // Эффект для загрузки персонажей при монтировании и изменении статуса аутентификации
+  // Эффект для загрузки персонажей при монтировании
   useEffect(() => {
-    loadCharacters();
+    if (isAuthenticated && characters.length === 0 && !loading && !contextLoading) {
+      loadCharacters();
+    }
   }, [isAuthenticated]);
 
-  // Эффект для повторной попытки, если есть необходимость
+  // Эффект для повторной попытки только если реально нужно
   useEffect(() => {
-    if (loadAttempts > 0 && loadAttempts < 3 && characters.length === 0 && !loading) {
-      const timer = setTimeout(loadCharacters, 1500);
+    if (loadAttempts > 0 && loadAttempts < 2 && characters.length === 0 && !loading && !contextLoading && isAuthenticated) {
+      const timer = setTimeout(() => {
+        console.log('CharactersList: Повторная попытка загрузки персонажей');
+        loadCharacters();
+      }, 2000);
       return () => clearTimeout(timer);
     }
-  }, [loadAttempts, characters.length, loading]);
+  }, [loadAttempts, isAuthenticated]);
 
   if (!isAuthenticated) {
     return (

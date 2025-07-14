@@ -12,7 +12,7 @@ interface CharacterContextType {
   error: string | null;
   setCharacter: (character: Character | null) => void;
   updateCharacter: (updates: Partial<Character>) => void;
-  saveCharacter: (character: Character) => Character;
+  saveCharacter: (character: Character) => Promise<Character>;
   deleteCharacter: (id: string) => Promise<void>;
   getUserCharacters: () => Promise<void>;
   getCharacterById: (id: string) => Promise<Character | null>;
@@ -47,14 +47,18 @@ export const CharacterProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     });
   }, []);
 
-  const saveCharacter = useCallback((character: Character): Character => {
+  const saveCharacter = useCallback(async (character: Character): Promise<Character> => {
     try {
       // Добавляем userId если его нет
       if (!character.userId) {
         character.userId = getCurrentUid();
       }
 
-      const savedCharacter = characterService.saveCharacter(character);
+      // Сначала сохраняем локально
+      const localCharacter = characterService.saveCharacter(character);
+      
+      // Затем пытаемся сохранить в Firestore
+      const savedCharacter = await characterService.saveCharacterToFirestore(localCharacter);
       
       // Обновляем локальный список
       setCharacters(prev => {
