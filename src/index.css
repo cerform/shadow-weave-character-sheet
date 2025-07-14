@@ -4,25 +4,25 @@
 
 @layer base {
   :root {
-    /* Arcane Theme (Default) - Mystical Purple & Gold */
-    --background: 16 16 30; /* Deep mystical dark */
-    --foreground: 250 250 255; /* Moonlight white */
-    --card: 20 15 25; /* Dark parchment */
-    --card-foreground: 245 245 250;
-    --popover: 20 15 25;
-    --popover-foreground: 245 245 250;
+    /* Arcane Theme (Default) - Soft Mystical Colors */
+    --background: 215 25 12; /* Soft deep blue-grey */
+    --foreground: 35 15 82; /* Warm parchment white */
+    --card: 220 20 18; /* Darker card background */
+    --card-foreground: 35 12 78;
+    --popover: 220 20 18;
+    --popover-foreground: 35 12 78;
     
-    /* Primary - Arcane Purple */
-    --primary: 159 122 234; /* Mystical purple */
-    --primary-foreground: 255 255 255;
+    /* Primary - Soft Mystical Purple */
+    --primary: 260 35 58; /* Muted purple like the crystal image */
+    --primary-foreground: 35 15 95;
     
-    /* Secondary - Moonlit Blue */
-    --secondary: 99 102 241; /* Enchanted blue */
-    --secondary-foreground: 255 255 255;
+    /* Secondary - Muted Blue */
+    --secondary: 220 30 48; /* Soft blue */
+    --secondary-foreground: 35 15 95;
     
-    /* Accent - Golden Magic */
-    --accent: 251 191 36; /* Golden glow */
-    --accent-foreground: 30 30 30;
+    /* Accent - Soft Golden */
+    --accent: 45 45 55; /* Muted gold */
+    --accent-foreground: 220 25 15;
     
     /* Destructive - Dragon Fire */
     --destructive: 239 68 68; /* Dragon red */
@@ -46,18 +46,18 @@
     --chart-5: 239 68 68;   /* Elemental */
   }
 
-  /* Forest Theme - Nature Magic */
+  /* Forest Theme - Soft Nature Colors like tree house image */
   [data-theme="forest"] {
-    --background: 10 25 10;
-    --foreground: 220 255 220;
-    --card: 15 30 15;
-    --card-foreground: 220 255 220;
-    --primary: 34 197 94; /* Forest green */
-    --primary-foreground: 255 255 255;
-    --secondary: 101 163 13; /* Moss green */
-    --secondary-foreground: 255 255 255;
-    --accent: 250 204 21; /* Sunlight yellow */
-    --accent-foreground: 30 30 30;
+    --background: 142 25 15; /* Soft forest dark */
+    --foreground: 35 15 75; /* Warm natural white */
+    --card: 142 20 20;
+    --card-foreground: 35 12 72;
+    --primary: 142 30 40; /* Muted forest green */
+    --primary-foreground: 35 15 90;
+    --secondary: 80 25 35; /* Soft moss */
+    --secondary-foreground: 35 15 90;
+    --accent: 42 40 50; /* Soft amber */
+    --accent-foreground: 142 25 20;
     --border: 45 85 45;
     --input: 45 85 45;
     --ring: 34 197 94;
@@ -65,18 +65,18 @@
     --muted-foreground: 156 163 175;
   }
 
-  /* Inferno Theme - Fire & Destruction */
+  /* Inferno Theme - Soft Fire Colors */
   [data-theme="inferno"] {
-    --background: 25 5 5;
-    --foreground: 255 220 220;
-    --card: 30 10 10;
-    --card-foreground: 255 220 220;
-    --primary: 239 68 68; /* Dragon fire */
-    --primary-foreground: 255 255 255;
-    --secondary: 251 146 60; /* Molten orange */
-    --secondary-foreground: 255 255 255;
-    --accent: 251 191 36; /* Golden flame */
-    --accent-foreground: 30 30 30;
+    --background: 15 30 18; /* Soft dark brown */
+    --foreground: 35 15 75; /* Warm light */
+    --card: 20 25 22;
+    --card-foreground: 35 12 72;
+    --primary: 15 40 45; /* Muted fire orange */
+    --primary-foreground: 35 15 90;
+    --secondary: 25 35 40; /* Soft ember */
+    --secondary-foreground: 35 15 90;
+    --accent: 42 35 50; /* Soft golden */
+    --accent-foreground: 15 30 20;
     --border: 85 40 40;
     --input: 85 40 40;
     --ring: 239 68 68;
@@ -84,18 +84,18 @@
     --muted-foreground: 156 163 175;
   }
 
-  /* Underdark Theme - Deep Purple & Shadow */
+  /* Underdark Theme - Soft Dark Purple */
   [data-theme="underdark"] {
-    --background: 5 5 15;
-    --foreground: 200 200 255;
-    --card: 10 10 20;
-    --card-foreground: 200 200 255;
-    --primary: 124 58 237; /* Deep purple */
-    --primary-foreground: 255 255 255;
-    --secondary: 67 56 202; /* Dark violet */
-    --secondary-foreground: 255 255 255;
-    --accent: 168 85 247; /* Magic purple */
-    --accent-foreground: 30 30 30;
+    --background: 280 25 12; /* Soft deep purple */
+    --foreground: 35 15 80; /* Warm light */
+    --card: 280 20 16;
+    --card-foreground: 35 12 75;
+    --primary: 280 30 40; /* Muted deep purple */
+    --primary-foreground: 35 15 90;
+    --secondary: 260 25 35; /* Soft violet */
+    --secondary-foreground: 35 15 90;
+    --accent: 280 40 50; /* Soft magic purple */
+    --accent-foreground: 280 25 15;
     --border: 40 40 85;
     --input: 40 40 85;
     --ring: 124 58 237;
@@ -103,18 +103,18 @@
     --muted-foreground: 156 163 175;
   }
 
-  /* Divine Theme - Holy Gold & Light */
+  /* Divine Theme - Soft Golden Light */
   [data-theme="divine"] {
-    --background: 25 25 15;
-    --foreground: 255 255 230;
-    --card: 30 30 20;
-    --card-foreground: 255 255 230;
-    --primary: 251 191 36; /* Holy gold */
-    --primary-foreground: 30 30 30;
-    --secondary: 245 158 11; /* Divine amber */
-    --secondary-foreground: 30 30 30;
-    --accent: 255 255 255; /* Pure light */
-    --accent-foreground: 30 30 30;
+    --background: 45 25 18; /* Soft golden dark */
+    --foreground: 35 15 78; /* Warm light */
+    --card: 45 20 22;
+    --card-foreground: 35 12 75;
+    --primary: 45 35 50; /* Soft holy gold */
+    --primary-foreground: 45 25 15;
+    --secondary: 42 30 45; /* Soft amber */
+    --secondary-foreground: 45 25 15;
+    --accent: 35 20 85; /* Soft light */
+    --accent-foreground: 45 25 15;
     --border: 85 85 45;
     --input: 85 85 45;
     --ring: 251 191 36;
