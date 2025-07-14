@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -11,8 +10,6 @@ import OBSLayout from '@/components/OBSLayout';
 import IconOnlyNavigation from '@/components/navigation/IconOnlyNavigation';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import CharacterNavigation from '@/components/characters/CharacterNavigation';
-import CharactersPageDebugger from '@/components/debug/CharactersPageDebugger';
-import ConsoleErrorCatcher from '@/components/debug/ConsoleErrorCatcher';
 import ErrorDisplay from '@/components/characters/ErrorDisplay';
 import LoadingState from '@/components/characters/LoadingState';
 import { toast } from 'sonner';
@@ -118,7 +115,6 @@ const CharactersListPage: React.FC = () => {
     }
   }, [deleteCharacter]);
 
-
   // Если пользователь не авторизован, предлагаем авторизоваться
   if (!isAuthenticated) {
     return (
@@ -150,10 +146,6 @@ const CharactersListPage: React.FC = () => {
         }
       >
         <div className="container mx-auto p-6 max-w-5xl">
-          {/* Добавляем компоненты отладки */}
-          <ConsoleErrorCatcher />
-          <CharactersPageDebugger />
-          
           {/* Навигация по страницам персонажей */}
           <CharacterNavigation />
           

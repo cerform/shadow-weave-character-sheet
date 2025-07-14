@@ -20,7 +20,7 @@ const ConsoleErrorCatcher: React.FC = () => {
     const originalConsoleError = console.error;
     const originalConsoleWarn = console.warn;
     
-    // Перехватываем console.error
+    // Перехватываем console.error с фильтрацией
     console.error = (...args: any[]) => {
       // Вызываем оригинальный метод
       originalConsoleError.apply(console, args);
@@ -32,17 +32,25 @@ const ConsoleErrorCatcher: React.FC = () => {
         JSON.stringify(arg)
       ).join(' ');
       
+      // Игнорируем ошибки postMessage и DataCloneError, так как они связаны с браузерными расширениями
+      if (errorMessage.includes('Failed to send message') || 
+          errorMessage.includes('DataCloneError') ||
+          errorMessage.includes('postMessage') ||
+          errorMessage.includes('Request object could not be cloned')) {
+        return;
+      }
+      
       const errorObj: CaughtError = {
         message: errorMessage,
         timestamp: new Date(),
         stack: args.find(arg => arg instanceof Error)?.stack
       };
       
-      // Добавляем ошибку в состояние
-      setErrors(prev => [...prev, errorObj]);
+      // Добавляем ошибку в состояние (максимум 10 ошибок)
+      setErrors(prev => [...prev.slice(-9), errorObj]);
     };
     
-    // Перехватываем console.warn
+    // Перехватываем console.warn с ограничением
     console.warn = (...args: any[]) => {
       // Вызываем оригинальный метод
       originalConsoleWarn.apply(console, args);
@@ -53,13 +61,19 @@ const ConsoleErrorCatcher: React.FC = () => {
         JSON.stringify(arg)
       ).join(' ');
       
+      // Игнорируем системные предупреждения браузера
+      if (warnMessage.includes('extension') || 
+          warnMessage.includes('chrome-extension')) {
+        return;
+      }
+      
       const warnObj: CaughtError = {
         message: warnMessage,
         timestamp: new Date()
       };
       
-      // Добавляем предупреждение в состояние
-      setWarnings(prev => [...prev, warnObj]);
+      // Добавляем предупреждение в состояние (максимум 5 предупреждений)
+      setWarnings(prev => [...prev.slice(-4), warnObj]);
     };
     
     // Восстанавливаем оригинальные методы при размонтировании
