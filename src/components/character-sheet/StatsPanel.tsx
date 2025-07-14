@@ -6,6 +6,7 @@ import { Progress } from "@/components/ui/progress";
 import { Character } from '@/types/character';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
+import { getAbilityScore } from '@/utils/characterNormalizer';
 import { 
   calculateAbilityModifier, 
   formatModifier, 
@@ -35,12 +36,12 @@ export const StatsPanel: React.FC<StatsPanelProps> = ({ character }) => {
   }
 
   const abilities = {
-    strength: character.strength || character.abilities?.strength || 10,
-    dexterity: character.dexterity || character.abilities?.dexterity || 10,
-    constitution: character.constitution || character.abilities?.constitution || 10,
-    intelligence: character.intelligence || character.abilities?.intelligence || 10,
-    wisdom: character.wisdom || character.abilities?.wisdom || 10,
-    charisma: character.charisma || character.abilities?.charisma || 10
+    strength: getAbilityScore(character, 'strength'),
+    dexterity: getAbilityScore(character, 'dexterity'),
+    constitution: getAbilityScore(character, 'constitution'),
+    intelligence: getAbilityScore(character, 'intelligence'),
+    wisdom: getAbilityScore(character, 'wisdom'),
+    charisma: getAbilityScore(character, 'charisma')
   };
 
   const proficiencyBonus = calculateProficiencyBonusByLevel(character.level);

@@ -13,6 +13,7 @@ import {
 import { db } from '@/lib/firebase';
 import { Character } from '@/types/character';
 import { getCurrentUid } from '@/utils/authHelpers';
+import { normalizeCharacterAbilities } from '@/utils/characterNormalizer';
 
 // Коллекция персонажей в Firestore
 const CHARACTERS_COLLECTION = 'characters';
@@ -64,8 +65,11 @@ export const getCharacterById = async (characterId: string): Promise<Character |
         ...data,
         id: characterSnapshot.id
       };
-      console.log('characterService: Персонаж загружен:', character.name);
-      return character;
+      
+      // Нормализуем характеристики при загрузке
+      const normalizedCharacter = normalizeCharacterAbilities(character);
+      console.log('characterService: Персонаж загружен и нормализован:', normalizedCharacter.name);
+      return normalizedCharacter;
     } else {
       console.log('characterService: Персонаж не найден');
       return null;
@@ -79,27 +83,31 @@ export const getCharacterById = async (characterId: string): Promise<Character |
 // Сохранение персонажа (локально с ID)
 export const saveCharacter = (character: Character): Character => {
   try {
+    // Нормализуем характеристики перед сохранением
+    const normalizedCharacter = normalizeCharacterAbilities(character);
+    
     // Генерируем ID если его нет
-    if (!character.id) {
-      character.id = `character_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    if (!normalizedCharacter.id) {
+      normalizedCharacter.id = `character_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     }
     
     // Добавляем userId если его нет
-    if (!character.userId) {
-      character.userId = getCurrentUid();
+    if (!normalizedCharacter.userId) {
+      normalizedCharacter.userId = getCurrentUid();
     }
     
     // Обновляем временные метки
     const now = new Date().toISOString();
-    if (!character.createdAt) {
-      character.createdAt = now;
+    if (!normalizedCharacter.createdAt) {
+      normalizedCharacter.createdAt = now;
     }
-    character.updatedAt = now;
+    normalizedCharacter.updatedAt = now;
     
     // Сохраняем в localStorage как резервную копию
-    localStorage.setItem(`character_${character.id}`, JSON.stringify(character));
+    localStorage.setItem(`character_${normalizedCharacter.id}`, JSON.stringify(normalizedCharacter));
     
-    return character;
+    console.log('characterService: Персонаж нормализован и сохранен локально:', normalizedCharacter);
+    return normalizedCharacter;
   } catch (error) {
     console.error('characterService: Ошибка сохранения персонажа:', error);
     throw new Error('Не удалось сохранить персонажа');
@@ -112,12 +120,15 @@ export const saveCharacterToFirestore = async (character: Character, retryCount 
     try {
       console.log(`characterService: Сохранение персонажа в Firestore (попытка ${attemptNumber}):`, character.name);
       
+      // Нормализуем характеристики перед сохранением
+      const normalizedCharacter = normalizeCharacterAbilities(character);
+      
       // Подготавливаем данные для сохранения
       const characterData = {
-        ...character,
-        userId: character.userId || getCurrentUid(),
+        ...normalizedCharacter,
+        userId: normalizedCharacter.userId || getCurrentUid(),
         updatedAt: new Date().toISOString(),
-        createdAt: character.createdAt || new Date().toISOString()
+        createdAt: normalizedCharacter.createdAt || new Date().toISOString()
       };
       
       let docRef;
