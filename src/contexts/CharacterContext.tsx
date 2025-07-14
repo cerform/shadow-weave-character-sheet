@@ -4,6 +4,7 @@ import { Character } from '@/types/character';
 import { useCharacterState } from '@/hooks/useCharacterState';
 import { useCharacterOperations } from '@/hooks/useCharacterOperations';
 import { subscribeToCharacters, unsubscribeAll } from '@/services/characterService';
+import { auth } from '@/lib/firebase';
 
 interface CharacterContextType {
   characters: Character[];
@@ -35,24 +36,46 @@ export const CharacterProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const state = useCharacterState();
   const operations = useCharacterOperations();
 
-  // 🔥 Инициализируем реалтайм подписку при монтировании
+  // 🔥 Инициализируем реалтайм подписку при монтировании с fallback
   useEffect(() => {
+    if (!auth.currentUser) return;
+    
     console.log('CharacterContext: Инициализация реалтайм подписки');
     
-    const unsubscribe = subscribeToCharacters((characters) => {
-      console.log('CharacterContext: Получены персонажи через подписку:', characters.length);
-      state.setCharacters(characters);
-    });
+    let isSubscribed = true;
+    
+    const initializeSubscription = async () => {
+      try {
+        const unsubscribe = subscribeToCharacters((characters) => {
+          if (isSubscribed) {
+            console.log('CharacterContext: Получены персонажи через подписку:', characters.length);
+            state.setCharacters(characters);
+          }
+        });
 
-    // Очистка подписки при размонтировании
-    return () => {
-      console.log('CharacterContext: Очистка реалтайм подписки');
-      if (unsubscribe) {
-        unsubscribe();
+        return unsubscribe;
+      } catch (error) {
+        console.error('CharacterContext: Ошибка подписки, используем fallback:', error);
+        // Fallback: загружаем из localStorage
+        const localCharacters = JSON.parse(localStorage.getItem('characters') || '[]')
+          .filter((char: any) => char.userId === auth.currentUser?.uid);
+        if (isSubscribed) {
+          state.setCharacters(localCharacters);
+        }
       }
+    };
+
+    let unsubscribePromise = initializeSubscription();
+
+    return () => {
+      isSubscribed = false;
+      console.log('CharacterContext: Очистка реалтайм подписки');
+      unsubscribePromise?.then((unsubscribe) => {
+        if (unsubscribe) unsubscribe();
+      });
       unsubscribeAll();
     };
-  }, [state]);
+  }, [state, auth.currentUser]);
 
   // Обертки для интеграции с операциями
   const saveCharacter = useCallback(async (character: Character): Promise<Character> => {

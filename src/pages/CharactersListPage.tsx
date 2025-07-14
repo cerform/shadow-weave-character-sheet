@@ -71,13 +71,13 @@ const CharactersListPage: React.FC = () => {
     }
   }, []);
 
-  // При монтировании компонента обновляем список персонажей
+  // При монтировании компонента обновляем список персонажей ОДИН РАЗ
   useEffect(() => {
     let mounted = true;
     
     const loadCharacters = async () => {
-      if (isAuthenticated && mounted) {
-        console.log('CharactersListPage: Вызываем getUserCharacters напрямую в useEffect');
+      if (isAuthenticated && mounted && user?.uid) {
+        console.log('CharactersListPage: Однократная загрузка персонажей при монтировании');
         try {
           setIsRefreshing(true);
           await getUserCharacters();
@@ -91,12 +91,13 @@ const CharactersListPage: React.FC = () => {
       }
     };
 
+    // Загружаем только один раз при монтировании компонента
     loadCharacters();
     
     return () => {
       mounted = false;
     };
-  }, [isAuthenticated, getUserCharacters]);
+  }, [isAuthenticated, user?.uid]); // Убираем getUserCharacters из dependencies
   
   // Запускаем диагностику при возникновении ошибки с debounce
   useEffect(() => {

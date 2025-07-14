@@ -98,6 +98,56 @@ export const getUserCharacters = async (userId?: string): Promise<Character[]> =
       console.log('characterService: Пользователь не авторизован, используем localStorage');
       return LocalCharacterStore.getAll();
     }
+
+    // Сначала пробуем Firestore
+    try {
+      const q = query(
+        collection(db, CHARACTERS_COLLECTION),
+        where('userId', '==', uid),
+        orderBy('updatedAt', 'desc')
+      );
+      
+      const querySnapshot = await getDocs(q);
+      const characters: Character[] = [];
+      
+      querySnapshot.docs.forEach((doc) => {
+        const data = doc.data();
+        const normalizedCharacter = normalizeCharacterAbilities({
+          ...data,
+          id: doc.id
+        } as Character);
+        characters.push(normalizedCharacter);
+      });
+
+      console.log('characterService: Загружено персонажей из Firestore:', characters.length);
+      
+      // Если Firestore работает но пуст, проверяем localStorage для миграции
+      if (characters.length === 0) {
+        const localCharacters = LocalCharacterStore.getAll(uid);
+        
+        if (localCharacters.length > 0) {
+          console.log('characterService: Найдены персонажи в localStorage для миграции:', localCharacters.length);
+          // Мигрируем в Firestore
+          for (const char of localCharacters) {
+            try {
+              await saveCharacter(char);
+            } catch (migrationError) {
+              console.error('Ошибка миграции персонажа:', migrationError);
+            }
+          }
+          return localCharacters;
+        }
+      }
+      
+      return characters;
+    } catch (firestoreError) {
+      console.error('characterService: Ошибка загрузки из Firestore, используем localStorage:', firestoreError);
+      
+      // Fallback: загружаем из localStorage
+      const localCharacters = LocalCharacterStore.getAll(uid);
+      console.log('characterService: Загружено из localStorage (fallback):', localCharacters.length);
+      return localCharacters;
+    }
     
     try {
       const q = query(
