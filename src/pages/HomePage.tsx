@@ -23,9 +23,16 @@ const HomePage = () => {
 
   const quickActions = [
     {
+      icon: UserPlus,
+      title: "Создать персонажа",
+      description: "Создайте нового персонажа для D&D 5e",
+      href: "/character-creation",
+      featured: true
+    },
+    {
       icon: Users,
       title: "Управление персонажами",
-      description: "Создавайте и управляйте своими персонажами D&D",
+      description: "Просматривайте и управляйте существующими персонажами",
       href: "/character-management"
     },
     {
@@ -104,12 +111,15 @@ const HomePage = () => {
                 {quickActions.map((action, index) => {
                   const Icon = action.icon;
                   const isDisabled = action.requiresAuth && !isAuthenticated;
+                  const isFeatured = action.featured;
                   
                   return (
                     <div
                       key={index}
                       className={`magic-card cursor-pointer group ${
                         isDisabled ? 'opacity-60 cursor-not-allowed' : ''
+                      } ${
+                        isFeatured ? 'ring-2 ring-primary/30 bg-primary/5 hover:ring-primary/50' : ''
                       }`}
                       onClick={() => {
                         if (isDisabled) {
@@ -120,14 +130,27 @@ const HomePage = () => {
                       }}
                     >
                       <div className="flex items-center gap-4 mb-4">
-                        <div className="p-3 rounded-lg bg-primary/10 border border-primary/20">
+                        <div className={`p-3 rounded-lg ${
+                          isFeatured 
+                            ? 'bg-primary/20 border border-primary/40' 
+                            : 'bg-primary/10 border border-primary/20'
+                        }`}>
                           <Icon 
-                            className="h-6 w-6 text-primary" 
+                            className={`h-6 w-6 ${
+                              isFeatured ? 'text-primary' : 'text-primary'
+                            }`} 
                           />
                         </div>
                         <div className="flex-1">
-                          <h3 className="text-lg font-fantasy-heading text-foreground">
+                          <h3 className={`text-lg font-fantasy-heading ${
+                            isFeatured ? 'text-primary' : 'text-foreground'
+                          }`}>
                             {action.title}
+                            {isFeatured && (
+                              <span className="ml-2 text-xs bg-primary/20 text-primary px-2 py-1 rounded-full">
+                                ✨ Рекомендуется
+                              </span>
+                            )}
                           </h3>
                         </div>
                       </div>
