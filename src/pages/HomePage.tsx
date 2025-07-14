@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,8 +6,14 @@ import {
   BookMarked, BookOpen, Users, Shield, UserPlus, Swords 
 } from 'lucide-react';
 import ThemeSelector from '@/components/ThemeSelector';
+import { logCharacterSystemDiagnostics } from '@/utils/characterDiagnostics';
 
 const HomePage = () => {
+  // Выполняем диагностику при загрузке главной страницы
+  useEffect(() => {
+    logCharacterSystemDiagnostics();
+  }, []);
+
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
