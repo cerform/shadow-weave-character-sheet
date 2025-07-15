@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
+import { applyRacialBonuses } from '@/utils/raceAbilityBonuses';
 
 import type { CharacterSheet } from "@/utils/characterImports";
 import AbilityScoreMethodSelector from './AbilityScoreMethodSelector';
@@ -230,7 +231,6 @@ const CharacterAbilityScores: React.FC<CharacterAbilityScoresProps> = ({
     // Применяем расовые бонусы если раса выбрана
     let finalAbilities = baseAbilities;
     if (character.race) {
-      const { applyRacialBonuses } = require('@/utils/raceAbilityBonuses');
       finalAbilities = applyRacialBonuses(baseAbilities, character.race, character.subrace);
     }
 

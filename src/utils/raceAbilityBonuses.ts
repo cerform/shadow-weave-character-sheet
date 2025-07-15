@@ -49,10 +49,10 @@ export const subraceAbilityBonuses: Record<string, AbilityBonus> = {
 
 // Применить расовые бонусы к характеристикам
 export const applyRacialBonuses = (
-  baseAbilities: Record<string, number>,
+  baseAbilities: { strength: number; dexterity: number; constitution: number; intelligence: number; wisdom: number; charisma: number },
   race: string,
   subrace?: string
-): Record<string, number> => {
+): { strength: number; dexterity: number; constitution: number; intelligence: number; wisdom: number; charisma: number } => {
   const result = { ...baseAbilities };
   
   // Применяем бонусы основной расы
@@ -60,16 +60,14 @@ export const applyRacialBonuses = (
   if (raceBonus) {
     if (raceBonus.all) {
       // Человек: +1 ко всем характеристикам
-      Object.keys(result).forEach(ability => {
-        if (ability !== 'all' && ability !== 'custom') {
-          result[ability] += raceBonus.all!;
-        }
+      (Object.keys(result) as Array<keyof typeof result>).forEach(ability => {
+        result[ability] += raceBonus.all!;
       });
     } else {
       // Остальные расы: конкретные бонусы
       Object.entries(raceBonus).forEach(([ability, bonus]) => {
-        if (ability !== 'custom' && typeof bonus === 'number' && result[ability] !== undefined) {
-          result[ability] += bonus;
+        if (ability !== 'custom' && typeof bonus === 'number' && ability in result) {
+          (result as any)[ability] += bonus;
         }
       });
     }
@@ -80,8 +78,8 @@ export const applyRacialBonuses = (
     const subraceBonus = subraceAbilityBonuses[subrace];
     if (subraceBonus) {
       Object.entries(subraceBonus).forEach(([ability, bonus]) => {
-        if (ability !== 'custom' && typeof bonus === 'number' && result[ability] !== undefined) {
-          result[ability] += bonus;
+        if (ability !== 'custom' && typeof bonus === 'number' && ability in result) {
+          (result as any)[ability] += bonus;
         }
       });
     }

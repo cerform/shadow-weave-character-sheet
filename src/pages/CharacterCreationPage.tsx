@@ -31,7 +31,7 @@ const CharacterCreationPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const [abilitiesMethod, setAbilitiesMethod] = useState<"pointbuy" | "standard" | "roll" | "manual">("standard");
-  const [diceResults, setDiceResults] = useState<number[][]>([]);
+  const [diceResults, setDiceResults] = useState<number[][]>(Array(6).fill(null).map(() => []));
   const [abilityScorePoints, setAbilityScorePoints] = useState(27);
   const [rollsHistory, setRollsHistory] = useState<{ ability: string; rolls: number[]; total: number }[]>([]);
   const [maxAbilityScore, setMaxAbilityScore] = useState(15);

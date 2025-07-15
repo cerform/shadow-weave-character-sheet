@@ -114,9 +114,14 @@ const AbilityRollingPanel: React.FC<AbilityRollingPanelProps> = ({
             {/* Отображение набора кубиков для выбора */}
             <ScrollArea className="h-24 rounded-md border border-gray-700 bg-black/70 p-2">
               <div className="space-y-2">
-                {diceResults.map((dice, diceIndex) => {
+                {diceResults && diceResults.map((dice, diceIndex) => {
                   const isAssigned = Object.values(assignedDice).includes(diceIndex);
                   const isAssignedToThisStat = assignedDice[stat] === diceIndex;
+                  
+                  // Проверяем, что dice существует и является массивом
+                  if (!dice || !Array.isArray(dice)) {
+                    return null;
+                  }
                   
                   return (
                     <div
@@ -147,7 +152,7 @@ const AbilityRollingPanel: React.FC<AbilityRollingPanelProps> = ({
                   );
                 })}
                 
-                {diceResults.length === 0 && (
+                {(!diceResults || diceResults.length === 0) && (
                   <div className="text-center text-gray-500 py-2">
                     Нажмите "Бросить кубики" для генерации значений
                   </div>
