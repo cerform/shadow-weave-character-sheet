@@ -12,6 +12,7 @@ import CharacterEquipmentSelection from './CharacterEquipmentSelection';
 import CharacterSpellSelection from './CharacterSpellSelection';
 import CharacterReview from './CharacterReview';
 import CharacterHitPointsCalculator from './CharacterHitPointsCalculator';
+import CharacterSkillSelection from './CharacterSkillSelection';
 import { Character } from '@/types/character';
 
 // Character type is now the primary type
@@ -112,7 +113,16 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
             maxAbilityScore={maxAbilityScore}
           />
         );
-      case 5: // Предыстория
+      case 5: // Навыки
+        return (
+          <CharacterSkillSelection 
+            character={character} 
+            updateCharacter={updateCharacter}
+            nextStep={nextStep}
+            prevStep={prevStep}
+          />
+        );
+      case 6: // Предыстория
         return (
           <CharacterBackground 
             character={character} 
@@ -121,7 +131,7 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
             prevStep={prevStep}
           />
         );
-      case 6: // Здоровье
+      case 7: // Здоровье
         return (
           <CharacterHitPointsCalculator
             character={character}
@@ -130,7 +140,7 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
             prevStep={prevStep}
           />
         );
-      case 7: // Выбор снаряжения
+      case 8: // Выбор снаряжения
         return (
           <CharacterEquipmentSelection 
             character={character} 
@@ -139,7 +149,7 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
             prevStep={prevStep}
           />
         );
-      case 8: // Детали персонажа
+      case 9: // Детали персонажа
         return (
           <CharacterBasicInfo 
             character={character} 
@@ -148,7 +158,7 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
             prevStep={prevStep}
           />
         );
-      case 9: // Выбор заклинаний
+      case 10: // Выбор заклинаний
         // Проверяем, является ли класс магическим
         if (!isMagicClass) {
           // Автоматически переходим к следующему шагу с задержкой
@@ -164,7 +174,7 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
             prevStep={prevStep}
           />
         );
-      case 10: // Просмотр и завершение
+      case 11: // Просмотр и завершение
         return (
           <CharacterReview 
             character={character}

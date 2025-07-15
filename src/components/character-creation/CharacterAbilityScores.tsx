@@ -217,15 +217,8 @@ const CharacterAbilityScores: React.FC<CharacterAbilityScoresProps> = ({
   };
 
   const handleNext = () => {
-    // Создаем объекты для обоих форматов abilities и stats
-    const abilitiesFormat = {
-      STR: stats.strength,
-      DEX: stats.dexterity,
-      CON: stats.constitution,
-      INT: stats.intelligence,
-      WIS: stats.wisdom,
-      CHA: stats.charisma,
-      // Для обратной совместимости
+    // Создаем базовые характеристики
+    const baseAbilities = {
       strength: stats.strength,
       dexterity: stats.dexterity,
       constitution: stats.constitution,
@@ -233,14 +226,38 @@ const CharacterAbilityScores: React.FC<CharacterAbilityScoresProps> = ({
       wisdom: stats.wisdom,
       charisma: stats.charisma
     };
+    
+    // Применяем расовые бонусы если раса выбрана
+    let finalAbilities = baseAbilities;
+    if (character.race) {
+      const { applyRacialBonuses } = require('@/utils/raceAbilityBonuses');
+      finalAbilities = applyRacialBonuses(baseAbilities, character.race, character.subrace);
+    }
+
+    // Создаем объекты для обоих форматов abilities и stats
+    const abilitiesFormat = {
+      STR: finalAbilities.strength,
+      DEX: finalAbilities.dexterity,
+      CON: finalAbilities.constitution,
+      INT: finalAbilities.intelligence,
+      WIS: finalAbilities.wisdom,
+      CHA: finalAbilities.charisma,
+      // Для обратной совместимости
+      strength: finalAbilities.strength,
+      dexterity: finalAbilities.dexterity,
+      constitution: finalAbilities.constitution,
+      intelligence: finalAbilities.intelligence,
+      wisdom: finalAbilities.wisdom,
+      charisma: finalAbilities.charisma
+    };
 
     const statsFormat = {
-      strength: stats.strength,
-      dexterity: stats.dexterity,
-      constitution: stats.constitution,
-      intelligence: stats.intelligence,
-      wisdom: stats.wisdom,
-      charisma: stats.charisma
+      strength: finalAbilities.strength,
+      dexterity: finalAbilities.dexterity,
+      constitution: finalAbilities.constitution,
+      intelligence: finalAbilities.intelligence,
+      wisdom: finalAbilities.wisdom,
+      charisma: finalAbilities.charisma
     };
     
     // Сохраняем в оба поля abilities и stats для совместимости
