@@ -23,6 +23,7 @@ import ResourcePanel from './ResourcePanel';
 import RestPanel from './RestPanel';
 import { CharacterPortrait } from './CharacterPortrait';
 import { StatsPanel } from './StatsPanel';
+import EnhancedSkillsPanel from './EnhancedSkillsPanel';
 
 interface CharacterSheetProps {
   character?: Character;
@@ -185,10 +186,9 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character: initialChara
             
             {/* Skills Tab */}
             <TabsContent value="skills" className="space-y-4">
-              <CharacterContent
+              <EnhancedSkillsPanel
                 character={character}
                 onUpdate={handleUpdateCharacter}
-                section="skills"
               />
             </TabsContent>
             
