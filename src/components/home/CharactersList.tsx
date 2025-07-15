@@ -1,276 +1,163 @@
-import React, { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { UserPlus, User, Play, Trash2, RefreshCw } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
-import { User, Swords, Shield, AlertCircle, RefreshCw, Trash2 } from "lucide-react";
-import { useCharacter } from '@/contexts/CharacterContext';
-import { Character } from '@/types/character';
+import { getUserCharacters } from '@/services/firebase/firestore';
 import { toast } from 'sonner';
-import LoadingState from '@/components/characters/LoadingState';
-import { diagnoseCharacterLoading } from '@/utils/characterLoadingDebug';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
-const CharactersList: React.FC = () => {
-  const { isAuthenticated } = useAuth();
+const CharactersList = () => {
   const navigate = useNavigate();
-  const { characters, getUserCharacters, loading: contextLoading, refreshCharacters, deleteCharacter } = useCharacter();
-  const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
+  const [characters, setCharacters] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [loadAttempts, setLoadAttempts] = useState(0);
-  const [characterToDelete, setCharacterToDelete] = useState<string | null>(null);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [deletingId, setDeletingId] = useState<string | null>(null);
 
-  // Функция для загрузки персонажей с обработкой ошибок и повторных попыток
   const loadCharacters = async () => {
-    if (!isAuthenticated) {
-      setLoading(false);
-      return;
-    }
-
-    try {
-      setLoading(true);
-      console.log('CharactersList: Загрузка персонажей (попытка ' + (loadAttempts + 1) + ')');
-      
-      await getUserCharacters();
-      console.log(`CharactersList: Персонажи загружены`);
-      setError(null);
-      setError(null);
-      
-      // Если персонажи не загрузились и попыток было мало, повторить
-      if (characters.length === 0 && loadAttempts < 2) {
-        console.log('CharactersList: Нет персонажей, будет предпринята повторная попытка');
-        setLoadAttempts(prev => prev + 1);
-      }
-    } catch (err) {
-      console.error('CharactersList: Ошибка при загрузке персонажей', err);
-      setError('Не удалось загрузить персонажей');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Обработчик ручного обновления списка персонажей
-  const handleRefresh = async () => {
-    try {
-      setLoading(true);
-      console.log('CharactersList: Принудительное обновление списка персонажей');
-      await refreshCharacters();
-      toast.success('Список персонажей обновлен');
-      setError(null);
-    } catch (err) {
-      console.error('CharactersList: Ошибка при обновлении персонажей', err);
-      setError('Не удалось обновить список персонажей');
-      toast.error('Не удалось обновить список персонажей');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Запуск диагностики загрузки персонажей
-  const runDiagnostics = async () => {
-    try {
-      const result = await diagnoseCharacterLoading();
-      console.log('Результаты диагностики:', result);
-      if (result.success) {
-        toast.success(result.message || 'Диагностика успешна');
-        handleRefresh();
-      } else {
-        toast.error(result.error || 'Ошибка диагностики');
-      }
-    } catch (error) {
-      console.error('Ошибка при запуске диагностики:', error);
-      toast.error('Не удалось выполнить диагностику');
-    }
-  };
-  
-  // Функция для открытия персонажа
-  const handleOpenCharacter = (id: string) => {
-    navigate(`/character/${id}`);
-  };
-
-  // Функция для удаления персонажа
-  const openDeleteDialog = (id: string) => {
-    setCharacterToDelete(id);
-    setIsDeleteDialogOpen(true);
-  };
-
-  const handleDeleteCharacter = async () => {
-    if (!characterToDelete) return;
+    if (!user) return;
+    
+    setLoading(true);
+    setError(null);
     
     try {
-      setDeletingId(characterToDelete);
-      await deleteCharacter(characterToDelete);
-      toast.success('Персонаж успешно удален');
-      // Список персонажей автоматически обновится через контекст
+      console.log('🔄 Загружаем персонажей для пользователя:', user.uid);
+      const userCharacters = await getUserCharacters(user.uid);
+      console.log('✅ Получено персонажей:', userCharacters.length);
+      setCharacters(userCharacters);
     } catch (err) {
-      console.error('Ошибка при удалении персонажа:', err);
-      toast.error('Не удалось удалить персонажа');
+      console.error('❌ Ошибка загрузки персонажей:', err);
+      setError('Ошибка загрузки персонажей');
+      toast.error('Не удалось загрузить персонажей');
     } finally {
-      setDeletingId(null);
-      setCharacterToDelete(null);
-      setIsDeleteDialogOpen(false);
+      setLoading(false);
     }
   };
 
-  // Эффект для загрузки персонажей при монтировании
   useEffect(() => {
-    if (isAuthenticated && characters.length === 0 && !loading && !contextLoading) {
+    if (user) {
       loadCharacters();
     }
-  }, [isAuthenticated]);
+  }, [user]);
 
-  // Эффект для повторной попытки только если реально нужно
-  useEffect(() => {
-    if (loadAttempts > 0 && loadAttempts < 2 && characters.length === 0 && !loading && !contextLoading && isAuthenticated) {
-      const timer = setTimeout(() => {
-        console.log('CharactersList: Повторная попытка загрузки персонажей');
-        loadCharacters();
-      }, 2000);
-      return () => clearTimeout(timer);
-    }
-  }, [loadAttempts, isAuthenticated]);
-
-  if (!isAuthenticated) {
+  if (!user) {
     return (
-      <Card className="shadow-lg border border-gray-800/30 bg-black/30 backdrop-blur-sm mt-8">
-        <CardHeader>
-          <CardTitle className="text-xl text-center">Персонажи</CardTitle>
-        </CardHeader>
-        <CardContent className="text-center">
-          <p>Войдите в систему, чтобы увидеть своих персонажей</p>
-        </CardContent>
-        <CardFooter className="flex justify-center">
-          <Button asChild>
-            <Link to="/auth"><User className="mr-2 h-4 w-4" /> Войти</Link>
+      <Card className="magic-card">
+        <CardContent className="p-6 text-center">
+          <User className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+          <h3 className="text-lg font-fantasy-heading mb-2">Войдите в систему</h3>
+          <p className="text-muted-foreground font-fantasy-body mb-4">
+            Войдите в систему, чтобы просматривать ваших персонажей
+          </p>
+          <Button onClick={() => navigate('/auth')}>
+            Войти
           </Button>
-        </CardFooter>
-      </Card>
-    );
-  }
-
-  if (loading || contextLoading) {
-    return <LoadingState />;
-  }
-
-  if (error) {
-    return (
-      <Card className="shadow-lg border border-red-800/30 bg-black/30 backdrop-blur-sm mt-8">
-        <CardHeader>
-          <CardTitle className="text-xl text-center text-red-500">Ошибка загрузки персонажей</CardTitle>
-        </CardHeader>
-        <CardContent className="text-center">
-          <AlertCircle className="mx-auto h-12 w-12 text-red-500 mb-4" />
-          <p className="mb-4">{error}</p>
-          <div className="flex justify-center flex-wrap gap-2">
-            <Button variant="outline" onClick={handleRefresh}>
-              <RefreshCw className="mr-2 h-4 w-4" /> Обновить
-            </Button>
-            <Button variant="secondary" onClick={runDiagnostics}>
-              Запустить диагностику
-            </Button>
-          </div>
         </CardContent>
-      </Card>
-    );
-  }
-
-  if (characters.length === 0) {
-    return (
-      <Card className="shadow-lg border border-gray-800/30 bg-black/30 backdrop-blur-sm mt-8">
-        <CardHeader>
-          <CardTitle className="text-xl text-center">Персонажи</CardTitle>
-        </CardHeader>
-        <CardContent className="text-center">
-          <p>У вас пока нет персонажей</p>
-        </CardContent>
-        <CardFooter className="flex justify-center">
-          <Button asChild>
-            <Link to="/character-creation"><Swords className="mr-2 h-4 w-4" /> Создать персонажа</Link>
-          </Button>
-        </CardFooter>
       </Card>
     );
   }
 
   return (
-    <div className="mt-8">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-2xl font-philosopher">Ваши персонажи</h2>
-        <Button variant="outline" size="sm" onClick={handleRefresh}>
-          <RefreshCw className="mr-2 h-4 w-4" /> Обновить
-        </Button>
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {characters.map((character) => (
-          <Card 
-            key={character.id} 
-            className="shadow-lg border border-purple-700/30 bg-black/30 backdrop-blur-sm hover:shadow-purple-700/10 hover:border-purple-700/50 transition-all duration-300 relative"
+    <Card className="magic-card">
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-fantasy-heading">
+            👥 Ваши персонажи
+          </h3>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={loadCharacters}
+            disabled={loading}
           >
-            <CardHeader>
-              <div className="flex items-center">
-                <Shield className="h-6 w-6 mr-2 text-purple-500" />
-                <CardTitle className="text-lg">{character.name || 'Безымянный герой'}</CardTitle>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <p>Уровень: {character.level || 1}</p>
-              <p>Класс: {character.class || '—'}</p>
-              <p>Раса: {character.race || '—'}</p>
-            </CardContent>
-            <CardFooter className="flex justify-between">
-              <Button variant="outline" onClick={() => handleOpenCharacter(character.id)}>
-                Открыть
-              </Button>
-              <div className="flex gap-2">
-                <Button onClick={() => handleOpenCharacter(character.id)}>
-                  Играть
-                </Button>
-                <Button 
-                  variant="destructive" 
-                  size="icon"
-                  onClick={() => openDeleteDialog(character.id)}
-                  disabled={deletingId === character.id}
-                >
-                  <Trash2 size={16} />
-                </Button>
-              </div>
-            </CardFooter>
-          </Card>
-        ))}
-        <Card className="shadow-lg border border-dashed border-gray-700 bg-black/20 backdrop-blur-sm hover:border-purple-700/50 transition-all duration-300">
-          <CardContent className="flex flex-col items-center justify-center h-full py-10">
-            <Swords className="h-12 w-12 mb-4 text-gray-500" />
-            <p className="text-center mb-4">Создать нового персонажа</p>
-            <Button asChild>
-              <Link to="/character-creation">Создать</Link>
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
+            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+          </Button>
+        </div>
+      </CardHeader>
+      <CardContent>
+        {loading && (
+          <div className="text-center py-8">
+            <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-2" />
+            <p className="text-muted-foreground">Загрузка персонажей...</p>
+          </div>
+        )}
 
-      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Удаление персонажа</AlertDialogTitle>
-            <AlertDialogDescription>
-              Вы уверены, что хотите удалить персонажа? 
-              Это действие нельзя отменить.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Отмена</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDeleteCharacter}
-              className="bg-destructive hover:bg-destructive/90"
+        {error && (
+          <div className="text-center py-8">
+            <p className="text-destructive mb-4">{error}</p>
+            <Button onClick={loadCharacters} variant="outline">
+              Попробовать снова
+            </Button>
+          </div>
+        )}
+
+        {!loading && !error && (
+          <div className="space-y-4">
+            {/* Create Character Card */}
+            <Card 
+              className="border-2 border-dashed border-primary/30 hover:border-primary/50 cursor-pointer transition-colors group"
+              onClick={() => navigate('/character-creation')}
             >
-              Удалить
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </div>
+              <CardContent className="p-6 text-center">
+                <UserPlus className="mx-auto h-8 w-8 text-primary mb-2 group-hover:scale-110 transition-transform" />
+                <h4 className="font-fantasy-heading text-primary">Создать персонажа</h4>
+                <p className="text-sm text-muted-foreground font-fantasy-body">
+                  Создайте нового персонажа для приключений
+                </p>
+              </CardContent>
+            </Card>
+
+            {/* Characters List */}
+            {characters.length === 0 ? (
+              <div className="text-center py-8">
+                <User className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+                <h4 className="text-lg font-fantasy-heading mb-2">Нет персонажей</h4>
+                <p className="text-muted-foreground font-fantasy-body">
+                  Создайте своего первого персонажа, чтобы начать приключение!
+                </p>
+              </div>
+            ) : (
+              characters.map((character) => (
+                <Card key={character.id} className="hover:shadow-lg transition-shadow">
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-2">
+                          <h4 className="font-fantasy-heading text-lg">{character.name || 'Безымянный'}</h4>
+                          <Badge variant="secondary">
+                            Уровень {character.level || 1}
+                          </Badge>
+                        </div>
+                        <p className="text-sm text-muted-foreground font-fantasy-body">
+                          {character.race} {character.class}
+                          {character.subrace && ` (${character.subrace})`}
+                        </p>
+                        {character.background && (
+                          <p className="text-xs text-muted-foreground font-fantasy-body mt-1">
+                            Предыстория: {character.background}
+                          </p>
+                        )}
+                      </div>
+                      
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => navigate(`/character-sheet/${character.id}`)}
+                        >
+                          <Play className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))
+            )}
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 };
 

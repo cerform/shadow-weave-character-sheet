@@ -289,15 +289,16 @@ const CharacterCreationPage: React.FC = () => {
       // Prepare character for saving
       const characterToSave = convertToCharacter(character);
 
-      // Save character using Firebase
-      const savedCharacter = await saveCharacter(characterToSave);
+      // Save character using Firebase - используем правильную функцию из firestore.ts
+      const { saveCharacter: firestoreSaveCharacter } = await import('@/services/firebase/firestore');
+      const characterId = await firestoreSaveCharacter(characterToSave);
 
-      if (savedCharacter) {
+      if (characterId) {
         toast({
           title: "Персонаж сохранен!",
           description: "Ваш персонаж успешно сохранен.",
         });
-        navigate(`/character-sheet/${savedCharacter.id}`);
+        navigate(`/character-sheet/${characterId}`);
       } else {
         toast({
           title: "Ошибка сохранения",

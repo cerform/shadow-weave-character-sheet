@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { BookOpen, Users, Scroll, Dice6, Shield, UserPlus } from 'lucide-react';
 import ProfilePreview from '@/components/home/ProfilePreview';
+import CharactersList from '@/components/home/CharactersList';
 import { useAuth } from '@/hooks/use-auth';
 import FantasyThemeSelector from '@/components/FantasyThemeSelector';
 import { logCharacterSystemDiagnostics } from '@/utils/characterDiagnostics';
@@ -102,12 +103,15 @@ const HomePage = () => {
             {/* Profile Preview */}
             <ProfilePreview />
             
+            {/* Characters List */}
+            <CharactersList />
+            
             {/* Quick Actions */}
-            <div className="lg:col-span-2">
+            <div className="lg:col-span-3">
               <h2 className="text-2xl font-fantasy-heading mb-6">
                 🎲 Быстрые действия
               </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {quickActions.map((action, index) => {
                   const Icon = action.icon;
                   const isDisabled = action.requiresAuth && !isAuthenticated;
