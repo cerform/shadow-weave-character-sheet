@@ -1,326 +1,272 @@
-/* === Arcane Elegance Fantasy Theme === */
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Uncial+Antiqua&family=Inter:wght@100..900&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-@layer base {
-  :root {
-    --font-header: 'Cinzel', serif;
-    --font-body: 'Uncial Antiqua', cursive;
+:root {
+  /* Original Design System */
+  --background: 220 20% 14%;
+  --foreground: 220 8% 92%;
+  --card: 220 20% 18%;
+  --card-foreground: 220 8% 92%;
+  --popover: 220 20% 18%;
+  --popover-foreground: 220 8% 92%;
+  --primary: 265 90% 72%;
+  --primary-foreground: 220 8% 4%;
+  --secondary: 220 15% 22%;
+  --secondary-foreground: 220 8% 92%;
+  --muted: 220 15% 22%;
+  --muted-foreground: 220 8% 60%;
+  --accent: 265 85% 68%;
+  --accent-foreground: 220 8% 4%;
+  --destructive: 0 62% 58%;
+  --destructive-foreground: 0 0% 98%;
+  --border: 220 15% 26%;
+  --input: 220 15% 26%;
+  --ring: 265 90% 72%;
+  --radius: 0.5rem;
+  --chart-1: 265 90% 72%;
+  --chart-2: 220 70% 50%;
+  --chart-3: 30 80% 55%;
+  --chart-4: 280 65% 60%;
+  --chart-5: 340 75% 55%;
 
-    /* Arcane Elegance Color Palette (HSL values) */
-    --color-bg: 267 41% 11%;        /* #1a1423 */
-    --color-bg-secondary: 259 29% 21%; /* #2d223c */
-    --color-bg-tertiary: 255 29% 26%;  /* #3a2b52 */
-    --color-panel-border: 273 74% 71%; /* #a874f1 */
-    --color-text: 273 100% 97%;      /* #f3ecff */
-    --color-accent: 274 100% 85%;    /* #d1aaff */
-    --color-accent-soft: 271 100% 78%; /* #b890ff */
-    --color-btn-bg: 273 29% 21%;     /* #34203b */
-    --color-btn-border: 276 84% 76%; /* #bb8cf5 */
-    --color-btn-hover: 274 100% 86%; /* #d9b5ff */
+  /* RPG/MMO Enhancement Colors */
+  --rpg-bg-primary: 15 15% 8%;
+  --rpg-bg-secondary: 20 20% 12%;
+  --rpg-panel: 25 25% 16%;
+  --rpg-panel-elevated: 30 30% 20%;
+  --rpg-border: 265 40% 35%;
+  --rpg-border-glow: 265 80% 60%;
+  --rpg-hp: 0 85% 62%;
+  --rpg-mana: 220 85% 62%;
+  --rpg-xp: 45 85% 62%;
+  --rpg-gold: 45 100% 50%;
+  --rpg-rare: 265 85% 68%;
+  --rpg-epic: 280 85% 68%;
+  --rpg-legendary: 25 85% 62%;
 
-    /* Semantic tokens for Tailwind */
-    --background: var(--color-bg);
-    --foreground: var(--color-text);
-    --card: var(--color-bg-secondary);
-    --card-foreground: var(--color-text);
-    --popover: var(--color-bg-secondary);
-    --popover-foreground: var(--color-text);
-    --primary: var(--color-accent);
-    --primary-foreground: 267 41% 11%;
-    --secondary: var(--color-bg-tertiary);
-    --secondary-foreground: var(--color-text);
-    --muted: var(--color-bg-tertiary);
-    --muted-foreground: 273 50% 80%;
-    --accent: var(--color-accent);
-    --accent-foreground: 267 41% 11%;
-    --destructive: 0 84% 60%;
-    --destructive-foreground: var(--color-text);
-    --border: var(--color-panel-border);
-    --input: var(--color-bg-tertiary);
-    --ring: var(--color-accent);
-    --chart-1: var(--color-accent);
-    --chart-2: var(--color-btn-border);
-    --chart-3: var(--color-panel-border);
-    --chart-4: var(--color-accent-soft);
-    --chart-5: 280 70% 65%;
-    --radius: 0.75rem;
+  /* Ability Score Colors */
+  --str-color: 0 70% 60%;
+  --dex-color: 120 70% 60%;
+  --con-color: 40 70% 60%;
+  --int-color: 220 70% 60%;
+  --wis-color: 280 70% 60%;
+  --cha-color: 320 70% 60%;
 
-    /* Parchment texture pattern */
-    --parchment-texture: url("https://www.transparenttextures.com/patterns/parchment.png");
-  }
+  /* Gradients */
+  --gradient-panel: linear-gradient(145deg, hsl(var(--rpg-panel)), hsl(var(--rpg-panel-elevated)));
+  --gradient-hp: linear-gradient(90deg, hsl(var(--rpg-hp)), hsl(var(--rpg-hp) / 0.8));
+  --gradient-mana: linear-gradient(90deg, hsl(var(--rpg-mana)), hsl(var(--rpg-mana) / 0.8));
+  
+  /* Shadows & Glows */
+  --shadow-panel: 0 8px 32px rgba(0, 0, 0, 0.4);
+  --shadow-elevated: 0 12px 48px rgba(0, 0, 0, 0.6);
+  --glow-primary: 0 0 20px hsl(var(--rpg-border-glow) / 0.5);
+  --glow-hp: 0 0 15px hsl(var(--rpg-hp) / 0.6);
+  --glow-mana: 0 0 15px hsl(var(--rpg-mana) / 0.6);
 
-  .dark {
-    /* Dark mode inherits the same arcane theme */
-    --background: var(--color-bg);
-    --foreground: var(--color-text);
-    --card: var(--color-bg-secondary);
-    --card-foreground: var(--color-text);
-    --popover: var(--color-bg-secondary);
-    --popover-foreground: var(--color-text);
-    --primary: var(--color-accent);
-    --primary-foreground: 267 41% 11%;
-    --secondary: var(--color-bg-tertiary);
-    --secondary-foreground: var(--color-text);
-    --muted: var(--color-bg-tertiary);
-    --muted-foreground: 273 50% 80%;
-    --accent: var(--color-accent);
-    --accent-foreground: 267 41% 11%;
-    --destructive: 0 62% 30%;
-    --destructive-foreground: var(--color-text);
-    --border: var(--color-panel-border);
-    --input: var(--color-bg-tertiary);
-    --ring: var(--color-accent);
-    --chart-1: var(--color-accent);
-    --chart-2: var(--color-btn-border);
-    --chart-3: var(--color-panel-border);
-    --chart-4: var(--color-accent-soft);
-    --chart-5: 280 70% 65%;
-  }
+  /* Typography */
+  --font-fantasy-title: 'Cinzel', serif;
+  --font-fantasy-header: 'Cinzel', serif;
+  --font-fantasy-body: 'Inter', sans-serif;
+  --font-runic: 'Uncial Antiqua', cursive;
 }
 
+.dark {
+  --background: 220 20% 14%;
+  --foreground: 220 8% 92%;
+}
+
+/* Base Layer Styles */
 @layer base {
   * {
     @apply border-border;
   }
-  
   body {
     @apply bg-background text-foreground;
-    background-image: var(--parchment-texture);
-    font-family: var(--font-body);
-    transition: all 0.3s ease;
+    font-family: var(--font-fantasy-body);
+    background: linear-gradient(135deg, hsl(var(--rpg-bg-primary)), hsl(var(--rpg-bg-secondary)));
     min-height: 100vh;
   }
-
-  h1, h2, h3, h4, h5, h6 {
-    font-family: var(--font-header);
-    text-shadow: 0 0 6px hsl(var(--color-accent-soft) / 0.5);
-    letter-spacing: 1px;
-    font-weight: 600;
-  }
 }
 
+/* Component Layer - RPG UI Components */
 @layer components {
-  /* Arcane Card Styles */
-  .card-arcane {
-    @apply bg-card border-2 border-border rounded-xl p-6;
-    background: linear-gradient(135deg, 
-      hsl(var(--color-bg-secondary)), 
-      hsl(var(--color-bg-tertiary)));
-    box-shadow: 0 0 15px hsl(var(--color-accent-soft) / 0.3);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-  }
-
-  .card-arcane:hover {
-    transform: scale(1.02);
-    box-shadow: 0 0 25px hsl(var(--color-accent) / 0.4);
-  }
-
-  /* Arcane Button Styles */
-  .btn-arcane {
-    font-family: var(--font-header);
-    @apply bg-secondary border-2 border-border text-accent px-5 py-2 rounded-lg cursor-pointer;
-    box-shadow: 0 0 10px hsl(var(--color-accent-soft) / 0.3);
-    transition: all 0.3s ease;
-    font-weight: 600;
-  }
-
-  .btn-arcane:hover {
-    background: hsl(var(--color-btn-hover));
-    color: hsl(267 41% 11%);
-    box-shadow: 0 0 20px hsl(var(--color-accent) / 0.5);
-  }
-
-  /* Mystical Glow Effect */
-  .mystical-glow {
-    filter: drop-shadow(0 0 8px hsl(var(--color-accent) / 0.6));
-  }
-
-  /* Arcane Border */
-  .border-arcane {
-    border: 2px solid hsl(var(--color-panel-border));
-    box-shadow: inset 0 0 10px hsl(var(--color-accent-soft) / 0.2);
-  }
-
-  /* Arcane Background */
-  .bg-arcane {
-    background: linear-gradient(135deg, 
-      hsl(var(--color-bg-secondary)), 
-      hsl(var(--color-bg-tertiary)));
-  }
-
-  /* Text with mystical glow */
-  .text-mystical {
-    text-shadow: 0 0 8px hsl(var(--color-accent) / 0.8);
-    color: hsl(var(--color-accent));
-  }
-
-  /* Theme Selector */
-  .theme-selector {
-    position: absolute;
-    top: 1rem;
-    right: 1rem;
-    background: hsl(var(--color-btn-bg));
-    border: 2px solid hsl(var(--color-btn-border));
-    border-radius: 10px;
-    padding: 0.5rem;
-    color: hsl(var(--color-text));
-    box-shadow: 0 0 15px hsl(var(--color-accent-soft) / 0.3);
-  }
-
-  .theme-selector select {
-    background: transparent;
-    border: none;
-    color: hsl(var(--color-accent));
-    font-family: var(--font-body);
-    font-size: 1rem;
-  }
-
-  /* Enhanced Magic Card */
-  .magic-card {
-    @apply card-arcane;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .magic-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(45deg, 
-      transparent 40%, 
-      hsl(var(--color-accent) / 0.1) 50%, 
-      transparent 60%);
-    transform: translateX(-100%);
-    transition: transform 0.6s ease;
-    pointer-events: none;
-  }
-
-  .magic-card:hover::before {
-    transform: translateX(100%);
-  }
-
-  /* Fantasy Typography */
+  /* Typography Classes */
   .font-fantasy-title {
-    font-family: var(--font-header);
+    font-family: var(--font-fantasy-title);
     font-weight: 700;
-    letter-spacing: 0.05em;
-    text-shadow: 0 0 10px hsl(var(--color-accent) / 0.4);
   }
-
-  .font-fantasy-heading {
-    font-family: var(--font-header);
+  
+  .font-fantasy-header {
+    font-family: var(--font-fantasy-header);
     font-weight: 600;
-    letter-spacing: 0.025em;
   }
-
+  
   .font-fantasy-body {
-    font-family: var(--font-body);
-    letter-spacing: 0.01em;
+    font-family: var(--font-fantasy-body);
+  }
+  
+  .font-runic {
+    font-family: var(--font-runic);
   }
 
-  /* Glowing Input Styles */
-  .input-arcane {
-    @apply bg-input border-2 border-border rounded-lg px-4 py-2 text-foreground;
-    box-shadow: inset 0 0 10px hsl(var(--color-bg) / 0.5);
+  /* RPG Panel Styles */
+  .rpg-panel {
+    background: var(--gradient-panel);
+    border: 1px solid hsl(var(--rpg-border));
+    box-shadow: var(--shadow-panel);
+    border-radius: 12px;
+    backdrop-filter: blur(8px);
+  }
+  
+  .rpg-panel-elevated {
+    background: var(--gradient-panel);
+    border: 1px solid hsl(var(--rpg-border-glow));
+    box-shadow: var(--shadow-elevated), var(--glow-primary);
+    border-radius: 16px;
+    backdrop-filter: blur(12px);
+  }
+
+  /* Character Portrait */
+  .character-portrait {
+    @apply relative rounded-full border-4 border-primary/50 bg-gradient-to-br from-primary/20 to-accent/20;
+    box-shadow: var(--glow-primary);
     transition: all 0.3s ease;
   }
-
-  .input-arcane:focus {
-    @apply border-accent ring-2 ring-accent ring-opacity-50;
-    box-shadow: 
-      inset 0 0 10px hsl(var(--color-bg) / 0.5),
-      0 0 15px hsl(var(--color-accent) / 0.3);
+  
+  .character-portrait:hover {
+    border-color: hsl(var(--rpg-border-glow));
+    box-shadow: var(--shadow-elevated), 0 0 30px hsl(var(--rpg-border-glow) / 0.8);
+    transform: scale(1.05);
   }
 
-  /* Arcane Navigation */
-  .nav-arcane {
-    @apply bg-card border border-border rounded-lg p-4;
-    background: linear-gradient(135deg, 
-      hsl(var(--color-bg-secondary) / 0.8), 
-      hsl(var(--color-bg-tertiary) / 0.6));
-    backdrop-filter: blur(10px);
+  /* Resource Bars */
+  .resource-bar {
+    @apply relative h-6 rounded-lg overflow-hidden border border-white/20;
+    background: linear-gradient(90deg, rgba(0,0,0,0.6), rgba(0,0,0,0.4));
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
+  }
+  
+  .resource-bar-fill {
+    @apply h-full transition-all duration-500 ease-out;
+    background: var(--gradient-hp);
+    box-shadow: 0 0 10px currentColor;
+  }
+  
+  .resource-bar-hp .resource-bar-fill {
+    background: var(--gradient-hp);
+    box-shadow: var(--glow-hp);
+  }
+  
+  .resource-bar-mana .resource-bar-fill {
+    background: var(--gradient-mana);
+    box-shadow: var(--glow-mana);
   }
 
-  /* Arcane Table */
-  .table-arcane {
-    @apply bg-card border border-border rounded-lg overflow-hidden;
-    background: linear-gradient(135deg, 
-      hsl(var(--color-bg-secondary) / 0.9), 
-      hsl(var(--color-bg-tertiary) / 0.7));
+  /* Ability Score Cards */
+  .ability-card {
+    @apply rpg-panel p-4 text-center transition-all duration-300 cursor-pointer;
+  }
+  
+  .ability-card:hover {
+    @apply rpg-panel-elevated;
+    transform: translateY(-2px);
+  }
+  
+  .ability-card-str { border-color: hsl(var(--str-color)); }
+  .ability-card-dex { border-color: hsl(var(--dex-color)); }
+  .ability-card-con { border-color: hsl(var(--con-color)); }
+  .ability-card-int { border-color: hsl(var(--int-color)); }
+  .ability-card-wis { border-color: hsl(var(--wis-color)); }
+  .ability-card-cha { border-color: hsl(var(--cha-color)); }
+
+  /* Dice Panel */
+  .dice-panel {
+    @apply rpg-panel p-6;
+    background: conic-gradient(from 0deg, hsl(var(--rpg-panel)), hsl(var(--rpg-panel-elevated)), hsl(var(--rpg-panel)));
+  }
+  
+  .dice-item {
+    @apply flex items-center justify-center w-12 h-12 rounded-lg border-2 border-primary/30 bg-gradient-to-br from-primary/10 to-accent/10 cursor-pointer transition-all duration-200;
+    font-family: var(--font-fantasy-header);
+    font-weight: 600;
+  }
+  
+  .dice-item:hover {
+    @apply border-primary/60 bg-gradient-to-br from-primary/20 to-accent/20;
+    transform: scale(1.1) rotate(5deg);
+    box-shadow: var(--glow-primary);
   }
 
-  .table-arcane th {
-    @apply bg-secondary text-secondary-foreground px-4 py-3 font-medium border-b border-border;
-    font-family: var(--font-header);
-    letter-spacing: 0.5px;
+  /* Magic Effects */
+  .text-glow {
+    text-shadow: 0 0 10px currentColor, 0 0 20px currentColor, 0 0 30px currentColor;
+  }
+  
+  .border-glow {
+    box-shadow: 0 0 15px hsl(var(--rpg-border-glow) / 0.6);
+  }
+  
+  .magic-card {
+    @apply rpg-panel transition-all duration-300;
+  }
+  
+  .magic-card:hover {
+    @apply rpg-panel-elevated;
+    transform: translateY(-4px);
   }
 
-  .table-arcane td {
-    @apply px-4 py-3 border-b border-border;
+  /* Button Styles */
+  .btn-rpg {
+    @apply px-6 py-3 rounded-lg border border-primary/50 bg-gradient-to-r from-primary/20 to-accent/20 text-primary-foreground font-fantasy-header font-semibold transition-all duration-300;
+    box-shadow: var(--shadow-panel);
+  }
+  
+  .btn-rpg:hover {
+    @apply border-primary/80 bg-gradient-to-r from-primary/30 to-accent/30;
+    box-shadow: var(--shadow-elevated), var(--glow-primary);
+    transform: translateY(-2px);
+  }
+  
+  .btn-glow {
+    @apply btn-rpg;
+    animation: pulse-glow 2s infinite;
   }
 
-  .table-arcane tr:hover {
-    background: hsl(var(--color-accent) / 0.05);
+  /* Tabs Enhancement */
+  .rpg-tabs {
+    @apply rpg-panel;
   }
-
-  /* Mystical Badge */
-  .badge-arcane {
-    @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-medium;
-    background: hsl(var(--color-accent) / 0.2);
-    color: hsl(var(--color-accent));
-    border: 1px solid hsl(var(--color-accent) / 0.3);
-    box-shadow: 0 0 8px hsl(var(--color-accent) / 0.2);
+  
+  .rpg-tab-trigger {
+    @apply px-6 py-3 rounded-lg border border-transparent bg-transparent text-muted-foreground font-fantasy-header transition-all duration-300;
+  }
+  
+  .rpg-tab-trigger[data-state="active"] {
+    @apply border-primary/60 bg-gradient-to-r from-primary/20 to-accent/20 text-primary;
+    box-shadow: var(--glow-primary);
   }
 }
 
+/* Utilities Layer - Animation */
 @layer utilities {
-  .animate-mystical {
-    animation: mystical 3s ease-in-out infinite;
-  }
-
-  @keyframes mystical {
-    0%, 100% {
-      text-shadow: 0 0 6px hsl(var(--color-accent) / 0.5);
+  @keyframes pulse-glow {
+    0%, 100% { 
+      box-shadow: var(--shadow-panel); 
     }
-    50% {
-      text-shadow: 
-        0 0 10px hsl(var(--color-accent) / 0.8),
-        0 0 20px hsl(var(--color-accent) / 0.4);
+    50% { 
+      box-shadow: var(--shadow-elevated), var(--glow-primary); 
     }
   }
-
-  .animate-float {
-    animation: float 6s ease-in-out infinite;
-  }
-
+  
   @keyframes float {
     0%, 100% { transform: translateY(0px); }
     50% { transform: translateY(-10px); }
   }
-
-  .animate-glow-pulse {
-    animation: glowPulse 2s ease-in-out infinite alternate;
-  }
-
-  @keyframes glowPulse {
-    from {
-      box-shadow: 0 0 15px hsl(var(--color-accent-soft) / 0.3);
-    }
-    to {
-      box-shadow: 0 0 25px hsl(var(--color-accent) / 0.5);
-    }
-  }
-
-  /* Background pattern overlay */
-  .bg-mystical-pattern {
-    background-image: 
-      radial-gradient(circle at 25% 25%, hsl(var(--color-accent) / 0.05) 0%, transparent 50%),
-      radial-gradient(circle at 75% 75%, hsl(var(--color-accent-soft) / 0.05) 0%, transparent 50%),
-      var(--parchment-texture);
+  
+  .animate-float {
+    animation: float 3s ease-in-out infinite;
   }
 }

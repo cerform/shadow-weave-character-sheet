@@ -21,6 +21,8 @@ import { HPBar } from './HPBar';
 import DicePanel from './DicePanel';
 import ResourcePanel from './ResourcePanel';
 import RestPanel from './RestPanel';
+import { CharacterPortrait } from './CharacterPortrait';
+import { StatsPanel } from './StatsPanel';
 
 interface CharacterSheetProps {
   character?: Character;
@@ -98,79 +100,83 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character: initialChara
   };
 
   return (
-    <div className="character-sheet w-full max-w-[1200px] mx-auto p-4">
-      {/* Top Bar with Character Name and Actions */}
-      <div className="flex flex-wrap justify-between items-center gap-4 mb-4">
-        <CharacterHeader
-          character={character}
-          onUpdate={handleUpdateCharacter}
-        />
+    <div className="character-sheet w-full max-w-[1600px] mx-auto p-4 space-y-6">
+      {/* Character Portrait & Basic Info */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2">
+          <CharacterPortrait
+            character={character}
+            onUpdate={handleUpdateCharacter}
+          />
+        </div>
         
-        <div className="flex gap-2 flex-wrap">
-          <Button variant="outline" size="sm" onClick={importFromJSON}>
-            <FileUp className="h-4 w-4 mr-2" />
-            Импорт
-          </Button>
-          <CharacterExportPDF character={character} />
-          <SaveCharacterButton character={character} />
+        <div className="flex flex-col justify-between">
+          <div className="flex gap-2 flex-wrap">
+            <Button variant="outline" size="sm" onClick={importFromJSON}>
+              <FileUp className="h-4 w-4 mr-2" />
+              Импорт
+            </Button>
+            <CharacterExportPDF character={character} />
+            <SaveCharacterButton character={character} />
+          </div>
         </div>
       </div>
-      
-      {/* Character Info Header */}
-      <CharacterInfoHeader character={character} />
-      
+
       {/* Main Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
-        {/* Left Column: Stats */}
-        <div className="col-span-1">
-          {/* Health Bar */}
-          <div className="mb-4">
-            <HPBar
-              currentHp={character.currentHp || 0}
-              maxHp={character.maxHp || 1}
-              temporaryHp={character.tempHp || character.temporaryHp || 0}
-              onUpdate={(hp) => handleUpdateCharacter(hp)}
-            />
-          </div>
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        {/* Left Sidebar: Stats & Resources */}
+        <div className="lg:col-span-1 space-y-6">
+          {/* Ability Scores */}
+          <StatsPanel character={character} />
           
-          {/* Primary Resources */}
-          <div className="mb-4">
-            <CharacterContent
-              character={character}
-              onUpdate={handleUpdateCharacter}
-              section="resources"
-            />
-          </div>
+          {/* Health & Resources */}
+          <HPBar
+            currentHp={character.currentHp || 0}
+            maxHp={character.maxHp || 1}
+            temporaryHp={character.tempHp || character.temporaryHp || 0}
+            onUpdate={(hp) => handleUpdateCharacter(hp)}
+          />
           
           {/* Dice Roller */}
-          <div className="mb-4">
-            <DicePanel
-              character={character}
-              onUpdate={handleUpdateCharacter}
-            />
-          </div>
+          <DicePanel
+            character={character}
+            onUpdate={handleUpdateCharacter}
+          />
           
           {/* Resource Management */}
-          <div className="mb-4">
-            <ResourcePanel
-              character={character}
-              onUpdate={handleUpdateCharacter}
-            />
-          </div>
+          <ResourcePanel
+            character={character}
+            onUpdate={handleUpdateCharacter}
+          />
         </div>
         
-        {/* Center and Right Columns: Main Content */}
-        <div className="col-span-1 lg:col-span-2">
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
-            {/* Tabs Navigation */}
-            <TabsList className="grid grid-cols-3 mb-4">
-              <TabsTrigger value="general">Общее</TabsTrigger>
-              <TabsTrigger value="skills">Навыки</TabsTrigger>
-              <TabsTrigger value="management">Управление</TabsTrigger>
+        {/* Main Content Area */}
+        <div className="lg:col-span-3">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="rpg-tabs">
+            {/* Enhanced Tabs Navigation */}
+            <TabsList className="grid grid-cols-3 mb-6 h-12 bg-gradient-to-r from-primary/10 to-accent/10 border border-primary/20">
+              <TabsTrigger 
+                value="general" 
+                className="rpg-tab-trigger font-fantasy-header"
+              >
+                🎭 Общее
+              </TabsTrigger>
+              <TabsTrigger 
+                value="skills" 
+                className="rpg-tab-trigger font-fantasy-header"
+              >
+                ⚔️ Навыки
+              </TabsTrigger>
+              <TabsTrigger 
+                value="management" 
+                className="rpg-tab-trigger font-fantasy-header"
+              >
+                🔧 Управление
+              </TabsTrigger>
             </TabsList>
             
             {/* General Tab */}
-            <TabsContent value="general">
+            <TabsContent value="general" className="space-y-4">
               <CharacterTabs
                 character={character}
                 onUpdate={handleUpdateCharacter}
@@ -178,7 +184,7 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character: initialChara
             </TabsContent>
             
             {/* Skills Tab */}
-            <TabsContent value="skills">
+            <TabsContent value="skills" className="space-y-4">
               <CharacterContent
                 character={character}
                 onUpdate={handleUpdateCharacter}
@@ -187,26 +193,22 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character: initialChara
             </TabsContent>
             
             {/* Management Tab */}
-            <TabsContent value="management">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <RestPanel
-                    character={character}
-                    onUpdate={handleUpdateCharacter}
-                  />
-                </div>
-                <div>
-                  <LevelUpPanel
-                    character={character}
-                    onUpdate={handleUpdateCharacter}
-                  />
-                </div>
+            <TabsContent value="management" className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <RestPanel
+                  character={character}
+                  onUpdate={handleUpdateCharacter}
+                />
+                <LevelUpPanel
+                  character={character}
+                  onUpdate={handleUpdateCharacter}
+                />
               </div>
               
-              <Alert className="mt-4">
+              <Alert className="rpg-panel">
                 <AlertCircle className="h-4 w-4" />
-                <AlertTitle>Важно</AlertTitle>
-                <AlertDescription>
+                <AlertTitle className="font-fantasy-header">Важно</AlertTitle>
+                <AlertDescription className="font-fantasy-body">
                   Изменения в персонаже будут сохранены только после нажатия на кнопку "Сохранить персонажа".
                 </AlertDescription>
               </Alert>

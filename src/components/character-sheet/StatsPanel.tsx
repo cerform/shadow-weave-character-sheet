@@ -1,8 +1,8 @@
 
 import React from 'react';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 import { Character } from '@/types/character';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
@@ -12,6 +12,14 @@ import {
   formatModifier, 
   calculateProficiencyBonusByLevel 
 } from '@/utils/characterCalculations';
+import { 
+  Zap, 
+  Target, 
+  Heart, 
+  Brain, 
+  Eye, 
+  Sparkles 
+} from 'lucide-react';
 
 interface StatsPanelProps {
   character?: Character | null;
@@ -24,9 +32,9 @@ export const StatsPanel: React.FC<StatsPanelProps> = ({ character }) => {
 
   if (!character) {
     return (
-      <Card className="bg-card/30 backdrop-blur-sm border-primary/20">
+      <Card className="rpg-panel">
         <CardHeader>
-          <CardTitle style={{ color: currentTheme.textColor }}>Характеристики</CardTitle>
+          <CardTitle className="font-fantasy-header text-glow">Характеристики</CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-muted-foreground">Персонаж не загружен</p>
@@ -47,66 +55,165 @@ export const StatsPanel: React.FC<StatsPanelProps> = ({ character }) => {
   const proficiencyBonus = calculateProficiencyBonusByLevel(character.level);
 
   const abilityInfo = [
-    { name: 'Сила', key: 'strength', value: abilities.strength },
-    { name: 'Ловкость', key: 'dexterity', value: abilities.dexterity },
-    { name: 'Телосложение', key: 'constitution', value: abilities.constitution },
-    { name: 'Интеллект', key: 'intelligence', value: abilities.intelligence },
-    { name: 'Мудрость', key: 'wisdom', value: abilities.wisdom },
-    { name: 'Харизма', key: 'charisma', value: abilities.charisma }
+    { 
+      name: 'Сила', 
+      short: 'СИЛ',
+      key: 'strength', 
+      value: abilities.strength, 
+      icon: Zap,
+      color: 'hsl(var(--str-color))',
+      description: 'Физическая мощь, влияет на урон в ближнем бою и грузоподъемность'
+    },
+    { 
+      name: 'Ловкость', 
+      short: 'ЛОВ',
+      key: 'dexterity', 
+      value: abilities.dexterity, 
+      icon: Target,
+      color: 'hsl(var(--dex-color))',
+      description: 'Проворность и скорость реакций, влияет на КД и инициативу'
+    },
+    { 
+      name: 'Телосложение', 
+      short: 'ТЕЛ',
+      key: 'constitution', 
+      value: abilities.constitution, 
+      icon: Heart,
+      color: 'hsl(var(--con-color))',
+      description: 'Выносливость и жизненная сила, определяет очки здоровья'
+    },
+    { 
+      name: 'Интеллект', 
+      short: 'ИНТ',
+      key: 'intelligence', 
+      value: abilities.intelligence, 
+      icon: Brain,
+      color: 'hsl(var(--int-color))',
+      description: 'Способность к рассуждению и память, важен для заклинателей'
+    },
+    { 
+      name: 'Мудрость', 
+      short: 'МУД',
+      key: 'wisdom', 
+      value: abilities.wisdom, 
+      icon: Eye,
+      color: 'hsl(var(--wis-color))',
+      description: 'Восприятие и интуиция, важен для клериков и друидов'
+    },
+    { 
+      name: 'Харизма', 
+      short: 'ХАР',
+      key: 'charisma', 
+      value: abilities.charisma, 
+      icon: Sparkles,
+      color: 'hsl(var(--cha-color))',
+      description: 'Сила личности и магическое присутствие'
+    }
   ];
 
   return (
-    <Card className="bg-card/30 backdrop-blur-sm border-primary/20">
-      <CardHeader>
-        <CardTitle style={{ color: currentTheme.textColor }}>Характеристики</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {abilityInfo.map(({ name, key, value }) => {
-          const modifier = calculateAbilityModifier(value);
-          
-          return (
-            <div key={key} className="space-y-2">
-              <div className="flex items-center justify-between">
-                <span style={{ color: currentTheme.textColor }}>{name}</span>
-                <div className="flex items-center space-x-2">
-                  <span className="text-sm text-muted-foreground">{value}</span>
-                  <Badge 
-                    variant="secondary" 
-                    style={{ 
-                      backgroundColor: currentTheme.accent, 
-                      color: currentTheme.textColor 
-                    }}
-                  >
-                    {formatModifier(modifier)}
-                  </Badge>
+    <TooltipProvider>
+      <Card className="rpg-panel-elevated">
+        <CardHeader className="pb-4">
+          <CardTitle className="font-fantasy-header text-glow flex items-center gap-2">
+            <Zap className="h-5 w-5" />
+            Характеристики
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {/* Ability Scores Grid */}
+          <div className="grid grid-cols-2 gap-3 mb-6">
+            {abilityInfo.map(({ name, short, key, value, icon: Icon, color, description }) => {
+              const modifier = calculateAbilityModifier(value);
+              
+              return (
+                <Tooltip key={key}>
+                  <TooltipTrigger asChild>
+                    <div className={`ability-card ability-card-${key}`}>
+                      <div className="flex items-center justify-center mb-2">
+                        <Icon 
+                          className="h-6 w-6" 
+                          style={{ color }} 
+                        />
+                      </div>
+                      <div className="text-xs font-fantasy-body text-muted-foreground mb-1">
+                        {short}
+                      </div>
+                      <div className="text-2xl font-fantasy-header font-bold mb-1">
+                        {value}
+                      </div>
+                      <Badge 
+                        variant="secondary" 
+                        className="text-xs px-2 py-1"
+                        style={{ 
+                          backgroundColor: `${color}20`, 
+                          color: color,
+                          border: `1px solid ${color}40`
+                        }}
+                      >
+                        {formatModifier(modifier)}
+                      </Badge>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent side="top" className="max-w-xs">
+                    <div className="font-fantasy-body">
+                      <div className="font-semibold text-sm mb-1">{name}</div>
+                      <div className="text-xs text-muted-foreground">{description}</div>
+                      <div className="text-xs mt-2">
+                        <span className="font-medium">Значение:</span> {value} 
+                        <span className="ml-2 font-medium">Модификатор:</span> {formatModifier(modifier)}
+                      </div>
+                    </div>
+                  </TooltipContent>
+                </Tooltip>
+              );
+            })}
+          </div>
+
+          {/* Combat Stats */}
+          <div className="space-y-3 pt-4 border-t border-border/50">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="text-center p-3 rounded-lg bg-gradient-to-br from-primary/10 to-accent/10 border border-primary/30">
+                <div className="text-xs font-fantasy-body text-muted-foreground mb-1">
+                  Бонус мастерства
+                </div>
+                <div className="text-lg font-fantasy-header font-bold text-primary">
+                  +{proficiencyBonus}
                 </div>
               </div>
-              <Progress 
-                value={Math.min((value / 20) * 100, 100)} 
-                className="h-2"
-              />
+              
+              <div className="text-center p-3 rounded-lg bg-gradient-to-br from-green-500/10 to-emerald-500/10 border border-green-500/30">
+                <div className="text-xs font-fantasy-body text-muted-foreground mb-1">
+                  Инициатива
+                </div>
+                <div className="text-lg font-fantasy-header font-bold text-green-400">
+                  {formatModifier(calculateAbilityModifier(abilities.dexterity))}
+                </div>
+              </div>
             </div>
-          );
-        })}
-      </CardContent>
-      <CardFooter className="flex flex-col space-y-2 text-sm">
-        <div className="flex justify-between w-full">
-          <span style={{ color: currentTheme.mutedTextColor }}>
-            Бонус мастерства: +{proficiencyBonus}
-          </span>
-          <span style={{ color: currentTheme.mutedTextColor }}>
-            Уровень: {character.level}
-          </span>
-        </div>
-        <div className="flex justify-between w-full">
-          <span style={{ color: currentTheme.mutedTextColor }}>
-            Инициатива: {formatModifier(calculateAbilityModifier(abilities.dexterity))}
-          </span>
-          <span style={{ color: currentTheme.mutedTextColor }}>
-            КД: {character.armorClass || 10 + calculateAbilityModifier(abilities.dexterity)}
-          </span>
-        </div>
-      </CardFooter>
-    </Card>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div className="text-center p-3 rounded-lg bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border border-blue-500/30">
+                <div className="text-xs font-fantasy-body text-muted-foreground mb-1">
+                  Класс Доспеха
+                </div>
+                <div className="text-lg font-fantasy-header font-bold text-blue-400">
+                  {character.armorClass || 10 + calculateAbilityModifier(abilities.dexterity)}
+                </div>
+              </div>
+              
+              <div className="text-center p-3 rounded-lg bg-gradient-to-br from-purple-500/10 to-violet-500/10 border border-purple-500/30">
+                <div className="text-xs font-fantasy-body text-muted-foreground mb-1">
+                  Уровень
+                </div>
+                <div className="text-lg font-fantasy-header font-bold text-purple-400">
+                  {character.level}
+                </div>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </TooltipProvider>
   );
 };
