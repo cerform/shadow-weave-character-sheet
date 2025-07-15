@@ -148,39 +148,6 @@ export const getUserCharacters = async (userId?: string): Promise<Character[]> =
       console.log('characterService: Загружено из localStorage (fallback):', localCharacters.length);
       return localCharacters;
     }
-    
-    try {
-      const q = query(
-        collection(db, CHARACTERS_COLLECTION),
-        where('userId', '==', uid),
-        orderBy('updatedAt', 'desc')
-      );
-      
-      const snapshot = await getDocs(q);
-      const characters: Character[] = [];
-      
-      snapshot.docs.forEach((doc) => {
-        const data = doc.data();
-        const normalizedCharacter = normalizeCharacterAbilities({
-          ...data,
-          id: doc.id
-        } as Character);
-        characters.push(normalizedCharacter);
-        
-        // Синхронизируем с localStorage
-        try {
-          localStorage.setItem(`character_${doc.id}`, JSON.stringify(normalizedCharacter));
-        } catch (e) {
-          console.warn('characterService: Не удалось сохранить резервную копию:', doc.id);
-        }
-      });
-      
-      console.log('characterService: Загружено персонажей из Firestore:', characters.length);
-      return characters;
-    } catch (firestoreError) {
-      console.warn('characterService: Ошибка загрузки из Firestore, используем localStorage:', firestoreError);
-      return LocalCharacterStore.getAll(uid);
-    }
   } catch (error) {
     console.error('characterService: Ошибка получения персонажей:', error);
     return LocalCharacterStore.getAll();
