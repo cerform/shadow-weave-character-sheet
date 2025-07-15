@@ -247,13 +247,14 @@ export const saveCharacterToDatabase = async (character: Character): Promise<Cha
       characterId = generateCharacterId();
     }
     
-    // Сохраняем в Firestore
-    const characterRef = doc(db, CHARACTERS_COLLECTION, characterId);
-    await setDoc(characterRef, characterData);
+    // Используем функцию из firestore.ts
+    const savedId = await import('@/services/firebase/firestore').then(module => 
+      module.saveCharacter({ ...characterData, id: characterId })
+    );
     
     const savedCharacter = {
       ...characterData,
-      id: characterId
+      id: typeof savedId === 'string' ? savedId : characterId
     };
     
     // Сохраняем в localStorage как резервную копию

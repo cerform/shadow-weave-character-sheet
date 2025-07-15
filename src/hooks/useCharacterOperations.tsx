@@ -9,6 +9,8 @@ export const useCharacterOperations = () => {
   
   const saveCharacter = useCallback(async (character: Character): Promise<Character> => {
     try {
+      console.log('useCharacterOperations: Начинаем сохранение персонажа:', character.name);
+      
       // Добавляем userId если его нет
       if (!character.userId) {
         character.userId = getCurrentUid();
@@ -16,10 +18,12 @@ export const useCharacterOperations = () => {
 
       // Сначала сохраняем локально как резервную копию
       const localCharacter = characterService.saveCharacter(character);
+      console.log('useCharacterOperations: Персонаж сохранен локально');
       
       try {
         // Затем пытаемся сохранить в Firestore с retry
         const savedCharacter = await characterService.saveCharacterToFirestore(localCharacter);
+        console.log('useCharacterOperations: Персонаж сохранен в Firestore:', savedCharacter.id);
         return savedCharacter;
       } catch (firestoreError) {
         console.warn('Ошибка сохранения в Firestore, используем локальную копию:', firestoreError);
