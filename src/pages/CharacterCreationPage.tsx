@@ -9,7 +9,7 @@ import { Save } from 'lucide-react';
 import { getAllRaces, getSubracesForRace } from '@/data/races';
 import { getAllClasses } from '@/data/classes';
 import { getAllBackgrounds } from '@/data/backgrounds';
-import { useCharacter } from '@/contexts/CharacterContext';
+import { useCharacterOperations } from '@/hooks/useCharacterOperations';
 import { getCurrentUid } from '@/utils/authHelpers';
 import FloatingDiceButton from '@/components/dice/FloatingDiceButton';
 import { useTheme } from '@/hooks/use-theme';
@@ -22,7 +22,7 @@ import IconOnlyNavigation from '@/components/navigation/IconOnlyNavigation';
 const CharacterCreationPage: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { saveCharacter } = useCharacter();
+  const { saveCharacter } = useCharacterOperations();
   const { character, updateCharacter, isMagicClass, convertToCharacter } = useCharacterCreation();
   const [races] = useState(getAllRaces());
   const [classes] = useState(getAllClasses());
