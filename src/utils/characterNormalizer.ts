@@ -5,78 +5,83 @@ import { Character } from '@/types/character';
  * между разными форматами (STR/strength, DEX/dexterity и т.д.)
  */
 export const normalizeCharacterAbilities = (character: Character): Character => {
-  // Собираем значения характеристик из всех возможных источников
-  const strength = character.strength || 
-                  character.abilities?.strength || 
-                  character.abilities?.STR || 
-                  character.stats?.strength || 10;
+  try {
+    // Создаем глубокую копию персонажа без циклических ссылок
+    const cleanCharacter = JSON.parse(JSON.stringify(character));
+    
+    // Собираем значения характеристик из всех возможных источников
+    const strength = cleanCharacter.strength || 
+                     cleanCharacter.abilities?.strength || 
+                     cleanCharacter.abilities?.STR || 
+                     cleanCharacter.stats?.strength || 10;
+                     
+    const dexterity = cleanCharacter.dexterity || 
+                     cleanCharacter.abilities?.dexterity || 
+                     cleanCharacter.abilities?.DEX || 
+                     cleanCharacter.stats?.dexterity || 10;
+                     
+    const constitution = cleanCharacter.constitution || 
+                        cleanCharacter.abilities?.constitution || 
+                        cleanCharacter.abilities?.CON || 
+                        cleanCharacter.stats?.constitution || 10;
+                        
+    const intelligence = cleanCharacter.intelligence || 
+                        cleanCharacter.abilities?.intelligence || 
+                        cleanCharacter.abilities?.INT || 
+                        cleanCharacter.stats?.intelligence || 10;
+                        
+    const wisdom = cleanCharacter.wisdom || 
+                  cleanCharacter.abilities?.wisdom || 
+                  cleanCharacter.abilities?.WIS || 
+                  cleanCharacter.stats?.wisdom || 10;
                   
-  const dexterity = character.dexterity || 
-                   character.abilities?.dexterity || 
-                   character.abilities?.DEX || 
-                   character.stats?.dexterity || 10;
-                   
-  const constitution = character.constitution || 
-                      character.abilities?.constitution || 
-                      character.abilities?.CON || 
-                      character.stats?.constitution || 10;
-                      
-  const intelligence = character.intelligence || 
-                      character.abilities?.intelligence || 
-                      character.abilities?.INT || 
-                      character.stats?.intelligence || 10;
-                      
-  const wisdom = character.wisdom || 
-                character.abilities?.wisdom || 
-                character.abilities?.WIS || 
-                character.stats?.wisdom || 10;
-                
-  const charisma = character.charisma || 
-                  character.abilities?.charisma || 
-                  character.abilities?.CHA || 
-                  character.stats?.charisma || 10;
+    const charisma = cleanCharacter.charisma || 
+                    cleanCharacter.abilities?.charisma || 
+                    cleanCharacter.abilities?.CHA || 
+                    cleanCharacter.stats?.charisma || 10;
 
-  // Возвращаем нормализованного персонажа со всеми форматами
-  return {
-    ...character,
-    // Основные поля характеристик
-    strength,
-    dexterity,
-    constitution,
-    intelligence,
-    wisdom,
-    charisma,
-    
-    // Объект abilities с обоими форматами
-    abilities: {
-      ...character.abilities,
-      // Формат с сокращениями
-      STR: strength,
-      DEX: dexterity,
-      CON: constitution,
-      INT: intelligence,
-      WIS: wisdom,
-      CHA: charisma,
-      // Полные названия
+    // Возвращаем нормализованного персонажа
+    return {
+      ...cleanCharacter,
+      // Основные поля характеристик
       strength,
       dexterity,
       constitution,
       intelligence,
       wisdom,
       charisma,
-    },
-    
-    // Объект stats
-    stats: {
-      ...character.stats,
-      strength,
-      dexterity,
-      constitution,
-      intelligence,
-      wisdom,
-      charisma,
-    }
-  };
+      
+      // Объект abilities с обоими форматами
+      abilities: {
+        STR: strength,
+        DEX: dexterity,
+        CON: constitution,
+        INT: intelligence,
+        WIS: wisdom,
+        CHA: charisma,
+        strength,
+        dexterity,
+        constitution,
+        intelligence,
+        wisdom,
+        charisma,
+      },
+      
+      // Объект stats
+      stats: {
+        strength,
+        dexterity,
+        constitution,
+        intelligence,
+        wisdom,
+        charisma,
+      }
+    };
+  } catch (error) {
+    console.error('characterNormalizer: Ошибка нормализации персонажа:', error);
+    // Возвращаем исходного персонажа если нормализация не удалась
+    return character;
+  }
 };
 
 /**
