@@ -282,7 +282,29 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
 
   // Обработчик сохранения и перехода к следующему шагу
   const handleSaveAndContinue = () => {
-    if (nextStep) nextStep();
+    // Сохраняем выбранные заклинания
+    console.log('Сохранены заклинания персонажа:', character.spells);
+    
+    toast({
+      title: "Заклинания сохранены",
+      description: `Выбрано заговоров: ${cantripsKnown}, заклинаний: ${spellsKnown}`,
+    });
+    
+    if (nextStep) {
+      nextStep();
+    }
+  };
+
+  // Обработчик пропуска выбора заклинаний
+  const handleSkipSpells = () => {
+    toast({
+      title: "Выбор заклинаний пропущен",
+      description: "Вы можете добавить заклинания позже в листе персонажа",
+    });
+    
+    if (nextStep) {
+      nextStep();
+    }
   };
 
   // Получаем уникальные уровни заклинаний для создания вкладок
@@ -479,12 +501,23 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
       </div>
 
       {nextStep && prevStep && (
-        <div className="mt-auto pt-4">
+        <div className="mt-auto pt-4 space-y-2">
           <NavigationButtons 
             onPrev={prevStep}
             onNext={handleSaveAndContinue}
             nextDisabled={false}
+            nextLabel="Завершить создание"
           />
+          <div className="text-center">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={handleSkipSpells}
+              className="text-muted-foreground hover:text-primary"
+            >
+              Пропустить выбор заклинаний
+            </Button>
+          </div>
         </div>
       )}
     </div>
