@@ -26,6 +26,7 @@ import NotFound from '@/pages/NotFound';
 import CharacterManagementPage from '@/pages/CharacterManagementPage';
 import BackgroundWrapper from '@/components/layout/BackgroundWrapper';
 import FloatingSpellWidget from '@/components/spellbook/FloatingSpellWidget';
+import StorageCleaner from '@/components/debug/StorageCleaner';
 
 function App() {
   return (
@@ -62,6 +63,7 @@ function App() {
                    </Routes>
                    <Toaster />
                    <FloatingSpellWidget />
+                   <StorageCleaner />
                  </BackgroundWrapper>
               </Router>
               </SocketProvider>
