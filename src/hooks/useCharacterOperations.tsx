@@ -16,19 +16,10 @@ export const useCharacterOperations = () => {
         character.userId = getCurrentUid();
       }
 
-      // Сначала сохраняем локально как резервную копию
-      const localCharacter = characterService.saveCharacter(character);
-      console.log('useCharacterOperations: Персонаж сохранен локально');
-      
-      try {
-        // Затем пытаемся сохранить в Firestore с retry
-        const savedCharacter = await characterService.saveCharacterToFirestore(localCharacter);
-        console.log('useCharacterOperations: Персонаж сохранен в Firestore:', savedCharacter.id);
-        return savedCharacter;
-      } catch (firestoreError) {
-        console.warn('Ошибка сохранения в Firestore, используем локальную копию:', firestoreError);
-        return localCharacter;
-      }
+      // Сохраняем персонажа в Firebase Realtime Database
+      const savedCharacter = await characterService.saveCharacter(character);
+      console.log('useCharacterOperations: Персонаж сохранен в Firebase:', savedCharacter.id);
+      return savedCharacter;
     } catch (error) {
       console.error('Критическая ошибка сохранения персонажа:', error);
       throw error;
@@ -67,7 +58,7 @@ export const useCharacterOperations = () => {
     }
     
     try {
-      await characterService.saveCharacterToFirestore(character);
+      await characterService.saveCharacter(character);
       toast.success('Персонаж сохранен');
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Ошибка сохранения персонажа';

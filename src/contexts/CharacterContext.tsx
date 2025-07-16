@@ -3,7 +3,7 @@ import React, { createContext, useContext, useCallback, useEffect } from 'react'
 import { Character } from '@/types/character';
 import { useCharacterState } from '@/hooks/useCharacterState';
 import { useCharacterOperations } from '@/hooks/useCharacterOperations';
-import { subscribeToCharacters, unsubscribeAll } from '@/services/characterService';
+import { subscribeToCharacters } from '@/services/characterService';
 import { auth } from '@/lib/firebase';
 
 interface CharacterContextType {
@@ -73,7 +73,7 @@ export const CharacterProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       unsubscribePromise?.then((unsubscribe) => {
         if (unsubscribe) unsubscribe();
       });
-      unsubscribeAll();
+      // Глобальная отмена подписок не требуется в данной реализации
     };
   }, [state, auth.currentUser]);
 

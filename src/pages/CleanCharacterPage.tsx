@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { getCharactersByUserId } from '@/services/characterService';
+import { getUserCharacters } from '@/services/characterService';
 import { Character } from '@/types/character';
 import { Loader2, AlertCircle, LogIn } from 'lucide-react';
 import { toast } from 'sonner';
@@ -55,7 +55,7 @@ const CleanCharacterPage: React.FC = () => {
         
         // Загружаем персонажей
         console.log('Загрузка персонажей для пользователя:', userId);
-        const loadedCharacters = await getCharactersByUserId(userId);
+        const loadedCharacters = await getUserCharacters(userId);
         console.log('Загружено персонажей:', loadedCharacters.length);
         
         // Обновляем отладочную информацию

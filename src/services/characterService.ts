@@ -77,3 +77,71 @@ export const deleteCharacter = async (characterId: string): Promise<void> => {
   if (!uid) return;
   await remove(ref(db, `${CHARACTERS_PATH}/${uid}/${characterId}`));
 };
+
+// Алиас для getUserCharacters для обратной совместимости
+export const getCharactersByUserId = getUserCharacters;
+
+// Функция для сохранения в Firestore (алиас для saveCharacter)
+export const saveCharacterToFirestore = saveCharacter;
+
+// Функции для работы с бэкапами в localStorage
+export const getAllBackups = (): Array<{ id: string; character: Character; timestamp: string }> => {
+  const backups: Array<{ id: string; character: Character; timestamp: string }> = [];
+  
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith('character_backup_')) {
+        const data = localStorage.getItem(key);
+        if (data) {
+          try {
+            const backup = JSON.parse(data);
+            backups.push({
+              id: key.replace('character_backup_', ''),
+              character: backup.character,
+              timestamp: backup.timestamp
+            });
+          } catch (error) {
+            console.warn(`Ошибка парсинга бэкапа ${key}:`, error);
+          }
+        }
+      }
+    }
+  } catch (error) {
+    console.error('Ошибка получения бэкапов:', error);
+  }
+  
+  // Сортируем по времени (новые сначала)
+  return backups.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+};
+
+export const restoreFromBackup = (backupId: string): Character | null => {
+  try {
+    const data = localStorage.getItem(`character_backup_${backupId}`);
+    if (data) {
+      const backup = JSON.parse(data);
+      return backup.character;
+    }
+  } catch (error) {
+    console.error('Ошибка восстановления из бэкапа:', error);
+  }
+  return null;
+};
+
+export const createBackup = (character: Character): void => {
+  try {
+    const backupId = `${character.id}_${Date.now()}`;
+    const backup = {
+      character,
+      timestamp: new Date().toISOString()
+    };
+    localStorage.setItem(`character_backup_${backupId}`, JSON.stringify(backup));
+  } catch (error) {
+    console.error('Ошибка создания бэкапа:', error);
+  }
+};
+
+// Пустая функция для обратной совместимости
+export const unsubscribeAll = (): void => {
+  // Заглушка - в данной реализации нет глобальных подписок для отмены
+};
