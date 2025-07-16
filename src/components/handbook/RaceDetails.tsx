@@ -11,7 +11,7 @@ import ThemeSelector from '@/components/ThemeSelector';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
 import NavigationButtons from '@/components/ui/NavigationButtons';
-import FloatingDiceButton from '@/components/dice/FloatingDiceButton';
+
 
 interface RaceDetailsProps {
   race: any;
@@ -470,7 +470,7 @@ const RaceDetails: React.FC<RaceDetailsProps> = ({ race, onBack }) => {
         </Button>
       </div>
       
-      <FloatingDiceButton />
+      
     </div>
   );
 };

@@ -3,7 +3,7 @@ import { useSpellbook } from '@/contexts/SpellbookContext';
 import { useTheme } from '@/hooks/use-theme';
 import ThemeSelector from '@/components/ThemeSelector';
 import NavigationButtons from '@/components/ui/NavigationButtons';
-import FloatingDiceButton from '@/components/dice/FloatingDiceButton';
+
 import BackgroundWrapper from '@/components/layout/BackgroundWrapper';
 import SpellBookViewer from '@/components/spellbook/SpellBookViewer';
 import SpellFilterPanel from '@/components/spellbook/SpellFilterPanel';
@@ -474,7 +474,7 @@ const SpellbookPage: React.FC = () => {
           <SpellBookViewer />
         </div>
       </div>
-      <FloatingDiceButton />
+      
     </BackgroundWrapper>
   );
 };

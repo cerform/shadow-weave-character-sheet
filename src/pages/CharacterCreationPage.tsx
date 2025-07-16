@@ -11,7 +11,7 @@ import { getAllClasses } from '@/data/classes';
 import { getAllBackgrounds } from '@/data/backgrounds';
 import { useCharacterOperations } from '@/hooks/useCharacterOperations';
 import { getCurrentUid } from '@/utils/authHelpers';
-import FloatingDiceButton from '@/components/dice/FloatingDiceButton';
+
 import { useTheme } from '@/hooks/use-theme';
 import CreationStepper from '@/components/character-creation/CreationStepper';
 import CreationSidebar from '@/components/character-creation/CreationSidebar';
@@ -400,7 +400,7 @@ const CharacterCreationPage: React.FC = () => {
       </div>
       
       {/* Добавляем только одну кнопку Dice Button */}
-      <FloatingDiceButton />
+      
     </div>
   );
 };

@@ -14,7 +14,7 @@ import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
 import ThemeSelector from '@/components/ThemeSelector';
 import BackgroundWrapper from '@/components/layout/BackgroundWrapper';
-import FloatingDiceButton from '@/components/dice/FloatingDiceButton';
+
 import NavigationButtons from '@/components/ui/NavigationButtons';
 
 const HandbookPage: React.FC = () => {
@@ -144,7 +144,7 @@ const HandbookPage: React.FC = () => {
         </div>
       </div>
       
-      <FloatingDiceButton />
+      
     </BackgroundWrapper>
   );
 };
