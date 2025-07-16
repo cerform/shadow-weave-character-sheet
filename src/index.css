@@ -4,7 +4,7 @@
 @tailwind utilities;
 
 :root {
-  /* Original Design System */
+  /* Shadow Theme - Default Dark Purple */
   --background: 220 20% 14%;
   --foreground: 220 8% 92%;
   --card: 220 20% 18%;
@@ -25,11 +25,6 @@
   --input: 220 15% 26%;
   --ring: 265 90% 72%;
   --radius: 0.5rem;
-  --chart-1: 265 90% 72%;
-  --chart-2: 220 70% 50%;
-  --chart-3: 30 80% 55%;
-  --chart-4: 280 65% 60%;
-  --chart-5: 340 75% 55%;
 
   /* RPG/MMO Enhancement Colors */
   --rpg-bg-primary: 15 15% 8%;
@@ -46,31 +41,76 @@
   --rpg-epic: 280 85% 68%;
   --rpg-legendary: 25 85% 62%;
 
-  /* Ability Score Colors */
-  --str-color: 0 70% 60%;
-  --dex-color: 120 70% 60%;
-  --con-color: 40 70% 60%;
-  --int-color: 220 70% 60%;
-  --wis-color: 280 70% 60%;
-  --cha-color: 320 70% 60%;
-
-  /* Gradients */
-  --gradient-panel: linear-gradient(145deg, hsl(var(--rpg-panel)), hsl(var(--rpg-panel-elevated)));
-  --gradient-hp: linear-gradient(90deg, hsl(var(--rpg-hp)), hsl(var(--rpg-hp) / 0.8));
-  --gradient-mana: linear-gradient(90deg, hsl(var(--rpg-mana)), hsl(var(--rpg-mana) / 0.8));
-  
-  /* Shadows & Glows */
-  --shadow-panel: 0 8px 32px rgba(0, 0, 0, 0.4);
-  --shadow-elevated: 0 12px 48px rgba(0, 0, 0, 0.6);
-  --glow-primary: 0 0 20px hsl(var(--rpg-border-glow) / 0.5);
-  --glow-hp: 0 0 15px hsl(var(--rpg-hp) / 0.6);
-  --glow-mana: 0 0 15px hsl(var(--rpg-mana) / 0.6);
+  /* Background Images */
+  --bg-fantasy-1: url('/src/assets/fantasy-bg-1.jpg');
+  --bg-fantasy-2: url('/src/assets/fantasy-bg-2.jpg');
+  --bg-fantasy-3: url('/src/assets/fantasy-bg-3.jpg');
 
   /* Typography */
   --font-fantasy-title: 'Cinzel', serif;
   --font-fantasy-header: 'Cinzel', serif;
   --font-fantasy-body: 'Inter', sans-serif;
   --font-runic: 'Uncial Antiqua', cursive;
+}
+
+/* Fire Theme - Warm Orange/Red */
+[data-theme="fire"] {
+  --background: 20 25% 8%;
+  --foreground: 20 8% 92%;
+  --card: 20 25% 12%;
+  --card-foreground: 20 8% 92%;
+  --popover: 20 25% 12%;
+  --popover-foreground: 20 8% 92%;
+  --primary: 15 90% 62%;
+  --primary-foreground: 20 8% 4%;
+  --secondary: 20 20% 16%;
+  --secondary-foreground: 20 8% 92%;
+  --muted: 20 20% 16%;
+  --muted-foreground: 20 8% 60%;
+  --accent: 25 85% 58%;
+  --accent-foreground: 20 8% 4%;
+  --rpg-border: 15 60% 45%;
+  --rpg-border-glow: 15 90% 65%;
+}
+
+/* Nature Theme - Green/Earth */
+[data-theme="nature"] {
+  --background: 120 25% 8%;
+  --foreground: 120 8% 92%;
+  --card: 120 25% 12%;
+  --card-foreground: 120 8% 92%;
+  --popover: 120 25% 12%;
+  --popover-foreground: 120 8% 92%;
+  --primary: 120 70% 50%;
+  --primary-foreground: 120 8% 4%;
+  --secondary: 120 20% 16%;
+  --secondary-foreground: 120 8% 92%;
+  --muted: 120 20% 16%;
+  --muted-foreground: 120 8% 60%;
+  --accent: 140 65% 45%;
+  --accent-foreground: 120 8% 4%;
+  --rpg-border: 120 50% 35%;
+  --rpg-border-glow: 120 80% 55%;
+}
+
+/* Arcane Theme - Blue/Cyan */
+[data-theme="arcane"] {
+  --background: 200 30% 8%;
+  --foreground: 200 8% 92%;
+  --card: 200 30% 12%;
+  --card-foreground: 200 8% 92%;
+  --popover: 200 30% 12%;
+  --popover-foreground: 200 8% 92%;
+  --primary: 195 85% 65%;
+  --primary-foreground: 200 8% 4%;
+  --secondary: 200 25% 16%;
+  --secondary-foreground: 200 8% 92%;
+  --muted: 200 25% 16%;
+  --muted-foreground: 200 8% 60%;
+  --accent: 180 75% 60%;
+  --accent-foreground: 200 8% 4%;
+  --rpg-border: 195 55% 40%;
+  --rpg-border-glow: 195 85% 70%;
 }
 
 .dark {
@@ -88,6 +128,33 @@
     font-family: var(--font-fantasy-body);
     background: linear-gradient(135deg, hsl(var(--rpg-bg-primary)), hsl(var(--rpg-bg-secondary)));
     min-height: 100vh;
+    position: relative;
+  }
+  
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: var(--bg-fantasy-1);
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    opacity: 0.1;
+    z-index: -2;
+  }
+  
+  body::after {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, hsl(var(--background) / 0.8), hsl(var(--background) / 0.9));
+    z-index: -1;
   }
 }
 
