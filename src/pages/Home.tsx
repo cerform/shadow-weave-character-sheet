@@ -1,5 +1,4 @@
-
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,14 +7,23 @@ import ProfilePreview from '@/components/home/ProfilePreview';
 import { useAuth } from '@/hooks/use-auth';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
+import { Character } from '@/types/character';
+import { subscribeToCharacters } from '@/services/characterService';
+import CharacterCard from '@/components/home/CharacterCard';
 
 const Home = () => {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
   const { theme } = useTheme();
-  
+  const [characters, setCharacters] = useState<Character[]>([]);
+
   const themeKey = (theme || 'default') as keyof typeof themes;
   const currentTheme = themes[themeKey] || themes.default;
+
+  useEffect(() => {
+    const unsubscribe = subscribeToCharacters(setCharacters);
+    return () => unsubscribe?.();
+  }, []);
 
   const navigateToAuth = () => {
     console.log("Home: Переход на страницу /auth");
@@ -41,7 +49,7 @@ const Home = () => {
       icon: Scroll,
       title: "Справочник D&D",
       description: "Полный справочник по заклинаниям D&D",
-      href: "/dnd-spells", 
+      href: "/dnd-spells",
       color: "#F59E0B"
     },
     {
@@ -55,31 +63,30 @@ const Home = () => {
   ];
 
   return (
-    <div 
+    <div
       className="min-h-screen p-6"
-      style={{ 
+      style={{
         background: `linear-gradient(135deg, ${currentTheme.background} 0%, ${currentTheme.background}CC 100%)`,
         color: currentTheme.textColor
       }}
     >
       <div className="container mx-auto max-w-6xl">
-        {/* Header */}
         <div className="text-center mb-12">
-          <h1 
+          <h1
             className="text-4xl md:text-6xl font-bold mb-4"
             style={{ color: currentTheme.accent }}
           >
             Shadow Weave
           </h1>
-          <p 
+          <p
             className="text-xl md:text-2xl mb-8"
             style={{ color: `${currentTheme.textColor}80` }}
           >
             Управление персонажами D&D 5e
           </p>
-          
+
           {!isAuthenticated && (
-            <Button 
+            <Button
               onClick={navigateToAuth}
               size="lg"
               className="gap-2"
@@ -94,13 +101,25 @@ const Home = () => {
           )}
         </div>
 
+        {/* 🧙 Персонажи пользователя */}
+        {isAuthenticated && characters.length > 0 && (
+          <div className="mb-12">
+            <h2 className="text-2xl font-bold mb-6" style={{ color: currentTheme.textColor }}>
+              Ваши персонажи
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {characters.map((char) => (
+                <CharacterCard key={char.id} character={char} />
+              ))}
+            </div>
+          </div>
+        )}
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Profile Preview */}
           <ProfilePreview />
-          
-          {/* Quick Actions */}
+
           <div className="lg:col-span-2">
-            <h2 
+            <h2
               className="text-2xl font-bold mb-6"
               style={{ color: currentTheme.textColor }}
             >
@@ -110,9 +129,9 @@ const Home = () => {
               {quickActions.map((action, index) => {
                 const Icon = action.icon;
                 const isDisabled = action.requiresAuth && !isAuthenticated;
-                
+
                 return (
-                  <Card 
+                  <Card
                     key={index}
                     className={`hover:shadow-lg transition-all duration-200 cursor-pointer bg-black/50 backdrop-blur-sm border ${
                       isDisabled ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105'
@@ -128,11 +147,11 @@ const Home = () => {
                   >
                     <CardHeader>
                       <div className="flex items-center gap-3">
-                        <Icon 
-                          className="h-8 w-8" 
+                        <Icon
+                          className="h-8 w-8"
                           style={{ color: action.color }}
                         />
-                        <CardTitle 
+                        <CardTitle
                           className="text-lg"
                           style={{ color: currentTheme.textColor }}
                         >
@@ -157,9 +176,8 @@ const Home = () => {
           </div>
         </div>
 
-        {/* Features Preview */}
         <div className="mt-16">
-          <h2 
+          <h2
             className="text-3xl font-bold text-center mb-8"
             style={{ color: currentTheme.textColor }}
           >
@@ -167,11 +185,11 @@ const Home = () => {
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="text-center">
-              <Dice6 
-                className="h-16 w-16 mx-auto mb-4" 
+              <Dice6
+                className="h-16 w-16 mx-auto mb-4"
                 style={{ color: currentTheme.accent }}
               />
-              <h3 
+              <h3
                 className="text-xl font-semibold mb-2"
                 style={{ color: currentTheme.textColor }}
               >
@@ -182,11 +200,11 @@ const Home = () => {
               </p>
             </div>
             <div className="text-center">
-              <BookOpen 
-                className="h-16 w-16 mx-auto mb-4" 
+              <BookOpen
+                className="h-16 w-16 mx-auto mb-4"
                 style={{ color: currentTheme.accent }}
               />
-              <h3 
+              <h3
                 className="text-xl font-semibold mb-2"
                 style={{ color: currentTheme.textColor }}
               >
@@ -197,11 +215,11 @@ const Home = () => {
               </p>
             </div>
             <div className="text-center">
-              <Users 
-                className="h-16 w-16 mx-auto mb-4" 
+              <Users
+                className="h-16 w-16 mx-auto mb-4"
                 style={{ color: currentTheme.accent }}
               />
-              <h3 
+              <h3
                 className="text-xl font-semibold mb-2"
                 style={{ color: currentTheme.textColor }}
               >
