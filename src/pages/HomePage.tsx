@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { BookOpen, Users, Scroll, Dice6, Shield, UserPlus, Sparkles, Swords, Map, Settings } from 'lucide-react';
+import { BookOpen, Users, Scroll, Dice6, Shield, UserPlus, Sparkles, Swords, Map, Settings, Crown } from 'lucide-react';
 import ProfilePreview from '@/components/home/ProfilePreview';
 import CharactersList from '@/components/home/CharactersList';
 import { useAuth } from '@/hooks/use-auth';
@@ -57,11 +57,10 @@ const HomePage = () => {
       gradient: "from-amber-500/20 to-orange-500/20"
     },
     {
-      icon: Shield,
-      title: "Экран мастера",
-      description: "Инструменты для ведения игровых сессий и управления партией",
-      href: "/dm",
-      requiresAuth: true,
+      icon: Crown,
+      title: "Панель Мастера",
+      description: "Создавайте сессии и управляйте игровыми партиями в реальном времени",
+      href: "/gm-dashboard",
       gradient: "from-red-500/20 to-rose-500/20"
     },
     {
@@ -190,7 +189,6 @@ const HomePage = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
               {quickActions.map((action, index) => {
                 const Icon = action.icon;
-                const isDisabled = action.requiresAuth && !isAuthenticated;
                 const isFeatured = action.featured;
                 
                 return (
@@ -198,17 +196,10 @@ const HomePage = () => {
                     key={index}
                     className={`
                       magic-card cursor-pointer group h-full transition-all duration-300
-                      border-primary/20 bg-card/50 backdrop-blur-sm hover:bg-card/70
-                      ${isDisabled ? 'opacity-60 cursor-not-allowed' : 'hover:-translate-y-2'}
+                      border-primary/20 bg-card/50 backdrop-blur-sm hover:bg-card/70 hover:-translate-y-2
                       ${isFeatured ? 'ring-2 ring-primary/30 shadow-lg shadow-primary/20' : ''}
                     `}
-                    onClick={() => {
-                      if (isDisabled) {
-                        navigateToAuth();
-                      } else {
-                        navigate(action.href);
-                      }
-                    }}
+                    onClick={() => navigate(action.href)}
                   >
                     <CardHeader className="pb-3">
                       <div className="flex items-center gap-4">
@@ -239,11 +230,6 @@ const HomePage = () => {
                     <CardContent>
                       <CardDescription className="font-fantasy-body text-sm leading-relaxed">
                         {action.description}
-                        {isDisabled && (
-                          <span className="block mt-3 text-destructive font-medium text-xs">
-                            ⚠️ Требуется авторизация
-                          </span>
-                        )}
                       </CardDescription>
                     </CardContent>
                   </Card>

@@ -11,6 +11,7 @@ import CharacterCreationPage from './pages/CharacterCreationPage';
 import ProfilePage from './pages/ProfilePage';
 import HandbookPage from './pages/HandbookPage';
 import CharacterViewPage from './pages/CharacterViewPage';
+import GMDashboardPage from './pages/GMDashboardPage';
 import DMDashboardPage from './pages/DMDashboardPage';
 import PlayerDashboardPage from './pages/PlayerDashboardPage';
 import BattleScenePage from './pages/BattleScenePage';
@@ -135,6 +136,9 @@ const AppRoutes: React.FC = () => {
       
       {/* Добавляем маршрут для отладки */}
       <Route path="/debug" element={<DebugPage />} />
+      
+      {/* GM Dashboard маршрут */}
+      <Route path="/gm-dashboard" element={<GMDashboardPage />} />
       
       {/* Общедоступные маршруты */}
       <Route path="/spellbook" element={<SpellbookPage />} />
