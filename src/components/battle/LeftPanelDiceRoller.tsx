@@ -8,7 +8,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
 import { Dices, Plus, Minus } from 'lucide-react';
-import SimpleDiceRenderer from '@/components/dice/SimpleDiceRenderer';
+import GradientDice from '@/components/dice/GradientDice';
 import DiceBox3D from '@/components/dice/DiceBox3D';
 
 interface LeftPanelDiceRollerProps {

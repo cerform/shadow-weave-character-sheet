@@ -7,7 +7,7 @@ import { themes } from '@/lib/themes';
 import { Dices } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { SelectionSubOption } from '@/components/ui/selection-card';
-import SimpleDiceRenderer from './SimpleDiceRenderer';
+import GradientDice from './GradientDice';
 
 // Типы кубиков D&D
 const DICE_TYPES = ['d4', 'd6', 'd8', 'd10', 'd12', 'd20'] as const;
@@ -267,10 +267,11 @@ export const DiceRenderer: React.FC<DiceRendererProps> = ({
     >
       {showSimpleDice ? (
         <div className="flex flex-col items-center justify-center h-full">
-          <SimpleDiceRenderer 
-            type={diceType}
-            themeColor={actualThemeColor}
+          <GradientDice 
+            diceType={diceType}
             size={100}
+            color1={actualThemeColor}
+            color2={actualThemeColor}
           />
           {result !== null && (
             <div className="mt-2 text-center font-bold text-lg" style={{ color: actualThemeColor }}>

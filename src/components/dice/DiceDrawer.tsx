@@ -24,7 +24,7 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
-import { useMediaQuery } from '@/hooks/use-media-query';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 export const DiceDrawer: React.FC = () => {
@@ -34,7 +34,7 @@ export const DiceDrawer: React.FC = () => {
   const currentTheme = themes[currentThemeId as keyof typeof themes] || themes.default;
   
   // Определяем, используем ли мобильное устройство
-  const isMobile = useMediaQuery("(max-width: 768px)");
+  const isMobile = useIsMobile();
 
   const handleCloseDrawer = () => {
     setIsOpen(false);

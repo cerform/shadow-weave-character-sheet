@@ -16,8 +16,6 @@ import AuthPage from '@/pages/AuthPage';
 import UserProfilePage from '@/pages/UserProfilePage';
 import DMPanel from '@/components/session/DMPanel';
 import PlayerSessionPage from '@/pages/PlayerSessionPage';
-import BattlePage from '@/pages/BattlePage';
-import BattleMapPage from '@/pages/BattleMapPage';
 import DMSessionPage from '@/pages/DMSessionPage';
 import HandbookPage from '@/pages/HandbookPage';
 import SpellbookPage from '@/pages/SpellbookPage';
@@ -52,8 +50,6 @@ function App() {
                     <Route path="/dm" element={<DMPanel />} />
                     <Route path="/dm/session/:sessionId" element={<DMSessionPage />} />
                     <Route path="/session" element={<PlayerSessionPage />} />
-                    <Route path="/battle/:sessionId" element={<BattlePage />} />
-                    <Route path="/battle-map/:sessionId?" element={<BattleMapPage />} />
                     <Route path="/dm-session/:sessionId" element={<DMSessionPage />} />
                     <Route path="/handbook" element={<HandbookPage />} />
                     <Route path="/spellbook" element={<SpellbookPage />} />

@@ -1,6 +1,6 @@
 import React, { useRef, useState, useEffect } from "react";
 import OBSLayout from "@/components/OBSLayout";
-import { DiceRoller3D } from "@/components/character-sheet/DiceRoller3D";
+import { DiceRoller3D } from "@/components/dice/DiceRoller3D";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";

@@ -26,3 +26,13 @@ export const useProtectedRoute = () => {
     canAccessPlayerDashboard: isAuthenticated && !loading
   };
 };
+
+// Хук для получения роли пользователя
+export const useUserRole = () => {
+  const { currentUser } = useAuth();
+  return {
+    isDM: currentUser?.isDM || false,
+    isPlayer: !currentUser?.isDM,
+    role: currentUser?.isDM ? 'dm' : 'player',
+  };
+};
