@@ -3,7 +3,7 @@ import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 
 // Импортируем страницы
-import Home from './pages/Home';
+import HomePage from './pages/HomePage';
 import NotFound from './pages/NotFound';
 import AuthPage from './pages/AuthPage';
 import SpellbookPage from './pages/SpellbookPage';
@@ -90,7 +90,7 @@ const AppRoutes: React.FC = () => {
   
   return (
     <Routes>
-      <Route path="/" element={<Home />} />
+      <Route path="/" element={<HomePage />} />
       <Route path="/auth" element={<AuthPage />} />
       <Route path="/unauthorized" element={<UnauthorizedPage />} />
       <Route path="/dashboard" element={<RoleBasedRedirect />} />
@@ -111,7 +111,7 @@ const AppRoutes: React.FC = () => {
           </React.Suspense>
         </ProtectedDMRoute>
       } />
-      <Route path="/battle/:sessionId" element={
+      <Route path="/battle" element={
         <ProtectedDMRoute>
           <BattleScenePage />
         </ProtectedDMRoute>
