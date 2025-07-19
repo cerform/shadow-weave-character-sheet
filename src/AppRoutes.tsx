@@ -6,6 +6,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import HomePage from './pages/HomePage';
 import NotFound from './pages/NotFound';
 import AuthPage from './pages/AuthPage';
+import DndSpellsPage from './pages/DndSpellsPage';
 import SpellbookPage from './pages/SpellbookPage';
 import CharacterCreationPage from './pages/CharacterCreationPage';
 import ProfilePage from './pages/ProfilePage';
@@ -17,9 +18,7 @@ import PlayerDashboardPage from './pages/PlayerDashboardPage';
 import BattleScenePage from './pages/BattleScenePage';
 import UnauthorizedPage from './pages/UnauthorizedPage';
 import DebugPage from './pages/DebugPage';
-import DndSpellsPage from './pages/DndSpellsPage';
 import CharactersListPage from './pages/CharactersListPage';
-
 import CharacterManagementPage from './pages/CharacterManagementPage';
 
 // Ленивая загрузка страниц, зависящих от WebSocket
@@ -87,6 +86,7 @@ const RoleBasedRedirect = () => {
 
 const AppRoutes: React.FC = () => {
   console.log('AppRoutes: Инициализация маршрутов');
+  console.log('DndSpellsPage импортирована:', DndSpellsPage);
   
   return (
     <Routes>
@@ -95,7 +95,7 @@ const AppRoutes: React.FC = () => {
       <Route path="/unauthorized" element={<UnauthorizedPage />} />
       <Route path="/dashboard" element={<RoleBasedRedirect />} />
       
-      {/* Добавляем страницу заклинаний D&D */}
+      {/* Добавляем страницу заклинаний D&D в начало списка */}
       <Route path="/dnd-spells" element={<DndSpellsPage />} />
       
       {/* Маршруты DM с защитой */}
