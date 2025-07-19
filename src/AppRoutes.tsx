@@ -87,6 +87,7 @@ const RoleBasedRedirect = () => {
 const AppRoutes: React.FC = () => {
   console.log('AppRoutes: Инициализация маршрутов');
   console.log('DndSpellsPage импортирована:', DndSpellsPage);
+  console.log('window.location.pathname:', window.location.pathname);
   
   return (
     <Routes>
@@ -96,7 +97,10 @@ const AppRoutes: React.FC = () => {
       <Route path="/dashboard" element={<RoleBasedRedirect />} />
       
       {/* Добавляем страницу заклинаний D&D в начало списка */}
-      <Route path="/dnd-spells" element={<DndSpellsPage />} />
+      <Route 
+        path="/dnd-spells" 
+        element={<DndSpellsPage />} 
+      />
       
       {/* Маршруты DM с защитой */}
       <Route path="/dm" element={

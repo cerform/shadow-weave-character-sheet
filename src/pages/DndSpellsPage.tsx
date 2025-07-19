@@ -26,6 +26,7 @@ interface Spell {
 }
 
 const DndSpellsPage: React.FC = () => {
+  console.log('DndSpellsPage: Компонент загружается');
   const navigate = useNavigate();
   const [spells, setSpells] = useState<Spell[]>([]);
   const [filteredSpells, setFilteredSpells] = useState<Spell[]>([]);
