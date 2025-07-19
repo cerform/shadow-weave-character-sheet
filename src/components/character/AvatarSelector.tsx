@@ -3,7 +3,7 @@ import React, { useState, useRef } from "react";
 import { Camera, Dices } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { 
   Select,
   SelectContent,

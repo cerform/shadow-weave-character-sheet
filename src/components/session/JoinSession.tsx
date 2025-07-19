@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
-import { useToast } from "../ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import useSessionStore from '@/stores/sessionStore';
 import { useNavigate } from 'react-router-dom';
 import { Home } from 'lucide-react';

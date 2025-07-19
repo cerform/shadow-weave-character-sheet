@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Save, Camera, Scroll, BookOpen, Shield, Crown, Sword } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import IconOnlyNavigation from "@/components/navigation/IconOnlyNavigation";
 import { useTheme } from "@/hooks/use-theme";

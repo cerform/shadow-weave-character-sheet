@@ -23,7 +23,7 @@ import {
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
 import { Badge } from '@/components/ui/badge';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import { getCurrentUid } from '@/utils/authHelpers';
 import { Dices } from 'lucide-react';
 

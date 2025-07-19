@@ -13,7 +13,7 @@ import { useNavigate } from "react-router-dom";
 import NavigationButtons from "@/components/ui/NavigationButtons";
 import { useTheme } from "@/hooks/use-theme";
 import { themes } from "@/lib/themes";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 
 // Типы токенов: игрок, моб или босс
 interface Token {

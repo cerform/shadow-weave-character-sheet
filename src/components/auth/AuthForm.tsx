@@ -9,7 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import { LogIn, UserPlus, AlertCircle, Info, AlertTriangle } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useNavigate } from 'react-router-dom';
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "@/hooks/use-toast";
 import { Separator } from "@/components/ui/separator";
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';

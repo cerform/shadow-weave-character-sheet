@@ -7,7 +7,7 @@ import { LogIn, User, Shield, UsersRound, LogOut } from "lucide-react";
 import { useAuth } from '@/hooks/use-auth';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
-import { toast } from '@/components/ui/use-toast';
+import { toast } from '@/hooks/use-toast';
 
 const ProfilePreview = () => {
   const navigate = useNavigate();
