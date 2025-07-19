@@ -22,6 +22,7 @@ import SpellbookPage from '@/pages/SpellbookPage';
 import DebugPage from '@/pages/DebugPage';
 import NotFound from '@/pages/NotFound';
 import CharacterManagementPage from '@/pages/CharacterManagementPage';
+import DndSpellsPage from '@/pages/DndSpellsPage';
 import BackgroundWrapper from '@/components/layout/BackgroundWrapper';
 import UnifiedFloatingWidget from '@/components/ui/UnifiedFloatingWidget';
 
@@ -53,6 +54,7 @@ function App() {
                     <Route path="/dm-session/:sessionId" element={<DMSessionPage />} />
                     <Route path="/handbook" element={<HandbookPage />} />
                     <Route path="/spellbook" element={<SpellbookPage />} />
+                    <Route path="/dnd-spells" element={<DndSpellsPage />} />
                     <Route path="/debug" element={<DebugPage />} />
                      <Route path="*" element={<NotFound />} />
                    </Routes>
