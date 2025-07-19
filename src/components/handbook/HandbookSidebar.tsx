@@ -99,6 +99,24 @@ const HandbookSidebar: React.FC<HandbookSidebarProps> = ({
         
         <div className="space-y-2">
           <Button
+            variant={activeSection === 'rules' ? 'default' : 'outline'}
+            className="w-full justify-start transition-all duration-300"
+            onClick={() => setActiveSection('rules')}
+            style={activeSection === 'rules' ? {
+              background: currentTheme.accent,
+              color: currentTheme.buttonText || '#fff',
+              boxShadow: `0 0 10px ${currentTheme.accent}80`
+            } : {
+              background: 'rgba(0,0,0,0.4)',
+              borderColor: `${currentTheme.accent}50`,
+              color: currentTheme.textColor
+            }}
+          >
+            <Book className="mr-2 h-4 w-4" />
+            Правила игры
+          </Button>
+
+          <Button
             variant={activeSection === 'races' ? 'default' : 'outline'}
             className="w-full justify-start transition-all duration-300"
             onClick={() => setActiveSection('races')}

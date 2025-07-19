@@ -7,6 +7,8 @@ import ClassesList from '@/components/handbook/ClassesList';
 import ClassDetails from '@/components/handbook/ClassDetails';
 import BackgroundsList from '@/components/handbook/BackgroundsList';
 import BackgroundDetails from '@/components/handbook/BackgroundDetails';
+import RulesList from '@/components/handbook/RulesList';
+import RuleDetails from '@/components/handbook/RuleDetails';
 import { getAllRaces, getAllRaceSources } from '@/data/races';
 import { getAllClasses, getAllClassSources } from '@/data/classes';
 import { getAllBackgrounds, getAllBackgroundSources } from '@/data/backgrounds';
@@ -24,10 +26,11 @@ const HandbookPage: React.FC = () => {
   const [backgrounds, setBackgrounds] = useState<any[]>([]);
   
   // Состояния для UI
-  const [activeSection, setActiveSection] = useState('races');
+  const [activeSection, setActiveSection] = useState('rules');
   const [selectedRace, setSelectedRace] = useState<any>(null);
   const [selectedClass, setSelectedClass] = useState<any>(null);
   const [selectedBackground, setSelectedBackground] = useState<any>(null);
+  const [selectedRule, setSelectedRule] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState('');
   
   // Состояния для фильтров
@@ -60,12 +63,20 @@ const HandbookPage: React.FC = () => {
     setSelectedRace(null);
     setSelectedClass(null);
     setSelectedBackground(null);
+    setSelectedRule(null);
     setSearchQuery('');
   }, [activeSection]);
   
   // Рендеринг содержимого
   const renderContent = () => {
     switch (activeSection) {
+      case 'rules':
+        return selectedRule 
+          ? <RuleDetails rule={selectedRule} onBack={() => setSelectedRule(null)} /> 
+          : <RulesList 
+              searchQuery={searchQuery} 
+              setSelectedRule={setSelectedRule} 
+            />;
       case 'races':
         return selectedRace 
           ? <RaceDetails race={selectedRace} onBack={() => setSelectedRace(null)} /> 
@@ -133,6 +144,7 @@ const HandbookPage: React.FC = () => {
                 className="text-3xl font-bold"
                 style={{ color: currentTheme.accent, textShadow: `0 0 10px ${currentTheme.accent}80` }}
               >
+                {activeSection === 'rules' && 'Правила игры'}
                 {activeSection === 'races' && 'Расы'}
                 {activeSection === 'classes' && 'Классы'}
                 {activeSection === 'backgrounds' && 'Предыстории'}
