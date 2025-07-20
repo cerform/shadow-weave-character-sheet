@@ -16,6 +16,14 @@ interface DiceRollModalProps {
   playerName?: string;
 }
 
+interface RollHistoryEntry {
+  formula: string;
+  result: number;
+  reason: string;
+  playerName: string;
+  timestamp: string;
+}
+
 type DiceType = 'd4' | 'd6' | 'd8' | 'd10' | 'd12' | 'd20';
 
 const DICE_TYPES: DiceType[] = ['d4', 'd6', 'd8', 'd10', 'd12', 'd20'];
@@ -28,16 +36,18 @@ export function DiceRollModal({ open, onClose, onRoll, playerName: defaultPlayer
   const [quantity, setQuantity] = useState(1);
   const [modifier, setModifier] = useState(0);
   const [diceResult, setDiceResult] = useState<number | null>(null);
+  const [rollHistory, setRollHistory] = useState<RollHistoryEntry[]>([]);
+  const [lastRollTotal, setLastRollTotal] = useState<number | null>(null);
   const [key, setKey] = useState(0); // Для форсирования пересоздания компонента DiceRoller3D
   const { theme } = useTheme();
   const themeKey = (theme as keyof typeof themes) || 'default';
   const currentTheme = themes[themeKey] || themes.default;
 
-  // При открытии модала, сбрасываем ключ для принудительной перерисовки
+  // При открытии модала, сбрасываем ключ для принудительной перерисовки, но НЕ сбрасываем результат
   useEffect(() => {
     if (open) {
       setKey(prev => prev + 1);
-      setDiceResult(null);
+      // Убираем сброс результата - пусть результат остается между открытиями
     }
   }, [open, selectedDice]);
 
@@ -73,12 +83,25 @@ export function DiceRollModal({ open, onClose, onRoll, playerName: defaultPlayer
     if (onRoll) {
       onRoll(formula, reason, playerName);
     }
-    onClose();
+    // НЕ закрываем модальное окно здесь - пользователь должен сам его закрыть
   };
 
   // Обработчик результата броска кубика из 3D компонента
   const handleRollComplete = (value: number) => {
+    const total = value + modifier;
     setDiceResult(value);
+    setLastRollTotal(total);
+    
+    // Добавляем запись в историю
+    const rollEntry: RollHistoryEntry = {
+      formula: formula,
+      result: total,
+      reason: reason || 'Бросок',
+      playerName: playerName || 'Игрок',
+      timestamp: new Date().toLocaleTimeString()
+    };
+    
+    setRollHistory(prev => [rollEntry, ...prev].slice(0, 10)); // Храним последние 10 бросков
   };
 
   return (
@@ -242,6 +265,42 @@ export function DiceRollModal({ open, onClose, onRoll, playerName: defaultPlayer
           />
         </div>
 
+        {/* Результат последнего броска */}
+        {lastRollTotal !== null && (
+          <div className="bg-primary/10 border border-primary/20 rounded-lg p-3 text-center">
+            <div className="text-sm text-muted-foreground mb-1">Результат броска:</div>
+            <div className="text-2xl font-bold" style={{ color: currentTheme.accent }}>
+              {formula} = {lastRollTotal}
+            </div>
+            {diceResult !== null && modifier !== 0 && (
+              <div className="text-sm text-muted-foreground mt-1">
+                ({diceResult} + {modifier} = {lastRollTotal})
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* История бросков */}
+        {rollHistory.length > 0 && (
+          <div className="border border-primary/20 rounded-lg p-3">
+            <div className="text-sm font-medium mb-2" style={{ color: currentTheme.textColor }}>
+              История бросков:
+            </div>
+            <div className="space-y-2 max-h-32 overflow-y-auto">
+              {rollHistory.map((roll, index) => (
+                <div key={index} className="flex justify-between items-center text-xs p-2 bg-muted/50 rounded">
+                  <span style={{ color: currentTheme.textColor }}>
+                    {roll.timestamp} - {roll.formula}
+                  </span>
+                  <span className="font-bold" style={{ color: currentTheme.accent }}>
+                    {roll.result}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         <DialogFooter>
           <Button 
             variant="outline" 
@@ -251,7 +310,7 @@ export function DiceRollModal({ open, onClose, onRoll, playerName: defaultPlayer
               color: currentTheme.textColor
             }}
           >
-            Отмена
+            Закрыть
           </Button>
           <Button 
             onClick={handleRoll}
