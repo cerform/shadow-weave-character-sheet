@@ -52,15 +52,15 @@ const HomePage = () => {
     {
       icon: Scroll,
       title: "Справочник D&D",
-      description: "Подробные описания заклинаний, правил и механик игры",
-      href: "/dnd-spells",
+      description: "Подробные описания рас, классов и правил игры",
+      href: "/handbook",
       gradient: "from-amber-500/20 to-orange-500/20"
     },
     {
       icon: Crown,
       title: "Панель Мастера",
       description: "Создавайте сессии и управляйте игровыми партиями в реальном времени",
-      href: "/gm-dashboard",
+      href: "/dm",
       gradient: "from-red-500/20 to-rose-500/20"
     },
     {
