@@ -38,6 +38,7 @@ export const createDefaultCharacter = (): Character => {
       sp: 0,
       cp: 0,
     },
+    userId: '', // Добавляем поле userId
   };
 };
 

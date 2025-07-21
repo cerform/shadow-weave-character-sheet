@@ -263,10 +263,14 @@ const CharacterCreationPage: React.FC = () => {
 
   // Handle save character
   const handleSaveCharacter = useCallback(async () => {
+    console.log('=== НАЧАЛО СОХРАНЕНИЯ ПЕРСОНАЖА ===');
     setIsLoading(true);
     try {
       const uid = getCurrentUid();
+      console.log('UID пользователя:', uid);
+      
       if (!uid) {
+        console.log('Пользователь не авторизован, перенаправляем на страницу входа');
         toast({
           title: "Ошибка",
           description: "Необходимо войти в систему для сохранения персонажа.",
@@ -277,7 +281,14 @@ const CharacterCreationPage: React.FC = () => {
       }
 
       // Check required fields
+      console.log('Проверяем обязательные поля:', {
+        name: character.name,
+        race: character.race,
+        class: character.class
+      });
+      
       if (!character.name || !character.race || !character.class) {
+        console.log('Не заполнены обязательные поля');
         toast({
           title: "Ошибка",
           description: "Пожалуйста, заполните все обязательные поля (Имя, Раса, Класс).",
@@ -287,19 +298,34 @@ const CharacterCreationPage: React.FC = () => {
       }
 
       // Prepare character for saving
+      console.log('Подготавливаем персонажа для сохранения...');
       const characterToSave = convertToCharacter(character);
+      
+      // Добавляем userId к персонажу
+      characterToSave.userId = uid;
+      
+      console.log('Данные персонажа для сохранения:', characterToSave);
 
-      // Save character using Firebase - используем правильную функцию из firestore.ts
+      // Save character using Firebase
+      console.log('Сохраняем персонажа через Firebase...');
       const { saveCharacter: firestoreSaveCharacter } = await import('@/services/firebase/firestore');
       const characterId = await firestoreSaveCharacter(characterToSave);
 
+      console.log('Персонаж сохранен с ID:', characterId);
+
       if (characterId) {
+        console.log('Сохранение успешно, показываем уведомление и перенаправляем');
         toast({
           title: "Персонаж сохранен!",
           description: "Ваш персонаж успешно сохранен.",
         });
-        navigate(`/character-sheet/${characterId}`);
+        
+        // Небольшая задержка перед переходом для показа toast
+        setTimeout(() => {
+          navigate(`/character-sheet/${characterId}`);
+        }, 100);
       } else {
+        console.log('Не получен ID персонажа');
         toast({
           title: "Ошибка сохранения",
           description: "Не удалось сохранить персонажа. Попробуйте еще раз.",
@@ -307,13 +333,18 @@ const CharacterCreationPage: React.FC = () => {
         });
       }
     } catch (error) {
-      console.error("Ошибка при сохранении персонажа:", error);
+      console.error("=== ОШИБКА ПРИ СОХРАНЕНИИ ПЕРСОНАЖА ===");
+      console.error("Детали ошибки:", error);
+      console.error("Тип ошибки:", typeof error);
+      console.error("Стек ошибки:", error instanceof Error ? error.stack : 'Нет стека');
+      
       toast({
         title: "Ошибка сохранения",
-        description: "Произошла ошибка при сохранении персонажа.",
+        description: error instanceof Error ? error.message : "Произошла неизвестная ошибка при сохранении персонажа.",
         variant: "destructive",
       });
     } finally {
+      console.log('=== ЗАВЕРШЕНИЕ СОХРАНЕНИЯ ПЕРСОНАЖА ===');
       setIsLoading(false);
     }
   }, [character, convertToCharacter, navigate, toast]);

@@ -21,11 +21,13 @@ const CharacterReview: React.FC<CharacterReviewProps> = ({
   setCurrentStep,
   onSaveCharacter
 }) => {
+  const [isLoading, setIsLoading] = React.useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
   
   // Обработчик сохранения персонажа
   const handleSaveCharacter = async () => {
+    setIsLoading(true);
     try {
       console.log('Сохранение персонажа:', character);
       
@@ -52,6 +54,8 @@ const CharacterReview: React.FC<CharacterReviewProps> = ({
         description: "Произошла ошибка при сохранении персонажа",
         variant: "destructive"
       });
+    } finally {
+      setIsLoading(false);
     }
   };
   
@@ -125,8 +129,8 @@ const CharacterReview: React.FC<CharacterReviewProps> = ({
             Назад
           </Button>
         )}
-        <Button onClick={handleSaveCharacter}>
-          Завершить создание
+        <Button onClick={handleSaveCharacter} disabled={isLoading}>
+          {isLoading ? "Сохранение..." : "Завершить создание"}
         </Button>
       </div>
     </div>
