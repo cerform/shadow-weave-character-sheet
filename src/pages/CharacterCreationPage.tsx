@@ -394,6 +394,7 @@ const CharacterCreationPage: React.FC = () => {
               onLevelChange={handleLevelChange}
               maxAbilityScore={maxAbilityScore}
               setCurrentStep={setCurrentStep}
+              onSaveCharacter={handleSaveCharacter}
             />
           </CardContent>
         </Card>

@@ -11,30 +11,40 @@ interface CharacterReviewProps {
   prevStep?: () => void;
   updateCharacter: (updates: Partial<Character>) => void;
   setCurrentStep: (step: number) => void;
+  onSaveCharacter?: () => Promise<void>;
 }
 
 const CharacterReview: React.FC<CharacterReviewProps> = ({ 
   character, 
   prevStep, 
   updateCharacter,
-  setCurrentStep 
+  setCurrentStep,
+  onSaveCharacter
 }) => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { saveCharacter } = useCharacter();
   
   // Обработчик сохранения персонажа
   const handleSaveCharacter = async () => {
     try {
       console.log('Сохранение персонажа:', character);
-      const savedCharacter = await saveCharacter(character);
       
-      toast({
-        title: "Персонаж сохранен",
-        description: `${character.name} успешно сохранен!`,
-      });
-      
-      navigate(`/character-sheet/${savedCharacter.id}`);
+      if (onSaveCharacter) {
+        // Используем функцию сохранения из родительского компонента
+        await onSaveCharacter();
+      } else {
+        // Fallback на старый метод
+        const { useCharacter } = await import('@/contexts/CharacterContext');
+        const context = useCharacter();
+        const savedCharacter = await context.saveCharacter(character);
+        
+        toast({
+          title: "Персонаж сохранен",
+          description: `${character.name} успешно сохранен!`,
+        });
+        
+        navigate(`/character-sheet/${savedCharacter.id}`);
+      }
     } catch (error) {
       console.error('Ошибка сохранения персонажа:', error);
       toast({
@@ -116,7 +126,7 @@ const CharacterReview: React.FC<CharacterReviewProps> = ({
           </Button>
         )}
         <Button onClick={handleSaveCharacter}>
-          Сохранить персонажа
+          Завершить создание
         </Button>
       </div>
     </div>
