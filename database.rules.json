@@ -1,14 +1,10 @@
 {
   "rules": {
-    // Персонажи: структура users/userId/characters/characterId
+    // Персонажи: структура characters/userId/characterId
     "characters": {
       "$userId": {
         ".read": "auth != null && auth.uid == $userId",
-        ".write": "auth != null && auth.uid == $userId",
-        "$characterId": {
-          ".read": "auth != null && auth.uid == $userId",
-          ".write": "auth != null && auth.uid == $userId"
-        }
+        ".write": "auth != null && auth.uid == $userId"
       }
     },
     
