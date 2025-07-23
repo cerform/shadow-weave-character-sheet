@@ -308,7 +308,7 @@ const CharacterCreationPage: React.FC = () => {
 
       // Save character using Realtime Database
       console.log('Сохраняем персонажа через Realtime Database...');
-      const { saveCharacter: realtimeSaveCharacter } = await import('@/services/characterService');
+      import { saveCharacter as realtimeSaveCharacter } from '@/services/characterService';
       const savedCharacter = await realtimeSaveCharacter(characterToSave);
 
       console.log('Персонаж сохранен:', savedCharacter);
