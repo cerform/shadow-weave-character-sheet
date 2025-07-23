@@ -1,12 +1,14 @@
 {
   "rules": {
-    // Персонажи: доступ только к своим персонажам
+    // Персонажи: структура users/userId/characters/characterId
     "characters": {
-      ".read": "auth != null",
-      ".write": "auth != null",
-      "$characterId": {
-        ".read": "auth != null",
-        ".write": "auth != null && (newData.child('userId').val() == auth.uid || (!newData.exists() && data.child('userId').val() == auth.uid))"
+      "$userId": {
+        ".read": "auth != null && auth.uid == $userId",
+        ".write": "auth != null && auth.uid == $userId",
+        "$characterId": {
+          ".read": "auth != null && auth.uid == $userId",
+          ".write": "auth != null && auth.uid == $userId"
+        }
       }
     },
     
@@ -18,24 +20,12 @@
       }
     },
     
-    // Сессии игр: чтение для всех авторизованных, запись только для создателя
+    // Сессии игр: чтение для участников, запись для создателя
     "sessions": {
-      ".read": "auth != null",
-      ".write": "auth != null",
       "$sessionId": {
-        ".read": "auth != null",
-        ".write": "auth != null && (newData.child('hostId').val() == auth.uid || (!newData.exists() && data.child('hostId').val() == auth.uid))"
+        ".read": "auth != null && (data.child('dmId').val() == auth.uid || data.child('playerIds').hasChild(auth.uid))",
+        ".write": "auth != null && (newData.child('dmId').val() == auth.uid || (!newData.exists() && data.child('dmId').val() == auth.uid))"
       }
-    },
-    
-    // Заклинания: только чтение для всех
-    "spells": {
-      ".read": true,
-      ".write": false
-    },
-    
-    // По умолчанию: только для авторизованных пользователей
-    ".read": "auth != null",
-    ".write": "auth != null"
+    }
   }
 }

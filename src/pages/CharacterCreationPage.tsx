@@ -306,14 +306,14 @@ const CharacterCreationPage: React.FC = () => {
       
       console.log('Данные персонажа для сохранения:', characterToSave);
 
-      // Save character using Firebase
-      console.log('Сохраняем персонажа через Firebase...');
-      const { saveCharacter: firestoreSaveCharacter } = await import('@/services/firebase/firestore');
-      const characterId = await firestoreSaveCharacter(characterToSave);
+      // Save character using Realtime Database
+      console.log('Сохраняем персонажа через Realtime Database...');
+      const { saveCharacter: realtimeSaveCharacter } = await import('@/services/characterService');
+      const savedCharacter = await realtimeSaveCharacter(characterToSave);
 
-      console.log('Персонаж сохранен с ID:', characterId);
+      console.log('Персонаж сохранен:', savedCharacter);
 
-      if (characterId) {
+      if (savedCharacter && savedCharacter.id) {
         console.log('Сохранение успешно, показываем уведомление и перенаправляем');
         toast({
           title: "Персонаж сохранен!",
@@ -322,10 +322,10 @@ const CharacterCreationPage: React.FC = () => {
         
         // Небольшая задержка перед переходом для показа toast
         setTimeout(() => {
-          navigate(`/character-sheet/${characterId}`);
+          navigate(`/character-sheet/${savedCharacter.id}`);
         }, 100);
       } else {
-        console.log('Не получен ID персонажа');
+        console.log('Не получен ID персонажа или персонаж не сохранился');
         toast({
           title: "Ошибка сохранения",
           description: "Не удалось сохранить персонажа. Попробуйте еще раз.",

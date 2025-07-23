@@ -8,13 +8,7 @@ import {
   GoogleAuthProvider,
   signInWithPopup,
 } from "firebase/auth";
-import {
-  getFirestore,
-  doc,
-  getDoc,
-  setDoc,
-  serverTimestamp,
-} from "firebase/firestore";
+import { ref, get, set } from "firebase/database";
 import { app, db } from "@/lib/firebase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -61,18 +55,18 @@ const FirebaseAuthForm: React.FC = () => {
 
   const ensureUserProfile = async (uid: string, email: string | null, displayName: string | null) => {
     try {
-      const userDoc = doc(db, "users", uid);
-      const snapshot = await getDoc(userDoc);
+      const userRef = ref(db, `users/${uid}`);
+      const snapshot = await get(userRef);
       
       if (!snapshot.exists()) {
         // Создаем новый профиль с выбранной ролью
         const isDM = role === "dm";
-        await setDoc(userDoc, {
+        await set(userRef, {
           uid,
           email,
           displayName: displayName || email?.split('@')[0] || 'Пользователь',
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp(),
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
           photoURL: null,
           characters: [],
           isDM: isDM,
@@ -81,9 +75,10 @@ const FirebaseAuthForm: React.FC = () => {
         console.log(`Профиль пользователя создан с ролью: ${role}`);
       } else {
         // Обновляем дату последнего входа
-        await setDoc(userDoc, {
-          updatedAt: serverTimestamp()
-        }, { merge: true });
+        await set(userRef, {
+          ...snapshot.val(),
+          updatedAt: new Date().toISOString()
+        });
       }
     } catch (error) {
       console.error("Ошибка при создании/обновлении профиля:", error);

@@ -1,7 +1,7 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { UserType, AuthContextType } from '@/types/auth';
-import { doc, setDoc, getDoc } from 'firebase/firestore';
+import { ref, set, get } from 'firebase/database';
 import { User as FirebaseUser } from 'firebase/auth';
 import { db } from '@/firebase';
 import { auth, loginWithEmail, registerWithEmail, loginWithGoogle, logout, listenToAuthChanges } from '@/services/firebase/auth';
@@ -49,18 +49,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Функция для сохранения информации о пользователе в Firestore
-  const saveUserToFirestore = async (user: UserType) => {
+  // Функция для сохранения информации о пользователе в Realtime Database
+  const saveUserToDatabase = async (user: UserType) => {
     try {
-      const userRef = doc(db, "users", user.id);
+      const userRef = ref(db, `users/${user.id}`);
       
       // Проверим, существует ли этот пользователь
-      const userSnap = await getDoc(userRef);
+      const userSnap = await get(userRef);
       
       if (userSnap.exists()) {
         // Обновляем существующего пользователя
-        const userData = userSnap.data();
-        await setDoc(userRef, {
+        const userData = userSnap.val();
+        await set(userRef, {
+          ...userData,
           username: user.username || user.displayName || userData.username || '',
           email: user.email,
           updatedAt: new Date().toISOString(),
@@ -68,13 +69,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           photoURL: user.photoURL || userData.photoURL || '',
           displayName: user.displayName || userData.displayName || '',
           role: user.role || userData.role || 'player',
-          // Сохраняем другие поля, но не перезаписываем их
-        }, { merge: true });
+        });
         
         console.log("Обновлен существующий пользователь:", user.id);
       } else {
         // Создаем нового пользователя
-        await setDoc(userRef, {
+        await set(userRef, {
           username: user.username || user.displayName || '',
           email: user.email,
           displayName: user.displayName || '',
@@ -93,14 +93,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  // Функция для получения расширенных данных пользователя из Firestore
-  const getUserFromFirestore = async (userId: string): Promise<Partial<UserType>> => {
+  // Функция для получения расширенных данных пользователя из Realtime Database
+  const getUserFromDatabase = async (userId: string): Promise<Partial<UserType>> => {
     try {
-      const userRef = doc(db, "users", userId);
-      const userSnap = await getDoc(userRef);
+      const userRef = ref(db, `users/${userId}`);
+      const userSnap = await get(userRef);
       
       if (userSnap.exists()) {
-        return userSnap.data() as Partial<UserType>;
+        return userSnap.val() as Partial<UserType>;
       }
       
       return {};
@@ -119,8 +119,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       try {
         if (authUser) {
           console.log("Auth state changed: User logged in", authUser);
-          // Получаем дополнительные данные из Firestore
-          const userData = await getUserFromFirestore(authUser.uid);
+          // Получаем дополнительные данные из Realtime Database
+          const userData = await getUserFromDatabase(authUser.uid);
           const transformedUser = transformUser(authUser, userData);
           
           console.log("Трансформированный пользователь:", transformedUser);
@@ -129,8 +129,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           localStorage.setItem('authUser', JSON.stringify(transformedUser));
           
           setUser(transformedUser);
-          // Сохраняем пользователя в Firestore (создаем или обновляем)
-          await saveUserToFirestore(transformedUser);
+          // Сохраняем пользователя в Realtime Database (создаем или обновляем)
+          await saveUserToDatabase(transformedUser);
         } else {
           console.log("Auth state changed: User logged out");
           // Очищаем localStorage при выходе
@@ -156,8 +156,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const firebaseUser = await loginWithEmail(email, password);
       if (firebaseUser) {
         console.log("Login successful", firebaseUser);
-        // Получаем дополнительные данные из Firestore
-        const userData = await getUserFromFirestore(firebaseUser.uid);
+        // Получаем дополнительные данные из Realtime Database
+        const userData = await getUserFromDatabase(firebaseUser.uid);
         const transformedUser = transformUser(firebaseUser, userData);
         setUser(transformedUser);
       }
@@ -183,8 +183,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         transformedUser.username = displayName;
         transformedUser.isDM = isDM;
         
-        // Сохраняем пользователя в Firestore
-        await saveUserToFirestore(transformedUser);
+        // Сохраняем пользователя в Realtime Database
+        await saveUserToDatabase(transformedUser);
         
         setUser(transformedUser);
       }
@@ -230,8 +230,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       // Если попап был успешным, обрабатываем результат
       if (firebaseUser) {
         console.log("Google login successful", firebaseUser);
-        // Получаем дополнительные данные из Firestore
-        const userData = await getUserFromFirestore(firebaseUser.uid);
+        // Получаем дополнительные данные из Realtime Database
+        const userData = await getUserFromDatabase(firebaseUser.uid);
         
         // Создаем объект пользователя с учетом данных из Firestore
         const transformedUser = transformUser(firebaseUser, {
@@ -246,8 +246,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         // Сохраняем в localStorage
         localStorage.setItem('authUser', JSON.stringify(transformedUser));
         
-        // Сохраняем пользователя в Firestore для обновления или создания
-        await saveUserToFirestore(transformedUser);
+        // Сохраняем пользователя в Realtime Database для обновления или создания
+        await saveUserToDatabase(transformedUser);
         
         // Устанавливаем пользователя в контекст
         setUser(transformedUser);
@@ -285,9 +285,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       if (!user) throw new Error('Пользователь не авторизован');
       
       console.log("Updating user profile", data);
-      // Обновляем профиль в Firestore
+      // Обновляем профиль в Realtime Database
       const updatedUser = { ...user, ...data };
-      await saveUserToFirestore(updatedUser);
+      await saveUserToDatabase(updatedUser);
       
       // Обновляем в localStorage
       localStorage.setItem('authUser', JSON.stringify(updatedUser));

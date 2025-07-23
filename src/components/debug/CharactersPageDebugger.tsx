@@ -9,7 +9,7 @@ import { Separator } from "@/components/ui/separator";
 import { AlertTriangle, ChevronDown, Info } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/use-auth';
-import { diagnoseCharacterLoading } from '@/utils/characterLoadingDebug';
+// Removed - import { diagnoseCharacterLoading } from '@/utils/characterLoadingDebug';
 
 const CharactersPageDebugger: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -44,7 +44,19 @@ const CharactersPageDebugger: React.FC = () => {
     setIsChecking(true);
     
     try {
-      const results = await diagnoseCharacterLoading();
+      // Простая диагностика без внешней зависимости
+      const results = {
+        success: isAuthenticated && !error,
+        error: error || (!isAuthenticated ? 'Пользователь не авторизован' : null),
+        debug: {
+          isAuthenticated,
+          userId: user?.uid,
+          charactersCount: characters.length,
+          loading,
+          error: error
+        }
+      };
+      
       setDebugResults(results);
       
       if (results.success) {

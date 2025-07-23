@@ -8,7 +8,7 @@ import {
   orderByChild,
   equalTo
 } from 'firebase/database';
-import { db } from '@/lib/firebaseRealtime';
+import { db } from '@/lib/firebase';
 import { Character } from '@/types/character';
 import { getCurrentUid } from '@/utils/authHelpers';
 import { normalizeCharacterAbilities } from '@/utils/characterNormalizer';

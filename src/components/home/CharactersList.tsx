@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { UserPlus, User, Play, Trash2, RefreshCw } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
-import { getUserCharacters } from '@/services/firebase/firestore';
+import { getUserCharacters } from '@/services/characterService';
 import { toast } from 'sonner';
 
 const CharactersList = () => {
