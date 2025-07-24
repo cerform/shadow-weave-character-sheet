@@ -12,6 +12,8 @@ import { getAllBackgrounds } from '@/data/backgrounds';
 import { useCharacterOperations } from '@/hooks/useCharacterOperations';
 import { getCurrentUid } from '@/utils/authHelpers';
 import { saveCharacter as realtimeSaveCharacter } from '@/services/characterService';
+import { getCharacterSteps } from '@/config/characterCreationSteps';
+import { useAbilitiesRoller } from '@/hooks/useAbilitiesRoller';
 
 import { useTheme } from '@/hooks/use-theme';
 import CreationStepper from '@/components/character-creation/CreationStepper';
@@ -25,11 +27,42 @@ const CharacterCreationPage: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { saveCharacter } = useCharacterOperations();
-  const { character, updateCharacter, isMagicClass, convertToCharacter } = useCharacterCreation();
+  const { character, updateCharacter, isMagicClass, convertToCharacter, currentStep, setCurrentStep, nextStep, prevStep } = useCharacterCreation();
   const [isLoading, setIsLoading] = useState(false);
 
   // 🔧 Управление методом распределения характеристик
   const [abilitiesMethod, setAbilitiesMethod] = useState<AbilityRollMethod>('standard');
+
+  // Хук для броска характеристик
+  const abilityRoller = useAbilitiesRoller(abilitiesMethod, character.level || 1);
+
+  // Функция для получения модификатора способности
+  const getModifier = useCallback((score: number) => {
+    const modifier = Math.floor((score - 10) / 2);
+    return modifier >= 0 ? `+${modifier}` : `${modifier}`;
+  }, []);
+
+  // Проверяем, есть ли подрасы для текущей расы
+  const hasSubraces = useMemo(() => {
+    if (!character.race) return false;
+    const subraces = getSubracesForRace(character.race);
+    return subraces && subraces.length > 0;
+  }, [character.race]);
+
+  // Получаем шаги создания персонажа с учетом фильтрации
+  const steps = useMemo(() => {
+    return getCharacterSteps({ hasSubraces }).map(step => ({
+      ...step,
+      completed: step.id < currentStep,
+      active: step.id === currentStep,
+      disabled: step.id > currentStep
+    }));
+  }, [hasSubraces, currentStep]);
+
+  // Функция для обработки изменения уровня
+  const handleLevelChange = useCallback((level: number) => {
+    updateCharacter({ level });
+  }, [updateCharacter]);
 
   const handleSaveCharacter = useCallback(async () => {
     console.log('=== НАЧАЛО СОХРАНЕНИЯ ПЕРСОНАЖА ===');
@@ -95,15 +128,36 @@ const CharacterCreationPage: React.FC = () => {
     <div className="flex flex-col min-h-screen">
       <IconOnlyNavigation />
       <div className="flex flex-1">
-        <CreationSidebar />
+        <CreationSidebar 
+          steps={steps}
+          currentStep={currentStep}
+          setCurrentStep={setCurrentStep}
+        />
         <main className="flex-1 p-6">
-          <CreationStepper />
+          <CreationStepper 
+            steps={steps}
+            currentStep={currentStep}
+            setCurrentStep={setCurrentStep}
+          />
           <CharacterCreationContent
+            currentStep={currentStep}
             character={character}
             updateCharacter={updateCharacter}
-            isMagicClass={isMagicClass}
+            nextStep={nextStep}
+            prevStep={prevStep}
             abilitiesMethod={abilitiesMethod}
             setAbilitiesMethod={setAbilitiesMethod}
+            diceResults={abilityRoller.diceResults}
+            getModifier={getModifier}
+            rollAllAbilities={abilityRoller.rollAllAbilities}
+            rollSingleAbility={abilityRoller.rollSingleAbility}
+            abilityScorePoints={abilityRoller.abilityScorePoints}
+            isMagicClass={isMagicClass}
+            rollsHistory={abilityRoller.rollsHistory}
+            onLevelChange={handleLevelChange}
+            maxAbilityScore={20}
+            setCurrentStep={setCurrentStep}
+            onSaveCharacter={handleSaveCharacter}
           />
           <div className="mt-6 flex justify-end">
             <Button onClick={handleSaveCharacter} disabled={isLoading}>
