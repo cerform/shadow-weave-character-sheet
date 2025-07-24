@@ -1,8 +1,9 @@
-
-import { initializeApp } from 'firebase/app';
+// src/lib/firebase.ts
+import { initializeApp, getApp, getApps } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getDatabase } from 'firebase/database';
 
+// ✅ Конфиг именно под твой проект
 const firebaseConfig = {
   apiKey: "AIzaSyAeKvsN-wul7CsemTA-cFxZI0iO9sWe0fg",
   authDomain: "shadow-char.firebaseapp.com",
@@ -10,18 +11,10 @@ const firebaseConfig = {
   projectId: "shadow-char"
 };
 
-// Initialize Firebase
-export const app = initializeApp(firebaseConfig);
-
-// Initialize Firebase services
-export const auth = getAuth(app);
-export const db = getDatabase(app); // Только Realtime Database
-
-export default app;
-// ✅ Проверка: если уже инициализирован — повторно не делаем
+// ✅ Проверка: если уже инициализирован — повторно не инициализируем
 const firebaseApp = getApps().length ? getApp() : initializeApp(firebaseConfig);
 
-// ✅ Экспортируй всё отдельно (внимание на имена!)
+// ✅ Экспорт необходимых сервисов
 export const app = firebaseApp;
 export const auth = getAuth(firebaseApp);
-export const db = getFirestore(firebaseApp);
+export const db = getDatabase(firebaseApp); // Используем Realtime Database
