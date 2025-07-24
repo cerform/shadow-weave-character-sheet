@@ -12,6 +12,7 @@ import { db } from '@/lib/firebase';
 import { Character } from '@/types/character';
 import { getCurrentUid } from '@/utils/authHelpers';
 import { normalizeCharacterAbilities } from '@/utils/characterNormalizer';
+import { generateRandomId } from '@/utils/idGenerator';
 import { LocalCharacterStore } from './characterStorage';
 
 const CHARACTERS_PATH = 'characters';
@@ -58,9 +59,14 @@ export const getCharacterById = async (characterId: string): Promise<Character |
 
 export const saveCharacter = async (character: Character): Promise<Character> => {
   const uid = getCurrentUid();
-  if (!uid) return character;
+  if (!uid) {
+    console.error('saveCharacter: No user ID available');
+    return character;
+  }
 
-  const characterId = character.id || `character_${Date.now()}`;
+  const characterId = character.id || generateRandomId();
+  console.log('saveCharacter: Saving character with ID:', characterId);
+  
   const data = {
     ...normalizeCharacterAbilities(character),
     userId: uid,
@@ -68,8 +74,14 @@ export const saveCharacter = async (character: Character): Promise<Character> =>
     createdAt: character.createdAt || new Date().toISOString()
   };
 
-  await set(ref(db, `${CHARACTERS_PATH}/${uid}/${characterId}`), data);
-  return { ...data, id: characterId };
+  try {
+    await set(ref(db, `${CHARACTERS_PATH}/${uid}/${characterId}`), data);
+    console.log('saveCharacter: Character saved successfully');
+    return { ...data, id: characterId };
+  } catch (error) {
+    console.error('saveCharacter: Error saving character:', error);
+    throw error;
+  }
 };
 
 export const deleteCharacter = async (characterId: string): Promise<void> => {

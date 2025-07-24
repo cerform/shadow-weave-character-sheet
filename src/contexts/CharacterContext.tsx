@@ -75,7 +75,7 @@ export const CharacterProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       });
       // Глобальная отмена подписок не требуется в данной реализации
     };
-  }, [state, auth.currentUser]);
+  }, [auth.currentUser]); // Убираем state из зависимостей
 
   // Обертки для интеграции с операциями
   const saveCharacter = useCallback(async (character: Character): Promise<Character> => {
