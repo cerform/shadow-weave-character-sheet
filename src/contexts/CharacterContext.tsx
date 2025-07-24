@@ -2,7 +2,7 @@ import React, { createContext, useContext, useCallback, useEffect } from 'react'
 import { Character } from '@/types/character';
 import { useCharacterState } from '@/hooks/useCharacterState';
 import { useCharacterOperations } from '@/hooks/useCharacterOperations';
-import { subscribeToCharacters } from '@/services/characterService';
+#import { subscribeToCharacters } from '@/services/characterService';
 import { auth } from '@/lib/firebase';
 
 interface CharacterContextType {
