@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useCallback, useEffect } from 'react';
 import { Character } from '@/types/character';
 import { useCharacterState } from '@/hooks/useCharacterState';
@@ -36,63 +35,40 @@ export const CharacterProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const state = useCharacterState();
   const operations = useCharacterOperations();
 
-  // 🔥 Инициализируем реалтайм подписку при монтировании с fallback
+  // 🔥 Только Firebase: без localStorage fallback
   useEffect(() => {
     if (!auth.currentUser) return;
-    
+
     console.log('CharacterContext: Инициализация реалтайм подписки');
-    
+
     let isSubscribed = true;
-    
-    const initializeSubscription = async () => {
-      try {
-        const unsubscribe = subscribeToCharacters((characters) => {
-          if (isSubscribed) {
-            console.log('CharacterContext: Получены персонажи через подписку:', characters.length);
-            state.setCharacters(characters);
-          }
-        });
 
-        return unsubscribe;
-      } catch (error) {
-        console.error('CharacterContext: Ошибка подписки, используем fallback:', error);
-        // Fallback: загружаем из localStorage
-        const localCharacters = JSON.parse(localStorage.getItem('characters') || '[]')
-          .filter((char: any) => char.userId === auth.currentUser?.uid);
-        if (isSubscribed) {
-          state.setCharacters(localCharacters);
-        }
+    const unsubscribe = subscribeToCharacters((characters) => {
+      if (isSubscribed) {
+        console.log('CharacterContext: Получены персонажи через подписку:', characters.length);
+        state.setCharacters(characters);
       }
-    };
-
-    let unsubscribePromise = initializeSubscription();
+    });
 
     return () => {
       isSubscribed = false;
       console.log('CharacterContext: Очистка реалтайм подписки');
-      unsubscribePromise?.then((unsubscribe) => {
-        if (unsubscribe) unsubscribe();
-      });
-      // Глобальная отмена подписок не требуется в данной реализации
+      unsubscribe?.();
     };
-  }, [auth.currentUser]); // Убираем state из зависимостей
+  }, [auth.currentUser]);
 
-  // Обертки для интеграции с операциями
   const saveCharacter = useCallback(async (character: Character): Promise<Character> => {
     try {
       state.setLoading(true);
       state.clearError();
-      
+
       const savedCharacter = await operations.saveCharacter(character);
-      
-      // Обновляем локальный список
       state.addCharacter(savedCharacter);
-      
-      // Обновляем текущего персонажа если это он
+
       if (state.character?.id === savedCharacter.id) {
         state.setCharacter(savedCharacter);
       }
-      
+
       return savedCharacter;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Неизвестная ошибка';
@@ -107,10 +83,7 @@ export const CharacterProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     try {
       state.setLoading(true);
       state.clearError();
-      
       await operations.deleteCharacter(id);
-      
-      // Обновляем локальный список
       state.removeCharacter(id);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Ошибка удаления персонажа';
@@ -123,21 +96,15 @@ export const CharacterProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   const getUserCharacters = useCallback(async () => {
     try {
-      console.log('CharacterContext: Начинаем загрузку персонажей. Устанавливаем loading = true');
       state.setLoading(true);
       state.clearError();
-      
       const userCharacters = await operations.getUserCharacters();
-      console.log('CharacterContext: Получены персонажи:', userCharacters.length);
       state.setCharacters(userCharacters);
-      console.log('CharacterContext: Персонажи установлены в состояние');
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Ошибка загрузки персонажей';
-      console.error('CharacterContext: Ошибка загрузки персонажей:', err);
       state.setError(errorMessage);
-      state.setCharacters([]); // Устанавливаем пустой массив при ошибке
+      state.setCharacters([]);
     } finally {
-      console.log('CharacterContext: Завершаем загрузку. Устанавливаем loading = false');
       state.setLoading(false);
     }
   }, [state, operations]);
@@ -146,14 +113,11 @@ export const CharacterProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     try {
       state.setLoading(true);
       state.clearError();
-      
       const foundCharacter = await operations.getCharacterById(id);
-      
       if (foundCharacter) {
         state.setCharacter(foundCharacter);
         return foundCharacter;
       }
-      
       return null;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Ошибка загрузки персонажа';
@@ -165,7 +129,6 @@ export const CharacterProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   }, [state, operations]);
 
   const refreshCharacters = useCallback(async () => {
-    console.log('CharacterContext: Принудительное обновление списка персонажей');
     await getUserCharacters();
   }, [getUserCharacters]);
 
@@ -173,7 +136,7 @@ export const CharacterProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     if (!state.character) {
       throw new Error('Нет текущего персонажа для сохранения');
     }
-    
+
     try {
       state.setLoading(true);
       await operations.saveCurrentCharacter(state.character);
@@ -200,7 +163,7 @@ export const CharacterProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         getUserCharacters,
         getCharacterById,
         refreshCharacters,
-        saveCurrentCharacter
+        saveCurrentCharacter,
       }}
     >
       {children}

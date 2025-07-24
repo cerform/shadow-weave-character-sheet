@@ -6,59 +6,38 @@ import { useToast } from "@/hooks/use-toast";
 import { Character } from '@/types/character';
 import { useCharacterCreation } from '@/hooks/useCharacterCreation';
 import { Save } from 'lucide-react';
-import { getAllRaces, getSubracesForRace } from '@/data/races';
-import { getAllClasses } from '@/data/classes';
-import { getAllBackgrounds } from '@/data/backgrounds';
-import { useCharacterOperations } from '@/hooks/useCharacterOperations';
-import { getCurrentUid } from '@/utils/authHelpers';
-import { saveCharacter as realtimeSaveCharacter } from '@/services/characterService';
+import { getSubracesForRace } from '@/data/races';
 import { getCharacterSteps } from '@/config/characterCreationSteps';
 import { useAbilitiesRoller } from '@/hooks/useAbilitiesRoller';
-
 import { useTheme } from '@/hooks/use-theme';
 import CreationStepper from '@/components/character-creation/CreationStepper';
 import CreationSidebar from '@/components/character-creation/CreationSidebar';
 import CharacterCreationContent from '@/components/character-creation/CharacterCreationContent';
-import { getEquipmentLength } from '@/utils/safetyUtils';
 import IconOnlyNavigation from '@/components/navigation/IconOnlyNavigation';
 import { AbilityRollMethod } from '@/components/character-creation/AbilityScoreMethodSelector';
+import { getCurrentUid } from '@/utils/authHelpers';
+import { saveCharacter as realtimeSaveCharacter } from '@/services/characterService';
 
 const CharacterCreationPage: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { saveCharacter } = useCharacterOperations();
   const { character, updateCharacter, isMagicClass, convertToCharacter, currentStep, setCurrentStep, nextStep, prevStep } = useCharacterCreation();
   const [isLoading, setIsLoading] = useState(false);
-
-  // 🔧 Управление методом распределения характеристик
   const [abilitiesMethod, setAbilitiesMethod] = useState<AbilityRollMethod>('standard');
 
-  // Сброс состояния при загрузке страницы (для нового создания)
-  useEffect(() => {
-    // Если это новое создание персонажа (нет сохраненного прогресса), начинаем с шага 0
-    const savedProgress = localStorage.getItem('character_creation_progress');
-    if (!savedProgress) {
-      setCurrentStep(0);
-    }
-  }, [setCurrentStep]);
-
-  // Хук для броска характеристик
   const abilityRoller = useAbilitiesRoller(abilitiesMethod, character.level || 1);
 
-  // Функция для получения модификатора способности
   const getModifier = useCallback((score: number) => {
     const modifier = Math.floor((score - 10) / 2);
     return modifier >= 0 ? `+${modifier}` : `${modifier}`;
   }, []);
 
-  // Проверяем, есть ли подрасы для текущей расы
   const hasSubraces = useMemo(() => {
     if (!character.race) return false;
     const subraces = getSubracesForRace(character.race);
     return subraces && subraces.length > 0;
   }, [character.race]);
 
-  // Получаем шаги создания персонажа с учетом фильтрации
   const steps = useMemo(() => {
     return getCharacterSteps({ hasSubraces }).map(step => ({
       ...step,
@@ -68,10 +47,11 @@ const CharacterCreationPage: React.FC = () => {
     }));
   }, [hasSubraces, currentStep]);
 
-  // Функция для обработки изменения уровня
   const handleLevelChange = useCallback((level: number) => {
     updateCharacter({ level });
   }, [updateCharacter]);
+
+  // 🔥 Удалён localStorage.getItem('character_creation_progress') — больше не нужен
 
   const handleSaveCharacter = useCallback(async () => {
     console.log('=== НАЧАЛО СОХРАНЕНИЯ ПЕРСОНАЖА ===');
@@ -168,7 +148,6 @@ const CharacterCreationPage: React.FC = () => {
             setCurrentStep={setCurrentStep}
             onSaveCharacter={handleSaveCharacter}
           />
-          {/* Показываем кнопку только если НЕ на последнем шаге (CharacterReview) */}
           {currentStep !== steps.length - 1 && (
             <div className="mt-6 flex justify-end">
               <Button onClick={handleSaveCharacter} disabled={isLoading}>
