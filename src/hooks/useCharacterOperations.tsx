@@ -1,4 +1,3 @@
-// Хуки для работы с персонажами
 import { useCallback } from 'react';
 import * as characterService from '@/services/characterService';
 import { Character } from '@/types/character';
@@ -6,22 +5,32 @@ import { getCurrentUid } from '@/utils/authHelpers';
 import { toast } from 'sonner';
 
 export const useCharacterOperations = () => {
-  
   const saveCharacter = useCallback(async (character: Character): Promise<Character> => {
     try {
-      console.log('useCharacterOperations: Начинаем сохранение персонажа:', character.name);
-      
-      // Добавляем userId если его нет
-      if (!character.userId) {
-        character.userId = getCurrentUid();
+      const userId = getCurrentUid();
+      if (!userId) throw new Error('Пользователь не авторизован');
+
+      const dataToSave = { ...character };
+
+      // Присваиваем userId, если его нет
+      if (!dataToSave.userId) {
+        dataToSave.userId = userId;
       }
 
-      // Сохраняем персонажа в Firebase Realtime Database
-      const savedCharacter = await characterService.saveCharacter(character);
-      console.log('useCharacterOperations: Персонаж сохранен в Firebase:', savedCharacter.id);
-      return savedCharacter;
+      // Обновление или создание
+      let result: Character;
+      if (dataToSave.id) {
+        await characterService.updateCharacter(dataToSave);
+        result = dataToSave;
+        toast.success('Персонаж обновлён');
+      } else {
+        result = await characterService.saveCharacter(dataToSave);
+        toast.success('Персонаж создан');
+      }
+
+      return result;
     } catch (error) {
-      console.error('Критическая ошибка сохранения персонажа:', error);
+      console.error('Ошибка при сохранении персонажа:', error);
       throw error;
     }
   }, []);
@@ -29,10 +38,11 @@ export const useCharacterOperations = () => {
   const deleteCharacter = useCallback(async (id: string) => {
     try {
       await characterService.deleteCharacter(id);
-      toast.success('Персонаж удален');
+      toast.success('Персонаж удалён');
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Ошибка удаления персонажа';
-      throw new Error(errorMessage);
+      toast.error(errorMessage);
+      throw err;
     }
   }, []);
 
@@ -56,16 +66,15 @@ export const useCharacterOperations = () => {
     if (!character) {
       throw new Error('Нет текущего персонажа для сохранения');
     }
-    
+
     try {
-      await characterService.saveCharacter(character);
-      toast.success('Персонаж сохранен');
+      await saveCharacter(character);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Ошибка сохранения персонажа';
       toast.error(errorMessage);
       throw err;
     }
-  }, []);
+  }, [saveCharacter]);
 
   return {
     saveCharacter,

@@ -2,8 +2,14 @@ import React, { createContext, useContext, useCallback, useEffect } from 'react'
 import { Character } from '@/types/character';
 import { useCharacterState } from '@/hooks/useCharacterState';
 import { useCharacterOperations } from '@/hooks/useCharacterOperations';
-#import { subscribeToCharacters } from '@/services/characterService';
 import { auth } from '@/lib/firebase';
+import {
+  collection,
+  onSnapshot,
+  query,
+  where,
+} from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 interface CharacterContextType {
   characters: Character[];
@@ -35,25 +41,31 @@ export const CharacterProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const state = useCharacterState();
   const operations = useCharacterOperations();
 
-  // 🔥 Только Firebase: без localStorage fallback
+  // ✅ Firestore realtime подписка
   useEffect(() => {
-    if (!auth.currentUser) return;
+    const currentUser = auth.currentUser;
+    if (!currentUser) return;
 
-    console.log('CharacterContext: Инициализация реалтайм подписки');
+    const q = query(
+      collection(db, 'characters'),
+      where('userId', '==', currentUser.uid)
+    );
 
-    let isSubscribed = true;
+    console.log('CharacterContext: Подписка на Firestore персонажей...');
 
-    const unsubscribe = subscribeToCharacters((characters) => {
-      if (isSubscribed) {
-        console.log('CharacterContext: Получены персонажи через подписку:', characters.length);
-        state.setCharacters(characters);
-      }
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const characters: Character[] = [];
+      snapshot.forEach((doc) => {
+        characters.push({ id: doc.id, ...doc.data() } as Character);
+      });
+
+      console.log('CharacterContext: Загружено персонажей:', characters.length);
+      state.setCharacters(characters);
     });
 
     return () => {
-      isSubscribed = false;
-      console.log('CharacterContext: Очистка реалтайм подписки');
-      unsubscribe?.();
+      console.log('CharacterContext: Отписка от Firestore');
+      unsubscribe();
     };
   }, [auth.currentUser]);
 
