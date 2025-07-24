@@ -2,7 +2,6 @@ import React, { createContext, useContext, useCallback, useEffect } from 'react'
 import { Character } from '@/types/character';
 import { useCharacterState } from '@/hooks/useCharacterState';
 import { useCharacterOperations } from '@/hooks/useCharacterOperations';
-#import { subscribeToCharacters } from '@/services/characterService';
 import { auth } from '@/lib/firebase';
 
 interface CharacterContextType {
@@ -35,20 +34,21 @@ export const CharacterProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const state = useCharacterState();
   const operations = useCharacterOperations();
 
-  // 🔥 Только Firebase: без localStorage fallback
-useEffect(() => {
-  const loadCharacters = async () => {
-    try {
+  // ✅ Новый useEffect: загружаем персонажей один раз при инициализации
+  useEffect(() => {
+    const fetchCharacters = async () => {
       if (!auth.currentUser) return;
-      const characters = await operations.getUserCharacters();
-      state.setCharacters(characters);
-    } catch (error) {
-      console.error('Ошибка при загрузке персонажей:', error);
-    }
-  };
+      try {
+        const characters = await operations.getUserCharacters();
+        state.setCharacters(characters);
+      } catch (error) {
+        console.error('Ошибка загрузки персонажей:', error);
+        state.setCharacters([]);
+      }
+    };
 
-  loadCharacters();
-}, []);
+    fetchCharacters();
+  }, []);
 
   const saveCharacter = useCallback(async (character: Character): Promise<Character> => {
     try {
