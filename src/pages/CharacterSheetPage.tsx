@@ -22,24 +22,22 @@ const CharacterSheetPage = () => {
     if (!character || (id && character.id !== id)) {
       loadCharacter(id);
     }
-    
-    // Проверяем, есть ли активная сессия
+  }, [id]); // Убираем character из зависимостей, чтобы избежать бесконечного цикла
+
+  // Отдельный useEffect для подключения к сессии
+  useEffect(() => {
     const savedSession = localStorage.getItem('active-session');
-    if (savedSession && isConnected) {
+    if (savedSession && isConnected && character) {
       try {
         const parsedSession = JSON.parse(savedSession);
         if (parsedSession && parsedSession.sessionCode) {
-          // Если есть сессия и персонаж, подключаемся к сессии
-          if (character) {
-            // Используем обновленный метод connect, передавая только обязательный параметр
-            connect(parsedSession.sessionCode);
-          }
+          connect(parsedSession.sessionCode);
         }
       } catch (error) {
         console.error("Ошибка при загрузке данных сессии:", error);
       }
     }
-  }, [id, character, isConnected]);
+  }, [isConnected, character]);
 
   const loadCharacter = async (characterId?: string) => {
     setLoading(true);
