@@ -1,18 +1,21 @@
 // src/lib/firebase.ts
-import { initializeApp, getApps, getApp } from 'firebase/app';
+import { initializeApp, getApp, getApps } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 
+// 🔥 Конфиг Firebase проекта
 const firebaseConfig = {
-  apiKey: 'your-api-key',
-  authDomain: 'your-auth-domain',
-  projectId: 'your-project-id',
-  storageBucket: 'your-storage-bucket',
-  messagingSenderId: 'your-sender-id',
-  appId: 'your-app-id',
+  apiKey: "AIzaSyAeKvsN-wul7CsemTA-cFxZI0iO9sWe0fg",
+  authDomain: "shadow-char.firebaseapp.com",
+  projectId: "shadow-char",
+  storageBucket: "shadow-char.appspot.com",
+     
 };
 
-const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+// ✅ Безопасная инициализация — предотвращаем ошибку "already exists"
+const firebaseApp = getApps().length ? getApp() : initializeApp(firebaseConfig);
 
-export const auth = getAuth(app);
-export const db = getFirestore(app);
+// ✅ Экспорт сервисов
+export const app = firebaseApp;
+export const auth = getAuth(firebaseApp);
+export const db = getFirestore(firebaseApp); // Firestore используется здесь
