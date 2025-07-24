@@ -1,13 +1,18 @@
+import { initializeApp } from "firebase/app";
+import { getAuth } from "firebase/auth";
+import { getFirestore } from "firebase/firestore";
 
-// Этот файл просто переадресует к основной структуре в lib/firebase.ts
-// для обратной совместимости с существующим кодом
-
-import { app, db, auth } from './lib/firebase';
-
-export { 
-  app, 
-  db, 
-  auth
+const firebaseConfig = {
+  apiKey: "твой_api_key",
+  authDomain: "твой_домен",
+  projectId: "shadow-char",
+  storageBucket: "shadow-char.appspot.com",
+  messagingSenderId: "твой_sender_id",
+  appId: "твой_app_id",
 };
 
-export default app;
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app); // <-- Firestore!
+
+export { app, auth, db }; // 👈 экспортируем Firestore здесь

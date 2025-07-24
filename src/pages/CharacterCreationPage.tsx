@@ -16,7 +16,7 @@ import CharacterCreationContent from '@/components/character-creation/CharacterC
 import IconOnlyNavigation from '@/components/navigation/IconOnlyNavigation';
 import { AbilityRollMethod } from '@/components/character-creation/AbilityScoreMethodSelector';
 import { getCurrentUid } from '@/utils/authHelpers';
-import { saveCharacter as realtimeSaveCharacter } from '@/services/characterService';
+import { saveCharacter } from "@/services/characterService"; // ← использовать firestore-версию
 
 const CharacterCreationPage: React.FC = () => {
   const navigate = useNavigate();
