@@ -12,7 +12,7 @@ import {
   setPersistence,
   browserLocalPersistence
 } from 'firebase/auth';
-import { app } from '@/firebase';
+import { app } from '@/lib/firebase';
 import { logAuthError } from './error-utils';
 
 // Initialize Firebase Auth
