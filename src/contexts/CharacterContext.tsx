@@ -2,14 +2,8 @@ import React, { createContext, useContext, useCallback, useEffect } from 'react'
 import { Character } from '@/types/character';
 import { useCharacterState } from '@/hooks/useCharacterState';
 import { useCharacterOperations } from '@/hooks/useCharacterOperations';
+#import { subscribeToCharacters } from '@/services/characterService';
 import { auth } from '@/lib/firebase';
-import {
-  collection,
-  onSnapshot,
-  query,
-  where,
-} from 'firebase/firestore';
-import { db } from '@/lib/firebase';
 
 interface CharacterContextType {
   characters: Character[];
@@ -41,33 +35,20 @@ export const CharacterProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const state = useCharacterState();
   const operations = useCharacterOperations();
 
-  // ✅ Firestore realtime подписка
-  useEffect(() => {
-    const currentUser = auth.currentUser;
-    if (!currentUser) return;
-
-    const q = query(
-      collection(db, 'characters'),
-      where('userId', '==', currentUser.uid)
-    );
-
-    console.log('CharacterContext: Подписка на Firestore персонажей...');
-
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const characters: Character[] = [];
-      snapshot.forEach((doc) => {
-        characters.push({ id: doc.id, ...doc.data() } as Character);
-      });
-
-      console.log('CharacterContext: Загружено персонажей:', characters.length);
+  // 🔥 Только Firebase: без localStorage fallback
+useEffect(() => {
+  const loadCharacters = async () => {
+    try {
+      if (!auth.currentUser) return;
+      const characters = await operations.getUserCharacters();
       state.setCharacters(characters);
-    });
+    } catch (error) {
+      console.error('Ошибка при загрузке персонажей:', error);
+    }
+  };
 
-    return () => {
-      console.log('CharacterContext: Отписка от Firestore');
-      unsubscribe();
-    };
-  }, [auth.currentUser]);
+  loadCharacters();
+}, []);
 
   const saveCharacter = useCallback(async (character: Character): Promise<Character> => {
     try {
