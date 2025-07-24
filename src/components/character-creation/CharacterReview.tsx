@@ -129,7 +129,8 @@ const CharacterReview: React.FC<CharacterReviewProps> = ({
             Назад
           </Button>
         )}
-        <Button onClick={handleSaveCharacter} disabled={isLoading}>
+        <div className="flex-1"></div>
+        <Button onClick={handleSaveCharacter} disabled={isLoading} className="ml-auto">
           {isLoading ? "Сохранение..." : "Завершить создание"}
         </Button>
       </div>

@@ -159,12 +159,15 @@ const CharacterCreationPage: React.FC = () => {
             setCurrentStep={setCurrentStep}
             onSaveCharacter={handleSaveCharacter}
           />
-          <div className="mt-6 flex justify-end">
-            <Button onClick={handleSaveCharacter} disabled={isLoading}>
-              <Save className="mr-2 h-4 w-4" />
-              {isLoading ? "Сохраняем..." : "Завершить создание"}
-            </Button>
-          </div>
+          {/* Показываем кнопку только если НЕ на последнем шаге (CharacterReview) */}
+          {currentStep !== steps.length - 1 && (
+            <div className="mt-6 flex justify-end">
+              <Button onClick={handleSaveCharacter} disabled={isLoading}>
+                <Save className="mr-2 h-4 w-4" />
+                {isLoading ? "Сохраняем..." : "Завершить создание"}
+              </Button>
+            </div>
+          )}
         </main>
       </div>
     </div>

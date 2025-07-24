@@ -43,7 +43,7 @@ const CreationStepper: React.FC<CreationStepperProps> = ({
   };
 
   return (
-    <div className="relative w-full mb-8 sticky top-0 z-10 py-4 bg-black/30 backdrop-blur-md">
+    <div className="relative w-full mb-8 sticky top-16 z-20 py-4 bg-black/30 backdrop-blur-md">
       {/* Progress bar background - фиксированный цвет фона */}
       <div 
         className="absolute top-1/2 left-0 w-full h-1 -translate-y-1/2 rounded-full z-0"
