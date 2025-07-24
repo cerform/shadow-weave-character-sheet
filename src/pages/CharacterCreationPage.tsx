@@ -33,6 +33,15 @@ const CharacterCreationPage: React.FC = () => {
   // 🔧 Управление методом распределения характеристик
   const [abilitiesMethod, setAbilitiesMethod] = useState<AbilityRollMethod>('standard');
 
+  // Сброс состояния при загрузке страницы (для нового создания)
+  useEffect(() => {
+    // Если это новое создание персонажа (нет сохраненного прогресса), начинаем с шага 0
+    const savedProgress = localStorage.getItem('character_creation_progress');
+    if (!savedProgress) {
+      setCurrentStep(0);
+    }
+  }, [setCurrentStep]);
+
   // Хук для броска характеристик
   const abilityRoller = useAbilitiesRoller(abilitiesMethod, character.level || 1);
 

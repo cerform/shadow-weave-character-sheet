@@ -21,7 +21,7 @@ export interface UseCharacterCreationReturn {
 export const useCharacterCreation = (): UseCharacterCreationReturn => {
   const { saveCharacter } = useCharacter();
   const navigate = useNavigate();
-  const [currentStep, setCurrentStep] = useState(1);
+  const [currentStep, setCurrentStep] = useState(0);
   const [character, setCharacter] = useState<Character>(createDefaultCharacter());
 
   // При монтировании компонента инициализируем персонажа
@@ -106,7 +106,7 @@ export const useCharacterCreation = (): UseCharacterCreationReturn => {
 
   // Функция для перехода к предыдущему шагу
   const prevStep = () => {
-    setCurrentStep(prev => Math.max(1, prev - 1));
+    setCurrentStep(prev => Math.max(0, prev - 1));
   };
 
   return {
