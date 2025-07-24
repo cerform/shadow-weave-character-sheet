@@ -5,8 +5,8 @@ import { useCharacter } from '@/contexts/CharacterContext';
 import { Character } from '@/types/character';
 import { useToast } from '@/hooks/use-toast';
 import { useSocket } from '@/contexts/SocketContext';
-import { createDefaultCharacter } from '@/utils/characterUtils';
 import CharacterSheet from '@/components/character-sheet/CharacterSheet';
+import { getCharacterById } from '@/services/characterService'; // 🔥 Firestore
 
 const CharacterSheetPage = () => {
   const { id } = useParams();
@@ -16,81 +16,47 @@ const CharacterSheetPage = () => {
   const { isConnected, sessionData, connect } = useSocket();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  
-  // Загружаем персонажа при инициализации
-  useEffect(() => {
-    if (!character || (id && character.id !== id)) {
-      loadCharacter(id);
-    }
-  }, [id]); // Убираем character из зависимостей, чтобы избежать бесконечного цикла
 
-  // Отдельный useEffect для подключения к сессии
+  // Загрузка персонажа из Firestore
+  useEffect(() => {
+    if (!id) {
+      setError("Не указан ID персонажа.");
+      return;
+    }
+
+    const loadCharacterFromFirestore = async () => {
+      setLoading(true);
+      try {
+        const data = await getCharacterById(id);
+        if (!data) {
+          setError(`Персонаж с ID ${id} не найден.`);
+        } else {
+          setCharacter(data as Character);
+          console.log("Персонаж загружен:", data);
+        }
+      } catch (err) {
+        console.error("Ошибка при загрузке персонажа:", err);
+        setError("Ошибка при загрузке персонажа.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadCharacterFromFirestore();
+  }, [id, setCharacter]);
+
+  // Подключение к сессии если активна
   useEffect(() => {
     const savedSession = localStorage.getItem('active-session');
     if (savedSession && isConnected && character) {
       try {
-        const parsedSession = JSON.parse(savedSession);
-        if (parsedSession && parsedSession.sessionCode) {
-          connect(parsedSession.sessionCode);
-        }
-      } catch (error) {
-        console.error("Ошибка при загрузке данных сессии:", error);
+        const parsed = JSON.parse(savedSession);
+        if (parsed?.sessionCode) connect(parsed.sessionCode);
+      } catch (e) {
+        console.error("Ошибка при подключении к сессии:", e);
       }
     }
   }, [isConnected, character]);
-
-  const loadCharacter = async (characterId?: string) => {
-    setLoading(true);
-    setError('');
-    
-    try {
-      // Если указан ID, загружаем конкретного персонажа
-      if (characterId) {
-        const savedCharacter = localStorage.getItem(`character_${characterId}`);
-        
-        if (savedCharacter) {
-          const loadedCharacter = JSON.parse(savedCharacter);
-          setCharacter(loadedCharacter);
-          localStorage.setItem('last-selected-character', characterId);
-          console.log(`Загружен персонаж: ${loadedCharacter.name}`);
-        } else {
-          setError(`Персонаж с ID ${characterId} не найден.`);
-          setCharacter(createDefaultCharacter());
-        }
-      } 
-      // Иначе проверяем, есть ли сохраненный последний персонаж
-      else {
-        const lastCharacterId = localStorage.getItem('last-selected-character');
-        if (lastCharacterId) {
-          loadCharacter(lastCharacterId);
-        } else {
-          // Создаем нового персонажа, если нет сохраненных
-          const newCharacter = createDefaultCharacter();
-          setCharacter(newCharacter);
-          console.log('Создан новый персонаж');
-        }
-      }
-    } catch (err) {
-      console.error('Ошибка при загрузке персонажа:', err);
-      setError('Не удалось загрузить персонажа. Пожалуйста, попробуйте еще раз.');
-      setCharacter(createDefaultCharacter());
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleUpdateCharacter = (updates: Partial<Character>) => {
-    if (!character) return;
-    
-    const updatedCharacter = { ...character, ...updates };
-    setCharacter(updatedCharacter);
-    
-    // Сохраняем персонажа в localStorage
-    localStorage.setItem(`character_${character.id}`, JSON.stringify(updatedCharacter));
-    localStorage.setItem('last-selected-character', character.id);
-    
-    console.log('Персонаж обновлен:', updatedCharacter);
-  };
 
   const handleBack = () => {
     navigate('/characters');
@@ -113,7 +79,9 @@ const CharacterSheetPage = () => {
         <div className="text-center">
           <h2 className="text-xl font-semibold text-red-500 mb-4">Ошибка</h2>
           <p>{error}</p>
-          <Button onClick={handleBack} className="mt-4">Вернуться к списку персонажей</Button>
+          <Button onClick={handleBack} className="mt-4">
+            Вернуться к списку персонажей
+          </Button>
         </div>
       </div>
     );
@@ -128,9 +96,9 @@ const CharacterSheetPage = () => {
             <span className="font-medium">Подключено к сессии: </span>
             <span>{sessionData.name || sessionData.code}</span>
           </div>
-          <Button 
-            size="sm" 
-            variant="ghost" 
+          <Button
+            size="sm"
+            variant="ghost"
             className="text-green-500 hover:text-green-400"
             onClick={() => navigate('/session')}
           >
@@ -138,32 +106,20 @@ const CharacterSheetPage = () => {
           </Button>
         </div>
       )}
-      
-      {/* Navigation buttons */}
+
       <div className="flex flex-wrap justify-between items-center mb-4 gap-2">
-        <Button 
-          variant="outline" 
-          onClick={handleBack}
-          className="mb-2 sm:mb-0"
-        >
+        <Button variant="outline" onClick={handleBack}>
           ← К списку персонажей
         </Button>
-        
-        {/* Conditional session buttons */}
         {!isConnected ? (
           <Button onClick={() => navigate('/join-session')}>Присоединиться к сессии</Button>
         ) : (
           <Button onClick={() => navigate('/session')}>Вернуться в сессию</Button>
         )}
       </div>
-      
-      {/* Character sheet */}
-      {character && (
-        <CharacterSheet 
-          character={character} 
-          onUpdate={handleUpdateCharacter}
-        />
-      )}
+
+      {/* Персонаж */}
+      {character && <CharacterSheet character={character} />}
     </div>
   );
 };
