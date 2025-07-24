@@ -18,3 +18,10 @@ export const auth = getAuth(app);
 export const db = getDatabase(app); // Только Realtime Database
 
 export default app;
+// ✅ Проверка: если уже инициализирован — повторно не делаем
+const firebaseApp = getApps().length ? getApp() : initializeApp(firebaseConfig);
+
+// ✅ Экспортируй всё отдельно (внимание на имена!)
+export const app = firebaseApp;
+export const auth = getAuth(firebaseApp);
+export const db = getFirestore(firebaseApp);
