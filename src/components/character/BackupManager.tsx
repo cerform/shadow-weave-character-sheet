@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { History, Download, Trash2 } from 'lucide-react';
 import { Character } from '@/types/character';
-import { getAllBackups, restoreFromBackup } from '@/services/characterService';
+// Удалены функции getAllBackups, restoreFromBackup - они не существуют
 import { toast } from 'sonner';
 import { formatDistanceToNow } from 'date-fns';
 import { ru } from 'date-fns/locale';
@@ -23,7 +23,20 @@ const BackupManager: React.FC<BackupManagerProps> = ({ onRestore }) => {
   }, []);
 
   const loadBackups = () => {
-    const allBackups = getAllBackups();
+    // Получаем резервные копии из localStorage
+    const backupKeys = Object.keys(localStorage).filter(key => key.startsWith('character_backup_'));
+    const allBackups = backupKeys.map(key => {
+      try {
+        const backup = JSON.parse(localStorage.getItem(key) || '{}');
+        return {
+          id: key.replace('character_backup_', ''),
+          character: backup.character,
+          timestamp: backup.timestamp
+        };
+      } catch {
+        return null;
+      }
+    }).filter(Boolean);
     setBackups(allBackups);
   };
 

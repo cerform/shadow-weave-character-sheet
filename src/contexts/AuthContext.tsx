@@ -1,9 +1,9 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { UserType, AuthContextType } from '@/types/auth';
-import { ref, set, get } from 'firebase/database';
+import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { User as FirebaseUser } from 'firebase/auth';
-import { db } from '@/firebase';
+import { db } from '@/lib/firebase';
 import { auth, loginWithEmail, registerWithEmail, loginWithGoogle, logout, listenToAuthChanges } from '@/services/firebase/auth';
 import { toast } from 'sonner';
 
@@ -49,18 +49,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Функция для сохранения информации о пользователе в Realtime Database
+  // Функция для сохранения информации о пользователе в Firestore
   const saveUserToDatabase = async (user: UserType) => {
     try {
-      const userRef = ref(db, `users/${user.id}`);
+      const userRef = doc(db, 'users', user.id);
       
       // Проверим, существует ли этот пользователь
-      const userSnap = await get(userRef);
+      const userSnap = await getDoc(userRef);
       
       if (userSnap.exists()) {
         // Обновляем существующего пользователя
-        const userData = userSnap.val();
-        await set(userRef, {
+        const userData = userSnap.data();
+        await setDoc(userRef, {
           ...userData,
           username: user.username || user.displayName || userData.username || '',
           email: user.email,
@@ -74,7 +74,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         console.log("Обновлен существующий пользователь:", user.id);
       } else {
         // Создаем нового пользователя
-        await set(userRef, {
+        await setDoc(userRef, {
           username: user.username || user.displayName || '',
           email: user.email,
           displayName: user.displayName || '',
@@ -93,14 +93,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  // Функция для получения расширенных данных пользователя из Realtime Database
+  // Функция для получения расширенных данных пользователя из Firestore
   const getUserFromDatabase = async (userId: string): Promise<Partial<UserType>> => {
     try {
-      const userRef = ref(db, `users/${userId}`);
-      const userSnap = await get(userRef);
+      const userRef = doc(db, 'users', userId);
+      const userSnap = await getDoc(userRef);
       
       if (userSnap.exists()) {
-        return userSnap.val() as Partial<UserType>;
+        return userSnap.data() as Partial<UserType>;
       }
       
       return {};

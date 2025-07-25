@@ -84,7 +84,7 @@ const CharacterCreationPage: React.FC = () => {
 
       console.log('Данные персонажа для сохранения:', characterToSave);
 
-      const savedCharacter = await realtimeSaveCharacter(characterToSave);
+      const savedCharacter = await saveCharacter(characterToSave);
 
       if (savedCharacter && savedCharacter.id) {
         toast({

@@ -8,7 +8,6 @@ import {
   GoogleAuthProvider,
   signInWithPopup,
 } from "firebase/auth";
-import { ref, get, set } from "firebase/database";
 import { app, db } from "@/lib/firebase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -53,37 +52,7 @@ const FirebaseAuthForm: React.FC = () => {
     }
   }, [isAuthenticated, currentUser, navigate, returnPath]);
 
-  const ensureUserProfile = async (uid: string, email: string | null, displayName: string | null) => {
-    try {
-      const userRef = ref(db, `users/${uid}`);
-      const snapshot = await get(userRef);
-      
-      if (!snapshot.exists()) {
-        // Создаем новый профиль с выбранной ролью
-        const isDM = role === "dm";
-        await set(userRef, {
-          uid,
-          email,
-          displayName: displayName || email?.split('@')[0] || 'Пользователь',
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-          photoURL: null,
-          characters: [],
-          isDM: isDM,
-          role: role // Добавляем роль пользователя
-        });
-        console.log(`Профиль пользователя создан с ролью: ${role}`);
-      } else {
-        // Обновляем дату последнего входа
-        await set(userRef, {
-          ...snapshot.val(),
-          updatedAt: new Date().toISOString()
-        });
-      }
-    } catch (error) {
-      console.error("Ошибка при создании/обновлении профиля:", error);
-    }
-  };
+  // Функция удалена - используем только Firestore через AuthContext
 
   const handleEmailAuth = async () => {
     setError("");

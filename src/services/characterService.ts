@@ -25,7 +25,9 @@ export const updateCharacter = async (character: Character): Promise<void> => {
   if (!character.id) throw new Error("У персонажа отсутствует ID");
 
   const docRef = doc(db, "characters", character.id);
-  await updateDoc(docRef, character);
+  const updateData = { ...character };
+  delete updateData.id; // Удаляем id из данных для обновления
+  await updateDoc(docRef, updateData);
 };
 
 // Удаление персонажа
