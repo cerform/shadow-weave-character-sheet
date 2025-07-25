@@ -115,16 +115,7 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
             maxAbilityScore={maxAbilityScore}
           />
         );
-      case 5: // Навыки
-        return (
-          <CharacterSkillSelection 
-            character={character} 
-            updateCharacter={updateCharacter}
-            nextStep={nextStep}
-            prevStep={prevStep}
-          />
-        );
-      case 6: // Предыстория
+      case 5: // Предыстория
         return (
           <CharacterBackground 
             character={character} 
@@ -133,7 +124,7 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
             prevStep={prevStep}
           />
         );
-      case 7: // Здоровье
+      case 6: // Здоровье
         return (
           <CharacterHitPointsCalculator
             character={character}
@@ -142,7 +133,7 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
             prevStep={prevStep}
           />
         );
-      case 8: // Выбор снаряжения
+      case 7: // Выбор снаряжения
         return (
           <CharacterEquipmentSelection 
             character={character} 
@@ -151,7 +142,7 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
             prevStep={prevStep}
           />
         );
-      case 9: // Детали персонажа
+      case 8: // Детали персонажа
         return (
           <CharacterBasicInfo 
             character={character} 
@@ -160,7 +151,7 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
             prevStep={prevStep}
           />
         );
-      case 10: // Выбор заклинаний
+      case 9: // Выбор заклинаний
         // Проверяем, является ли класс магическим
         if (!isMagicClass) {
           // Автоматически переходим к следующему шагу с задержкой
@@ -176,7 +167,7 @@ const CharacterCreationContent: React.FC<CharacterCreationContentProps> = ({
             prevStep={prevStep}
           />
         );
-      case 11: // Просмотр и завершение
+      case 10: // Просмотр и завершение
         return (
           <CharacterReview 
             character={character}
