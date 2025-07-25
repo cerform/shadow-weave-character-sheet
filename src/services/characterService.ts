@@ -16,7 +16,13 @@ import { Character } from "@/types/character";
 // Создание нового персонажа
 export const saveCharacter = async (character: Character): Promise<Character> => {
   const charactersRef = collection(db, "characters");
-  const docRef = await addDoc(charactersRef, character);
+  
+  // Фильтруем undefined значения
+  const cleanedCharacter = Object.fromEntries(
+    Object.entries(character).filter(([_, value]) => value !== undefined)
+  );
+  
+  const docRef = await addDoc(charactersRef, cleanedCharacter);
   return { ...character, id: docRef.id };
 };
 
@@ -25,8 +31,12 @@ export const updateCharacter = async (character: Character): Promise<void> => {
   if (!character.id) throw new Error("У персонажа отсутствует ID");
 
   const docRef = doc(db, "characters", character.id);
-  const updateData = { ...character };
-  delete updateData.id; // Удаляем id из данных для обновления
+  
+  // Фильтруем undefined значения и удаляем id из данных для обновления
+  const updateData = Object.fromEntries(
+    Object.entries(character).filter(([key, value]) => key !== 'id' && value !== undefined)
+  );
+  
   await updateDoc(docRef, updateData);
 };
 
