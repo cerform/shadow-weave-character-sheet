@@ -7,6 +7,19 @@ import { useToast } from '@/hooks/use-toast';
 import { useSocket } from '@/contexts/SocketContext';
 import CharacterSheet from '@/components/character-sheet/CharacterSheet';
 import { getCharacterById } from '@/services/characterService'; // 🔥 Firestore
+import { useCharacterOperations } from '@/hooks/useCharacterOperations';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Trash2 } from 'lucide-react';
 
 const CharacterSheetPage = () => {
   const { id } = useParams();
@@ -14,8 +27,10 @@ const CharacterSheetPage = () => {
   const { character, setCharacter } = useCharacter();
   const { toast } = useToast();
   const { isConnected, sessionData, connect } = useSocket();
+  const { deleteCharacter } = useCharacterOperations();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [deleting, setDeleting] = useState(false);
 
   // Загрузка персонажа из Firestore
   useEffect(() => {
@@ -60,6 +75,28 @@ const CharacterSheetPage = () => {
 
   const handleBack = () => {
     navigate('/characters');
+  };
+
+  const handleDeleteCharacter = async () => {
+    if (!id) return;
+    
+    setDeleting(true);
+    try {
+      await deleteCharacter(id);
+      toast({
+        title: "Персонаж удален",
+        description: "Персонаж был успешно удален.",
+      });
+      navigate('/characters');
+    } catch (error) {
+      toast({
+        title: "Ошибка",
+        description: "Не удалось удалить персонажа.",
+        variant: "destructive",
+      });
+    } finally {
+      setDeleting(false);
+    }
   };
 
   if (loading) {
@@ -111,11 +148,41 @@ const CharacterSheetPage = () => {
         <Button variant="outline" onClick={handleBack}>
           ← К списку персонажей
         </Button>
-        {!isConnected ? (
-          <Button onClick={() => navigate('/join-session')}>Присоединиться к сессии</Button>
-        ) : (
-          <Button onClick={() => navigate('/session')}>Вернуться в сессию</Button>
-        )}
+        
+        <div className="flex gap-2">
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="destructive" size="sm" disabled={deleting}>
+                <Trash2 className="w-4 h-4 mr-2" />
+                Удалить персонажа
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Удалить персонажа?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Это действие нельзя отменить. Персонаж {character?.name || 'без имени'} будет удален навсегда.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Отмена</AlertDialogCancel>
+                <AlertDialogAction 
+                  onClick={handleDeleteCharacter}
+                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  disabled={deleting}
+                >
+                  {deleting ? 'Удаление...' : 'Удалить'}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+
+          {!isConnected ? (
+            <Button onClick={() => navigate('/join-session')}>Присоединиться к сессии</Button>
+          ) : (
+            <Button onClick={() => navigate('/session')}>Вернуться в сессию</Button>
+          )}
+        </div>
       </div>
 
       {/* Персонаж */}
