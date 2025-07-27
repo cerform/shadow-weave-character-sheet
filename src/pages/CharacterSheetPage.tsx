@@ -144,15 +144,15 @@ const CharacterSheetPage = () => {
         </div>
       )}
 
-      <div className="flex flex-wrap justify-between items-center mb-4 gap-2">
-        <Button variant="outline" onClick={handleBack}>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-4">
+        <Button variant="outline" onClick={handleBack} className="shrink-0">
           ← К списку персонажей
         </Button>
         
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2 justify-end">
           <AlertDialog>
             <AlertDialogTrigger asChild>
-              <Button variant="destructive" size="sm" disabled={deleting}>
+              <Button variant="destructive" size="sm" disabled={deleting} className="shrink-0">
                 <Trash2 className="w-4 h-4 mr-2" />
                 Удалить персонажа
               </Button>
@@ -178,9 +178,13 @@ const CharacterSheetPage = () => {
           </AlertDialog>
 
           {!isConnected ? (
-            <Button onClick={() => navigate('/join-session')}>Присоединиться к сессии</Button>
+            <Button onClick={() => navigate('/join-session')} className="shrink-0">
+              Присоединиться к сессии
+            </Button>
           ) : (
-            <Button onClick={() => navigate('/session')}>Вернуться в сессию</Button>
+            <Button onClick={() => navigate('/session')} className="shrink-0">
+              Вернуться в сессию
+            </Button>
           )}
         </div>
       </div>
