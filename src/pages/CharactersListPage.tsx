@@ -3,17 +3,33 @@ import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { UserPlus, User, Play, RefreshCw, ArrowLeft } from 'lucide-react';
+import { UserPlus, User, Play, RefreshCw, ArrowLeft, Edit, Trash2 } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { getUserCharacters } from '@/services/characterService';
+import { useCharacterOperations } from '@/hooks/useCharacterOperations';
+import { useToast } from '@/hooks/use-toast';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { toast } from 'sonner';
 
 const CharactersListPage: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { deleteCharacter } = useCharacterOperations();
+  const { toast } = useToast();
   const [characters, setCharacters] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState<string | null>(null);
 
   const loadCharacters = async () => {
     if (!user) return;
@@ -29,9 +45,34 @@ const CharactersListPage: React.FC = () => {
     } catch (err) {
       console.error('❌ Ошибка загрузки персонажей:', err);
       setError('Ошибка загрузки персонажей');
-      toast.error('Не удалось загрузить персонажей');
+      toast({
+        title: "Ошибка",
+        description: "Не удалось загрузить персонажей",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDeleteCharacter = async (characterId: string, characterName: string) => {
+    setDeleting(characterId);
+    try {
+      await deleteCharacter(characterId);
+      toast({
+        title: "Персонаж удален",
+        description: `Персонаж ${characterName} был успешно удален.`,
+      });
+      // Обновляем список персонажей
+      setCharacters(prev => prev.filter(char => char.id !== characterId));
+    } catch (error) {
+      toast({
+        title: "Ошибка",
+        description: "Не удалось удалить персонажа.",
+        variant: "destructive",
+      });
+    } finally {
+      setDeleting(null);
     }
   };
 
@@ -64,17 +105,18 @@ const CharactersListPage: React.FC = () => {
     <div className="min-h-screen p-6">
       <div className="container mx-auto max-w-4xl">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
           <div className="flex items-center gap-4">
             <Button 
               variant="outline" 
               size="sm"
               onClick={() => navigate('/')}
+              className="shrink-0"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
               Назад
             </Button>
-            <h1 className="text-3xl font-fantasy-title text-glow">
+            <h1 className="text-2xl sm:text-3xl font-fantasy-title text-glow">
               👥 Управление персонажами
             </h1>
           </div>
@@ -171,7 +213,48 @@ const CharactersListPage: React.FC = () => {
                             <Button
                               variant="outline"
                               size="sm"
+                              onClick={() => navigate(`/character-creation?edit=${character.id}`)}
+                              title="Редактировать персонажа"
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  disabled={deleting === character.id}
+                                  title="Удалить персонажа"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Удалить персонажа?</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Это действие нельзя отменить. Персонаж {character.name || 'без имени'} будет удален навсегда.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Отмена</AlertDialogCancel>
+                                  <AlertDialogAction 
+                                    onClick={() => handleDeleteCharacter(character.id, character.name || 'без имени')}
+                                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                    disabled={deleting === character.id}
+                                  >
+                                    {deleting === character.id ? 'Удаление...' : 'Удалить'}
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                            
+                            <Button
+                              variant="default"
+                              size="sm"
                               onClick={() => navigate(`/character-sheet/${character.id}`)}
+                              title="Открыть персонажа"
                             >
                               <Play className="h-4 w-4" />
                             </Button>
