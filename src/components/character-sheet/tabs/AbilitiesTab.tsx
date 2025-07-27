@@ -2,12 +2,9 @@
 import React, { useState, useEffect } from 'react';
 import { Character } from '@/types/character';
 import { Card, CardContent } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Button } from '@/components/ui/button';
-import { Plus, Minus } from 'lucide-react';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
 import {
@@ -82,22 +79,6 @@ const AbilitiesTab: React.FC<AbilitiesTabProps> = ({ character, onUpdateCharacte
     onUpdateCharacter(updatedCharacter);
   }, [abilities, skills, savingThrows, proficiencyBonus]);
 
-  const handleAbilityChange = (ability: keyof typeof abilities, value: string) => {
-    const numValue = Math.max(1, Math.min(30, parseInt(value) || 10));
-    setAbilities(prev => ({
-      ...prev,
-      [ability]: numValue
-    }));
-  };
-
-  const adjustAbility = (ability: keyof typeof abilities, delta: number) => {
-    const currentValue = abilities[ability];
-    const newValue = Math.max(1, Math.min(30, currentValue + delta));
-    setAbilities(prev => ({
-      ...prev,
-      [ability]: newValue
-    }));
-  };
 
   const handleSkillProficiencyToggle = (skillName: string) => {
     setSkills(prev => {
@@ -153,43 +134,20 @@ const AbilitiesTab: React.FC<AbilitiesTabProps> = ({ character, onUpdateCharacte
                 
                 return (
                   <div key={key} className="flex items-center justify-between p-3 border rounded-lg">
-                    <div className="flex items-center space-x-3">
-                      <Label className="w-24 font-medium">
-                        {abilityNames[abilityKey]}
-                      </Label>
-                      <div className="flex items-center space-x-2">
-                        <Button 
-                          variant="outline" 
-                          size="icon" 
-                          className="h-8 w-8"
-                          onClick={() => adjustAbility(abilityKey, -1)}
-                        >
-                          <Minus className="h-4 w-4" />
-                        </Button>
-                        <Input
-                          type="number"
-                          value={value}
-                          onChange={(e) => handleAbilityChange(abilityKey, e.target.value)}
-                          className="w-16 text-center"
-                          min="1"
-                          max="30"
-                        />
-                        <Button 
-                          variant="outline" 
-                          size="icon" 
-                          className="h-8 w-8"
-                          onClick={() => adjustAbility(abilityKey, 1)}
-                        >
-                          <Plus className="h-4 w-4" />
-                        </Button>
+                    <Label className="font-medium">
+                      {abilityNames[abilityKey]}
+                    </Label>
+                    <div className="flex items-center space-x-4">
+                      <div className="text-center">
+                        <div className="text-2xl font-bold">{value}</div>
                       </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-lg font-bold">
-                        {formatModifier(modifier)}
-                      </div>
-                      <div className="text-sm text-muted-foreground">
-                        модификатор
+                      <div className="text-center">
+                        <div className="text-lg font-bold">
+                          {formatModifier(modifier)}
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          модификатор
+                        </div>
                       </div>
                     </div>
                   </div>
