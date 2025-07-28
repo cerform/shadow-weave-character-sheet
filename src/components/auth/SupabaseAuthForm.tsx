@@ -163,58 +163,36 @@ const SupabaseAuthForm: React.FC<SupabaseAuthFormProps> = ({ onSuccess }) => {
     try {
       console.log('🔄 Attempting Google sign in...');
       
-      // Создаем URL для OAuth с правильным redirect
-      const redirectTo = `${window.location.origin}/auth`;
-      const authUrl = `https://mqdjwhjtvjnktobgruuu.supabase.co/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(redirectTo)}`;
-      
-      // Принудительно открываем popup
-      const popup = window.open(
-        authUrl,
-        'google-oauth',
-        'width=500,height=600,scrollbars=yes,resizable=yes,centerscreen=yes'
-      );
-
-      if (!popup) {
-        throw new Error('Popup заблокировано браузером. Разрешите всплывающие окна для этого сайта.');
-      }
-
-      console.log('✅ Popup opened for Google OAuth');
-      
-      toast({
-        title: "Открыто окно Google авторизации",
-        description: "Войдите через Google в новом окне",
+      // Используем стандартный Supabase метод без кастомного popup
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/`,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          }
+        }
       });
 
-      // Слушаем сообщения от popup окна
-      const handleMessage = (event: MessageEvent) => {
-        if (event.origin !== window.location.origin) return;
-        
-        if (event.data.type === 'SUPABASE_AUTH_SUCCESS') {
-          console.log('✅ Получили успешную авторизацию от popup');
-          popup.close();
-          window.removeEventListener('message', handleMessage);
-          setLoading(false);
-          onSuccess?.();
-        }
-      };
+      console.log('✅ Google OAuth response:', { data, error });
 
-      window.addEventListener('message', handleMessage);
+      if (error) {
+        console.error('❌ Google OAuth error:', error);
+        throw error;
+      }
 
-      // Отслеживаем закрытие popup
-      const checkClosed = setInterval(() => {
-        if (popup.closed) {
-          clearInterval(checkClosed);
-          window.removeEventListener('message', handleMessage);
-          setLoading(false);
-          console.log('Popup закрыт пользователем');
-        }
-      }, 1000);
+      // Supabase автоматически перенаправит пользователя
+      toast({
+        title: "Перенаправление на Google...",
+        description: "Сейчас откроется страница авторизации Google",
+      });
 
     } catch (error: any) {
       console.error('❌ Google sign in catch error:', error);
       toast({
         title: "Ошибка входа через Google",
-        description: error.message || "Разрешите всплывающие окна в браузере",
+        description: error.message || "Произошла неизвестная ошибка",
         variant: "destructive",
       });
       setLoading(false);

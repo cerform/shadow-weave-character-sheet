@@ -15,50 +15,27 @@ const AuthPage = () => {
 
   // Проверяем, авторизован ли пользователь и обрабатываем OAuth callback
   useEffect(() => {
-    // Проверяем URL параметры для OAuth callback СНАЧАЛА
-    if (location.search.includes('code=') || location.hash.includes('access_token=')) {
-      console.log('OAuth callback detected');
-      
-      const handleOAuthCallback = async () => {
-        const { data, error } = await supabase.auth.getSession();
+    const checkAuthAndHandleCallback = async () => {
+      try {
+        // Получаем текущую сессию
+        const { data: { session }, error } = await supabase.auth.getSession();
         
         if (error) {
-          console.error('OAuth callback error:', error);
+          console.error('Session error:', error);
           return;
         }
         
-        if (data?.session?.user) {
-          console.log('OAuth session established:', data.session.user.email);
-          
-          // Если это popup окно, отправляем сообщение родительскому окну
-          if (window.opener) {
-            window.opener.postMessage({
-              type: 'SUPABASE_AUTH_SUCCESS',
-              user: data.session.user
-            }, window.location.origin);
-            window.close();
-            return;
-          }
-          
+        if (session?.user) {
+          console.log('User authenticated:', session.user.email);
           navigate(returnPath);
         }
-      };
-      
-      handleOAuthCallback();
-      return; // Важно! Не выполняем дальнейшую логику
-    }
-    
-    // Только если НЕ OAuth callback, проверяем существующего пользователя
-    const checkUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        console.log("User is already authenticated, redirecting");
-        navigate(returnPath);
+      } catch (error) {
+        console.error('Auth check error:', error);
       }
     };
-    
-    checkUser();
-  }, [navigate, returnPath, location.search, location.hash]);
+
+    checkAuthAndHandleCallback();
+  }, [navigate, returnPath]);
 
   const handleAuthSuccess = () => {
     navigate(returnPath);
