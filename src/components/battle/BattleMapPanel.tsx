@@ -3,13 +3,25 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { socketService, BattleToken } from '@/services/socket';
 import BattleCanvas from './BattleCanvas';
 import TokenManager from './TokenManager';
 import InitiativePanel from './InitiativePanel';
 import MapUploader from '../session/MapUploader';
 import { Map, Users, Swords, Plus, Shield, Zap } from 'lucide-react';
 import PlayerViewPanel from './PlayerViewPanel';
+
+// Локальный интерфейс токена без зависимости от socket
+interface BattleToken {
+  id: string;
+  name: string;
+  x: number;
+  y: number;
+  color: string;
+  size: number;
+  type: 'player' | 'npc' | 'monster';
+  hp?: number;
+  maxHp?: number;
+}
 
 interface BattleMapPanelProps {
   isDM?: boolean;
@@ -25,47 +37,10 @@ const BattleMapPanel: React.FC<BattleMapPanelProps> = ({
   const [isBattleActive, setIsBattleActive] = useState(false);
   const [mapBackground, setMapBackground] = useState<string | null>(null);
 
+  // Инициализация тестовых данных
   useEffect(() => {
-    // Подписываемся на события боевой карты
-    const handleBattleEvent = (data: any) => {
-      console.log('⚔️ Событие боевой карты:', data.type);
-      
-      switch (data.type) {
-        case 'token_add':
-          setTokens(prev => [...prev, data.token]);
-          break;
-        case 'token_move':
-          setTokens(prev => prev.map(token =>
-            token.id === data.tokenId ? { ...token, x: data.x, y: data.y } : token
-          ));
-          break;
-        case 'token_update':
-          setTokens(prev => prev.map(token =>
-            token.id === data.tokenId ? { ...token, ...data.updates } : token
-          ));
-          break;
-        case 'token_delete':
-          setTokens(prev => prev.filter(token => token.id !== data.tokenId));
-          if (selectedTokenId === data.tokenId) {
-            setSelectedTokenId(null);
-          }
-          break;
-        case 'battle_state_change':
-          setIsBattleActive(data.active);
-          break;
-        case 'battle_clear':
-          setTokens([]);
-          setSelectedTokenId(null);
-          break;
-      }
-    };
-
-    socketService.onBattleEvent(handleBattleEvent);
-    
-    return () => {
-      socketService.removeBattleListener(handleBattleEvent);
-    };
-  }, [selectedTokenId]);
+    console.log('🗺️ Инициализация боевой карты');
+  }, []);
 
   // Добавление нового токена
   const handleTokenAdd = (tokenData: Omit<BattleToken, 'id'>) => {
@@ -74,25 +49,16 @@ const BattleMapPanel: React.FC<BattleMapPanelProps> = ({
       id: Date.now().toString() + Math.random().toString(36).substr(2, 9)
     };
     
-    if (isDM) {
-      socketService.addBattleToken(newToken);
-    }
+    console.log('➕ Добавление токена:', newToken);
+    setTokens(prev => [...prev, newToken]);
   };
 
   // Обновление токена
   const handleTokenUpdate = (tokenId: string, updates: Partial<BattleToken>) => {
+    console.log('🔄 Обновление токена:', tokenId, updates);
     setTokens(prev => prev.map(token => 
       token.id === tokenId ? { ...token, ...updates } : token
     ));
-    
-    // Отправляем через сокеты только если это DM
-    if (isDM && sessionId) {
-      socketService.sendMessage(JSON.stringify({
-        type: 'battle_token_update',
-        tokenId,
-        updates
-      }), 'system');
-    }
   };
 
   // Перемещение токена
@@ -108,24 +74,21 @@ const BattleMapPanel: React.FC<BattleMapPanelProps> = ({
       return; // Игрок не может двигать не свои токены
     }
 
-    socketService.moveBattleToken(tokenId, x, y);
+    console.log('🚀 Перемещение токена:', tokenId, 'to', x, y);
+    setTokens(prev => prev.map(token =>
+      token.id === tokenId ? { ...token, x, y } : token
+    ));
   };
 
   // Удаление токена (только DM)
   const handleTokenDelete = (tokenId: string) => {
     if (!isDM) return;
     
+    console.log('🗑️ Удаление токена:', tokenId);
     setTokens(prev => prev.filter(token => token.id !== tokenId));
     
     if (selectedTokenId === tokenId) {
       setSelectedTokenId(null);
-    }
-    
-    if (sessionId) {
-      socketService.sendMessage(JSON.stringify({
-        type: 'battle_token_delete',
-        tokenId
-      }), 'system');
     }
   };
 
@@ -134,34 +97,17 @@ const BattleMapPanel: React.FC<BattleMapPanelProps> = ({
     if (!isDM) return;
     
     const newState = !isBattleActive;
+    console.log('⚔️ Переключение боя:', newState ? 'НАЧАЛСЯ' : 'ЗАВЕРШИЛСЯ');
     setIsBattleActive(newState);
-    
-    if (sessionId) {
-      socketService.sendMessage(JSON.stringify({
-        type: 'battle_state_change',
-        active: newState
-      }), 'system');
-      
-      // Отправляем системное сообщение
-      socketService.sendMessage(
-        newState ? '⚔️ **Бой начался!** Все на позиции!' : '🏁 **Бой завершен!** Можно расслабиться.',
-        'system'
-      );
-    }
   };
 
   // Очистка карты (только DM)
   const clearMap = () => {
     if (!isDM) return;
     
+    console.log('🧹 Очистка карты');
     setTokens([]);
     setSelectedTokenId(null);
-    
-    if (sessionId) {
-      socketService.sendMessage(JSON.stringify({
-        type: 'battle_clear'
-      }), 'system');
-    }
   };
 
   // Добавление тестовых токенов (только для DM)
@@ -366,13 +312,13 @@ const BattleMapPanel: React.FC<BattleMapPanelProps> = ({
               />
             )}
             
-            {/* Управление токенами - скрывается во время боя или показывается компактно */}
+            {/* Управление токенами */}
             <TokenManager
               tokens={tokens}
               selectedTokenId={selectedTokenId}
               onTokenUpdate={handleTokenUpdate}
               onTokenDelete={handleTokenDelete}
-              onTokenAdd={isBattleActive ? undefined : handleTokenAdd} // Блокируем добавление во время боя
+              onTokenAdd={handleTokenAdd} // Разрешаем добавление всегда для тестирования
               onTokenSelect={setSelectedTokenId}
             />
             
