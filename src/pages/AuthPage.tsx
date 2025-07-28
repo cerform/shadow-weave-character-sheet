@@ -13,7 +13,7 @@ const AuthPage = () => {
   const location = useLocation();
   const returnPath = location.state?.returnPath || '/character-creation';
 
-  // Проверяем, авторизован ли пользователь
+  // Проверяем, авторизован ли пользователь и обрабатываем OAuth callback
   useEffect(() => {
     const checkUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -23,8 +23,29 @@ const AuthPage = () => {
       }
     };
     
-    checkUser();
-  }, [navigate, returnPath]);
+    // Обрабатываем OAuth callback (например, от Google)
+    const handleOAuthCallback = async () => {
+      const { data, error } = await supabase.auth.getSession();
+      
+      if (error) {
+        console.error('OAuth callback error:', error);
+        return;
+      }
+      
+      if (data?.session?.user) {
+        console.log('OAuth session established:', data.session.user.email);
+        navigate(returnPath);
+      }
+    };
+    
+    // Проверяем URL параметры для OAuth callback
+    if (location.search.includes('code=') || location.hash.includes('access_token=')) {
+      console.log('OAuth callback detected');
+      handleOAuthCallback();
+    } else {
+      checkUser();
+    }
+  }, [navigate, returnPath, location.search, location.hash]);
 
   const handleAuthSuccess = () => {
     navigate(returnPath);

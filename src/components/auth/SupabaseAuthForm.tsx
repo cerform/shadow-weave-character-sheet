@@ -163,41 +163,36 @@ const SupabaseAuthForm: React.FC<SupabaseAuthFormProps> = ({ onSuccess }) => {
     try {
       console.log('🔄 Attempting Google sign in...');
       
-      // Принудительно открываем Google OAuth в новом окне, а НЕ в iframe
-      const authUrl = `https://mqdjwhjtvjnktobgruuu.supabase.co/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(window.location.origin + '/')}`;
-      
-      // Открываем popup окно вручную
-      const popup = window.open(
-        authUrl,
-        'google-auth',
-        'width=500,height=600,scrollbars=yes,resizable=yes'
-      );
-
-      if (!popup) {
-        throw new Error('Popup заблокировано браузером. Разрешите всплывающие окна для этого сайта.');
-      }
-
-      console.log('✅ Popup opened for Google OAuth');
-      
-      toast({
-        title: "Открыто окно Google авторизации",
-        description: "Войдите через Google в новом окне",
+      // Используем стандартный Supabase метод, но с правильными настройками
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth`,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          }
+        }
       });
 
-      // Отслеживаем закрытие popup
-      const checkClosed = setInterval(() => {
-        if (popup.closed) {
-          clearInterval(checkClosed);
-          setLoading(false);
-          console.log('Popup закрыт пользователем');
-        }
-      }, 1000);
+      console.log('✅ Google OAuth response:', { data, error });
+
+      if (error) {
+        console.error('❌ Google OAuth error:', error);
+        throw error;
+      }
+
+      // Supabase автоматически откроет новое окно и обработает callback
+      toast({
+        title: "Перенаправление на Google...",
+        description: "Откроется новое окно для авторизации",
+      });
 
     } catch (error: any) {
       console.error('❌ Google sign in catch error:', error);
       toast({
         title: "Ошибка входа через Google",
-        description: error.message || "Разрешите всплывающие окна в браузере",
+        description: error.message || "Произошла неизвестная ошибка",
         variant: "destructive",
       });
       setLoading(false);
