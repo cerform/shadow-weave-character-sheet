@@ -14,6 +14,140 @@ export type Database = {
   }
   public: {
     Tables: {
+      battle_maps: {
+        Row: {
+          background_color: string | null
+          created_at: string | null
+          grid_size: number | null
+          height: number
+          id: string
+          image_url: string | null
+          is_active: boolean | null
+          name: string
+          session_id: string
+          updated_at: string | null
+          width: number
+        }
+        Insert: {
+          background_color?: string | null
+          created_at?: string | null
+          grid_size?: number | null
+          height?: number
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          name: string
+          session_id: string
+          updated_at?: string | null
+          width?: number
+        }
+        Update: {
+          background_color?: string | null
+          created_at?: string | null
+          grid_size?: number | null
+          height?: number
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          name?: string
+          session_id?: string
+          updated_at?: string | null
+          width?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "battle_maps_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "game_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      battle_tokens: {
+        Row: {
+          armor_class: number | null
+          character_id: string | null
+          color: string | null
+          conditions: Json | null
+          created_at: string | null
+          current_hp: number | null
+          id: string
+          image_url: string | null
+          is_hidden_from_players: boolean | null
+          is_visible: boolean | null
+          map_id: string | null
+          max_hp: number | null
+          name: string
+          notes: string | null
+          position_x: number
+          position_y: number
+          session_id: string
+          size: number | null
+          token_type: string
+          updated_at: string | null
+        }
+        Insert: {
+          armor_class?: number | null
+          character_id?: string | null
+          color?: string | null
+          conditions?: Json | null
+          created_at?: string | null
+          current_hp?: number | null
+          id?: string
+          image_url?: string | null
+          is_hidden_from_players?: boolean | null
+          is_visible?: boolean | null
+          map_id?: string | null
+          max_hp?: number | null
+          name: string
+          notes?: string | null
+          position_x?: number
+          position_y?: number
+          session_id: string
+          size?: number | null
+          token_type?: string
+          updated_at?: string | null
+        }
+        Update: {
+          armor_class?: number | null
+          character_id?: string | null
+          color?: string | null
+          conditions?: Json | null
+          created_at?: string | null
+          current_hp?: number | null
+          id?: string
+          image_url?: string | null
+          is_hidden_from_players?: boolean | null
+          is_visible?: boolean | null
+          map_id?: string | null
+          max_hp?: number | null
+          name?: string
+          notes?: string | null
+          position_x?: number
+          position_y?: number
+          session_id?: string
+          size?: number | null
+          token_type?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "battle_tokens_map_id_fkey"
+            columns: ["map_id"]
+            isOneToOne: false
+            referencedRelation: "battle_maps"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "battle_tokens_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "game_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       characters: {
         Row: {
           alignment: string | null
@@ -119,12 +253,280 @@ export type Database = {
         }
         Relationships: []
       }
+      fog_of_war: {
+        Row: {
+          grid_x: number
+          grid_y: number
+          id: string
+          is_revealed: boolean | null
+          map_id: string
+          revealed_at: string | null
+          revealed_by_user_id: string | null
+          session_id: string
+        }
+        Insert: {
+          grid_x: number
+          grid_y: number
+          id?: string
+          is_revealed?: boolean | null
+          map_id: string
+          revealed_at?: string | null
+          revealed_by_user_id?: string | null
+          session_id: string
+        }
+        Update: {
+          grid_x?: number
+          grid_y?: number
+          id?: string
+          is_revealed?: boolean | null
+          map_id?: string
+          revealed_at?: string | null
+          revealed_by_user_id?: string | null
+          session_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fog_of_war_map_id_fkey"
+            columns: ["map_id"]
+            isOneToOne: false
+            referencedRelation: "battle_maps"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fog_of_war_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "game_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      game_sessions: {
+        Row: {
+          created_at: string | null
+          current_map_id: string | null
+          description: string | null
+          dm_id: string
+          ended_at: string | null
+          fog_of_war_enabled: boolean | null
+          grid_enabled: boolean | null
+          grid_size: number | null
+          id: string
+          is_active: boolean | null
+          max_players: number | null
+          name: string
+          session_code: string
+          updated_at: string | null
+          view_center_x: number | null
+          view_center_y: number | null
+          zoom_level: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          current_map_id?: string | null
+          description?: string | null
+          dm_id: string
+          ended_at?: string | null
+          fog_of_war_enabled?: boolean | null
+          grid_enabled?: boolean | null
+          grid_size?: number | null
+          id?: string
+          is_active?: boolean | null
+          max_players?: number | null
+          name: string
+          session_code: string
+          updated_at?: string | null
+          view_center_x?: number | null
+          view_center_y?: number | null
+          zoom_level?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          current_map_id?: string | null
+          description?: string | null
+          dm_id?: string
+          ended_at?: string | null
+          fog_of_war_enabled?: boolean | null
+          grid_enabled?: boolean | null
+          grid_size?: number | null
+          id?: string
+          is_active?: boolean | null
+          max_players?: number | null
+          name?: string
+          session_code?: string
+          updated_at?: string | null
+          view_center_x?: number | null
+          view_center_y?: number | null
+          zoom_level?: number | null
+        }
+        Relationships: []
+      }
+      initiative_tracker: {
+        Row: {
+          character_name: string
+          created_at: string | null
+          has_acted_this_turn: boolean | null
+          id: string
+          initiative_modifier: number | null
+          initiative_roll: number
+          is_current_turn: boolean | null
+          round_number: number | null
+          session_id: string
+          token_id: string | null
+          turn_order: number
+          updated_at: string | null
+        }
+        Insert: {
+          character_name: string
+          created_at?: string | null
+          has_acted_this_turn?: boolean | null
+          id?: string
+          initiative_modifier?: number | null
+          initiative_roll: number
+          is_current_turn?: boolean | null
+          round_number?: number | null
+          session_id: string
+          token_id?: string | null
+          turn_order: number
+          updated_at?: string | null
+        }
+        Update: {
+          character_name?: string
+          created_at?: string | null
+          has_acted_this_turn?: boolean | null
+          id?: string
+          initiative_modifier?: number | null
+          initiative_roll?: number
+          is_current_turn?: boolean | null
+          round_number?: number | null
+          session_id?: string
+          token_id?: string | null
+          turn_order?: number
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "initiative_tracker_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "game_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "initiative_tracker_token_id_fkey"
+            columns: ["token_id"]
+            isOneToOne: false
+            referencedRelation: "battle_tokens"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      session_messages: {
+        Row: {
+          content: string
+          created_at: string | null
+          dice_roll_data: Json | null
+          id: string
+          is_whisper: boolean | null
+          message_type: string
+          sender_name: string
+          session_id: string
+          user_id: string
+          whisper_to_user_id: string | null
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          dice_roll_data?: Json | null
+          id?: string
+          is_whisper?: boolean | null
+          message_type?: string
+          sender_name: string
+          session_id: string
+          user_id: string
+          whisper_to_user_id?: string | null
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          dice_roll_data?: Json | null
+          id?: string
+          is_whisper?: boolean | null
+          message_type?: string
+          sender_name?: string
+          session_id?: string
+          user_id?: string
+          whisper_to_user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "session_messages_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "game_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      session_players: {
+        Row: {
+          character_id: string | null
+          id: string
+          is_online: boolean | null
+          is_visible: boolean | null
+          joined_at: string | null
+          last_seen: string | null
+          player_name: string
+          position_x: number | null
+          position_y: number | null
+          session_id: string
+          user_id: string
+        }
+        Insert: {
+          character_id?: string | null
+          id?: string
+          is_online?: boolean | null
+          is_visible?: boolean | null
+          joined_at?: string | null
+          last_seen?: string | null
+          player_name: string
+          position_x?: number | null
+          position_y?: number | null
+          session_id: string
+          user_id: string
+        }
+        Update: {
+          character_id?: string | null
+          id?: string
+          is_online?: boolean | null
+          is_visible?: boolean | null
+          joined_at?: string | null
+          last_seen?: string | null
+          player_name?: string
+          position_x?: number | null
+          position_y?: number | null
+          session_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "session_players_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "game_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      generate_session_code: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
     }
     Enums: {
       [_ in never]: never
