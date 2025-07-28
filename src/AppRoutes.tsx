@@ -24,6 +24,7 @@ import CharacterManagementPage from './pages/CharacterManagementPage';
 // Ленивая загрузка страниц, зависящих от WebSocket
 const GameRoomPage = React.lazy(() => import('./pages/GameRoomPage'));
 const JoinSessionPage = React.lazy(() => import('./pages/JoinSessionPage'));
+const BattleMapPageFixed = React.lazy(() => import('./pages/BattleMapPageFixed'));
 
 // Импорт хука для защиты маршрутов
 import { useProtectedRoute } from './hooks/use-auth';
@@ -118,6 +119,13 @@ const AppRoutes: React.FC = () => {
       <Route path="/battle" element={
         <ProtectedDMRoute>
           <BattleScenePage />
+        </ProtectedDMRoute>
+      } />
+      <Route path="/battle/:sessionId" element={
+        <ProtectedDMRoute>
+          <React.Suspense fallback={<LazyLoading />}>
+            <BattleMapPageFixed />
+          </React.Suspense>
         </ProtectedDMRoute>
       } />
       

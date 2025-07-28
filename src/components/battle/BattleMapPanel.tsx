@@ -9,6 +9,7 @@ import TokenManager from './TokenManager';
 import InitiativePanel from './InitiativePanel';
 import MapUploader from '../session/MapUploader';
 import { Map, Users, Swords, Plus, Shield, Zap } from 'lucide-react';
+import PlayerViewPanel from './PlayerViewPanel';
 
 interface BattleMapPanelProps {
   isDM?: boolean;
@@ -303,16 +304,30 @@ const BattleMapPanel: React.FC<BattleMapPanelProps> = ({
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 h-[calc(100vh-200px)]">
         {/* Боевая карта */}
         <div className="lg:col-span-3 flex flex-col">
-          <BattleCanvas
-            width={Math.min(800, window.innerWidth * 0.7)}
-            height={Math.min(600, window.innerHeight * 0.6)}
-            gridSize={64}
-            isDM={isDM}
-            tokens={tokens}
-            onTokenMove={handleTokenMove}
-            onTokenAdd={isDM ? handleTokenAdd : undefined}
-            onTokenSelect={setSelectedTokenId}
-          />
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                <span>🗺️ Карта боя</span>
+                <div className="flex items-center gap-2">
+                  <Badge variant="outline">
+                    Токенов: {tokens.length}
+                  </Badge>
+                </div>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <BattleCanvas
+                width={800}
+                height={600}
+                gridSize={32}
+                isDM={isDM}
+                tokens={tokens}
+                onTokenMove={handleTokenMove}
+                onTokenAdd={isDM ? handleTokenAdd : undefined}
+                onTokenSelect={setSelectedTokenId}
+              />
+            </CardContent>
+          </Card>
           
           {/* Кнопки управления боем для DM */}
           {isDM && (
@@ -368,6 +383,13 @@ const BattleMapPanel: React.FC<BattleMapPanelProps> = ({
                 currentMap={mapBackground}
               />
             )}
+            
+            {/* Предпросмотр для игроков */}
+            <PlayerViewPanel
+              tokens={tokens}
+              showPlayerView={isDM}
+              mapBackground={mapBackground}
+            />
           </div>
         )}
 

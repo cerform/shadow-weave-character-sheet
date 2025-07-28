@@ -242,13 +242,13 @@ const BattleCanvas: React.FC<BattleCanvasProps> = ({
   }, [handleMouseDown, handleMouseMove, handleMouseUp]);
 
   return (
-    <div className="battle-canvas-container border rounded-lg overflow-hidden bg-background shadow-lg p-4">
+    <div className="battle-canvas-container border rounded-lg overflow-hidden bg-background shadow-lg p-4 flex justify-center items-center min-h-[600px]">
       <canvas
         ref={canvasRef}
         width={width}
         height={height}
         className="cursor-crosshair block border border-border/20 rounded"
-        style={{ maxWidth: '100%', height: 'auto', backgroundColor: '#fafafa' }}
+        style={{ backgroundColor: '#fafafa' }}
       />
     </div>
   );
