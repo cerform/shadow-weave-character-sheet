@@ -156,6 +156,31 @@ export const getCharacterById = async (id: string): Promise<Character | null> =>
  * Подготавливает объект персонажа для сохранения в БД
  */
 function prepareCharacterForDB(character: Character, userId: string): any {
+  // Очищаем заклинания от некорректных значений
+  const cleanSpells = (character.spells || []).map(spell => {
+    const cleanedSpell: any = { ...spell };
+    
+    // Убираем некорректные объекты с _type: "undefined"
+    if (cleanedSpell.verbal && typeof cleanedSpell.verbal === 'object') {
+      cleanedSpell.verbal = undefined;
+    }
+    if (cleanedSpell.somatic && typeof cleanedSpell.somatic === 'object') {
+      cleanedSpell.somatic = undefined;
+    }
+    if (cleanedSpell.material && typeof cleanedSpell.material === 'object') {
+      cleanedSpell.material = undefined;
+    }
+    
+    // Устанавливаем корректные boolean значения на основе компонентов
+    if (cleanedSpell.components && typeof cleanedSpell.components === 'string') {
+      cleanedSpell.verbal = cleanedSpell.components.includes('В');
+      cleanedSpell.somatic = cleanedSpell.components.includes('С');
+      cleanedSpell.material = cleanedSpell.components.includes('М');
+    }
+    
+    return cleanedSpell;
+  });
+
   return {
     user_id: userId,
     name: character.name || '',
@@ -182,7 +207,7 @@ function prepareCharacterForDB(character: Character, userId: string): any {
     proficiency_bonus: character.proficiencyBonus || 2,
     
     // JSON поля
-    spells: character.spells || [],
+    spells: cleanSpells,
     equipment: character.equipment || [],
     money: character.money || { gp: 0, sp: 0, cp: 0 },
     stats: character.stats || {},
