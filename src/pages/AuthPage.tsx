@@ -15,58 +15,49 @@ const AuthPage = () => {
 
   // Проверяем, авторизован ли пользователь и обрабатываем OAuth callback
   useEffect(() => {
+    // Проверяем URL параметры для OAuth callback СНАЧАЛА
+    if (location.search.includes('code=') || location.hash.includes('access_token=')) {
+      console.log('OAuth callback detected');
+      
+      const handleOAuthCallback = async () => {
+        const { data, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error('OAuth callback error:', error);
+          return;
+        }
+        
+        if (data?.session?.user) {
+          console.log('OAuth session established:', data.session.user.email);
+          
+          // Если это popup окно, отправляем сообщение родительскому окну
+          if (window.opener) {
+            window.opener.postMessage({
+              type: 'SUPABASE_AUTH_SUCCESS',
+              user: data.session.user
+            }, window.location.origin);
+            window.close();
+            return;
+          }
+          
+          navigate(returnPath);
+        }
+      };
+      
+      handleOAuthCallback();
+      return; // Важно! Не выполняем дальнейшую логику
+    }
+    
+    // Только если НЕ OAuth callback, проверяем существующего пользователя
     const checkUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         console.log("User is already authenticated, redirecting");
-        
-        // Если это popup окно, отправляем сообщение родительскому окну
-        if (window.opener) {
-          window.opener.postMessage({
-            type: 'SUPABASE_AUTH_SUCCESS',
-            user: user
-          }, window.location.origin);
-          window.close();
-          return;
-        }
-        
         navigate(returnPath);
       }
     };
     
-    // Обрабатываем OAuth callback (например, от Google)
-    const handleOAuthCallback = async () => {
-      const { data, error } = await supabase.auth.getSession();
-      
-      if (error) {
-        console.error('OAuth callback error:', error);
-        return;
-      }
-      
-      if (data?.session?.user) {
-        console.log('OAuth session established:', data.session.user.email);
-        
-        // Если это popup окно, отправляем сообщение родительскому окну
-        if (window.opener) {
-          window.opener.postMessage({
-            type: 'SUPABASE_AUTH_SUCCESS',
-            user: data.session.user
-          }, window.location.origin);
-          window.close();
-          return;
-        }
-        
-        navigate(returnPath);
-      }
-    };
-    
-    // Проверяем URL параметры для OAuth callback
-    if (location.search.includes('code=') || location.hash.includes('access_token=')) {
-      console.log('OAuth callback detected');
-      handleOAuthCallback();
-    } else {
-      checkUser();
-    }
+    checkUser();
   }, [navigate, returnPath, location.search, location.hash]);
 
   const handleAuthSuccess = () => {
