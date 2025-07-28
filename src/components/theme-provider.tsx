@@ -51,9 +51,12 @@ export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
   const handleSetTheme = (newTheme: string) => {
     setTheme(newTheme);
     setUserTheme(newTheme);
+    setTheme(current);
+    
     
     // Сохраняем тему в localStorage
     localStorage.setItem('theme', newTheme);
+    localStorage.clear('atribute', currentTheme);
     
     console.log("Theme set in ThemeProvider:", newTheme);
   };
