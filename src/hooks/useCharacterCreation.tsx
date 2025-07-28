@@ -92,11 +92,35 @@ export const useCharacterCreation = (): UseCharacterCreationReturn => {
 
   // Функция для конвертации данных в объект Character
   const convertToCharacter = (data: any): Character => {
-    // Простая реализация - копируем все свойства
-    return {
-      ...createDefaultCharacter(),
-      ...data,
-    };
+    // Создаем базовый объект персонажа
+    const baseCharacter = createDefaultCharacter();
+    
+    // Объединяем с переданными данными, заменяя undefined на значения по умолчанию
+    const merged = { ...baseCharacter, ...data };
+    
+    // Проходимся по всем полям и заменяем undefined на значения по умолчанию
+    const result: any = {};
+    for (const [key, value] of Object.entries(merged)) {
+      if (value !== undefined) {
+        result[key] = value;
+      } else if (key in baseCharacter) {
+        result[key] = (baseCharacter as any)[key];
+      }
+    }
+    
+    // Обеспечиваем обязательные поля
+    result.name = result.name || '';
+    result.race = result.race || '';
+    result.class = result.class || '';
+    result.level = result.level || 1;
+    result.userId = result.userId || '';
+    result.spells = result.spells || [];
+    result.equipment = result.equipment || [];
+    result.money = result.money || { gp: 0, sp: 0, cp: 0 };
+    
+    console.log('🔄 Конвертированный персонаж:', result);
+    
+    return result as Character;
   };
 
   // Функция для перехода к следующему шагу

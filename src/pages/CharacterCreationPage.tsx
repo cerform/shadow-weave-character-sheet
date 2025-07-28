@@ -82,7 +82,13 @@ const CharacterCreationPage: React.FC = () => {
       const characterToSave = convertToCharacter(character);
       characterToSave.userId = uid;
 
-      console.log('Данные персонажа для сохранения:', characterToSave);
+      // Дополнительная валидация: убеждаемся, что нет undefined значений
+      if (hasUndefinedValues(characterToSave)) {
+        console.warn('⚠️ Обнаружены undefined значения в персонаже:', characterToSave);
+        throw new Error('Данные персонажа содержат некорректные значения');
+      }
+
+      console.log('✅ Данные персонажа для сохранения (валидированы):', characterToSave);
 
       const savedCharacter = await saveCharacter(characterToSave);
 
@@ -161,5 +167,31 @@ const CharacterCreationPage: React.FC = () => {
     </div>
   );
 };
+
+/**
+ * Проверяет, есть ли в объекте undefined значения
+ */
+function hasUndefinedValues(obj: any, path = ''): boolean {
+  if (obj === undefined) {
+    console.log(`🔍 Найдено undefined значение в ${path}`);
+    return true;
+  }
+
+  if (obj === null || typeof obj !== 'object') {
+    return false;
+  }
+
+  if (Array.isArray(obj)) {
+    return obj.some((item, index) => hasUndefinedValues(item, `${path}[${index}]`));
+  }
+
+  for (const [key, value] of Object.entries(obj)) {
+    if (hasUndefinedValues(value, path ? `${path}.${key}` : key)) {
+      return true;
+    }
+  }
+
+  return false;
+}
 
 export default CharacterCreationPage;

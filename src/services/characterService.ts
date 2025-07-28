@@ -17,10 +17,10 @@ import { Character } from "@/types/character";
 export const saveCharacter = async (character: Character): Promise<Character> => {
   const charactersRef = collection(db, "characters");
   
-  // Фильтруем undefined значения
-  const cleanedCharacter = Object.fromEntries(
-    Object.entries(character).filter(([_, value]) => value !== undefined)
-  );
+  // Глубокая очистка от undefined значений
+  const cleanedCharacter = cleanUndefinedValues(character);
+  
+  console.log('🔍 Очищенные данные персонажа перед сохранением:', cleanedCharacter);
   
   const docRef = await addDoc(charactersRef, cleanedCharacter);
   return { ...character, id: docRef.id };
@@ -32,10 +32,9 @@ export const updateCharacter = async (character: Character): Promise<void> => {
 
   const docRef = doc(db, "characters", character.id);
   
-  // Фильтруем undefined значения и удаляем id из данных для обновления
-  const updateData = Object.fromEntries(
-    Object.entries(character).filter(([key, value]) => key !== 'id' && value !== undefined)
-  );
+  // Глубокая очистка от undefined значений и удаляем id из данных для обновления
+  const { id, ...characterData } = character;
+  const updateData = cleanUndefinedValues(characterData);
   
   await updateDoc(docRef, updateData);
 };
@@ -71,3 +70,31 @@ export const getCharacterById = async (id: string): Promise<Character | null> =>
 
   return null;
 };
+
+/**
+ * Глубокая очистка объекта от undefined значений
+ */
+function cleanUndefinedValues(obj: any): any {
+  if (obj === null || obj === undefined) {
+    return obj;
+  }
+
+  if (Array.isArray(obj)) {
+    return obj.map(item => cleanUndefinedValues(item)).filter(item => item !== undefined);
+  }
+
+  if (typeof obj === 'object') {
+    const cleaned: any = {};
+    for (const [key, value] of Object.entries(obj)) {
+      if (value !== undefined) {
+        const cleanedValue = cleanUndefinedValues(value);
+        if (cleanedValue !== undefined) {
+          cleaned[key] = cleanedValue;
+        }
+      }
+    }
+    return cleaned;
+  }
+
+  return obj;
+}
