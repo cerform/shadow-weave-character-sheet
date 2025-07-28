@@ -108,6 +108,26 @@ export const useCharacterCreation = (): UseCharacterCreationReturn => {
       }
     }
     
+    // Исправляем характеристики - берем из stats если основные поля пустые
+    if (result.stats) {
+      result.strength = result.strength !== 10 ? result.strength : (result.stats.strength || 10);
+      result.dexterity = result.dexterity !== 10 ? result.dexterity : (result.stats.dexterity || 10);
+      result.constitution = result.constitution !== 10 ? result.constitution : (result.stats.constitution || 10);
+      result.intelligence = result.intelligence !== 10 ? result.intelligence : (result.stats.intelligence || 10);
+      result.wisdom = result.wisdom !== 10 ? result.wisdom : (result.stats.wisdom || 10);
+      result.charisma = result.charisma !== 10 ? result.charisma : (result.stats.charisma || 10);
+      
+      // Обновляем stats объект тоже
+      result.stats = {
+        strength: result.strength,
+        dexterity: result.dexterity,
+        constitution: result.constitution,
+        intelligence: result.intelligence,
+        wisdom: result.wisdom,
+        charisma: result.charisma,
+      };
+    }
+    
     // Обеспечиваем обязательные поля
     result.name = result.name || '';
     result.race = result.race || '';
