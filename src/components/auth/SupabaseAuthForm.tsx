@@ -163,15 +163,16 @@ const SupabaseAuthForm: React.FC<SupabaseAuthFormProps> = ({ onSuccess }) => {
     try {
       console.log('🔄 Attempting Google sign in...');
       
-      // Используем стандартный Supabase метод без кастомного popup
+      // Открываем popup окно для Google OAuth
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/`,
+          redirectTo: `${window.location.origin}/auth`,
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',
-          }
+          },
+          skipBrowserRedirect: false
         }
       });
 
@@ -182,11 +183,25 @@ const SupabaseAuthForm: React.FC<SupabaseAuthFormProps> = ({ onSuccess }) => {
         throw error;
       }
 
-      // Supabase автоматически перенаправит пользователя
-      toast({
-        title: "Перенаправление на Google...",
-        description: "Сейчас откроется страница авторизации Google",
-      });
+      // Для popup нужно дождаться закрытия окна и проверить сессию
+      const checkSession = setInterval(async () => {
+        const { data: session } = await supabase.auth.getSession();
+        if (session.session) {
+          clearInterval(checkSession);
+          toast({
+            title: "Вход выполнен!",
+            description: "Добро пожаловать через Google!",
+          });
+          onSuccess?.();
+          setLoading(false);
+        }
+      }, 1000);
+
+      // Очистить интервал через 30 секунд
+      setTimeout(() => {
+        clearInterval(checkSession);
+        setLoading(false);
+      }, 30000);
 
     } catch (error: any) {
       console.error('❌ Google sign in catch error:', error);
