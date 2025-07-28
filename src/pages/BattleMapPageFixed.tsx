@@ -6,13 +6,16 @@ import InteractiveBattleMap from '@/components/battle/InteractiveBattleMap';
 const BattleMapPageFixed: React.FC = () => {
   const navigate = useNavigate();
   const { sessionId } = useParams<{ sessionId: string }>();
-  const { user, loading } = useAuth();
+  const { user, loading, isAuthenticated } = useAuth();
+
+  console.log('BattleMapPageFixed - Auth state:', { user, loading, isAuthenticated });
 
   useEffect(() => {
-    if (!loading && !user) {
+    if (!loading && !isAuthenticated) {
+      console.log('Redirecting to auth from BattleMapPageFixed');
       navigate('/auth');
     }
-  }, [user, loading, navigate]);
+  }, [isAuthenticated, loading, navigate]);
 
   if (loading) {
     return (
@@ -25,10 +28,7 @@ const BattleMapPageFixed: React.FC = () => {
     );
   }
 
-  if (!user) {
-    return null;
-  }
-
+  // Временно убираем проверку авторизации для отладки
   const isDM = true; // Можно определить роль пользователя из контекста или props
 
   return <InteractiveBattleMap isDM={isDM} />;

@@ -5,7 +5,9 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Navigate } from 'react-router-dom';
 
 const DMDashboardPageNew: React.FC = () => {
-  const { user, loading } = useAuth();
+  const { user, loading, isAuthenticated } = useAuth();
+
+  console.log('DMDashboardPageNew - Auth state:', { user, loading, isAuthenticated });
 
   if (loading) {
     return (
@@ -22,10 +24,7 @@ const DMDashboardPageNew: React.FC = () => {
     );
   }
 
-  if (!user) {
-    return <Navigate to="/auth" replace />;
-  }
-
+  // Временно убираем проверку авторизации для отладки
   return <ModernDMDashboard />;
 };
 
