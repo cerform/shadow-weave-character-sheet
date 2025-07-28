@@ -33,7 +33,7 @@ const HomePage = () => {
       icon: Users,
       title: "Управление персонажами",
       description: "Просматривайте, редактируйте и управляйте всеми своими персонажами",
-      href: "/character-management",
+      href: "/characters",
       gradient: "from-blue-500/20 to-cyan-500/20"
     },
     {
@@ -54,7 +54,7 @@ const HomePage = () => {
       icon: Crown,
       title: "Панель Мастера",
       description: "Современная панель DM с инициативой, токенами, туманом войны и VTT интерфейсом",
-      href: "/dm-dashboard",
+      href: "/dm-dashboard-new",
       gradient: "from-red-500/20 to-rose-500/20"
     },
     {
