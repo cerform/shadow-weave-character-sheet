@@ -7,7 +7,7 @@ import ProfilePreview from '@/components/home/ProfilePreview';
 import CharactersList from '@/components/home/CharactersList';
 import { useAuth } from '@/hooks/use-auth';
 import FantasyThemeSelector from '@/components/FantasyThemeSelector';
-import { logCharacterSystemDiagnostics } from '@/utils/characterDiagnostics';
+// Removed characterDiagnostics import as it was deleted
 import fantasyBg1 from '@/assets/fantasy-bg-1.jpg';
 import fantasyBg2 from '@/assets/fantasy-bg-2.jpg';
 import fantasyBg3 from '@/assets/fantasy-bg-3.jpg';
@@ -16,10 +16,7 @@ const HomePage = () => {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
   
-  // Выполняем диагностику при загрузке главной страницы
-  useEffect(() => {
-    logCharacterSystemDiagnostics();
-  }, []);
+  // Removed debug logging
 
   const navigateToAuth = () => {
     console.log("Home: Переход на страницу /auth");
