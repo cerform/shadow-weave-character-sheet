@@ -319,17 +319,7 @@ const SupabaseAuthForm: React.FC<SupabaseAuthFormProps> = ({ onSuccess }) => {
             </div>
           </div>
           
-          <Button 
-            variant="outline" 
-            className="w-full mb-2" 
-            onClick={handleGoogleSignIn}
-            disabled={loading}
-            type="button"
-          >
-            {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {!loading && <GoogleIcon />}
-            <span className="ml-2">Войти через Google</span>
-          </Button>
+          {/* Google OAuth отключен - не работает в iframe Lovable */}
           
           <Button 
             variant="outline" 
@@ -343,7 +333,8 @@ const SupabaseAuthForm: React.FC<SupabaseAuthFormProps> = ({ onSuccess }) => {
           
           <p className="text-xs text-muted-foreground mt-4 text-center">
             Анонимный вход позволяет сразу начать создание персонажей.<br />
-            Ваши персонажи будут сохранены только до очистки браузера.
+            Ваши персонажи будут сохранены только до очистки браузера.<br />
+            <span className="text-amber-600">Google OAuth недоступен в iframe-окружении.</span>
           </p>
         </CardContent>
       </Card>
