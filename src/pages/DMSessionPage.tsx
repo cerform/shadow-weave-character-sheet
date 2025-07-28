@@ -262,7 +262,7 @@ const DMSessionPage = () => {
               <CardDescription>Инструменты Мастера Подземелий</CardDescription>
             </CardHeader>
             <CardContent className="flex flex-wrap gap-4">
-              <Button onClick={() => navigate(`/battle/${sessionId}`)}>Карта боя</Button>
+              <Button onClick={() => navigate(`/dm/battle-map/${sessionId}`)}>Карта боя</Button>
               <Button>Генератор событий</Button>
               <Button>Бestiарий</Button>
               <Button>Таблицы лута</Button>
