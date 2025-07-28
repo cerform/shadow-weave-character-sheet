@@ -527,6 +527,14 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: string
       }
+      join_session: {
+        Args: {
+          session_code_param: string
+          player_name_param: string
+          character_id_param?: string
+        }
+        Returns: string
+      }
     }
     Enums: {
       [_ in never]: never
