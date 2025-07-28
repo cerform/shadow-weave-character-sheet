@@ -53,6 +53,7 @@
     "cmdk": "^1.0.0",
     "date-fns": "^4.1.0",
     "embla-carousel-react": "^8.3.0",
+    "fabric": "^6.0.2",
     "firebase": "^10.11.0",
     "framer-motion": "^12.9.7",
     "html2pdf.js": "^0.10.3",
