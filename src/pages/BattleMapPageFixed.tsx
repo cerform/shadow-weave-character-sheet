@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/use-auth';
-import BattleMapWithSidebar from '@/components/battle/BattleMapWithSidebar';
+import SimpleBattleMap from '@/components/battle/SimpleBattleMap';
 
 const BattleMapPageFixed: React.FC = () => {
   const navigate = useNavigate();
@@ -31,7 +31,7 @@ const BattleMapPageFixed: React.FC = () => {
 
   const isDM = true; // Можно определить роль пользователя из контекста или props
 
-  return <BattleMapWithSidebar isDM={isDM} />;
+  return <SimpleBattleMap isDM={isDM} />;
 };
 
 export default BattleMapPageFixed;
