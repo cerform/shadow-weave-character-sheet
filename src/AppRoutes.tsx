@@ -159,14 +159,27 @@ const AppRoutes: React.FC = () => {
       
       {/* DM Dashboard маршруты */}
       <Route path="/dm-dashboard" element={
-        <React.Suspense fallback={<LazyLoading />}>
-          <DMDashboardPageNew />
-        </React.Suspense>
+        <ProtectedDMRoute>
+          <React.Suspense fallback={<LazyLoading />}>
+            <DMDashboardPageNew />
+          </React.Suspense>
+        </ProtectedDMRoute>
       } />
       <Route path="/dm-dashboard/:sessionId" element={
-        <React.Suspense fallback={<LazyLoading />}>
-          <DMDashboardPageNew />
-        </React.Suspense>
+        <ProtectedDMRoute>
+          <React.Suspense fallback={<LazyLoading />}>
+            <DMDashboardPageNew />
+          </React.Suspense>
+        </ProtectedDMRoute>
+      } />
+      
+      {/* Battle Map маршрут */}
+      <Route path="/battle-map-fixed" element={
+        <ProtectedDMRoute>
+          <React.Suspense fallback={<LazyLoading />}>
+            <BattleMapPageFixed />
+          </React.Suspense>
+        </ProtectedDMRoute>
       } />
       
       {/* Маршрут для неизвестных путей */}
