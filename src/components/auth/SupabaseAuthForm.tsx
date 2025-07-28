@@ -163,36 +163,58 @@ const SupabaseAuthForm: React.FC<SupabaseAuthFormProps> = ({ onSuccess }) => {
     try {
       console.log('🔄 Attempting Google sign in...');
       
-      // Используем стандартный Supabase метод, но с правильными настройками
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}/auth`,
-          queryParams: {
-            access_type: 'offline',
-            prompt: 'consent',
-          }
-        }
-      });
+      // Создаем URL для OAuth с правильным redirect
+      const redirectTo = `${window.location.origin}/auth`;
+      const authUrl = `https://mqdjwhjtvjnktobgruuu.supabase.co/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(redirectTo)}`;
+      
+      // Принудительно открываем popup
+      const popup = window.open(
+        authUrl,
+        'google-oauth',
+        'width=500,height=600,scrollbars=yes,resizable=yes,centerscreen=yes'
+      );
 
-      console.log('✅ Google OAuth response:', { data, error });
-
-      if (error) {
-        console.error('❌ Google OAuth error:', error);
-        throw error;
+      if (!popup) {
+        throw new Error('Popup заблокировано браузером. Разрешите всплывающие окна для этого сайта.');
       }
 
-      // Supabase автоматически откроет новое окно и обработает callback
+      console.log('✅ Popup opened for Google OAuth');
+      
       toast({
-        title: "Перенаправление на Google...",
-        description: "Откроется новое окно для авторизации",
+        title: "Открыто окно Google авторизации",
+        description: "Войдите через Google в новом окне",
       });
+
+      // Слушаем сообщения от popup окна
+      const handleMessage = (event: MessageEvent) => {
+        if (event.origin !== window.location.origin) return;
+        
+        if (event.data.type === 'SUPABASE_AUTH_SUCCESS') {
+          console.log('✅ Получили успешную авторизацию от popup');
+          popup.close();
+          window.removeEventListener('message', handleMessage);
+          setLoading(false);
+          onSuccess?.();
+        }
+      };
+
+      window.addEventListener('message', handleMessage);
+
+      // Отслеживаем закрытие popup
+      const checkClosed = setInterval(() => {
+        if (popup.closed) {
+          clearInterval(checkClosed);
+          window.removeEventListener('message', handleMessage);
+          setLoading(false);
+          console.log('Popup закрыт пользователем');
+        }
+      }, 1000);
 
     } catch (error: any) {
       console.error('❌ Google sign in catch error:', error);
       toast({
         title: "Ошибка входа через Google",
-        description: error.message || "Произошла неизвестная ошибка",
+        description: error.message || "Разрешите всплывающие окна в браузере",
         variant: "destructive",
       });
       setLoading(false);

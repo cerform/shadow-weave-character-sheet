@@ -19,6 +19,17 @@ const AuthPage = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         console.log("User is already authenticated, redirecting");
+        
+        // Если это popup окно, отправляем сообщение родительскому окну
+        if (window.opener) {
+          window.opener.postMessage({
+            type: 'SUPABASE_AUTH_SUCCESS',
+            user: user
+          }, window.location.origin);
+          window.close();
+          return;
+        }
+        
         navigate(returnPath);
       }
     };
@@ -34,6 +45,17 @@ const AuthPage = () => {
       
       if (data?.session?.user) {
         console.log('OAuth session established:', data.session.user.email);
+        
+        // Если это popup окно, отправляем сообщение родительскому окну
+        if (window.opener) {
+          window.opener.postMessage({
+            type: 'SUPABASE_AUTH_SUCCESS',
+            user: data.session.user
+          }, window.location.origin);
+          window.close();
+          return;
+        }
+        
         navigate(returnPath);
       }
     };
