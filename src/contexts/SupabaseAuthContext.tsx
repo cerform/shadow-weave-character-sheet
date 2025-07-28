@@ -84,8 +84,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   useEffect(() => {
     // Получаем текущую сессию
     const getSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setUser(mapSupabaseUser(session?.user ?? null));
+      console.log('Getting initial session...');
+      const { data: { session }, error } = await supabase.auth.getSession();
+      console.log('Initial session:', { 
+        hasSession: !!session, 
+        userEmail: session?.user?.email,
+        error 
+      });
+      
+      const mappedUser = mapSupabaseUser(session?.user ?? null);
+      console.log('Initial mapped user:', mappedUser);
+      
+      setUser(mappedUser);
       setLoading(false);
     };
 
@@ -94,8 +104,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     // Слушаем изменения аутентификации
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('Auth state changed:', event, session?.user?.email);
-        setUser(mapSupabaseUser(session?.user ?? null));
+        console.log('Auth state changed:', event, {
+          hasSession: !!session,
+          userEmail: session?.user?.email,
+          userId: session?.user?.id
+        });
+        
+        const mappedUser = mapSupabaseUser(session?.user ?? null);
+        console.log('Mapped user:', mappedUser);
+        
+        setUser(mappedUser);
         setLoading(false);
       }
     );
