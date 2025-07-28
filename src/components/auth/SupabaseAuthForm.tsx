@@ -161,19 +161,31 @@ const SupabaseAuthForm: React.FC<SupabaseAuthFormProps> = ({ onSuccess }) => {
     setLoading(true);
 
     try {
+      console.log('🔄 Attempting Google sign in...');
+      
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/`
+          redirectTo: `${window.location.origin}/`,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          },
+          // Принудительно используем popup вместо redirect в iframe
+          skipBrowserRedirect: false
         }
       });
 
+      console.log('✅ Google OAuth response:', { data, error });
+
       if (error) {
+        console.error('❌ Google OAuth error:', error);
         throw error;
       }
 
-      // OAuth redirect will handle the success case
+      // OAuth будет обработан через popup или redirect
     } catch (error: any) {
+      console.error('❌ Google sign in catch error:', error);
       toast({
         title: "Ошибка входа через Google",
         description: error.message || "Произошла неизвестная ошибка",
