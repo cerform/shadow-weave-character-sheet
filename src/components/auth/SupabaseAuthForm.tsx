@@ -4,9 +4,10 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Mail, Lock, User } from 'lucide-react';
+import { Loader2, Mail, Lock, User, Crown } from 'lucide-react';
 
 // Google icon as SVG component
 const GoogleIcon = () => (
@@ -39,6 +40,7 @@ const SupabaseAuthForm: React.FC<SupabaseAuthFormProps> = ({ onSuccess }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [displayName, setDisplayName] = useState('');
+  const [isDM, setIsDM] = useState(false);
   const { toast } = useToast();
 
   const handleSignUp = async (e: React.FormEvent) => {
@@ -55,6 +57,7 @@ const SupabaseAuthForm: React.FC<SupabaseAuthFormProps> = ({ onSuccess }) => {
           emailRedirectTo: `${window.location.origin}/`,
           data: {
             display_name: displayName,
+            is_dm: isDM,
           }
         }
       });
@@ -288,6 +291,18 @@ const SupabaseAuthForm: React.FC<SupabaseAuthFormProps> = ({ onSuccess }) => {
                       minLength={6}
                     />
                   </div>
+                </div>
+                
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="dm-role"
+                    checked={isDM}
+                    onCheckedChange={(checked) => setIsDM(checked as boolean)}
+                  />
+                  <Label htmlFor="dm-role" className="flex items-center gap-2 text-sm">
+                    <Crown className="h-4 w-4 text-amber-500" />
+                    Я хочу быть Мастером Подземелий (DM)
+                  </Label>
                 </div>
                 
                 <Button type="submit" className="w-full" disabled={loading}>
