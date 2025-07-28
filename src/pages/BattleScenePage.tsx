@@ -483,17 +483,7 @@ const BattleScenePage = () => {
 
         {/* Центральная пустая зона (сцена боя) */}
         <div className="relative w-full h-full overflow-hidden">
-          <BattleMap
-            tokens={tokens as any}
-            setTokens={setTokens as any}
-            background={background}
-            setBackground={setBackground}
-            onUpdateTokenPosition={updateTokenPosition}
-            onSelectToken={setSelectedTokenId}
-            selectedTokenId={selectedTokenId}
-            initiative={initiative}
-            battleActive={battleActive}
-          />
+          <BattleMap />
         </div>
 
         {/* Правая панель */}
