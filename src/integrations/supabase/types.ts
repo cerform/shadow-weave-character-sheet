@@ -14,7 +14,111 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      characters: {
+        Row: {
+          alignment: string | null
+          armor_class: number
+          background: string | null
+          backstory: string | null
+          charisma: number
+          class: string
+          constitution: number
+          created_at: string
+          current_hp: number
+          dexterity: number
+          equipment: Json | null
+          experience: number | null
+          gender: string | null
+          hit_points: Json | null
+          id: string
+          intelligence: number
+          level: number
+          max_hp: number
+          money: Json | null
+          name: string
+          proficiencies: Json | null
+          proficiency_bonus: number | null
+          race: string
+          speed: number | null
+          spells: Json | null
+          stats: Json | null
+          strength: number
+          subclass: string | null
+          subrace: string | null
+          updated_at: string
+          user_id: string
+          wisdom: number
+        }
+        Insert: {
+          alignment?: string | null
+          armor_class?: number
+          background?: string | null
+          backstory?: string | null
+          charisma?: number
+          class: string
+          constitution?: number
+          created_at?: string
+          current_hp?: number
+          dexterity?: number
+          equipment?: Json | null
+          experience?: number | null
+          gender?: string | null
+          hit_points?: Json | null
+          id?: string
+          intelligence?: number
+          level?: number
+          max_hp?: number
+          money?: Json | null
+          name: string
+          proficiencies?: Json | null
+          proficiency_bonus?: number | null
+          race: string
+          speed?: number | null
+          spells?: Json | null
+          stats?: Json | null
+          strength?: number
+          subclass?: string | null
+          subrace?: string | null
+          updated_at?: string
+          user_id: string
+          wisdom?: number
+        }
+        Update: {
+          alignment?: string | null
+          armor_class?: number
+          background?: string | null
+          backstory?: string | null
+          charisma?: number
+          class?: string
+          constitution?: number
+          created_at?: string
+          current_hp?: number
+          dexterity?: number
+          equipment?: Json | null
+          experience?: number | null
+          gender?: string | null
+          hit_points?: Json | null
+          id?: string
+          intelligence?: number
+          level?: number
+          max_hp?: number
+          money?: Json | null
+          name?: string
+          proficiencies?: Json | null
+          proficiency_bonus?: number | null
+          race?: string
+          speed?: number | null
+          spells?: Json | null
+          stats?: Json | null
+          strength?: number
+          subclass?: string | null
+          subrace?: string | null
+          updated_at?: string
+          user_id?: string
+          wisdom?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
