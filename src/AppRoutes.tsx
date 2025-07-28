@@ -104,10 +104,12 @@ const AppRoutes: React.FC = () => {
         element={<DndSpellsPage />} 
       />
       
-      {/* Маршруты DM с защитой */}
+      {/* Маршруты DM с защитой - новая панель */}
       <Route path="/dm" element={
         <ProtectedDMRoute>
-          <DMDashboardPage />
+          <React.Suspense fallback={<LazyLoading />}>
+            <DMDashboardPageNew />
+          </React.Suspense>
         </ProtectedDMRoute>
       } />
       <Route path="/dm-session/:id" element={
@@ -150,8 +152,10 @@ const AppRoutes: React.FC = () => {
       {/* Добавляем маршрут для отладки */}
       <Route path="/debug" element={<DebugPage />} />
       
-      {/* GM Dashboard маршрут */}
-      <Route path="/gm-dashboard" element={<GMDashboardPage />} />
+      {/* Перенаправление старых маршрутов на новые */}
+      <Route path="/gm-dashboard" element={<Navigate to="/dm-dashboard" replace />} />
+      <Route path="/dm-dashboard-new" element={<Navigate to="/dm-dashboard" replace />} />
+      <Route path="/dm-dashboard-new/:sessionId" element={<Navigate to="/dm-dashboard/:sessionId" replace />} />
       
       {/* Общедоступные маршруты */}
       <Route path="/spellbook" element={<SpellbookPage />} />
@@ -163,13 +167,13 @@ const AppRoutes: React.FC = () => {
       
       <Route path="/character-management" element={<CharacterManagementPage />} />
       
-      {/* DM Dashboard - новая панель мастера */}
-      <Route path="/dm-dashboard-new" element={
+      {/* DM Dashboard маршруты */}
+      <Route path="/dm-dashboard" element={
         <React.Suspense fallback={<LazyLoading />}>
           <DMDashboardPageNew />
         </React.Suspense>
       } />
-      <Route path="/dm-dashboard-new/:sessionId" element={
+      <Route path="/dm-dashboard/:sessionId" element={
         <React.Suspense fallback={<LazyLoading />}>
           <DMDashboardPageNew />
         </React.Suspense>
