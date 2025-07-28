@@ -25,6 +25,7 @@ import CharacterManagementPage from './pages/CharacterManagementPage';
 const GameRoomPage = React.lazy(() => import('./pages/GameRoomPage'));
 const JoinSessionPage = React.lazy(() => import('./pages/JoinSessionPage'));
 const BattleMapPageFixed = React.lazy(() => import('./pages/BattleMapPageFixed'));
+const DMDashboardPageNew = React.lazy(() => import('./pages/DMDashboardPageNew'));
 
 // Импорт хука для защиты маршрутов
 import { useProtectedRoute } from './hooks/use-auth';
@@ -161,6 +162,18 @@ const AppRoutes: React.FC = () => {
       <Route path="/characters" element={<CharactersListPage />} />
       
       <Route path="/character-management" element={<CharacterManagementPage />} />
+      
+      {/* DM Dashboard - новая панель мастера */}
+      <Route path="/dm-dashboard-new" element={
+        <React.Suspense fallback={<LazyLoading />}>
+          <DMDashboardPageNew />
+        </React.Suspense>
+      } />
+      <Route path="/dm-dashboard-new/:sessionId" element={
+        <React.Suspense fallback={<LazyLoading />}>
+          <DMDashboardPageNew />
+        </React.Suspense>
+      } />
       
       {/* Маршрут для неизвестных путей */}
       <Route path="*" element={<NotFound />} />
