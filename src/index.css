@@ -26,6 +26,28 @@
   --ring: 265 90% 72%;
   --radius: 0.5rem;
 
+  /* Gradients */
+  --gradient-panel: linear-gradient(135deg, hsl(var(--rpg-panel)), hsl(var(--rpg-panel-elevated)));
+  --gradient-hp: linear-gradient(90deg, hsl(var(--rpg-hp)), hsl(var(--rpg-hp) / 0.8));
+  --gradient-mana: linear-gradient(90deg, hsl(var(--rpg-mana)), hsl(var(--rpg-mana) / 0.8));
+
+  /* Shadows */
+  --shadow-panel: 0 4px 12px hsl(var(--background) / 0.3);
+  --shadow-elevated: 0 8px 24px hsl(var(--background) / 0.4), 0 4px 8px hsl(var(--background) / 0.3);
+  
+  /* Glows */
+  --glow-primary: 0 0 20px hsl(var(--primary) / 0.3);
+  --glow-hp: 0 0 15px hsl(var(--rpg-hp) / 0.4);
+  --glow-mana: 0 0 15px hsl(var(--rpg-mana) / 0.4);
+  
+  /* Ability colors */
+  --str-color: 0 70% 50%;
+  --dex-color: 120 70% 50%;
+  --con-color: 30 70% 50%;
+  --int-color: 240 70% 50%;
+  --wis-color: 60 70% 50%;
+  --cha-color: 300 70% 50%;
+
   /* RPG/MMO Enhancement Colors */
   --rpg-bg-primary: 15 15% 8%;
   --rpg-bg-secondary: 20 20% 12%;
