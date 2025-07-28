@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,7 +7,6 @@ import ProfilePreview from '@/components/home/ProfilePreview';
 import CharactersList from '@/components/home/CharactersList';
 import { useAuth } from '@/hooks/use-auth';
 import FantasyThemeSelector from '@/components/FantasyThemeSelector';
-// Removed characterDiagnostics import as it was deleted
 import fantasyBg1 from '@/assets/fantasy-bg-1.jpg';
 import fantasyBg2 from '@/assets/fantasy-bg-2.jpg';
 import fantasyBg3 from '@/assets/fantasy-bg-3.jpg';
@@ -16,8 +15,6 @@ const HomePage = () => {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
   
-  // Removed debug logging
-
   const navigateToAuth = () => {
     console.log("Home: Переход на страницу /auth");
     navigate('/auth');
@@ -56,15 +53,15 @@ const HomePage = () => {
     {
       icon: Crown,
       title: "Панель Мастера",
-      description: "Полноценная панель с инициативой, токенами, туманом войны и инструментами DM",
-      href: "/dm",
+      description: "Современная панель DM с инициативой, токенами, туманом войны и VTT интерфейсом",
+      href: "/dm-dashboard",
       gradient: "from-red-500/20 to-rose-500/20"
     },
     {
       icon: Map,
       title: "Боевая карта",
       description: "Интерактивная карта для проведения тактических боёв",
-      href: "/battle",
+      href: "/battle-map-fixed",
       gradient: "from-green-500/20 to-emerald-500/20"
     }
   ];
@@ -118,167 +115,123 @@ const HomePage = () => {
         ))}
       </div>
 
-      {/* Theme Selector */}
-      <div className="absolute top-6 right-6 z-20">
-        <FantasyThemeSelector />
-      </div>
-
-      {/* Контент */}
-      <div className="relative z-10 p-6">
-        <div className="container mx-auto max-w-7xl">
-          {/* Header */}
-          <div className="text-center mb-16 pt-8">
-            <div className="relative inline-block">
-              <h1 className="text-5xl md:text-7xl font-fantasy-title mb-6 text-glow bg-gradient-to-br from-primary via-accent to-primary bg-clip-text text-transparent animate-breathe">
-                Shadow Weave
-              </h1>
-              <div className="absolute -top-2 -right-2">
-                <Sparkles className="h-8 w-8 text-primary animate-pulse" />
+      <div className="relative z-10">
+        {/* Верхняя панель навигации */}
+        <div className="container mx-auto px-4 py-6">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center space-x-3">
+              <div className="relative">
+                <Shield className="h-10 w-10 text-primary" />
+                <Sparkles className="h-4 w-4 text-accent absolute -top-1 -right-1 animate-pulse" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                  D&D Helper
+                </h1>
+                <p className="text-sm text-muted-foreground">Ваш цифровой помощник для D&D 5e</p>
               </div>
             </div>
             
-            <p className="text-xl md:text-2xl mb-8 text-muted-foreground font-fantasy-header">
-              ⚔️ Мастерская для создания героев D&D 5e ⚔️
+            <div className="flex items-center space-x-4">
+              <FantasyThemeSelector />
+              {isAuthenticated ? (
+                <ProfilePreview />
+              ) : (
+                <Button 
+                  onClick={navigateToAuth}
+                  className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90"
+                >
+                  Войти
+                </Button>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Главный контент */}
+        <div className="container mx-auto px-4 pb-16">
+          <div className="text-center mb-16">
+            <h2 className="text-5xl font-bold mb-6 bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent">
+              Добро пожаловать в мир D&D
+            </h2>
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+              Создавайте персонажей, изучайте заклинания, проводите эпические сессии
             </p>
-            
-            <div className="flex items-center justify-center gap-4 mb-8">
-              <div className="h-px bg-gradient-to-r from-transparent via-primary to-transparent w-32" />
-              <Swords className="h-6 w-6 text-primary" />
-              <div className="h-px bg-gradient-to-r from-transparent via-primary to-transparent w-32" />
-            </div>
-            
-            {!isAuthenticated && (
-              <Button 
-                onClick={navigateToAuth}
-                size="lg"
-                className="btn-glow gap-3 text-lg px-8 py-4 h-auto font-fantasy-header"
+          </div>
+
+          {/* Быстрые действия */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">
+            {quickActions.map((action, index) => (
+              <Card 
+                key={index} 
+                className={`relative overflow-hidden border-2 transition-all duration-300 hover:shadow-2xl hover:shadow-primary/20 hover:border-primary/50 cursor-pointer group ${
+                  action.featured ? 'md:col-span-2 lg:col-span-1' : ''
+                }`}
+                onClick={() => navigate(action.href)}
               >
-                <UserPlus className="h-6 w-6" />
-                Начать приключение
-                <Sparkles className="h-4 w-4" />
-              </Button>
-            )}
+                <div className={`absolute inset-0 bg-gradient-to-br ${action.gradient} opacity-50 group-hover:opacity-70 transition-opacity`} />
+                <CardHeader className="relative z-10">
+                  <div className="flex items-center space-x-3">
+                    <div className="p-2 rounded-lg bg-primary/20 group-hover:bg-primary/30 transition-colors">
+                      <action.icon className="h-6 w-6 text-primary" />
+                    </div>
+                    <CardTitle className="group-hover:text-primary transition-colors">
+                      {action.title}
+                    </CardTitle>
+                  </div>
+                </CardHeader>
+                <CardContent className="relative z-10">
+                  <CardDescription className="text-base">
+                    {action.description}
+                  </CardDescription>
+                </CardContent>
+              </Card>
+            ))}
           </div>
 
-          <div className="grid grid-cols-1 xl:grid-cols-4 gap-8 mb-16">
-            {/* Profile Preview */}
-            <Card className="xl:col-span-1 magic-card border-primary/20 bg-card/50 backdrop-blur-sm">
-              <ProfilePreview />
-            </Card>
-            
-            {/* Characters List */}
-            <Card className="xl:col-span-3 magic-card border-primary/20 bg-card/50 backdrop-blur-sm">
+          {/* Персонажи пользователя */}
+          {isAuthenticated && (
+            <div className="mb-16">
               <CharactersList />
-            </Card>
-          </div>
+            </div>
+          )}
 
-          {/* Quick Actions */}
-          <div className="mb-16">
-            <div className="text-center mb-8">
-              <h2 className="text-3xl font-fantasy-header mb-4 text-glow">
-                🎲 Быстрые действия
-              </h2>
-              <p className="text-muted-foreground font-fantasy-body">
-                Выберите действие для начала работы с приложением
-              </p>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-              {quickActions.map((action, index) => {
-                const Icon = action.icon;
-                const isFeatured = action.featured;
-                
-                return (
-                  <Card
-                    key={index}
-                    className={`
-                      magic-card cursor-pointer group h-full transition-all duration-300
-                      border-primary/20 bg-card/50 backdrop-blur-sm hover:bg-card/70 hover:-translate-y-2
-                      ${isFeatured ? 'ring-2 ring-primary/30 shadow-lg shadow-primary/20' : ''}
-                    `}
-                    onClick={() => navigate(action.href)}
-                  >
-                    <CardHeader className="pb-3">
-                      <div className="flex items-center gap-4">
-                        <div className={`
-                          p-4 rounded-xl bg-gradient-to-br ${action.gradient}
-                          border border-primary/30 group-hover:border-primary/50
-                          transition-all duration-300 group-hover:scale-110
-                        `}>
-                          <Icon className="h-8 w-8 text-primary" />
-                        </div>
-                        
-                        <div className="flex-1">
-                          <CardTitle className={`
-                            text-lg font-fantasy-header
-                            ${isFeatured ? 'text-primary' : 'text-foreground'}
-                          `}>
-                            {action.title}
-                            {isFeatured && (
-                              <span className="ml-2 text-xs bg-primary/20 text-primary px-2 py-1 rounded-full">
-                                ✨ Популярное
-                              </span>
-                            )}
-                          </CardTitle>
-                        </div>
-                      </div>
-                    </CardHeader>
-                    
-                    <CardContent>
-                      <CardDescription className="font-fantasy-body text-sm leading-relaxed">
-                        {action.description}
-                      </CardDescription>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Features Preview */}
-          <div className="mb-16">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl font-fantasy-header mb-4 text-glow">
-                ⚡ Возможности приложения
-              </h2>
-              <p className="text-muted-foreground font-fantasy-body max-w-2xl mx-auto">
-                Погрузитесь в мир D&D с современными инструментами и красивым интерфейсом
-              </p>
-            </div>
-            
+          {/* Особенности */}
+          <div className="text-center mb-12">
+            <h3 className="text-3xl font-bold mb-8">Возможности приложения</h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               {features.map((feature, index) => (
-                <Card key={index} className="magic-card text-center group border-primary/20 bg-card/50 backdrop-blur-sm">
-                  <CardHeader>
-                    <div className="mx-auto mb-4 w-20 h-20 rounded-full bg-gradient-to-br from-primary/20 to-accent/20 border border-primary/30 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                      <feature.icon className={`h-10 w-10 ${feature.color}`} />
-                    </div>
-                    
-                    <CardTitle className="text-xl font-fantasy-header text-foreground">
-                      {feature.title}
-                    </CardTitle>
-                  </CardHeader>
-                  
-                  <CardContent>
-                    <CardDescription className="font-fantasy-body leading-relaxed">
-                      {feature.description}
-                    </CardDescription>
-                  </CardContent>
-                </Card>
+                <div 
+                  key={index} 
+                  className="text-center group hover:scale-105 transition-transform duration-300"
+                >
+                  <div className="mb-4 inline-flex p-4 rounded-full bg-gradient-to-br from-primary/20 to-accent/20 group-hover:from-primary/30 group-hover:to-accent/30 transition-colors">
+                    <feature.icon className={`h-8 w-8 ${feature.color}`} />
+                  </div>
+                  <h4 className="text-xl font-semibold mb-2">{feature.title}</h4>
+                  <p className="text-muted-foreground">{feature.description}</p>
+                </div>
               ))}
             </div>
           </div>
 
-          {/* Footer */}
-          <div className="text-center pb-8">
-            <div className="inline-flex items-center gap-4 text-muted-foreground">
-              <Settings className="h-4 w-4" />
-              <span className="font-fantasy-body text-sm">
-                Создано с магией для любителей D&D
-              </span>
-              <Sparkles className="h-4 w-4" />
+          {/* Призыв к действию */}
+          {!isAuthenticated && (
+            <div className="text-center bg-gradient-to-r from-primary/10 to-accent/10 rounded-2xl p-8 border border-primary/20">
+              <h3 className="text-2xl font-bold mb-4">Готовы начать приключение?</h3>
+              <p className="text-muted-foreground mb-6">
+                Присоединитесь к тысячам игроков, которые уже используют D&D Helper
+              </p>
+              <Button 
+                size="lg"
+                onClick={navigateToAuth}
+                className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90"
+              >
+                <UserPlus className="mr-2 h-5 w-5" />
+                Создать аккаунт
+              </Button>
             </div>
-          </div>
+          )}
         </div>
       </div>
     </div>

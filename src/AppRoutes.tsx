@@ -12,9 +12,7 @@ import CharacterCreationPage from './pages/CharacterCreationPage';
 import ProfilePage from './pages/ProfilePage';
 import HandbookPage from './pages/HandbookPage';
 import CharacterViewPage from './pages/CharacterViewPage';
-import GMDashboardPage from './pages/GMDashboardPage';
-import DMDashboardPage from './pages/DMDashboardPage';
-import PlayerDashboardPage from './pages/PlayerDashboardPage';
+
 import BattleScenePage from './pages/BattleScenePage';
 import UnauthorizedPage from './pages/UnauthorizedPage';
 import DebugPage from './pages/DebugPage';
@@ -132,12 +130,7 @@ const AppRoutes: React.FC = () => {
         </ProtectedDMRoute>
       } />
       
-      {/* Маршруты игрока с защитой */}
-      <Route path="/player" element={
-        <ProtectedPlayerRoute>
-          <PlayerDashboardPage />
-        </ProtectedPlayerRoute>
-      } />
+      {/* Удаляем неиспользуемые маршруты игрока */}
       <Route path="/join-session" element={
         <ProtectedPlayerRoute>
           <React.Suspense fallback={<LazyLoading />}>
@@ -152,10 +145,7 @@ const AppRoutes: React.FC = () => {
       {/* Добавляем маршрут для отладки */}
       <Route path="/debug" element={<DebugPage />} />
       
-      {/* Перенаправление старых маршрутов на новые */}
-      <Route path="/gm-dashboard" element={<Navigate to="/dm-dashboard" replace />} />
-      <Route path="/dm-dashboard-new" element={<Navigate to="/dm-dashboard" replace />} />
-      <Route path="/dm-dashboard-new/:sessionId" element={<Navigate to="/dm-dashboard/:sessionId" replace />} />
+      {/* Удаляем старые перенаправления */}
       
       {/* Общедоступные маршруты */}
       <Route path="/spellbook" element={<SpellbookPage />} />
