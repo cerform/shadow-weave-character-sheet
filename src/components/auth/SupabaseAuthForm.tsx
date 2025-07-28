@@ -46,28 +46,41 @@ const SupabaseAuthForm: React.FC<SupabaseAuthFormProps> = ({ onSuccess }) => {
     setLoading(true);
 
     try {
+      console.log('🔄 Attempting to sign up with email:', email);
+      
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
+          emailRedirectTo: `${window.location.origin}/`,
           data: {
             display_name: displayName,
           }
         }
       });
 
+      console.log('✅ Sign up response:', { data, error });
+
       if (error) {
+        console.error('❌ Sign up error:', error);
         throw error;
       }
 
       if (data?.user) {
         toast({
           title: "Регистрация успешна!",
-          description: "Добро пожаловать в мир D&D!",
+          description: data.user.email_confirmed_at 
+            ? "Добро пожаловать в мир D&D!" 
+            : "Проверьте email для подтверждения аккаунта",
         });
-        onSuccess?.();
+        
+        // Только если email подтвержден, вызываем onSuccess
+        if (data.user.email_confirmed_at || data.user.aud === 'authenticated') {
+          onSuccess?.();
+        }
       }
     } catch (error: any) {
+      console.error('❌ Sign up catch error:', error);
       toast({
         title: "Ошибка регистрации",
         description: error.message || "Произошла неизвестная ошибка",
@@ -83,12 +96,17 @@ const SupabaseAuthForm: React.FC<SupabaseAuthFormProps> = ({ onSuccess }) => {
     setLoading(true);
 
     try {
+      console.log('🔄 Attempting to sign in with email:', email);
+      
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
+      console.log('✅ Sign in response:', { data, error });
+
       if (error) {
+        console.error('❌ Sign in error:', error);
         throw error;
       }
 
@@ -100,6 +118,7 @@ const SupabaseAuthForm: React.FC<SupabaseAuthFormProps> = ({ onSuccess }) => {
         onSuccess?.();
       }
     } catch (error: any) {
+      console.error('❌ Sign in catch error:', error);
       toast({
         title: "Ошибка входа",
         description: error.message || "Произошла неизвестная ошибка",
