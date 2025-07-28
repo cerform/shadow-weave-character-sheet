@@ -175,6 +175,16 @@ const AppRoutes: React.FC = () => {
         </ProtectedDMRoute>
       } />
       
+      
+      {/* DM Dashboard New маршрут */}
+      <Route path="/dm-dashboard-new" element={
+        <ProtectedDMRoute>
+          <React.Suspense fallback={<LazyLoading />}>
+            <DMDashboardPageNew />
+          </React.Suspense>
+        </ProtectedDMRoute>
+      } />
+      
       {/* Battle Map маршрут */}
       <Route path="/battle-map-fixed" element={<BattleMapPageFixed />} />
       
