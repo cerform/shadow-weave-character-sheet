@@ -14,7 +14,7 @@ interface TokenManagerProps {
   selectedTokenId: string | null;
   onTokenUpdate: (tokenId: string, updates: Partial<BattleToken>) => void;
   onTokenDelete: (tokenId: string) => void;
-  onTokenAdd: (token: Omit<BattleToken, 'id'>) => void;
+  onTokenAdd?: (token: Omit<BattleToken, 'id'>) => void; // Опциональный - может быть заблокирован во время боя
   onTokenSelect: (tokenId: string | null) => void;
 }
 
@@ -37,7 +37,7 @@ const TokenManager: React.FC<TokenManagerProps> = ({
   });
 
   const handleAddToken = () => {
-    if (!newToken.name.trim()) return;
+    if (!newToken.name.trim() || !onTokenAdd) return;
     
     onTokenAdd({
       ...newToken,
@@ -77,15 +77,17 @@ const TokenManager: React.FC<TokenManagerProps> = ({
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
           <span>🎭 Управление токенами</span>
-          <Button size="sm" onClick={() => setIsAddingToken(true)}>
-            <Plus className="h-4 w-4 mr-1" />
-            Добавить
-          </Button>
+          {onTokenAdd && (
+            <Button size="sm" onClick={() => setIsAddingToken(true)}>
+              <Plus className="h-4 w-4 mr-1" />
+              Добавить
+            </Button>
+          )}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Форма добавления токена */}
-        {isAddingToken && (
+        {isAddingToken && onTokenAdd && (
           <Card className="border-2 border-dashed">
             <CardContent className="pt-4 space-y-3">
               <div>
@@ -181,8 +183,50 @@ const TokenManager: React.FC<TokenManagerProps> = ({
           </Card>
         )}
 
+        {/* Превью токенов */}
+        <div className="space-y-2">
+          <h4 className="text-sm font-medium text-muted-foreground">Превью токенов</h4>
+          <div className="grid grid-cols-3 gap-2 p-2 bg-muted/20 rounded-lg">
+            {tokens.slice(0, 6).map((token) => (
+              <div
+                key={`preview-${token.id}`}
+                className="relative"
+                title={token.name}
+              >
+                <div
+                  className="w-12 h-12 rounded-full border-2 bg-center bg-cover bg-no-repeat cursor-pointer hover:scale-105 transition-transform"
+                  style={{ 
+                    backgroundColor: token.color,
+                    borderColor: token.type === 'player' ? '#3b82f6' : token.type === 'monster' ? '#ef4444' : '#10b981'
+                  }}
+                  onClick={() => onTokenSelect(token.id)}
+                >
+                  <div className="w-full h-full flex items-center justify-center text-white text-xs font-bold">
+                    {token.name[0]}
+                  </div>
+                </div>
+                {token.hp !== undefined && (
+                  <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2">
+                    <div className="w-8 h-1 bg-red-200 rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-green-500 transition-all" 
+                        style={{ width: `${(token.hp / token.maxHp!) * 100}%` }}
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+            {tokens.length > 6 && (
+              <div className="w-12 h-12 rounded-full border-2 border-dashed border-muted-foreground/50 flex items-center justify-center text-muted-foreground text-xs">
+                +{tokens.length - 6}
+              </div>
+            )}
+          </div>
+        </div>
+
         {/* Список токенов */}
-        <div className="space-y-2 max-h-96 overflow-y-auto">
+        <div className="space-y-2 max-h-80 overflow-y-auto">
           {tokens.map((token) => (
             <div
               key={token.id}
@@ -281,7 +325,8 @@ const TokenManager: React.FC<TokenManagerProps> = ({
           <div className="text-center py-8 text-muted-foreground">
             <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
             <p>Нет токенов на карте</p>
-            <p className="text-sm">Добавьте токены для начала боя</p>
+            {onTokenAdd && <p className="text-sm">Добавьте токены для начала боя</p>}
+            {!onTokenAdd && <p className="text-sm">Добавление токенов заблокировано во время боя</p>}
           </div>
         )}
       </CardContent>

@@ -41,8 +41,9 @@ const BattleCanvas: React.FC<BattleCanvasProps> = ({
 
   // Отрисовка сетки
   const drawGrid = useCallback((ctx: CanvasRenderingContext2D) => {
-    ctx.strokeStyle = '#e0e0e0';
-    ctx.lineWidth = 1;
+    ctx.strokeStyle = '#ddd';
+    ctx.lineWidth = 0.5;
+    ctx.globalAlpha = 0.7;
 
     // Вертикальные линии
     for (let x = 0; x <= width; x += gridSize) {
@@ -59,6 +60,8 @@ const BattleCanvas: React.FC<BattleCanvasProps> = ({
       ctx.lineTo(width, y);
       ctx.stroke();
     }
+    
+    ctx.globalAlpha = 1.0; // Сброс прозрачности
   }, [width, height, gridSize]);
 
   // Отрисовка токена
@@ -239,13 +242,13 @@ const BattleCanvas: React.FC<BattleCanvasProps> = ({
   }, [handleMouseDown, handleMouseMove, handleMouseUp]);
 
   return (
-    <div className="battle-canvas-container border rounded-lg overflow-hidden bg-white shadow-lg">
+    <div className="battle-canvas-container border rounded-lg overflow-hidden bg-background shadow-lg p-4">
       <canvas
         ref={canvasRef}
         width={width}
         height={height}
-        className="cursor-crosshair block"
-        style={{ maxWidth: '100%', height: 'auto' }}
+        className="cursor-crosshair block border border-border/20 rounded"
+        style={{ maxWidth: '100%', height: 'auto', backgroundColor: '#fafafa' }}
       />
     </div>
   );

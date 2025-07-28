@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { socketService, BattleToken } from '@/services/socket';
 import BattleCanvas from './BattleCanvas';
 import TokenManager from './TokenManager';
+import InitiativePanel from './InitiativePanel';
 import MapUploader from '../session/MapUploader';
 import { Map, Users, Swords, Plus, Shield, Zap } from 'lucide-react';
 
@@ -95,6 +96,11 @@ const BattleMapPanel: React.FC<BattleMapPanelProps> = ({
 
   // Перемещение токена
   const handleTokenMove = (tokenId: string, x: number, y: number) => {
+    // Блокируем перемещение токенов во время активного боя для игроков
+    if (isBattleActive && !isDM) {
+      return; // Во время боя только DM может двигать токены
+    }
+
     // Разрешаем игрокам двигать только свои токены
     const token = tokens.find(t => t.id === tokenId);
     if (!isDM && token?.type !== 'player') {
@@ -294,42 +300,90 @@ const BattleMapPanel: React.FC<BattleMapPanelProps> = ({
       </Card>
 
       {/* Основная область */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 h-[calc(100vh-200px)]">
         {/* Боевая карта */}
-        <div className="lg:col-span-3">
+        <div className="lg:col-span-3 flex flex-col">
           <BattleCanvas
-            width={800}
-            height={600}
-            gridSize={30}
+            width={Math.min(800, window.innerWidth * 0.7)}
+            height={Math.min(600, window.innerHeight * 0.6)}
+            gridSize={64}
             isDM={isDM}
             tokens={tokens}
             onTokenMove={handleTokenMove}
             onTokenAdd={isDM ? handleTokenAdd : undefined}
             onTokenSelect={setSelectedTokenId}
           />
+          
+          {/* Кнопки управления боем для DM */}
+          {isDM && (
+            <div className="mt-4 flex gap-2 justify-center">
+              <Button
+                size="lg"
+                variant={isBattleActive ? "destructive" : "default"}
+                onClick={toggleBattle}
+                className="min-w-32"
+              >
+                {isBattleActive ? (
+                  <>
+                    <Shield className="h-5 w-5 mr-2" />
+                    Завершить бой
+                  </>
+                ) : (
+                  <>
+                    <Swords className="h-5 w-5 mr-2" />
+                    Начать бой
+                  </>
+                )}
+              </Button>
+            </div>
+          )}
         </div>
 
         {/* Панель управления токенами */}
         {isDM && (
-          <div className="lg:col-span-1 space-y-4">
+          <div className="lg:col-span-1 space-y-4 overflow-y-auto">
+            {/* Панель инициативы - показывается только во время боя */}
+            {isBattleActive && (
+              <InitiativePanel
+                tokens={tokens}
+                isBattleActive={isBattleActive}
+                onTokenSelect={setSelectedTokenId}
+              />
+            )}
+            
+            {/* Управление токенами - скрывается во время боя или показывается компактно */}
             <TokenManager
               tokens={tokens}
               selectedTokenId={selectedTokenId}
               onTokenUpdate={handleTokenUpdate}
               onTokenDelete={handleTokenDelete}
-              onTokenAdd={handleTokenAdd}
+              onTokenAdd={isBattleActive ? undefined : handleTokenAdd} // Блокируем добавление во время боя
               onTokenSelect={setSelectedTokenId}
             />
-            <MapUploader 
-              onMapUpload={setMapBackground}
-              currentMap={mapBackground}
-            />
+            
+            {/* Загрузка карты */}
+            {!isBattleActive && (
+              <MapUploader 
+                onMapUpload={setMapBackground}
+                currentMap={mapBackground}
+              />
+            )}
           </div>
         )}
 
         {/* Информация для игроков */}
         {!isDM && (
-          <div className="lg:col-span-1">
+          <div className="lg:col-span-1 space-y-4">
+            {/* Панель инициативы для игроков */}
+            {isBattleActive && (
+              <InitiativePanel
+                tokens={tokens}
+                isBattleActive={isBattleActive}
+                onTokenSelect={setSelectedTokenId}
+              />
+            )}
+            
+            {/* Персонажи игрока */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -344,7 +398,7 @@ const BattleMapPanel: React.FC<BattleMapPanelProps> = ({
                       key={token.id}
                       className={`p-2 border rounded cursor-pointer transition-colors ${
                         selectedTokenId === token.id ? 'border-primary bg-primary/10' : 'hover:bg-muted/50'
-                      }`}
+                      } ${isBattleActive ? 'opacity-75' : ''}`}
                       onClick={() => setSelectedTokenId(token.id)}
                     >
                       <div className="flex items-center gap-2">
@@ -353,6 +407,11 @@ const BattleMapPanel: React.FC<BattleMapPanelProps> = ({
                           style={{ backgroundColor: token.color }}
                         />
                         <span className="text-sm font-medium">{token.name}</span>
+                        {isBattleActive && (
+                          <Badge variant="secondary" className="text-xs">
+                            🔒 Заморожен
+                          </Badge>
+                        )}
                       </div>
                       {token.hp !== undefined && (
                         <div className="mt-1">
