@@ -8,7 +8,6 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { useCharacter } from '@/contexts/CharacterContext';
 import { socketService, GameSession, SessionPlayer, SessionMessage, DiceRollResult } from '@/services/socket';
 import { Copy, Users, Crown, MessageSquare, Dice6, Settings, Play, Square, Map, Zap, Scroll, Shield } from 'lucide-react';
 import BattleMapPanel from '@/components/battle/BattleMapPanel';
@@ -28,7 +27,9 @@ const DMPanel: React.FC = () => {
     totalDiceRolls: 0,
     sessionDuration: 0
   });
-  const { character } = useCharacter();
+  
+  // Убираем зависимость от CharacterContext для DMPanel
+  const character = null; // DM панель может работать без персонажа
   const { toast } = useToast();
 
   useEffect(() => {
