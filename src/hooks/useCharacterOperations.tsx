@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import * as characterService from '@/services/characterService';
+import * as characterService from '@/services/supabaseCharacterService';
 import { Character } from '@/types/character';
 import { getCurrentUid } from '@/utils/authHelpers';
 import { toast } from 'sonner';
@@ -7,15 +7,7 @@ import { toast } from 'sonner';
 export const useCharacterOperations = () => {
   const saveCharacter = useCallback(async (character: Character): Promise<Character> => {
     try {
-      const userId = getCurrentUid();
-      if (!userId) throw new Error('Пользователь не авторизован');
-
       const dataToSave = { ...character };
-
-      // Присваиваем userId, если его нет
-      if (!dataToSave.userId) {
-        dataToSave.userId = userId;
-      }
 
       // Обновление или создание
       let result: Character;
@@ -47,13 +39,8 @@ export const useCharacterOperations = () => {
   }, []);
 
   const getUserCharacters = useCallback(async () => {
-    const userId = getCurrentUid();
-    if (!userId) {
-      throw new Error('Пользователь не авторизован');
-    }
-
-    console.log('Загрузка персонажей для пользователя:', userId);
-    const userCharacters = await characterService.getUserCharacters(userId);
+    console.log('Загрузка персонажей пользователя через Supabase');
+    const userCharacters = await characterService.getUserCharacters();
     console.log('Получено персонажей:', userCharacters.length);
     return userCharacters;
   }, []);

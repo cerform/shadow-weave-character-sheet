@@ -15,8 +15,8 @@ import CreationSidebar from '@/components/character-creation/CreationSidebar';
 import CharacterCreationContent from '@/components/character-creation/CharacterCreationContent';
 import IconOnlyNavigation from '@/components/navigation/IconOnlyNavigation';
 import { AbilityRollMethod } from '@/components/character-creation/AbilityScoreMethodSelector';
-import { getCurrentUid } from '@/utils/authHelpers';
-import { saveCharacter } from "@/services/characterService"; // ← использовать firestore-версию
+import { supabase } from '@/integrations/supabase/client';
+import { saveCharacter } from "@/services/supabaseCharacterService";
 
 const CharacterCreationPage: React.FC = () => {
   const navigate = useNavigate();
@@ -57,16 +57,17 @@ const CharacterCreationPage: React.FC = () => {
     console.log('=== НАЧАЛО СОХРАНЕНИЯ ПЕРСОНАЖА ===');
     setIsLoading(true);
     try {
-      const uid = getCurrentUid();
-      console.log('UID пользователя:', uid);
+      // Проверяем авторизацию через Supabase
+      const { data: { user } } = await supabase.auth.getUser();
+      console.log('Supabase пользователь:', user);
 
-      if (!uid) {
+      if (!user) {
         toast({
           title: "Ошибка",
           description: "Необходимо войти в систему для сохранения персонажа.",
           variant: "destructive",
         });
-        navigate('/auth');
+        navigate('/auth', { state: { returnPath: '/character-creation' } });
         return;
       }
 
@@ -80,7 +81,7 @@ const CharacterCreationPage: React.FC = () => {
       }
 
       const characterToSave = convertToCharacter(character);
-      characterToSave.userId = uid;
+      // userId теперь устанавливается автоматически в Supabase сервисе
 
       // Дополнительная валидация: убеждаемся, что нет undefined значений
       if (hasUndefinedValues(characterToSave)) {

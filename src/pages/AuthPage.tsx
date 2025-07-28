@@ -1,27 +1,34 @@
 
 import React, { useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import FirebaseAuthForm from '@/components/auth/FirebaseAuthForm';
+import SupabaseAuthForm from '@/components/auth/SupabaseAuthForm';
 import { useTheme } from '@/hooks/use-theme';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useAuth } from '@/hooks/use-auth';
+import { supabase } from '@/integrations/supabase/client';
 
 const AuthPage = () => {
   const { theme } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
-  const { isAuthenticated, currentUser } = useAuth();
-  const returnPath = location.state?.returnPath || '/';
+  const returnPath = location.state?.returnPath || '/character-creation';
 
-  // Если пользователь уже авторизован, перенаправляем его на главную
+  // Проверяем, авторизован ли пользователь
   useEffect(() => {
-    console.log("AuthPage - Auth state:", { isAuthenticated, currentUser });
-    if (isAuthenticated && currentUser) {
-      console.log("User is already authenticated, redirecting to home");
-      navigate('/');
-    }
-  }, [isAuthenticated, currentUser, navigate]);
+    const checkUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        console.log("User is already authenticated, redirecting");
+        navigate(returnPath);
+      }
+    };
+    
+    checkUser();
+  }, [navigate, returnPath]);
+
+  const handleAuthSuccess = () => {
+    navigate(returnPath);
+  };
 
   return (
     <div className={`min-h-screen p-6 flex flex-col justify-center items-center bg-gradient-to-br from-background to-background/80 theme-${theme}`}>
@@ -44,7 +51,7 @@ const AuthPage = () => {
             Войдите или зарегистрируйтесь, чтобы сохранять своих персонажей в облаке и иметь к ним доступ с любого устройства
           </p>
           
-          <FirebaseAuthForm />
+          <SupabaseAuthForm onSuccess={handleAuthSuccess} />
         </div>
       </div>
     </div>
