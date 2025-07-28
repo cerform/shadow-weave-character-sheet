@@ -12,6 +12,7 @@ import { Switch } from '@/components/ui/switch';
 import { Progress } from '@/components/ui/progress';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Separator } from '@/components/ui/separator';
+import TokenEditor, { TokenData } from './TokenEditor';
 import {
   Heart,
   Shield,
@@ -51,26 +52,15 @@ import {
   Image,
   Camera,
   Layers,
-  MoreHorizontal
+  MoreHorizontal,
+  Edit,
+  Copy
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate, useParams } from 'react-router-dom';
 
-interface BattleToken {
-  id: string;
-  name: string;
-  token_type: string;
-  position_x: number;
-  position_y: number;
-  size: number;
-  color: string;
-  image_url?: string;
-  max_hp?: number;
-  current_hp?: number;
-  armor_class?: number;
-  is_hidden_from_players: boolean;
-  conditions: any[];
-  notes?: string;
+interface BattleToken extends TokenData {
+  session_id?: string;
 }
 
 interface InitiativeEntry {
@@ -97,6 +87,8 @@ const DMDashboard: React.FC = () => {
   const [showChat, setShowChat] = useState(true);
   const [showInitiative, setShowInitiative] = useState(true);
   const [showTokens, setShowTokens] = useState(true);
+  const [selectedToken, setSelectedToken] = useState<BattleToken | null>(null);
+  const [isTokenEditorOpen, setIsTokenEditorOpen] = useState(false);
   const [newTokenForm, setNewTokenForm] = useState({
     name: '',
     type: 'monster' as 'player' | 'npc' | 'monster',
@@ -147,9 +139,20 @@ const DMDashboard: React.FC = () => {
       .eq('session_id', sessionId);
     
     if (data) {
-      const mappedTokens = data.map(token => ({
+      const mappedTokens: BattleToken[] = data.map(token => ({
         ...token,
-        conditions: Array.isArray(token.conditions) ? token.conditions : []
+        token_type: token.token_type as 'player' | 'npc' | 'monster' | 'object',
+        conditions: Array.isArray(token.conditions) ? 
+          token.conditions.map(c => typeof c === 'string' ? c : String(c)) : [],
+        tags: [],
+        abilities: {
+          strength: 10,
+          dexterity: 10,
+          constitution: 10,
+          intelligence: 10,
+          wisdom: 10,
+          charisma: 10
+        }
       }));
       setTokens(mappedTokens);
     }
@@ -185,8 +188,68 @@ const DMDashboard: React.FC = () => {
       conditions: []
     };
 
-    await supabase.from('battle_tokens').insert(tokenData);
+    await supabase.from('battle_tokens').insert([tokenData]);
     setNewTokenForm({ name: '', type: 'monster', hp: 30, ac: 13 });
+  };
+
+  const saveToken = async (tokenData: TokenData) => {
+    if (!sessionId) return;
+
+    const dbData = {
+      ...tokenData,
+      session_id: sessionId,
+      conditions: tokenData.conditions || []
+    };
+
+    if (tokenData.id) {
+      // Update existing token
+      await supabase
+        .from('battle_tokens')
+        .update(dbData)
+        .eq('id', tokenData.id);
+    } else {
+      // Create new token
+      const { data } = await supabase
+        .from('battle_tokens')
+        .insert(dbData)
+        .select()
+        .single();
+      
+      if (data) {
+        const newToken: BattleToken = { 
+          ...data, 
+          token_type: data.token_type as 'player' | 'npc' | 'monster' | 'object',
+          conditions: Array.isArray(data.conditions) ? 
+            data.conditions.map(c => typeof c === 'string' ? c : String(c)) : [],
+          tags: [], 
+          abilities: { 
+            strength: 10, 
+            dexterity: 10, 
+            constitution: 10, 
+            intelligence: 10, 
+            wisdom: 10, 
+            charisma: 10 
+          } 
+        };
+        setTokens(prev => [...prev, newToken]);
+      }
+    }
+    
+    setIsTokenEditorOpen(false);
+    setSelectedToken(null);
+  };
+
+  const deleteToken = async (tokenId: string) => {
+    if (!sessionId) return;
+    
+    await supabase.from('battle_tokens').delete().eq('id', tokenId);
+    setIsTokenEditorOpen(false);
+    setSelectedToken(null);
+  };
+
+  const openTokenEditor = (token?: BattleToken) => {
+    setSelectedToken(token || null);
+    setIsTokenEditorOpen(true);
   };
 
   const rollInitiative = async () => {
@@ -329,56 +392,66 @@ const DMDashboard: React.FC = () => {
           
           <Separator className="my-2 w-8" />
           
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="w-10 h-10 p-0 text-slate-400 hover:text-white hover:bg-slate-700"
-                title="Add Token"
-              >
-                <Plus className="h-5 w-5" />
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="bg-slate-800 border-slate-700">
-              <DialogHeader>
-                <DialogTitle className="text-white">Add New Token</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4">
-                <div>
-                  <Label className="text-slate-300">Name</Label>
-                  <Input
-                    value={newTokenForm.name}
-                    onChange={(e) => setNewTokenForm({...newTokenForm, name: e.target.value})}
-                    className="bg-slate-700 border-slate-600 text-white"
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <Label className="text-slate-300">HP</Label>
-                    <Input
-                      type="number"
-                      value={newTokenForm.hp}
-                      onChange={(e) => setNewTokenForm({...newTokenForm, hp: parseInt(e.target.value)})}
-                      className="bg-slate-700 border-slate-600 text-white"
-                    />
-                  </div>
-                  <div>
-                    <Label className="text-slate-300">AC</Label>
-                    <Input
-                      type="number"
-                      value={newTokenForm.ac}
-                      onChange={(e) => setNewTokenForm({...newTokenForm, ac: parseInt(e.target.value)})}
-                      className="bg-slate-700 border-slate-600 text-white"
-                    />
-                  </div>
-                </div>
-                <Button onClick={addToken} className="w-full bg-blue-600 hover:bg-blue-700">
-                  Add Token
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="w-10 h-10 p-0 text-slate-400 hover:text-white hover:bg-slate-700"
+                  title="Add Token"
+                >
+                  <Plus className="h-5 w-5" />
                 </Button>
-              </div>
-            </DialogContent>
-          </Dialog>
+              </DialogTrigger>
+              <DialogContent className="bg-slate-800 border-slate-700">
+                <DialogHeader>
+                  <DialogTitle className="text-white">Quick Add Token</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div>
+                    <Label className="text-slate-300">Name</Label>
+                    <Input
+                      value={newTokenForm.name}
+                      onChange={(e) => setNewTokenForm({...newTokenForm, name: e.target.value})}
+                      className="bg-slate-700 border-slate-600 text-white"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <Label className="text-slate-300">HP</Label>
+                      <Input
+                        type="number"
+                        value={newTokenForm.hp}
+                        onChange={(e) => setNewTokenForm({...newTokenForm, hp: parseInt(e.target.value)})}
+                        className="bg-slate-700 border-slate-600 text-white"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-slate-300">AC</Label>
+                      <Input
+                        type="number"
+                        value={newTokenForm.ac}
+                        onChange={(e) => setNewTokenForm({...newTokenForm, ac: parseInt(e.target.value)})}
+                        className="bg-slate-700 border-slate-600 text-white"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button onClick={addToken} className="flex-1 bg-blue-600 hover:bg-blue-700">
+                      Quick Add
+                    </Button>
+                    <Button 
+                      onClick={() => openTokenEditor()}
+                      variant="outline"
+                      className="border-slate-600 text-slate-300"
+                    >
+                      <Edit className="h-4 w-4 mr-2" />
+                      Advanced
+                    </Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
         </div>
 
         {/* Main Map Area */}
@@ -533,7 +606,11 @@ const DMDashboard: React.FC = () => {
               
               <ScrollArea className="flex-1 p-3">
                 {tokens.map(token => (
-                  <div key={token.id} className="bg-slate-800/50 rounded p-2 mb-2 border border-slate-700">
+                  <div 
+                    key={token.id} 
+                    className="bg-slate-800/50 rounded p-2 mb-2 border border-slate-700 cursor-pointer hover:bg-slate-700/50 transition-colors"
+                    onClick={() => openTokenEditor(token)}
+                  >
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2">
                         <div 
@@ -541,12 +618,28 @@ const DMDashboard: React.FC = () => {
                           style={{ backgroundColor: token.color }}
                         />
                         <span className="text-sm font-medium text-white">{token.name}</span>
+                        {token.is_hidden_from_players && (
+                          <EyeOff className="h-3 w-3 text-slate-400" />
+                        )}
                       </div>
-                      {token.armor_class && (
-                        <Badge variant="outline" className="text-xs">
-                          AC {token.armor_class}
-                        </Badge>
-                      )}
+                      <div className="flex items-center gap-1">
+                        {token.armor_class && (
+                          <Badge variant="outline" className="text-xs">
+                            AC {token.armor_class}
+                          </Badge>
+                        )}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openTokenEditor(token);
+                          }}
+                          className="h-6 w-6 p-0 text-slate-400 hover:text-white"
+                        >
+                          <Edit className="h-3 w-3" />
+                        </Button>
+                      </div>
                     </div>
                     
                     {token.max_hp && (
@@ -561,6 +654,21 @@ const DMDashboard: React.FC = () => {
                             style={{ width: `${(token.current_hp || 0) / token.max_hp * 100}%` }}
                           />
                         </div>
+                      </div>
+                    )}
+
+                    {/* Conditions */}
+                    {token.conditions && token.conditions.length > 0 && (
+                      <div className="mt-2 flex flex-wrap gap-1">
+                        {token.conditions.map((condition, index) => (
+                          <Badge 
+                            key={index} 
+                            variant="destructive" 
+                            className="text-xs px-1 py-0"
+                          >
+                            {condition}
+                          </Badge>
+                        ))}
                       </div>
                     )}
                   </div>
@@ -599,6 +707,18 @@ const DMDashboard: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* Token Editor */}
+      <TokenEditor
+        token={selectedToken}
+        isOpen={isTokenEditorOpen}
+        onSave={saveToken}
+        onCancel={() => {
+          setIsTokenEditorOpen(false);
+          setSelectedToken(null);
+        }}
+        onDelete={deleteToken}
+      />
     </div>
   );
 };
