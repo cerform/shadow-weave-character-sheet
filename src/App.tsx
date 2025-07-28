@@ -1,7 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { ThemeProvider } from '@/contexts/ThemeContext';
-import { AuthProvider } from '@/contexts/AuthContext';
+import { AuthProvider } from '@/contexts/SupabaseAuthContext';
 import { CharacterProvider } from '@/contexts/CharacterContext';
 import { SpellbookProvider } from '@/contexts/SpellbookContext';
 import { SessionProvider } from '@/contexts/SessionContext';

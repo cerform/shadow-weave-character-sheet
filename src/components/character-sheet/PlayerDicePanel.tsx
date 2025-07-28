@@ -24,7 +24,7 @@ import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { getCurrentUid } from '@/utils/authHelpers';
+import { supabase } from '@/integrations/supabase/client';
 import { Dices } from 'lucide-react';
 
 interface PlayerDicePanelProps {
@@ -77,7 +77,7 @@ export const PlayerDicePanel: React.FC<PlayerDicePanelProps> = ({
       reason: useCustomReason ? rollReason : predefinedRollReasons.find(r => r.value === rollReason)?.label || 'Бросок',
       message: rollMessage,
       timestamp: now.toLocaleTimeString(),
-      userId: getCurrentUid() || 'guest',
+      userId: 'user',
       characterName: characterName || 'Персонаж'
     };
     

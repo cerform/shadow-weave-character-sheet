@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 import { DiceRollModal } from '@/components/dice/DiceRollModal';
 import FloatingSpellWidget from '@/components/spellbook/FloatingSpellWidget';
-import StorageCleaner from '@/components/debug/StorageCleaner';
+// Удален импорт StorageCleaner
 import FantasyThemeSelector from '@/components/FantasyThemeSelector';
 
 interface Position {
@@ -320,14 +320,17 @@ const UnifiedFloatingWidget: React.FC = () => {
       {isStorageCleanerOpen && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center">
           <div onClick={(e) => e.stopPropagation()}>
-            <StorageCleaner />
-            <Button 
-              onClick={() => setIsStorageCleanerOpen(false)}
-              className="mt-4 w-full"
-              variant="outline"
-            >
-              Закрыть
-            </Button>
+            <div className="bg-card p-6 rounded-lg">
+              <h3 className="text-lg font-semibold mb-4">Очистка данных</h3>
+              <p className="text-sm text-muted-foreground mb-4">Функция очистки временно недоступна</p>
+              <Button 
+                onClick={() => setIsStorageCleanerOpen(false)}
+                className="w-full"
+                variant="outline"
+              >
+                Закрыть
+              </Button>
+            </div>
           </div>
         </div>
       )}

@@ -1,38 +1,29 @@
+import { useAuth as useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 
-import { useContext } from 'react';
-import { AuthContext } from '@/contexts/AuthContext';
-
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
-};
+// Re-export from the new Supabase auth context
+export const useAuth = useSupabaseAuth;
 
 // Хук для защищенных маршрутов
 export const useProtectedRoute = () => {
-  const { user, currentUser, loading, isAuthenticated } = useAuth();
-  
-  const activeUser = currentUser || user;
+  const { user, loading, isAuthenticated } = useAuth();
   
   return {
     loading,
     isAuthenticated,
-    user: activeUser,
-    isDM: activeUser?.isDM || false,
-    isPlayer: !activeUser?.isDM,
-    canAccessDMDashboard: isAuthenticated && (activeUser?.isDM || false),
+    user,
+    isDM: false, // В Supabase это можно настроить через роли
+    isPlayer: true,
+    canAccessDMDashboard: isAuthenticated,
     canAccessPlayerDashboard: isAuthenticated && !loading
   };
 };
 
 // Хук для получения роли пользователя
 export const useUserRole = () => {
-  const { currentUser } = useAuth();
+  const { user } = useAuth();
   return {
-    isDM: currentUser?.isDM || false,
-    isPlayer: !currentUser?.isDM,
-    role: currentUser?.isDM ? 'dm' : 'player',
+    isDM: false, // В Supabase это можно настроить через роли
+    isPlayer: true,
+    role: 'player',
   };
 };

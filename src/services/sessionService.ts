@@ -1,6 +1,6 @@
 import { io } from 'socket.io-client';
 import { Character } from '@/types/character';
-import { getCharacterById } from '@/services/characterService';
+import { getCharacterById } from '@/services/supabaseCharacterService';
 
 // const URL = process.env.NODE_ENV === 'production' ? undefined : 'http://localhost:4000';
 const URL = 'http://localhost:4000';

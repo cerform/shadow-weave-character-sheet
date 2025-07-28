@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { UserPlus, User, Play, RefreshCw, ArrowLeft, Edit, Trash2 } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
-import { getUserCharacters } from '@/services/characterService';
+import { getUserCharacters } from '@/services/supabaseCharacterService';
 import { useCharacterOperations } from '@/hooks/useCharacterOperations';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -38,8 +38,8 @@ const CharactersListPage: React.FC = () => {
     setError(null);
     
     try {
-      console.log('🔄 Загружаем персонажей для пользователя:', user.uid);
-      const userCharacters = await getUserCharacters(user.uid);
+      console.log('🔄 Загружаем персонажей пользователя через Supabase');
+      const userCharacters = await getUserCharacters();
       console.log('✅ Получено персонажей:', userCharacters.length);
       setCharacters(userCharacters);
     } catch (err) {

@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import SessionChat, { SessionChatProps } from '@/components/SessionChat';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/hooks/use-auth';
 import { useSocket } from '@/contexts/SocketContext';
 
 const GameRoomPage: React.FC = () => {

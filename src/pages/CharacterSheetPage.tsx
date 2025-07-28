@@ -6,7 +6,7 @@ import { Character } from '@/types/character';
 import { useToast } from '@/hooks/use-toast';
 import { useSocket } from '@/contexts/SocketContext';
 import CharacterSheet from '@/components/character-sheet/CharacterSheet';
-import { getCharacterById } from '@/services/characterService';
+import { getCharacterById } from '@/services/supabaseCharacterService';
 
 const CharacterSheetPage = () => {
   const { id } = useParams();

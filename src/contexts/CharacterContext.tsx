@@ -2,7 +2,7 @@ import React, { createContext, useContext, useCallback, useEffect } from 'react'
 import { Character } from '@/types/character';
 import { useCharacterState } from '@/hooks/useCharacterState';
 import { useCharacterOperations } from '@/hooks/useCharacterOperations';
-import { auth } from '@/lib/firebase';
+import { supabase } from '@/integrations/supabase/client';
 
 interface CharacterContextType {
   characters: Character[];
@@ -37,7 +37,10 @@ export const CharacterProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   // ✅ Новый useEffect: загружаем персонажей один раз при инициализации
   useEffect(() => {
     const fetchCharacters = async () => {
-      if (!auth.currentUser) return;
+      // Проверяем через Supabase аутентификацию
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      
       try {
         const characters = await operations.getUserCharacters();
         state.setCharacters(characters);

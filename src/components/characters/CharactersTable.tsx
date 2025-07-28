@@ -7,7 +7,7 @@ import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@
 import { Eye, Edit, Trash2, Loader2, AlertCircle } from "lucide-react";
 import { Character } from '@/types/character';
 import { toast } from 'sonner';
-import DebugPanel from '@/components/debug/DebugPanel';
+// Удален импорт DebugPanel
 import { validateCharacters } from '@/utils/debugUtils';
 
 interface CharactersTableProps {
@@ -143,12 +143,10 @@ const CharactersTable: React.FC<CharactersTableProps> = ({ characters, onDelete 
           </div>
           
           {validationReport && (
-            <DebugPanel 
-              title="Проблемы с данными персонажей" 
-              data={validationReport} 
-              variant="warning"
-              showByDefault={true}
-            />
+            <div className="mb-4 p-3 bg-muted border border-muted-foreground/20 rounded">
+              <p className="text-sm text-destructive">Проблемы с данными персонажей:</p>
+              <pre className="text-xs mt-2">{JSON.stringify(validationReport, null, 2)}</pre>
+            </div>
           )}
           
           <div className="mt-4">
@@ -172,12 +170,10 @@ const CharactersTable: React.FC<CharactersTableProps> = ({ characters, onDelete 
       </CardHeader>
       <CardContent>
         {validationReport && !validationReport.valid && (
-          <DebugPanel 
-            title="Диагностика данных персонажей" 
-            data={validationReport} 
-            variant="warning"
-            showByDefault={true}
-          />
+          <div className="mb-4 p-3 bg-muted border border-muted-foreground/20 rounded">
+            <p className="text-sm text-destructive">Диагностика данных персонажей:</p>
+            <pre className="text-xs mt-2">{JSON.stringify(validationReport, null, 2)}</pre>
+          </div>
         )}
         
         {hasInvalidCharacters && (

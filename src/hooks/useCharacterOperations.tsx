@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 import * as characterService from '@/services/supabaseCharacterService';
 import { Character } from '@/types/character';
-import { getCurrentUid } from '@/utils/authHelpers';
+// Удален импорт getCurrentUid - теперь используется Supabase напрямую
 import { toast } from 'sonner';
 
 export const useCharacterOperations = () => {
