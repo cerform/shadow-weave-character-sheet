@@ -85,8 +85,25 @@ const CharacterCreationPage: React.FC = () => {
 
       // Дополнительная валидация: убеждаемся, что нет undefined значений
       if (hasUndefinedValues(characterToSave)) {
-        console.warn('⚠️ Обнаружены undefined значения в персонаже:', characterToSave);
-        throw new Error('Данные персонажа содержат некорректные значения');
+        console.warn('⚠️ Обнаружены undefined значения в персонаже, выполняется очистка...');
+        
+        // Очищаем undefined значения перед сохранением
+        const cleanedCharacter = cleanUndefinedValues(characterToSave);
+        console.log('✅ Очищенный персонаж:', cleanedCharacter);
+        
+        const savedCharacter = await saveCharacter(cleanedCharacter);
+        
+        if (savedCharacter && savedCharacter.id) {
+          toast({
+            title: "Персонаж сохранен!",
+            description: "Ваш персонаж успешно сохранен (с автоматической очисткой данных).",
+          });
+
+          setTimeout(() => {
+            navigate(`/character-sheet/${savedCharacter.id}`);
+          }, 100);
+        }
+        return;
       }
 
       console.log('✅ Данные персонажа для сохранения (валидированы):', characterToSave);
@@ -193,6 +210,51 @@ function hasUndefinedValues(obj: any, path = ''): boolean {
   }
 
   return false;
+}
+
+/**
+ * Очищает undefined значения из объекта
+ */
+function cleanUndefinedValues(obj: any): any {
+  if (obj === undefined || obj === null || typeof obj !== 'object') {
+    return obj === undefined ? null : obj;
+  }
+
+  if (Array.isArray(obj)) {
+    return obj.map(item => cleanUndefinedValues(item));
+  }
+
+  const cleaned: any = {};
+  for (const [key, value] of Object.entries(obj)) {
+    if (value !== undefined) {
+      if (typeof value === 'object' && value !== null) {
+        // Специальная обработка для заклинаний
+        if (key === 'spells' && Array.isArray(value)) {
+          cleaned[key] = value.map(spell => {
+            const cleanedSpell = { ...spell };
+            
+            // Очищаем некорректные объекты с _type: "undefined"
+            if (cleanedSpell.verbal && typeof cleanedSpell.verbal === 'object') {
+              cleanedSpell.verbal = cleanedSpell.components?.includes('В') || false;
+            }
+            if (cleanedSpell.somatic && typeof cleanedSpell.somatic === 'object') {
+              cleanedSpell.somatic = cleanedSpell.components?.includes('С') || false;
+            }
+            if (cleanedSpell.material && typeof cleanedSpell.material === 'object') {
+              cleanedSpell.material = cleanedSpell.components?.includes('М') || false;
+            }
+            
+            return cleanUndefinedValues(cleanedSpell);
+          });
+        } else {
+          cleaned[key] = cleanUndefinedValues(value);
+        }
+      } else {
+        cleaned[key] = value;
+      }
+    }
+  }
+  return cleaned;
 }
 
 export default CharacterCreationPage;
