@@ -38,6 +38,9 @@ const BattleCanvas: React.FC<BattleCanvasProps> = ({
   const [selectedToken, setSelectedToken] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const [isPanning, setIsPanning] = useState(false);
+  const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
+  const [lastPanPoint, setLastPanPoint] = useState({ x: 0, y: 0 });
 
   // Отрисовка сетки
   const drawGrid = useCallback((ctx: CanvasRenderingContext2D) => {
@@ -126,24 +129,30 @@ const BattleCanvas: React.FC<BattleCanvasProps> = ({
     // Очистка canvas
     ctx.clearRect(0, 0, width, height);
 
+    // Применяем смещение для панорамирования
+    ctx.save();
+    ctx.translate(panOffset.x, panOffset.y);
+
     // Отрисовка сетки
     drawGrid(ctx);
 
     // Отрисовка токенов
     tokens.forEach(token => drawToken(ctx, token));
-  }, [width, height, tokens, drawGrid, drawToken]);
 
-  // Получение координат мыши относительно canvas
+    ctx.restore();
+  }, [width, height, tokens, drawGrid, drawToken, panOffset]);
+
+  // Получение координат мыши относительно canvas с учетом панорамирования
   const getMousePos = useCallback((e: MouseEvent): { x: number; y: number } => {
     const canvas = canvasRef.current;
     if (!canvas) return { x: 0, y: 0 };
 
     const rect = canvas.getBoundingClientRect();
     return {
-      x: e.clientX - rect.left,
-      y: e.clientY - rect.top
+      x: e.clientX - rect.left - panOffset.x,
+      y: e.clientY - rect.top - panOffset.y
     };
-  }, []);
+  }, [panOffset]);
 
   // Привязка к сетке
   const snapToGrid = useCallback((x: number, y: number) => {
@@ -169,6 +178,13 @@ const BattleCanvas: React.FC<BattleCanvasProps> = ({
   const handleMouseDown = useCallback((e: MouseEvent) => {
     const pos = getMousePos(e);
     const token = getTokenAt(pos.x, pos.y);
+
+    // Проверяем правую кнопку мыши для панорамирования
+    if (e.button === 2 || e.ctrlKey) {
+      setIsPanning(true);
+      setLastPanPoint({ x: e.clientX, y: e.clientY });
+      return;
+    }
 
     if (token) {
       setSelectedToken(token.id);
@@ -203,6 +219,21 @@ const BattleCanvas: React.FC<BattleCanvasProps> = ({
 
   // Обработчик движения мыши
   const handleMouseMove = useCallback((e: MouseEvent) => {
+    // Панорамирование карты
+    if (isPanning) {
+      const deltaX = e.clientX - lastPanPoint.x;
+      const deltaY = e.clientY - lastPanPoint.y;
+      
+      setPanOffset(prev => ({
+        x: prev.x + deltaX,
+        y: prev.y + deltaY
+      }));
+      
+      setLastPanPoint({ x: e.clientX, y: e.clientY });
+      return;
+    }
+
+    // Перетаскивание токенов
     if (!isDragging || !selectedToken) return;
 
     const pos = getMousePos(e);
@@ -213,11 +244,12 @@ const BattleCanvas: React.FC<BattleCanvasProps> = ({
     if (onTokenMove) {
       onTokenMove(selectedToken, snapped.x, snapped.y);
     }
-  }, [isDragging, selectedToken, getMousePos, dragOffset, snapToGrid, onTokenMove]);
+  }, [isPanning, lastPanPoint, isDragging, selectedToken, getMousePos, dragOffset, snapToGrid, onTokenMove]);
 
   // Обработчик отпускания мыши
   const handleMouseUp = useCallback(() => {
     setIsDragging(false);
+    setIsPanning(false);
   }, []);
 
   // Эффект для отрисовки
@@ -230,19 +262,27 @@ const BattleCanvas: React.FC<BattleCanvasProps> = ({
     const canvas = canvasRef.current;
     if (!canvas) return;
 
+    // Блокируем контекстное меню для правой кнопки мыши
+    const handleContextMenu = (e: Event) => e.preventDefault();
+
     canvas.addEventListener('mousedown', handleMouseDown);
     canvas.addEventListener('mousemove', handleMouseMove);
     canvas.addEventListener('mouseup', handleMouseUp);
+    canvas.addEventListener('contextmenu', handleContextMenu);
 
     return () => {
       canvas.removeEventListener('mousedown', handleMouseDown);
       canvas.removeEventListener('mousemove', handleMouseMove);
       canvas.removeEventListener('mouseup', handleMouseUp);
+      canvas.removeEventListener('contextmenu', handleContextMenu);
     };
   }, [handleMouseDown, handleMouseMove, handleMouseUp]);
 
   return (
     <div className="battle-canvas-container border rounded-lg overflow-hidden bg-white shadow-lg">
+      <div className="text-xs text-muted-foreground p-2 border-b bg-muted/20">
+        Управление: ЛКМ - выбрать/переместить токен | ПКМ/Ctrl+ЛКМ - панорамирование карты
+      </div>
       <canvas
         ref={canvasRef}
         width={width}
@@ -250,7 +290,8 @@ const BattleCanvas: React.FC<BattleCanvasProps> = ({
         className="cursor-crosshair block"
         style={{ 
           backgroundColor: '#ffffff',
-          border: '2px solid #e2e8f0'
+          border: '2px solid #e2e8f0',
+          cursor: isPanning ? 'grabbing' : isDragging ? 'grabbing' : 'grab'
         }}
       />
     </div>
