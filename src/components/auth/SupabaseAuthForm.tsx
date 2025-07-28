@@ -158,84 +158,32 @@ const SupabaseAuthForm: React.FC<SupabaseAuthFormProps> = ({ onSuccess }) => {
   };
 
   const handleGoogleSignIn = async () => {
-    setLoading(true);
-
+    console.log('🔄 Attempting Google sign in...');
+    
     try {
-      console.log('🔄 Attempting Google sign in...');
-      
-      // Сначала открываем popup окно сразу, чтобы браузер не заблокировал
-      const popup = window.open(
-        '', 
-        'google-auth', 
-        'width=500,height=600,scrollbars=yes,resizable=yes,left=' + 
-        (window.screen.width / 2 - 250) + ',top=' + 
-        (window.screen.height / 2 - 300)
-      );
-
-      if (!popup) {
-        throw new Error('Браузер заблокировал попап. Разрешите попапы для этого сайта.');
-      }
-
-      // Получаем URL для OAuth от Supabase
+      // Простое перенаправление на Google OAuth без popup
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/auth`,
+          redirectTo: `${window.location.origin}/`,
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',
-          },
-          skipBrowserRedirect: true // Важно! Не делаем автоматический редирект
+          }
         }
       });
 
-      console.log('✅ Google OAuth response:', { data, error });
-
       if (error) {
         console.error('❌ Google OAuth error:', error);
-        popup.close();
-        throw error;
+        toast({
+          title: "Ошибка входа через Google",
+          description: error.message,
+          variant: "destructive",
+        });
+        return;
       }
 
-      if (data.url) {
-        // Перенаправляем popup на Google OAuth URL
-        popup.location.href = data.url;
-        
-        // Ждем когда popup закроется или произойдет авторизация
-        const checkClosed = setInterval(() => {
-          if (popup.closed) {
-            clearInterval(checkClosed);
-            // Проверяем сессию после закрытия popup
-            setTimeout(async () => {
-              const { data: session } = await supabase.auth.getSession();
-              if (session.session) {
-                toast({
-                  title: "Вход выполнен!",
-                  description: "Добро пожаловать через Google!",
-                });
-                onSuccess?.();
-              } else {
-                toast({
-                  title: "Вход отменен",
-                  description: "Авторизация через Google была прервана",
-                  variant: "destructive",
-                });
-              }
-              setLoading(false);
-            }, 1000);
-          }
-        }, 1000);
-
-        // Очистить интервал через 5 минут
-        setTimeout(() => {
-          clearInterval(checkClosed);
-          if (!popup.closed) {
-            popup.close();
-          }
-          setLoading(false);
-        }, 300000);
-      }
-
+      console.log('✅ Redirecting to Google OAuth:', data.url);
     } catch (error: any) {
       console.error('❌ Google sign in catch error:', error);
       toast({
@@ -243,7 +191,6 @@ const SupabaseAuthForm: React.FC<SupabaseAuthFormProps> = ({ onSuccess }) => {
         description: error.message || "Произошла неизвестная ошибка",
         variant: "destructive",
       });
-      setLoading(false);
     }
   };
 
