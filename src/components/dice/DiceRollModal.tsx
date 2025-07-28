@@ -39,6 +39,7 @@ export function DiceRollModal({ open, onClose, onRoll, playerName: defaultPlayer
   const [rollHistory, setRollHistory] = useState<RollHistoryEntry[]>([]);
   const [lastRollTotal, setLastRollTotal] = useState<number | null>(null);
   const [key, setKey] = useState(0); // Для форсирования пересоздания компонента DiceRoller3D
+  const [triggerRoll, setTriggerRoll] = useState(false); // Для запуска 3D анимации
   const { theme } = useTheme();
   const themeKey = (theme as keyof typeof themes) || 'default';
   const currentTheme = themes[themeKey] || themes.default;
@@ -80,6 +81,9 @@ export function DiceRollModal({ open, onClose, onRoll, playerName: defaultPlayer
   };
 
   const handleRoll = () => {
+    // Запускаем 3D анимацию
+    setTriggerRoll(prev => !prev);
+    
     if (onRoll) {
       onRoll(formula, reason, playerName);
     }
@@ -262,6 +266,7 @@ export function DiceRollModal({ open, onClose, onRoll, playerName: defaultPlayer
             hideControls={true} 
             modifier={modifier}
             playerName={playerName}
+            forceReroll={triggerRoll}
           />
         </div>
 
