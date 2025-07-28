@@ -288,18 +288,17 @@ const SupabaseAuthForm: React.FC<SupabaseAuthFormProps> = ({ onSuccess }) => {
             </div>
           </div>
           
-          {/* Временно отключена кнопка Google OAuth 
           <Button 
             variant="outline" 
             className="w-full mb-2" 
             onClick={handleGoogleSignIn}
             disabled={loading}
+            type="button"
           >
             {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             {!loading && <GoogleIcon />}
             <span className="ml-2">Войти через Google</span>
           </Button>
-          */}
           
           <Button 
             variant="outline" 
