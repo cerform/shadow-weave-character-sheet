@@ -1,37 +1,57 @@
-import React, { useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { useAuth } from '@/hooks/use-auth';
-import InteractiveBattleMap from '@/components/battle/InteractiveBattleMap';
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Home, Map } from 'lucide-react';
 
 const BattleMapPageFixed: React.FC = () => {
   const navigate = useNavigate();
-  const { sessionId } = useParams<{ sessionId: string }>();
-  const { user, loading, isAuthenticated } = useAuth();
 
-  console.log('BattleMapPageFixed - Auth state:', { user, loading, isAuthenticated });
-
-  useEffect(() => {
-    if (!loading && !isAuthenticated) {
-      console.log('Redirecting to auth from BattleMapPageFixed');
-      navigate('/auth');
-    }
-  }, [isAuthenticated, loading, navigate]);
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p>Загрузка...</p>
+  return (
+    <div className="min-h-screen bg-slate-900 text-white p-6">
+      <div className="max-w-4xl mx-auto">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-4">
+            <Button 
+              variant="ghost" 
+              onClick={() => navigate('/')}
+              className="text-slate-300 hover:text-white"
+            >
+              <Home className="h-4 w-4 mr-2" />
+              На главную
+            </Button>
+            <h1 className="text-3xl font-bold">Боевая карта</h1>
+          </div>
         </div>
+
+        <Card className="bg-slate-800 border-slate-700">
+          <CardHeader>
+            <CardTitle className="text-white flex items-center gap-2">
+              <Map className="h-6 w-6" />
+              Интерактивная боевая карта
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-center py-12">
+              <Map className="h-16 w-16 mx-auto mb-4 text-slate-400" />
+              <h3 className="text-xl font-semibold mb-2">Боевая карта загружается</h3>
+              <p className="text-slate-400">
+                Здесь будет интерактивная боевая карта с токенами, сеткой и инструментами DM
+              </p>
+              <div className="mt-6 flex gap-4 justify-center">
+                <Button className="bg-blue-600 hover:bg-blue-700">
+                  Загрузить карту
+                </Button>
+                <Button variant="outline" className="border-slate-600 text-slate-300">
+                  Создать новую карту
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
-    );
-  }
-
-  // Временно убираем проверку авторизации для отладки
-  const isDM = true; // Можно определить роль пользователя из контекста или props
-
-  return <InteractiveBattleMap isDM={isDM} />;
+    </div>
+  );
 };
 
 export default BattleMapPageFixed;
