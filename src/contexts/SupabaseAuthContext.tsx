@@ -82,32 +82,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Получаем текущую сессию
-    const getSession = async () => {
-      console.log('Getting initial session...');
-      const { data: { session }, error } = await supabase.auth.getSession();
-      console.log('Initial session:', { 
-        hasSession: !!session, 
-        userEmail: session?.user?.email,
-        error 
-      });
-      
-      const mappedUser = mapSupabaseUser(session?.user ?? null);
-      console.log('Initial mapped user:', mappedUser);
-      
-      setUser(mappedUser);
-      setLoading(false);
-    };
+    let mounted = true;
 
-    getSession();
-
-    // Слушаем изменения аутентификации
+    // Слушаем изменения аутентификации СНАЧАЛА
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
+        if (!mounted) return;
+        
         console.log('Auth state changed:', event, {
           hasSession: !!session,
           userEmail: session?.user?.email,
-          userId: session?.user?.id
+          userId: session?.user?.id,
+          timestamp: new Date().toISOString()
         });
         
         const mappedUser = mapSupabaseUser(session?.user ?? null);
@@ -118,7 +104,34 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
     );
 
-    return () => subscription.unsubscribe();
+    // ЗАТЕМ получаем текущую сессию
+    const getSession = async () => {
+      if (!mounted) return;
+      
+      console.log('Getting initial session...');
+      const { data: { session }, error } = await supabase.auth.getSession();
+      console.log('Initial session:', { 
+        hasSession: !!session, 
+        userEmail: session?.user?.email,
+        userId: session?.user?.id,
+        error,
+        timestamp: new Date().toISOString()
+      });
+      
+      if (session) {
+        const mappedUser = mapSupabaseUser(session.user);
+        console.log('Initial mapped user:', mappedUser);
+        setUser(mappedUser);
+      }
+      setLoading(false);
+    };
+
+    getSession();
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const login = async (email: string, password: string) => {
