@@ -1,5 +1,5 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { BookOpen, Users, Scroll, Dice6, Shield, UserPlus, Sparkles, Swords, Map, Settings, Crown } from 'lucide-react';
@@ -99,17 +99,16 @@ const HomePage = () => {
         <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-background/50" />
       </div>
 
-      {/* Магические частицы */}
+      {/* Убираем анимированные частицы для улучшения производительности */}
       <div className="absolute inset-0 z-1">
-        {[...Array(20)].map((_, i) => (
+        {/* Статичные магические частицы без анимации */}
+        {[...Array(5)].map((_, i) => (
           <div
             key={i}
-            className="absolute w-1 h-1 bg-primary/30 rounded-full animate-mystical-flow"
+            className="absolute w-2 h-2 bg-primary/20 rounded-full"
             style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-              animationDelay: `${Math.random() * 20}s`,
-              animationDuration: `${15 + Math.random() * 10}s`
+              left: `${20 + Math.random() * 60}%`,
+              top: `${20 + Math.random() * 60}%`,
             }}
           />
         ))}
@@ -162,30 +161,32 @@ const HomePage = () => {
           {/* Быстрые действия */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">
             {quickActions.map((action, index) => (
-              <Card 
-                key={index} 
-                className={`relative overflow-hidden border-2 transition-all duration-300 hover:shadow-2xl hover:shadow-primary/20 hover:border-primary/50 cursor-pointer group ${
-                  action.featured ? 'md:col-span-2 lg:col-span-1' : ''
-                }`}
-                onClick={() => navigate(action.href)}
+              <Link 
+                key={index}
+                to={action.href}
+                className={`block ${action.featured ? 'md:col-span-2 lg:col-span-1' : ''}`}
               >
-                <div className={`absolute inset-0 bg-gradient-to-br ${action.gradient} opacity-50 group-hover:opacity-70 transition-opacity`} />
-                <CardHeader className="relative z-10">
-                  <div className="flex items-center space-x-3">
-                    <div className="p-2 rounded-lg bg-primary/20 group-hover:bg-primary/30 transition-colors">
-                      <action.icon className="h-6 w-6 text-primary" />
+                <Card 
+                  className="relative overflow-hidden border-2 transition-all duration-300 hover:shadow-2xl hover:shadow-primary/20 hover:border-primary/50 cursor-pointer group h-full"
+                >
+                  <div className={`absolute inset-0 bg-gradient-to-br ${action.gradient} opacity-50 group-hover:opacity-70 transition-opacity`} />
+                  <CardHeader className="relative z-10">
+                    <div className="flex items-center space-x-3">
+                      <div className="p-2 rounded-lg bg-primary/20 group-hover:bg-primary/30 transition-colors">
+                        <action.icon className="h-6 w-6 text-primary" />
+                      </div>
+                      <CardTitle className="group-hover:text-primary transition-colors">
+                        {action.title}
+                      </CardTitle>
                     </div>
-                    <CardTitle className="group-hover:text-primary transition-colors">
-                      {action.title}
-                    </CardTitle>
-                  </div>
-                </CardHeader>
-                <CardContent className="relative z-10">
-                  <CardDescription className="text-base">
-                    {action.description}
-                  </CardDescription>
-                </CardContent>
-              </Card>
+                  </CardHeader>
+                  <CardContent className="relative z-10">
+                    <CardDescription className="text-base">
+                      {action.description}
+                    </CardDescription>
+                  </CardContent>
+                </Card>
+              </Link>
             ))}
           </div>
 

@@ -23,6 +23,7 @@ import CharacterManagementPage from './pages/CharacterManagementPage';
 const GameRoomPage = React.lazy(() => import('./pages/GameRoomPage'));
 const JoinSessionPage = React.lazy(() => import('./pages/JoinSessionPage'));
 const DMDashboardPageNew = React.lazy(() => import('./pages/DMDashboardPageNew'));
+const TestPage = React.lazy(() => import('./pages/TestPage'));
 
 // Импортируем BattleMapPageFixed напрямую для отладки
 import BattleMapPageFixed from './pages/BattleMapPageFixed';
@@ -185,6 +186,13 @@ const AppRoutes: React.FC = () => {
       
       {/* Battle Map маршрут */}
       <Route path="/battle-map-fixed" element={<BattleMapPageFixed />} />
+      
+      {/* Тестовая страница для отладки */}
+      <Route path="/test" element={
+        <React.Suspense fallback={<LazyLoading />}>
+          <TestPage />
+        </React.Suspense>
+      } />
       
       {/* Маршрут для неизвестных путей */}
       <Route path="*" element={<NotFound />} />
