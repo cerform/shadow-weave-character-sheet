@@ -73,7 +73,7 @@ interface InitiativeEntry {
   token_id?: string;
 }
 
-const DMDashboard: React.FC = () => {
+const ModernDMDashboard: React.FC = () => {
   const navigate = useNavigate();
   const { sessionId } = useParams<{ sessionId: string }>();
   const [tokens, setTokens] = useState<BattleToken[]>([]);
@@ -723,4 +723,4 @@ const DMDashboard: React.FC = () => {
   );
 };
 
-export default DMDashboard;
+export default ModernDMDashboard;
