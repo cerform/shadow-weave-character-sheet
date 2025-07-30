@@ -84,43 +84,25 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   useEffect(() => {
     let mounted = true;
 
-    // Слушаем изменения аутентификации СНАЧАЛА
+    // Слушаем изменения аутентификации
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         if (!mounted) return;
         
-        console.log('Auth state changed:', event, {
-          hasSession: !!session,
-          userEmail: session?.user?.email,
-          userId: session?.user?.id,
-          timestamp: new Date().toISOString()
-        });
-        
         const mappedUser = mapSupabaseUser(session?.user ?? null);
-        console.log('Mapped user:', mappedUser);
-        
         setUser(mappedUser);
         setLoading(false);
       }
     );
 
-    // ЗАТЕМ получаем текущую сессию
+    // Получаем текущую сессию
     const getSession = async () => {
       if (!mounted) return;
       
-      console.log('Getting initial session...');
-      const { data: { session }, error } = await supabase.auth.getSession();
-      console.log('Initial session:', { 
-        hasSession: !!session, 
-        userEmail: session?.user?.email,
-        userId: session?.user?.id,
-        error,
-        timestamp: new Date().toISOString()
-      });
+      const { data: { session } } = await supabase.auth.getSession();
       
       if (session) {
         const mappedUser = mapSupabaseUser(session.user);
-        console.log('Initial mapped user:', mappedUser);
         setUser(mappedUser);
       }
       setLoading(false);

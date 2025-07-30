@@ -13,28 +13,15 @@ const AuthPage = () => {
   const location = useLocation();
   const returnPath = location.state?.returnPath || '/character-creation';
 
-  // Проверяем, авторизован ли пользователь и обрабатываем OAuth callback
+  // Слушаем изменения аутентификации для быстрого перенаправления
   useEffect(() => {
-    const checkAuthAndHandleCallback = async () => {
-      try {
-        // Получаем текущую сессию
-        const { data: { session }, error } = await supabase.auth.getSession();
-        
-        if (error) {
-          console.error('Session error:', error);
-          return;
-        }
-        
-        if (session?.user) {
-          console.log('User authenticated:', session.user.email);
-          navigate(returnPath);
-        }
-      } catch (error) {
-        console.error('Auth check error:', error);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (session?.user) {
+        navigate(returnPath);
       }
-    };
+    });
 
-    checkAuthAndHandleCallback();
+    return () => subscription.unsubscribe();
   }, [navigate, returnPath]);
 
   const handleAuthSuccess = () => {
