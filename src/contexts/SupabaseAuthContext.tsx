@@ -83,6 +83,27 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   useEffect(() => {
     let mounted = true;
+    
+    // Единая функция инициализации
+    const initializeAuth = async () => {
+      if (!mounted) return;
+      
+      try {
+        // Получаем текущую сессию один раз
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (mounted) {
+          const mappedUser = mapSupabaseUser(session?.user ?? null);
+          setUser(mappedUser);
+          setLoading(false);
+        }
+      } catch (error) {
+        console.error('Auth initialization error:', error);
+        if (mounted) {
+          setLoading(false);
+        }
+      }
+    };
 
     // Слушаем изменения аутентификации
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -95,20 +116,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
     );
 
-    // Получаем текущую сессию
-    const getSession = async () => {
-      if (!mounted) return;
-      
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (session) {
-        const mappedUser = mapSupabaseUser(session.user);
-        setUser(mappedUser);
-      }
-      setLoading(false);
-    };
-
-    getSession();
+    // Инициализируем авторизацию
+    initializeAuth();
 
     return () => {
       mounted = false;
