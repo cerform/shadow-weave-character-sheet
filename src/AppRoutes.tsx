@@ -22,10 +22,10 @@ import CharacterManagementPage from './pages/CharacterManagementPage';
 // Ленивая загрузка страниц, зависящих от WebSocket
 const GameRoomPage = React.lazy(() => import('./pages/GameRoomPage'));
 const JoinSessionPage = React.lazy(() => import('./pages/JoinSessionPage'));
-const DMDashboardPageNew = React.lazy(() => import('./pages/DMDashboardPageNew'));
 const TestPage = React.lazy(() => import('./pages/TestPage'));
 
-// Импортируем BattleMapPageFixed напрямую для отладки
+// Импортируем страницы напрямую
+import DMDashboardPageNew from './pages/DMDashboardPageNew';
 import BattleMapPageFixed from './pages/BattleMapPageFixed';
 
 // Импорт хука для защиты маршрутов
@@ -40,14 +40,17 @@ const LazyLoading = () => (
 
 // Компонент для защиты маршрутов DM
 const ProtectedDMRoute = ({ children }: { children: React.ReactNode }) => {
-  const { loading, canAccessDMDashboard } = useProtectedRoute();
+  const { loading, canAccessDMDashboard, isAuthenticated } = useProtectedRoute();
+  
+  console.log('ProtectedDMRoute check:', { loading, canAccessDMDashboard, isAuthenticated });
   
   if (loading) {
     return <LazyLoading />;
   }
   
   if (!canAccessDMDashboard) {
-    return <Navigate to="/unauthorized" replace />;
+    console.log('Redirecting to /auth - no access');
+    return <Navigate to="/auth" replace />;
   }
   
   return <>{children}</>;
@@ -108,9 +111,7 @@ const AppRoutes: React.FC = () => {
       {/* Маршруты DM с защитой - новая панель */}
       <Route path="/dm" element={
         <ProtectedDMRoute>
-          <React.Suspense fallback={<LazyLoading />}>
-            <DMDashboardPageNew />
-          </React.Suspense>
+          <DMDashboardPageNew />
         </ProtectedDMRoute>
       } />
       <Route path="/dm-session/:id" element={
@@ -127,9 +128,7 @@ const AppRoutes: React.FC = () => {
       } />
       <Route path="/battle/:sessionId" element={
         <ProtectedDMRoute>
-          <React.Suspense fallback={<LazyLoading />}>
-            <BattleMapPageFixed />
-          </React.Suspense>
+          <BattleMapPageFixed />
         </ProtectedDMRoute>
       } />
       
@@ -163,35 +162,21 @@ const AppRoutes: React.FC = () => {
       {/* DM Dashboard маршруты */}
       <Route path="/dm-dashboard" element={
         <ProtectedDMRoute>
-          <React.Suspense fallback={<LazyLoading />}>
-            <DMDashboardPageNew />
-          </React.Suspense>
+          <DMDashboardPageNew />
         </ProtectedDMRoute>
       } />
       <Route path="/dm-dashboard/:sessionId" element={
         <ProtectedDMRoute>
-          <React.Suspense fallback={<LazyLoading />}>
-            <DMDashboardPageNew />
-          </React.Suspense>
+          <DMDashboardPageNew />
         </ProtectedDMRoute>
       } />
       
       
       {/* DM Dashboard New маршрут */}
-      <Route path="/dm-dashboard-new" element={
-        <ProtectedDMRoute>
-          <React.Suspense fallback={<LazyLoading />}>
-            <DMDashboardPageNew />
-          </React.Suspense>
-        </ProtectedDMRoute>
-      } />
+      <Route path="/dm-dashboard-new" element={<DMDashboardPageNew />} />
       
       {/* Battle Map маршрут */}
-      <Route path="/battle-map-fixed" element={
-        <ProtectedDMRoute>
-          <BattleMapPageFixed />
-        </ProtectedDMRoute>
-      } />
+      <Route path="/battle-map-fixed" element={<BattleMapPageFixed />} />
       
       {/* Тестовая страница для отладки */}
       <Route path="/test" element={
