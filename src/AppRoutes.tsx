@@ -179,13 +179,19 @@ const AppRoutes: React.FC = () => {
       
       {/* DM Dashboard New маршрут */}
       <Route path="/dm-dashboard-new" element={
-        <React.Suspense fallback={<LazyLoading />}>
-          <DMDashboardPageNew />
-        </React.Suspense>
+        <ProtectedDMRoute>
+          <React.Suspense fallback={<LazyLoading />}>
+            <DMDashboardPageNew />
+          </React.Suspense>
+        </ProtectedDMRoute>
       } />
       
       {/* Battle Map маршрут */}
-      <Route path="/battle-map-fixed" element={<BattleMapPageFixed />} />
+      <Route path="/battle-map-fixed" element={
+        <ProtectedDMRoute>
+          <BattleMapPageFixed />
+        </ProtectedDMRoute>
+      } />
       
       {/* Тестовая страница для отладки */}
       <Route path="/test" element={
