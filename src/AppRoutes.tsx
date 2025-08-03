@@ -115,11 +115,7 @@ const AppRoutes: React.FC = () => {
       <Route path="/battle-map-fixed" element={<BattleMapPageFixed />} />
       
       {/* Маршруты DM с защитой - новая панель */}
-      <Route path="/dm" element={
-        <ProtectedDMRoute>
-          <DMDashboardPageNew />
-        </ProtectedDMRoute>
-      } />
+      <Route path="/dm" element={<DMDashboardPageNew />} />
       <Route path="/dm-session/:id" element={
         <ProtectedDMRoute>
           <React.Suspense fallback={<LazyLoading />}>
@@ -166,16 +162,8 @@ const AppRoutes: React.FC = () => {
       <Route path="/character-management" element={<CharacterManagementPage />} />
       
       {/* DM Dashboard маршруты */}
-      <Route path="/dm-dashboard" element={
-        <ProtectedDMRoute>
-          <DMDashboardPageNew />
-        </ProtectedDMRoute>
-      } />
-      <Route path="/dm-dashboard/:sessionId" element={
-        <ProtectedDMRoute>
-          <DMDashboardPageNew />
-        </ProtectedDMRoute>
-      } />
+      <Route path="/dm-dashboard" element={<DMDashboardPageNew />} />
+      <Route path="/dm-dashboard/:sessionId" element={<DMDashboardPageNew />} />
       
       
       
