@@ -16,6 +16,7 @@ import CharacterViewPage from './pages/CharacterViewPage';
 import BattleScenePage from './pages/BattleScenePage';
 import UnauthorizedPage from './pages/UnauthorizedPage';
 import DebugPage from './pages/DebugPage';
+import AdminPage from './pages/AdminPage';
 import CharactersListPage from './pages/CharactersListPage';
 import CharacterManagementPage from './pages/CharacterManagementPage';
 
@@ -51,6 +52,24 @@ const ProtectedDMRoute = ({ children }: { children: React.ReactNode }) => {
   if (!canAccessDMDashboard) {
     console.log('Redirecting to /auth - no access');
     return <Navigate to="/auth" replace />;
+  }
+  
+  return <>{children}</>;
+};
+
+// Компонент для защиты админских маршрутов
+const ProtectedAdminRoute = ({ children }: { children: React.ReactNode }) => {
+  const { loading, isAdmin, isAuthenticated } = useProtectedRoute();
+  
+  console.log('ProtectedAdminRoute check:', { loading, isAdmin, isAuthenticated });
+  
+  if (loading) {
+    return <LazyLoading />;
+  }
+  
+  if (!isAdmin) {
+    console.log('Redirecting to /unauthorized - no admin access');
+    return <Navigate to="/unauthorized" replace />;
   }
   
   return <>{children}</>;
@@ -172,6 +191,13 @@ const AppRoutes: React.FC = () => {
         <React.Suspense fallback={<LazyLoading />}>
           <TestPage />
         </React.Suspense>
+      } />
+      
+      {/* Админская панель */}
+      <Route path="/admin" element={
+        <ProtectedAdminRoute>
+          <AdminPage />
+        </ProtectedAdminRoute>
       } />
       
       {/* Маршрут для неизвестных путей */}

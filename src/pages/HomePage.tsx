@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { BookOpen, Users, Scroll, Dice6, Shield, UserPlus, Sparkles, Swords, Map, Settings, Crown } from 'lucide-react';
 import ProfilePreview from '@/components/home/ProfilePreview';
 import CharactersList from '@/components/home/CharactersList';
-import { useAuth } from '@/hooks/use-auth';
+import { useAuth, useProtectedRoute } from '@/hooks/use-auth';
 import FantasyThemeSelector from '@/components/FantasyThemeSelector';
 import fantasyBg1 from '@/assets/fantasy-bg-1.jpg';
 import fantasyBg2 from '@/assets/fantasy-bg-2.jpg';
@@ -14,6 +14,7 @@ import fantasyBg3 from '@/assets/fantasy-bg-3.jpg';
 const HomePage = () => {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
+  const { isAdmin, isDM, loading: rolesLoading } = useProtectedRoute();
   
   const navigateToAuth = () => {
     console.log("Home: Переход на страницу /auth");
@@ -65,6 +66,21 @@ const HomePage = () => {
       gradient: "from-green-500/20 to-emerald-500/20"
     }
   ];
+
+  // Добавляем админскую панель для администраторов
+  const adminActions = [];
+  if (isAdmin) {
+    adminActions.push({
+      icon: Shield,
+      title: "Панель администратора",
+      description: "Управление ролями пользователей и администрирование системы",
+      href: "/admin",
+      gradient: "from-red-600/20 to-pink-600/20"
+    });
+  }
+
+  // Объединяем все действия
+  const allActions = [...quickActions, ...adminActions];
 
   const features = [
     {
@@ -160,7 +176,7 @@ const HomePage = () => {
 
           {/* Быстрые действия */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">
-            {quickActions.map((action, index) => (
+            {allActions.map((action, index) => (
               <Link 
                 key={index}
                 to={action.href}
