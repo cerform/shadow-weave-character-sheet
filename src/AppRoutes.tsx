@@ -108,6 +108,12 @@ const AppRoutes: React.FC = () => {
         element={<DndSpellsPage />} 
       />
       
+      {/* DM Dashboard New маршрут - перемещаем выше */}
+      <Route path="/dm-dashboard-new" element={<DMDashboardPageNew />} />
+      
+      {/* Battle Map маршрут - перемещаем выше */}
+      <Route path="/battle-map-fixed" element={<BattleMapPageFixed />} />
+      
       {/* Маршруты DM с защитой - новая панель */}
       <Route path="/dm" element={
         <ProtectedDMRoute>
@@ -172,11 +178,6 @@ const AppRoutes: React.FC = () => {
       } />
       
       
-      {/* DM Dashboard New маршрут */}
-      <Route path="/dm-dashboard-new" element={<DMDashboardPageNew />} />
-      
-      {/* Battle Map маршрут */}
-      <Route path="/battle-map-fixed" element={<BattleMapPageFixed />} />
       
       {/* Тестовая страница для отладки */}
       <Route path="/test" element={
