@@ -4,14 +4,15 @@ import { useNavigate } from 'react-router-dom';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { LogIn, User, Shield, UsersRound, LogOut } from "lucide-react";
-import { useAuth } from '@/hooks/use-auth';
+import { useAuth, useProtectedRoute } from '@/hooks/use-auth';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
 import { toast } from '@/hooks/use-toast';
 
 const ProfilePreview = () => {
   const navigate = useNavigate();
-  const { currentUser, isAuthenticated, logout } = useAuth();
+  const { user: currentUser, isAuthenticated, logout } = useAuth();
+  const { isAdmin, isDM, isPlayer } = useProtectedRoute();
   const { theme } = useTheme();
   
   // Получаем текущую тему для стилизации
@@ -118,7 +119,7 @@ const ProfilePreview = () => {
             className="text-sm"
             style={{ color: `${currentTheme.textColor}80` }}
           >
-            {currentUser.isDM ? "🎩 Мастер Подземелий" : "🎲 Игрок"}
+            {isAdmin ? "👑 Администратор" : isDM ? "🎩 Мастер Подземелий" : "🎲 Игрок"}
           </p>
         </div>
       </div>
@@ -154,7 +155,7 @@ const ProfilePreview = () => {
           <span>Персонажи</span>
         </Button>
         
-        {currentUser.isDM && (
+        {isDM && (
           <Button 
             variant="outline"
             size="sm"
@@ -174,7 +175,7 @@ const ProfilePreview = () => {
         <Button 
           variant="outline" 
           size="sm"
-          className={`w-full gap-2 tooltip-wrapper ${!currentUser.isDM ? 'col-span-2' : ''}`}
+          className={`w-full gap-2 tooltip-wrapper ${!isDM ? 'col-span-2' : ''}`}
           style={{
             borderColor: currentTheme.accent,
             color: currentTheme.textColor
