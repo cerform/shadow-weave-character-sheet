@@ -177,8 +177,14 @@ const AppRoutes: React.FC = () => {
       <Route path="/handbook" element={<HandbookPage />} />
       <Route path="/character/:id" element={<CharacterViewPage />} />
       <Route path="/characters" element={<CharactersListPage />} />
-      
       <Route path="/character-management" element={<CharacterManagementPage />} />
+      
+      {/* Маршрут для сессий */}
+      <Route path="/session" element={
+        <React.Suspense fallback={<LazyLoading />}>
+          <JoinSessionPage />
+        </React.Suspense>
+      } />
       
       {/* DM Dashboard маршруты */}
       <Route path="/dm-dashboard" element={<DMDashboardPageNew />} />
