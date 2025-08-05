@@ -172,6 +172,23 @@ const ProfilePreview = () => {
           </Button>
         )}
         
+        {isAdmin && (
+          <Button 
+            variant="outline"
+            size="sm"
+            className="w-full gap-2 tooltip-wrapper"
+            style={{
+              borderColor: currentTheme.accent,
+              color: currentTheme.textColor
+            }}
+            onClick={() => navigate('/admin')}
+            title="Панель администратора"
+          >
+            <Shield size={14} />
+            <span>Админ</span>
+          </Button>
+        )}
+        
         <Button 
           variant="outline" 
           size="sm"
