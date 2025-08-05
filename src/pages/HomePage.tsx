@@ -55,7 +55,7 @@ const HomePage = () => {
       icon: Crown,
       title: "Панель Мастера",
       description: "Современная панель DM с инициативой, токенами, туманом войны и VTT интерфейсом",
-      href: "/dm-dashboard-new",
+      href: "/dm",
       gradient: "from-red-500/20 to-rose-500/20"
     },
     {
