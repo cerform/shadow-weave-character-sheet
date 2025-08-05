@@ -112,6 +112,9 @@ const RoleBasedRedirect = () => {
 const AppRoutes: React.FC = () => {
   console.log('AppRoutes: Инициализация маршрутов');
   console.log('DndSpellsPage импортирована:', DndSpellsPage);
+  console.log('AdminPage импортирована:', AdminPage);
+  console.log('DMDashboardPageNew импортирована:', DMDashboardPageNew);
+  console.log('BattleMapPageFixed импортирована:', BattleMapPageFixed);
   console.log('window.location.pathname:', window.location.pathname);
   
   return (

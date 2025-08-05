@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Home, Map } from 'lucide-react';
 
 const BattleMapPageFixed: React.FC = () => {
+  console.log('BattleMapPageFixed: компонент загружается');
   const navigate = useNavigate();
 
   return (

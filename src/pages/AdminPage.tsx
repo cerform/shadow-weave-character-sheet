@@ -11,6 +11,7 @@ import { UserRolesService, AppRole, UserRole } from '@/services/userRolesService
 import { useToast } from '@/hooks/use-toast';
 
 const AdminPage: React.FC = () => {
+  console.log('AdminPage: компонент загружается');
   const navigate = useNavigate();
   const { isAdmin, loading } = useProtectedRoute();
   const { toast } = useToast();
