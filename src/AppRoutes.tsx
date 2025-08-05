@@ -115,6 +115,7 @@ const AppRoutes: React.FC = () => {
   console.log('AdminPage импортирована:', AdminPage);
   console.log('DMDashboardPageNew импортирована:', DMDashboardPageNew);
   console.log('BattleMapPageFixed импортирована:', BattleMapPageFixed);
+  console.log('HomePage импортирована:', HomePage);
   console.log('window.location.pathname:', window.location.pathname);
   
   return (
