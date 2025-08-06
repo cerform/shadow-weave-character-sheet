@@ -178,19 +178,19 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
 
     console.log('Final position after snap and bounds:', boundedX, boundedY);
 
+    // Обновляем состояние токенов
+    const updatedTokens = tokens.map(token => 
+      token.id === tokenId 
+        ? { ...token, x: boundedX, y: boundedY }
+        : token
+    );
+    
+    console.log('Updated tokens:', updatedTokens.find(t => t.id === tokenId));
+
     if (onTokensChange) {
-      const updatedTokens = tokens.map(token => 
-        token.id === tokenId 
-          ? { ...token, x: boundedX, y: boundedY }
-          : token
-      );
       onTokensChange(updatedTokens);
     } else {
-      setInternalTokens(prev => prev.map(token => 
-        token.id === tokenId 
-          ? { ...token, x: boundedX, y: boundedY }
-          : token
-      ));
+      setInternalTokens(updatedTokens);
     }
     
     setDraggedTokenId(null);
@@ -202,7 +202,7 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
         description: `${token.name} перемещен на позицию (${Math.floor(boundedX/gridSize)}, ${Math.floor(boundedY/gridSize)})`,
       });
     }
-  }, [snapToGrid, setTokens, tokens, toast, gridCols, gridRows, gridSize]);
+  }, [snapToGrid, tokens, onTokensChange, toast, gridCols, gridRows, gridSize]);
 
   // Клик по токену
   const handleTokenClick = useCallback((token: Token) => {
@@ -344,8 +344,14 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
         x={token.x}
         y={token.y}
         draggable={isDM || token.type === 'player'}
-        onDragStart={(e) => handleDragStart(token.id, e)}
-        onDragEnd={(e) => handleDragEnd(token.id, e.target.x(), e.target.y())}
+        onDragStart={(e) => {
+          console.log('Token drag start:', token.id, 'current pos:', token.x, token.y);
+          handleDragStart(token.id, e);
+        }}
+        onDragEnd={(e) => {
+          console.log('Token drag end:', token.id, 'target pos:', e.target.x(), e.target.y());
+          handleDragEnd(token.id, e.target.x(), e.target.y());
+        }}
         onMouseEnter={() => setHoveredTokenId(token.id)}
         onMouseLeave={() => setHoveredTokenId(null)}
         onClick={() => handleTokenClick(token)}
