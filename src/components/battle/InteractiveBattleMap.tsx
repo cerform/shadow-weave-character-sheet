@@ -405,7 +405,7 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
         {renderHPBar(token)}
 
         {/* Индикаторы состояний */}
-        {renderConditionIndicators(token)}
+        {token.conditions && token.conditions.length > 0 && renderConditionIndicators(token)}
 
         {/* Индикатор активного хода */}
         {isActive && (
@@ -629,15 +629,17 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
           </Layer>
           
           {/* Слой тумана войны */}
-          <FogOfWarLayer
-            width={windowSize.width}
-            height={windowSize.height}
-            gridSize={gridSize}
-            visible={showFogOfWar}
-            isDM={isDM}
-            onVisibilityChange={setFogVisibleAreas}
-            initialVisibleAreas={fogVisibleAreas}
-          />
+          {showFogOfWar && (
+            <FogOfWarLayer
+              width={windowSize.width}
+              height={windowSize.height}
+              gridSize={gridSize}
+              visible={showFogOfWar}
+              isDM={isDM}
+              onVisibilityChange={setFogVisibleAreas}
+              initialVisibleAreas={fogVisibleAreas}
+            />
+          )}
         </Stage>
         
         {/* Индикатор масштаба */}
