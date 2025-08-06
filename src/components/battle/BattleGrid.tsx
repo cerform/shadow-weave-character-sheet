@@ -3,6 +3,7 @@ import React, { useRef, useEffect, useState } from 'react';
 
 interface BattleGridProps {
   gridSize: { rows: number, cols: number };
+  cellSize: number; // Размер клетки в пикселях (32, 64, 128, 256)
   visible: boolean;
   opacity: number;
   color?: string;
@@ -12,6 +13,7 @@ interface BattleGridProps {
 
 const BattleGrid: React.FC<BattleGridProps> = ({
   gridSize,
+  cellSize,
   visible,
   opacity,
   color = '#aaadb0',
@@ -67,8 +69,13 @@ const BattleGrid: React.FC<BattleGridProps> = ({
     canvas.width = width;
     canvas.height = height;
     
-    const cellWidth = width / gridSize.cols;
-    const cellHeight = height / gridSize.rows;
+    // Используем фиксированный размер клетки
+    const cellWidth = cellSize;
+    const cellHeight = cellSize;
+    
+    // Пересчитываем количество линий на основе размера клетки
+    const actualCols = Math.ceil(width / cellSize);
+    const actualRows = Math.ceil(height / cellSize);
     
     ctx.clearRect(0, 0, width, height);
     
@@ -78,7 +85,7 @@ const BattleGrid: React.FC<BattleGridProps> = ({
     ctx.lineWidth = 1;
     
     // Вертикальные линии
-    for (let col = 0; col <= gridSize.cols; col++) {
+    for (let col = 0; col <= actualCols; col++) {
       const x = Math.floor(col * cellWidth) + 0.5; // +0.5 для четкости линий
       ctx.beginPath();
       ctx.moveTo(x, 0);
@@ -87,7 +94,7 @@ const BattleGrid: React.FC<BattleGridProps> = ({
     }
     
     // Горизонтальные линии
-    for (let row = 0; row <= gridSize.rows; row++) {
+    for (let row = 0; row <= actualRows; row++) {
       const y = Math.floor(row * cellHeight) + 0.5; // +0.5 для четкости линий
       ctx.beginPath();
       ctx.moveTo(0, y);
@@ -95,21 +102,23 @@ const BattleGrid: React.FC<BattleGridProps> = ({
       ctx.stroke();
     }
     
-    // Добавляем координаты на сетке
-    ctx.fillStyle = color;
-    ctx.font = '10px Arial';
-    ctx.textAlign = 'center';
-    
-    for (let col = 0; col < gridSize.cols; col++) {
-      const x = col * cellWidth + cellWidth / 2;
-      ctx.fillText(col.toString(), x, 12);
+    // Добавляем координаты на сетке (только для больших размеров клеток)
+    if (cellSize >= 64) {
+      ctx.fillStyle = color;
+      ctx.font = `${Math.min(12, cellSize / 8)}px Arial`;
+      ctx.textAlign = 'center';
+      
+      for (let col = 0; col < actualCols; col++) {
+        const x = col * cellWidth + cellWidth / 2;
+        ctx.fillText(col.toString(), x, 16);
+      }
+      
+      for (let row = 0; row < actualRows; row++) {
+        const y = row * cellHeight + cellHeight / 2;
+        ctx.fillText(row.toString(), 12, y + 4);
+      }
     }
-    
-    for (let row = 0; row < gridSize.rows; row++) {
-      const y = row * cellHeight + cellHeight / 2;
-      ctx.fillText(row.toString(), 10, y + 4);
-    }
-  }, [canvasSize, gridSize, visible, opacity, color]);
+  }, [canvasSize, gridSize, cellSize, visible, opacity, color]);
   
   if (!visible) return null;
   

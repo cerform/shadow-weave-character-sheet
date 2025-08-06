@@ -431,6 +431,7 @@ const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
             >
               <BattleGrid 
                 gridSize={gridSize}
+                cellSize={64}
                 visible={true}
                 opacity={gridOpacity}
                 imageSize={imageSize}
@@ -491,6 +492,7 @@ const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({
                 >
                   <BattleGrid 
                     gridSize={gridSize}
+                    cellSize={64}
                     visible={true}
                     opacity={gridOpacity}
                     imageSize={imageSize}

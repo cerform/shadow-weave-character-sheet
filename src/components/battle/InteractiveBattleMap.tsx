@@ -10,11 +10,9 @@ import MapUploader from './MapUploader';
 import TerrainPalette from './TerrainPalette';
 import useImage from 'use-image';
 
-const GRID_SIZE = 64; // Размер клетки в пикселях
-const ROWS = 20;
-const COLS = 24;
-const MAP_WIDTH = COLS * GRID_SIZE;
-const MAP_HEIGHT = ROWS * GRID_SIZE;
+// Доступные размеры клеток
+const GRID_SIZES = [32, 64, 128, 256];
+const DEFAULT_GRID_SIZE = 64;
 
 export interface Token {
   id: string;
@@ -62,10 +60,10 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
     {
       id: 'goblin_scout',
       name: 'Goblin Scout',
-      x: GRID_SIZE * 8,
-      y: GRID_SIZE * 6,
+      x: DEFAULT_GRID_SIZE * 8,
+      y: DEFAULT_GRID_SIZE * 6,
       color: '#dc2626',
-      size: GRID_SIZE * 0.9,
+      size: DEFAULT_GRID_SIZE * 0.9,
       hp: 7,
       maxHp: 12,
       ac: 15,
@@ -78,10 +76,10 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
     {
       id: 'human_fighter',
       name: 'Sir Gareth',
-      x: GRID_SIZE * 3,
-      y: GRID_SIZE * 8,
+      x: DEFAULT_GRID_SIZE * 3,
+      y: DEFAULT_GRID_SIZE * 8,
       color: '#2563eb',
-      size: GRID_SIZE * 0.9,
+      size: DEFAULT_GRID_SIZE * 0.9,
       hp: 22,
       maxHp: 30,
       ac: 18,
@@ -94,10 +92,10 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
     {
       id: 'elf_wizard',
       name: 'Lyralei',
-      x: GRID_SIZE * 2,
-      y: GRID_SIZE * 9,
+      x: DEFAULT_GRID_SIZE * 2,
+      y: DEFAULT_GRID_SIZE * 9,
       color: '#7c3aed',
-      size: GRID_SIZE * 0.9,
+      size: DEFAULT_GRID_SIZE * 0.9,
       hp: 18,
       maxHp: 18,
       ac: 12,
@@ -116,6 +114,9 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
   const [selectedToken, setSelectedToken] = useState<Token | null>(null);
   const [editingToken, setEditingToken] = useState<Token | null>(null);
   const [showGrid, setShowGrid] = useState(true);
+  const [gridSize, setGridSize] = useState(DEFAULT_GRID_SIZE);
+  const [gridRows, setGridRows] = useState(20);
+  const [gridCols, setGridCols] = useState(24);
   const [mapImage, setMapImage] = useState<string | null>(mapImageUrl || null);
   const [mapScale, setMapScale] = useState(100);
   const [selectedTerrain, setSelectedTerrain] = useState(null);
@@ -126,8 +127,8 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
 
   // Привязка к сетке
   const snapToGrid = useCallback((value: number) => {
-    return Math.round(value / GRID_SIZE) * GRID_SIZE;
-  }, []);
+    return Math.round(value / gridSize) * gridSize;
+  }, [gridSize]);
 
   // Обработчики Drag & Drop
   const handleDragStart = useCallback((tokenId: string) => {
@@ -148,8 +149,10 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
     const snappedY = snapToGrid(newY);
     
     // Проверяем границы карты
-    const boundedX = Math.max(0, Math.min(snappedX, MAP_WIDTH - GRID_SIZE));
-    const boundedY = Math.max(0, Math.min(snappedY, MAP_HEIGHT - GRID_SIZE));
+    const mapWidth = gridCols * gridSize;
+    const mapHeight = gridRows * gridSize;
+    const boundedX = Math.max(0, Math.min(snappedX, mapWidth - gridSize));
+    const boundedY = Math.max(0, Math.min(snappedY, mapHeight - gridSize));
 
     if (onTokensChange) {
       const updatedTokens = tokens.map(token => 
@@ -172,10 +175,10 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
     if (token) {
       toast({
         title: "Токен перемещен",
-        description: `${token.name} перемещен на позицию (${Math.floor(boundedX/GRID_SIZE)}, ${Math.floor(boundedY/GRID_SIZE)})`,
+        description: `${token.name} перемещен на позицию (${Math.floor(boundedX/gridSize)}, ${Math.floor(boundedY/gridSize)})`,
       });
     }
-  }, [snapToGrid, setTokens, tokens, toast]);
+  }, [snapToGrid, setTokens, tokens, toast, gridCols, gridRows, gridSize]);
 
   // Клик по токену
   const handleTokenClick = useCallback((token: Token) => {
@@ -415,10 +418,10 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
     const newToken: Token = {
       id: `token_${Date.now()}`,
       name: `New Token`,
-      x: GRID_SIZE * 2,
-      y: GRID_SIZE * 2,
+      x: gridSize * 2,
+      y: gridSize * 2,
       color: '#6b7280',
-      size: GRID_SIZE * 0.9,
+      size: gridSize * 0.9,
       hp: 10,
       maxHp: 10,
       ac: 10,
@@ -437,7 +440,7 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
       title: "Токен добавлен",
       description: "Новый токен создан на карте",
     });
-  }, [tokens, onTokensChange, toast]);
+  }, [tokens, onTokensChange, toast, gridSize]);
 
   // Сохранение токена
   const handleSaveToken = useCallback((updatedToken: Token) => {
@@ -514,11 +517,12 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
         {isDM && (
           <div className="w-80 bg-card border-r border-border p-4">
             <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="tokens">Токены</TabsTrigger>
-                <TabsTrigger value="map">Карта</TabsTrigger>
-                <TabsTrigger value="terrain">Ландшафт</TabsTrigger>
-              </TabsList>
+                <TabsList className="grid w-full grid-cols-4">
+                  <TabsTrigger value="tokens">Токены</TabsTrigger>
+                  <TabsTrigger value="grid">Сетка</TabsTrigger>
+                  <TabsTrigger value="map">Карта</TabsTrigger>
+                  <TabsTrigger value="terrain">Ландшафт</TabsTrigger>
+                </TabsList>
               
               <TabsContent value="tokens" className="space-y-4 mt-4">
                 <Card>
@@ -609,6 +613,63 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
                 </Card>
               </TabsContent>
               
+              <TabsContent value="grid" className="space-y-4 mt-4">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-lg">
+                      <Map className="h-5 w-5" />
+                      Настройки сетки
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div>
+                      <label className="text-sm font-medium mb-2 block">Размер клетки</label>
+                      <div className="grid grid-cols-2 gap-2">
+                        {GRID_SIZES.map(size => (
+                          <Button
+                            key={size}
+                            variant={gridSize === size ? 'default' : 'outline'}
+                            onClick={() => setGridSize(size)}
+                            className="w-full"
+                          >
+                            {size}×{size}
+                          </Button>
+                        ))}
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-sm font-medium mb-2 block">Строки</label>
+                        <input
+                          type="number"
+                          value={gridRows}
+                          onChange={(e) => setGridRows(Math.max(1, parseInt(e.target.value) || 1))}
+                          className="w-full px-3 py-2 border border-border rounded-md bg-background"
+                          min="1"
+                          max="50"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium mb-2 block">Столбцы</label>
+                        <input
+                          type="number"
+                          value={gridCols}
+                          onChange={(e) => setGridCols(Math.max(1, parseInt(e.target.value) || 1))}
+                          className="w-full px-3 py-2 border border-border rounded-md bg-background"
+                          min="1"
+                          max="50"
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="text-sm text-muted-foreground">
+                      Общий размер карты: {gridCols * gridSize}×{gridRows * gridSize}px
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+              
               <TabsContent value="map" className="space-y-4 mt-4">
                 <MapUploader
                   onMapLoaded={handleMapLoaded}
@@ -631,8 +692,8 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
         <div className="flex-1 overflow-auto bg-muted/20 p-4">
           <div className="border border-border rounded-lg overflow-hidden bg-card relative">
             <Stage
-              width={MAP_WIDTH}
-              height={MAP_HEIGHT}
+              width={gridCols * gridSize}
+              height={gridRows * gridSize}
               ref={stageRef}
               className="cursor-crosshair"
             >
@@ -643,16 +704,16 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
                     image={mapBg}
                     x={0}
                     y={0}
-                    width={MAP_WIDTH}
-                    height={MAP_HEIGHT}
+                    width={gridCols * gridSize}
+                    height={gridRows * gridSize}
                     opacity={0.9}
                   />
                 ) : (
                   <Rect
                     x={0}
                     y={0}
-                    width={MAP_WIDTH}
-                    height={MAP_HEIGHT}
+                    width={gridCols * gridSize}
+                    height={gridRows * gridSize}
                     fill="#0f172a"
                   />
                 )}
@@ -660,56 +721,60 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
                 {/* Сетка */}
                 {showGrid && (
                   <>
-                    {Array.from({ length: COLS + 1 }, (_, col) => (
+                    {Array.from({ length: gridCols + 1 }, (_, col) => (
                       <Rect
                         key={`grid-v-${col}`}
-                        x={col * GRID_SIZE}
+                        x={col * gridSize}
                         y={0}
                         width={1}
-                        height={MAP_HEIGHT}
+                        height={gridRows * gridSize}
                         fill={mapBg ? "#ffffff" : "#334155"}
                         opacity={mapBg ? 0.4 : 0.3}
                       />
                     ))}
-                    {Array.from({ length: ROWS + 1 }, (_, row) => (
+                    {Array.from({ length: gridRows + 1 }, (_, row) => (
                       <Rect
                         key={`grid-h-${row}`}
                         x={0}
-                        y={row * GRID_SIZE}
-                        width={MAP_WIDTH}
+                        y={row * gridSize}
+                        width={gridCols * gridSize}
                         height={1}
                         fill={mapBg ? "#ffffff" : "#334155"}
                         opacity={mapBg ? 0.4 : 0.3}
                       />
                     ))}
 
-                    {/* Координаты */}
-                    {Array.from({ length: COLS }, (_, col) => (
-                      <Text
-                        key={`coord-x-${col}`}
-                        text={(col + 1).toString()}
-                        fontSize={12}
-                        fill={mapBg ? "#000000" : "#64748b"}
-                        x={col * GRID_SIZE + GRID_SIZE / 2 - 6}
-                        y={4}
-                        fontFamily="monospace"
-                        stroke={mapBg ? "#ffffff" : "transparent"}
-                        strokeWidth={mapBg ? 1 : 0}
-                      />
-                    ))}
-                    {Array.from({ length: ROWS }, (_, row) => (
-                      <Text
-                        key={`coord-y-${row}`}
-                        text={String.fromCharCode(65 + row)} // A, B, C...
-                        fontSize={12}
-                        fill={mapBg ? "#000000" : "#64748b"}
-                        x={4}
-                        y={row * GRID_SIZE + GRID_SIZE / 2 - 6}
-                        fontFamily="monospace"
-                        stroke={mapBg ? "#ffffff" : "transparent"}
-                        strokeWidth={mapBg ? 1 : 0}
-                      />
-                    ))}
+                    {/* Координаты (только для больших размеров клеток) */}
+                    {gridSize >= 64 && (
+                      <>
+                        {Array.from({ length: gridCols }, (_, col) => (
+                          <Text
+                            key={`coord-x-${col}`}
+                            text={(col + 1).toString()}
+                            fontSize={Math.min(12, gridSize / 6)}
+                            fill={mapBg ? "#000000" : "#64748b"}
+                            x={col * gridSize + gridSize / 2 - 6}
+                            y={4}
+                            fontFamily="monospace"
+                            stroke={mapBg ? "#ffffff" : "transparent"}
+                            strokeWidth={mapBg ? 1 : 0}
+                          />
+                        ))}
+                        {Array.from({ length: gridRows }, (_, row) => (
+                          <Text
+                            key={`coord-y-${row}`}
+                            text={String.fromCharCode(65 + row)} // A, B, C...
+                            fontSize={Math.min(12, gridSize / 6)}
+                            fill={mapBg ? "#000000" : "#64748b"}
+                            x={4}
+                            y={row * gridSize + gridSize / 2 - 6}
+                            fontFamily="monospace"
+                            stroke={mapBg ? "#ffffff" : "transparent"}
+                            strokeWidth={mapBg ? 1 : 0}
+                          />
+                        ))}
+                      </>
+                    )}
                   </>
                 )}
 
@@ -730,7 +795,7 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
 
       {/* Статистика карты */}
       <div className="px-4 py-2 bg-card border-t border-border flex justify-between text-sm text-muted-foreground">
-        <span>Размер: {COLS}×{ROWS} клеток ({GRID_SIZE}px/клетка)</span>
+        <span>Размер: {gridCols}×{gridRows} клеток ({gridSize}px/клетка)</span>
         <span>Токенов на карте: {tokens.length}</span>
         <span>Режим: {isDM ? 'Мастер подземелий' : 'Игрок'}</span>
       </div>
