@@ -225,10 +225,7 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
   const handleDragStart = useCallback((tokenId: string, e: any) => {
     try {
       logMouseEvent('drag_start', e, tokenId);
-      console.log('🎯 DRAG START - BEGIN');
-      
-      // Сбрасываем предыдущее состояние draggedTokenId перед началом нового drag
-      setDraggedTokenId(null);
+      console.log('🎯 DRAG START - BEGIN for token:', tokenId);
       
       const token = tokens.find(t => t.id === tokenId);
       if (!token) {
@@ -243,7 +240,7 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
         isDM,
         controlledBy: token.controlledBy,
         currentUserId,
-        previousDraggedTokenId: draggedTokenId
+        currentDraggedTokenId: draggedTokenId
       });
       
       // Проверяем права доступа
@@ -262,12 +259,9 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
         return;
       }
       
-      // Устанавливаем новое состояние с небольшой задержкой
-      setTimeout(() => {
-        console.log('✅ DRAG ALLOWED - setting dragged token to:', tokenId);
-        setDraggedTokenId(tokenId);
-        console.log('🎯 DRAG START - END');
-      }, 0);
+      console.log('✅ DRAG ALLOWED - setting dragged token to:', tokenId);
+      setDraggedTokenId(tokenId);
+      console.log('🎯 DRAG START - END for token:', tokenId);
       
     } catch (error) {
       addError('Exception in handleDragStart', { error: error.message, tokenId, stack: error.stack });
@@ -277,19 +271,31 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
   const handleDragEnd = useCallback((tokenId: string, newX: number, newY: number, e: any) => {
     try {
       logMouseEvent('drag_end', e, tokenId);
-      console.log('🎯 DRAG END - BEGIN');
+      console.log('🎯 DRAG END - BEGIN for token:', tokenId);
       
-      console.log('🎯 DRAG END TOKEN:', {
-        id: tokenId,
+      console.log('🎯 DRAG END STATE CHECK:', {
+        receivedTokenId: tokenId,
+        currentDraggedTokenId: draggedTokenId,
         newPos: { x: newX, y: newY },
         gridSize,
-        draggedTokenId,
-        tokensCount: tokens.length
+        tokensCount: tokens.length,
+        allTokenIds: tokens.map(t => t.id),
+        timestamp: Date.now()
       });
       
       // Проверяем, что токен действительно перетаскивался
       if (draggedTokenId !== tokenId) {
+        console.error('🚨 DRAG MISMATCH DETECTED:', {
+          expected: draggedTokenId,
+          received: tokenId,
+          tokensOnMap: tokens.map(t => ({ id: t.id, name: t.name })),
+          timestamp: Date.now()
+        });
         addError(`Drag mismatch: expected ${draggedTokenId}, got ${tokenId}`);
+        
+        // Принудительно сбрасываем состояние для предотвращения дальнейших ошибок
+        console.log('🔄 FORCE RESET draggedTokenId to null');
+        setDraggedTokenId(null);
         return;
       }
       
