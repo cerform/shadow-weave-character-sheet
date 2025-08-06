@@ -134,6 +134,15 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
   const [selectedTerrain, setSelectedTerrain] = useState(null);
   const [activeTab, setActiveTab] = useState('tokens');
   const [windowSize, setWindowSize] = useState({ width: 1920, height: 1080 });
+  const [errorLog, setErrorLog] = useState<string[]>([]);
+  
+  // Функция для добавления ошибок в лог
+  const addError = useCallback((message: string, data?: any) => {
+    const timestamp = new Date().toISOString();
+    const errorMessage = `[${timestamp}] ${message}`;
+    console.error('🚨 DRAG ERROR:', errorMessage, data);
+    setErrorLog(prev => [...prev.slice(-9), errorMessage]); // Держим последние 10 ошибок
+  }, []);
   
   // Устанавливаем размеры окна
   useEffect(() => {
@@ -212,123 +221,186 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
     };
   }, []);
 
-  // Обработчики Drag & Drop с улучшенной отладкой
+  // Обработчики Drag & Drop с детальным error logging
   const handleDragStart = useCallback((tokenId: string, e: any) => {
-    logMouseEvent('drag_start', e, tokenId);
-    
-    const token = tokens.find(t => t.id === tokenId);
-    console.log('🎯 DRAG START TOKEN:', {
-      id: tokenId,
-      currentPos: { x: token?.x, y: token?.y },
-      target: e.target,
-      canDrag: isDM || token?.controlledBy === currentUserId
-    });
-    
-    // Проверяем права доступа
-    if (!isDM && token?.controlledBy !== currentUserId) {
-      console.log('❌ DRAG BLOCKED - no permissions');
-      toast({
-        title: "Нет доступа",
-        description: "Вы можете перемещать только своих персонажей",
-        variant: "destructive"
+    try {
+      logMouseEvent('drag_start', e, tokenId);
+      console.log('🎯 DRAG START - BEGIN');
+      
+      const token = tokens.find(t => t.id === tokenId);
+      if (!token) {
+        addError(`Token not found: ${tokenId}`, { availableTokens: tokens.map(t => t.id) });
+        return;
+      }
+      
+      console.log('🎯 DRAG START TOKEN:', {
+        id: tokenId,
+        currentPos: { x: token.x, y: token.y },
+        canDrag: isDM || token.controlledBy === currentUserId,
+        isDM,
+        controlledBy: token.controlledBy,
+        currentUserId
       });
-      e.evt.preventDefault();
-      return;
+      
+      // Проверяем права доступа
+      if (!isDM && token.controlledBy !== currentUserId) {
+        addError(`Access denied for token: ${tokenId}`, { 
+          isDM, 
+          tokenControlledBy: token.controlledBy, 
+          currentUserId 
+        });
+        toast({
+          title: "Нет доступа",
+          description: "Вы можете перемещать только своих персонажей",
+          variant: "destructive"
+        });
+        e.evt?.preventDefault?.();
+        return;
+      }
+      
+      console.log('✅ DRAG ALLOWED - setting dragged token');
+      setDraggedTokenId(tokenId);
+      console.log('🎯 DRAG START - END');
+      
+    } catch (error) {
+      addError('Exception in handleDragStart', { error: error.message, tokenId, stack: error.stack });
     }
-    
-    console.log('✅ DRAG ALLOWED - setting dragged token');
-    setDraggedTokenId(tokenId);
-  }, [isDM, tokens, toast, currentUserId, logMouseEvent]);
+  }, [isDM, tokens, toast, currentUserId, logMouseEvent, addError]);
 
   const handleDragEnd = useCallback((tokenId: string, newX: number, newY: number, e: any) => {
-    logMouseEvent('drag_end', e, tokenId);
-    
-    console.log('🎯 DRAG END TOKEN:', {
-      id: tokenId,
-      newPos: { x: newX, y: newY },
-      gridSize,
-      snapFunction: snapToGrid.toString()
-    });
-    
-    // Проверяем минимальное движение
-    const currentToken = tokens.find(t => t.id === tokenId);
-    if (!currentToken) {
-      console.log('❌ TOKEN NOT FOUND:', tokenId);
-      return;
-    }
-    
-    const deltaX = Math.abs(newX - currentToken.x);
-    const deltaY = Math.abs(newY - currentToken.y);
-    const minMovement = 5; // Минимальное движение в пикселях (убираем привязку к gridSize)
-    
-    console.log('📏 MOVEMENT CHECK:', {
-      oldPos: { x: currentToken.x, y: currentToken.y },
-      newPos: { x: newX, y: newY },
-      delta: { x: deltaX, y: deltaY },
-      minMovement,
-      willMove: deltaX >= minMovement || deltaY >= minMovement
-    });
-    
-    if (deltaX < minMovement && deltaY < minMovement) {
-      console.log('⚠️ MOVEMENT TOO SMALL - ignoring');
+    try {
+      logMouseEvent('drag_end', e, tokenId);
+      console.log('🎯 DRAG END - BEGIN');
+      
+      console.log('🎯 DRAG END TOKEN:', {
+        id: tokenId,
+        newPos: { x: newX, y: newY },
+        gridSize,
+        draggedTokenId,
+        tokensCount: tokens.length
+      });
+      
+      // Проверяем, что токен действительно перетаскивался
+      if (draggedTokenId !== tokenId) {
+        addError(`Drag mismatch: expected ${draggedTokenId}, got ${tokenId}`);
+        return;
+      }
+      
+      // Проверяем минимальное движение
+      const currentToken = tokens.find(t => t.id === tokenId);
+      if (!currentToken) {
+        addError(`Token not found during drag end: ${tokenId}`, { 
+          availableTokens: tokens.map(t => t.id) 
+        });
+        return;
+      }
+      
+      const deltaX = Math.abs(newX - currentToken.x);
+      const deltaY = Math.abs(newY - currentToken.y);
+      const minMovement = 5; // Минимальное движение в пикселях
+      
+      console.log('📏 MOVEMENT CHECK:', {
+        oldPos: { x: currentToken.x, y: currentToken.y },
+        newPos: { x: newX, y: newY },
+        delta: { x: deltaX, y: deltaY },
+        minMovement,
+        willMove: deltaX >= minMovement || deltaY >= minMovement
+      });
+      
+      if (deltaX < minMovement && deltaY < minMovement) {
+        console.log('⚠️ MOVEMENT TOO SMALL - ignoring');
+        setDraggedTokenId(null);
+        return;
+      }
+      
+      const snappedX = snapToGrid(newX);
+      const snappedY = snapToGrid(newY);
+      
+      console.log('📐 SNAP TO GRID:', {
+        original: { x: newX, y: newY },
+        snapped: { x: snappedX, y: snappedY }
+      });
+      
+      // Проверяем границы карты
+      const mapWidth = gridCols * gridSize;
+      const mapHeight = gridRows * gridSize;
+      const boundedX = Math.max(gridSize/2, Math.min(snappedX, mapWidth - gridSize/2));
+      const boundedY = Math.max(gridSize/2, Math.min(snappedY, mapHeight - gridSize/2));
+
+      console.log('🗺️ BOUNDS CHECK:', {
+        mapSize: { width: mapWidth, height: mapHeight },
+        snapped: { x: snappedX, y: snappedY },
+        bounded: { x: boundedX, y: boundedY }
+      });
+
+      // Создаем полностью новый массив токенов для принудительного обновления
+      const oldTokensLength = tokens.length;
+      const updatedTokens = tokens.map(token => 
+        token.id === tokenId 
+          ? { ...token, x: boundedX, y: boundedY }
+          : token
+      );
+      
+      console.log('🔄 UPDATING TOKENS:', {
+        tokenId,
+        oldToken: tokens.find(t => t.id === tokenId),
+        newToken: updatedTokens.find(t => t.id === tokenId),
+        oldLength: oldTokensLength,
+        newLength: updatedTokens.length,
+        sameLength: oldTokensLength === updatedTokens.length
+      });
+
+      // Проверяем, что обновление прошло корректно
+      const updatedToken = updatedTokens.find(t => t.id === tokenId);
+      if (!updatedToken) {
+        addError(`Token lost after update: ${tokenId}`);
+        return;
+      }
+      
+      if (updatedToken.x !== boundedX || updatedToken.y !== boundedY) {
+        addError(`Position update failed`, {
+          expected: { x: boundedX, y: boundedY },
+          actual: { x: updatedToken.x, y: updatedToken.y }
+        });
+        return;
+      }
+
+      console.log('📝 CALLING STATE UPDATES');
+      
+      // Принудительно обновляем состояние
+      setCurrentTokens([...updatedTokens]); // Создаем новую ссылку на массив
+      
+      // Если есть внешний обработчик, тоже его вызываем
+      if (onTokensChange) {
+        console.log('📝 CALLING EXTERNAL onTokensChange');
+        onTokensChange([...updatedTokens]);
+      }
+      
       setDraggedTokenId(null);
-      return;
-    }
-    
-    const snappedX = snapToGrid(newX);
-    const snappedY = snapToGrid(newY);
-    
-    console.log('📐 SNAP TO GRID:', {
-      original: { x: newX, y: newY },
-      snapped: { x: snappedX, y: snappedY }
-    });
-    
-    // Проверяем границы карты
-    const mapWidth = gridCols * gridSize;
-    const mapHeight = gridRows * gridSize;
-    const boundedX = Math.max(gridSize/2, Math.min(snappedX, mapWidth - gridSize/2));
-    const boundedY = Math.max(gridSize/2, Math.min(snappedY, mapHeight - gridSize/2));
-
-    console.log('🗺️ BOUNDS CHECK:', {
-      mapSize: { width: mapWidth, height: mapHeight },
-      snapped: { x: snappedX, y: snappedY },
-      bounded: { x: boundedX, y: boundedY }
-    });
-
-    // Создаем полностью новый массив токенов для принудительного обновления
-    const updatedTokens = tokens.map(token => 
-      token.id === tokenId 
-        ? { ...token, x: boundedX, y: boundedY }
-        : token
-    );
-    
-    console.log('🔄 UPDATING TOKENS:', {
-      tokenId,
-      oldToken: tokens.find(t => t.id === tokenId),
-      newToken: updatedTokens.find(t => t.id === tokenId),
-      totalTokens: updatedTokens.length
-    });
-
-    // Принудительно обновляем состояние
-    setCurrentTokens([...updatedTokens]); // Создаем новую ссылку на массив
-    
-    // Если есть внешний обработчик, тоже его вызываем
-    if (onTokensChange) {
-      onTokensChange([...updatedTokens]);
-    }
-    
-    setDraggedTokenId(null);
-    
-    const token = tokens.find(t => t.id === tokenId);
-    if (token) {
-      toast({
-        title: "Токен перемещен",
-        description: `${token.name} перемещен на позицию (${Math.floor(boundedX/gridSize)}, ${Math.floor(boundedY/gridSize)})`,
+      
+      console.log('📝 STATE UPDATES COMPLETED');
+      
+      const token = tokens.find(t => t.id === tokenId);
+      if (token) {
+        toast({
+          title: "Токен перемещен",
+          description: `${token.name} перемещен на позицию (${Math.floor(boundedX/gridSize)}, ${Math.floor(boundedY/gridSize)})`,
+        });
+      }
+      
+      console.log('✅ DRAG COMPLETED SUCCESSFULLY');
+      console.log('🎯 DRAG END - END');
+      
+    } catch (error) {
+      addError('Exception in handleDragEnd', { 
+        error: error.message, 
+        tokenId, 
+        newX, 
+        newY,
+        stack: error.stack 
       });
     }
-    
-    console.log('✅ DRAG COMPLETED');
-  }, [snapToGrid, tokens, onTokensChange, toast, gridCols, gridRows, gridSize, logMouseEvent]);
+  }, [snapToGrid, tokens, onTokensChange, toast, gridCols, gridRows, gridSize, logMouseEvent, addError, draggedTokenId]);
 
   // Клик по токену
   const handleTokenClick = useCallback((token: Token) => {
@@ -474,33 +546,47 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
         y={token.y}
         draggable={isDM || token.controlledBy === currentUserId}
         onDragStart={(e) => {
-          logMouseEvent('token_drag_start', e, token.id);
-          console.log('🎯 TOKEN DRAG START:', token.id, 'current pos:', token.x, token.y);
-          
-          // Проверяем права доступа перед началом перетаскивания
-          if (!isDM && token.controlledBy !== currentUserId) {
-            console.log('❌ PREVENTING DRAG - no access');
-            e.evt.preventDefault();
-            return;
+          try {
+            logMouseEvent('token_drag_start', e, token.id);
+            console.log('🎯 TOKEN DRAG START EVENT:', token.id, 'current pos:', token.x, token.y);
+            
+            // Проверяем права доступа перед началом перетаскивания
+            if (!isDM && token.controlledBy !== currentUserId) {
+              console.log('❌ PREVENTING DRAG - no access');
+              addError(`Drag prevented - no access to token: ${token.id}`);
+              e.evt?.preventDefault?.();
+              return;
+            }
+            
+            handleDragStart(token.id, e);
+          } catch (error) {
+            addError('Exception in onDragStart', { error: error.message, tokenId: token.id });
           }
-          
-          handleDragStart(token.id, e);
         }}
         onDragMove={(e) => {
-          // Убираем реалтайм обновления - они мешают корректному drag & drop
-          console.log('🔄 TOKEN DRAG MOVE:', token.id, 'pos:', e.target.x(), e.target.y());
+          try {
+            // Убираем реалтайм обновления - они мешают корректному drag & drop
+            console.log('🔄 TOKEN DRAG MOVE:', token.id, 'pos:', e.target.x(), e.target.y());
+          } catch (error) {
+            addError('Exception in onDragMove', { error: error.message, tokenId: token.id });
+          }
         }}
         onDragEnd={(e) => {
-          logMouseEvent('token_drag_end', e, token.id);
-          console.log('🎯 TOKEN DRAG END:', token.id, 'target pos:', e.target.x(), e.target.y());
-          
-          // Проверяем права доступа
-          if (!isDM && token.controlledBy !== currentUserId) {
-            console.log('❌ NO ACCESS TO END DRAG');
-            return;
+          try {
+            logMouseEvent('token_drag_end', e, token.id);
+            console.log('🎯 TOKEN DRAG END EVENT:', token.id, 'target pos:', e.target.x(), e.target.y());
+            
+            // Проверяем права доступа
+            if (!isDM && token.controlledBy !== currentUserId) {
+              console.log('❌ NO ACCESS TO END DRAG');
+              addError(`Drag end prevented - no access to token: ${token.id}`);
+              return;
+            }
+            
+            handleDragEnd(token.id, e.target.x(), e.target.y(), e);
+          } catch (error) {
+            addError('Exception in onDragEnd', { error: error.message, tokenId: token.id });
           }
-          
-          handleDragEnd(token.id, e.target.x(), e.target.y(), e);
         }}
         onMouseEnter={() => setHoveredTokenId(token.id)}
         onMouseLeave={() => setHoveredTokenId(null)}
@@ -1007,10 +1093,30 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
                     {tokens.length === 0 && (
                       <div className="text-center py-4 text-muted-foreground text-sm">
                         Нет токенов на карте
-                      </div>
-                    )}
-                  </div>
-                </TabsContent>
+                       </div>
+                     )}
+                   </div>
+                   
+                   {/* Error Log Panel - показываем только если есть ошибки */}
+                   {errorLog.length > 0 && (
+                     <div className="mt-4 p-3 bg-red-900/20 border border-red-500/30 rounded">
+                       <h4 className="text-red-400 font-semibold mb-2">🚨 Ошибки перемещения:</h4>
+                       <div className="text-xs text-red-300 space-y-1 max-h-32 overflow-y-auto">
+                         {errorLog.slice(-5).map((error, i) => (
+                           <div key={i}>{error}</div>
+                         ))}
+                       </div>
+                       <Button 
+                         size="sm" 
+                         variant="ghost" 
+                         onClick={() => setErrorLog([])}
+                         className="mt-2 text-red-400 hover:text-red-300"
+                       >
+                         Очистить лог
+                       </Button>
+                     </div>
+                   )}
+                 </TabsContent>
                 
                 <TabsContent value="settings" className="mt-0 space-y-4">
                   {/* Настройки сетки */}
