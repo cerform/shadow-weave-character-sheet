@@ -383,6 +383,20 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
           console.log('Token drag start:', token.id, 'current pos:', token.x, token.y);
           handleDragStart(token.id, e);
         }}
+        onDragMove={(e) => {
+          // Обновляем позицию в реальном времени во время перетаскивания
+          if (draggedTokenId === token.id) {
+            const newX = e.target.x();
+            const newY = e.target.y();
+            console.log('Token drag move:', token.id, 'new pos:', newX, newY);
+            
+            // Немедленно обновляем состояние для визуального отклика
+            const updatedTokens = currentTokens.map(t => 
+              t.id === token.id ? { ...t, x: newX, y: newY } : t
+            );
+            setCurrentTokens(updatedTokens);
+          }
+        }}
         onDragEnd={(e) => {
           console.log('Token drag end:', token.id, 'target pos:', e.target.x(), e.target.y());
           handleDragEnd(token.id, e.target.x(), e.target.y());
