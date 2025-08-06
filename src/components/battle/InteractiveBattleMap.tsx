@@ -689,56 +689,57 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
         )}
 
         {/* Основная область карты */}
-        <div className="flex-1 overflow-hidden bg-muted/20 p-4 flex flex-col">
-          <div className="border border-border rounded-lg overflow-hidden bg-card relative flex-1 min-h-0">
-            <div className="w-full h-full overflow-auto">
+        <div className="flex-1 bg-muted/20 flex flex-col h-full">
+          <div className="flex-1 bg-card relative overflow-hidden">
+            <div className="w-full h-full">
               <Stage
-                width={gridCols * gridSize}
-                height={gridRows * gridSize}
+                width={Math.max(window.innerWidth - 320, gridCols * gridSize)}
+                height={Math.max(window.innerHeight - 100, gridRows * gridSize)}
                 ref={stageRef}
-                className="cursor-crosshair"
+                className="cursor-crosshair w-full h-full"
+                scale={{ x: 1, y: 1 }}
               >
               <Layer>
-                {/* Фон карты */}
+                {/* Фон карты на всю область */}
                 {mapBg ? (
                   <Image
                     image={mapBg}
                     x={0}
                     y={0}
-                    width={gridCols * gridSize}
-                    height={gridRows * gridSize}
+                    width={Math.max(window.innerWidth - 320, gridCols * gridSize)}
+                    height={Math.max(window.innerHeight - 100, gridRows * gridSize)}
                     opacity={0.9}
                   />
                 ) : (
                   <Rect
                     x={0}
                     y={0}
-                    width={gridCols * gridSize}
-                    height={gridRows * gridSize}
+                    width={Math.max(window.innerWidth - 320, gridCols * gridSize)}
+                    height={Math.max(window.innerHeight - 100, gridRows * gridSize)}
                     fill="#0f172a"
                   />
                 )}
 
-                {/* Сетка */}
+                {/* Сетка на всю область */}
                 {showGrid && (
                   <>
-                    {Array.from({ length: gridCols + 1 }, (_, col) => (
+                    {Array.from({ length: Math.ceil((window.innerWidth - 320) / gridSize) + 1 }, (_, col) => (
                       <Rect
                         key={`grid-v-${col}`}
                         x={col * gridSize}
                         y={0}
                         width={1}
-                        height={gridRows * gridSize}
+                        height={Math.max(window.innerHeight - 100, gridRows * gridSize)}
                         fill={mapBg ? "#ffffff" : "#334155"}
                         opacity={mapBg ? 0.4 : 0.3}
                       />
                     ))}
-                    {Array.from({ length: gridRows + 1 }, (_, row) => (
+                    {Array.from({ length: Math.ceil((window.innerHeight - 100) / gridSize) + 1 }, (_, row) => (
                       <Rect
                         key={`grid-h-${row}`}
                         x={0}
                         y={row * gridSize}
-                        width={gridCols * gridSize}
+                        width={Math.max(window.innerWidth - 320, gridCols * gridSize)}
                         height={1}
                         fill={mapBg ? "#ffffff" : "#334155"}
                         opacity={mapBg ? 0.4 : 0.3}
@@ -748,7 +749,7 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
                     {/* Координаты (только для больших размеров клеток) */}
                     {gridSize >= 64 && (
                       <>
-                        {Array.from({ length: gridCols }, (_, col) => (
+                        {Array.from({ length: Math.ceil((window.innerWidth - 320) / gridSize) }, (_, col) => (
                           <Text
                             key={`coord-x-${col}`}
                             text={(col + 1).toString()}
@@ -761,7 +762,7 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
                             strokeWidth={mapBg ? 1 : 0}
                           />
                         ))}
-                        {Array.from({ length: gridRows }, (_, row) => (
+                        {Array.from({ length: Math.ceil((window.innerHeight - 100) / gridSize) }, (_, row) => (
                           <Text
                             key={`coord-y-${row}`}
                             text={String.fromCharCode(65 + row)} // A, B, C...
@@ -782,7 +783,7 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
                 {/* Токены */}
                 {tokens.map(renderToken)}
               </Layer>
-              </Stage>
+            </Stage>
             </div>
             
             {/* Индикатор масштаба карты */}
@@ -796,8 +797,8 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
       </div>
 
       {/* Статистика карты */}
-      <div className="px-4 py-2 bg-card border-t border-border flex justify-between text-sm text-muted-foreground">
-        <span>Размер: {gridCols}×{gridRows} клеток ({gridSize}px/клетка)</span>
+      <div className="px-4 py-2 bg-card border-t border-border flex justify-between text-sm text-muted-foreground h-12">
+        <span>Размер: {Math.ceil((window.innerWidth - 320) / gridSize)}×{Math.ceil((window.innerHeight - 100) / gridSize)} клеток ({gridSize}px/клетка)</span>
         <span>Токенов на карте: {tokens.length}</span>
         <span>Режим: {isDM ? 'Мастер подземелий' : 'Игрок'}</span>
       </div>
