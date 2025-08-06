@@ -565,34 +565,12 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
     setStagePosition(newPos);
   }, []);
 
-  // Обработчики для панорамирования
-  const handleStageMouseDown = useCallback((e: any) => {
-    // Только если клик не по токену и зажат пробел или средняя кнопка мыши
-    if (e.target === e.target.getStage() && (e.evt.button === 1 || e.evt.ctrlKey)) {
-      setIsPanning(true);
+  // Обработка панорамирования карты
+  const handleStageDragEnd = useCallback((e: any) => {
+    // Только если это сама карта, а не токен
+    if (e.target === e.target.getStage()) {
+      setStagePosition({ x: e.target.x(), y: e.target.y() });
     }
-  }, []);
-
-  const handleStageMouseMove = useCallback((e: any) => {
-    if (!isPanning) return;
-    
-    const stage = stageRef.current;
-    if (!stage) return;
-
-    const dx = e.evt.movementX;
-    const dy = e.evt.movementY;
-    
-    const newPos = {
-      x: stage.x() + dx,
-      y: stage.y() + dy
-    };
-    
-    stage.position(newPos);
-    setStagePosition(newPos);
-  }, [isPanning]);
-
-  const handleStageMouseUp = useCallback(() => {
-    setIsPanning(false);
   }, []);
 
   return (
@@ -604,10 +582,9 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
           height={windowSize.height}
           ref={stageRef}
           className="w-full h-full"
+          draggable={true}
           onWheel={handleWheel}
-          onMouseDown={handleStageMouseDown}
-          onMouseMove={handleStageMouseMove}
-          onMouseUp={handleStageMouseUp}
+          onDragEnd={handleStageDragEnd}
           scaleX={mapScale}
           scaleY={mapScale}
           x={stagePosition.x}
