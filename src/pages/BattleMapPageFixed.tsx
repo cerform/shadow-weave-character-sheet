@@ -5,6 +5,7 @@ import { Home } from 'lucide-react';
 import InteractiveBattleMap, { Token } from '@/components/battle/InteractiveBattleMap';
 
 const BattleMapPageFixed: React.FC = () => {
+  console.log('🔍 BattleMapPageFixed: компонент загружается');
   const navigate = useNavigate();
   
   // Состояние для токенов и карты
@@ -55,6 +56,14 @@ const BattleMapPageFixed: React.FC = () => {
   
   const [mapUrl, setMapUrl] = useState<string>('');
 
+  console.log('🔍 BattleMapPageFixed: tokens count:', tokens.length);
+  console.log('🔍 BattleMapPageFixed: tokens:', tokens);
+
+  const handleTokensChange = (newTokens: Token[]) => {
+    console.log('🔄 BattleMapPageFixed: токены изменились:', newTokens);
+    setTokens(newTokens);
+  };
+
   return (
     <div className="w-screen h-screen bg-slate-900 text-white overflow-hidden">
       {/* Заголовок */}
@@ -86,7 +95,7 @@ const BattleMapPageFixed: React.FC = () => {
         <InteractiveBattleMap
           isDM={true}
           tokens={tokens}
-          onTokensChange={setTokens}
+          onTokensChange={handleTokensChange}
           mapImageUrl={mapUrl}
           onMapChange={setMapUrl}
         />
