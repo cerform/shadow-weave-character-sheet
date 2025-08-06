@@ -1,14 +1,18 @@
-import React, { useState, useCallback, useRef } from 'react';
-import { Stage, Layer, Rect, Text, Group, Circle } from 'react-konva';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
+import { Stage, Layer, Rect, Text, Group, Circle, Image } from 'react-konva';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Plus, Settings, RotateCcw, Zap, Shield, Heart, Eye, EyeOff } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Plus, Settings, RotateCcw, Zap, Shield, Heart, Eye, EyeOff, Map } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import SimpleTokenEditor from './SimpleTokenEditor';
+import MapUploader from './MapUploader';
+import TerrainPalette from './TerrainPalette';
+import useImage from 'use-image';
 
 const GRID_SIZE = 64; // Размер клетки в пикселях
-const ROWS = 12;
-const COLS = 16;
+const ROWS = 20;
+const COLS = 24;
 const MAP_WIDTH = COLS * GRID_SIZE;
 const MAP_HEIGHT = ROWS * GRID_SIZE;
 
@@ -38,6 +42,8 @@ interface InteractiveBattleMapProps {
   onTokensChange?: (tokens: Token[]) => void;
   activeTokenId?: string;
   onTokenSelect?: (tokenId: string) => void;
+  mapImageUrl?: string;
+  onMapChange?: (imageUrl: string) => void;
 }
 
 const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
@@ -45,7 +51,9 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
   tokens: externalTokens,
   onTokensChange,
   activeTokenId,
-  onTokenSelect
+  onTokenSelect,
+  mapImageUrl,
+  onMapChange
 }) => {
   const { toast } = useToast();
   const stageRef = useRef(null);
@@ -108,6 +116,13 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
   const [selectedToken, setSelectedToken] = useState<Token | null>(null);
   const [editingToken, setEditingToken] = useState<Token | null>(null);
   const [showGrid, setShowGrid] = useState(true);
+  const [mapImage, setMapImage] = useState<string | null>(mapImageUrl || null);
+  const [mapScale, setMapScale] = useState(100);
+  const [selectedTerrain, setSelectedTerrain] = useState(null);
+  const [activeTab, setActiveTab] = useState('tokens');
+  
+  // Загружаем изображение карты
+  const [mapBg] = useImage(mapImage || '');
 
   // Привязка к сетке
   const snapToGrid = useCallback((value: number) => {
@@ -460,104 +475,161 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
     });
   }, [tokens, onTokensChange, toast]);
 
+  // Обработка загрузки карты
+  const handleMapLoaded = useCallback((imageUrl: string, scale?: number) => {
+    setMapImage(imageUrl);
+    if (scale) setMapScale(scale);
+    if (onMapChange) {
+      onMapChange(imageUrl);
+    }
+    toast({
+      title: "Карта загружена",
+      description: "Фоновая карта успешно установлена",
+    });
+  }, [onMapChange, toast]);
+
+  const handleMapRemove = useCallback(() => {
+    setMapImage(null);
+    if (onMapChange) {
+      onMapChange('');
+    }
+    toast({
+      title: "Карта удалена",
+      description: "Фоновая карта была удалена",
+    });
+  }, [onMapChange, toast]);
+
+  const handleTerrainSelect = useCallback((terrain: any) => {
+    setSelectedTerrain(terrain);
+    toast({
+      title: "Элемент выбран",
+      description: `Выбран: ${terrain.name}`,
+    });
+  }, [toast]);
+
   return (
     <div className="min-h-screen bg-background text-foreground">
       <div className="flex h-screen">
         {/* Левая панель с инструментами для DM */}
         {isDM && (
-          <div className="w-80 bg-card border-r border-border p-4 space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg">
-                  <Settings className="h-5 w-5" />
-                  Управление картой
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <Button 
-                  onClick={addToken}
-                  className="w-full"
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Добавить токен
-                </Button>
-                
-                <Button 
-                  onClick={() => setShowGrid(!showGrid)}
-                  variant="outline"
-                  className="w-full"
-                >
-                  {showGrid ? <EyeOff className="w-4 h-4 mr-2" /> : <Eye className="w-4 h-4 mr-2" />}
-                  {showGrid ? 'Скрыть сетку' : 'Показать сетку'}
-                </Button>
+          <div className="w-80 bg-card border-r border-border p-4">
+            <Tabs value={activeTab} onValueChange={setActiveTab}>
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="tokens">Токены</TabsTrigger>
+                <TabsTrigger value="map">Карта</TabsTrigger>
+                <TabsTrigger value="terrain">Ландшафт</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="tokens" className="space-y-4 mt-4">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-lg">
+                      <Settings className="h-5 w-5" />
+                      Управление токенами
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <Button 
+                      onClick={addToken}
+                      className="w-full"
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      Добавить токен
+                    </Button>
+                    
+                    <Button 
+                      onClick={() => setShowGrid(!showGrid)}
+                      variant="outline"
+                      className="w-full"
+                    >
+                      {showGrid ? <EyeOff className="w-4 h-4 mr-2" /> : <Eye className="w-4 h-4 mr-2" />}
+                      {showGrid ? 'Скрыть сетку' : 'Показать сетку'}
+                    </Button>
 
-                <Button 
-                  onClick={() => {
-                    if (onTokensChange) {
-                      onTokensChange([]);
-                    } else {
-                      setInternalTokens([]);
-                    }
-                    toast({
-                      title: "Карта очищена",
-                      description: "Все токены удалены с карты",
-                    });
-                  }}
-                  variant="destructive"
-                  className="w-full"
-                >
-                  <RotateCcw className="w-4 h-4 mr-2" />
-                  Очистить карту
-                </Button>
-              </CardContent>
-            </Card>
+                    <Button 
+                      onClick={() => {
+                        if (onTokensChange) {
+                          onTokensChange([]);
+                        } else {
+                          setInternalTokens([]);
+                        }
+                        toast({
+                          title: "Карта очищена",
+                          description: "Все токены удалены с карты",
+                        });
+                      }}
+                      variant="destructive"
+                      className="w-full"
+                    >
+                      <RotateCcw className="w-4 h-4 mr-2" />
+                      Очистить токены
+                    </Button>
+                  </CardContent>
+                </Card>
 
-            {/* Список токенов */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Токены ({tokens.length})</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2 max-h-96 overflow-y-auto">
-                {tokens.map(token => (
-                  <div 
-                    key={token.id}
-                    className={`p-3 rounded-lg cursor-pointer border transition-colors ${
-                      selectedToken?.id === token.id 
-                        ? 'bg-primary/10 border-primary' 
-                        : 'bg-muted border-border hover:bg-muted/80'
-                    }`}
-                    onClick={() => handleTokenClick(token)}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <div 
-                          className="w-4 h-4 rounded-full border-2 border-white"
-                          style={{ backgroundColor: token.color }}
-                        />
-                        <span className="text-sm font-medium">{token.name}</span>
+                {/* Список токенов */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Токены ({tokens.length})</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2 max-h-96 overflow-y-auto">
+                    {tokens.map(token => (
+                      <div 
+                        key={token.id}
+                        className={`p-3 rounded-lg cursor-pointer border transition-colors ${
+                          selectedToken?.id === token.id 
+                            ? 'bg-primary/10 border-primary' 
+                            : 'bg-muted border-border hover:bg-muted/80'
+                        }`}
+                        onClick={() => handleTokenClick(token)}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <div 
+                              className="w-4 h-4 rounded-full border-2 border-white"
+                              style={{ backgroundColor: token.color }}
+                            />
+                            <span className="text-sm font-medium">{token.name}</span>
+                          </div>
+                          <span className="text-xs text-muted-foreground capitalize">{token.type}</span>
+                        </div>
+                        {token.hp !== undefined && (
+                          <div className="mt-2 text-xs text-muted-foreground">
+                            HP: {token.hp}/{token.maxHp} • AC: {token.ac}
+                          </div>
+                        )}
+                        {token.conditions && token.conditions.length > 0 && (
+                          <div className="mt-1 text-xs text-muted-foreground">
+                            Состояния: {token.conditions.join(', ')}
+                          </div>
+                        )}
                       </div>
-                      <span className="text-xs text-muted-foreground capitalize">{token.type}</span>
-                    </div>
-                    {token.hp !== undefined && (
-                      <div className="mt-2 text-xs text-muted-foreground">
-                        HP: {token.hp}/{token.maxHp} • AC: {token.ac}
-                      </div>
-                    )}
-                    {token.conditions && token.conditions.length > 0 && (
-                      <div className="mt-1 text-xs text-muted-foreground">
-                        Состояния: {token.conditions.join(', ')}
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
+                    ))}
+                  </CardContent>
+                </Card>
+              </TabsContent>
+              
+              <TabsContent value="map" className="space-y-4 mt-4">
+                <MapUploader
+                  onMapLoaded={handleMapLoaded}
+                  currentMapUrl={mapImage}
+                  onMapRemove={handleMapRemove}
+                />
+              </TabsContent>
+              
+              <TabsContent value="terrain" className="space-y-4 mt-4">
+                <TerrainPalette
+                  onElementSelect={handleTerrainSelect}
+                  selectedElement={selectedTerrain}
+                />
+              </TabsContent>
+            </Tabs>
           </div>
         )}
 
         {/* Основная область карты */}
         <div className="flex-1 overflow-auto bg-muted/20 p-4">
-          <div className="border border-border rounded-lg overflow-hidden bg-card">
+          <div className="border border-border rounded-lg overflow-hidden bg-card relative">
             <Stage
               width={MAP_WIDTH}
               height={MAP_HEIGHT}
@@ -566,13 +638,24 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
             >
               <Layer>
                 {/* Фон карты */}
-                <Rect
-                  x={0}
-                  y={0}
-                  width={MAP_WIDTH}
-                  height={MAP_HEIGHT}
-                  fill="#0f172a"
-                />
+                {mapBg ? (
+                  <Image
+                    image={mapBg}
+                    x={0}
+                    y={0}
+                    width={MAP_WIDTH}
+                    height={MAP_HEIGHT}
+                    opacity={0.9}
+                  />
+                ) : (
+                  <Rect
+                    x={0}
+                    y={0}
+                    width={MAP_WIDTH}
+                    height={MAP_HEIGHT}
+                    fill="#0f172a"
+                  />
+                )}
 
                 {/* Сетка */}
                 {showGrid && (
@@ -584,8 +667,8 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
                         y={0}
                         width={1}
                         height={MAP_HEIGHT}
-                        fill="#334155"
-                        opacity={0.3}
+                        fill={mapBg ? "#ffffff" : "#334155"}
+                        opacity={mapBg ? 0.4 : 0.3}
                       />
                     ))}
                     {Array.from({ length: ROWS + 1 }, (_, row) => (
@@ -595,8 +678,8 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
                         y={row * GRID_SIZE}
                         width={MAP_WIDTH}
                         height={1}
-                        fill="#334155"
-                        opacity={0.3}
+                        fill={mapBg ? "#ffffff" : "#334155"}
+                        opacity={mapBg ? 0.4 : 0.3}
                       />
                     ))}
 
@@ -606,10 +689,12 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
                         key={`coord-x-${col}`}
                         text={(col + 1).toString()}
                         fontSize={12}
-                        fill="#64748b"
+                        fill={mapBg ? "#000000" : "#64748b"}
                         x={col * GRID_SIZE + GRID_SIZE / 2 - 6}
                         y={4}
                         fontFamily="monospace"
+                        stroke={mapBg ? "#ffffff" : "transparent"}
+                        strokeWidth={mapBg ? 1 : 0}
                       />
                     ))}
                     {Array.from({ length: ROWS }, (_, row) => (
@@ -617,10 +702,12 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
                         key={`coord-y-${row}`}
                         text={String.fromCharCode(65 + row)} // A, B, C...
                         fontSize={12}
-                        fill="#64748b"
+                        fill={mapBg ? "#000000" : "#64748b"}
                         x={4}
                         y={row * GRID_SIZE + GRID_SIZE / 2 - 6}
                         fontFamily="monospace"
+                        stroke={mapBg ? "#ffffff" : "transparent"}
+                        strokeWidth={mapBg ? 1 : 0}
                       />
                     ))}
                   </>
@@ -630,6 +717,13 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
                 {tokens.map(renderToken)}
               </Layer>
             </Stage>
+            
+            {/* Индикатор масштаба карты */}
+            {mapImage && (
+              <div className="absolute top-4 right-4 bg-black/50 text-white px-2 py-1 rounded text-sm">
+                Масштаб: {mapScale}%
+              </div>
+            )}
           </div>
         </div>
       </div>
