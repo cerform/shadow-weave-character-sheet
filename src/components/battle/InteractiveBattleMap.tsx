@@ -218,11 +218,11 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
     console.log('Token after:', updatedTokens.find(t => t.id === tokenId));
 
     // Принудительно обновляем состояние
-    setCurrentTokens(updatedTokens);
+    setCurrentTokens([...updatedTokens]); // Создаем новую ссылку на массив
     
     // Если есть внешний обработчик, тоже его вызываем
     if (onTokensChange) {
-      onTokensChange(updatedTokens);
+      onTokensChange([...updatedTokens]);
     }
     
     setDraggedTokenId(null);
@@ -708,12 +708,15 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
   // Удаление токена
   const handleDeleteToken = useCallback((id: string) => {
     const token = tokens.find(t => t.id === id);
+    const filteredTokens = tokens.filter(token => token.id !== id);
+    
+    // Принудительно обновляем состояние с новой ссылкой на массив
+    setCurrentTokens([...filteredTokens]);
+    
     if (onTokensChange) {
-      const filteredTokens = tokens.filter(token => token.id !== id);
-      onTokensChange(filteredTokens);
-    } else {
-      setInternalTokens(prev => prev.filter(token => token.id !== id));
+      onTokensChange([...filteredTokens]);
     }
+    
     setEditingToken(null);
     setSelectedToken(null);
     toast({
@@ -814,33 +817,44 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
                 <TabsContent value="tokens" className="mt-0 space-y-2">
                   <h3 className="font-medium mb-2">Активные токены ({tokens.length})</h3>
                   <div className="space-y-2 max-h-64 overflow-y-auto">
-                    {tokens.map(token => (
-                      <div 
-                        key={token.id}
-                        className={`p-3 rounded border cursor-pointer transition-colors ${
-                          selectedToken?.id === token.id 
-                            ? 'bg-primary/10 border-primary' 
-                            : 'bg-muted border-border hover:bg-muted/80'
-                        }`}
-                        onClick={() => handleTokenClick(token)}
-                      >
-                        <div className="flex items-center gap-2">
-                          <div 
-                            className="w-4 h-4 rounded-full border-2 border-white flex-shrink-0"
-                            style={{ backgroundColor: token.color }}
-                          />
-                          <div className="flex-1 min-w-0">
-                            <div className="font-medium text-sm truncate">{token.name}</div>
-                            <div className="text-xs text-muted-foreground">
-                              HP: {token.hp}/{token.maxHp} | AC: {token.ac}
-                            </div>
-                            <div className="text-xs text-muted-foreground">
-                              {token.type} | Позиция: ({Math.floor(token.x/gridSize)}, {Math.floor(token.y/gridSize)})
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
+                     {tokens.map(token => (
+                       <div 
+                         key={token.id}
+                         className={`p-3 rounded border cursor-pointer transition-colors group ${
+                           selectedToken?.id === token.id 
+                             ? 'bg-primary/10 border-primary' 
+                             : 'bg-muted border-border hover:bg-muted/80'
+                         }`}
+                         onClick={() => handleTokenClick(token)}
+                       >
+                         <div className="flex items-center gap-2">
+                           <div 
+                             className="w-4 h-4 rounded-full border-2 border-white flex-shrink-0"
+                             style={{ backgroundColor: token.color }}
+                           />
+                           <div className="flex-1 min-w-0">
+                             <div className="font-medium text-sm truncate">{token.name}</div>
+                             <div className="text-xs text-muted-foreground">
+                               HP: {token.hp}/{token.maxHp} | AC: {token.ac}
+                             </div>
+                             <div className="text-xs text-muted-foreground">
+                               {token.type} | Позиция: ({Math.floor(token.x/gridSize)}, {Math.floor(token.y/gridSize)})
+                             </div>
+                           </div>
+                           <Button
+                             size="sm"
+                             variant="destructive"
+                             onClick={(e) => {
+                               e.stopPropagation();
+                               handleDeleteToken(token.id);
+                             }}
+                             className="opacity-0 group-hover:opacity-100 transition-opacity"
+                           >
+                             ×
+                           </Button>
+                         </div>
+                       </div>
+                     ))}
                     {tokens.length === 0 && (
                       <div className="text-center py-4 text-muted-foreground text-sm">
                         Нет токенов на карте
