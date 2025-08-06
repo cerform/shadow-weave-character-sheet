@@ -227,6 +227,9 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
       logMouseEvent('drag_start', e, tokenId);
       console.log('🎯 DRAG START - BEGIN');
       
+      // Сбрасываем предыдущее состояние draggedTokenId перед началом нового drag
+      setDraggedTokenId(null);
+      
       const token = tokens.find(t => t.id === tokenId);
       if (!token) {
         addError(`Token not found: ${tokenId}`, { availableTokens: tokens.map(t => t.id) });
@@ -239,7 +242,8 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
         canDrag: isDM || token.controlledBy === currentUserId,
         isDM,
         controlledBy: token.controlledBy,
-        currentUserId
+        currentUserId,
+        previousDraggedTokenId: draggedTokenId
       });
       
       // Проверяем права доступа
@@ -258,14 +262,17 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
         return;
       }
       
-      console.log('✅ DRAG ALLOWED - setting dragged token');
-      setDraggedTokenId(tokenId);
-      console.log('🎯 DRAG START - END');
+      // Устанавливаем новое состояние с небольшой задержкой
+      setTimeout(() => {
+        console.log('✅ DRAG ALLOWED - setting dragged token to:', tokenId);
+        setDraggedTokenId(tokenId);
+        console.log('🎯 DRAG START - END');
+      }, 0);
       
     } catch (error) {
       addError('Exception in handleDragStart', { error: error.message, tokenId, stack: error.stack });
     }
-  }, [isDM, tokens, toast, currentUserId, logMouseEvent, addError]);
+  }, [isDM, tokens, toast, currentUserId, logMouseEvent, addError, draggedTokenId]);
 
   const handleDragEnd = useCallback((tokenId: string, newX: number, newY: number, e: any) => {
     try {
