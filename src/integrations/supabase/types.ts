@@ -562,6 +562,14 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_user_dm_of_session: {
+        Args: { _session_id: string }
+        Returns: boolean
+      }
+      is_user_participant_of_session: {
+        Args: { _session_id: string }
+        Returns: boolean
+      }
       join_session: {
         Args: {
           session_code_param: string
