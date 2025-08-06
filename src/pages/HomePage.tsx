@@ -131,62 +131,60 @@ const HomePage = () => {
       </div>
 
       <div className="relative z-10">
-        {/* Компактная верхняя панель */}
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex justify-between items-center">
-            {/* Логотип и название - более компактные */}
-            <div className="flex items-center space-x-2">
-              <div className="relative">
-                <Shield className="h-8 w-8 text-primary" />
-                <Sparkles className="h-3 w-3 text-accent absolute -top-0.5 -right-0.5" />
+        {/* Основной контент с интегрированным хедером */}
+        <div className="container mx-auto px-4 py-8">
+          {/* Интегрированная верхняя панель */}
+          <div className="flex justify-between items-start mb-12">
+            <div className="flex-1">
+              {/* Логотип и название */}
+              <div className="flex items-center space-x-3 mb-6">
+                <div className="relative">
+                  <Shield className="h-12 w-12 text-primary" />
+                  <Sparkles className="h-4 w-4 text-accent absolute -top-1 -right-1" />
+                </div>
+                <div>
+                  <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                    D&D Helper
+                  </h1>
+                  <p className="text-muted-foreground">Ваш цифровой помощник для D&D 5e</p>
+                </div>
               </div>
-              <div>
-                <h1 className="text-xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                  D&D Helper
-                </h1>
-                <p className="text-xs text-muted-foreground hidden sm:block">Ваш цифровой помощник для D&D 5e</p>
+              
+              {/* Главный заголовок */}
+              <div className="max-w-4xl">
+                <h2 className="text-6xl font-bold mb-6 bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent leading-tight">
+                  Добро пожаловать в мир D&D
+                </h2>
+                <p className="text-xl text-muted-foreground">
+                  Создавайте персонажей, изучайте заклинания, проводите эпические сессии
+                </p>
               </div>
             </div>
             
-            {/* Правая панель - более компактная */}
-            <div className="flex items-center space-x-2">
-              <div className="hidden md:block">
+            {/* Правая панель управления */}
+            <div className="flex flex-col items-end space-y-4 ml-8">
+              <div className="flex items-center space-x-3">
                 <FantasyThemeSelector />
+                {isAuthenticated ? (
+                  <ProfilePreview />
+                ) : (
+                  <div className="flex items-center space-x-2">
+                    <Button 
+                      variant="outline"
+                      onClick={navigateToAuth}
+                    >
+                      Регистрация
+                    </Button>
+                    <Button 
+                      onClick={navigateToAuth}
+                      className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90"
+                    >
+                      Войти
+                    </Button>
+                  </div>
+                )}
               </div>
-              {isAuthenticated ? (
-                <ProfilePreview />
-              ) : (
-                <div className="flex items-center space-x-2">
-                  <Button 
-                    variant="outline"
-                    size="sm"
-                    onClick={navigateToAuth}
-                    className="hidden sm:flex"
-                  >
-                    Регистрация
-                  </Button>
-                  <Button 
-                    size="sm"
-                    onClick={navigateToAuth}
-                    className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90"
-                  >
-                    Войти
-                  </Button>
-                </div>
-              )}
             </div>
-          </div>
-        </div>
-
-        {/* Главный контент */}
-        <div className="container mx-auto px-4 pb-16">
-          <div className="text-center mb-16">
-            <h2 className="text-5xl font-bold mb-6 bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent">
-              Добро пожаловать в мир D&D
-            </h2>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Создавайте персонажей, изучайте заклинания, проводите эпические сессии
-            </p>
           </div>
 
           {/* Быстрые действия - Компактная сетка */}
