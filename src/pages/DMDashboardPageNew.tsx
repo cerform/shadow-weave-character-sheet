@@ -39,11 +39,14 @@ const DMDashboardPageNew: React.FC = () => {
 
     try {
       setIsCreating(true);
+      console.log('🎮 Создание сессии:', { sessionName, sessionDescription });
       
       const newSession = await sessionService.createSession(
         sessionName.trim(), 
         sessionDescription.trim() || undefined
       );
+      
+      console.log('✅ Сессия создана успешно:', newSession);
       
       toast({
         title: "Сессия создана",

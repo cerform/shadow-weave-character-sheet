@@ -33,7 +33,7 @@ const FloatingActionWidget: React.FC = () => {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
   const { theme, setTheme, themeStyles } = useTheme();
-  const { setUserTheme } = useUserTheme();
+  const { activeTheme, setUserTheme } = useUserTheme();
 
   // Скрываем виджет на определенных страницах
   useEffect(() => {
@@ -56,29 +56,13 @@ const FloatingActionWidget: React.FC = () => {
   const handleThemeChange = (themeName: string) => {
     console.log('🎨 Смена темы на:', themeName);
     
-    // Применяем тему через основной хук
+    // Применяем тему через UserTheme хук (основной)
+    setUserTheme(themeName);
+    
+    // Также устанавливаем через обычный theme хук для совместимости
     setTheme(themeName);
     
-    // Принудительно применяем CSS переменные
-    const selectedTheme = themes[themeName as keyof typeof themes] || themes.default;
-    document.documentElement.setAttribute('data-theme', themeName);
-    document.body.className = '';
-    document.body.classList.add(`theme-${themeName}`);
-    
-    // Устанавливаем CSS переменные напрямую
-    document.documentElement.style.setProperty('--background', selectedTheme.background);
-    document.documentElement.style.setProperty('--foreground', selectedTheme.foreground);
-    document.documentElement.style.setProperty('--primary', selectedTheme.primary);
-    document.documentElement.style.setProperty('--accent', selectedTheme.accent);
-    document.documentElement.style.setProperty('--text', selectedTheme.textColor);
-    document.documentElement.style.setProperty('--card-bg', selectedTheme.cardBackground);
-    
-    // Сохраняем в localStorage
-    localStorage.setItem('theme', themeName);
-    localStorage.setItem('userTheme', themeName);
-    localStorage.setItem('dnd-theme', themeName);
-    
-    console.log('✅ Тема применена:', themeName, selectedTheme);
+    console.log('✅ Тема применена:', themeName);
   };
 
   const quickActions = [
@@ -167,7 +151,7 @@ const FloatingActionWidget: React.FC = () => {
           <DropdownMenuLabel>Выберите тему</DropdownMenuLabel>
           {themeOptions.map((option) => {
             const themeColor = themes[option.name as keyof typeof themes]?.accent || themes.default.accent;
-            const isActive = theme === option.name;
+            const isActive = activeTheme === option.name; // Используем activeTheme вместо theme
             
             return (
               <DropdownMenuItem
