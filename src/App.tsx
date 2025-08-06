@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router } from 'react-router-dom';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { AuthProvider } from '@/contexts/SupabaseAuthContext';
 import { CharacterProvider } from '@/contexts/CharacterContext';
@@ -8,23 +8,9 @@ import { SessionProvider } from '@/contexts/SessionContext';
 import { SocketProvider } from '@/contexts/SocketContext';
 import { Toaster } from '@/components/ui/toaster';
 import NavigationButtons from '@/components/ui/NavigationButtons';
-import HomePage from '@/pages/HomePage';
-import CharacterCreationPage from '@/pages/CharacterCreationPage';
-import CharactersListPage from '@/pages/CharactersListPage';
-import CharacterSheetPage from '@/pages/CharacterSheetPage';
-import AuthPage from '@/pages/AuthPage';
-import UserProfilePage from '@/pages/UserProfilePage';
-import DMPanel from '@/components/session/DMPanel';
-import PlayerSessionPage from '@/pages/PlayerSessionPage';
-import DMSessionPage from '@/pages/DMSessionPage';
-import HandbookPage from '@/pages/HandbookPage';
-import SpellbookPage from '@/pages/SpellbookPage';
-import DebugPage from '@/pages/DebugPage';
-import NotFound from '@/pages/NotFound';
-import CharacterManagementPage from '@/pages/CharacterManagementPage';
-import DndSpellsPage from '@/pages/DndSpellsPage';
 import BackgroundWrapper from '@/components/layout/BackgroundWrapper';
 import UnifiedFloatingWidget from '@/components/ui/UnifiedFloatingWidget';
+import AppRoutes from '@/AppRoutes';
 
 function App() {
   return (
@@ -37,29 +23,9 @@ function App() {
               <Router>
                 <BackgroundWrapper>
                   <NavigationButtons />
-                  <Routes>
-                    <Route path="/" element={<HomePage />} />
-                    <Route path="/auth" element={<AuthPage />} />
-                    <Route path="/profile" element={<UserProfilePage />} />
-                    <Route path="/character-creation" element={<CharacterCreationPage />} />
-                    <Route path="/character" element={<CharacterCreationPage />} />
-                    <Route path="/characters" element={<CharactersListPage />} />
-                    <Route path="/recent-characters" element={<CharactersListPage />} />
-                    <Route path="/character-management" element={<CharacterManagementPage />} />
-                    <Route path="/character/:id" element={<CharacterSheetPage />} />
-                    <Route path="/character-sheet/:id" element={<CharacterSheetPage />} />
-                    <Route path="/dm" element={<DMPanel />} />
-                    <Route path="/dm/session/:sessionId" element={<DMSessionPage />} />
-                    <Route path="/session" element={<PlayerSessionPage />} />
-                    <Route path="/dm-session/:sessionId" element={<DMSessionPage />} />
-                    <Route path="/handbook" element={<HandbookPage />} />
-                    <Route path="/spellbook" element={<SpellbookPage />} />
-                    <Route path="/dnd-spells" element={<DndSpellsPage />} />
-                    <Route path="/debug" element={<DebugPage />} />
-                     <Route path="*" element={<NotFound />} />
-                   </Routes>
-                   <Toaster />
-                   <UnifiedFloatingWidget />
+                  <AppRoutes />
+                  <Toaster />
+                  <UnifiedFloatingWidget />
                  </BackgroundWrapper>
               </Router>
               </SocketProvider>
