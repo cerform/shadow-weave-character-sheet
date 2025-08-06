@@ -7,6 +7,7 @@ import { Slider } from '@/components/ui/slider';
 import { Upload, Download, FolderOpen, X, RotateCcw, ZoomIn, ZoomOut } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useParams } from 'react-router-dom';
 
 interface MapUploaderProps {
   onMapLoaded: (imageUrl: string, scale?: number) => void;
@@ -20,6 +21,7 @@ const MapUploader: React.FC<MapUploaderProps> = ({
   onMapRemove
 }) => {
   const { toast } = useToast();
+  const { id: sessionId } = useParams<{ id: string }>();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [scale, setScale] = useState([100]);
@@ -67,11 +69,35 @@ const MapUploader: React.FC<MapUploaderProps> = ({
         .from('battle-maps')
         .getPublicUrl(filePath);
 
+      // Сохраняем карту в базе данных, если есть sessionId
+      if (sessionId) {
+        try {
+          const { error: dbError } = await supabase
+            .from('battle_maps')
+            .insert({
+              session_id: sessionId,
+              name: file.name,
+              image_url: data.publicUrl,
+              width: 800,
+              height: 600,
+              grid_size: 25
+            });
+
+          if (dbError) {
+            console.warn('Не удалось сохранить карту в базе данных:', dbError);
+          } else {
+            console.log('Карта успешно сохранена в базе данных');
+          }
+        } catch (dbError) {
+          console.warn('Ошибка при сохранении карты в базе данных:', dbError);
+        }
+      }
+
       onMapLoaded(data.publicUrl, scale[0]);
       
       toast({
         title: "Карта загружена",
-        description: "Карта успешно загружена и готова к использованию",
+        description: "Карта успешно загружена и сохранена",
       });
 
     } catch (error) {
