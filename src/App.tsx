@@ -9,6 +9,7 @@ import { SocketProvider } from '@/contexts/SocketContext';
 import { Toaster } from '@/components/ui/toaster';
 
 import DynamicFantasyBackground from '@/components/layout/DynamicFantasyBackground';
+import FloatingActionWidget from '@/components/ui/FloatingActionWidget';
 import AppRoutes from '@/AppRoutes';
 
 function App() {
@@ -22,6 +23,7 @@ function App() {
               <Router>
                 <DynamicFantasyBackground>
                   <AppRoutes />
+                  <FloatingActionWidget />
                   <Toaster />
                 </DynamicFantasyBackground>
               </Router>
