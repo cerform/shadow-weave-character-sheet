@@ -25,6 +25,10 @@ export const SimpleToken: React.FC<SimpleTokenProps> = ({
 
   const handleMouseDown = (e: React.MouseEvent) => {
     e.preventDefault();
+    e.stopPropagation();
+    
+    console.log(`🎯 MOUSE DOWN: ${token.id}`);
+    
     isDragging.current = true;
     lastPosition.current = { x: e.clientX, y: e.clientY };
     onSelect(token.id);
@@ -32,28 +36,43 @@ export const SimpleToken: React.FC<SimpleTokenProps> = ({
 
     const handleMouseMove = (moveEvent: MouseEvent) => {
       if (!isDragging.current) return;
+      
+      moveEvent.preventDefault();
+      moveEvent.stopPropagation();
 
       const deltaX = moveEvent.clientX - lastPosition.current.x;
       const deltaY = moveEvent.clientY - lastPosition.current.y;
       
-      const newX = token.x + deltaX;
-      const newY = token.y + deltaY;
-      
-      onDrag(token.id, newX, newY);
-      lastPosition.current = { x: moveEvent.clientX, y: moveEvent.clientY };
+      // Проверяем что есть реальное движение
+      if (Math.abs(deltaX) > 1 || Math.abs(deltaY) > 1) {
+        const newX = token.x + deltaX;
+        const newY = token.y + deltaY;
+        
+        console.log(`🔄 DRAGGING: ${token.id} to ${newX}, ${newY}`);
+        onDrag(token.id, newX, newY);
+        lastPosition.current = { x: moveEvent.clientX, y: moveEvent.clientY };
+      }
     };
 
-    const handleMouseUp = () => {
+    const handleMouseUp = (upEvent: MouseEvent) => {
+      console.log(`🎯 MOUSE UP: ${token.id}`);
+      
       if (isDragging.current) {
         isDragging.current = false;
         onDragEnd(token.id);
+        
+        upEvent.preventDefault();
+        upEvent.stopPropagation();
       }
+      
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
+      document.removeEventListener('mouseleave', handleMouseUp);
     };
 
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
+    document.addEventListener('mousemove', handleMouseMove, { passive: false });
+    document.addEventListener('mouseup', handleMouseUp, { passive: false });
+    document.addEventListener('mouseleave', handleMouseUp, { passive: false });
   };
 
   const hpPercentage = (token.hp / token.maxHp) * 100;
@@ -61,15 +80,19 @@ export const SimpleToken: React.FC<SimpleTokenProps> = ({
 
   return (
     <div
-      className="absolute cursor-pointer select-none transition-all duration-75"
+      className="absolute select-none transition-none"
       style={{
         left: token.x - token.size / 2,
         top: token.y - token.size / 2,
         width: token.size,
         height: token.size,
-        zIndex: isDragged ? 1000 : isSelected ? 100 : 10
+        zIndex: isDragged ? 1000 : isSelected ? 100 : 10,
+        cursor: isDragged ? 'grabbing' : 'grab',
+        userSelect: 'none',
+        pointerEvents: 'auto'
       }}
       onMouseDown={handleMouseDown}
+      onContextMenu={(e) => e.preventDefault()}
     >
       {/* Token circle */}
       <div
