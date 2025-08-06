@@ -43,49 +43,16 @@ const GridHelperPlane: React.FC<{ width: number; height: number; size: number }>
   height,
   size,
 }) => {
-  const lines = [];
-
-  // Vertical lines
-  for (let x = -width / 2; x <= width / 2; x += size) {
-    lines.push(
-      <line key={`v-${x}`}>
-        <bufferGeometry>
-          <bufferAttribute
-            attach="attributes-position"
-            count={2}
-            array={new Float32Array([
-              x, 0.01, -height / 2,
-              x, 0.01, height / 2,
-            ])}
-            itemSize={3}
-          />
-        </bufferGeometry>
-        <lineBasicMaterial color="#444" />
-      </line>
-    );
-  }
-
-  // Horizontal lines
-  for (let z = -height / 2; z <= height / 2; z += size) {
-    lines.push(
-      <line key={`h-${z}`}>
-        <bufferGeometry>
-          <bufferAttribute
-            attach="attributes-position"
-            count={2}
-            array={new Float32Array([
-              -width / 2, 0.01, z,
-              width / 2, 0.01, z,
-            ])}
-            itemSize={3}
-          />
-        </bufferGeometry>
-        <lineBasicMaterial color="#444" />
-      </line>
-    );
-  }
-
-  return <>{lines}</>;
+  // Создаем простую сетку с помощью gridHelper или линий
+  return (
+    <group>
+      {/* Используем встроенный gridHelper */}
+      <gridHelper 
+        args={[Math.max(width, height), Math.max(width, height) / size]} 
+        position={[0, 0.01, 0]}
+      />
+    </group>
+  );
 };
 
 interface MapSceneProps {
