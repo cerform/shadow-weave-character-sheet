@@ -566,7 +566,16 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
   }, []);
 
   // Обработка панорамирования карты
+  const handleStageDragStart = useCallback((e: any) => {
+    // Предотвращаем перетаскивание карты если кликнули по токену
+    if (e.target !== e.target.getStage()) {
+      e.target.getStage().draggable(false);
+    }
+  }, []);
+
   const handleStageDragEnd = useCallback((e: any) => {
+    // Включаем обратно перетаскивание карты
+    e.target.getStage().draggable(true);
     // Только если это сама карта, а не токен
     if (e.target === e.target.getStage()) {
       setStagePosition({ x: e.target.x(), y: e.target.y() });
@@ -584,6 +593,7 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
           className="w-full h-full"
           draggable={true}
           onWheel={handleWheel}
+          onDragStart={handleStageDragStart}
           onDragEnd={handleStageDragEnd}
           scaleX={mapScale}
           scaleY={mapScale}
