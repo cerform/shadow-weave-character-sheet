@@ -1,7 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { 
   Dices, 
   BookOpen, 
@@ -10,12 +12,20 @@ import {
   Sparkles,
   Database,
   Menu,
-  X
+  X,
+  Home,
+  Users,
+  Crown,
+  Gamepad2,
+  User,
+  LogOut,
+  Shield
 } from 'lucide-react';
 import { DiceRollModal } from '@/components/dice/DiceRollModal';
 import FloatingSpellWidget from '@/components/spellbook/FloatingSpellWidget';
-// Удален импорт StorageCleaner
 import FantasyThemeSelector from '@/components/FantasyThemeSelector';
+import { useAuth, useProtectedRoute } from '@/hooks/use-auth';
+import { toast } from '@/hooks/use-toast';
 
 interface Position {
   x: number;
@@ -23,6 +33,10 @@ interface Position {
 }
 
 const UnifiedFloatingWidget: React.FC = () => {
+  const navigate = useNavigate();
+  const { user: currentUser, isAuthenticated, logout } = useAuth();
+  const { isAdmin, isDM } = useProtectedRoute();
+  
   const [isOpen, setIsOpen] = useState(false);
   const [isDiceModalOpen, setIsDiceModalOpen] = useState(false);
   const [isSpellWidgetOpen, setIsSpellWidgetOpen] = useState(false);
@@ -150,6 +164,36 @@ const UnifiedFloatingWidget: React.FC = () => {
     };
   }, [isDragging]);
 
+  const handleLogout = async () => {
+    try {
+      await logout();
+      toast({
+        title: "Выход выполнен",
+        description: "Вы успешно вышли из системы"
+      });
+      setIsOpen(false);
+    } catch (error) {
+      console.error("Ошибка при выходе:", error);
+      toast({
+        title: "Ошибка",
+        description: "Не удалось выйти из системы",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const navItems = [
+    { path: '/', icon: Home, label: 'Главная' },
+    { path: '/characters', icon: Users, label: 'Персонажи' },
+    { path: '/dm', icon: Crown, label: 'Мастер' },
+    { path: '/session', icon: Gamepad2, label: 'Сессия' },
+  ];
+
+  const handleNavigate = (path: string) => {
+    navigate(path);
+    setIsOpen(false);
+  };
+
   const tools = [
     {
       icon: Dices,
@@ -240,17 +284,97 @@ const UnifiedFloatingWidget: React.FC = () => {
           >
             <Card className="border-none shadow-2xl">
               <CardContent className="p-0">
-                {/* Заголовок */}
-                <div className="p-4 border-b border-border/50 bg-gradient-to-r from-primary/10 to-accent/10">
-                  <div className="flex items-center gap-2">
-                    <Sparkles className="h-5 w-5 text-primary" />
-                    <h3 className="font-fantasy-header text-lg text-primary">
-                      Инструменты
-                    </h3>
+                {/* Профиль пользователя */}
+                {isAuthenticated && currentUser && (
+                  <div className="p-4 border-b border-border/50 bg-gradient-to-r from-primary/10 to-accent/10">
+                    <div className="flex items-center gap-3 mb-3">
+                      <Avatar className="h-10 w-10 border-2 border-primary/30">
+                        <AvatarImage src={`https://api.dicebear.com/7.x/adventurer/svg?seed=${currentUser.username || currentUser.email}`} />
+                        <AvatarFallback className="bg-primary/20">
+                          {(currentUser.username || currentUser.email || "").substring(0, 2).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1">
+                        <h3 className="font-medium text-sm">
+                          {currentUser.username || currentUser.displayName || currentUser.email || "Искатель приключений"}
+                        </h3>
+                        <p className="text-xs text-muted-foreground">
+                          {isAdmin ? "👑 Администратор" : isDM ? "🎩 Мастер" : "🎲 Игрок"}
+                        </p>
+                      </div>
+                    </div>
+                    
+                    {/* Кнопки профиля */}
+                    <div className="grid grid-cols-2 gap-2">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        className="text-xs"
+                        onClick={() => handleNavigate('/profile')}
+                      >
+                        <User className="h-3 w-3 mr-1" />
+                        Профиль
+                      </Button>
+                      
+                      {isDM && (
+                        <Button 
+                          variant="outline"
+                          size="sm"
+                          className="text-xs"
+                          onClick={() => handleNavigate('/dm')}
+                        >
+                          <Shield className="h-3 w-3 mr-1" />
+                          Панель DM
+                        </Button>
+                      )}
+                      
+                      {isAdmin && (
+                        <Button 
+                          variant="outline"
+                          size="sm"
+                          className="text-xs"
+                          onClick={() => handleNavigate('/admin')}
+                        >
+                          <Shield className="h-3 w-3 mr-1" />
+                          Админ
+                        </Button>
+                      )}
+                      
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        className="text-xs"
+                        onClick={handleLogout}
+                      >
+                        <LogOut className="h-3 w-3 mr-1" />
+                        Выйти
+                      </Button>
+                    </div>
                   </div>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Быстрый доступ к функциям
-                  </p>
+                )}
+                
+                {/* Навигация */}
+                <div className="p-4 border-b border-border/50">
+                  <h3 className="font-medium text-sm mb-3 flex items-center gap-2">
+                    <Menu className="h-4 w-4 text-primary" />
+                    Навигация
+                  </h3>
+                  <div className="space-y-1">
+                    {navItems.map((item) => {
+                      const Icon = item.icon;
+                      return (
+                        <Button
+                          key={item.path}
+                          variant="ghost"
+                          className="w-full justify-start h-8 text-sm"
+                          onClick={() => handleNavigate(item.path)}
+                        >
+                          <Icon className="h-4 w-4 mr-2" />
+                          {item.label}
+                        </Button>
+                      );
+                    })}
+                  </div>
                 </div>
                 
                 {/* Переключатель темы */}

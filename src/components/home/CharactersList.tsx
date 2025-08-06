@@ -67,14 +67,33 @@ const CharactersList = () => {
           <h3 className="text-lg font-fantasy-heading">
             👥 Ваши персонажи
           </h3>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={loadCharacters}
-            disabled={loading}
-          >
-            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-          </Button>
+          <div className="flex items-center gap-2">
+            {/* Интегрированная панель профиля */}
+            <div className="flex items-center gap-2 px-3 py-1 bg-primary/10 rounded-lg border border-primary/20">
+              <Avatar className="h-8 w-8 border border-primary/30">
+                <AvatarImage src={`https://api.dicebear.com/7.x/adventurer/svg?seed=${user.username || user.email}`} />
+                <AvatarFallback className="text-xs bg-primary/20">
+                  {(user.username || user.email || "").substring(0, 2).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex flex-col">
+                <span className="text-sm font-medium">
+                  {user.username || user.displayName || user.email || "Искатель приключений"}
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  {user.role === 'admin' ? "👑 Администратор" : user.role === 'dm' ? "🎩 Мастер" : "🎲 Игрок"}
+                </span>
+              </div>
+            </div>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={loadCharacters}
+              disabled={loading}
+            >
+              <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+            </Button>
+          </div>
         </div>
       </CardHeader>
       <CardContent>

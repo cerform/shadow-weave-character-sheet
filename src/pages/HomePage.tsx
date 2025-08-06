@@ -162,31 +162,9 @@ const HomePage = () => {
                 </div>
               </div>
               
-              {/* Правая панель управления */}
-              <div className="flex flex-col items-end space-y-3 ml-6">
-                <div className="flex items-center space-x-3">
-                  <FantasyThemeSelector />
-                  {isAuthenticated ? (
-                    <ProfilePreview />
-                  ) : (
-                    <div className="flex items-center space-x-2">
-                      <Button 
-                        variant="outline"
-                        size="sm"
-                        onClick={navigateToAuth}
-                      >
-                        Регистрация
-                      </Button>
-                      <Button 
-                        size="sm"
-                        onClick={navigateToAuth}
-                        className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90"
-                      >
-                        Войти
-                      </Button>
-                    </div>
-                  )}
-                </div>
+              {/* Правая панель управления - убрана, теперь в виджете */}
+              <div className="flex items-center space-y-3 ml-6">
+                <FantasyThemeSelector />
               </div>
             </div>
 
