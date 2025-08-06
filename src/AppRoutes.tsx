@@ -40,15 +40,16 @@ const LazyLoading = () => (
 
 // Компонент для защиты маршрутов DM
 const ProtectedDMRoute = ({ children }: { children: React.ReactNode }) => {
-  const { loading, canAccessDMDashboard, isAuthenticated } = useProtectedRoute();
+  const { loading, canAccessDMDashboard, isAuthenticated, isAdmin } = useProtectedRoute();
   
-  console.log('ProtectedDMRoute check:', { loading, canAccessDMDashboard, isAuthenticated });
+  console.log('ProtectedDMRoute check:', { loading, canAccessDMDashboard, isAuthenticated, isAdmin });
   
   if (loading) {
     return <LazyLoading />;
   }
   
-  if (!canAccessDMDashboard) {
+  // Админы имеют доступ ко всем DM функциям
+  if (!canAccessDMDashboard && !isAdmin) {
     console.log('Redirecting to /unauthorized - no DM access');
     return <Navigate to="/unauthorized" replace />;
   }
