@@ -19,6 +19,7 @@ import AdminPage from '@/pages/AdminPage';
 import CharactersListPage from '@/pages/CharactersListPage';
 import CharacterManagementPage from '@/pages/CharacterManagementPage';
 import DMDashboardPageNew from '@/pages/DMDashboardPageNew';
+import DMSessionPage from '@/pages/DMSessionPage';
 import BattleMapPageFixed from '@/pages/BattleMapPageFixed';
 import BattleMap3DPage from '@/pages/BattleMap3DPage';
 
@@ -167,7 +168,12 @@ const AppRoutes: React.FC = () => {
           <BattleMap3DPage />
         </ProtectedDMRoute>
       } />
-      <Route path="/dm-session/:id" element={
+      <Route path="/dm-session/:sessionId" element={
+        <ProtectedDMRoute>
+          <DMSessionPage />
+        </ProtectedDMRoute>
+      } />
+      <Route path="/game-room/:id" element={
         <ProtectedDMRoute>
           <React.Suspense fallback={<LazyLoading />}>
             <GameRoomPage />
