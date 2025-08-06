@@ -8,8 +8,6 @@ import { useToast } from '@/hooks/use-toast';
 import SimpleTokenEditor from './SimpleTokenEditor';
 import MapUploader from './MapUploader';
 import TerrainPalette from './TerrainPalette';
-import FogOfWarLayer, { VisibleArea } from './FogOfWarLayer';
-import BattleMapWidget from './BattleMapWidget';
 import useImage from 'use-image';
 
 // Доступные размеры клеток
@@ -120,14 +118,10 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
   const [gridRows, setGridRows] = useState(20);
   const [gridCols, setGridCols] = useState(24);
   const [mapImage, setMapImage] = useState<string | null>(mapImageUrl || null);
-  const [mapScale, setMapScale] = useState(1);
-  const [stagePosition, setStagePosition] = useState({ x: 0, y: 0 });
-  const [isPanning, setIsPanning] = useState(false);
+  const [mapScale, setMapScale] = useState(100);
   const [selectedTerrain, setSelectedTerrain] = useState(null);
   const [activeTab, setActiveTab] = useState('tokens');
   const [windowSize, setWindowSize] = useState({ width: 1920, height: 1080 });
-  const [showFogOfWar, setShowFogOfWar] = useState(true);
-  const [fogVisibleAreas, setFogVisibleAreas] = useState<VisibleArea[]>([]);
   
   // Устанавливаем размеры окна
   useEffect(() => {
@@ -392,6 +386,7 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
             stroke="#374151"
             strokeWidth={1}
           />
+          <Shield className="w-3 h-3" />
           <Text
             text={token.ac?.toString() || '10'}
             fontSize={8}
@@ -404,10 +399,10 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
         </Group>
 
         {/* HP бар */}
-        {token.hp !== undefined && token.maxHp !== undefined && renderHPBar(token)}
+        {renderHPBar(token)}
 
         {/* Индикаторы состояний */}
-        {token.conditions && token.conditions.length > 0 && renderConditionIndicators(token)}
+        {renderConditionIndicators(token)}
 
         {/* Индикатор активного хода */}
         {isActive && (
@@ -533,85 +528,165 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
     });
   }, [toast]);
 
-  // Обработка масштабирования карты
-  const handleWheel = useCallback((e: any) => {
-    e.evt.preventDefault();
-    
-    const stage = stageRef.current;
-    if (!stage) return;
-    
-    const scaleBy = 1.1;
-    const oldScale = stage.scaleX();
-    const pointer = stage.getPointerPosition();
-    
-    let newScale = e.evt.deltaY < 0 ? oldScale * scaleBy : oldScale / scaleBy;
-    newScale = Math.max(0.2, Math.min(3, newScale));
-    
-    const mousePointTo = {
-      x: (pointer.x - stage.x()) / oldScale,
-      y: (pointer.y - stage.y()) / oldScale,
-    };
-    
-    const newPos = {
-      x: pointer.x - mousePointTo.x * newScale,
-      y: pointer.y - mousePointTo.y * newScale,
-    };
-    
-    stage.scale({ x: newScale, y: newScale });
-    stage.position(newPos);
-    stage.batchDraw();
-    
-    setMapScale(newScale);
-    setStagePosition(newPos);
-  }, []);
-
-  // Обработка панорамирования карты
-  const handleStageMouseDown = useCallback((e: any) => {
-    // Панорамирование только если кликнули на пустое место (не на токен)
-    if (e.target === e.target.getStage()) {
-      setIsPanning(true);
-    }
-  }, []);
-
-  const handleStageMouseMove = useCallback((e: any) => {
-    if (!isPanning) return;
-    
-    const stage = stageRef.current;
-    if (!stage) return;
-
-    const dx = e.evt.movementX;
-    const dy = e.evt.movementY;
-    
-    const newPos = {
-      x: stage.x() + dx,
-      y: stage.y() + dy
-    };
-    
-    stage.position(newPos);
-    setStagePosition(newPos);
-  }, [isPanning]);
-
-  const handleStageMouseUp = useCallback(() => {
-    setIsPanning(false);
-  }, []);
-
   return (
     <div className="w-screen h-screen bg-background text-foreground flex flex-col overflow-hidden fixed inset-0">
+      {/* Верхняя панель управления */}
+      {isDM && (
+        <div className="bg-card border-b border-border p-3 shadow-sm z-10 relative">
+          <div className="flex items-center justify-between mb-2">
+            <h1 className="text-lg font-bold">Интерактивная боевая карта</h1>
+            <div className="flex items-center gap-2">
+              <Button 
+                onClick={() => setShowGrid(!showGrid)}
+                variant={showGrid ? "default" : "outline"}
+                size="sm"
+              >
+                {showGrid ? <EyeOff className="w-4 h-4 mr-2" /> : <Eye className="w-4 h-4 mr-2" />}
+                Сетка
+              </Button>
+              <Button 
+                onClick={addToken}
+                size="sm"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Добавить токен
+              </Button>
+              <Button 
+                onClick={() => {
+                  if (onTokensChange) {
+                    onTokensChange([]);
+                  } else {
+                    setInternalTokens([]);
+                  }
+                  toast({
+                    title: "Карта очищена",
+                    description: "Все токены удалены с карты",
+                  });
+                }}
+                variant="destructive"
+                size="sm"
+              >
+                <RotateCcw className="w-4 h-4 mr-2" />
+                Очистить
+              </Button>
+            </div>
+          </div>
+          
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsList className="grid w-full grid-cols-4 max-w-md">
+              <TabsTrigger value="tokens">Токены</TabsTrigger>
+              <TabsTrigger value="grid">Сетка</TabsTrigger>
+              <TabsTrigger value="map">Карта</TabsTrigger>
+              <TabsTrigger value="terrain">Ландшафт</TabsTrigger>
+            </TabsList>
+            
+            <div className="mt-2">
+              <TabsContent value="tokens" className="mt-0">
+                <div className="flex flex-wrap gap-2">
+                  {tokens.map(token => (
+                    <div 
+                      key={token.id}
+                      className={`p-2 rounded border cursor-pointer transition-colors ${
+                        selectedToken?.id === token.id 
+                          ? 'bg-primary/10 border-primary' 
+                          : 'bg-muted border-border hover:bg-muted/80'
+                      }`}
+                      onClick={() => handleTokenClick(token)}
+                    >
+                      <div className="flex items-center gap-2">
+                        <div 
+                          className="w-4 h-4 rounded-full border-2 border-white"
+                          style={{ backgroundColor: token.color }}
+                        />
+                        <span className="text-sm font-medium">{token.name}</span>
+                        <span className="text-xs text-muted-foreground">
+                          HP: {token.hp}/{token.maxHp}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </TabsContent>
+              
+              <TabsContent value="grid" className="mt-0">
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-2">
+                    <label className="text-sm font-medium">Размер клетки:</label>
+                    <div className="flex gap-1">
+                      {GRID_SIZES.map(size => (
+                        <Button
+                          key={size}
+                          variant={gridSize === size ? 'default' : 'outline'}
+                          onClick={() => setGridSize(size)}
+                          size="sm"
+                        >
+                          {size}px
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-2">
+                    <label className="text-sm font-medium">Строки:</label>
+                    <input
+                      type="number"
+                      value={gridRows}
+                      onChange={(e) => setGridRows(Math.max(1, parseInt(e.target.value) || 1))}
+                      className="w-20 px-2 py-1 border border-border rounded bg-background text-sm"
+                      min="1"
+                      max="50"
+                    />
+                  </div>
+                  
+                  <div className="flex items-center gap-2">
+                    <label className="text-sm font-medium">Столбцы:</label>
+                    <input
+                      type="number"
+                      value={gridCols}
+                      onChange={(e) => setGridCols(Math.max(1, parseInt(e.target.value) || 1))}
+                      className="w-20 px-2 py-1 border border-border rounded bg-background text-sm"
+                      min="1"
+                      max="50"
+                    />
+                  </div>
+                  
+                  <div className="text-sm text-muted-foreground">
+                    Размер: {gridCols * gridSize}×{gridRows * gridSize}px
+                  </div>
+                </div>
+              </TabsContent>
+              
+              <TabsContent value="map" className="mt-0">
+                <MapUploader
+                  onMapLoaded={handleMapLoaded}
+                  currentMapUrl={mapImage}
+                  onMapRemove={handleMapRemove}
+                />
+              </TabsContent>
+              
+              <TabsContent value="terrain" className="mt-0">
+                <TerrainPalette
+                  onElementSelect={handleTerrainSelect}
+                  selectedElement={selectedTerrain}
+                />
+              </TabsContent>
+            </div>
+          </Tabs>
+        </div>
+      )}
+
       {/* Карта на весь экран */}
-      <div className="absolute inset-0 w-full h-full">
+      <div className="absolute inset-0 w-full h-full" style={{ 
+        top: isDM ? '160px' : '0px',
+        left: '0px',
+        right: '0px', 
+        bottom: '0px'
+      }}>
         <Stage
           width={windowSize.width}
-          height={windowSize.height}
+          height={isDM ? windowSize.height - 160 : windowSize.height}
           ref={stageRef}
           className="w-full h-full"
-          onWheel={handleWheel}
-          onMouseDown={handleStageMouseDown}
-          onMouseMove={handleStageMouseMove}
-          onMouseUp={handleStageMouseUp}
-          scaleX={mapScale}
-          scaleY={mapScale}
-          x={stagePosition.x}
-          y={stagePosition.y}
         >
           <Layer>
             {/* Фон карты */}
@@ -621,7 +696,7 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
                 x={0}
                 y={0}
                 width={windowSize.width}
-                height={windowSize.height}
+                height={isDM ? windowSize.height - 160 : windowSize.height}
                 opacity={0.9}
               />
             ) : (
@@ -629,7 +704,7 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
                 x={0}
                 y={0}
                 width={windowSize.width}
-                height={windowSize.height}
+                height={isDM ? windowSize.height - 160 : windowSize.height}
                 fill="#0f172a"
               />
             )}
@@ -643,12 +718,12 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
                     x={col * gridSize}
                     y={0}
                     width={1}
-                    height={windowSize.height}
+                    height={isDM ? windowSize.height - 160 : windowSize.height}
                     fill={mapBg ? "#ffffff" : "#334155"}
                     opacity={mapBg ? 0.4 : 0.3}
                   />
                 ))}
-                {Array.from({ length: Math.ceil(windowSize.height / gridSize) + 1 }, (_, row) => (
+                {Array.from({ length: Math.ceil((isDM ? windowSize.height - 160 : windowSize.height) / gridSize) + 1 }, (_, row) => (
                   <Rect
                     key={`grid-h-${row}`}
                     x={0}
@@ -677,7 +752,7 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
                         strokeWidth={mapBg ? 1 : 0}
                       />
                     ))}
-                    {Array.from({ length: Math.ceil(windowSize.height / gridSize) }, (_, row) => (
+                    {Array.from({ length: Math.ceil((isDM ? windowSize.height - 160 : windowSize.height) / gridSize) }, (_, row) => (
                       <Text
                         key={`coord-y-${row}`}
                         text={String.fromCharCode(65 + row)}
@@ -699,71 +774,20 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
             {/* Токены */}
             {tokens.map(renderToken)}
           </Layer>
-          
-          {/* Слой тумана войны */}
-          {showFogOfWar && isDM && (
-            <Layer>
-              <FogOfWarLayer
-                width={windowSize.width}
-                height={windowSize.height}
-                gridSize={gridSize}
-                visible={showFogOfWar}
-                isDM={isDM}
-                onVisibilityChange={setFogVisibleAreas}
-                initialVisibleAreas={fogVisibleAreas}
-              />
-            </Layer>
-          )}
         </Stage>
         
         {/* Индикатор масштаба */}
-        <div className="absolute top-4 right-4 bg-black/70 text-white px-3 py-2 rounded-lg text-sm font-medium">
-          Масштаб: {Math.round(mapScale * 100)}%
-        </div>
+        {mapImage && (
+          <div className="absolute top-4 right-4 bg-black/70 text-white px-3 py-2 rounded-lg text-sm font-medium">
+            Масштаб: {mapScale}%
+          </div>
+        )}
         
         {/* Информация внизу */}
         <div className="absolute bottom-4 left-4 bg-black/70 text-white px-3 py-2 rounded-lg text-sm">
           Токенов: {tokens.length} | Размер клетки: {gridSize}px | {isDM ? 'Мастер' : 'Игрок'}
         </div>
       </div>
-
-      {/* Плавающий виджет управления для DM */}
-      {isDM && (
-        <BattleMapWidget
-          showFogOfWar={showFogOfWar}
-          onToggleFogOfWar={setShowFogOfWar}
-          fogVisibleAreas={fogVisibleAreas}
-          onFogAreasChange={setFogVisibleAreas}
-          windowSize={windowSize}
-          showGrid={showGrid}
-          onToggleGrid={setShowGrid}
-          gridSize={gridSize}
-          onGridSizeChange={setGridSize}
-          gridRows={gridRows}
-          onGridRowsChange={setGridRows}
-          gridCols={gridCols}
-          onGridColsChange={setGridCols}
-          gridSizes={GRID_SIZES}
-          tokensCount={tokens.length}
-          onAddToken={addToken}
-          onClearTokens={() => {
-            if (onTokensChange) {
-              onTokensChange([]);
-            } else {
-              setInternalTokens([]);
-            }
-            toast({
-              title: "Карта очищена",
-              description: "Все токены удалены с карты",
-            });
-          }}
-          mapImage={mapImage}
-          onMapLoaded={handleMapLoaded}
-          onMapRemove={handleMapRemove}
-          selectedTerrain={selectedTerrain}
-          onTerrainSelect={handleTerrainSelect}
-        />
-      )}
 
       {/* Редактор токена */}
       {editingToken && (
