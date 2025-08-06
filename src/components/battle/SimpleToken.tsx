@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { SimpleToken as TokenType } from '@/stores/simpleBattleStore';
 
 interface SimpleTokenProps {
@@ -22,6 +22,18 @@ export const SimpleToken: React.FC<SimpleTokenProps> = ({
 }) => {
   const isDragging = useRef(false);
   const lastPosition = useRef({ x: 0, y: 0 });
+  
+  // Локальные координаты для плавного перемещения
+  const [localX, setLocalX] = useState(token.x);
+  const [localY, setLocalY] = useState(token.y);
+  
+  // Синхронизируем локальные координаты с пропсами при изменении
+  useEffect(() => {
+    if (!isDragging.current) {
+      setLocalX(token.x);
+      setLocalY(token.y);
+    }
+  }, [token.x, token.y]);
 
   const handleMouseDown = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -45,10 +57,14 @@ export const SimpleToken: React.FC<SimpleTokenProps> = ({
       
       // Проверяем что есть реальное движение (уменьшил порог)
       if (Math.abs(deltaX) > 0.5 || Math.abs(deltaY) > 0.5) {
-        const newX = token.x + deltaX;
-        const newY = token.y + deltaY;
+        const newX = localX + deltaX;
+        const newY = localY + deltaY;
         
-        console.log(`🔄 DRAGGING: ${token.id} from ${token.x},${token.y} to ${newX}, ${newY} (delta: ${deltaX}, ${deltaY})`);
+        // Обновляем локальные координаты сразу для плавности
+        setLocalX(newX);
+        setLocalY(newY);
+        
+        console.log(`🔄 DRAGGING: ${token.id} from ${localX},${localY} to ${newX}, ${newY} (delta: ${deltaX}, ${deltaY})`);
         onDrag(token.id, newX, newY);
         lastPosition.current = { x: moveEvent.clientX, y: moveEvent.clientY };
       }
@@ -82,8 +98,8 @@ export const SimpleToken: React.FC<SimpleTokenProps> = ({
     <div
       className="absolute select-none transition-none"
       style={{
-        left: token.x - token.size / 2,
-        top: token.y - token.size / 2,
+        left: localX - token.size / 2,
+        top: localY - token.size / 2,
         width: token.size,
         height: token.size,
         zIndex: isDragged ? 1000 : isSelected ? 100 : 10,
