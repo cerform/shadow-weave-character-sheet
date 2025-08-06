@@ -35,7 +35,7 @@ const CharactersTable: React.FC<CharactersTableProps> = ({ characters, onDelete 
     console.log(`Открываем персонажа с ID: ${id}`);
     // Сохраняем ID последнего выбранного персонажа
     localStorage.setItem('last-selected-character', id);
-    navigate(`/character/${id}`);
+    navigate(`/character-sheet/${id}`);
   };
 
   // Функция удаления персонажа с индикацией загрузки
@@ -215,8 +215,8 @@ const CharactersTable: React.FC<CharactersTableProps> = ({ characters, onDelete 
                   <Button 
                     variant="ghost" 
                     size="sm"
-                    onClick={() => navigate(`/character/${character.id}`)}
-                    title="Редактировать"
+                    onClick={() => navigate(`/character-sheet/${character.id}`)}
+                    title="Открыть персонажа"
                   >
                     <Edit size={16} />
                   </Button>

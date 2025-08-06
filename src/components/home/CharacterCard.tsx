@@ -13,7 +13,7 @@ export const CharacterCard: React.FC<CharacterCardProps> = ({ character }) => {
   const navigate = useNavigate();
 
   const handleViewCharacter = () => {
-    navigate(`/character/${character.id}`);
+    navigate(`/character-sheet/${character.id}`);
   };
 
   return (

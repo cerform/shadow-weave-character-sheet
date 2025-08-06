@@ -11,6 +11,7 @@ import CharacterCreationPage from '@/pages/CharacterCreationPage';
 import ProfilePage from '@/pages/ProfilePage';
 import HandbookPage from '@/pages/HandbookPage';
 import CharacterViewPage from '@/pages/CharacterViewPage';
+import CharacterSheetPage from '@/pages/CharacterSheetPage';
 import BattleScenePage from '@/pages/BattleScenePage';
 import UnauthorizedPage from '@/pages/UnauthorizedPage';
 import DebugPage from '@/pages/DebugPage';
@@ -133,6 +134,7 @@ const AppRoutes: React.FC = () => {
       <Route path="/character-creation" element={<CharacterCreationPage />} />
       <Route path="/characters" element={<CharactersListPage />} />
       <Route path="/character/:id" element={<CharacterViewPage />} />
+      <Route path="/character-sheet/:id" element={<CharacterSheetPage />} />
       <Route path="/character-management" element={<CharacterManagementPage />} />
       
       {/* Профиль */}
