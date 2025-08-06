@@ -336,12 +336,13 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
         return;
       }
       
-      const snappedX = snapToGrid(newX);
-      const snappedY = snapToGrid(newY);
+      // Используем точные координаты без привязки к сетке
+      const snappedX = newX;
+      const snappedY = newY;
       
-      console.log('📐 SNAP TO GRID:', {
+      console.log('📐 NO GRID SNAP - using exact coordinates:', {
         original: { x: newX, y: newY },
-        snapped: { x: snappedX, y: snappedY }
+        used: { x: snappedX, y: snappedY }
       });
       
       // Проверяем границы карты
