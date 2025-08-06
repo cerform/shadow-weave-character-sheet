@@ -7,9 +7,9 @@ import { SpellbookProvider } from '@/contexts/SpellbookContext';
 import { SessionProvider } from '@/contexts/SessionContext';
 import { SocketProvider } from '@/contexts/SocketContext';
 import { Toaster } from '@/components/ui/toaster';
-
+import CompactNavigationMenu from '@/components/navigation/CompactNavigationMenu';
 import BackgroundWrapper from '@/components/layout/BackgroundWrapper';
-
+import UnifiedFloatingWidget from '@/components/ui/UnifiedFloatingWidget';
 import AppRoutes from '@/AppRoutes';
 
 function App() {
@@ -22,10 +22,10 @@ function App() {
               <SocketProvider>
               <Router>
                 <BackgroundWrapper>
-                  
+                  <CompactNavigationMenu />
                   <AppRoutes />
                   <Toaster />
-                  
+                  <UnifiedFloatingWidget />
                  </BackgroundWrapper>
               </Router>
               </SocketProvider>
