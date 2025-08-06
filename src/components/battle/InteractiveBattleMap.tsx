@@ -402,7 +402,7 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
         </Group>
 
         {/* HP бар */}
-        {renderHPBar(token)}
+        {token.hp !== undefined && token.maxHp !== undefined && renderHPBar(token)}
 
         {/* Индикаторы состояний */}
         {token.conditions && token.conditions.length > 0 && renderConditionIndicators(token)}
