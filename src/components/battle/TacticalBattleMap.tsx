@@ -554,6 +554,10 @@ const TacticalBattleMap: React.FC<TacticalBattleMapProps> = ({
               />
             ))}
 
+          </Layer>
+          
+          {/* Separate Layer for Tokens - не зависит от масштаба карты */}
+          <Layer>
             {/* Tokens */}
             {tokens.map((token) => {
               const [tokenImage] = useImage(token.avatar || '');
@@ -561,8 +565,8 @@ const TacticalBattleMap: React.FC<TacticalBattleMapProps> = ({
               return (
                 <Group
                   key={token.id}
-                  x={token.x}
-                  y={token.y}
+                  x={(token.x * zoom) + mapPosition.x}
+                  y={(token.y * zoom) + mapPosition.y}
                   onClick={() => handleTokenClick(token.id)}
                 >
                   {/* Token Base */}
