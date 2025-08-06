@@ -162,14 +162,64 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
     return cellIndex * gridSize + cellCenter;
   }, [gridSize]);
 
-  // Обработчики Drag & Drop
+  // Отладочные функции для мыши
+  const logMouseEvent = useCallback((event: string, e: any, tokenId?: string) => {
+    const mousePos = { x: e.evt.clientX, y: e.evt.clientY };
+    const stagePos = e.target.getStage()?.getPointerPosition();
+    console.log(`🖱️ MOUSE ${event.toUpperCase()}:`, {
+      tokenId,
+      button: e.evt.button,
+      clientPos: mousePos,
+      stagePos,
+      timestamp: Date.now(),
+      type: e.evt.type
+    });
+  }, []);
+
+  // Глобальные обработчики мыши для отладки
+  useEffect(() => {
+    const handleGlobalMouseDown = (e: MouseEvent) => {
+      console.log('🖱️ GLOBAL MOUSE DOWN:', {
+        button: e.button,
+        clientX: e.clientX,
+        clientY: e.clientY,
+        timestamp: Date.now()
+      });
+    };
+
+    const handleGlobalMouseUp = (e: MouseEvent) => {
+      console.log('🖱️ GLOBAL MOUSE UP:', {
+        button: e.button,
+        clientX: e.clientX,
+        clientY: e.clientY,
+        timestamp: Date.now()
+      });
+    };
+
+    document.addEventListener('mousedown', handleGlobalMouseDown);
+    document.addEventListener('mouseup', handleGlobalMouseUp);
+
+    return () => {
+      document.removeEventListener('mousedown', handleGlobalMouseDown);
+      document.removeEventListener('mouseup', handleGlobalMouseUp);
+    };
+  }, []);
+
+  // Обработчики Drag & Drop с улучшенной отладкой
   const handleDragStart = useCallback((tokenId: string, e: any) => {
-    console.log('Drag start:', tokenId);
+    logMouseEvent('drag_start', e, tokenId);
+    
     const token = tokens.find(t => t.id === tokenId);
+    console.log('🎯 DRAG START TOKEN:', {
+      id: tokenId,
+      currentPos: { x: token?.x, y: token?.y },
+      target: e.target,
+      canDrag: isDM || token?.controlledBy === currentUserId
+    });
     
     // Проверяем права доступа
     if (!isDM && token?.controlledBy !== currentUserId) {
-      console.log('Drag blocked - no permissions');
+      console.log('❌ DRAG BLOCKED - no permissions');
       toast({
         title: "Нет доступа",
         description: "Вы можете перемещать только своих персонажей",
@@ -179,23 +229,41 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
       return;
     }
     
-    console.log('Drag allowed, setting dragged token');
+    console.log('✅ DRAG ALLOWED - setting dragged token');
     setDraggedTokenId(tokenId);
-  }, [isDM, tokens, toast, currentUserId]);
+  }, [isDM, tokens, toast, currentUserId, logMouseEvent]);
 
-  const handleDragEnd = useCallback((tokenId: string, newX: number, newY: number) => {
-    console.log('Drag end:', tokenId, 'new position:', newX, newY);
+  const handleDragEnd = useCallback((tokenId: string, newX: number, newY: number, e: any) => {
+    logMouseEvent('drag_end', e, tokenId);
+    
+    console.log('🎯 DRAG END TOKEN:', {
+      id: tokenId,
+      newPos: { x: newX, y: newY },
+      gridSize,
+      snapFunction: snapToGrid.toString()
+    });
     
     // Проверяем минимальное движение
     const currentToken = tokens.find(t => t.id === tokenId);
-    if (!currentToken) return;
+    if (!currentToken) {
+      console.log('❌ TOKEN NOT FOUND:', tokenId);
+      return;
+    }
     
     const deltaX = Math.abs(newX - currentToken.x);
     const deltaY = Math.abs(newY - currentToken.y);
-    const minMovement = gridSize * 0.3; // 30% от размера клетки
+    const minMovement = 5; // Минимальное движение в пикселях (убираем привязку к gridSize)
+    
+    console.log('📏 MOVEMENT CHECK:', {
+      oldPos: { x: currentToken.x, y: currentToken.y },
+      newPos: { x: newX, y: newY },
+      delta: { x: deltaX, y: deltaY },
+      minMovement,
+      willMove: deltaX >= minMovement || deltaY >= minMovement
+    });
     
     if (deltaX < minMovement && deltaY < minMovement) {
-      console.log('Movement too small, ignoring');
+      console.log('⚠️ MOVEMENT TOO SMALL - ignoring');
       setDraggedTokenId(null);
       return;
     }
@@ -203,7 +271,10 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
     const snappedX = snapToGrid(newX);
     const snappedY = snapToGrid(newY);
     
-    console.log('After snap:', snappedX, snappedY);
+    console.log('📐 SNAP TO GRID:', {
+      original: { x: newX, y: newY },
+      snapped: { x: snappedX, y: snappedY }
+    });
     
     // Проверяем границы карты
     const mapWidth = gridCols * gridSize;
@@ -211,7 +282,11 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
     const boundedX = Math.max(gridSize/2, Math.min(snappedX, mapWidth - gridSize/2));
     const boundedY = Math.max(gridSize/2, Math.min(snappedY, mapHeight - gridSize/2));
 
-    console.log('Final position after snap and bounds:', boundedX, boundedY);
+    console.log('🗺️ BOUNDS CHECK:', {
+      mapSize: { width: mapWidth, height: mapHeight },
+      snapped: { x: snappedX, y: snappedY },
+      bounded: { x: boundedX, y: boundedY }
+    });
 
     // Создаем полностью новый массив токенов для принудительного обновления
     const updatedTokens = tokens.map(token => 
@@ -220,9 +295,12 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
         : token
     );
     
-    console.log('Updated tokens array:', updatedTokens);
-    console.log('Token before:', tokens.find(t => t.id === tokenId));
-    console.log('Token after:', updatedTokens.find(t => t.id === tokenId));
+    console.log('🔄 UPDATING TOKENS:', {
+      tokenId,
+      oldToken: tokens.find(t => t.id === tokenId),
+      newToken: updatedTokens.find(t => t.id === tokenId),
+      totalTokens: updatedTokens.length
+    });
 
     // Принудительно обновляем состояние
     setCurrentTokens([...updatedTokens]); // Создаем новую ссылку на массив
@@ -241,7 +319,9 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
         description: `${token.name} перемещен на позицию (${Math.floor(boundedX/gridSize)}, ${Math.floor(boundedY/gridSize)})`,
       });
     }
-  }, [snapToGrid, tokens, onTokensChange, setInternalTokens, toast, gridCols, gridRows, gridSize]);
+    
+    console.log('✅ DRAG COMPLETED');
+  }, [snapToGrid, tokens, onTokensChange, toast, gridCols, gridRows, gridSize, logMouseEvent]);
 
   // Клик по токену
   const handleTokenClick = useCallback((token: Token) => {
@@ -387,10 +467,12 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
         y={token.y}
         draggable={isDM || token.controlledBy === currentUserId}
         onDragStart={(e) => {
-          console.log('Token drag start:', token.id, 'current pos:', token.x, token.y);
+          logMouseEvent('token_drag_start', e, token.id);
+          console.log('🎯 TOKEN DRAG START:', token.id, 'current pos:', token.x, token.y);
           
           // Проверяем права доступа перед началом перетаскивания
           if (!isDM && token.controlledBy !== currentUserId) {
+            console.log('❌ PREVENTING DRAG - no access');
             e.evt.preventDefault();
             return;
           }
@@ -398,28 +480,20 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
           handleDragStart(token.id, e);
         }}
         onDragMove={(e) => {
-          // Обновляем позицию в реальном времени во время перетаскивания
-          if (draggedTokenId === token.id) {
-            const newX = e.target.x();
-            const newY = e.target.y();
-            console.log('Token drag move:', token.id, 'new pos:', newX, newY);
-            
-            // Немедленно обновляем состояние для визуального отклика
-            const updatedTokens = currentTokens.map(t => 
-              t.id === token.id ? { ...t, x: newX, y: newY } : t
-            );
-            setCurrentTokens([...updatedTokens]); // Новая ссылка на массив
-          }
+          // Убираем реалтайм обновления - они мешают корректному drag & drop
+          console.log('🔄 TOKEN DRAG MOVE:', token.id, 'pos:', e.target.x(), e.target.y());
         }}
         onDragEnd={(e) => {
-          console.log('Token drag end:', token.id, 'target pos:', e.target.x(), e.target.y());
+          logMouseEvent('token_drag_end', e, token.id);
+          console.log('🎯 TOKEN DRAG END:', token.id, 'target pos:', e.target.x(), e.target.y());
           
           // Проверяем права доступа
           if (!isDM && token.controlledBy !== currentUserId) {
+            console.log('❌ NO ACCESS TO END DRAG');
             return;
           }
           
-          handleDragEnd(token.id, e.target.x(), e.target.y());
+          handleDragEnd(token.id, e.target.x(), e.target.y(), e);
         }}
         onMouseEnter={() => setHoveredTokenId(token.id)}
         onMouseLeave={() => setHoveredTokenId(null)}
@@ -585,7 +659,7 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
         y={token.y}
         draggable={isDM || token.type === 'player'}
         onDragStart={(e) => handleDragStart(token.id, e)}
-        onDragEnd={(e) => handleDragEnd(token.id, e.target.x(), e.target.y())}
+        onDragEnd={(e) => handleDragEnd(token.id, e.target.x(), e.target.y(), e)}
         onMouseEnter={() => setHoveredTokenId(token.id)}
         onMouseLeave={() => setHoveredTokenId(null)}
         onClick={() => handleTokenClick(token)}
