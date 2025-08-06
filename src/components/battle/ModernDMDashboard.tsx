@@ -61,6 +61,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 
 interface BattleToken extends TokenData {
   session_id?: string;
+  image_url?: string;  // Добавляем поле image_url
 }
 
 interface InitiativeEntry {
@@ -141,6 +142,7 @@ const ModernDMDashboard: React.FC = () => {
     if (data) {
       const mappedTokens: BattleToken[] = data.map(token => ({
         ...token,
+        avatar: token.image_url,  // Преобразуем image_url в avatar для TokenData
         token_type: token.token_type as 'player' | 'npc' | 'monster' | 'object',
         conditions: Array.isArray(token.conditions) ? 
           token.conditions.map(c => typeof c === 'string' ? c : String(c)) : [],
@@ -198,6 +200,7 @@ const ModernDMDashboard: React.FC = () => {
     const dbData = {
       ...tokenData,
       session_id: sessionId,
+      image_url: tokenData.avatar,  // Преобразуем avatar в image_url для базы данных
       conditions: tokenData.conditions || []
     };
 
@@ -482,15 +485,44 @@ const ModernDMDashboard: React.FC = () => {
             {tokens.map(token => (
               <div
                 key={token.id}
-                className="absolute w-8 h-8 rounded-full border-2 border-white shadow-lg cursor-pointer transform hover:scale-110 transition-transform"
+                className="absolute w-8 h-8 rounded-full border-2 border-white shadow-lg cursor-pointer transform hover:scale-110 transition-transform overflow-hidden"
                 style={{
-                  backgroundColor: token.color,
                   left: `${token.position_x}px`,
                   top: `${token.position_y}px`
                 }}
                 title={`${token.name} (${token.current_hp}/${token.max_hp} HP)`}
+                onClick={() => openTokenEditor(token)}
               >
-                <div className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 text-xs text-white bg-black/50 px-1 rounded">
+                {token.image_url ? (
+                  <img 
+                    src={token.image_url} 
+                    alt={token.name}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      // Fallback при ошибке загрузки изображения
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = 'none';
+                      
+                      // Создаем цветовую замену
+                      const parent = target.parentElement;
+                      if (parent && !parent.querySelector('.token-fallback')) {
+                        const fallback = document.createElement('div');
+                        fallback.className = 'token-fallback w-full h-full flex items-center justify-center text-white font-bold text-xs';
+                        fallback.style.backgroundColor = token.color;
+                        fallback.textContent = token.name.charAt(0).toUpperCase();
+                        parent.appendChild(fallback);
+                      }
+                    }}
+                  />
+                ) : (
+                  <div 
+                    className="w-full h-full flex items-center justify-center text-white font-bold text-xs"
+                    style={{ backgroundColor: token.color }}
+                  >
+                    {token.name.charAt(0).toUpperCase()}
+                  </div>
+                )}
+                <div className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 text-xs text-white bg-black/50 px-1 rounded whitespace-nowrap">
                   {token.name}
                 </div>
               </div>
@@ -710,9 +742,52 @@ const ModernDMDashboard: React.FC = () => {
 
       {/* Token Editor */}
       <TokenEditor
-        token={selectedToken}
+        token={selectedToken ? {
+          id: selectedToken.id,
+          name: selectedToken.name,
+          avatar: selectedToken.image_url,  // Связываем image_url с avatar
+          token_type: selectedToken.token_type as 'player' | 'npc' | 'monster' | 'object',
+          max_hp: selectedToken.max_hp,
+          current_hp: selectedToken.current_hp,
+          armor_class: selectedToken.armor_class,
+          position_x: selectedToken.position_x,
+          position_y: selectedToken.position_y,
+          size: selectedToken.size,
+          color: selectedToken.color,
+          is_hidden_from_players: selectedToken.is_hidden_from_players,
+          conditions: selectedToken.conditions || [],
+          notes: selectedToken.notes,
+          tags: [], // Если нужно, можно добавить теги в BattleToken
+          abilities: {
+            strength: 10,
+            dexterity: 10,
+            constitution: 10,
+            intelligence: 10,
+            wisdom: 10,
+            charisma: 10
+          }
+        } : null}
         isOpen={isTokenEditorOpen}
-        onSave={saveToken}
+        onSave={(tokenData) => {
+          // Преобразуем TokenData обратно в BattleToken для сохранения
+          const battleToken: Partial<BattleToken> = {
+            id: tokenData.id,
+            name: tokenData.name,
+            image_url: tokenData.avatar,  // Связываем avatar с image_url
+            token_type: tokenData.token_type,
+            max_hp: tokenData.max_hp,
+            current_hp: tokenData.current_hp,
+            armor_class: tokenData.armor_class,
+            position_x: tokenData.position_x,
+            position_y: tokenData.position_y,
+            size: tokenData.size,
+            color: tokenData.color,
+            is_hidden_from_players: tokenData.is_hidden_from_players,
+            conditions: tokenData.conditions,
+            notes: tokenData.notes
+          };
+          saveToken(battleToken as TokenData);
+        }}
         onCancel={() => {
           setIsTokenEditorOpen(false);
           setSelectedToken(null);
