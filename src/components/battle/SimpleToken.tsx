@@ -1,0 +1,105 @@
+import React, { useRef } from 'react';
+import { SimpleToken as TokenType } from '@/stores/simpleBattleStore';
+
+interface SimpleTokenProps {
+  token: TokenType;
+  isSelected: boolean;
+  isDragged: boolean;
+  onSelect: (id: string) => void;
+  onDragStart: (id: string, e: React.MouseEvent) => void;
+  onDrag: (id: string, x: number, y: number) => void;
+  onDragEnd: (id: string) => void;
+}
+
+export const SimpleToken: React.FC<SimpleTokenProps> = ({
+  token,
+  isSelected,
+  isDragged,
+  onSelect,
+  onDragStart,
+  onDrag,
+  onDragEnd
+}) => {
+  const isDragging = useRef(false);
+  const lastPosition = useRef({ x: 0, y: 0 });
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
+    isDragging.current = true;
+    lastPosition.current = { x: e.clientX, y: e.clientY };
+    onSelect(token.id);
+    onDragStart(token.id, e);
+
+    const handleMouseMove = (moveEvent: MouseEvent) => {
+      if (!isDragging.current) return;
+
+      const deltaX = moveEvent.clientX - lastPosition.current.x;
+      const deltaY = moveEvent.clientY - lastPosition.current.y;
+      
+      const newX = token.x + deltaX;
+      const newY = token.y + deltaY;
+      
+      onDrag(token.id, newX, newY);
+      lastPosition.current = { x: moveEvent.clientX, y: moveEvent.clientY };
+    };
+
+    const handleMouseUp = () => {
+      if (isDragging.current) {
+        isDragging.current = false;
+        onDragEnd(token.id);
+      }
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+  };
+
+  const hpPercentage = (token.hp / token.maxHp) * 100;
+  const hpColor = hpPercentage > 50 ? '#22c55e' : hpPercentage > 25 ? '#eab308' : '#ef4444';
+
+  return (
+    <div
+      className="absolute cursor-pointer select-none transition-all duration-75"
+      style={{
+        left: token.x - token.size / 2,
+        top: token.y - token.size / 2,
+        width: token.size,
+        height: token.size,
+        zIndex: isDragged ? 1000 : isSelected ? 100 : 10
+      }}
+      onMouseDown={handleMouseDown}
+    >
+      {/* Token circle */}
+      <div
+        className="w-full h-full rounded-full border-2 flex items-center justify-center text-white font-bold text-sm shadow-lg"
+        style={{
+          backgroundColor: token.color,
+          borderColor: isSelected ? '#fbbf24' : isDragged ? '#f59e0b' : '#000000',
+          borderWidth: isSelected || isDragged ? '3px' : '2px',
+          transform: isDragged ? 'scale(1.1)' : 'scale(1)',
+          boxShadow: isDragged ? '0 8px 25px rgba(0,0,0,0.3)' : '0 2px 10px rgba(0,0,0,0.2)'
+        }}
+      >
+        {token.name.split(' ').map(word => word[0]).join('').toUpperCase()}
+      </div>
+
+      {/* HP Bar */}
+      <div className="absolute -bottom-2 left-0 right-0 h-1 bg-gray-700 rounded-full">
+        <div
+          className="h-full rounded-full transition-all duration-300"
+          style={{
+            width: `${hpPercentage}%`,
+            backgroundColor: hpColor
+          }}
+        />
+      </div>
+
+      {/* Token name */}
+      <div className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 text-xs text-white bg-black bg-opacity-70 px-1 rounded whitespace-nowrap">
+        {token.name}
+      </div>
+    </div>
+  );
+};
