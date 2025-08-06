@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Plus, Upload, Trash2, Edit, Settings, Users } from 'lucide-react';
 import { defaultTokens } from '@/data/defaultTokens';
 import SimpleTokenEditor from './SimpleTokenEditor';
+import MapControls from './MapControls';
 import useImage from 'use-image';
 
 export interface Token {
@@ -69,6 +70,17 @@ const TacticalBattleMap: React.FC<TacticalBattleMapProps> = ({
   const [showTokenLibrary, setShowTokenLibrary] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [mapImage] = useImage(mapImageUrl || '');
+  
+  // Состояние для управления картой
+  const [zoom, setZoom] = useState(1);
+  const [mapPosition, setMapPosition] = useState({ x: 0, y: 0 });
+  const [gridVisible, setGridVisible] = useState(true);
+  const [gridOpacity, setGridOpacity] = useState(0.5);
+  const [gridScale, setGridScale] = useState(1);
+  const [gridPosition, setGridPosition] = useState({ x: 0, y: 0 });
+  const [fogOfWar, setFogOfWar] = useState(false);
+  const [revealRadius, setRevealRadius] = useState(3);
+  const [isDynamicLighting, setDynamicLighting] = useState(false);
 
   console.log('🎲 TacticalBattleMap render:', { 
     tokensCount: tokens.length, 
@@ -219,8 +231,104 @@ const TacticalBattleMap: React.FC<TacticalBattleMapProps> = ({
     reader.readAsDataURL(file);
   }, [onMapChange]);
 
+  // Обработчики управления картой
+  const handleZoomIn = useCallback(() => {
+    setZoom(prev => Math.min(prev + 0.1, 3));
+  }, []);
+
+  const handleZoomOut = useCallback(() => {
+    setZoom(prev => Math.max(prev - 0.1, 0.5));
+  }, []);
+
+  const handleResetZoom = useCallback(() => {
+    setZoom(1);
+  }, []);
+
+  const handleMoveMap = useCallback((direction: 'up' | 'down' | 'left' | 'right') => {
+    const step = 20;
+    setMapPosition(prev => {
+      switch (direction) {
+        case 'up': return { ...prev, y: prev.y + step };
+        case 'down': return { ...prev, y: prev.y - step };
+        case 'left': return { ...prev, x: prev.x + step };
+        case 'right': return { ...prev, x: prev.x - step };
+        default: return prev;
+      }
+    });
+  }, []);
+
+  // Обработчики управления сеткой
+  const handleGridZoomIn = useCallback(() => {
+    setGridScale(prev => Math.min(prev + 0.1, 2));
+  }, []);
+
+  const handleGridZoomOut = useCallback(() => {
+    setGridScale(prev => Math.max(prev - 0.1, 0.5));
+  }, []);
+
+  const handleResetGridZoom = useCallback(() => {
+    setGridScale(1);
+  }, []);
+
+  const handleMoveGrid = useCallback((direction: 'up' | 'down' | 'left' | 'right') => {
+    const step = 10;
+    setGridPosition(prev => {
+      switch (direction) {
+        case 'up': return { ...prev, y: prev.y + step };
+        case 'down': return { ...prev, y: prev.y - step };
+        case 'left': return { ...prev, x: prev.x + step };
+        case 'right': return { ...prev, x: prev.x - step };
+        default: return prev;
+      }
+    });
+  }, []);
+
+  const handleAlignGridToMap = useCallback(() => {
+    setGridPosition(mapPosition);
+    setGridScale(zoom);
+  }, [mapPosition, zoom]);
+
+  const handleResetFogOfWar = useCallback(() => {
+    // Логика сброса тумана войны
+    console.log('🌫️ Resetting fog of war');
+  }, []);
+
+  const handleAddLight = useCallback((type: 'torch' | 'lantern' | 'daylight' | 'custom', color?: string, intensity?: number) => {
+    console.log('💡 Adding light source:', { type, color, intensity });
+  }, []);
+
   return (
     <div className="w-full h-full bg-slate-900 flex">
+      {/* Map Controls */}
+      <div className="absolute top-4 right-4 z-10">
+        <MapControls
+          fogOfWar={fogOfWar}
+          setFogOfWar={setFogOfWar}
+          revealRadius={revealRadius}
+          setRevealRadius={setRevealRadius}
+          gridVisible={gridVisible}
+          setGridVisible={setGridVisible}
+          gridOpacity={gridOpacity}
+          setGridOpacity={setGridOpacity}
+          onResetFogOfWar={handleResetFogOfWar}
+          isDM={isDM}
+          isDynamicLighting={isDynamicLighting}
+          setDynamicLighting={setDynamicLighting}
+          onAddLight={handleAddLight}
+          onMoveMap={handleMoveMap}
+          zoom={zoom}
+          onZoomIn={handleZoomIn}
+          onZoomOut={handleZoomOut}
+          onResetZoom={handleResetZoom}
+          onMoveGrid={handleMoveGrid}
+          gridScale={gridScale}
+          onGridZoomIn={handleGridZoomIn}
+          onGridZoomOut={handleGridZoomOut}
+          onResetGridZoom={handleResetGridZoom}
+          onAlignGridToMap={handleAlignGridToMap}
+        />
+      </div>
+
       {/* Sidebar */}
       {isDM && (
         <div className="w-80 bg-slate-800 p-4 space-y-4 overflow-y-auto">
@@ -366,17 +474,24 @@ const TacticalBattleMap: React.FC<TacticalBattleMapProps> = ({
       )}
 
       {/* Game Board */}
-      <div className="flex-1">
+      <div className="flex-1 overflow-hidden">
         <Stage 
-          width={GRID_COLS * GRID_SIZE} 
-          height={GRID_ROWS * GRID_SIZE}
+          width={GRID_COLS * GRID_SIZE * zoom} 
+          height={GRID_ROWS * GRID_SIZE * zoom}
           className="bg-slate-700"
+          scaleX={zoom}
+          scaleY={zoom}
+          x={mapPosition.x}
+          y={mapPosition.y}
           onClick={(e) => {
             // Клик по пустой области сетки
             if (e.target === e.target.getStage()) {
               const pos = e.target.getStage().getPointerPosition();
               if (pos) {
-                handleSquareClick(pos.x, pos.y);
+                // Корректируем координаты с учетом масштаба и позиции
+                const adjustedX = (pos.x - mapPosition.x) / zoom;
+                const adjustedY = (pos.y - mapPosition.y) / zoom;
+                handleSquareClick(adjustedX, adjustedY);
               }
             }
           }}
@@ -392,26 +507,36 @@ const TacticalBattleMap: React.FC<TacticalBattleMapProps> = ({
             )}
 
             {/* Grid Lines */}
-            {Array.from({ length: GRID_COLS + 1 }, (_, i) => (
-              <Rect
-                key={`v-${i}`}
-                x={i * GRID_SIZE}
-                y={0}
-                width={1}
-                height={GRID_ROWS * GRID_SIZE}
-                fill="rgba(255,255,255,0.3)"
-              />
-            ))}
-            {Array.from({ length: GRID_ROWS + 1 }, (_, i) => (
-              <Rect
-                key={`h-${i}`}
-                x={0}
-                y={i * GRID_SIZE}
-                width={GRID_COLS * GRID_SIZE}
-                height={1}
-                fill="rgba(255,255,255,0.3)"
-              />
-            ))}
+            {gridVisible && (
+              <Group
+                x={gridPosition.x}
+                y={gridPosition.y}
+                scaleX={gridScale}
+                scaleY={gridScale}
+                opacity={gridOpacity}
+              >
+                {Array.from({ length: GRID_COLS + 1 }, (_, i) => (
+                  <Rect
+                    key={`v-${i}`}
+                    x={i * GRID_SIZE}
+                    y={0}
+                    width={2}
+                    height={GRID_ROWS * GRID_SIZE}
+                    fill="rgba(255,255,255,0.8)"
+                  />
+                ))}
+                {Array.from({ length: GRID_ROWS + 1 }, (_, i) => (
+                  <Rect
+                    key={`h-${i}`}
+                    x={0}
+                    y={i * GRID_SIZE}
+                    width={GRID_COLS * GRID_SIZE}
+                    height={2}
+                    fill="rgba(255,255,255,0.8)"
+                  />
+                ))}
+              </Group>
+            )}
 
             {/* Available Movement Squares */}
             {availableSquares.map((square, index) => (
