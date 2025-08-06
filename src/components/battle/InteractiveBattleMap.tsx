@@ -122,6 +122,7 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
   const [mapImage, setMapImage] = useState<string | null>(mapImageUrl || null);
   const [mapScale, setMapScale] = useState(1);
   const [stagePosition, setStagePosition] = useState({ x: 0, y: 0 });
+  const [isPanning, setIsPanning] = useState(false);
   const [selectedTerrain, setSelectedTerrain] = useState(null);
   const [activeTab, setActiveTab] = useState('tokens');
   const [windowSize, setWindowSize] = useState({ width: 1920, height: 1080 });
@@ -539,12 +540,12 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
     const stage = stageRef.current;
     if (!stage) return;
     
-    const scaleBy = 1.05;
+    const scaleBy = 1.1;
     const oldScale = stage.scaleX();
     const pointer = stage.getPointerPosition();
     
     let newScale = e.evt.deltaY < 0 ? oldScale * scaleBy : oldScale / scaleBy;
-    newScale = Math.max(0.1, Math.min(5, newScale)); // Ограничиваем масштаб
+    newScale = Math.max(0.2, Math.min(3, newScale));
     
     const mousePointTo = {
       x: (pointer.x - stage.x()) / oldScale,
@@ -560,13 +561,38 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
     stage.position(newPos);
     stage.batchDraw();
     
-    setMapScale(Math.round(newScale * 100));
+    setMapScale(newScale);
     setStagePosition(newPos);
   }, []);
 
-  // Обработка панорамирования карты
-  const handleStageDragEnd = useCallback((e: any) => {
-    setStagePosition({ x: e.target.x(), y: e.target.y() });
+  // Обработчики для панорамирования
+  const handleStageMouseDown = useCallback((e: any) => {
+    // Только если клик не по токену и зажат пробел или средняя кнопка мыши
+    if (e.target === e.target.getStage() && (e.evt.button === 1 || e.evt.ctrlKey)) {
+      setIsPanning(true);
+    }
+  }, []);
+
+  const handleStageMouseMove = useCallback((e: any) => {
+    if (!isPanning) return;
+    
+    const stage = stageRef.current;
+    if (!stage) return;
+
+    const dx = e.evt.movementX;
+    const dy = e.evt.movementY;
+    
+    const newPos = {
+      x: stage.x() + dx,
+      y: stage.y() + dy
+    };
+    
+    stage.position(newPos);
+    setStagePosition(newPos);
+  }, [isPanning]);
+
+  const handleStageMouseUp = useCallback(() => {
+    setIsPanning(false);
   }, []);
 
   return (
@@ -578,9 +604,10 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
           height={windowSize.height}
           ref={stageRef}
           className="w-full h-full"
-          draggable={true}
           onWheel={handleWheel}
-          onDragEnd={handleStageDragEnd}
+          onMouseDown={handleStageMouseDown}
+          onMouseMove={handleStageMouseMove}
+          onMouseUp={handleStageMouseUp}
           scaleX={mapScale}
           scaleY={mapScale}
           x={stagePosition.x}
