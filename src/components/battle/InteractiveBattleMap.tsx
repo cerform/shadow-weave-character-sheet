@@ -319,7 +319,7 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
       
       const deltaX = Math.abs(newX - currentToken.x);
       const deltaY = Math.abs(newY - currentToken.y);
-      const minMovement = 5; // Минимальное движение в пикселях
+      const minMovement = 1; // уменьшили минимальное движение до 1 пикселя
       
       console.log('📏 MOVEMENT CHECK:', {
         oldPos: { x: currentToken.x, y: currentToken.y },
@@ -331,6 +331,7 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
       
       if (deltaX < minMovement && deltaY < minMovement) {
         console.log('⚠️ MOVEMENT TOO SMALL - ignoring');
+        draggedTokenRef.current = null;
         setDraggedTokenId(null);
         return;
       }
