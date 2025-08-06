@@ -118,11 +118,14 @@ export const useSimpleBattleStore = create<SimpleBattleStore>((set, get) => ({
   },
 
   moveToken: (id, x, y) => {
-    set((state) => ({
-      tokens: state.tokens.map(token =>
+    console.log(`🏪 STORE: Moving token ${id} to ${x}, ${y}`);
+    set((state) => {
+      const newTokens = state.tokens.map(token =>
         token.id === id ? { ...token, x, y } : token
-      )
-    }));
+      );
+      console.log(`🏪 STORE: Token ${id} updated to`, newTokens.find(t => t.id === id));
+      return { tokens: newTokens };
+    });
   },
 
   setMapBackground: (background) => {

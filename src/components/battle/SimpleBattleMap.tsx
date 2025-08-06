@@ -43,7 +43,15 @@ export const SimpleBattleMap: React.FC<{ isDM?: boolean }> = ({ isDM = true }) =
     const boundedY = Math.max(10, Math.min(y, mapSize.height - 10));
     
     console.log(`📍 MOVE TOKEN: ${id} to ${boundedX}, ${boundedY} (requested: ${x}, ${y})`);
+    
+    // Принудительно обновляем store
     moveToken(id, boundedX, boundedY);
+    
+    // Проверяем что токен действительно обновился
+    setTimeout(() => {
+      const updatedToken = tokens.find(t => t.id === id);
+      console.log(`✅ VERIFICATION: ${id} now at ${updatedToken?.x}, ${updatedToken?.y}`);
+    }, 0);
   };
 
   const handleTokenDragEnd = (id: string) => {
