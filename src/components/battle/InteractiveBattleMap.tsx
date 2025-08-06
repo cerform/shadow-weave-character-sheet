@@ -359,8 +359,11 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
       }
     };
 
+    console.log(`Rendering token ${token.id} at position:`, token.x, token.y);
+
     return (
       <Group
+        key={`${token.id}-${token.x}-${token.y}`} // Принудительный перерендер при изменении позиции
         x={token.x}
         y={token.y}
         draggable={isDM || token.type === 'player'}
@@ -994,7 +997,7 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
 
             {/* Токены */}
             {tokens.map(token => (
-              <TokenWithAvatar key={token.id} token={token} />
+              <TokenWithAvatar key={`${token.id}-${token.x}-${token.y}`} token={token} />
             ))}
           </Layer>
         </Stage>
