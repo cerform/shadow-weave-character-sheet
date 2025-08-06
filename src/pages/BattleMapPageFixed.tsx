@@ -2,7 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Home } from 'lucide-react';
-import { SimpleBattleMap } from '@/components/battle/SimpleBattleMap';
+import SimpleBattleMap from '@/components/battle/SimpleBattleMap';
 
 const BattleMapPageFixed: React.FC = () => {
   const navigate = useNavigate();
