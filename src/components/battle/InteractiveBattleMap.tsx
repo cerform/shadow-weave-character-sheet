@@ -121,6 +121,8 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
 
   const tokens = currentTokens;
 
+  // Используем ref для немедленного отслеживания перетаскиваемого токена
+  const draggedTokenRef = useRef<string | null>(null);
   const [draggedTokenId, setDraggedTokenId] = useState<string | null>(null);
   const [hoveredTokenId, setHoveredTokenId] = useState<string | null>(null);
   const [selectedToken, setSelectedToken] = useState<Token | null>(null);
@@ -260,7 +262,8 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
       }
       
       console.log('✅ DRAG ALLOWED - setting dragged token to:', tokenId);
-      setDraggedTokenId(tokenId);
+      draggedTokenRef.current = tokenId; // Синхронное обновление
+      setDraggedTokenId(tokenId); // Асинхронное обновление для UI
       console.log('🎯 DRAG START - END for token:', tokenId);
       
     } catch (error) {
@@ -276,6 +279,7 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
       console.log('🎯 DRAG END STATE CHECK:', {
         receivedTokenId: tokenId,
         currentDraggedTokenId: draggedTokenId,
+        refDraggedTokenId: draggedTokenRef.current,
         newPos: { x: newX, y: newY },
         gridSize,
         tokensCount: tokens.length,
@@ -283,18 +287,23 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
         timestamp: Date.now()
       });
       
+      // Используем ref для проверки, так как он обновляется синхронно
+      const expectedTokenId = draggedTokenRef.current;
+      
       // Проверяем, что токен действительно перетаскивался
-      if (draggedTokenId !== tokenId) {
+      if (expectedTokenId !== tokenId) {
         console.error('🚨 DRAG MISMATCH DETECTED:', {
-          expected: draggedTokenId,
+          expected: expectedTokenId,
           received: tokenId,
+          stateExpected: draggedTokenId,
           tokensOnMap: tokens.map(t => ({ id: t.id, name: t.name })),
           timestamp: Date.now()
         });
-        addError(`Drag mismatch: expected ${draggedTokenId}, got ${tokenId}`);
+        addError(`Drag mismatch: expected ${expectedTokenId}, got ${tokenId}`);
         
         // Принудительно сбрасываем состояние для предотвращения дальнейших ошибок
-        console.log('🔄 FORCE RESET draggedTokenId to null');
+        console.log('🔄 FORCE RESET draggedTokenId and ref to null');
+        draggedTokenRef.current = null;
         setDraggedTokenId(null);
         return;
       }
@@ -389,7 +398,8 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
         onTokensChange([...updatedTokens]);
       }
       
-      setDraggedTokenId(null);
+      draggedTokenRef.current = null; // Синхронное обновление
+      setDraggedTokenId(null); // Асинхронное обновление для UI
       
       console.log('📝 STATE UPDATES COMPLETED');
       
