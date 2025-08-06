@@ -120,7 +120,8 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
   const [gridRows, setGridRows] = useState(20);
   const [gridCols, setGridCols] = useState(24);
   const [mapImage, setMapImage] = useState<string | null>(mapImageUrl || null);
-  const [mapScale, setMapScale] = useState(100);
+  const [mapScale, setMapScale] = useState(1);
+  const [stagePosition, setStagePosition] = useState({ x: 0, y: 0 });
   const [selectedTerrain, setSelectedTerrain] = useState(null);
   const [activeTab, setActiveTab] = useState('tokens');
   const [windowSize, setWindowSize] = useState({ width: 1920, height: 1080 });
@@ -531,6 +532,43 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
     });
   }, [toast]);
 
+  // Обработка масштабирования карты
+  const handleWheel = useCallback((e: any) => {
+    e.evt.preventDefault();
+    
+    const stage = stageRef.current;
+    if (!stage) return;
+    
+    const scaleBy = 1.05;
+    const oldScale = stage.scaleX();
+    const pointer = stage.getPointerPosition();
+    
+    let newScale = e.evt.deltaY < 0 ? oldScale * scaleBy : oldScale / scaleBy;
+    newScale = Math.max(0.1, Math.min(5, newScale)); // Ограничиваем масштаб
+    
+    const mousePointTo = {
+      x: (pointer.x - stage.x()) / oldScale,
+      y: (pointer.y - stage.y()) / oldScale,
+    };
+    
+    const newPos = {
+      x: pointer.x - mousePointTo.x * newScale,
+      y: pointer.y - mousePointTo.y * newScale,
+    };
+    
+    stage.scale({ x: newScale, y: newScale });
+    stage.position(newPos);
+    stage.batchDraw();
+    
+    setMapScale(Math.round(newScale * 100));
+    setStagePosition(newPos);
+  }, []);
+
+  // Обработка панорамирования карты
+  const handleStageDragEnd = useCallback((e: any) => {
+    setStagePosition({ x: e.target.x(), y: e.target.y() });
+  }, []);
+
   return (
     <div className="w-screen h-screen bg-background text-foreground flex flex-col overflow-hidden fixed inset-0">
       {/* Карта на весь экран */}
@@ -540,6 +578,13 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
           height={windowSize.height}
           ref={stageRef}
           className="w-full h-full"
+          draggable={true}
+          onWheel={handleWheel}
+          onDragEnd={handleStageDragEnd}
+          scaleX={mapScale}
+          scaleY={mapScale}
+          x={stagePosition.x}
+          y={stagePosition.y}
         >
           <Layer>
             {/* Фон карты */}
@@ -645,11 +690,9 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
         </Stage>
         
         {/* Индикатор масштаба */}
-        {mapImage && (
-          <div className="absolute top-4 right-4 bg-black/70 text-white px-3 py-2 rounded-lg text-sm font-medium">
-            Масштаб: {mapScale}%
-          </div>
-        )}
+        <div className="absolute top-4 right-4 bg-black/70 text-white px-3 py-2 rounded-lg text-sm font-medium">
+          Масштаб: {Math.round(mapScale * 100)}%
+        </div>
         
         {/* Информация внизу */}
         <div className="absolute bottom-4 left-4 bg-black/70 text-white px-3 py-2 rounded-lg text-sm">
