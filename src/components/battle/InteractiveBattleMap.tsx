@@ -511,166 +511,134 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
   }, [toast]);
 
   return (
-    <div className="h-screen bg-background text-foreground flex flex-col">
-      <div className="flex flex-1 overflow-hidden">
-        {/* Левая панель с инструментами для DM */}
-        {isDM && (
-          <div className="w-80 bg-card border-r border-border p-4 overflow-y-auto">
-            <Tabs value={activeTab} onValueChange={setActiveTab}>
-                <TabsList className="grid w-full grid-cols-4">
-                  <TabsTrigger value="tokens">Токены</TabsTrigger>
-                  <TabsTrigger value="grid">Сетка</TabsTrigger>
-                  <TabsTrigger value="map">Карта</TabsTrigger>
-                  <TabsTrigger value="terrain">Ландшафт</TabsTrigger>
-                </TabsList>
-              
-              <TabsContent value="tokens" className="space-y-4 mt-4">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-lg">
-                      <Settings className="h-5 w-5" />
-                      Управление токенами
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    <Button 
-                      onClick={addToken}
-                      className="w-full"
+    <div className="h-screen bg-background text-foreground flex flex-col overflow-hidden">
+      {/* Верхняя панель управления */}
+      {isDM && (
+        <div className="bg-card border-b border-border p-4 shadow-sm">
+          <div className="flex items-center justify-between mb-4">
+            <h1 className="text-xl font-bold">Интерактивная боевая карта</h1>
+            <div className="flex items-center gap-2">
+              <Button 
+                onClick={() => setShowGrid(!showGrid)}
+                variant={showGrid ? "default" : "outline"}
+                size="sm"
+              >
+                {showGrid ? <EyeOff className="w-4 h-4 mr-2" /> : <Eye className="w-4 h-4 mr-2" />}
+                Сетка
+              </Button>
+              <Button 
+                onClick={addToken}
+                size="sm"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Добавить токен
+              </Button>
+              <Button 
+                onClick={() => {
+                  if (onTokensChange) {
+                    onTokensChange([]);
+                  } else {
+                    setInternalTokens([]);
+                  }
+                  toast({
+                    title: "Карта очищена",
+                    description: "Все токены удалены с карты",
+                  });
+                }}
+                variant="destructive"
+                size="sm"
+              >
+                <RotateCcw className="w-4 h-4 mr-2" />
+                Очистить
+              </Button>
+            </div>
+          </div>
+          
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsList className="grid w-full grid-cols-4 max-w-md">
+              <TabsTrigger value="tokens">Токены</TabsTrigger>
+              <TabsTrigger value="grid">Сетка</TabsTrigger>
+              <TabsTrigger value="map">Карта</TabsTrigger>
+              <TabsTrigger value="terrain">Ландшафт</TabsTrigger>
+            </TabsList>
+            
+            <div className="mt-4">
+              <TabsContent value="tokens" className="mt-0">
+                <div className="flex flex-wrap gap-2">
+                  {tokens.map(token => (
+                    <div 
+                      key={token.id}
+                      className={`p-2 rounded border cursor-pointer transition-colors ${
+                        selectedToken?.id === token.id 
+                          ? 'bg-primary/10 border-primary' 
+                          : 'bg-muted border-border hover:bg-muted/80'
+                      }`}
+                      onClick={() => handleTokenClick(token)}
                     >
-                      <Plus className="w-4 h-4 mr-2" />
-                      Добавить токен
-                    </Button>
-                    
-                    <Button 
-                      onClick={() => setShowGrid(!showGrid)}
-                      variant="outline"
-                      className="w-full"
-                    >
-                      {showGrid ? <EyeOff className="w-4 h-4 mr-2" /> : <Eye className="w-4 h-4 mr-2" />}
-                      {showGrid ? 'Скрыть сетку' : 'Показать сетку'}
-                    </Button>
-
-                    <Button 
-                      onClick={() => {
-                        if (onTokensChange) {
-                          onTokensChange([]);
-                        } else {
-                          setInternalTokens([]);
-                        }
-                        toast({
-                          title: "Карта очищена",
-                          description: "Все токены удалены с карты",
-                        });
-                      }}
-                      variant="destructive"
-                      className="w-full"
-                    >
-                      <RotateCcw className="w-4 h-4 mr-2" />
-                      Очистить токены
-                    </Button>
-                  </CardContent>
-                </Card>
-
-                {/* Список токенов */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">Токены ({tokens.length})</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-2 max-h-96 overflow-y-auto">
-                    {tokens.map(token => (
-                      <div 
-                        key={token.id}
-                        className={`p-3 rounded-lg cursor-pointer border transition-colors ${
-                          selectedToken?.id === token.id 
-                            ? 'bg-primary/10 border-primary' 
-                            : 'bg-muted border-border hover:bg-muted/80'
-                        }`}
-                        onClick={() => handleTokenClick(token)}
-                      >
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <div 
-                              className="w-4 h-4 rounded-full border-2 border-white"
-                              style={{ backgroundColor: token.color }}
-                            />
-                            <span className="text-sm font-medium">{token.name}</span>
-                          </div>
-                          <span className="text-xs text-muted-foreground capitalize">{token.type}</span>
-                        </div>
-                        {token.hp !== undefined && (
-                          <div className="mt-2 text-xs text-muted-foreground">
-                            HP: {token.hp}/{token.maxHp} • AC: {token.ac}
-                          </div>
-                        )}
-                        {token.conditions && token.conditions.length > 0 && (
-                          <div className="mt-1 text-xs text-muted-foreground">
-                            Состояния: {token.conditions.join(', ')}
-                          </div>
-                        )}
+                      <div className="flex items-center gap-2">
+                        <div 
+                          className="w-4 h-4 rounded-full border-2 border-white"
+                          style={{ backgroundColor: token.color }}
+                        />
+                        <span className="text-sm font-medium">{token.name}</span>
+                        <span className="text-xs text-muted-foreground">
+                          HP: {token.hp}/{token.maxHp}
+                        </span>
                       </div>
-                    ))}
-                  </CardContent>
-                </Card>
+                    </div>
+                  ))}
+                </div>
               </TabsContent>
               
-              <TabsContent value="grid" className="space-y-4 mt-4">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-lg">
-                      <Map className="h-5 w-5" />
-                      Настройки сетки
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div>
-                      <label className="text-sm font-medium mb-2 block">Размер клетки</label>
-                      <div className="grid grid-cols-2 gap-2">
-                        {GRID_SIZES.map(size => (
-                          <Button
-                            key={size}
-                            variant={gridSize === size ? 'default' : 'outline'}
-                            onClick={() => setGridSize(size)}
-                            className="w-full"
-                          >
-                            {size}×{size}
-                          </Button>
-                        ))}
-                      </div>
+              <TabsContent value="grid" className="mt-0">
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-2">
+                    <label className="text-sm font-medium">Размер клетки:</label>
+                    <div className="flex gap-1">
+                      {GRID_SIZES.map(size => (
+                        <Button
+                          key={size}
+                          variant={gridSize === size ? 'default' : 'outline'}
+                          onClick={() => setGridSize(size)}
+                          size="sm"
+                        >
+                          {size}px
+                        </Button>
+                      ))}
                     </div>
-                    
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="text-sm font-medium mb-2 block">Строки</label>
-                        <input
-                          type="number"
-                          value={gridRows}
-                          onChange={(e) => setGridRows(Math.max(1, parseInt(e.target.value) || 1))}
-                          className="w-full px-3 py-2 border border-border rounded-md bg-background"
-                          min="1"
-                          max="50"
-                        />
-                      </div>
-                      <div>
-                        <label className="text-sm font-medium mb-2 block">Столбцы</label>
-                        <input
-                          type="number"
-                          value={gridCols}
-                          onChange={(e) => setGridCols(Math.max(1, parseInt(e.target.value) || 1))}
-                          className="w-full px-3 py-2 border border-border rounded-md bg-background"
-                          min="1"
-                          max="50"
-                        />
-                      </div>
-                    </div>
-                    
-                    <div className="text-sm text-muted-foreground">
-                      Общий размер карты: {gridCols * gridSize}×{gridRows * gridSize}px
-                    </div>
-                  </CardContent>
-                </Card>
+                  </div>
+                  
+                  <div className="flex items-center gap-2">
+                    <label className="text-sm font-medium">Строки:</label>
+                    <input
+                      type="number"
+                      value={gridRows}
+                      onChange={(e) => setGridRows(Math.max(1, parseInt(e.target.value) || 1))}
+                      className="w-20 px-2 py-1 border border-border rounded bg-background text-sm"
+                      min="1"
+                      max="50"
+                    />
+                  </div>
+                  
+                  <div className="flex items-center gap-2">
+                    <label className="text-sm font-medium">Столбцы:</label>
+                    <input
+                      type="number"
+                      value={gridCols}
+                      onChange={(e) => setGridCols(Math.max(1, parseInt(e.target.value) || 1))}
+                      className="w-20 px-2 py-1 border border-border rounded bg-background text-sm"
+                      min="1"
+                      max="50"
+                    />
+                  </div>
+                  
+                  <div className="text-sm text-muted-foreground">
+                    Размер: {gridCols * gridSize}×{gridRows * gridSize}px
+                  </div>
+                </div>
               </TabsContent>
               
-              <TabsContent value="map" className="space-y-4 mt-4">
+              <TabsContent value="map" className="mt-0">
                 <MapUploader
                   onMapLoaded={handleMapLoaded}
                   currentMapUrl={mapImage}
@@ -678,129 +646,124 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
                 />
               </TabsContent>
               
-              <TabsContent value="terrain" className="space-y-4 mt-4">
+              <TabsContent value="terrain" className="mt-0">
                 <TerrainPalette
                   onElementSelect={handleTerrainSelect}
                   selectedElement={selectedTerrain}
                 />
               </TabsContent>
-            </Tabs>
-          </div>
-        )}
+            </div>
+          </Tabs>
+        </div>
+      )}
 
-        {/* Основная область карты */}
-        <div className="flex-1 bg-muted/20 flex flex-col h-full">
-          <div className="flex-1 bg-card relative overflow-hidden">
-            <div className="w-full h-full">
-              <Stage
-                width={Math.max(window.innerWidth - 320, gridCols * gridSize)}
-                height={Math.max(window.innerHeight - 100, gridRows * gridSize)}
-                ref={stageRef}
-                className="cursor-crosshair w-full h-full"
-                scale={{ x: 1, y: 1 }}
-              >
-              <Layer>
-                {/* Фон карты на всю область */}
-                {mapBg ? (
-                  <Image
-                    image={mapBg}
-                    x={0}
-                    y={0}
-                    width={Math.max(window.innerWidth - 320, gridCols * gridSize)}
-                    height={Math.max(window.innerHeight - 100, gridRows * gridSize)}
-                    opacity={0.9}
-                  />
-                ) : (
+      {/* Карта на весь экран */}
+      <div className="flex-1 bg-background overflow-hidden relative">
+        <Stage
+          width={window.innerWidth}
+          height={isDM ? window.innerHeight - 200 : window.innerHeight}
+          ref={stageRef}
+          className="cursor-crosshair"
+        >
+          <Layer>
+            {/* Фон карты */}
+            {mapBg ? (
+              <Image
+                image={mapBg}
+                x={0}
+                y={0}
+                width={window.innerWidth}
+                height={isDM ? window.innerHeight - 200 : window.innerHeight}
+                opacity={0.9}
+              />
+            ) : (
+              <Rect
+                x={0}
+                y={0}
+                width={window.innerWidth}
+                height={isDM ? window.innerHeight - 200 : window.innerHeight}
+                fill="#0f172a"
+              />
+            )}
+
+            {/* Сетка */}
+            {showGrid && (
+              <>
+                {Array.from({ length: Math.ceil(window.innerWidth / gridSize) + 1 }, (_, col) => (
                   <Rect
-                    x={0}
+                    key={`grid-v-${col}`}
+                    x={col * gridSize}
                     y={0}
-                    width={Math.max(window.innerWidth - 320, gridCols * gridSize)}
-                    height={Math.max(window.innerHeight - 100, gridRows * gridSize)}
-                    fill="#0f172a"
+                    width={1}
+                    height={isDM ? window.innerHeight - 200 : window.innerHeight}
+                    fill={mapBg ? "#ffffff" : "#334155"}
+                    opacity={mapBg ? 0.4 : 0.3}
                   />
-                )}
+                ))}
+                {Array.from({ length: Math.ceil((isDM ? window.innerHeight - 200 : window.innerHeight) / gridSize) + 1 }, (_, row) => (
+                  <Rect
+                    key={`grid-h-${row}`}
+                    x={0}
+                    y={row * gridSize}
+                    width={window.innerWidth}
+                    height={1}
+                    fill={mapBg ? "#ffffff" : "#334155"}
+                    opacity={mapBg ? 0.4 : 0.3}
+                  />
+                ))}
 
-                {/* Сетка на всю область */}
-                {showGrid && (
+                {/* Координаты для больших клеток */}
+                {gridSize >= 64 && (
                   <>
-                    {Array.from({ length: Math.ceil((window.innerWidth - 320) / gridSize) + 1 }, (_, col) => (
-                      <Rect
-                        key={`grid-v-${col}`}
-                        x={col * gridSize}
-                        y={0}
-                        width={1}
-                        height={Math.max(window.innerHeight - 100, gridRows * gridSize)}
-                        fill={mapBg ? "#ffffff" : "#334155"}
-                        opacity={mapBg ? 0.4 : 0.3}
+                    {Array.from({ length: Math.ceil(window.innerWidth / gridSize) }, (_, col) => (
+                      <Text
+                        key={`coord-x-${col}`}
+                        text={(col + 1).toString()}
+                        fontSize={Math.min(14, gridSize / 6)}
+                        fill={mapBg ? "#000000" : "#64748b"}
+                        x={col * gridSize + gridSize / 2 - 8}
+                        y={8}
+                        fontFamily="monospace"
+                        fontStyle="bold"
+                        stroke={mapBg ? "#ffffff" : "transparent"}
+                        strokeWidth={mapBg ? 1 : 0}
                       />
                     ))}
-                    {Array.from({ length: Math.ceil((window.innerHeight - 100) / gridSize) + 1 }, (_, row) => (
-                      <Rect
-                        key={`grid-h-${row}`}
-                        x={0}
-                        y={row * gridSize}
-                        width={Math.max(window.innerWidth - 320, gridCols * gridSize)}
-                        height={1}
-                        fill={mapBg ? "#ffffff" : "#334155"}
-                        opacity={mapBg ? 0.4 : 0.3}
+                    {Array.from({ length: Math.ceil((isDM ? window.innerHeight - 200 : window.innerHeight) / gridSize) }, (_, row) => (
+                      <Text
+                        key={`coord-y-${row}`}
+                        text={String.fromCharCode(65 + row)}
+                        fontSize={Math.min(14, gridSize / 6)}
+                        fill={mapBg ? "#000000" : "#64748b"}
+                        x={8}
+                        y={row * gridSize + gridSize / 2 - 6}
+                        fontFamily="monospace"
+                        fontStyle="bold"
+                        stroke={mapBg ? "#ffffff" : "transparent"}
+                        strokeWidth={mapBg ? 1 : 0}
                       />
                     ))}
-
-                    {/* Координаты (только для больших размеров клеток) */}
-                    {gridSize >= 64 && (
-                      <>
-                        {Array.from({ length: Math.ceil((window.innerWidth - 320) / gridSize) }, (_, col) => (
-                          <Text
-                            key={`coord-x-${col}`}
-                            text={(col + 1).toString()}
-                            fontSize={Math.min(12, gridSize / 6)}
-                            fill={mapBg ? "#000000" : "#64748b"}
-                            x={col * gridSize + gridSize / 2 - 6}
-                            y={4}
-                            fontFamily="monospace"
-                            stroke={mapBg ? "#ffffff" : "transparent"}
-                            strokeWidth={mapBg ? 1 : 0}
-                          />
-                        ))}
-                        {Array.from({ length: Math.ceil((window.innerHeight - 100) / gridSize) }, (_, row) => (
-                          <Text
-                            key={`coord-y-${row}`}
-                            text={String.fromCharCode(65 + row)} // A, B, C...
-                            fontSize={Math.min(12, gridSize / 6)}
-                            fill={mapBg ? "#000000" : "#64748b"}
-                            x={4}
-                            y={row * gridSize + gridSize / 2 - 6}
-                            fontFamily="monospace"
-                            stroke={mapBg ? "#ffffff" : "transparent"}
-                            strokeWidth={mapBg ? 1 : 0}
-                          />
-                        ))}
-                      </>
-                    )}
                   </>
                 )}
-
-                {/* Токены */}
-                {tokens.map(renderToken)}
-              </Layer>
-            </Stage>
-            </div>
-            
-            {/* Индикатор масштаба карты */}
-            {mapImage && (
-              <div className="absolute top-4 right-4 bg-black/50 text-white px-2 py-1 rounded text-sm">
-                Масштаб: {mapScale}%
-              </div>
+              </>
             )}
-          </div>
-        </div>
-      </div>
 
-      {/* Статистика карты */}
-      <div className="px-4 py-2 bg-card border-t border-border flex justify-between text-sm text-muted-foreground h-12">
-        <span>Размер: {Math.ceil((window.innerWidth - 320) / gridSize)}×{Math.ceil((window.innerHeight - 100) / gridSize)} клеток ({gridSize}px/клетка)</span>
-        <span>Токенов на карте: {tokens.length}</span>
-        <span>Режим: {isDM ? 'Мастер подземелий' : 'Игрок'}</span>
+            {/* Токены */}
+            {tokens.map(renderToken)}
+          </Layer>
+        </Stage>
+        
+        {/* Индикатор масштаба */}
+        {mapImage && (
+          <div className="absolute top-4 right-4 bg-black/70 text-white px-3 py-2 rounded-lg text-sm font-medium">
+            Масштаб: {mapScale}%
+          </div>
+        )}
+        
+        {/* Информация внизу */}
+        <div className="absolute bottom-4 left-4 bg-black/70 text-white px-3 py-2 rounded-lg text-sm">
+          Токенов: {tokens.length} | Размер клетки: {gridSize}px | {isDM ? 'Мастер' : 'Игрок'}
+        </div>
       </div>
 
       {/* Редактор токена */}
