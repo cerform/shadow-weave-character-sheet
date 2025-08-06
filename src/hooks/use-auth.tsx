@@ -32,6 +32,15 @@ export const useProtectedRoute = () => {
   const isDM = userRoles.includes('dm') || isAdmin;
   const isPlayer = userRoles.includes('player') || userRoles.length === 0;
 
+  console.log('useProtectedRoute состояние:', {
+    loading: loading || rolesLoading,
+    isAuthenticated,
+    userRoles,
+    isAdmin,
+    isDM,
+    canAccessDMDashboard: isAuthenticated && isDM
+  });
+
   return {
     loading: loading || rolesLoading,
     isAuthenticated,

@@ -50,8 +50,8 @@ const ProtectedDMRoute = ({ children }: { children: React.ReactNode }) => {
   }
   
   if (!canAccessDMDashboard) {
-    console.log('Redirecting to /auth - no access');
-    return <Navigate to="/auth" replace />;
+    console.log('Redirecting to /unauthorized - no DM access');
+    return <Navigate to="/unauthorized" replace />;
   }
   
   return <>{children}</>;
@@ -134,11 +134,19 @@ const AppRoutes: React.FC = () => {
       {/* DM Dashboard New маршрут - перемещаем выше */}
       <Route path="/dm-dashboard-new" element={<DMDashboardPageNew />} />
       
-      {/* Battle Map маршрут - перемещаем выше */}
-      <Route path="/battle-map-fixed" element={<BattleMapPageFixed />} />
+      {/* Battle Map маршрут без защиты для доступа с главной */}
+      <Route path="/battle-map-fixed" element={
+        <ProtectedDMRoute>
+          <BattleMapPageFixed />
+        </ProtectedDMRoute>
+      } />
       
       {/* Маршруты DM с защитой - новая панель */}
-      <Route path="/dm" element={<DMDashboardPageNew />} />
+      <Route path="/dm" element={
+        <ProtectedDMRoute>
+          <DMDashboardPageNew />
+        </ProtectedDMRoute>
+      } />
       <Route path="/dm-session/:id" element={
         <ProtectedDMRoute>
           <React.Suspense fallback={<LazyLoading />}>
