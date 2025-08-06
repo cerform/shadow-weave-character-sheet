@@ -167,6 +167,15 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
 
   const handleDragEnd = useCallback((tokenId: string, newX: number, newY: number) => {
     console.log('Drag end:', tokenId, 'new position:', newX, newY);
+    
+    // Если позиция не изменилась, игнорируем
+    const currentToken = tokens.find(t => t.id === tokenId);
+    if (currentToken && currentToken.x === newX && currentToken.y === newY) {
+      console.log('Position unchanged, skipping update');
+      setDraggedTokenId(null);
+      return;
+    }
+    
     const snappedX = snapToGrid(newX);
     const snappedY = snapToGrid(newY);
     
@@ -187,6 +196,7 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
     
     console.log('Updated tokens:', updatedTokens.find(t => t.id === tokenId));
 
+    // Принудительно обновляем состояние
     if (onTokensChange) {
       onTokensChange(updatedTokens);
     } else {
@@ -202,7 +212,7 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
         description: `${token.name} перемещен на позицию (${Math.floor(boundedX/gridSize)}, ${Math.floor(boundedY/gridSize)})`,
       });
     }
-  }, [snapToGrid, tokens, onTokensChange, toast, gridCols, gridRows, gridSize]);
+  }, [snapToGrid, tokens, onTokensChange, setInternalTokens, toast, gridCols, gridRows, gridSize]);
 
   // Клик по токену
   const handleTokenClick = useCallback((token: Token) => {
