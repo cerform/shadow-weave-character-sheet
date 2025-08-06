@@ -16,6 +16,23 @@ export interface Theme {
 }
 
 export const themes: Record<string, Theme> = {
+  // Темная тема по умолчанию
+  default: {
+    background: '#0F0F23',
+    foreground: '#E2E8F0',
+    textColor: '#E2E8F0',
+    mutedTextColor: '#94A3B8',
+    accent: '#8B5CF6',
+    primary: '#8B5CF6',
+    secondary: '#6366F1',
+    buttonText: '#FFFFFF',
+    cardBackground: 'rgba(0, 0, 0, 0.4)',
+    borderColor: '#374151',
+    backgroundBrightness: 0.3,
+    backgroundGradient: 'linear-gradient(135deg, #0F0F23 0%, #1E1B4B 100%)',
+    decorativeCorners: true
+  },
+  
   // Фиолетовый + Черный с глоу эффектами
   shadow: {
     background: '#0A0A0A',

@@ -16,13 +16,27 @@ const BackgroundWrapper: React.FC<BackgroundWrapperProps> = ({
 }) => {
   const { theme } = useTheme();
   const themeKey = (theme || 'default') as keyof typeof themes;
-  const currentTheme = themes[themeKey] || themes.default;
+  const currentTheme = themes[themeKey] || themes.default || {
+    background: '#0F0F23',
+    foreground: '#E2E8F0',
+    textColor: '#E2E8F0',
+    mutedTextColor: '#94A3B8',
+    accent: '#8B5CF6',
+    primary: '#8B5CF6',
+    secondary: '#6366F1',
+    buttonText: '#FFFFFF',
+    cardBackground: 'rgba(0, 0, 0, 0.4)',
+    borderColor: '#374151',
+    backgroundBrightness: 0.3,
+    backgroundGradient: 'linear-gradient(135deg, #0F0F23 0%, #1E1B4B 100%)',
+    decorativeCorners: true
+  };
 
   return (
     <div 
       className="min-h-screen relative"
       style={{
-        backgroundColor: currentTheme.background,
+        backgroundColor: currentTheme?.background || '#0F0F23',
         backgroundImage: `url('/lovable-uploads/fedf4d87-93ed-4c26-a401-c2ced1b62cdd.png')`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
@@ -35,7 +49,7 @@ const BackgroundWrapper: React.FC<BackgroundWrapperProps> = ({
         <div 
           className="absolute inset-0 w-full h-full z-0"
           style={{ 
-            background: currentTheme.backgroundGradient || 
+            background: (currentTheme?.backgroundGradient) || 
               `linear-gradient(to bottom, rgba(0, 0, 0, ${opacity}), rgba(0, 0, 0, ${opacity - 0.1}))`,
             opacity: opacity
           }}
