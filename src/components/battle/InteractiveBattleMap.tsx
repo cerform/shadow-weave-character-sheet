@@ -675,11 +675,15 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
       tags: []
     };
     
+    const updatedTokens = [...tokens, newToken];
+    
+    // Принудительно обновляем состояние с новой ссылкой на массив
+    setCurrentTokens([...updatedTokens]);
+    
     if (onTokensChange) {
-      onTokensChange([...tokens, newToken]);
-    } else {
-      setInternalTokens(prev => [...prev, newToken]);
+      onTokensChange([...updatedTokens]);
     }
+    
     toast({
       title: "Токен добавлен",
       description: "Новый токен создан на карте",
@@ -688,16 +692,18 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
 
   // Сохранение токена
   const handleSaveToken = useCallback((updatedToken: Token) => {
+    console.log('Saving token:', updatedToken);
+    const updatedTokens = tokens.map(token => 
+      token.id === updatedToken.id ? { ...updatedToken } : token
+    );
+    
+    // Принудительно обновляем состояние с новой ссылкой на массив
+    setCurrentTokens([...updatedTokens]);
+    
     if (onTokensChange) {
-      const updatedTokens = tokens.map(token => 
-        token.id === updatedToken.id ? updatedToken : token
-      );
-      onTokensChange(updatedTokens);
-    } else {
-      setInternalTokens(prev => prev.map(token => 
-        token.id === updatedToken.id ? updatedToken : token
-      ));
+      onTokensChange([...updatedTokens]);
     }
+    
     setEditingToken(null);
     toast({
       title: "Токен обновлен",
