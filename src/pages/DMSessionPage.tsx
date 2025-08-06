@@ -8,9 +8,8 @@ import DiceRoller from '@/components/session/DiceRoller';
 import SessionChat from '@/components/session/SessionChat';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
-import useSessionStore from '@/stores/sessionStore';
-import { Session } from '@/types/session';
 import { useAuth } from '@/hooks/use-auth';
+import { supabase } from '@/integrations/supabase/client';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -58,11 +57,10 @@ interface Player {
 const DMSessionPage = () => {
   const { sessionId } = useParams<{ sessionId: string }>();
   const navigate = useNavigate();
-  const sessionStore = useSessionStore();
-  const { sessions, fetchSessions, endSession } = sessionStore;
-  const { currentUser } = useAuth(); // Используем currentUser из useAuth вместо sessionStore
-  const { isAuthenticated } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const [currentSession, setCurrentSession] = useState<any | null>(null);
+  const [players, setPlayers] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [isAddingPlayer, setIsAddingPlayer] = useState(false);
   const [newPlayerName, setNewPlayerName] = useState('');
   const [isEndingSession, setIsEndingSession] = useState(false);
@@ -78,36 +76,96 @@ const DMSessionPage = () => {
     }
     
     const loadSession = async () => {
-      await fetchSessions();
+      if (!sessionId) {
+        navigate('/dm');
+        return;
+      }
+
+      try {
+        // Загружаем сессию
+        const { data: session, error: sessionError } = await supabase
+          .from('game_sessions')
+          .select('*')
+          .eq('id', sessionId)
+          .single();
+
+        if (sessionError || !session) {
+          toast({
+            title: "Сессия не найдена",
+            variant: "destructive"
+          });
+          navigate('/dm');
+          return;
+        }
+
+        // Проверяем права доступа
+        if (session.dm_id !== user?.id) {
+          toast({
+            title: "Доступ запрещен",
+            description: "У вас нет прав для просмотра этой сессии",
+            variant: "destructive"
+          });
+          navigate('/dm');
+          return;
+        }
+
+        setCurrentSession(session);
+
+        // Загружаем игроков
+        const { data: sessionPlayers, error: playersError } = await supabase
+          .from('session_players')
+          .select(`
+            *,
+            characters (
+              id,
+              name,
+              class,
+              level
+            )
+          `)
+          .eq('session_id', sessionId);
+
+        if (!playersError && sessionPlayers) {
+          setPlayers(sessionPlayers);
+        }
+
+      } catch (error) {
+        console.error('Error loading session:', error);
+        toast({
+          title: "Ошибка загрузки",
+          description: "Не удалось загрузить сессию",
+          variant: "destructive"
+        });
+        navigate('/dm');
+      } finally {
+        setLoading(false);
+      }
     };
     
     loadSession();
-  }, [isAuthenticated, navigate, fetchSessions]);
+  }, [isAuthenticated, navigate, sessionId, user?.id, toast]);
 
-  // Select the current session when sessions load or ID changes
-  useEffect(() => {
-    if (sessions && sessionId) {
-      const session = sessions.find(s => s.id === sessionId);
-      
-      if (session) {
-        setCurrentSession(session);
-      } else {
-        // Session not found, navigate back
-        navigate('/dm');
-        toast({
-          title: "Сессия не найдена",
-          variant: "destructive"
-        });
-      }
-    }
-  }, [sessions, sessionId, navigate, toast]);
+  const handleEndSession = async () => {
+    if (!sessionId) return;
 
-  const handleEndSession = () => {
-    if (sessionId && endSession) {
-      endSession(sessionId);
+    try {
+      const { error } = await supabase
+        .from('game_sessions')
+        .update({ is_active: false, ended_at: new Date().toISOString() })
+        .eq('id', sessionId);
+
+      if (error) throw error;
+
       navigate('/dm');
       toast({
         title: "Сессия успешно завершена",
+      });
+    } catch (error) {
+      console.error('Error ending session:', error);
+      toast({
+        title: "Ошибка",
+        description: "Не удалось завершить сессию",
+        variant: "destructive"
       });
     }
   };
@@ -137,7 +195,7 @@ const DMSessionPage = () => {
     
     const newMessage = {
       id: Date.now().toString(),
-      sender: currentUser?.displayName || 'DM', // Use displayName instead of name
+      sender: user?.user_metadata?.full_name || 'DM',
       content: message,
       timestamp: new Date().toISOString(),
       isDM: true
@@ -146,13 +204,22 @@ const DMSessionPage = () => {
     setMessages(prev => [...prev, newMessage]);
     setMessage('');
     
-    // In a real app, you'd send this via socket
+    // В реальном приложении здесь отправка через сокет
   };
+
+  if (loading) {
+    return (
+      <div className="container p-6">
+        <h1>Загрузка сессии...</h1>
+        <Button onClick={() => navigate('/dm')}>Вернуться к списку сессий</Button>
+      </div>
+    );
+  }
 
   if (!currentSession) {
     return (
       <div className="container p-6">
-        <h1>Загрузка сессии...</h1>
+        <h1>Сессия не найдена</h1>
         <Button onClick={() => navigate('/dm')}>Вернуться к списку сессий</Button>
       </div>
     );
@@ -168,7 +235,7 @@ const DMSessionPage = () => {
           </Button>
           <h1 className="text-3xl font-bold">{currentSession.name}</h1>
           <div className="px-2 py-1 rounded bg-green-100 text-green-800 text-sm">
-            Код: {currentSession.code}
+            Код: {currentSession.session_code}
           </div>
         </div>
         
@@ -217,33 +284,33 @@ const DMSessionPage = () => {
                       <TableHead>Действия</TableHead>
                     </TableRow>
                   </TableHeader>
-                  <TableBody>
-                    {currentSession.players && currentSession.players.length > 0 ? (
-                      currentSession.players.map((player: Player) => (
-                        <TableRow key={player.id}>
-                          <TableCell className="font-medium">{player.name}</TableCell>
-                          <TableCell>
-                            {player.character ? player.character.name : 'Не выбран'}
-                          </TableCell>
-                          <TableCell>
-                            <div className={`w-3 h-3 rounded-full ${player.connected ? 'bg-green-500' : 'bg-red-500'} mr-2 inline-block`}></div>
-                            {player.connected ? 'Онлайн' : 'Оффлайн'}
-                          </TableCell>
-                          <TableCell>
-                            <Button variant="ghost" size="sm">
-                              Просмотр
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    ) : (
-                      <TableRow>
-                        <TableCell colSpan={4} className="text-center py-4">
-                          Нет игроков в сессии
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
+                   <TableBody>
+                     {players && players.length > 0 ? (
+                       players.map((player: any) => (
+                         <TableRow key={player.id}>
+                           <TableCell className="font-medium">{player.player_name}</TableCell>
+                           <TableCell>
+                             {player.characters ? player.characters.name : 'Не выбран'}
+                           </TableCell>
+                           <TableCell>
+                             <div className={`w-3 h-3 rounded-full ${player.is_online ? 'bg-green-500' : 'bg-red-500'} mr-2 inline-block`}></div>
+                             {player.is_online ? 'Онлайн' : 'Оффлайн'}
+                           </TableCell>
+                           <TableCell>
+                             <Button variant="ghost" size="sm">
+                               Просмотр
+                             </Button>
+                           </TableCell>
+                         </TableRow>
+                       ))
+                     ) : (
+                       <TableRow>
+                         <TableCell colSpan={4} className="text-center py-4">
+                           Нет игроков в сессии
+                         </TableCell>
+                       </TableRow>
+                     )}
+                   </TableBody>
                 </Table>
               </div>
               
