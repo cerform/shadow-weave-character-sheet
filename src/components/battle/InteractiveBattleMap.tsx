@@ -566,20 +566,33 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
   }, []);
 
   // Обработка панорамирования карты
-  const handleStageDragStart = useCallback((e: any) => {
-    // Предотвращаем перетаскивание карты если кликнули по токену
-    if (e.target !== e.target.getStage()) {
-      e.target.getStage().draggable(false);
+  const handleStageMouseDown = useCallback((e: any) => {
+    // Панорамирование только если кликнули на пустое место (не на токен)
+    if (e.target === e.target.getStage()) {
+      setIsPanning(true);
     }
   }, []);
 
-  const handleStageDragEnd = useCallback((e: any) => {
-    // Включаем обратно перетаскивание карты
-    e.target.getStage().draggable(true);
-    // Только если это сама карта, а не токен
-    if (e.target === e.target.getStage()) {
-      setStagePosition({ x: e.target.x(), y: e.target.y() });
-    }
+  const handleStageMouseMove = useCallback((e: any) => {
+    if (!isPanning) return;
+    
+    const stage = stageRef.current;
+    if (!stage) return;
+
+    const dx = e.evt.movementX;
+    const dy = e.evt.movementY;
+    
+    const newPos = {
+      x: stage.x() + dx,
+      y: stage.y() + dy
+    };
+    
+    stage.position(newPos);
+    setStagePosition(newPos);
+  }, [isPanning]);
+
+  const handleStageMouseUp = useCallback(() => {
+    setIsPanning(false);
   }, []);
 
   return (
@@ -591,10 +604,10 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
           height={windowSize.height}
           ref={stageRef}
           className="w-full h-full"
-          draggable={true}
           onWheel={handleWheel}
-          onDragStart={handleStageDragStart}
-          onDragEnd={handleStageDragEnd}
+          onMouseDown={handleStageMouseDown}
+          onMouseMove={handleStageMouseMove}
+          onMouseUp={handleStageMouseUp}
           scaleX={mapScale}
           scaleY={mapScale}
           x={stagePosition.x}
