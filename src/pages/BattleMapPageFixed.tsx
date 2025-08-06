@@ -14,6 +14,12 @@ const BattleMapPageFixed: React.FC = () => {
       <div className="max-w-4xl mx-auto">
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-3xl font-bold">Боевая карта</h1>
+          <Button 
+            onClick={() => navigate('/battle-map-3d')}
+            className="bg-purple-600 hover:bg-purple-700"
+          >
+            Переключить на 3D
+          </Button>
         </div>
 
         <Card className="bg-slate-800 border-slate-700">

@@ -20,6 +20,7 @@ import CharactersListPage from '@/pages/CharactersListPage';
 import CharacterManagementPage from '@/pages/CharacterManagementPage';
 import DMDashboardPageNew from '@/pages/DMDashboardPageNew';
 import BattleMapPageFixed from '@/pages/BattleMapPageFixed';
+import BattleMap3DPage from '@/pages/BattleMap3DPage';
 
 // Ленивая загрузка страниц, зависящих от WebSocket
 const GameRoomPage = React.lazy(() => import('@/pages/GameRoomPage'));
@@ -159,6 +160,11 @@ const AppRoutes: React.FC = () => {
       <Route path="/battle/:sessionId" element={
         <ProtectedDMRoute>
           <BattleMapPageFixed />
+        </ProtectedDMRoute>
+      } />
+      <Route path="/battle-map-3d" element={
+        <ProtectedDMRoute>
+          <BattleMap3DPage />
         </ProtectedDMRoute>
       } />
       <Route path="/dm-session/:id" element={
