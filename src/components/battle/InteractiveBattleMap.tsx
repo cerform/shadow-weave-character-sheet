@@ -511,11 +511,11 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
   }, [toast]);
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      <div className="flex h-screen">
+    <div className="h-screen bg-background text-foreground flex flex-col">
+      <div className="flex flex-1 overflow-hidden">
         {/* Левая панель с инструментами для DM */}
         {isDM && (
-          <div className="w-80 bg-card border-r border-border p-4">
+          <div className="w-80 bg-card border-r border-border p-4 overflow-y-auto">
             <Tabs value={activeTab} onValueChange={setActiveTab}>
                 <TabsList className="grid w-full grid-cols-4">
                   <TabsTrigger value="tokens">Токены</TabsTrigger>
@@ -689,14 +689,15 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
         )}
 
         {/* Основная область карты */}
-        <div className="flex-1 overflow-auto bg-muted/20 p-4">
-          <div className="border border-border rounded-lg overflow-hidden bg-card relative">
-            <Stage
-              width={gridCols * gridSize}
-              height={gridRows * gridSize}
-              ref={stageRef}
-              className="cursor-crosshair"
-            >
+        <div className="flex-1 overflow-hidden bg-muted/20 p-4 flex flex-col">
+          <div className="border border-border rounded-lg overflow-hidden bg-card relative flex-1 min-h-0">
+            <div className="w-full h-full overflow-auto">
+              <Stage
+                width={gridCols * gridSize}
+                height={gridRows * gridSize}
+                ref={stageRef}
+                className="cursor-crosshair"
+              >
               <Layer>
                 {/* Фон карты */}
                 {mapBg ? (
@@ -781,7 +782,8 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
                 {/* Токены */}
                 {tokens.map(renderToken)}
               </Layer>
-            </Stage>
+              </Stage>
+            </div>
             
             {/* Индикатор масштаба карты */}
             {mapImage && (
