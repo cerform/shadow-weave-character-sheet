@@ -149,6 +149,11 @@ const AppRoutes: React.FC = () => {
           <DMDashboardPageNew />
         </ProtectedDMRoute>
       } />
+      <Route path="/dm/battle-map/:id" element={
+        <ProtectedDMRoute>
+          <BattleMapPageFixed />
+        </ProtectedDMRoute>
+      } />
       <Route path="/battle-map-fixed" element={
         <ProtectedDMRoute>
           <BattleMapPageFixed />
