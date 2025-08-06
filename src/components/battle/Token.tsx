@@ -143,12 +143,36 @@ const Token: React.FC<TokenProps> = ({
         />
       )}
       
-      <img
-        src={token.img}
-        alt={token.name}
-        className="w-full h-full object-cover pointer-events-none"
-        draggable={false}
-      />
+      {token.img ? (
+        <img
+          src={token.img}
+          alt={token.name}
+          className="w-full h-full object-cover pointer-events-none"
+          draggable={false}
+          onError={(e) => {
+            // Fallback при ошибке загрузки изображения
+            const target = e.target as HTMLImageElement;
+            target.style.display = 'none';
+            
+            // Создаем текстовую замену
+            const parent = target.parentElement;
+            if (parent && !parent.querySelector('.token-fallback')) {
+              const fallback = document.createElement('div');
+              fallback.className = 'token-fallback w-full h-full flex items-center justify-center text-white font-bold text-xs';
+              fallback.style.backgroundColor = token.color || '#6b7280';
+              fallback.textContent = token.name.charAt(0).toUpperCase();
+              parent.appendChild(fallback);
+            }
+          }}
+        />
+      ) : (
+        <div 
+          className="w-full h-full flex items-center justify-center text-white font-bold text-xs"
+          style={{ backgroundColor: token.color || '#6b7280' }}
+        >
+          {token.name.charAt(0).toUpperCase()}
+        </div>
+      )}
       
       {/* Отображаем значение инициативы, если оно есть */}
       {token.initiative !== undefined && (

@@ -18,6 +18,7 @@ export interface Token {
   spellSlots?: { [key: string]: { used: number; max: number } };
   visible: boolean;
   size: number;
+  color?: string; // Добавляем поле цвета для токена
 }
 
 export interface Initiative {

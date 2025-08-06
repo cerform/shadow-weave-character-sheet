@@ -10,6 +10,7 @@ import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { defaultTokens } from '@/data/defaultTokens';
 import {
   Save,
   X,
@@ -176,19 +177,84 @@ const TokenEditor: React.FC<TokenEditorProps> = ({
                           src={formData.avatar} 
                           alt="Token Avatar" 
                           className="w-full h-full object-cover"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.style.display = 'none';
+                            const parent = target.parentElement;
+                            if (parent && !parent.querySelector('.avatar-fallback')) {
+                              const fallback = document.createElement('div');
+                              fallback.className = 'avatar-fallback w-full h-full flex items-center justify-center text-white font-bold text-lg';
+                              fallback.style.backgroundColor = formData.color || '#6b7280';
+                              fallback.textContent = formData.name.charAt(0).toUpperCase() || '?';
+                              parent.appendChild(fallback);
+                            }
+                          }}
                         />
                       ) : (
                         <Image className="h-8 w-8 text-slate-400" />
                       )}
                     </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="border-slate-600 text-slate-300"
-                    >
-                      <Upload className="h-3 w-3 mr-1" />
-                      Upload
-                    </Button>
+                    <div className="flex gap-2">
+                      <input
+                        type="file"
+                        id="avatar-upload"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            const reader = new FileReader();
+                            reader.onload = (event) => {
+                              setFormData(prev => ({ 
+                                ...prev, 
+                                avatar: event.target?.result as string 
+                              }));
+                            };
+                            reader.readAsDataURL(file);
+                          }
+                        }}
+                      />
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => document.getElementById('avatar-upload')?.click()}
+                        className="border-slate-600 text-slate-300"
+                      >
+                        <Upload className="h-3 w-3 mr-1" />
+                        Upload
+                      </Button>
+                    </div>
+                    
+                    {/* Предустановленные аватары */}
+                    <div className="w-full">
+                      <Label className="text-slate-300 text-sm mb-2 block">Предустановленные:</Label>
+                      <div className="grid grid-cols-3 gap-2">
+                        {defaultTokens.map((token) => (
+                          <button
+                            key={token.id}
+                            type="button"
+                            onClick={() => {
+                              setFormData(prev => ({ 
+                                ...prev, 
+                                avatar: token.image,
+                                name: prev.name || token.name,
+                                size: prev.size || token.size,
+                                max_hp: prev.max_hp || token.suggestedHP,
+                                current_hp: prev.current_hp || token.suggestedHP,
+                                armor_class: prev.armor_class || token.suggestedAC
+                              }));
+                            }}
+                            className="w-16 h-16 bg-slate-600 border border-slate-500 rounded-lg overflow-hidden hover:border-blue-400 transition-colors"
+                          >
+                            <img 
+                              src={token.image} 
+                              alt={token.name}
+                              className="w-full h-full object-cover"
+                            />
+                          </button>
+                        ))}
+                      </div>
+                    </div>
                   </div>
                 </div>
 
