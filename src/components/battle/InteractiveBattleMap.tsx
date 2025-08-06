@@ -390,7 +390,6 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
             stroke="#374151"
             strokeWidth={1}
           />
-          <Shield className="w-3 h-3" />
           <Text
             text={token.ac?.toString() || '10'}
             fontSize={8}
