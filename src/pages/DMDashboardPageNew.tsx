@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 console.log('DMDashboardPageNew загружается...');
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -8,16 +8,21 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Home, Crown, Users, Sword, Map, Dice6, Eye } from 'lucide-react';
+import { Home, Crown, Users, Sword, Map, Dice6, Eye, Play, Pause, Trash2, Copy, Calendar } from 'lucide-react';
 import { sessionService } from '@/services/sessionService';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/use-auth';
 
 const DMDashboardPageNew: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useAuth();
   const [isCreateSessionOpen, setIsCreateSessionOpen] = useState(false);
   const [sessionName, setSessionName] = useState('');
   const [sessionDescription, setSessionDescription] = useState('');
   const [isCreating, setIsCreating] = useState(false);
+  const [sessions, setSessions] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
   const features = [
     { icon: Users, title: 'Инициатива', description: 'Трекер порядка ходов' },
@@ -26,6 +31,101 @@ const DMDashboardPageNew: React.FC = () => {
     { icon: Eye, title: 'Туман войны', description: 'Скрытие областей карты' },
     { icon: Dice6, title: 'Кости', description: 'Система бросков костей' }
   ];
+
+  // Загрузка сессий пользователя
+  const fetchSessions = async () => {
+    if (!user?.id) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('game_sessions')
+        .select(`
+          *,
+          session_players(count)
+        `)
+        .eq('dm_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setSessions(data || []);
+    } catch (error) {
+      console.error('Error fetching sessions:', error);
+      toast({
+        title: "Ошибка",
+        description: "Не удалось загрузить сессии",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Загружаем сессии при монтировании компонента
+  useEffect(() => {
+    fetchSessions();
+  }, [user?.id]);
+
+  // Управление сессией
+  const handleSessionAction = async (sessionId: string, action: 'pause' | 'resume' | 'delete') => {
+    try {
+      if (action === 'delete') {
+        const { error } = await supabase
+          .from('game_sessions')
+          .delete()
+          .eq('id', sessionId);
+        
+        if (error) throw error;
+        
+        toast({
+          title: "Сессия удалена",
+          description: "Сессия была успешно удалена"
+        });
+      } else if (action === 'pause') {
+        const { error } = await supabase
+          .from('game_sessions')
+          .update({ is_active: false })
+          .eq('id', sessionId);
+        
+        if (error) throw error;
+        
+        toast({
+          title: "Сессия приостановлена",
+          description: "Сессия была приостановлена"
+        });
+      } else if (action === 'resume') {
+        const { error } = await supabase
+          .from('game_sessions')
+          .update({ is_active: true })
+          .eq('id', sessionId);
+        
+        if (error) throw error;
+        
+        toast({
+          title: "Сессия возобновлена",
+          description: "Сессия была возобновлена"
+        });
+      }
+      
+      // Перезагружаем список сессий
+      fetchSessions();
+    } catch (error) {
+      console.error('Error managing session:', error);
+      toast({
+        title: "Ошибка",
+        description: "Не удалось выполнить действие",
+        variant: "destructive"
+      });
+    }
+  };
+
+  // Копирование кода сессии
+  const copySessionCode = (code: string) => {
+    navigator.clipboard.writeText(code);
+    toast({
+      title: "Код скопирован",
+      description: `Код сессии ${code} скопирован в буфер обмена`
+    });
+  };
 
   const handleCreateSession = async () => {
     if (!sessionName.trim()) {
@@ -53,7 +153,8 @@ const DMDashboardPageNew: React.FC = () => {
         description: `Код сессии: ${newSession.session_code}`,
       });
       
-      // Переходим к странице управления сессией
+      // Перезагружаем сессии после создания
+      fetchSessions();
       navigate(`/dm-session/${newSession.id}`);
       
     } catch (error) {
@@ -107,6 +208,83 @@ const DMDashboardPageNew: React.FC = () => {
             </Card>
           ))}
         </div>
+
+        {/* Список активных сессий */}
+        {!loading && sessions.length > 0 && (
+          <Card className="bg-slate-800 border-slate-700 mb-8">
+            <CardHeader>
+              <CardTitle className="text-white flex items-center gap-2">
+                <Calendar className="h-5 w-5" />
+                Ваши сессии ({sessions.length})
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-4">
+                {sessions.map((session) => (
+                  <div key={session.id} className="bg-slate-700 p-4 rounded-lg">
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-2">
+                          <h3 className="text-lg font-semibold text-white">{session.name}</h3>
+                          <Badge variant={session.is_active ? "default" : "secondary"}>
+                            {session.is_active ? "Активна" : "Приостановлена"}
+                          </Badge>
+                          <Badge variant="outline" className="cursor-pointer" onClick={() => copySessionCode(session.session_code)}>
+                            <Copy className="h-3 w-3 mr-1" />
+                            {session.session_code}
+                          </Badge>
+                        </div>
+                        {session.description && (
+                          <p className="text-slate-300 text-sm mb-2">{session.description}</p>
+                        )}
+                        <div className="flex items-center gap-4 text-sm text-slate-400">
+                          <span>Создана: {new Date(session.created_at).toLocaleDateString('ru-RU')}</span>
+                          <span>Игроков: {session.session_players?.[0]?.count || 0}</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          size="sm"
+                          onClick={() => navigate(`/dm-session/${session.id}`)}
+                          className="bg-blue-600 hover:bg-blue-700"
+                        >
+                          <Play className="h-4 w-4 mr-1" />
+                          Управлять
+                        </Button>
+                        {session.is_active ? (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleSessionAction(session.id, 'pause')}
+                          >
+                            <Pause className="h-4 w-4 mr-1" />
+                            Пауза
+                          </Button>
+                        ) : (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleSessionAction(session.id, 'resume')}
+                          >
+                            <Play className="h-4 w-4 mr-1" />
+                            Продолжить
+                          </Button>
+                        )}
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          onClick={() => handleSessionAction(session.id, 'delete')}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         <Card className="bg-slate-800 border-slate-700">
           <CardHeader>
