@@ -38,10 +38,11 @@ export const SimpleBattleMap: React.FC<{ isDM?: boolean }> = ({ isDM = true }) =
   };
 
   const handleTokenDrag = (id: string, x: number, y: number) => {
-    // Ограничиваем движение в пределах карты
-    const boundedX = Math.max(25, Math.min(x, mapSize.width - 25));
-    const boundedY = Math.max(25, Math.min(y, mapSize.height - 25));
+    // Убираем жёсткие ограничения - даём больше свободы движения
+    const boundedX = Math.max(10, Math.min(x, mapSize.width - 10));
+    const boundedY = Math.max(10, Math.min(y, mapSize.height - 10));
     
+    console.log(`📍 MOVE TOKEN: ${id} to ${boundedX}, ${boundedY} (requested: ${x}, ${y})`);
     moveToken(id, boundedX, boundedY);
   };
 

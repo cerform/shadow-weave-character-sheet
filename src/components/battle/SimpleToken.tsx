@@ -43,12 +43,12 @@ export const SimpleToken: React.FC<SimpleTokenProps> = ({
       const deltaX = moveEvent.clientX - lastPosition.current.x;
       const deltaY = moveEvent.clientY - lastPosition.current.y;
       
-      // Проверяем что есть реальное движение
-      if (Math.abs(deltaX) > 1 || Math.abs(deltaY) > 1) {
+      // Проверяем что есть реальное движение (уменьшил порог)
+      if (Math.abs(deltaX) > 0.5 || Math.abs(deltaY) > 0.5) {
         const newX = token.x + deltaX;
         const newY = token.y + deltaY;
         
-        console.log(`🔄 DRAGGING: ${token.id} to ${newX}, ${newY}`);
+        console.log(`🔄 DRAGGING: ${token.id} from ${token.x},${token.y} to ${newX}, ${newY} (delta: ${deltaX}, ${deltaY})`);
         onDrag(token.id, newX, newY);
         lastPosition.current = { x: moveEvent.clientX, y: moveEvent.clientY };
       }
