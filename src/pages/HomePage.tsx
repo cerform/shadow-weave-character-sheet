@@ -131,33 +131,48 @@ const HomePage = () => {
       </div>
 
       <div className="relative z-10">
-        {/* Верхняя панель навигации */}
-        <div className="container mx-auto px-4 py-6">
+        {/* Компактная верхняя панель */}
+        <div className="container mx-auto px-4 py-4">
           <div className="flex justify-between items-center">
-            <div className="flex items-center space-x-3">
+            {/* Логотип и название - более компактные */}
+            <div className="flex items-center space-x-2">
               <div className="relative">
-                <Shield className="h-10 w-10 text-primary" />
-                <Sparkles className="h-4 w-4 text-accent absolute -top-1 -right-1 animate-pulse" />
+                <Shield className="h-8 w-8 text-primary" />
+                <Sparkles className="h-3 w-3 text-accent absolute -top-0.5 -right-0.5" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                <h1 className="text-xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
                   D&D Helper
                 </h1>
-                <p className="text-sm text-muted-foreground">Ваш цифровой помощник для D&D 5e</p>
+                <p className="text-xs text-muted-foreground hidden sm:block">Ваш цифровой помощник для D&D 5e</p>
               </div>
             </div>
             
-            <div className="flex items-center space-x-4">
-              <FantasyThemeSelector />
+            {/* Правая панель - более компактная */}
+            <div className="flex items-center space-x-2">
+              <div className="hidden md:block">
+                <FantasyThemeSelector />
+              </div>
               {isAuthenticated ? (
                 <ProfilePreview />
               ) : (
-                <Button 
-                  onClick={navigateToAuth}
-                  className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90"
-                >
-                  Войти
-                </Button>
+                <div className="flex items-center space-x-2">
+                  <Button 
+                    variant="outline"
+                    size="sm"
+                    onClick={navigateToAuth}
+                    className="hidden sm:flex"
+                  >
+                    Регистрация
+                  </Button>
+                  <Button 
+                    size="sm"
+                    onClick={navigateToAuth}
+                    className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90"
+                  >
+                    Войти
+                  </Button>
+                </div>
               )}
             </div>
           </div>
