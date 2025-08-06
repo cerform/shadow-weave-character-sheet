@@ -54,6 +54,7 @@ const FloatingActionWidget: React.FC = () => {
   ];
 
   const handleThemeChange = (themeName: string) => {
+    console.log('🎨 Смена темы на:', themeName);
     setTheme(themeName);
     setUserTheme(themeName);
     localStorage.setItem('theme', themeName);
@@ -139,7 +140,11 @@ const FloatingActionWidget: React.FC = () => {
             </Button>
           </motion.div>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="mb-2">
+        <DropdownMenuContent 
+          align="end" 
+          className="z-[9999] bg-background border border-border shadow-lg backdrop-blur-sm mb-2"
+          sideOffset={8}
+        >
           <DropdownMenuLabel>Выберите тему</DropdownMenuLabel>
           {themeOptions.map((option) => {
             const themeColor = themes[option.name as keyof typeof themes]?.accent || themes.default.accent;
@@ -149,7 +154,7 @@ const FloatingActionWidget: React.FC = () => {
               <DropdownMenuItem
                 key={option.name}
                 onClick={() => handleThemeChange(option.name)}
-                className="flex items-center gap-2"
+                className="flex items-center gap-2 hover:bg-accent cursor-pointer"
               >
                 <div className="w-4 h-4 rounded-full" style={{ backgroundColor: themeColor }} />
                 <span>{option.label}</span>
