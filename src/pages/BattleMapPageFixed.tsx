@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Home } from 'lucide-react';
-import InteractiveBattleMap, { Token } from '@/components/battle/InteractiveBattleMap';
+import SmoothBattleMap, { Token } from '@/components/battle/SmoothBattleMap';
 
 const BattleMapPageFixed: React.FC = () => {
   console.log('🔍 BattleMapPageFixed: компонент загружается');
@@ -92,7 +92,7 @@ const BattleMapPageFixed: React.FC = () => {
 
       {/* Карта на весь экран */}
       <div className="w-full h-full pt-16">
-        <InteractiveBattleMap
+        <SmoothBattleMap
           isDM={true}
           tokens={tokens}
           onTokensChange={handleTokensChange}
