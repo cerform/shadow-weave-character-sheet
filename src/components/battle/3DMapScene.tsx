@@ -34,7 +34,6 @@ const LightSetup = () => {
         position={[10, 20, 10]}
         intensity={1.2}
         castShadow
-        shadow-mapSize={[1024, 1024]}
       />
     </>
   );

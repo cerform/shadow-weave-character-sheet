@@ -228,7 +228,6 @@ const Token3D: React.FC<Token3DProps> = ({
         anchorY="middle"
         outlineWidth={0.03}
         outlineColor="black"
-        font="/fonts/helvetiker_bold.typeface.json"
       >
         {token.name}
       </Text>
