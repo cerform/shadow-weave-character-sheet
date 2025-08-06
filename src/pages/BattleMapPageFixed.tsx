@@ -1,9 +1,9 @@
 import React from 'react';
-console.log('BattleMapPageFixed загружается...');
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Home, Map } from 'lucide-react';
+import { Home, Map, Upload } from 'lucide-react';
+import InteractiveBattleMap from '@/components/battle/InteractiveBattleMap';
 
 const BattleMapPageFixed: React.FC = () => {
   console.log('BattleMapPageFixed: компонент загружается');
@@ -34,21 +34,7 @@ const BattleMapPageFixed: React.FC = () => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-center py-12">
-              <Map className="h-16 w-16 mx-auto mb-4 text-slate-400" />
-              <h3 className="text-xl font-semibold mb-2">Боевая карта загружается</h3>
-              <p className="text-slate-400">
-                Здесь будет интерактивная боевая карта с токенами, сеткой и инструментами DM
-              </p>
-              <div className="mt-6 flex gap-4 justify-center">
-                <Button className="bg-blue-600 hover:bg-blue-700">
-                  Загрузить карту
-                </Button>
-                <Button variant="outline" className="border-slate-600 text-slate-300">
-                  Создать новую карту
-                </Button>
-              </div>
-            </div>
+            <InteractiveBattleMap isDM={true} />
           </CardContent>
         </Card>
       </div>
