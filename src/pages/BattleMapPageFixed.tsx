@@ -13,17 +13,7 @@ const BattleMapPageFixed: React.FC = () => {
     <div className="min-h-screen bg-slate-900 text-white p-6">
       <div className="max-w-4xl mx-auto">
         <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-4">
-            <Button 
-              variant="ghost" 
-              onClick={() => navigate('/')}
-              className="text-slate-300 hover:text-white"
-            >
-              <Home className="h-4 w-4 mr-2" />
-              На главную
-            </Button>
-            <h1 className="text-3xl font-bold">Боевая карта</h1>
-          </div>
+          <h1 className="text-3xl font-bold">Боевая карта</h1>
         </div>
 
         <Card className="bg-slate-800 border-slate-700">
