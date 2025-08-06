@@ -8,8 +8,7 @@ import { SessionProvider } from '@/contexts/SessionContext';
 import { SocketProvider } from '@/contexts/SocketContext';
 import { Toaster } from '@/components/ui/toaster';
 
-import BackgroundWrapper from '@/components/layout/BackgroundWrapper';
-import UnifiedFloatingWidget from '@/components/ui/UnifiedFloatingWidget';
+import DynamicFantasyBackground from '@/components/layout/DynamicFantasyBackground';
 import AppRoutes from '@/AppRoutes';
 
 function App() {
@@ -21,12 +20,10 @@ function App() {
             <SessionProvider>
               <SocketProvider>
               <Router>
-                <BackgroundWrapper>
-                  
+                <DynamicFantasyBackground>
                   <AppRoutes />
                   <Toaster />
-                  <UnifiedFloatingWidget />
-                 </BackgroundWrapper>
+                </DynamicFantasyBackground>
               </Router>
               </SocketProvider>
             </SessionProvider>
