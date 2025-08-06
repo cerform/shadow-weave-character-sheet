@@ -10,30 +10,23 @@ const BattleMapPageFixed: React.FC = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-slate-900 text-white p-6">
-      <div className="max-w-4xl mx-auto">
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-3xl font-bold">Боевая карта</h1>
+    <div className="w-screen h-screen bg-slate-900 text-white overflow-hidden">
+      {/* Заголовок */}
+      <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-30">
+        <div className="flex items-center justify-between gap-4">
+          <h1 className="text-xl font-bold text-white">Боевая карта</h1>
           <Button 
             onClick={() => navigate('/battle-map-3d')}
             className="bg-purple-600 hover:bg-purple-700"
+            size="sm"
           >
             Переключить на 3D
           </Button>
         </div>
-
-        <Card className="bg-slate-800 border-slate-700">
-          <CardHeader>
-            <CardTitle className="text-white flex items-center gap-2">
-              <Map className="h-6 w-6" />
-              Интерактивная боевая карта
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <InteractiveBattleMap isDM={true} />
-          </CardContent>
-        </Card>
       </div>
+
+      {/* Карта на весь экран */}
+      <InteractiveBattleMap isDM={true} />
     </div>
   );
 };

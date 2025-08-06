@@ -150,19 +150,23 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
 
   // Обработчики Drag & Drop
   const handleDragStart = useCallback((tokenId: string, e: any) => {
+    console.log('Drag start:', tokenId);
     if (!isDM && !tokens.find(t => t.id === tokenId && t.type === 'player')) {
+      console.log('Drag blocked - no permissions');
       toast({
         title: "Нет доступа",
         description: "Вы можете перемещать только своих персонажей",
         variant: "destructive"
       });
-      e.evt.preventDefault(); // Отменяем перетаскивание
+      e.evt.preventDefault();
       return;
     }
+    console.log('Drag allowed, setting dragged token');
     setDraggedTokenId(tokenId);
   }, [isDM, tokens, toast]);
 
   const handleDragEnd = useCallback((tokenId: string, newX: number, newY: number) => {
+    console.log('Drag end:', tokenId, 'new position:', newX, newY);
     const snappedX = snapToGrid(newX);
     const snappedY = snapToGrid(newY);
     
@@ -171,6 +175,8 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
     const mapHeight = gridRows * gridSize;
     const boundedX = Math.max(0, Math.min(snappedX, mapWidth - gridSize));
     const boundedY = Math.max(0, Math.min(snappedY, mapHeight - gridSize));
+
+    console.log('Final position after snap and bounds:', boundedX, boundedY);
 
     if (onTokensChange) {
       const updatedTokens = tokens.map(token => 
