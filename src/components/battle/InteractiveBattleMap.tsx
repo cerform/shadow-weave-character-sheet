@@ -143,9 +143,11 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
   // Загружаем изображение карты
   const [mapBg] = useImage(mapImage || '');
 
-  // Привязка к сетке
+  // Привязка к сетке - более точная
   const snapToGrid = useCallback((value: number) => {
-    return Math.round(value / gridSize) * gridSize;
+    const cellCenter = gridSize / 2;
+    const cellIndex = Math.round((value - cellCenter) / gridSize);
+    return cellIndex * gridSize + cellCenter;
   }, [gridSize]);
 
   // Обработчики Drag & Drop
@@ -168,10 +170,16 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
   const handleDragEnd = useCallback((tokenId: string, newX: number, newY: number) => {
     console.log('Drag end:', tokenId, 'new position:', newX, newY);
     
-    // Если позиция не изменилась, игнорируем
+    // Проверяем минимальное движение
     const currentToken = tokens.find(t => t.id === tokenId);
-    if (currentToken && currentToken.x === newX && currentToken.y === newY) {
-      console.log('Position unchanged, skipping update');
+    if (!currentToken) return;
+    
+    const deltaX = Math.abs(newX - currentToken.x);
+    const deltaY = Math.abs(newY - currentToken.y);
+    const minMovement = gridSize * 0.3; // 30% от размера клетки
+    
+    if (deltaX < minMovement && deltaY < minMovement) {
+      console.log('Movement too small, ignoring');
       setDraggedTokenId(null);
       return;
     }
@@ -179,11 +187,13 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
     const snappedX = snapToGrid(newX);
     const snappedY = snapToGrid(newY);
     
+    console.log('After snap:', snappedX, snappedY);
+    
     // Проверяем границы карты
     const mapWidth = gridCols * gridSize;
     const mapHeight = gridRows * gridSize;
-    const boundedX = Math.max(0, Math.min(snappedX, mapWidth - gridSize));
-    const boundedY = Math.max(0, Math.min(snappedY, mapHeight - gridSize));
+    const boundedX = Math.max(gridSize/2, Math.min(snappedX, mapWidth - gridSize/2));
+    const boundedY = Math.max(gridSize/2, Math.min(snappedY, mapHeight - gridSize/2));
 
     console.log('Final position after snap and bounds:', boundedX, boundedY);
 
