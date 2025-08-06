@@ -8,6 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 import SimpleTokenEditor from './SimpleTokenEditor';
 import MapUploader from './MapUploader';
 import TerrainPalette from './TerrainPalette';
+import FogOfWarLayer, { VisibleArea } from './FogOfWarLayer';
 import useImage from 'use-image';
 
 // Доступные размеры клеток
@@ -122,6 +123,8 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
   const [selectedTerrain, setSelectedTerrain] = useState(null);
   const [activeTab, setActiveTab] = useState('tokens');
   const [windowSize, setWindowSize] = useState({ width: 1920, height: 1080 });
+  const [showFogOfWar, setShowFogOfWar] = useState(true);
+  const [fogVisibleAreas, setFogVisibleAreas] = useState<VisibleArea[]>([]);
   
   // Устанавливаем размеры окна
   useEffect(() => {
@@ -537,6 +540,14 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
             <h1 className="text-lg font-bold">Интерактивная боевая карта</h1>
             <div className="flex items-center gap-2">
               <Button 
+                onClick={() => setShowFogOfWar(!showFogOfWar)}
+                variant={showFogOfWar ? "default" : "outline"}
+                size="sm"
+              >
+                🌫 Туман войны
+              </Button>
+              
+              <Button 
                 onClick={() => setShowGrid(!showGrid)}
                 variant={showGrid ? "default" : "outline"}
                 size="sm"
@@ -573,8 +584,9 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
           </div>
           
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-4 max-w-md">
+            <TabsList className="grid w-full grid-cols-5 max-w-lg">
               <TabsTrigger value="tokens">Токены</TabsTrigger>
+              <TabsTrigger value="fog">Туман</TabsTrigger>
               <TabsTrigger value="grid">Сетка</TabsTrigger>
               <TabsTrigger value="map">Карта</TabsTrigger>
               <TabsTrigger value="terrain">Ландшафт</TabsTrigger>
@@ -605,6 +617,51 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
                       </div>
                     </div>
                   ))}
+                </div>
+              </TabsContent>
+              
+              <TabsContent value="fog" className="mt-0">
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={showFogOfWar}
+                      onChange={(e) => setShowFogOfWar(e.target.checked)}
+                      className="rounded"
+                    />
+                    <label className="text-sm font-medium">Включить туман войны</label>
+                  </div>
+                  
+                  <Button
+                    onClick={() => setFogVisibleAreas([])}
+                    variant="outline"
+                    size="sm"
+                  >
+                    Скрыть всё
+                  </Button>
+                  
+                  <Button
+                    onClick={() => {
+                      const fullArea: VisibleArea = {
+                        id: 'full_reveal',
+                        x: 0,
+                        y: 0,
+                        type: 'rectangle',
+                        width: windowSize.width,
+                        height: windowSize.height,
+                        radius: 0
+                      };
+                      setFogVisibleAreas([fullArea]);
+                    }}
+                    variant="outline"
+                    size="sm"
+                  >
+                    Показать всё
+                  </Button>
+                  
+                  <div className="text-sm text-muted-foreground">
+                    Видимых областей: {fogVisibleAreas.length}
+                  </div>
                 </div>
               </TabsContent>
               
@@ -774,6 +831,17 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
             {/* Токены */}
             {tokens.map(renderToken)}
           </Layer>
+          
+          {/* Слой тумана войны */}
+          <FogOfWarLayer
+            width={windowSize.width}
+            height={isDM ? windowSize.height - 160 : windowSize.height}
+            gridSize={gridSize}
+            visible={showFogOfWar}
+            isDM={isDM}
+            onVisibilityChange={setFogVisibleAreas}
+            initialVisibleAreas={fogVisibleAreas}
+          />
         </Stage>
         
         {/* Индикатор масштаба */}
