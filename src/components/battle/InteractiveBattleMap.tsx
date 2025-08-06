@@ -629,16 +629,18 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
           </Layer>
           
           {/* Слой тумана войны */}
-          {showFogOfWar && (
-            <FogOfWarLayer
-              width={windowSize.width}
-              height={windowSize.height}
-              gridSize={gridSize}
-              visible={showFogOfWar}
-              isDM={isDM}
-              onVisibilityChange={setFogVisibleAreas}
-              initialVisibleAreas={fogVisibleAreas}
-            />
+          {showFogOfWar && isDM && (
+            <Layer>
+              <FogOfWarLayer
+                width={windowSize.width}
+                height={windowSize.height}
+                gridSize={gridSize}
+                visible={showFogOfWar}
+                isDM={isDM}
+                onVisibilityChange={setFogVisibleAreas}
+                initialVisibleAreas={fogVisibleAreas}
+              />
+            </Layer>
           )}
         </Stage>
         

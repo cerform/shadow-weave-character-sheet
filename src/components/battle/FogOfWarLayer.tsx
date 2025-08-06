@@ -202,88 +202,45 @@ const FogOfWarLayer: React.FC<FogOfWarProps> = ({
 
   return (
     <>
-      {/* Инструменты управления туманом для DM */}
-      {isDM && (
-        <div className="absolute top-4 left-4 bg-black/80 text-white p-3 rounded-lg z-50 space-y-2">
-          <div className="text-sm font-medium">Туман войны</div>
-          
-          <div className="flex gap-2">
-            <button
-              className={`px-3 py-1 rounded text-xs ${
-                currentTool === 'reveal' 
-                  ? 'bg-green-600 text-white' 
-                  : 'bg-gray-600 hover:bg-gray-500'
-              }`}
-              onClick={() => setCurrentTool(currentTool === 'reveal' ? null : 'reveal')}
-            >
-              Открыть
-            </button>
-            
-            <button
-              className={`px-3 py-1 rounded text-xs ${
-                currentTool === 'hide' 
-                  ? 'bg-red-600 text-white' 
-                  : 'bg-gray-600 hover:bg-gray-500'
-              }`}
-              onClick={() => setCurrentTool(currentTool === 'hide' ? null : 'hide')}
-            >
-              Скрыть
-            </button>
-          </div>
-          
-          <div className="space-y-1">
-            <div className="text-xs">Размер кисти: {brushSize}px</div>
-            <input
-              type="range"
-              min="50"
-              max="300"
-              value={brushSize}
-              onChange={(e) => setBrushSize(Number(e.target.value))}
-              className="w-full h-1"
-            />
-          </div>
-          
-          <div className="flex gap-2">
-            <button
-              className="px-2 py-1 bg-blue-600 hover:bg-blue-500 rounded text-xs"
-              onClick={clearAllFog}
-            >
-              Все видно
-            </button>
-            
-            <button
-              className="px-2 py-1 bg-red-600 hover:bg-red-500 rounded text-xs"
-              onClick={hideAllMap}
-            >
-              Скрыть все
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Слой тумана войны */}
-      <Layer
-        ref={layerRef}
+      {/* Слой тумана войны - только Konva элементы */}
+      <Rect
+        x={0}
+        y={0}
+        width={width}
+        height={height}
+        fill="#000000"
+        opacity={isDM ? 0.3 : 0.8}
         listening={isDM}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
       />
-
-      {/* Курсор кисти для DM */}
-      {isDM && currentTool && (
-        <Circle
-          x={0}
-          y={0}
-          radius={brushSize / 2}
-          stroke={currentTool === 'reveal' ? '#22c55e' : '#ef4444'}
-          strokeWidth={2}
-          dash={[5, 5]}
-          opacity={0.7}
-          listening={false}
-          visible={false} // Будем управлять видимостью через события мыши
-        />
-      )}
+      
+      {/* Видимые области */}
+      {visibleAreas.map(area => (
+        area.type === 'circle' ? (
+          <Circle
+            key={area.id}
+            x={area.x}
+            y={area.y}
+            radius={area.radius}
+            fill="#000000"
+            globalCompositeOperation="destination-out"
+            listening={false}
+          />
+        ) : (
+          <Rect
+            key={area.id}
+            x={area.x}
+            y={area.y}
+            width={area.width || brushSize}
+            height={area.height || brushSize}
+            fill="#000000"
+            globalCompositeOperation="destination-out"
+            listening={false}
+          />
+        )
+      ))}
     </>
   );
 };
