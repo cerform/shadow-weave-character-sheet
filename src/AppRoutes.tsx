@@ -1,36 +1,32 @@
-
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 
-// Импортируем страницы
-import HomePage from './pages/HomePage';
-import NotFound from './pages/NotFound';
-import AuthPage from './pages/AuthPage';
-import DndSpellsPage from './pages/DndSpellsPage';
-import SpellbookPage from './pages/SpellbookPage';
-import CharacterCreationPage from './pages/CharacterCreationPage';
-import ProfilePage from './pages/ProfilePage';
-import HandbookPage from './pages/HandbookPage';
-import CharacterViewPage from './pages/CharacterViewPage';
-
-import BattleScenePage from './pages/BattleScenePage';
-import UnauthorizedPage from './pages/UnauthorizedPage';
-import DebugPage from './pages/DebugPage';
-import AdminPage from './pages/AdminPage';
-import CharactersListPage from './pages/CharactersListPage';
-import CharacterManagementPage from './pages/CharacterManagementPage';
+// Импортируем страницы через @/ alias
+import HomePage from '@/pages/HomePage';
+import NotFound from '@/pages/NotFound';
+import AuthPage from '@/pages/AuthPage';
+import DndSpellsPage from '@/pages/DndSpellsPage';
+import SpellbookPage from '@/pages/SpellbookPage';
+import CharacterCreationPage from '@/pages/CharacterCreationPage';
+import ProfilePage from '@/pages/ProfilePage';
+import HandbookPage from '@/pages/HandbookPage';
+import CharacterViewPage from '@/pages/CharacterViewPage';
+import BattleScenePage from '@/pages/BattleScenePage';
+import UnauthorizedPage from '@/pages/UnauthorizedPage';
+import DebugPage from '@/pages/DebugPage';
+import AdminPage from '@/pages/AdminPage';
+import CharactersListPage from '@/pages/CharactersListPage';
+import CharacterManagementPage from '@/pages/CharacterManagementPage';
+import DMDashboardPageNew from '@/pages/DMDashboardPageNew';
+import BattleMapPageFixed from '@/pages/BattleMapPageFixed';
 
 // Ленивая загрузка страниц, зависящих от WebSocket
-const GameRoomPage = React.lazy(() => import('./pages/GameRoomPage'));
-const JoinSessionPage = React.lazy(() => import('./pages/JoinSessionPage'));
-const TestPage = React.lazy(() => import('./pages/TestPage'));
-
-// Импортируем страницы напрямую
-import DMDashboardPageNew from './pages/DMDashboardPageNew';
-import BattleMapPageFixed from './pages/BattleMapPageFixed';
+const GameRoomPage = React.lazy(() => import('@/pages/GameRoomPage'));
+const JoinSessionPage = React.lazy(() => import('@/pages/JoinSessionPage'));
+const TestPage = React.lazy(() => import('@/pages/TestPage'));
 
 // Импорт хука для защиты маршрутов
-import { useProtectedRoute } from './hooks/use-auth';
+import { useProtectedRoute } from '@/hooks/use-auth';
 
 // Компонент Fallback для ленивой загрузки
 const LazyLoading = () => (
@@ -103,7 +99,7 @@ const RoleBasedRedirect = () => {
   }
   
   if (isPlayer) {
-    return <Navigate to="/player" replace />;
+    return <Navigate to="/characters" replace />;
   }
   
   return <Navigate to="/auth" replace />;
@@ -120,38 +116,37 @@ const AppRoutes: React.FC = () => {
   
   return (
     <Routes>
+      {/* Главная страница */}
       <Route path="/" element={<HomePage />} />
+      
+      {/* Аутентификация */}
       <Route path="/auth" element={<AuthPage />} />
       <Route path="/unauthorized" element={<UnauthorizedPage />} />
       <Route path="/dashboard" element={<RoleBasedRedirect />} />
       
-      {/* Добавляем страницу заклинаний D&D в начало списка */}
-      <Route 
-        path="/dnd-spells" 
-        element={<DndSpellsPage />} 
-      />
+      {/* Общедоступные страницы */}
+      <Route path="/spellbook" element={<SpellbookPage />} />
+      <Route path="/handbook" element={<HandbookPage />} />
+      <Route path="/dnd-spells" element={<DndSpellsPage />} />
       
-      {/* DM Dashboard New маршрут - перемещаем выше */}
-      <Route path="/dm-dashboard-new" element={<DMDashboardPageNew />} />
+      {/* Персонажи */}
+      <Route path="/character-creation" element={<CharacterCreationPage />} />
+      <Route path="/characters" element={<CharactersListPage />} />
+      <Route path="/character/:id" element={<CharacterViewPage />} />
+      <Route path="/character-management" element={<CharacterManagementPage />} />
       
-      {/* Battle Map маршрут без защиты для доступа с главной */}
-      <Route path="/battle-map-fixed" element={
-        <ProtectedDMRoute>
-          <BattleMapPageFixed />
-        </ProtectedDMRoute>
-      } />
+      {/* Профиль */}
+      <Route path="/profile" element={<ProfilePage />} />
       
-      {/* Маршруты DM с защитой - новая панель */}
+      {/* DM маршруты с защитой */}
       <Route path="/dm" element={
         <ProtectedDMRoute>
           <DMDashboardPageNew />
         </ProtectedDMRoute>
       } />
-      <Route path="/dm-session/:id" element={
+      <Route path="/battle-map-fixed" element={
         <ProtectedDMRoute>
-          <React.Suspense fallback={<LazyLoading />}>
-            <GameRoomPage />
-          </React.Suspense>
+          <BattleMapPageFixed />
         </ProtectedDMRoute>
       } />
       <Route path="/battle" element={
@@ -164,8 +159,22 @@ const AppRoutes: React.FC = () => {
           <BattleMapPageFixed />
         </ProtectedDMRoute>
       } />
+      <Route path="/dm-session/:id" element={
+        <ProtectedDMRoute>
+          <React.Suspense fallback={<LazyLoading />}>
+            <GameRoomPage />
+          </React.Suspense>
+        </ProtectedDMRoute>
+      } />
       
-      {/* Удаляем неиспользуемые маршруты игрока */}
+      {/* Админские маршруты */}
+      <Route path="/admin" element={
+        <ProtectedAdminRoute>
+          <AdminPage />
+        </ProtectedAdminRoute>
+      } />
+      
+      {/* Игровые сессии */}
       <Route path="/join-session" element={
         <ProtectedPlayerRoute>
           <React.Suspense fallback={<LazyLoading />}>
@@ -173,52 +182,27 @@ const AppRoutes: React.FC = () => {
           </React.Suspense>
         </ProtectedPlayerRoute>
       } />
-      
-      {/* Перенаправление для исправленных URL */}
-      <Route path="/join-game" element={<Navigate to="/join-session" replace />} />
-      
-      {/* Добавляем маршрут для отладки */}
-      <Route path="/debug" element={<DebugPage />} />
-      
-      {/* Удаляем старые перенаправления */}
-      
-      {/* Общедоступные маршруты */}
-      <Route path="/spellbook" element={<SpellbookPage />} />
-      <Route path="/character-creation" element={<CharacterCreationPage />} />
-      <Route path="/profile" element={<ProfilePage />} />
-      <Route path="/handbook" element={<HandbookPage />} />
-      <Route path="/character/:id" element={<CharacterViewPage />} />
-      <Route path="/characters" element={<CharactersListPage />} />
-      <Route path="/character-management" element={<CharacterManagementPage />} />
-      
-      {/* Маршрут для сессий */}
       <Route path="/session" element={
         <React.Suspense fallback={<LazyLoading />}>
           <JoinSessionPage />
         </React.Suspense>
       } />
       
-      {/* DM Dashboard маршруты */}
-      <Route path="/dm-dashboard" element={<DMDashboardPageNew />} />
-      <Route path="/dm-dashboard/:sessionId" element={<DMDashboardPageNew />} />
+      {/* Устаревшие редиректы */}
+      <Route path="/join-game" element={<Navigate to="/join-session" replace />} />
+      <Route path="/dm-dashboard" element={<Navigate to="/dm" replace />} />
+      <Route path="/dm-dashboard-new" element={<Navigate to="/dm" replace />} />
+      <Route path="/dm-dashboard/:sessionId" element={<Navigate to="/dm" replace />} />
       
-      
-      
-      {/* Тестовая страница для отладки */}
+      {/* Отладочные страницы */}
+      <Route path="/debug" element={<DebugPage />} />
       <Route path="/test" element={
         <React.Suspense fallback={<LazyLoading />}>
           <TestPage />
         </React.Suspense>
       } />
       
-      {/* Админская панель */}
-      <Route path="/admin" element={
-        <ProtectedAdminRoute>
-          <AdminPage />
-        </ProtectedAdminRoute>
-      } />
-      
-      {/* Маршрут для неизвестных путей */}
+      {/* Fallback - страница не найдена */}
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
