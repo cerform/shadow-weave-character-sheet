@@ -40,15 +40,32 @@ const BattleMapPageFixed: React.FC = () => {
       
       // Загружаем карты сессии
       const maps = await sessionService.getSessionMaps(sessionId!);
-      const activeMap = maps.find(m => m.is_active);
-      if (activeMap) {
-        setMapUrl(activeMap.image_url || '');
+      
+      // Находим активную карту или используем первую доступную
+      let activeMap = maps.find(m => m.is_active);
+      if (!activeMap && maps.length > 0) {
+        activeMap = maps[0];
+        // Устанавливаем первую карту как активную
+        await sessionService.setActiveMap(sessionId!, activeMap.id);
+        sessionData.current_map_id = activeMap.id;
       }
       
-      // Загружаем токены
-      const battleTokens = await sessionService.getMapTokens(sessionId!, activeMap?.id);
-      const convertedTokens = battleTokens.map(convertBattleTokenToToken);
-      setTokens(convertedTokens);
+      if (activeMap) {
+        setMapUrl(activeMap.image_url || '');
+        
+        // Загружаем токены для активной карты
+        const battleTokens = await sessionService.getMapTokens(sessionId!, activeMap.id);
+        console.log('🎯 Loaded battle tokens:', battleTokens);
+        
+        const convertedTokens = battleTokens.map(convertBattleTokenToToken);
+        console.log('🎯 Converted tokens:', convertedTokens);
+        setTokens(convertedTokens);
+      } else {
+        // Если нет карт, загружаем все токены сессии
+        const allTokens = await sessionService.getMapTokens(sessionId!);
+        const convertedTokens = allTokens.map(convertBattleTokenToToken);
+        setTokens(convertedTokens);
+      }
       
       toast.success('Данные сессии загружены');
     } catch (error) {
@@ -67,25 +84,25 @@ const BattleMapPageFixed: React.FC = () => {
     x: battleToken.position_x,
     y: battleToken.position_y,
     color: battleToken.color,
-    size: battleToken.size * 50, // Приводим к размеру в пикселях
-    hp: battleToken.current_hp || 30,
+    size: Math.max(battleToken.size * 50, 40), // Приводим к размеру в пикселях, минимум 40px
+    hp: battleToken.current_hp || battleToken.max_hp || 30,
     maxHp: battleToken.max_hp || 30,
     ac: battleToken.armor_class || 15,
     speed: 30, // Дефолтная скорость
-    type: battleToken.token_type as 'player' | 'monster' | 'npc',
+    type: (battleToken.token_type as 'player' | 'monster' | 'npc') || 'monster',
     controlledBy: battleToken.token_type === 'player' ? 'player1' : 'dm',
-    tags: battleToken.conditions || [],
+    tags: Array.isArray(battleToken.conditions) ? battleToken.conditions : [],
     notes: battleToken.notes
   });
 
-  const convertTokenToBattleToken = (token: Token): Omit<BattleToken, 'id' | 'session_id' | 'created_at' | 'updated_at'> => ({
-    map_id: session?.current_map_id,
+  const convertTokenToBattleToken = (token: Token, currentMapId?: string): Omit<BattleToken, 'id' | 'session_id' | 'created_at' | 'updated_at'> => ({
+    map_id: currentMapId || session?.current_map_id,
     character_id: undefined,
     name: token.name,
     image_url: token.avatar,
     position_x: token.x,
     position_y: token.y,
-    size: token.size / 50, // Приводим к относительному размеру
+    size: Math.max(token.size / 50, 0.8), // Приводим к относительному размеру, минимум 0.8
     color: token.color,
     token_type: token.type,
     current_hp: token.hp,
@@ -93,7 +110,7 @@ const BattleMapPageFixed: React.FC = () => {
     armor_class: token.ac,
     is_visible: true,
     is_hidden_from_players: token.type === 'monster' && token.controlledBy === 'dm',
-    conditions: token.tags || [],
+    conditions: Array.isArray(token.tags) ? token.tags : [],
     notes: token.notes
   });
 
@@ -108,8 +125,19 @@ const BattleMapPageFixed: React.FC = () => {
     try {
       setIsSaving(true);
       
+      // Определяем активную карту
+      let currentMapId = session?.current_map_id;
+      if (!currentMapId) {
+        const maps = await sessionService.getSessionMaps(sessionId);
+        const activeMap = maps.find(m => m.is_active) || maps[0];
+        if (activeMap) {
+          currentMapId = activeMap.id;
+          await sessionService.setActiveMap(sessionId, activeMap.id);
+        }
+      }
+      
       // Получаем текущие токены из базы
-      const currentBattleTokens = await sessionService.getMapTokens(sessionId, session?.current_map_id);
+      const currentBattleTokens = await sessionService.getMapTokens(sessionId, currentMapId);
       const currentTokenIds = new Set(currentBattleTokens.map(t => t.id));
       
       // Обновляем существующие токены и создаем новые
@@ -125,12 +153,12 @@ const BattleMapPageFixed: React.FC = () => {
             current_hp: token.hp,
             max_hp: token.maxHp,
             armor_class: token.ac,
-            conditions: token.tags || [],
+            conditions: Array.isArray(token.tags) ? token.tags : [],
             notes: token.notes
           });
         } else {
           // Создаем новый токен
-          await sessionService.createToken(sessionId, convertTokenToBattleToken(token));
+          await sessionService.createToken(sessionId, convertTokenToBattleToken(token, currentMapId));
         }
       }
       
