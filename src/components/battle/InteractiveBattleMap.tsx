@@ -659,11 +659,53 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
 
   // Добавление нового токена
   const addToken = useCallback(() => {
+    // Находим свободное место для нового токена
+    const findFreePosition = () => {
+      const tokenPositions = tokens.map(t => ({ x: t.x, y: t.y }));
+      const cellSize = gridSize;
+      
+      // Начинаем поиск с центра карты
+      const startX = Math.floor(gridCols / 2) * cellSize;
+      const startY = Math.floor(gridRows / 2) * cellSize;
+      
+      // Проверяем позиции по спирали от центра
+      for (let radius = 0; radius < Math.max(gridCols, gridRows) / 2; radius++) {
+        for (let angle = 0; angle < 360; angle += 45) {
+          const rad = (angle * Math.PI) / 180;
+          const x = startX + Math.cos(rad) * radius * cellSize;
+          const y = startY + Math.sin(rad) * radius * cellSize;
+          
+          // Проверяем, что позиция в пределах карты
+          if (x >= cellSize/2 && x < gridCols * cellSize - cellSize/2 && 
+              y >= cellSize/2 && y < gridRows * cellSize - cellSize/2) {
+            
+            // Проверяем, что позиция не занята другим токеном
+            const isOccupied = tokenPositions.some(pos => 
+              Math.abs(pos.x - x) < cellSize * 0.8 && 
+              Math.abs(pos.y - y) < cellSize * 0.8
+            );
+            
+            if (!isOccupied) {
+              return { x, y };
+            }
+          }
+        }
+      }
+      
+      // Если не нашли свободное место, ставим в случайную позицию
+      return {
+        x: (Math.floor(Math.random() * (gridCols - 2)) + 1) * cellSize,
+        y: (Math.floor(Math.random() * (gridRows - 2)) + 1) * cellSize
+      };
+    };
+    
+    const position = findFreePosition();
+    
     const newToken: Token = {
       id: `token_${Date.now()}`,
       name: `New Token`,
-      x: gridSize * 2,
-      y: gridSize * 2,
+      x: position.x,
+      y: position.y,
       color: '#6b7280',
       size: gridSize * 0.9,
       hp: 10,
@@ -688,7 +730,7 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
       title: "Токен добавлен",
       description: "Новый токен создан на карте",
     });
-  }, [tokens, onTokensChange, toast, gridSize]);
+  }, [tokens, onTokensChange, toast, gridSize, gridCols, gridRows]);
 
   // Сохранение токена
   const handleSaveToken = useCallback((updatedToken: Token) => {
