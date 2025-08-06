@@ -1,12 +1,15 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import { Stage, Layer, Rect, Group, Text, Circle, Image as KonvaImage } from 'react-konva';
 import { Button } from '@/components/ui/button';
-import { Plus, Upload, Trash2 } from 'lucide-react';
+import { Plus, Upload, Trash2, Edit, Settings, Users } from 'lucide-react';
+import { defaultTokens } from '@/data/defaultTokens';
+import SimpleTokenEditor from './SimpleTokenEditor';
 import useImage from 'use-image';
 
 export interface Token {
   id: string;
   name: string;
+  avatar?: string;
   x: number;
   y: number;
   color: string;
@@ -17,6 +20,8 @@ export interface Token {
   speed: number; // скорость в футах (обычно 30)
   type: 'player' | 'monster' | 'npc';
   controlledBy?: string;
+  tags?: string[];
+  notes?: string;
 }
 
 interface TacticalBattleMapProps {
@@ -60,12 +65,16 @@ const TacticalBattleMap: React.FC<TacticalBattleMapProps> = ({
 }) => {
   const [selectedTokenId, setSelectedTokenId] = useState<string | null>(null);
   const [availableSquares, setAvailableSquares] = useState<{x: number, y: number}[]>([]);
+  const [editingToken, setEditingToken] = useState<Token | null>(null);
+  const [showTokenLibrary, setShowTokenLibrary] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [mapImage] = useImage(mapImageUrl || '');
 
   console.log('🎲 TacticalBattleMap render:', { 
     tokensCount: tokens.length, 
     selectedToken: selectedTokenId,
-    availableSquares: availableSquares.length 
+    availableSquares: availableSquares.length,
+    editingToken: editingToken?.id
   });
 
   const calculateAvailableSquares = useCallback((token: Token) => {
@@ -155,28 +164,66 @@ const TacticalBattleMap: React.FC<TacticalBattleMapProps> = ({
   }, [selectedTokenId, availableSquares, tokens, onTokensChange]);
 
   const addToken = useCallback(() => {
+    setShowTokenLibrary(true);
+  }, []);
+
+  const addTokenFromLibrary = useCallback((defaultToken: any) => {
     const newToken: Token = {
       id: `token_${Date.now()}`,
-      name: `Fighter ${tokens.length + 1}`,
+      name: defaultToken.name,
+      avatar: defaultToken.image,
       x: 100,
       y: 100,
       color: '#3b82f6',
       size: 40,
-      hp: 30,
-      maxHp: 30,
-      ac: 16,
-      speed: 30, // 30 футов стандартная скорость
-      type: 'player',
-      controlledBy: 'player1'
+      hp: defaultToken.suggestedHP || 30,
+      maxHp: defaultToken.suggestedHP || 30,
+      ac: defaultToken.suggestedAC || 15,
+      speed: 30,
+      type: defaultToken.type === 'humanoid' ? 'player' : 'monster',
+      controlledBy: defaultToken.type === 'humanoid' ? 'player1' : 'dm',
+      tags: [defaultToken.type],
+      notes: defaultToken.description
     };
     onTokensChange([...tokens, newToken]);
+    setShowTokenLibrary(false);
   }, [tokens, onTokensChange]);
+
+  const handleEditToken = useCallback((token: Token) => {
+    setEditingToken(token);
+  }, []);
+
+  const handleSaveToken = useCallback((editedToken: Token) => {
+    const updatedTokens = tokens.map(t => 
+      t.id === editedToken.id ? editedToken : t
+    );
+    onTokensChange(updatedTokens);
+    setEditingToken(null);
+  }, [tokens, onTokensChange]);
+
+  const handleDeleteToken = useCallback(() => {
+    if (!editingToken) return;
+    const updatedTokens = tokens.filter(t => t.id !== editingToken.id);
+    onTokensChange(updatedTokens);
+    setEditingToken(null);
+  }, [editingToken, tokens, onTokensChange]);
+
+  const handleFileUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !onMapChange) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      onMapChange(event.target?.result as string);
+    };
+    reader.readAsDataURL(file);
+  }, [onMapChange]);
 
   return (
     <div className="w-full h-full bg-slate-900 flex">
       {/* Sidebar */}
       {isDM && (
-        <div className="w-80 bg-slate-800 p-4 space-y-4">
+        <div className="w-80 bg-slate-800 p-4 space-y-4 overflow-y-auto">
           <h3 className="text-lg font-bold text-white">D&D Боевая Карта</h3>
           
           <div className="bg-slate-700 p-3 rounded text-sm text-white">
@@ -186,16 +233,38 @@ const TacticalBattleMap: React.FC<TacticalBattleMapProps> = ({
               <li>• Стандартная скорость = 30 футов (6 клеток)</li>
               <li>• Клик на токен → показать доступные клетки</li>
               <li>• Клик на зеленую клетку → переместить</li>
+              <li>• ПКМ на токен → редактировать</li>
             </ul>
           </div>
 
-          <Button onClick={addToken} className="w-full">
-            <Plus className="w-4 h-4 mr-2" />
-            Добавить персонажа
-          </Button>
+          <div className="grid grid-cols-2 gap-2">
+            <Button onClick={addToken} className="w-full" size="sm">
+              <Plus className="w-4 h-4 mr-1" />
+              Добавить
+            </Button>
+            <Button
+              onClick={() => fileInputRef.current?.click()}
+              variant="outline"
+              size="sm"
+            >
+              <Upload className="w-4 h-4 mr-1" />
+              Фон
+            </Button>
+          </div>
+          
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handleFileUpload}
+            className="hidden"
+          />
 
           <div className="space-y-2">
-            <h4 className="text-md font-semibold text-white">Токены на карте:</h4>
+            <h4 className="text-md font-semibold text-white flex items-center">
+              <Users className="w-4 h-4 mr-2" />
+              Токены на карте ({tokens.length}):
+            </h4>
             {tokens.map((token) => (
               <div
                 key={token.id}
@@ -205,20 +274,48 @@ const TacticalBattleMap: React.FC<TacticalBattleMapProps> = ({
                     : 'bg-slate-700 text-gray-300 hover:bg-slate-600'
                 }`}
                 onClick={() => handleTokenClick(token.id)}
+                onContextMenu={(e) => {
+                  e.preventDefault();
+                  handleEditToken(token);
+                }}
               >
                 <div className="flex items-center space-x-2">
-                  <div
-                    className="w-3 h-3 rounded-full"
-                    style={{ backgroundColor: token.color }}
-                  />
-                  <span>{token.name}</span>
+                  {token.avatar ? (
+                    <img
+                      src={token.avatar}
+                      alt={token.name}
+                      className="w-6 h-6 rounded object-cover"
+                    />
+                  ) : (
+                    <div
+                      className="w-4 h-4 rounded-full"
+                      style={{ backgroundColor: token.color }}
+                    />
+                  )}
+                  <span className="flex-1">{token.name}</span>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-6 w-6 p-0 text-slate-400 hover:text-white"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleEditToken(token);
+                    }}
+                  >
+                    <Edit className="w-3 h-3" />
+                  </Button>
                 </div>
-                <div className="text-xs opacity-75">
+                <div className="text-xs opacity-75 mt-1">
                   Скорость: {token.speed} футов ({feetToSquares(token.speed)} клеток)
                 </div>
                 <div className="text-xs opacity-75">
                   HP: {token.hp}/{token.maxHp} | AC: {token.ac}
                 </div>
+                {token.tags && token.tags.length > 0 && (
+                  <div className="text-xs opacity-50 mt-1">
+                    🏷️ {token.tags.join(', ')}
+                  </div>
+                )}
               </div>
             ))}
           </div>
@@ -228,6 +325,41 @@ const TacticalBattleMap: React.FC<TacticalBattleMapProps> = ({
               <p>🎯 Выбран: {tokens.find(t => t.id === selectedTokenId)?.name}</p>
               <p>Доступно клеток: {availableSquares.length}</p>
               <p className="text-xs mt-1">Кликните на зеленую клетку для перемещения</p>
+            </div>
+          )}
+
+          {/* Библиотека токенов */}
+          {showTokenLibrary && (
+            <div className="bg-slate-700 p-3 rounded">
+              <div className="flex justify-between items-center mb-3">
+                <h4 className="font-semibold text-white">Выберите токен:</h4>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => setShowTokenLibrary(false)}
+                  className="text-slate-400 hover:text-white"
+                >
+                  ✕
+                </Button>
+              </div>
+              <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto">
+                {defaultTokens.map((defaultToken) => (
+                  <div
+                    key={defaultToken.id}
+                    className="bg-slate-600 p-2 rounded cursor-pointer hover:bg-slate-500 transition-colors"
+                    onClick={() => addTokenFromLibrary(defaultToken)}
+                  >
+                    <img
+                      src={defaultToken.image}
+                      alt={defaultToken.name}
+                      className="w-full h-12 object-cover rounded mb-1"
+                    />
+                    <div className="text-xs text-white text-center">
+                      {defaultToken.name}
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
         </div>
@@ -298,57 +430,83 @@ const TacticalBattleMap: React.FC<TacticalBattleMapProps> = ({
             ))}
 
             {/* Tokens */}
-            {tokens.map((token) => (
-              <Group
-                key={token.id}
-                x={token.x}
-                y={token.y}
-                onClick={() => handleTokenClick(token.id)}
-              >
-                {/* Token Base */}
-                <Circle
-                  radius={GRID_SIZE / 2 - 4}
-                  offsetX={-GRID_SIZE / 2}
-                  offsetY={-GRID_SIZE / 2}
-                  fill={token.color}
-                  stroke={selectedTokenId === token.id ? '#fbbf24' : '#000000'}
-                  strokeWidth={selectedTokenId === token.id ? 4 : 2}
-                />
+            {tokens.map((token) => {
+              const [tokenImage] = useImage(token.avatar || '');
+              
+              return (
+                <Group
+                  key={token.id}
+                  x={token.x}
+                  y={token.y}
+                  onClick={() => handleTokenClick(token.id)}
+                >
+                  {/* Token Base */}
+                  <Circle
+                    radius={GRID_SIZE / 2 - 4}
+                    offsetX={-GRID_SIZE / 2}
+                    offsetY={-GRID_SIZE / 2}
+                    fill={token.color}
+                    stroke={selectedTokenId === token.id ? '#fbbf24' : '#000000'}
+                    strokeWidth={selectedTokenId === token.id ? 4 : 2}
+                  />
 
-                {/* Token Name */}
-                <Text
-                  text={token.name}
-                  fontSize={10}
-                  fill="#ffffff"
-                  x={6}
-                  y={6}
-                  width={GRID_SIZE - 12}
-                  height={15}
-                  ellipsis={true}
-                />
+                  {/* Token Avatar */}
+                  {tokenImage ? (
+                    <KonvaImage
+                      image={tokenImage}
+                      x={4}
+                      y={4}
+                      width={GRID_SIZE - 8}
+                      height={GRID_SIZE - 20}
+                      cornerRadius={4}
+                    />
+                  ) : (
+                    /* Token Name if no avatar */
+                    <Text
+                      text={token.name}
+                      fontSize={10}
+                      fill="#ffffff"
+                      x={6}
+                      y={6}
+                      width={GRID_SIZE - 12}
+                      height={15}
+                      ellipsis={true}
+                    />
+                  )}
 
-                {/* HP Bar */}
-                <Rect
-                  x={6}
-                  y={GRID_SIZE - 12}
-                  width={GRID_SIZE - 12}
-                  height={4}
-                  fill="#333333"
-                  cornerRadius={2}
-                />
-                <Rect
-                  x={6}
-                  y={GRID_SIZE - 12}
-                  width={(GRID_SIZE - 12) * (token.hp / token.maxHp)}
-                  height={4}
-                  fill={token.hp > token.maxHp * 0.5 ? '#22c55e' : token.hp > token.maxHp * 0.25 ? '#eab308' : '#ef4444'}
-                  cornerRadius={2}
-                />
-              </Group>
-            ))}
+                  {/* HP Bar */}
+                  <Rect
+                    x={6}
+                    y={GRID_SIZE - 12}
+                    width={GRID_SIZE - 12}
+                    height={4}
+                    fill="#333333"
+                    cornerRadius={2}
+                  />
+                  <Rect
+                    x={6}
+                    y={GRID_SIZE - 12}
+                    width={(GRID_SIZE - 12) * (token.hp / token.maxHp)}
+                    height={4}
+                    fill={token.hp > token.maxHp * 0.5 ? '#22c55e' : token.hp > token.maxHp * 0.25 ? '#eab308' : '#ef4444'}
+                    cornerRadius={2}
+                  />
+                </Group>
+              );
+            })}
           </Layer>
         </Stage>
       </div>
+
+      {/* Token Editor */}
+      {editingToken && (
+        <SimpleTokenEditor
+          token={editingToken}
+          onSave={handleSaveToken}
+          onDelete={handleDeleteToken}
+          onCancel={() => setEditingToken(null)}
+        />
+      )}
     </div>
   );
 };
