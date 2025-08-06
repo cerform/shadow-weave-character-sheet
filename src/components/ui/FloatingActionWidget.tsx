@@ -55,11 +55,30 @@ const FloatingActionWidget: React.FC = () => {
 
   const handleThemeChange = (themeName: string) => {
     console.log('🎨 Смена темы на:', themeName);
+    
+    // Применяем тему через основной хук
     setTheme(themeName);
-    setUserTheme(themeName);
+    
+    // Принудительно применяем CSS переменные
+    const selectedTheme = themes[themeName as keyof typeof themes] || themes.default;
+    document.documentElement.setAttribute('data-theme', themeName);
+    document.body.className = '';
+    document.body.classList.add(`theme-${themeName}`);
+    
+    // Устанавливаем CSS переменные напрямую
+    document.documentElement.style.setProperty('--background', selectedTheme.background);
+    document.documentElement.style.setProperty('--foreground', selectedTheme.foreground);
+    document.documentElement.style.setProperty('--primary', selectedTheme.primary);
+    document.documentElement.style.setProperty('--accent', selectedTheme.accent);
+    document.documentElement.style.setProperty('--text', selectedTheme.textColor);
+    document.documentElement.style.setProperty('--card-bg', selectedTheme.cardBackground);
+    
+    // Сохраняем в localStorage
     localStorage.setItem('theme', themeName);
     localStorage.setItem('userTheme', themeName);
     localStorage.setItem('dnd-theme', themeName);
+    
+    console.log('✅ Тема применена:', themeName, selectedTheme);
   };
 
   const quickActions = [
