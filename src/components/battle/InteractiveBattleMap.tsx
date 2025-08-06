@@ -162,18 +162,25 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
     return cellIndex * gridSize + cellCenter;
   }, [gridSize]);
 
-  // Отладочные функции для мыши
+  // Отладочные функции для мыши с безопасной проверкой
   const logMouseEvent = useCallback((event: string, e: any, tokenId?: string) => {
-    const mousePos = { x: e.evt.clientX, y: e.evt.clientY };
-    const stagePos = e.target.getStage()?.getPointerPosition();
-    console.log(`🖱️ MOUSE ${event.toUpperCase()}:`, {
-      tokenId,
-      button: e.evt.button,
-      clientPos: mousePos,
-      stagePos,
-      timestamp: Date.now(),
-      type: e.evt.type
-    });
+    try {
+      const mousePos = e.evt ? { x: e.evt.clientX || 0, y: e.evt.clientY || 0 } : { x: 0, y: 0 };
+      const stagePos = e.target?.getStage?.()?.getPointerPosition?.() || { x: 0, y: 0 };
+      const button = e.evt?.button !== undefined ? e.evt.button : 'unknown';
+      
+      console.log(`🖱️ MOUSE ${event.toUpperCase()}:`, {
+        tokenId,
+        button,
+        clientPos: mousePos,
+        stagePos,
+        timestamp: Date.now(),
+        type: e.evt?.type || 'drag_event',
+        hasEvt: !!e.evt
+      });
+    } catch (error) {
+      console.log(`🖱️ MOUSE ${event.toUpperCase()} ERROR:`, error, { tokenId, eventObject: e });
+    }
   }, []);
 
   // Глобальные обработчики мыши для отладки
