@@ -5,7 +5,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Save, X, Trash2 } from 'lucide-react';
+import { Save, X, Trash2, Upload, Image } from 'lucide-react';
+import { defaultTokens } from '@/data/defaultTokens';
 
 export interface Token {
   id: string;
@@ -135,14 +136,114 @@ const SimpleTokenEditor: React.FC<SimpleTokenEditorProps> = ({
             </div>
 
             <div>
-              <Label htmlFor="avatar" className="text-white">Avatar URL</Label>
-              <Input
-                id="avatar"
-                value={editedToken.avatar || ''}
-                onChange={(e) => updateField('avatar', e.target.value)}
-                className="bg-slate-700 border-slate-600 text-white"
-                placeholder="https://example.com/avatar.png"
-              />
+              <Label htmlFor="avatar" className="text-white">Аватар</Label>
+              <div className="space-y-3">
+                {/* Превью текущего аватара */}
+                <div className="flex items-center gap-3">
+                  <div className="w-16 h-16 bg-slate-700 border-2 border-slate-600 rounded-lg flex items-center justify-center overflow-hidden">
+                    {editedToken.avatar ? (
+                      <img 
+                        src={editedToken.avatar} 
+                        alt="Token Avatar" 
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.style.display = 'none';
+                          const parent = target.parentElement;
+                          if (parent && !parent.querySelector('.avatar-fallback')) {
+                            const fallback = document.createElement('div');
+                            fallback.className = 'avatar-fallback w-full h-full flex items-center justify-center text-white font-bold text-sm';
+                            fallback.style.backgroundColor = editedToken.color || '#6b7280';
+                            fallback.textContent = editedToken.name.charAt(0).toUpperCase() || '?';
+                            parent.appendChild(fallback);
+                          }
+                        }}
+                      />
+                    ) : (
+                      <Image className="h-6 w-6 text-slate-400" />
+                    )}
+                  </div>
+                  
+                  <div className="flex gap-2">
+                    <input
+                      type="file"
+                      id="avatar-upload"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          const reader = new FileReader();
+                          reader.onload = (event) => {
+                            updateField('avatar', event.target?.result as string);
+                          };
+                          reader.readAsDataURL(file);
+                        }
+                      }}
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => document.getElementById('avatar-upload')?.click()}
+                      className="border-slate-600 text-slate-300"
+                    >
+                      <Upload className="h-3 w-3 mr-1" />
+                      Загрузить
+                    </Button>
+                    
+                    {editedToken.avatar && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => updateField('avatar', '')}
+                        className="border-slate-600 text-slate-300"
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    )}
+                  </div>
+                </div>
+                
+                {/* Предустановленные аватары */}
+                <div>
+                  <Label className="text-slate-300 text-sm mb-2 block">Предустановленные аватары:</Label>
+                  <div className="grid grid-cols-6 gap-2">
+                    {defaultTokens.map((token) => (
+                      <button
+                        key={token.id}
+                        type="button"
+                        onClick={() => {
+                          updateField('avatar', token.image);
+                          if (!editedToken.name || editedToken.name === 'Новый токен') {
+                            updateField('name', token.name);
+                          }
+                        }}
+                        className="w-12 h-12 bg-slate-600 border border-slate-500 rounded-lg overflow-hidden hover:border-blue-400 transition-colors"
+                        title={token.name}
+                      >
+                        <img 
+                          src={token.image} 
+                          alt={token.name}
+                          className="w-full h-full object-cover"
+                        />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                
+                {/* URL поле как дополнительная опция */}
+                <div>
+                  <Label className="text-slate-300 text-sm">Или введите URL:</Label>
+                  <Input
+                    value={editedToken.avatar || ''}
+                    onChange={(e) => updateField('avatar', e.target.value)}
+                    className="bg-slate-700 border-slate-600 text-white"
+                    placeholder="https://example.com/avatar.png"
+                  />
+                </div>
+              </div>
             </div>
           </TabsContent>
 

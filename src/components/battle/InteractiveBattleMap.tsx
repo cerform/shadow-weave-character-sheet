@@ -316,6 +316,171 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
     return icons[condition] || '?';
   };
 
+  // Компонент токена с поддержкой аватаров
+  const TokenWithAvatar = ({ token }: { token: Token }) => {
+    const [avatarImage] = useImage(token.avatar || '');
+    const isActive = token.isActive || token.id === activeTokenId;
+    const isDragged = draggedTokenId === token.id;
+    const isHovered = hoveredTokenId === token.id;
+    const isSelected = selectedToken?.id === token.id;
+
+    const getTypeColor = (type: string) => {
+      switch (type) {
+        case 'player': return '#2563eb';
+        case 'monster': return '#dc2626'; 
+        case 'npc': return '#16a34a';
+        default: return '#6b7280';
+      }
+    };
+
+    return (
+      <Group
+        x={token.x}
+        y={token.y}
+        draggable={isDM || token.type === 'player'}
+        onDragStart={() => handleDragStart(token.id)}
+        onDragEnd={(e) => handleDragEnd(token.id, e.target.x(), e.target.y())}
+        onMouseEnter={() => setHoveredTokenId(token.id)}
+        onMouseLeave={() => setHoveredTokenId(null)}
+        onClick={() => handleTokenClick(token)}
+        opacity={isDragged ? 0.8 : 1}
+        scaleX={isDragged ? 1.1 : isHovered ? 1.05 : 1}
+        scaleY={isDragged ? 1.1 : isHovered ? 1.05 : 1}
+      >
+        {/* Тень токена */}
+        <Circle
+          x={token.size / 2 + 2}
+          y={token.size / 2 + 2}
+          radius={(token.size / 2) - 2}
+          fill="#00000030"
+        />
+        
+        {/* Основной токен - изображение или цветной круг */}
+        {avatarImage ? (
+          <>
+            {/* Круглая маска для изображения */}
+            <Circle
+              x={token.size / 2}
+              y={token.size / 2}
+              radius={(token.size / 2) - 4}
+              fill={token.color}
+              stroke={isSelected ? "#fbbf24" : isActive ? "#10b981" : getTypeColor(token.type)}
+              strokeWidth={isSelected ? 4 : isActive ? 3 : 2}
+            />
+            <Image
+              x={4}
+              y={4}
+              width={token.size - 8}
+              height={token.size - 8}
+              image={avatarImage}
+              cornerRadius={(token.size / 2) - 4}
+              clipFunc={(ctx) => {
+                ctx.arc(token.size / 2, token.size / 2, (token.size / 2) - 4, 0, Math.PI * 2, false);
+              }}
+            />
+          </>
+        ) : (
+          <Circle
+            x={token.size / 2}
+            y={token.size / 2}
+            radius={(token.size / 2) - 4}
+            fill={token.color}
+            stroke={isSelected ? "#fbbf24" : isActive ? "#10b981" : getTypeColor(token.type)}
+            strokeWidth={isSelected ? 4 : isActive ? 3 : 2}
+          />
+        )}
+
+        {/* Имя токена */}
+        <Text
+          text={token.name}
+          fontSize={11}
+          fill="#ffffff"
+          fontStyle="bold"
+          x={2}
+          y={token.size - 16}
+          width={token.size - 4}
+          ellipsis={true}
+          align="center"
+        />
+
+        {/* AC индикатор */}
+        <Group x={token.size - 18} y={4}>
+          <Circle
+            radius={8}
+            fill="#1f2937"
+            stroke="#374151"
+            strokeWidth={1}
+          />
+          <Text
+            text={token.ac?.toString() || '10'}
+            fontSize={8}
+            fill="#ffffff"
+            x={-4}
+            y={-3}
+            align="center"
+            fontStyle="bold"
+          />
+        </Group>
+
+        {/* HP бар */}
+        {token.hp !== undefined && token.maxHp !== undefined && (
+          <Group x={0} y={-12}>
+            <Rect
+              x={2}
+              y={0}
+              width={token.size - 4}
+              height={6}
+              fill="#374151"
+              cornerRadius={3}
+            />
+            <Rect
+              x={2}
+              y={0}
+              width={((token.hp / token.maxHp) * (token.size - 4))}
+              height={6}
+              fill={token.hp > token.maxHp * 0.5 ? "#10b981" : token.hp > token.maxHp * 0.25 ? "#f59e0b" : "#ef4444"}
+              cornerRadius={3}
+            />
+            <Text
+              text={`${token.hp}/${token.maxHp}`}
+              fontSize={8}
+              fill="#ffffff"
+              x={2}
+              y={-1}
+              width={token.size - 4}
+              align="center"
+              fontStyle="bold"
+            />
+          </Group>
+        )}
+
+        {/* Статусы и условия */}
+        {token.conditions && token.conditions.length > 0 && (
+          <Group x={-12} y={token.size - 20}>
+            {token.conditions.slice(0, 3).map((condition, index) => (
+              <Group key={condition} x={index * 14} y={0}>
+                <Circle
+                  radius={6}
+                  fill={getConditionColor(condition)}
+                  stroke="#000000"
+                  strokeWidth={1}
+                />
+                <Text
+                  text={getConditionIcon(condition)}
+                  fontSize={8}
+                  fill="#ffffff"
+                  x={-3}
+                  y={-3}
+                  align="center"
+                />
+              </Group>
+            ))}
+          </Group>
+        )}
+      </Group>
+    );
+  };
+
   // Компонент токена
   const renderToken = useCallback((token: Token) => {
     const isActive = token.isActive || token.id === activeTokenId;
@@ -796,7 +961,9 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
             )}
 
             {/* Токены */}
-            {tokens.map(renderToken)}
+            {tokens.map(token => (
+              <TokenWithAvatar key={token.id} token={token} />
+            ))}
           </Layer>
         </Stage>
         
