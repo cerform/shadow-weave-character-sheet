@@ -4,6 +4,7 @@ import React, { Suspense } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, useTexture } from '@react-three/drei';
 import { Vector3 } from 'three';
+import FogOfWarLayer from './FogOfWarLayer';
 
 interface MapPlaneProps {
   textureUrl: string;
@@ -60,6 +61,7 @@ interface MapSceneProps {
   gridSize?: number;
   gridWidth?: number;
   gridHeight?: number;
+  isDM?: boolean;
 }
 
 const MapScene: React.FC<MapSceneProps> = ({
@@ -67,6 +69,7 @@ const MapScene: React.FC<MapSceneProps> = ({
   gridSize = 1,
   gridWidth = 24,
   gridHeight = 20,
+  isDM = false,
 }) => {
   const width = gridWidth * gridSize;
   const height = gridHeight * gridSize;
@@ -80,6 +83,13 @@ const MapScene: React.FC<MapSceneProps> = ({
       <Suspense fallback={null}>
         <MapPlane textureUrl={imageUrl} width={width} height={height} gridSize={gridSize} />
         <GridHelperPlane width={width} height={height} size={gridSize} />
+        <FogOfWarLayer
+          width={width}
+          height={height}
+          resolution={256}
+          isDM={isDM}
+          revealBrushSize={3}
+        />
       </Suspense>
       <LightSetup />
       <OrbitControls enablePan enableZoom enableRotate />

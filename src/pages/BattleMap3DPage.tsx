@@ -53,6 +53,7 @@ const BattleMap3DPage: React.FC = () => {
           gridSize={1}
           gridWidth={30}
           gridHeight={24}
+          isDM={true}
         />
       </div>
     </div>
