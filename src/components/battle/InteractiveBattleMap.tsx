@@ -529,12 +529,12 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
   }, [toast]);
 
   return (
-    <div className="h-screen bg-background text-foreground flex flex-col overflow-hidden">
+    <div className="w-screen h-screen bg-background text-foreground flex flex-col overflow-hidden fixed inset-0">
       {/* Верхняя панель управления */}
       {isDM && (
-        <div className="bg-card border-b border-border p-4 shadow-sm">
-          <div className="flex items-center justify-between mb-4">
-            <h1 className="text-xl font-bold">Интерактивная боевая карта</h1>
+        <div className="bg-card border-b border-border p-3 shadow-sm z-10 relative">
+          <div className="flex items-center justify-between mb-2">
+            <h1 className="text-lg font-bold">Интерактивная боевая карта</h1>
             <div className="flex items-center gap-2">
               <Button 
                 onClick={() => setShowGrid(!showGrid)}
@@ -580,7 +580,7 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
               <TabsTrigger value="terrain">Ландшафт</TabsTrigger>
             </TabsList>
             
-            <div className="mt-4">
+            <div className="mt-2">
               <TabsContent value="tokens" className="mt-0">
                 <div className="flex flex-wrap gap-2">
                   {tokens.map(token => (
@@ -676,12 +676,17 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
       )}
 
       {/* Карта на весь экран */}
-      <div className="flex-1 overflow-hidden relative" style={{ height: isDM ? windowSize.height - 200 : windowSize.height }}>
+      <div className="absolute inset-0 w-full h-full" style={{ 
+        top: isDM ? '160px' : '0px',
+        left: '0px',
+        right: '0px', 
+        bottom: '0px'
+      }}>
         <Stage
           width={windowSize.width}
-          height={isDM ? windowSize.height - 200 : windowSize.height}
+          height={isDM ? windowSize.height - 160 : windowSize.height}
           ref={stageRef}
-          className="cursor-crosshair absolute inset-0"
+          className="w-full h-full"
         >
           <Layer>
             {/* Фон карты */}
@@ -691,7 +696,7 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
                 x={0}
                 y={0}
                 width={windowSize.width}
-                height={isDM ? windowSize.height - 200 : windowSize.height}
+                height={isDM ? windowSize.height - 160 : windowSize.height}
                 opacity={0.9}
               />
             ) : (
@@ -699,7 +704,7 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
                 x={0}
                 y={0}
                 width={windowSize.width}
-                height={isDM ? windowSize.height - 200 : windowSize.height}
+                height={isDM ? windowSize.height - 160 : windowSize.height}
                 fill="#0f172a"
               />
             )}
@@ -713,12 +718,12 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
                     x={col * gridSize}
                     y={0}
                     width={1}
-                    height={isDM ? windowSize.height - 200 : windowSize.height}
+                    height={isDM ? windowSize.height - 160 : windowSize.height}
                     fill={mapBg ? "#ffffff" : "#334155"}
                     opacity={mapBg ? 0.4 : 0.3}
                   />
                 ))}
-                {Array.from({ length: Math.ceil((isDM ? windowSize.height - 200 : windowSize.height) / gridSize) + 1 }, (_, row) => (
+                {Array.from({ length: Math.ceil((isDM ? windowSize.height - 160 : windowSize.height) / gridSize) + 1 }, (_, row) => (
                   <Rect
                     key={`grid-h-${row}`}
                     x={0}
@@ -747,7 +752,7 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
                         strokeWidth={mapBg ? 1 : 0}
                       />
                     ))}
-                    {Array.from({ length: Math.ceil((isDM ? windowSize.height - 200 : windowSize.height) / gridSize) }, (_, row) => (
+                    {Array.from({ length: Math.ceil((isDM ? windowSize.height - 160 : windowSize.height) / gridSize) }, (_, row) => (
                       <Text
                         key={`coord-y-${row}`}
                         text={String.fromCharCode(65 + row)}
