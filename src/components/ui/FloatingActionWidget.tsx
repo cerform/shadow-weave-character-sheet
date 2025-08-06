@@ -10,10 +10,21 @@ import {
   Swords,
   BookOpen,
   Home,
-  User
+  User,
+  Paintbrush
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useAuth } from '@/hooks/use-auth';
+import { useTheme } from '@/hooks/use-theme';
+import { useUserTheme } from '@/hooks/use-user-theme';
+import { themes } from '@/lib/themes';
 
 const FloatingActionWidget: React.FC = () => {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -21,12 +32,34 @@ const FloatingActionWidget: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
+  const { theme, setTheme, themeStyles } = useTheme();
+  const { setUserTheme } = useUserTheme();
 
   // Скрываем виджет на определенных страницах
   useEffect(() => {
     const hiddenPaths = ['/auth', '/unauthorized'];
     setIsVisible(!hiddenPaths.includes(location.pathname));
   }, [location.pathname]);
+
+  const themeOptions = [
+    { name: 'default', label: 'По умолчанию' },
+    { name: 'warlock', label: 'Колдун' },
+    { name: 'wizard', label: 'Волшебник' },
+    { name: 'druid', label: 'Друид' },
+    { name: 'warrior', label: 'Воин' },
+    { name: 'bard', label: 'Бард' },
+    { name: 'monk', label: 'Монах' },
+    { name: 'ranger', label: 'Следопыт' },
+    { name: 'sorcerer', label: 'Чародей' },
+  ];
+
+  const handleThemeChange = (themeName: string) => {
+    setTheme(themeName);
+    setUserTheme(themeName);
+    localStorage.setItem('theme', themeName);
+    localStorage.setItem('userTheme', themeName);
+    localStorage.setItem('dnd-theme', themeName);
+  };
 
   const quickActions = [
     {
@@ -78,24 +111,65 @@ const FloatingActionWidget: React.FC = () => {
     setIsExpanded(false);
   };
 
+  const currentAccent = themeStyles?.accent || themes.default.accent;
+
   if (!isVisible || !isAuthenticated) return null;
 
   return (
     <motion.div
-      className="fixed bottom-6 right-6 z-50"
+      className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-4"
       initial={{ scale: 0, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
       transition={{ duration: 0.3, type: "spring" }}
     >
-      <AnimatePresence>
-        {isExpanded && (
+      {/* Переключатель тем */}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
           <motion.div
-            className="absolute bottom-16 right-0 space-y-3"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 20 }}
-            transition={{ duration: 0.2 }}
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ delay: 0.1, duration: 0.3 }}
           >
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-12 h-12 rounded-full bg-gradient-to-r from-secondary/80 to-accent/80 backdrop-blur-sm border-white/20 hover:scale-110 transition-all duration-200 shadow-lg hover:shadow-xl"
+            >
+              <Paintbrush className="w-5 h-5 text-white" />
+            </Button>
+          </motion.div>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="mb-2">
+          <DropdownMenuLabel>Выберите тему</DropdownMenuLabel>
+          {themeOptions.map((option) => {
+            const themeColor = themes[option.name as keyof typeof themes]?.accent || themes.default.accent;
+            const isActive = theme === option.name;
+            
+            return (
+              <DropdownMenuItem
+                key={option.name}
+                onClick={() => handleThemeChange(option.name)}
+                className="flex items-center gap-2"
+              >
+                <div className="w-4 h-4 rounded-full" style={{ backgroundColor: themeColor }} />
+                <span>{option.label}</span>
+                {isActive && <span className="ml-auto">✓</span>}
+              </DropdownMenuItem>
+            );
+          })}
+        </DropdownMenuContent>
+      </DropdownMenu>
+      {/* Основное меню действий */}
+      <div className="relative">
+        <AnimatePresence>
+          {isExpanded && (
+            <motion.div
+              className="absolute bottom-16 right-0 space-y-3"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 20 }}
+              transition={{ duration: 0.2 }}
+            >
             {quickActions.map((action, index) => (
               <motion.div
                 key={action.path}
@@ -120,24 +194,24 @@ const FloatingActionWidget: React.FC = () => {
                   {action.label}
                 </Button>
               </motion.div>
-            ))}
-          </motion.div>
-        )}
-      </AnimatePresence>
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-      <Button
-        variant="outline"
-        size="sm"
-        className={`
-          w-12 h-12 rounded-full
-          bg-gradient-to-r from-primary/80 to-primary-variant/80
-          backdrop-blur-sm border-white/20
-          hover:scale-110 transition-all duration-200
-          shadow-lg hover:shadow-xl
-          ${isExpanded ? 'rotate-45' : 'rotate-0'}
-        `}
-        onClick={() => setIsExpanded(!isExpanded)}
-      >
+        <Button
+          variant="outline"
+          size="sm"
+          className={`
+            w-12 h-12 rounded-full
+            bg-gradient-to-r from-primary/80 to-primary-variant/80
+            backdrop-blur-sm border-white/20
+            hover:scale-110 transition-all duration-200
+            shadow-lg hover:shadow-xl
+            ${isExpanded ? 'rotate-45' : 'rotate-0'}
+          `}
+          onClick={() => setIsExpanded(!isExpanded)}
+        >
         <AnimatePresence mode="wait">
           {isExpanded ? (
             <motion.div
@@ -161,7 +235,8 @@ const FloatingActionWidget: React.FC = () => {
             </motion.div>
           )}
         </AnimatePresence>
-      </Button>
+        </Button>
+      </div>
     </motion.div>
   );
 };
