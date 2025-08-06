@@ -12,7 +12,11 @@ import { useUserTheme } from '@/hooks/use-user-theme';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
 
-export const ThemeSelector = () => {
+interface ThemeSelectorProps {
+  compact?: boolean;
+}
+
+export const ThemeSelector = ({ compact = false }: ThemeSelectorProps) => {
   const { setUserTheme, activeTheme } = useUserTheme();
   const { theme, setTheme } = useTheme();
   
@@ -75,6 +79,23 @@ export const ThemeSelector = () => {
     
     console.log('Тема изменена на:', themeName);
   }, [currentThemeId, setUserTheme, setTheme, applyThemeToDom]);
+
+  if (compact) {
+    return (
+      <select
+        value={currentThemeId}
+        onChange={(e) => handleThemeChange(e.target.value)}
+        className="text-xs bg-transparent border-none outline-none cursor-pointer max-w-20"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {themesList.map((themeItem) => (
+          <option key={themeItem.name} value={themeItem.name} className="bg-background text-foreground">
+            {themeItem.label}
+          </option>
+        ))}
+      </select>
+    );
+  }
 
   return (
     <DropdownMenu>

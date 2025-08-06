@@ -7,7 +7,7 @@ import { SpellbookProvider } from '@/contexts/SpellbookContext';
 import { SessionProvider } from '@/contexts/SessionContext';
 import { SocketProvider } from '@/contexts/SocketContext';
 import { Toaster } from '@/components/ui/toaster';
-import NavigationButtons from '@/components/ui/NavigationButtons';
+import CompactNavigationMenu from '@/components/navigation/CompactNavigationMenu';
 import BackgroundWrapper from '@/components/layout/BackgroundWrapper';
 import UnifiedFloatingWidget from '@/components/ui/UnifiedFloatingWidget';
 import AppRoutes from '@/AppRoutes';
@@ -22,7 +22,7 @@ function App() {
               <SocketProvider>
               <Router>
                 <BackgroundWrapper>
-                  <NavigationButtons />
+                  <CompactNavigationMenu />
                   <AppRoutes />
                   <Toaster />
                   <UnifiedFloatingWidget />
