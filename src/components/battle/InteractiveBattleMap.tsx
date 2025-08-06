@@ -149,17 +149,17 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
   }, [gridSize]);
 
   // Обработчики Drag & Drop
-  const handleDragStart = useCallback((tokenId: string) => {
+  const handleDragStart = useCallback((tokenId: string, e: any) => {
     if (!isDM && !tokens.find(t => t.id === tokenId && t.type === 'player')) {
       toast({
         title: "Нет доступа",
         description: "Вы можете перемещать только своих персонажей",
         variant: "destructive"
       });
-      return false;
+      e.evt.preventDefault(); // Отменяем перетаскивание
+      return;
     }
     setDraggedTokenId(tokenId);
-    return true;
   }, [isDM, tokens, toast]);
 
   const handleDragEnd = useCallback((tokenId: string, newX: number, newY: number) => {
@@ -338,7 +338,7 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
         x={token.x}
         y={token.y}
         draggable={isDM || token.type === 'player'}
-        onDragStart={() => handleDragStart(token.id)}
+        onDragStart={(e) => handleDragStart(token.id, e)}
         onDragEnd={(e) => handleDragEnd(token.id, e.target.x(), e.target.y())}
         onMouseEnter={() => setHoveredTokenId(token.id)}
         onMouseLeave={() => setHoveredTokenId(null)}
@@ -503,7 +503,7 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
         x={token.x}
         y={token.y}
         draggable={isDM || token.type === 'player'}
-        onDragStart={() => handleDragStart(token.id)}
+        onDragStart={(e) => handleDragStart(token.id, e)}
         onDragEnd={(e) => handleDragEnd(token.id, e.target.x(), e.target.y())}
         onMouseEnter={() => setHoveredTokenId(token.id)}
         onMouseLeave={() => setHoveredTokenId(null)}
