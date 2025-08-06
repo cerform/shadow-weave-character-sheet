@@ -56,6 +56,9 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
   const { toast } = useToast();
   const stageRef = useRef(null);
   
+  // Временно задаем ID пользователя (в будущем из auth context)
+  const currentUserId = 'Player1'; // TODO: получать из useAuth()
+  
   const [internalTokens, setInternalTokens] = useState<Token[]>([
     {
       id: 'goblin_scout',
@@ -162,7 +165,10 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
   // Обработчики Drag & Drop
   const handleDragStart = useCallback((tokenId: string, e: any) => {
     console.log('Drag start:', tokenId);
-    if (!isDM && !tokens.find(t => t.id === tokenId && t.type === 'player')) {
+    const token = tokens.find(t => t.id === tokenId);
+    
+    // Проверяем права доступа
+    if (!isDM && token?.controlledBy !== currentUserId) {
       console.log('Drag blocked - no permissions');
       toast({
         title: "Нет доступа",
@@ -172,9 +178,10 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
       e.evt.preventDefault();
       return;
     }
+    
     console.log('Drag allowed, setting dragged token');
     setDraggedTokenId(tokenId);
-  }, [isDM, tokens, toast]);
+  }, [isDM, tokens, toast, currentUserId]);
 
   const handleDragEnd = useCallback((tokenId: string, newX: number, newY: number) => {
     console.log('Drag end:', tokenId, 'new position:', newX, newY);
@@ -378,9 +385,16 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
         key={`${token.id}-${token.x}-${token.y}`} // Принудительный перерендер при изменении позиции
         x={token.x}
         y={token.y}
-        draggable={isDM || token.type === 'player'}
+        draggable={isDM || token.controlledBy === currentUserId}
         onDragStart={(e) => {
           console.log('Token drag start:', token.id, 'current pos:', token.x, token.y);
+          
+          // Проверяем права доступа перед началом перетаскивания
+          if (!isDM && token.controlledBy !== currentUserId) {
+            e.evt.preventDefault();
+            return;
+          }
+          
           handleDragStart(token.id, e);
         }}
         onDragMove={(e) => {
@@ -394,11 +408,17 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
             const updatedTokens = currentTokens.map(t => 
               t.id === token.id ? { ...t, x: newX, y: newY } : t
             );
-            setCurrentTokens(updatedTokens);
+            setCurrentTokens([...updatedTokens]); // Новая ссылка на массив
           }
         }}
         onDragEnd={(e) => {
           console.log('Token drag end:', token.id, 'target pos:', e.target.x(), e.target.y());
+          
+          // Проверяем права доступа
+          if (!isDM && token.controlledBy !== currentUserId) {
+            return;
+          }
+          
           handleDragEnd(token.id, e.target.x(), e.target.y());
         }}
         onMouseEnter={() => setHoveredTokenId(token.id)}
