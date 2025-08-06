@@ -8,8 +8,8 @@ import { SessionProvider } from '@/contexts/SessionContext';
 import { SocketProvider } from '@/contexts/SocketContext';
 import { Toaster } from '@/components/ui/toaster';
 
-import DynamicFantasyBackground from '@/components/layout/DynamicFantasyBackground';
-
+import BackgroundWrapper from '@/components/layout/BackgroundWrapper';
+import UnifiedFloatingWidget from '@/components/ui/UnifiedFloatingWidget';
 import AppRoutes from '@/AppRoutes';
 
 function App() {
@@ -21,12 +21,12 @@ function App() {
             <SessionProvider>
               <SocketProvider>
               <Router>
-                <DynamicFantasyBackground autoRotate={true} rotateInterval={45}>
+                <BackgroundWrapper>
                   
                   <AppRoutes />
                   <Toaster />
-                  
-                 </DynamicFantasyBackground>
+                  <UnifiedFloatingWidget />
+                 </BackgroundWrapper>
               </Router>
               </SocketProvider>
             </SessionProvider>
