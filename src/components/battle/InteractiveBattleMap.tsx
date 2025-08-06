@@ -121,7 +121,25 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
   const [mapScale, setMapScale] = useState(100);
   const [selectedTerrain, setSelectedTerrain] = useState(null);
   const [activeTab, setActiveTab] = useState('tokens');
+  const [windowSize, setWindowSize] = useState({ width: 1920, height: 1080 });
   
+  // Устанавливаем размеры окна
+  useEffect(() => {
+    const updateWindowSize = () => {
+      setWindowSize({
+        width: window.innerWidth,
+        height: window.innerHeight
+      });
+    };
+    
+    updateWindowSize();
+    window.addEventListener('resize', updateWindowSize);
+    
+    return () => {
+      window.removeEventListener('resize', updateWindowSize);
+    };
+  }, []);
+
   // Загружаем изображение карты
   const [mapBg] = useImage(mapImage || '');
 
@@ -658,12 +676,12 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
       )}
 
       {/* Карта на весь экран */}
-      <div className="flex-1 bg-background overflow-hidden relative">
+      <div className="flex-1 overflow-hidden relative" style={{ height: isDM ? windowSize.height - 200 : windowSize.height }}>
         <Stage
-          width={window.innerWidth}
-          height={isDM ? window.innerHeight - 200 : window.innerHeight}
+          width={windowSize.width}
+          height={isDM ? windowSize.height - 200 : windowSize.height}
           ref={stageRef}
-          className="cursor-crosshair"
+          className="cursor-crosshair absolute inset-0"
         >
           <Layer>
             {/* Фон карты */}
@@ -672,16 +690,16 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
                 image={mapBg}
                 x={0}
                 y={0}
-                width={window.innerWidth}
-                height={isDM ? window.innerHeight - 200 : window.innerHeight}
+                width={windowSize.width}
+                height={isDM ? windowSize.height - 200 : windowSize.height}
                 opacity={0.9}
               />
             ) : (
               <Rect
                 x={0}
                 y={0}
-                width={window.innerWidth}
-                height={isDM ? window.innerHeight - 200 : window.innerHeight}
+                width={windowSize.width}
+                height={isDM ? windowSize.height - 200 : windowSize.height}
                 fill="#0f172a"
               />
             )}
@@ -689,23 +707,23 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
             {/* Сетка */}
             {showGrid && (
               <>
-                {Array.from({ length: Math.ceil(window.innerWidth / gridSize) + 1 }, (_, col) => (
+                {Array.from({ length: Math.ceil(windowSize.width / gridSize) + 1 }, (_, col) => (
                   <Rect
                     key={`grid-v-${col}`}
                     x={col * gridSize}
                     y={0}
                     width={1}
-                    height={isDM ? window.innerHeight - 200 : window.innerHeight}
+                    height={isDM ? windowSize.height - 200 : windowSize.height}
                     fill={mapBg ? "#ffffff" : "#334155"}
                     opacity={mapBg ? 0.4 : 0.3}
                   />
                 ))}
-                {Array.from({ length: Math.ceil((isDM ? window.innerHeight - 200 : window.innerHeight) / gridSize) + 1 }, (_, row) => (
+                {Array.from({ length: Math.ceil((isDM ? windowSize.height - 200 : windowSize.height) / gridSize) + 1 }, (_, row) => (
                   <Rect
                     key={`grid-h-${row}`}
                     x={0}
                     y={row * gridSize}
-                    width={window.innerWidth}
+                    width={windowSize.width}
                     height={1}
                     fill={mapBg ? "#ffffff" : "#334155"}
                     opacity={mapBg ? 0.4 : 0.3}
@@ -715,7 +733,7 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
                 {/* Координаты для больших клеток */}
                 {gridSize >= 64 && (
                   <>
-                    {Array.from({ length: Math.ceil(window.innerWidth / gridSize) }, (_, col) => (
+                    {Array.from({ length: Math.ceil(windowSize.width / gridSize) }, (_, col) => (
                       <Text
                         key={`coord-x-${col}`}
                         text={(col + 1).toString()}
@@ -729,7 +747,7 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
                         strokeWidth={mapBg ? 1 : 0}
                       />
                     ))}
-                    {Array.from({ length: Math.ceil((isDM ? window.innerHeight - 200 : window.innerHeight) / gridSize) }, (_, row) => (
+                    {Array.from({ length: Math.ceil((isDM ? windowSize.height - 200 : windowSize.height) / gridSize) }, (_, row) => (
                       <Text
                         key={`coord-y-${row}`}
                         text={String.fromCharCode(65 + row)}
