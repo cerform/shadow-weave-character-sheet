@@ -510,6 +510,17 @@ class SessionService {
     if (error) throw error;
     return data;
   }
+
+  // Сброс тумана войны
+  async resetFogOfWar(sessionId: string, mapId: string): Promise<void> {
+    const { error } = await supabase
+      .from('fog_of_war')
+      .delete()
+      .eq('session_id', sessionId)
+      .eq('map_id', mapId);
+
+    if (error) throw error;
+  }
 }
 
 export const sessionService = new SessionService();
