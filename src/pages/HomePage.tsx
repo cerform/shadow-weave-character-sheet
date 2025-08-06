@@ -174,32 +174,30 @@ const HomePage = () => {
             </p>
           </div>
 
-          {/* Быстрые действия */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">
+          {/* Быстрые действия - Компактная сетка */}
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-16">
             {allActions.map((action, index) => (
               <Link 
                 key={index}
                 to={action.href}
-                className={`block ${action.featured ? 'md:col-span-2 lg:col-span-1' : ''}`}
+                className="block group"
               >
                 <Card 
-                  className="relative overflow-hidden border-2 transition-all duration-300 hover:shadow-2xl hover:shadow-primary/20 hover:border-primary/50 cursor-pointer group h-full"
+                  className="relative overflow-hidden border transition-all duration-300 hover:shadow-lg hover:shadow-primary/20 hover:border-primary/50 cursor-pointer group h-full"
                 >
-                  <div className={`absolute inset-0 bg-gradient-to-br ${action.gradient} opacity-50 group-hover:opacity-70 transition-opacity`} />
-                  <CardHeader className="relative z-10">
-                    <div className="flex items-center space-x-3">
-                      <div className="p-2 rounded-lg bg-primary/20 group-hover:bg-primary/30 transition-colors">
-                        <action.icon className="h-6 w-6 text-primary" />
-                      </div>
-                      <CardTitle className="group-hover:text-primary transition-colors">
-                        {action.title}
-                      </CardTitle>
+                  <div className={`absolute inset-0 bg-gradient-to-br ${action.gradient} opacity-30 group-hover:opacity-50 transition-opacity`} />
+                  <CardContent className="relative z-10 p-4 flex flex-col items-center text-center space-y-3">
+                    <div className="p-3 rounded-xl bg-primary/10 group-hover:bg-primary/20 transition-colors">
+                      <action.icon className="h-8 w-8 text-primary" />
                     </div>
-                  </CardHeader>
-                  <CardContent className="relative z-10">
-                    <CardDescription className="text-base">
-                      {action.description}
-                    </CardDescription>
+                    <div className="space-y-1">
+                      <h3 className="font-semibold text-sm leading-tight group-hover:text-primary transition-colors">
+                        {action.title}
+                      </h3>
+                      <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
+                        {action.description}
+                      </p>
+                    </div>
                   </CardContent>
                 </Card>
               </Link>
