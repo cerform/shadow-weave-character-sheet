@@ -131,100 +131,106 @@ const HomePage = () => {
       </div>
 
       <div className="relative z-10">
-        {/* Основной контент с интегрированным хедером */}
+        {/* Единый интерфейс-фрейм */}
         <div className="container mx-auto px-4 py-8">
-          {/* Интегрированная верхняя панель */}
-          <div className="flex justify-between items-start mb-12">
-            <div className="flex-1">
-              {/* Логотип и название */}
-              <div className="flex items-center space-x-3 mb-6">
-                <div className="relative">
-                  <Shield className="h-12 w-12 text-primary" />
-                  <Sparkles className="h-4 w-4 text-accent absolute -top-1 -right-1" />
+          <div className="bg-background/95 backdrop-blur-md border border-border/50 rounded-2xl p-6 shadow-2xl">
+            {/* Интегрированная панель управления */}
+            <div className="flex justify-between items-start mb-8">
+              <div className="flex-1">
+                {/* Логотип и название */}
+                <div className="flex items-center space-x-3 mb-4">
+                  <div className="relative">
+                    <Shield className="h-10 w-10 text-primary" />
+                    <Sparkles className="h-3 w-3 text-accent absolute -top-1 -right-1" />
+                  </div>
+                  <div>
+                    <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                      D&D Helper
+                    </h1>
+                    <p className="text-sm text-muted-foreground">Ваш цифровой помощник для D&D 5e</p>
+                  </div>
                 </div>
-                <div>
-                  <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                    D&D Helper
-                  </h1>
-                  <p className="text-muted-foreground">Ваш цифровой помощник для D&D 5e</p>
+                
+                {/* Главный заголовок */}
+                <div className="max-w-3xl">
+                  <h2 className="text-4xl lg:text-5xl font-bold mb-4 bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent leading-tight">
+                    Добро пожаловать в мир D&D
+                  </h2>
+                  <p className="text-lg text-muted-foreground">
+                    Создавайте персонажей, изучайте заклинания, проводите эпические сессии
+                  </p>
                 </div>
               </div>
               
-              {/* Главный заголовок */}
-              <div className="max-w-4xl">
-                <h2 className="text-6xl font-bold mb-6 bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent leading-tight">
-                  Добро пожаловать в мир D&D
-                </h2>
-                <p className="text-xl text-muted-foreground">
-                  Создавайте персонажей, изучайте заклинания, проводите эпические сессии
-                </p>
+              {/* Правая панель управления */}
+              <div className="flex flex-col items-end space-y-3 ml-6">
+                <div className="flex items-center space-x-3">
+                  <FantasyThemeSelector />
+                  {isAuthenticated ? (
+                    <ProfilePreview />
+                  ) : (
+                    <div className="flex items-center space-x-2">
+                      <Button 
+                        variant="outline"
+                        size="sm"
+                        onClick={navigateToAuth}
+                      >
+                        Регистрация
+                      </Button>
+                      <Button 
+                        size="sm"
+                        onClick={navigateToAuth}
+                        className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90"
+                      >
+                        Войти
+                      </Button>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
-            
-            {/* Правая панель управления */}
-            <div className="flex flex-col items-end space-y-4 ml-8">
-              <div className="flex items-center space-x-3">
-                <FantasyThemeSelector />
-                {isAuthenticated ? (
-                  <ProfilePreview />
-                ) : (
-                  <div className="flex items-center space-x-2">
-                    <Button 
-                      variant="outline"
-                      onClick={navigateToAuth}
-                    >
-                      Регистрация
-                    </Button>
-                    <Button 
-                      onClick={navigateToAuth}
-                      className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90"
-                    >
-                      Войти
-                    </Button>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
 
-          {/* Быстрые действия - Компактная сетка */}
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-16">
-            {allActions.map((action, index) => (
-              <Link 
-                key={index}
-                to={action.href}
-                className="block group"
-              >
-                <Card 
-                  className="relative overflow-hidden border transition-all duration-300 hover:shadow-lg hover:shadow-primary/20 hover:border-primary/50 cursor-pointer group h-full"
+            {/* Быстрые действия - внутри фрейма */}
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-8">
+              {allActions.map((action, index) => (
+                <Link 
+                  key={index}
+                  to={action.href}
+                  className="block group"
                 >
-                  <div className={`absolute inset-0 bg-gradient-to-br ${action.gradient} opacity-30 group-hover:opacity-50 transition-opacity`} />
-                  <CardContent className="relative z-10 p-4 flex flex-col items-center text-center space-y-3">
-                    <div className="p-3 rounded-xl bg-primary/10 group-hover:bg-primary/20 transition-colors">
-                      <action.icon className="h-8 w-8 text-primary" />
-                    </div>
-                    <div className="space-y-1">
-                      <h3 className="font-semibold text-sm leading-tight group-hover:text-primary transition-colors">
-                        {action.title}
-                      </h3>
-                      <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
-                        {action.description}
-                      </p>
-                    </div>
-                  </CardContent>
-                </Card>
-              </Link>
-            ))}
-          </div>
-
-          {/* Персонажи пользователя */}
-          {isAuthenticated && (
-            <div className="mb-16">
-              <CharactersList />
+                  <Card 
+                    className="relative overflow-hidden border transition-all duration-300 hover:shadow-lg hover:shadow-primary/20 hover:border-primary/50 cursor-pointer group h-full bg-background/50"
+                  >
+                    <div className={`absolute inset-0 bg-gradient-to-br ${action.gradient} opacity-30 group-hover:opacity-50 transition-opacity`} />
+                    <CardContent className="relative z-10 p-4 flex flex-col items-center text-center space-y-3">
+                      <div className="p-3 rounded-xl bg-primary/10 group-hover:bg-primary/20 transition-colors">
+                        <action.icon className="h-8 w-8 text-primary" />
+                      </div>
+                      <div className="space-y-1">
+                        <h3 className="font-semibold text-sm leading-tight group-hover:text-primary transition-colors">
+                          {action.title}
+                        </h3>
+                        <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
+                          {action.description}
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </Link>
+              ))}
             </div>
-          )}
 
-          {/* Особенности */}
+            {/* Персонажи пользователя - внутри фрейма */}
+            {isAuthenticated && (
+              <div className="mb-8">
+                <CharactersList />
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Особенности - вне основного фрейма */}
+        <div className="container mx-auto px-4 py-8">
           <div className="text-center mb-12">
             <h3 className="text-3xl font-bold mb-8">Возможности приложения</h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
