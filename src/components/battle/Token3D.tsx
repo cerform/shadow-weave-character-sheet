@@ -28,7 +28,7 @@ const Token3D: React.FC<Token3DProps> = ({
   isSelected = false, 
   isHovered = false 
 }) => {
-  const meshRef = useRef<THREE.Mesh>(null);
+  const meshRef = useRef<THREE.Group>(null);
   const groupRef = useRef<THREE.Group>(null);
 
   // Анимация при наведении
@@ -212,9 +212,9 @@ const Token3D: React.FC<Token3DProps> = ({
       </Cylinder>
 
       {/* Основная модель токена */}
-      <mesh ref={meshRef}>
+      <group ref={meshRef}>
         <TokenModel />
-      </mesh>
+      </group>
 
       {/* HP бар */}
       <HPBar />
