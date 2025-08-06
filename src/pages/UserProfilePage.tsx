@@ -9,7 +9,6 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import BackgroundWrapper from "@/components/layout/BackgroundWrapper";
-import ThemeSelector from "@/components/ThemeSelector";
 import { useTheme } from "@/hooks/use-theme";
 import { themes } from "@/lib/themes";
 import IconOnlyNavigation from "@/components/navigation/IconOnlyNavigation";
@@ -134,7 +133,7 @@ const UserProfilePage = () => {
               Профиль игрока
             </h1>
           </div>
-          <IconOnlyNavigation includeThemeSelector={true} />
+          <IconOnlyNavigation />
         </div>
 
         <div 

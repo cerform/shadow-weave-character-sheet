@@ -10,7 +10,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/hooks/use-auth';
-import ThemeSelector from '@/components/ThemeSelector';
 import { 
   Menu, 
   Home, 
@@ -18,8 +17,7 @@ import {
   Users, 
   Gamepad2, 
   LogOut, 
-  Crown,
-  Palette
+  Crown
 } from 'lucide-react';
 
 interface CompactNavigationMenuProps {
@@ -103,19 +101,6 @@ const CompactNavigationMenu: React.FC<CompactNavigationMenuProps> = ({ className
               Профиль
             </DropdownMenuItem>
           )}
-          
-          <DropdownMenuItem
-            className="flex items-center gap-2 p-0"
-            onClick={(e) => e.preventDefault()}
-          >
-            <div className="flex items-center gap-2 px-2 py-1.5 w-full">
-              <Palette className="h-4 w-4" />
-              <span className="flex-1">Тема</span>
-              <div className="ml-auto">
-                <ThemeSelector compact />
-              </div>
-            </div>
-          </DropdownMenuItem>
           
           {currentUser && (
             <>

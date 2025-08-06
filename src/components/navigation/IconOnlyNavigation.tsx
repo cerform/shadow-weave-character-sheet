@@ -1,15 +1,10 @@
 
 import React from 'react';
 import NavigationButtons from "@/components/ui/NavigationButtons";
-import ThemeSelector from "@/components/ThemeSelector";
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
 
-interface IconOnlyNavigationProps {
-  includeThemeSelector?: boolean;
-}
-
-const IconOnlyNavigation: React.FC<IconOnlyNavigationProps> = ({ includeThemeSelector = false }) => {
+const IconOnlyNavigation: React.FC = () => {
   const { theme } = useTheme();
   const currentThemeId = theme || 'default';
   const currentTheme = themes[currentThemeId as keyof typeof themes] || themes.default;
@@ -23,10 +18,6 @@ const IconOnlyNavigation: React.FC<IconOnlyNavigationProps> = ({ includeThemeSel
       }}
     >
       <NavigationButtons />
-      
-      {includeThemeSelector && (
-        <ThemeSelector />
-      )}
     </div>
   );
 };

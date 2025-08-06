@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useSpellbook } from '@/contexts/SpellbookContext';
 import { useTheme } from '@/hooks/use-theme';
-import ThemeSelector from '@/components/ThemeSelector';
 import NavigationButtons from '@/components/ui/NavigationButtons';
 
 import BackgroundWrapper from '@/components/layout/BackgroundWrapper';
@@ -132,7 +131,6 @@ const SpellbookPage: React.FC = () => {
               Книга заклинаний D&D 5e
             </h1>
             <div className="flex items-center space-x-4">
-              <ThemeSelector />
               <NavigationButtons />
             </div>
           </header>

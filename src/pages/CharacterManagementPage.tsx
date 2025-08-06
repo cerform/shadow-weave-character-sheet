@@ -85,7 +85,7 @@ const CharacterManagementPage: React.FC = () => {
                 Управление персонажами
               </h1>
             </div>
-            <IconOnlyNavigation includeThemeSelector />
+            <IconOnlyNavigation />
           </div>
         }
       >

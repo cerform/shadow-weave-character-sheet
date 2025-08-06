@@ -4,7 +4,6 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/use-auth';
 import { useTheme } from '@/hooks/use-theme';
-import ThemeSelector from '@/components/ThemeSelector';
 import { Home, User, Users, Gamepad2, LogOut, Crown } from 'lucide-react';
 
 const NavigationButtons: React.FC = () => {
@@ -58,8 +57,6 @@ const NavigationButtons: React.FC = () => {
           <span className="hidden md:inline">Профиль</span>
         </Button>
       )}
-      
-      <ThemeSelector />
       
       {currentUser && (
         <Button

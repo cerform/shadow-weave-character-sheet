@@ -7,7 +7,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Download, ChevronRight, ChevronLeft, Home, Book, User } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import ThemeSelector from '@/components/ThemeSelector';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
 import NavigationButtons from '@/components/ui/NavigationButtons';
@@ -64,7 +63,6 @@ const RaceDetails: React.FC<RaceDetailsProps> = ({ race, onBack }) => {
         <h2 className="text-2xl font-bold ml-4" style={{ color: currentTheme.textColor }}>{renderContent(race.name)}</h2>
         <div className="ml-auto flex space-x-2">
           <NavigationButtons />
-          <ThemeSelector />
         </div>
       </div>
       

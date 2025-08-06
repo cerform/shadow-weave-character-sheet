@@ -6,7 +6,6 @@ import { BookOpen, Users, Scroll, Dice6, Shield, UserPlus, Sparkles, Swords, Map
 import ProfilePreview from '@/components/home/ProfilePreview';
 import CharactersList from '@/components/home/CharactersList';
 import { useAuth, useProtectedRoute } from '@/hooks/use-auth';
-import FantasyThemeSelector from '@/components/FantasyThemeSelector';
 import fantasyBg1 from '@/assets/fantasy-bg-1.jpg';
 import fantasyBg2 from '@/assets/fantasy-bg-2.jpg';
 import fantasyBg3 from '@/assets/fantasy-bg-3.jpg';
@@ -162,10 +161,7 @@ const HomePage = () => {
                 </div>
               </div>
               
-              {/* Правая панель управления - убрана, теперь в виджете */}
-              <div className="flex items-center space-y-3 ml-6">
-                <FantasyThemeSelector />
-              </div>
+              {/* Пустая правая панель */}
             </div>
 
             {/* Быстрые действия - внутри фрейма */}

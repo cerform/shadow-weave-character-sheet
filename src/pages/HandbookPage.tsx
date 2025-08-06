@@ -14,7 +14,6 @@ import { getAllClasses, getAllClassSources } from '@/data/classes';
 import { getAllBackgrounds, getAllBackgroundSources } from '@/data/backgrounds';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
-import ThemeSelector from '@/components/ThemeSelector';
 import BackgroundWrapper from '@/components/layout/BackgroundWrapper';
 
 import NavigationButtons from '@/components/ui/NavigationButtons';
@@ -120,8 +119,6 @@ const HandbookPage: React.FC = () => {
     <BackgroundWrapper>
       {/* Навигационная панель */}
       <div className="p-4 flex items-center justify-between">
-        <div />
-        <ThemeSelector />
       </div>
       
       <div className="flex flex-1 overflow-hidden">
