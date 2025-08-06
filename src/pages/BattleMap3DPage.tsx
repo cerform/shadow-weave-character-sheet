@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Home, Map, ArrowLeft } from 'lucide-react';
-import BattleMap3D from '@/components/battle/BattleMap3D';
+import MapScene from '@/components/battle/3DMapScene';
 
 const BattleMap3DPage: React.FC = () => {
   const navigate = useNavigate();
@@ -48,7 +48,12 @@ const BattleMap3DPage: React.FC = () => {
 
       {/* 3D карта */}
       <div className="w-full h-screen">
-        <BattleMap3D isDM={true} />
+        <MapScene 
+          imageUrl="/lovable-uploads/7e672432-7147-4618-8846-bb5600ec34c1.png"
+          gridSize={1}
+          gridWidth={30}
+          gridHeight={24}
+        />
       </div>
     </div>
   );
