@@ -106,8 +106,17 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
     }
   ]);
 
-  const tokens = externalTokens || internalTokens;
-  const setTokens = onTokensChange || setInternalTokens;
+  // Используем только внутреннее состояние для гарантированного обновления
+  const [currentTokens, setCurrentTokens] = useState<Token[]>(externalTokens || internalTokens);
+  
+  // Синхронизируем с внешними токенами при их изменении
+  useEffect(() => {
+    if (externalTokens) {
+      setCurrentTokens(externalTokens);
+    }
+  }, [externalTokens]);
+
+  const tokens = currentTokens;
 
   const [draggedTokenId, setDraggedTokenId] = useState<string | null>(null);
   const [hoveredTokenId, setHoveredTokenId] = useState<string | null>(null);
@@ -197,20 +206,23 @@ const InteractiveBattleMap: React.FC<InteractiveBattleMapProps> = ({
 
     console.log('Final position after snap and bounds:', boundedX, boundedY);
 
-    // Обновляем состояние токенов
+    // Создаем полностью новый массив токенов для принудительного обновления
     const updatedTokens = tokens.map(token => 
       token.id === tokenId 
         ? { ...token, x: boundedX, y: boundedY }
         : token
     );
     
-    console.log('Updated tokens:', updatedTokens.find(t => t.id === tokenId));
+    console.log('Updated tokens array:', updatedTokens);
+    console.log('Token before:', tokens.find(t => t.id === tokenId));
+    console.log('Token after:', updatedTokens.find(t => t.id === tokenId));
 
     // Принудительно обновляем состояние
+    setCurrentTokens(updatedTokens);
+    
+    // Если есть внешний обработчик, тоже его вызываем
     if (onTokensChange) {
       onTokensChange(updatedTokens);
-    } else {
-      setInternalTokens(updatedTokens);
     }
     
     setDraggedTokenId(null);
