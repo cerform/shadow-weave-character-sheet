@@ -3,7 +3,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Shield, ArrowLeft } from 'lucide-react';
-import BackgroundWrapper from '@/components/layout/BackgroundWrapper';
+
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/hooks/use-auth';
 
@@ -26,43 +26,49 @@ const UnauthorizedPage = () => {
   };
   
   return (
-    <BackgroundWrapper>
-      <div className="min-h-screen flex items-center justify-center p-4">
-        <Card className="max-w-md w-full bg-black/50 backdrop-blur-sm border-red-500/30">
-          <CardHeader className="text-center">
-            <div className="mx-auto bg-red-500/20 p-3 rounded-full mb-4">
-              <Shield className="h-10 w-10 text-red-500" />
-            </div>
-            <CardTitle className="text-2xl">Доступ запрещен</CardTitle>
-            <CardDescription>
-              У вас нет прав для доступа к запрошенной странице
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-center text-muted-foreground">
-              {isAuthenticated 
-                ? "Ваша учетная запись не имеет необходимых прав для просмотра этой страницы. Возможно, вам нужно войти с другой учетной записью."
-                : "Вам необходимо войти в систему для доступа к этой странице."}
+    <div className="min-h-screen flex items-center justify-center p-4">
+      <Card className="max-w-md w-full bg-black/50 backdrop-blur-sm border-red-500/30">
+        <CardHeader className="text-center">
+          <div className="mx-auto w-12 h-12 bg-red-500/20 rounded-full flex items-center justify-center mb-4">
+            <Shield className="w-6 h-6 text-red-400" />
+          </div>
+          <CardTitle className="text-2xl font-bold text-red-400">
+            Доступ запрещен
+          </CardTitle>
+          <CardDescription className="text-gray-300">
+            У вас недостаточно прав для доступа к этой странице
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="text-center">
+          <p className="text-gray-400 mb-4">
+            Эта страница доступна только администраторам или пользователям с соответствующими правами.
+          </p>
+          {!currentUser && (
+            <p className="text-sm text-gray-500">
+              Попробуйте войти в систему с правильными учетными данными.
             </p>
-          </CardContent>
-          <CardFooter className="flex flex-col gap-2">
+          )}
+        </CardContent>
+        <CardFooter className="flex gap-3">
+          <Button 
+            variant="outline" 
+            onClick={() => navigate(-1)}
+            className="flex-1"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Назад
+          </Button>
+          {!currentUser && (
             <Button 
-              className="w-full" 
-              onClick={handleRedirect}
+              onClick={() => navigate('/auth')}
+              className="flex-1"
             >
-              {isAuthenticated ? "Перейти в доступный раздел" : "Войти в систему"}
+              Войти
             </Button>
-            <Button 
-              variant="outline" 
-              className="w-full" 
-              onClick={() => navigate('/')}
-            >
-              <ArrowLeft className="mr-2 h-4 w-4" /> На главную
-            </Button>
-          </CardFooter>
-        </Card>
-      </div>
-    </BackgroundWrapper>
+          )}
+        </CardFooter>
+      </Card>
+    </div>
   );
 };
 

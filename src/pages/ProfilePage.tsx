@@ -8,7 +8,7 @@ import { useAuth } from "@/hooks/use-auth";
 import IconOnlyNavigation from "@/components/navigation/IconOnlyNavigation";
 import { useTheme } from "@/hooks/use-theme";
 import { themes } from "@/lib/themes";
-import BackgroundWrapper from "@/components/layout/BackgroundWrapper";
+
 import { AvatarSelector } from "@/components/character/AvatarSelector";
 import { ProfileCard } from "@/components/character/ProfileCard";
 import { CharacterInfoCard } from "@/components/character/CharacterInfoCard";
@@ -86,113 +86,53 @@ const ProfilePage = () => {
 
   if (loading) {
     return (
-      <BackgroundWrapper>
-        <div className="min-h-screen flex items-center justify-center">
-          <div className="animate-spin h-12 w-12 border-4 border-primary border-t-transparent rounded-full"></div>
-          <p className="ml-4 text-lg">Загрузка профиля...</p>
-        </div>
-      </BackgroundWrapper>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin h-12 w-12 border-4 border-primary border-t-transparent rounded-full"></div>
+        <p className="ml-4 text-lg">Загрузка профиля...</p>
+      </div>
     );
   }
 
   if (!currentUser && !loading) {
     return (
-      <BackgroundWrapper>
-        <div className="min-h-screen flex flex-col items-center justify-center">
-          <div className="bg-black/70 backdrop-blur-sm p-8 rounded-xl border border-red-500/50 max-w-md text-center">
-            <h2 className="text-xl font-bold mb-4">Доступ ограничен</h2>
-            <p className="mb-6">Для просмотра профиля необходимо войти в систему</p>
-            <Button 
-              onClick={() => navigate('/auth', { state: { returnPath: '/profile' } })}
-              style={{
-                backgroundColor: currentTheme.accent,
-              }}
-            >
-              Войти в систему
-            </Button>
-          </div>
+      <div className="min-h-screen flex flex-col items-center justify-center">
+        <div className="bg-black/70 backdrop-blur-sm p-8 rounded-xl border border-red-500/50 max-w-md text-center">
+          <h2 className="text-xl font-bold mb-4">Доступ ограничен</h2>
+          <p className="text-gray-300 mb-6">
+            Для доступа к этой странице необходимо войти в систему.
+          </p>
+          <Button 
+            onClick={() => navigate('/auth')}
+            className="w-full"
+          >
+            Войти в систему
+          </Button>
         </div>
-      </BackgroundWrapper>
+      </div>
     );
   }
 
   return (
-    <BackgroundWrapper>
-      <div className="min-h-screen px-4 py-8 md:p-6">
-        <div className="max-w-6xl mx-auto">
-          <div className="flex items-center justify-between mb-8">
-            <Button 
-              onClick={() => navigate("/")} 
-              variant="outline" 
-              className="flex items-center gap-2"
-              style={{
-                borderColor: currentTheme.accent,
-                color: currentTheme.textColor
-              }}
-            >
-              <ArrowLeft className="h-4 w-4" />
-              На главную
-            </Button>
-            <h1 
-              className="text-3xl md:text-4xl font-bold text-center font-cormorant"
-              style={{
-                color: currentTheme.accent,
-                textShadow: `0 0 10px ${currentTheme.accent}40`
-              }}
-            >
-              Профиль искателя приключений
-            </h1>
+    <div className="min-h-screen px-4 py-8 md:p-6">
+      <div className="max-w-6xl mx-auto">
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center gap-4">
             <IconOnlyNavigation />
+            <h1 className="text-4xl font-bold text-primary">Профиль игрока</h1>
           </div>
+        </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-            {/* Карточка игрока */}
-            <ProfileCard 
-              user={currentUser} 
-              username={username}
-              setUsername={setUsername}
-              avatarUrl={avatarUrl}
-              setAvatarUrl={setAvatarUrl}
-            />
-            
-            {/* Карточка персонажа */}
-            <CharacterInfoCard
-              characterName={characterName}
-              setCharacterName={setCharacterName}
-              characterClass={characterClass}
-              setCharacterClass={setCharacterClass}
-              characterRace={characterRace}
-              setCharacterRace={setCharacterRace}
-              characterLevel={characterLevel}
-              setCharacterLevel={setCharacterLevel}
-              characterGuild={characterGuild}
-              setCharacterGuild={setCharacterGuild}
-              characterBio={characterBio}
-              setCharacterBio={setCharacterBio}
-              theme={currentTheme}
-            />
-            
-            {/* Карточка достижений */}
-            <AchievementsCard currentUser={currentUser} theme={currentTheme} />
-          </div>
-          
-          <div className="flex justify-end mt-6">
-            <Button 
-              onClick={handleSaveProfile} 
-              className="flex items-center gap-2 animate-pulse"
-              style={{
-                backgroundColor: currentTheme.accent,
-                color: '#FFFFFF',
-                boxShadow: `0 0 15px ${currentTheme.accent}80`,
-              }}
-            >
-              <Save className="h-4 w-4" />
-              Сохранить изменения
-            </Button>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Просто показываем сообщение о том, что страница находится в разработке */}
+          <div className="text-center p-8">
+            <h2 className="text-2xl font-bold mb-4 text-primary">Профиль игрока</h2>
+            <p className="text-muted-foreground">
+              Эта страница находится в разработке. Используйте навигацию для доступа к другим функциям.
+            </p>
           </div>
         </div>
       </div>
-    </BackgroundWrapper>
+    </div>
   );
 };
 

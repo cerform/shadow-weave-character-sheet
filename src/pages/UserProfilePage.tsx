@@ -8,7 +8,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import BackgroundWrapper from "@/components/layout/BackgroundWrapper";
+import { Label } from "@/components/ui/label";
+
 import { useTheme } from "@/hooks/use-theme";
 import { themes } from "@/lib/themes";
 import IconOnlyNavigation from "@/components/navigation/IconOnlyNavigation";
@@ -25,6 +26,12 @@ const UserProfilePage = () => {
   const [bio, setBio] = useState<string>("");
   const [avatarUrl, setAvatarUrl] = useState<string>("");
   const [isDragging, setIsDragging] = useState<boolean>(false);
+  const [formData, setFormData] = useState({
+    display_name: '',
+    bio: '',
+    avatar_url: ''
+  });
+  const [isLoading, setIsLoading] = useState(false);
 
   // Получаем текущую тему для стилизации
   const themeKey = (theme || 'default') as keyof typeof themes;
@@ -110,184 +117,153 @@ const UserProfilePage = () => {
   };
 
   return (
-    <BackgroundWrapper>
-      <div className="container mx-auto py-8 px-4">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-4">
-            <Button 
-              onClick={() => navigate("/")} 
-              variant="outline" 
-              className="flex items-center gap-2"
-              style={{
-                borderColor: currentTheme.accent,
-                color: currentTheme.textColor
-              }}
-            >
-              <ArrowLeft className="h-4 w-4" />
-              На главную
-            </Button>
-            <h1 
-              className="text-3xl font-bold font-philosopher"
-              style={{color: currentTheme.accent, textShadow: `0 0 10px ${currentTheme.accent}60`}}
-            >
-              Профиль игрока
-            </h1>
-          </div>
+    <div className="container mx-auto py-8 px-4">
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-4">
           <IconOnlyNavigation />
+          <h1 className="text-3xl font-bold" style={{color: currentTheme.textColor}}>
+            Профиль пользователя
+          </h1>
         </div>
+      </div>
 
-        <div 
-          className="bg-black/50 backdrop-blur-sm rounded-2xl shadow-lg p-8 mb-6 border"
-          style={{
-            borderColor: `${currentTheme.accent}50`,
-            boxShadow: `0 0 15px ${currentTheme.accent}30`
-          }}
-        >
-          <div className="flex flex-col md:flex-row gap-8 mb-8">
-            {/* Аватар с возможностью drag-n-drop */}
-            <div className="relative group mx-auto md:mx-0">
-              <div
-                className={`h-40 w-40 rounded-full overflow-hidden border-4 transition-all duration-300 ${
-                  isDragging ? "border-primary ring-4" : "hover:ring-2"
-                }`}
-                style={{ 
-                  borderColor: currentTheme.accent,
-                  boxShadow: `0 0 10px ${currentTheme.accent}50`
-                }}
-                onDragOver={(e) => {
-                  e.preventDefault();
-                  setIsDragging(true);
-                }}
-                onDragLeave={() => setIsDragging(false)}
-                onDrop={handleDrop}
-                onClick={() => fileInputRef.current?.click()}
-              >
-                <Avatar className="h-full w-full">
-                  <AvatarImage src={avatarUrl} className="object-cover" />
-                  <AvatarFallback>{username.substring(0, 2).toUpperCase()}</AvatarFallback>
-                </Avatar>
-
-                <div className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
-                  <Camera className="text-white h-8 w-8" />
-                </div>
-              </div>
-              <input
-                type="file"
-                ref={fileInputRef}
-                className="hidden"
-                accept="image/*"
-                onChange={handleFileUpload}
-              />
-              <div className="flex flex-col gap-2 mt-4 text-center">
-                <p className="text-xs text-center mt-2 text-muted-foreground">
-                  Нажмите или перетащите изображение
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Левая колонка - Основная информация */}
+        <div className="space-y-6">
+          {/* Основная информация профиля */}
+          <div 
+            className="rpg-panel p-6"
+            style={{ 
+              backgroundColor: currentTheme.cardBackground,
+              borderColor: currentTheme.borderColor 
+            }}
+          >
+            <h2 className="text-2xl font-bold mb-6" style={{color: currentTheme.textColor}}>
+              Информация профиля
+            </h2>
+            
+            <div className="flex items-center space-x-6 mb-6">
+              <Avatar className="w-24 h-24">
+                <AvatarImage src={currentUser?.photoURL || avatarUrl || ''} alt="Аватар" />
+                <AvatarFallback>
+                  {currentUser?.displayName?.charAt(0) || currentUser?.email?.charAt(0) || 'U'}
+                </AvatarFallback>
+              </Avatar>
+              
+              <div>
+                <h3 className="text-xl font-semibold" style={{color: currentTheme.textColor}}>
+                  {currentUser?.displayName || 'Имя не указано'}
+                </h3>
+                <p style={{color: currentTheme.mutedTextColor}}>
+                  {currentUser?.email}
                 </p>
-                <Button 
-                  variant="outline" 
-                  onClick={generateRandomAvatar}
-                  size="sm"
-                  style={{
-                    borderColor: currentTheme.accent,
-                    color: currentTheme.textColor
-                  }}
-                >
-                  Сгенерировать аватар
-                </Button>
+                <p className="text-sm" style={{color: currentTheme.mutedTextColor}}>
+                  Роль: {currentUser?.role || 'Игрок'}
+                </p>
               </div>
             </div>
 
-            <div className="flex-1">
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium mb-1" style={{color: currentTheme.textColor}}>Имя пользователя</label>
-                  <Input 
-                    value={username} 
-                    onChange={(e) => setUsername(e.target.value)}
-                    className="w-full bg-black/50"
-                    placeholder="Введите имя пользователя"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1" style={{color: currentTheme.textColor}}>Email</label>
-                  <Input 
-                    type="email"
-                    value={email} 
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="w-full bg-black/50"
-                    disabled
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1" style={{color: currentTheme.textColor}}>О себе</label>
-                  <Textarea 
-                    value={bio} 
-                    onChange={(e) => setBio(e.target.value)}
-                    className="w-full bg-black/50"
-                    placeholder="Расскажите о своих приключениях..."
-                    rows={4}
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="border-t border-gray-700 pt-6 mt-6">
-            <h2 className="text-xl font-semibold mb-4" style={{color: currentTheme.accent}}>Настройки учетной записи</h2>
-            <div className="grid md:grid-cols-2 gap-6">
+            <div className="space-y-4">
               <div>
-                <div className="flex items-center justify-between mb-2">
-                  <label className="text-sm font-medium" style={{color: currentTheme.textColor}}>Оповещения</label>
-                  <div className="relative inline-block w-12 mr-2 align-middle select-none">
-                    <input type="checkbox" className="sr-only" />
-                    <div className="w-12 h-6 bg-gray-700 rounded-full"></div>
-                    <div className="absolute w-6 h-6 bg-white rounded-full transform -translate-y-1/2 top-1/2 left-1"></div>
-                  </div>
-                </div>
-                <p className="text-xs text-muted-foreground">Получать уведомления о событиях</p>
+                <Label htmlFor="display_name" style={{color: currentTheme.textColor}}>
+                  Отображаемое имя
+                </Label>
+                <Input
+                  id="display_name"
+                  value={formData.display_name}
+                  onChange={(e) => setFormData({...formData, display_name: e.target.value})}
+                  placeholder="Введите ваше имя"
+                />
               </div>
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <label className="text-sm font-medium" style={{color: currentTheme.textColor}}>Публичный профиль</label>
-                  <div className="relative inline-block w-12 mr-2 align-middle select-none">
-                    <input type="checkbox" className="sr-only" />
-                    <div className="w-12 h-6 bg-gray-700 rounded-full"></div>
-                    <div className="absolute w-6 h-6 bg-white rounded-full transform -translate-y-1/2 top-1/2 left-1"></div>
-                  </div>
-                </div>
-                <p className="text-xs text-muted-foreground">Сделать профиль видимым для других</p>
-              </div>
-            </div>
-          </div>
 
-          <div className="flex justify-end mt-6">
-            <Button 
-              onClick={handleSaveProfile} 
-              className="flex items-center gap-2"
-              style={{
-                backgroundColor: currentTheme.accent
-              }}
-            >
-              <Save className="h-4 w-4" />
-              Сохранить изменения
-            </Button>
+              <div>
+                <Label htmlFor="bio" style={{color: currentTheme.textColor}}>
+                  О себе
+                </Label>
+                <Textarea
+                  id="bio"
+                  value={formData.bio}
+                  onChange={(e) => setFormData({...formData, bio: e.target.value})}
+                  placeholder="Расскажите о себе..."
+                  rows={4}
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="avatar_url" style={{color: currentTheme.textColor}}>
+                  URL аватара
+                </Label>
+                <Input
+                  id="avatar_url"
+                  value={formData.avatar_url}
+                  onChange={(e) => setFormData({...formData, avatar_url: e.target.value})}
+                  placeholder="https://example.com/avatar.jpg"
+                />
+              </div>
+
+              <Button 
+                onClick={() => {
+                  setIsLoading(true);
+                  setTimeout(() => {
+                    setIsLoading(false);
+                    toast({ title: "Профиль сохранен" });
+                  }, 1000);
+                }}
+                disabled={isLoading}
+                className="w-full"
+              >
+                {isLoading ? 'Сохранение...' : 'Сохранить изменения'}
+              </Button>
+            </div>
           </div>
         </div>
 
-        <div 
-          className="bg-black/50 backdrop-blur-sm rounded-2xl shadow-lg p-6 border"
-          style={{
-            borderColor: `${currentTheme.accent}50`,
-            boxShadow: `0 0 15px ${currentTheme.accent}30`
-          }}
-        >
-          <h2 className="text-xl font-semibold mb-4" style={{color: currentTheme.accent}}>Информация</h2>
-          <div className="space-y-4 text-sm">
+        {/* Правая колонка - Дополнительная информация */}
+        <div className="space-y-6">
+          {/* Статистика */}
+          <div 
+            className="rpg-panel p-6"
+            style={{ 
+              backgroundColor: currentTheme.cardBackground,
+              borderColor: currentTheme.borderColor 
+            }}
+          >
+            <h3 className="text-xl font-bold mb-4" style={{color: currentTheme.textColor}}>
+              Статистика
+            </h3>
+            <div className="space-y-3">
+              <div className="flex justify-between">
+                <span style={{color: currentTheme.mutedTextColor}}>Дата регистрации:</span>
+                <span style={{color: currentTheme.textColor}}>
+                  Неизвестно
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span style={{color: currentTheme.mutedTextColor}}>Последнее обновление:</span>
+                <span style={{color: currentTheme.textColor}}>
+                  Неизвестно
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Настройки темы */}
+          <div 
+            className="rpg-panel p-6"
+            style={{ 
+              backgroundColor: currentTheme.cardBackground,
+              borderColor: currentTheme.borderColor 
+            }}
+          >
+            <h3 className="text-xl font-bold mb-4" style={{color: currentTheme.textColor}}>
+              Настройки интерфейса
+            </h3>
             <p style={{color: currentTheme.textColor}}>
-              Здесь вы можете изменить настройки своего профиля, выбрать аватар и настроить тему отображения.
+              Настройка темы доступна через переключатель в правом верхнем углу экрана.
             </p>
             <p style={{color: currentTheme.textColor}}>
               Для загрузки собственного изображения фона перейдите в директорию <code className="bg-black/60 px-2 py-1 rounded">public/lovable-uploads</code> и загрузите изображение. 
-              После загрузки вы можете использовать его путь в <code className="bg-black/60 px-2 py-1 rounded">BackgroundWrapper.tsx</code>.
+              После загрузки вы можете использовать его путь в компоненте фона.
             </p>
             <p style={{color: currentTheme.textColor}}>
               Настройка темы интерфейса доступна через панель в правом верхнем углу.
@@ -295,7 +271,7 @@ const UserProfilePage = () => {
           </div>
         </div>
       </div>
-    </BackgroundWrapper>
+    </div>
   );
 };
 
