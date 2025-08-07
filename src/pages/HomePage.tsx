@@ -143,10 +143,10 @@ const HomePage = () => {
                     <Sparkles className="h-3 w-3 text-accent absolute -top-1 -right-1" />
                   </div>
                   <div>
-                    <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                    <h1 className="text-3xl font-bold text-contrast text-enhanced">
                       D&D Helper
                     </h1>
-                    <p className="text-sm text-muted-foreground">Ваш цифровой помощник для D&D 5e</p>
+                    <p className="text-sm text-secondary">Ваш цифровой помощник для D&D 5e</p>
                   </div>
                 </div>
                 
