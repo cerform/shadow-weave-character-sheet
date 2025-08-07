@@ -3,6 +3,9 @@ import { useTheme } from '@/hooks/use-theme';
 import fantasyBg1 from '@/assets/fantasy-bg-1.jpg';
 import fantasyBg2 from '@/assets/fantasy-bg-2.jpg';
 import fantasyBg3 from '@/assets/fantasy-bg-3.jpg';
+import fantasyBg4 from '@/assets/fantasy-bg-4.jpg';
+import fantasyBg5 from '@/assets/fantasy-bg-5.jpg';
+import fantasyBg6 from '@/assets/fantasy-bg-6.jpg';
 import campfireForest from '@/assets/backgrounds/campfire-forest.jpg';
 
 interface DynamicFantasyBackgroundProps {
@@ -46,6 +49,27 @@ const DynamicFantasyBackground: React.FC<DynamicFantasyBackgroundProps> = ({
       image: fantasyBg3,
       overlay: 'linear-gradient(135deg, rgba(75, 0, 130, 0.4) 0%, rgba(51, 51, 51, 0.5) 50%, rgba(0, 0, 0, 0.7) 100%)',
       particles: 'mystic'
+    },
+    {
+      id: 'castle',
+      name: 'Магический замок',
+      image: fantasyBg4,
+      overlay: 'linear-gradient(135deg, rgba(120, 53, 15, 0.3) 0%, rgba(168, 85, 247, 0.4) 50%, rgba(30, 27, 75, 0.6) 100%)',
+      particles: 'magic'
+    },
+    {
+      id: 'underground',
+      name: 'Древнее подземелье',
+      image: fantasyBg5,
+      overlay: 'linear-gradient(135deg, rgba(17, 24, 39, 0.5) 0%, rgba(55, 65, 81, 0.6) 50%, rgba(0, 0, 0, 0.8) 100%)',
+      particles: 'mystic'
+    },
+    {
+      id: 'elfwood',
+      name: 'Эльфийский лес',
+      image: fantasyBg6,
+      overlay: 'linear-gradient(135deg, rgba(34, 197, 94, 0.3) 0%, rgba(101, 163, 13, 0.4) 50%, rgba(22, 101, 52, 0.6) 100%)',
+      particles: 'stars'
     }
   ];
 
@@ -67,7 +91,7 @@ const DynamicFantasyBackground: React.FC<DynamicFantasyBackgroundProps> = ({
     }, interval);
 
     return () => clearInterval(timer);
-  }, [autoChange, interval, backgrounds.length]);
+  }, [autoChange, interval]); // Убираем backgrounds.length из зависимостей
 
   const renderParticles = (type: string) => {
     const particleCount = 8;
@@ -158,24 +182,27 @@ const DynamicFantasyBackground: React.FC<DynamicFantasyBackgroundProps> = ({
           0%, 100% { opacity: 0.5; transform: scale(1); }
           50% { opacity: 1; transform: scale(1.3); }
         }
+        
+        .background-transition {
+          transition: all 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
       `}</style>
       
       <div className="min-h-screen relative overflow-hidden">
         {/* Основной фоновый слой */}
         <div 
-          className={`absolute inset-0 bg-cover bg-center bg-no-repeat transition-all duration-1000 ${
-            isTransitioning ? 'opacity-50 scale-110' : 'opacity-100 scale-100'
+          className={`absolute inset-0 bg-cover bg-center bg-no-repeat background-transition ${
+            isTransitioning ? 'opacity-40 scale-105 blur-sm' : 'opacity-100 scale-100'
           }`}
           style={{ 
-            backgroundImage: `url(${currentBackground.image})`,
-            filter: isTransitioning ? 'blur(2px)' : 'blur(0px)'
+            backgroundImage: `url(${currentBackground.image})`
           }}
         />
         
         {/* Тематическое наложение */}
         <div 
-          className={`absolute inset-0 transition-all duration-1000 ${
-            isTransitioning ? 'opacity-30' : 'opacity-80'
+          className={`absolute inset-0 background-transition ${
+            isTransitioning ? 'opacity-20' : 'opacity-70'
           }`}
           style={{ 
             background: currentBackground.overlay
@@ -183,10 +210,12 @@ const DynamicFantasyBackground: React.FC<DynamicFantasyBackgroundProps> = ({
         />
         
         {/* Дополнительный градиент для читаемости */}
-        <div className="absolute inset-0 bg-gradient-to-t from-background/60 via-transparent to-background/20" />
+        <div className="absolute inset-0 bg-gradient-to-t from-background/70 via-transparent to-background/30" />
         
         {/* Анимированные частицы */}
-        <div className="absolute inset-0 pointer-events-none">
+        <div className={`absolute inset-0 pointer-events-none transition-opacity duration-1000 ${
+          isTransitioning ? 'opacity-30' : 'opacity-100'
+        }`}>
           {renderParticles(currentBackground.particles)}
         </div>
         
