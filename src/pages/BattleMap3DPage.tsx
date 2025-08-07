@@ -91,12 +91,12 @@ const BattleMap3DPage: React.FC = () => {
         <Button 
           variant="outline" 
           onClick={() => {
-            // Проверяем, есть ли ID сессии в URL для возврата
+            // Всегда возвращаемся на 2D карту
             const sessionId = sessionStorage.getItem('currentSessionId');
             if (sessionId) {
               navigate(`/dm/battle-map/${sessionId}`);
             } else {
-              navigate('/dm');
+              navigate('/battle-map-fixed');
             }
           }}
           className="border-slate-600 text-slate-300 bg-slate-800/90 backdrop-blur-sm"
