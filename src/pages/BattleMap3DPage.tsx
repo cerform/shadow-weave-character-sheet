@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Home, Map, ArrowLeft, Upload } from 'lucide-react';
 import { toast } from 'sonner';
 import MapUploadFor3D from '@/components/battle/MapUploadFor3D';
-import Generated3DMap from '@/components/battle/Generated3DMap';
+import Simple3DMap from '@/components/battle/Simple3DMap';
 
 const BattleMap3DPage: React.FC = () => {
   const navigate = useNavigate();
@@ -174,11 +174,9 @@ const BattleMap3DPage: React.FC = () => {
           </div>
         ) : (
           <div className="w-full h-full">
-            <Generated3DMap 
-              mapData={generatedMapData} 
+            <Simple3DMap 
+              mapImageUrl={generatedMapData?.textureMap}
               tokens={tokens}
-              onTokenUpdate={handleTokenUpdate}
-              isDM={true} 
             />
           </div>
         )}

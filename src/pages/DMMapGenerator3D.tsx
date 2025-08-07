@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Home, ArrowLeft, Map, Upload } from 'lucide-react';
 import MapUploadFor3D from '@/components/battle/MapUploadFor3D';
-import Generated3DMap from '@/components/battle/Generated3DMap';
+import Simple3DMap from '@/components/battle/Simple3DMap';
 
 const DMMapGenerator3D: React.FC = () => {
   const navigate = useNavigate();
@@ -97,7 +97,7 @@ const DMMapGenerator3D: React.FC = () => {
           </div>
         ) : (
           <div className="w-full h-full">
-            <Generated3DMap mapData={generatedMapData} isDM={true} />
+            <Simple3DMap mapImageUrl={generatedMapData?.textureMap} />
           </div>
         )}
       </div>
