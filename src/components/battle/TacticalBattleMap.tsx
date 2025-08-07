@@ -150,6 +150,7 @@ const TacticalBattleMap: React.FC<TacticalBattleMapProps> = ({
   const [gridOpacity, setGridOpacity] = useState(0.5);
   const [gridScale, setGridScale] = useState(1);
   const [gridPosition, setGridPosition] = useState({ x: 0, y: 0 });
+  const [gridSquareSize, setGridSquareSize] = useState(5); // футы за квадрат
   
   // Состояние для управления мышью
   const [isDragging, setIsDragging] = useState(false);
@@ -442,6 +443,11 @@ const TacticalBattleMap: React.FC<TacticalBattleMapProps> = ({
     console.log('💡 Adding light source:', { type, color, intensity });
   }, []);
 
+  const handleGridSquareSizeChange = useCallback((size: number) => {
+    setGridSquareSize(size);
+    console.log(`📏 Grid square size changed to: ${size} feet`);
+  }, []);
+
   return (
     <div className="w-full h-full bg-slate-900 flex">
       {/* Map Controls */}
@@ -471,6 +477,8 @@ const TacticalBattleMap: React.FC<TacticalBattleMapProps> = ({
           onGridZoomOut={handleGridZoomOut}
           onResetGridZoom={handleResetGridZoom}
           onAlignGridToMap={handleAlignGridToMap}
+          gridSquareSize={gridSquareSize}
+          onGridSquareSizeChange={handleGridSquareSizeChange}
         />
       </div>
 

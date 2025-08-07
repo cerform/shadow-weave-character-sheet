@@ -5,6 +5,7 @@ import { Eye, EyeOff, Layers, Map, Sun, Moon, Grid, MoveHorizontal, MoveVertical
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface MapControlsProps {
   fogOfWar: boolean;
@@ -34,6 +35,9 @@ interface MapControlsProps {
   onGridZoomOut?: () => void;
   onResetGridZoom?: () => void;
   onAlignGridToMap?: () => void;
+  // Размер квадрата сетки в футах
+  gridSquareSize?: number;
+  onGridSquareSizeChange?: (size: number) => void;
 }
 
 const MapControls: React.FC<MapControlsProps> = ({
@@ -63,7 +67,10 @@ const MapControls: React.FC<MapControlsProps> = ({
   onGridZoomIn = () => {},
   onGridZoomOut = () => {},
   onResetGridZoom = () => {},
-  onAlignGridToMap = () => {}
+  onAlignGridToMap = () => {},
+  // Размер квадрата сетки
+  gridSquareSize = 5,
+  onGridSquareSizeChange = () => {}
 }) => {
   return (
     <div className="space-y-4">
@@ -165,6 +172,27 @@ const MapControls: React.FC<MapControlsProps> = ({
                       onValueChange={(vals) => isDM && setGridOpacity(vals[0])}
                       disabled={!isDM} // Disable if not DM
                     />
+                  </div>
+
+                  <div>
+                    <div className="mb-1 text-sm font-medium">Размер квадрата</div>
+                    <Select 
+                      value={gridSquareSize.toString()} 
+                      onValueChange={(value) => isDM && onGridSquareSizeChange(parseInt(value))}
+                      disabled={!isDM}
+                    >
+                      <SelectTrigger className="h-8">
+                        <SelectValue placeholder="Выберите размер" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="5">5 футов</SelectItem>
+                        <SelectItem value="10">10 футов</SelectItem>
+                        <SelectItem value="15">15 футов</SelectItem>
+                        <SelectItem value="20">20 футов</SelectItem>
+                        <SelectItem value="25">25 футов</SelectItem>
+                        <SelectItem value="30">30 футов</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
 
                   <div>
