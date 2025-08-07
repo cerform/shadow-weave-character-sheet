@@ -5,7 +5,7 @@ import * as React from "react"
 import { ThemeProvider as NextThemesProvider } from "next-themes"
 import { type ThemeProviderProps } from "next-themes/dist/types"
 import { themes } from '@/lib/themes'
-import { useUserTheme } from '@/hooks/use-user-theme'
+
 
 export interface ThemeContextType {
   theme: string;
@@ -21,15 +21,19 @@ export const ThemeProviderContext = React.createContext<ThemeContextType>({
 });
 
 export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
-  const { activeTheme, setUserTheme } = useUserTheme();
-  const [theme, setTheme] = React.useState<string>(activeTheme || 'default');
+  const [theme, setTheme] = React.useState<string>('default');
 
-  // Синхронизируем с UserTheme при изменении activeTheme
+  // Загружаем сохраненную тему при инициализации
   React.useEffect(() => {
-    if (activeTheme && activeTheme !== theme) {
-      setTheme(activeTheme);
+    try {
+      const savedTheme = localStorage.getItem('theme') || 'default';
+      if (themes[savedTheme as keyof typeof themes]) {
+        setTheme(savedTheme);
+      }
+    } catch (error) {
+      console.error('Error loading theme:', error);
     }
-  }, [activeTheme, theme]);
+  }, []);
 
   // Применяем тему к корневому элементу при изменении темы
   React.useEffect(() => {
@@ -47,10 +51,9 @@ export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
     document.documentElement.style.setProperty('--card-bg', currentTheme.cardBackground);
   }, [theme]);
 
-  // Обработчик для установки темы с синхронизацией между контекстами
+  // Обработчик для установки темы
   const handleSetTheme = (newTheme: string) => {
     setTheme(newTheme);
-    setUserTheme(newTheme);
     
     // Сохраняем тему в localStorage
     localStorage.setItem('theme', newTheme);

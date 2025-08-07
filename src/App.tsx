@@ -1,6 +1,6 @@
 import React from 'react';
 import { BrowserRouter as Router } from 'react-router-dom';
-import { ThemeProvider } from '@/contexts/ThemeContext';
+import { ThemeProvider } from '@/components/theme-provider';
 import { AuthProvider } from '@/contexts/SupabaseAuthContext';
 import { CharacterProvider } from '@/contexts/CharacterContext';
 import { SpellbookProvider } from '@/contexts/SpellbookContext';

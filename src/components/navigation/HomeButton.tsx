@@ -1,10 +1,8 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Shield } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { useUserTheme } from '@/hooks/use-user-theme';
-import { themes } from '@/lib/themes';
+import { useTheme } from '@/hooks/use-theme';
 
 interface HomeButtonProps {
   className?: string;
@@ -12,26 +10,21 @@ interface HomeButtonProps {
   variant?: "default" | "outline";
 }
 
-const HomeButton: React.FC<HomeButtonProps> = ({ 
-  className = "", 
-  showText = true,
-  variant = "outline"
-}) => {
-  const { activeTheme } = useUserTheme();
-  const themeKey = (activeTheme || 'default') as keyof typeof themes;
-  const currentTheme = themes[themeKey] || themes.default;
+const HomeButton: React.FC<HomeButtonProps> = ({ className = "", showText = true, variant = "default" }) => {
+  const { themeStyles } = useTheme();
   
   return (
     <Button 
       variant={variant}
-      className={`flex items-center gap-2 hover:shadow-[0_0_12px_rgba(var(--theme-accent-rgb),0.6)] ${className}`}
+      className={`inline-flex items-center gap-2 transition-colors ${className}`}
+      style={{ 
+        color: themeStyles?.textColor || '#E2E8F0',
+        borderColor: variant === "outline" ? themeStyles?.accent || '#8B5CF6' : 'transparent'
+      }}
       asChild
-      style={{
-        '--theme-accent-rgb': currentTheme.accent.replace('#', '').match(/.{2}/g)?.map(hex => parseInt(hex, 16)).join(',')
-      } as React.CSSProperties}
     >
       <Link to="/">
-        <Shield className="size-4" />
+        <Shield className="w-4 h-4" />
         {showText && <span>На главную</span>}
       </Link>
     </Button>

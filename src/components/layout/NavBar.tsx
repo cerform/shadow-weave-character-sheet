@@ -5,7 +5,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { Button } from "@/components/ui/button";
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
-import ThemeToggle from './ThemeToggle';
+
 
 interface NavBarProps {
   showAuth?: boolean;
@@ -49,8 +49,6 @@ const NavBar: React.FC<NavBarProps> = ({ showAuth = true }) => {
         </div>
       </div>
       <div className="flex items-center space-x-2">
-        {/* Добавляем переключатель тем */}
-        <ThemeToggle />
         
         {showAuth && (
           <>

@@ -7,7 +7,7 @@ import { FileUp, Loader2, AlertCircle, Info } from 'lucide-react';
 import { extractCharacterDataFromPdf, convertExtractedDataToCharacter } from '@/utils/pdfImporter';
 import { useToast } from '@/hooks/use-toast';
 import { useCharacter } from '@/contexts/CharacterContext';
-import { useTheme } from '@/contexts/ThemeContext';
+import { useTheme } from '@/hooks/use-theme';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const PdfCharacterImport: React.FC = () => {

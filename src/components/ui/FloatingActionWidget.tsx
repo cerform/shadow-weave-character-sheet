@@ -23,8 +23,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from '@/hooks/use-auth';
 import { useTheme } from '@/hooks/use-theme';
-import { useUserTheme } from '@/hooks/use-user-theme';
-import { themes } from '@/lib/themes';
 
 const FloatingActionWidget: React.FC = () => {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -33,7 +31,6 @@ const FloatingActionWidget: React.FC = () => {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
   const { theme, setTheme, themeStyles } = useTheme();
-  const { activeTheme, setUserTheme } = useUserTheme();
 
   // Скрываем виджет на определенных страницах
   useEffect(() => {
@@ -43,25 +40,19 @@ const FloatingActionWidget: React.FC = () => {
 
   const themeOptions = [
     { name: 'default', label: 'По умолчанию' },
-    { name: 'warlock', label: 'Колдун' },
-    { name: 'wizard', label: 'Волшебник' },
-    { name: 'druid', label: 'Друид' },
-    { name: 'warrior', label: 'Воин' },
-    { name: 'bard', label: 'Бард' },
-    { name: 'monk', label: 'Монах' },
-    { name: 'ranger', label: 'Следопыт' },
-    { name: 'sorcerer', label: 'Чародей' },
+    { name: 'shadow', label: 'Колдун' },
+    { name: 'frost', label: 'Волшебник' },
+    { name: 'emerald', label: 'Друид' },
+    { name: 'flame', label: 'Воин' },
+    { name: 'mystic', label: 'Бард' },
+    { name: 'steel', label: 'Монах' },
+    { name: 'bronze', label: 'Следопыт' },
+    { name: 'dark', label: 'Чародей' },
   ];
 
   const handleThemeChange = (themeName: string) => {
     console.log('🎨 Смена темы на:', themeName);
-    
-    // Применяем тему через UserTheme хук (основной)
-    setUserTheme(themeName);
-    
-    // Также устанавливаем через обычный theme хук для совместимости
     setTheme(themeName);
-    
     console.log('✅ Тема применена:', themeName);
   };
 
@@ -115,7 +106,7 @@ const FloatingActionWidget: React.FC = () => {
     setIsExpanded(false);
   };
 
-  const currentAccent = themeStyles?.accent || themes.default.accent;
+  const currentAccent = themeStyles?.accent || '#8B5CF6';
 
   if (!isVisible || !isAuthenticated) return null;
 
@@ -150,8 +141,8 @@ const FloatingActionWidget: React.FC = () => {
         >
           <DropdownMenuLabel>Выберите тему</DropdownMenuLabel>
           {themeOptions.map((option) => {
-            const themeColor = themes[option.name as keyof typeof themes]?.accent || themes.default.accent;
-            const isActive = activeTheme === option.name; // Используем activeTheme вместо theme
+            const themeColor = themeStyles?.accent || '#8B5CF6';
+            const isActive = theme === option.name;
             
             return (
               <DropdownMenuItem
