@@ -13,6 +13,7 @@ import {
   User,
   Paintbrush
 } from 'lucide-react';
+import { DiceDrawer } from '@/components/dice/DiceDrawer';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -117,6 +118,15 @@ const FloatingActionWidget: React.FC = () => {
       animate={{ scale: 1, opacity: 1 }}
       transition={{ duration: 0.3, type: "spring" }}
     >
+      {/* Кубики */}
+      <motion.div
+        initial={{ scale: 0, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ delay: 0.05, duration: 0.3 }}
+      >
+        <DiceDrawer />
+      </motion.div>
+
       {/* Переключатель тем */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
