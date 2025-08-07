@@ -53,29 +53,16 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        // Enhanced text colors for better contrast
+        "text-primary": "hsl(var(--text-primary))",
+        "text-secondary": "hsl(var(--text-secondary))",
+        "text-muted": "hsl(var(--text-muted))",
+        "text-contrast": "hsl(var(--text-contrast))",
         // D&D specific colors
         "dnd-gold": "hsl(var(--dnd-gold))",
         "dnd-red": "hsl(var(--dnd-red))",
         "dnd-green": "hsl(var(--dnd-green))",
         "dnd-blue": "hsl(var(--dnd-blue))",
-        theme: {
-          shadow: {
-            primary: "#7f00ff",
-            secondary: "#ff00ff",
-          },
-          fire: {
-            primary: "#ff4400",
-            secondary: "#ff8800",
-          },
-          nature: {
-            primary: "#00ff44",
-            secondary: "#44ff88",
-          },
-          arcane: {
-            primary: "#00ffff",
-            secondary: "#00ccff",
-          },
-        },
       },
       fontFamily: {
         // Arcane Elegance Fonts

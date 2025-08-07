@@ -4,21 +4,21 @@
 @tailwind utilities;
 
 :root {
-  /* Shadow Theme - Default Dark Purple */
+  /* Default Theme - Shadow/Purple */
   --background: 220 20% 14%;
-  --foreground: 220 8% 92%;
+  --foreground: 220 8% 96%;
   --card: 220 20% 18%;
-  --card-foreground: 220 8% 92%;
+  --card-foreground: 220 8% 96%;
   --popover: 220 20% 18%;
-  --popover-foreground: 220 8% 92%;
+  --popover-foreground: 220 8% 96%;
   --primary: 265 90% 72%;
-  --primary-foreground: 220 8% 4%;
+  --primary-foreground: 220 100% 100%;
   --secondary: 220 15% 22%;
-  --secondary-foreground: 220 8% 92%;
+  --secondary-foreground: 220 8% 96%;
   --muted: 220 15% 22%;
-  --muted-foreground: 220 8% 60%;
+  --muted-foreground: 220 8% 70%;
   --accent: 265 85% 68%;
-  --accent-foreground: 220 8% 4%;
+  --accent-foreground: 220 100% 100%;
   --destructive: 0 62% 58%;
   --destructive-foreground: 0 0% 98%;
   --border: 220 15% 26%;
@@ -26,6 +26,13 @@
   --ring: 265 90% 72%;
   --radius: 0.5rem;
 
+  /* Enhanced text colors for better contrast */
+  --text-primary: 220 8% 96%;
+  --text-secondary: 220 8% 80%;
+  --text-muted: 220 8% 70%;
+  --text-contrast: 220 100% 100%;
+  --text-glow-color: 265 90% 72%;
+  
   /* Gradients */
   --gradient-panel: linear-gradient(135deg, hsl(var(--rpg-panel)), hsl(var(--rpg-panel-elevated)));
   --gradient-hp: linear-gradient(90deg, hsl(var(--rpg-hp)), hsl(var(--rpg-hp) / 0.8));
@@ -39,14 +46,15 @@
   --glow-primary: 0 0 20px hsl(var(--primary) / 0.3);
   --glow-hp: 0 0 15px hsl(var(--rpg-hp) / 0.4);
   --glow-mana: 0 0 15px hsl(var(--rpg-mana) / 0.4);
+  --text-glow: 0 0 10px hsl(var(--text-glow-color) / 0.8), 0 0 20px hsl(var(--text-glow-color) / 0.6);
   
   /* Ability colors */
-  --str-color: 0 70% 50%;
-  --dex-color: 120 70% 50%;
-  --con-color: 30 70% 50%;
-  --int-color: 240 70% 50%;
-  --wis-color: 60 70% 50%;
-  --cha-color: 300 70% 50%;
+  --str-color: 0 70% 60%;
+  --dex-color: 120 70% 60%;
+  --con-color: 30 70% 60%;
+  --int-color: 240 70% 60%;
+  --wis-color: 60 70% 60%;
+  --cha-color: 300 70% 60%;
 
   /* RPG/MMO Enhancement Colors */
   --rpg-bg-primary: 15 15% 8%;
@@ -75,70 +83,206 @@
   --font-runic: 'Uncial Antiqua', cursive;
 }
 
-/* Fire Theme - Warm Orange/Red */
-[data-theme="fire"] {
+/* Shadow Theme - Enhanced */
+[data-theme="shadow"] {
+  --background: 220 20% 8%;
+  --foreground: 270 8% 98%;
+  --card: 220 20% 12%;
+  --card-foreground: 270 8% 98%;
+  --popover: 220 20% 12%;
+  --popover-foreground: 270 8% 98%;
+  --primary: 265 90% 72%;
+  --primary-foreground: 270 100% 100%;
+  --secondary: 220 15% 16%;
+  --secondary-foreground: 270 8% 98%;
+  --muted: 220 15% 16%;
+  --muted-foreground: 270 8% 80%;
+  --accent: 280 85% 70%;
+  --accent-foreground: 270 100% 100%;
+  --text-primary: 270 8% 98%;
+  --text-secondary: 270 8% 85%;
+  --text-muted: 270 8% 75%;
+  --text-contrast: 270 100% 100%;
+  --text-glow-color: 280 85% 70%;
+  --rpg-border: 265 60% 45%;
+  --rpg-border-glow: 265 90% 65%;
+}
+
+/* Flame Theme - Enhanced */
+[data-theme="flame"] {
   --background: 20 25% 8%;
-  --foreground: 20 8% 92%;
+  --foreground: 25 8% 98%;
   --card: 20 25% 12%;
-  --card-foreground: 20 8% 92%;
+  --card-foreground: 25 8% 98%;
   --popover: 20 25% 12%;
-  --popover-foreground: 20 8% 92%;
+  --popover-foreground: 25 8% 98%;
   --primary: 15 90% 62%;
-  --primary-foreground: 20 8% 4%;
+  --primary-foreground: 25 100% 100%;
   --secondary: 20 20% 16%;
-  --secondary-foreground: 20 8% 92%;
+  --secondary-foreground: 25 8% 98%;
   --muted: 20 20% 16%;
-  --muted-foreground: 20 8% 60%;
+  --muted-foreground: 25 8% 80%;
   --accent: 25 85% 58%;
-  --accent-foreground: 20 8% 4%;
+  --accent-foreground: 25 100% 100%;
+  --text-primary: 25 8% 98%;
+  --text-secondary: 25 8% 85%;
+  --text-muted: 25 8% 75%;
+  --text-contrast: 25 100% 100%;
+  --text-glow-color: 15 90% 62%;
   --rpg-border: 15 60% 45%;
   --rpg-border-glow: 15 90% 65%;
 }
 
-/* Nature Theme - Green/Earth */
-[data-theme="nature"] {
+/* Emerald Theme - Enhanced */
+[data-theme="emerald"] {
   --background: 120 25% 8%;
-  --foreground: 120 8% 92%;
+  --foreground: 120 8% 98%;
   --card: 120 25% 12%;
-  --card-foreground: 120 8% 92%;
+  --card-foreground: 120 8% 98%;
   --popover: 120 25% 12%;
-  --popover-foreground: 120 8% 92%;
+  --popover-foreground: 120 8% 98%;
   --primary: 120 70% 50%;
-  --primary-foreground: 120 8% 4%;
+  --primary-foreground: 120 100% 100%;
   --secondary: 120 20% 16%;
-  --secondary-foreground: 120 8% 92%;
+  --secondary-foreground: 120 8% 98%;
   --muted: 120 20% 16%;
-  --muted-foreground: 120 8% 60%;
+  --muted-foreground: 120 8% 80%;
   --accent: 140 65% 45%;
-  --accent-foreground: 120 8% 4%;
+  --accent-foreground: 120 100% 100%;
+  --text-primary: 120 8% 98%;
+  --text-secondary: 120 8% 85%;
+  --text-muted: 120 8% 75%;
+  --text-contrast: 120 100% 100%;
+  --text-glow-color: 120 70% 50%;
   --rpg-border: 120 50% 35%;
   --rpg-border-glow: 120 80% 55%;
 }
 
-/* Arcane Theme - Blue/Cyan */
-[data-theme="arcane"] {
+/* Frost Theme - Enhanced */
+[data-theme="frost"] {
   --background: 200 30% 8%;
-  --foreground: 200 8% 92%;
+  --foreground: 200 8% 98%;
   --card: 200 30% 12%;
-  --card-foreground: 200 8% 92%;
+  --card-foreground: 200 8% 98%;
   --popover: 200 30% 12%;
-  --popover-foreground: 200 8% 92%;
+  --popover-foreground: 200 8% 98%;
   --primary: 195 85% 65%;
-  --primary-foreground: 200 8% 4%;
+  --primary-foreground: 200 100% 100%;
   --secondary: 200 25% 16%;
-  --secondary-foreground: 200 8% 92%;
+  --secondary-foreground: 200 8% 98%;
   --muted: 200 25% 16%;
-  --muted-foreground: 200 8% 60%;
+  --muted-foreground: 200 8% 80%;
   --accent: 180 75% 60%;
-  --accent-foreground: 200 8% 4%;
+  --accent-foreground: 200 100% 100%;
+  --text-primary: 200 8% 98%;
+  --text-secondary: 200 8% 85%;
+  --text-muted: 200 8% 75%;
+  --text-contrast: 200 100% 100%;
+  --text-glow-color: 195 85% 65%;
   --rpg-border: 195 55% 40%;
   --rpg-border-glow: 195 85% 70%;
 }
 
-.dark {
-  --background: 220 20% 14%;
-  --foreground: 220 8% 92%;
+/* Mystic Theme - Enhanced */
+[data-theme="mystic"] {
+  --background: 300 25% 8%;
+  --foreground: 300 8% 98%;
+  --card: 300 25% 12%;
+  --card-foreground: 300 8% 98%;
+  --popover: 300 25% 12%;
+  --popover-foreground: 300 8% 98%;
+  --primary: 300 80% 65%;
+  --primary-foreground: 300 100% 100%;
+  --secondary: 300 20% 16%;
+  --secondary-foreground: 300 8% 98%;
+  --muted: 300 20% 16%;
+  --muted-foreground: 300 8% 80%;
+  --accent: 320 75% 60%;
+  --accent-foreground: 300 100% 100%;
+  --text-primary: 300 8% 98%;
+  --text-secondary: 300 8% 85%;
+  --text-muted: 300 8% 75%;
+  --text-contrast: 300 100% 100%;
+  --text-glow-color: 300 80% 65%;
+  --rpg-border: 300 55% 40%;
+  --rpg-border-glow: 300 85% 70%;
 }
+
+/* Steel Theme - Enhanced */
+[data-theme="steel"] {
+  --background: 210 25% 8%;
+  --foreground: 210 8% 98%;
+  --card: 210 25% 12%;
+  --card-foreground: 210 8% 98%;
+  --popover: 210 25% 12%;
+  --popover-foreground: 210 8% 98%;
+  --primary: 210 60% 55%;
+  --primary-foreground: 210 100% 100%;
+  --secondary: 210 20% 16%;
+  --secondary-foreground: 210 8% 98%;
+  --muted: 210 20% 16%;
+  --muted-foreground: 210 8% 80%;
+  --accent: 220 55% 50%;
+  --accent-foreground: 210 100% 100%;
+  --text-primary: 210 8% 98%;
+  --text-secondary: 210 8% 85%;
+  --text-muted: 210 8% 75%;
+  --text-contrast: 210 100% 100%;
+  --text-glow-color: 210 60% 55%;
+  --rpg-border: 210 45% 35%;
+  --rpg-border-glow: 210 75% 60%;
+}
+
+/* Bronze Theme - Enhanced */
+[data-theme="bronze"] {
+  --background: 30 25% 8%;
+  --foreground: 30 8% 98%;
+  --card: 30 25% 12%;
+  --card-foreground: 30 8% 98%;
+  --popover: 30 25% 12%;
+  --popover-foreground: 30 8% 98%;
+  --primary: 30 80% 55%;
+  --primary-foreground: 30 100% 100%;
+  --secondary: 30 20% 16%;
+  --secondary-foreground: 30 8% 98%;
+  --muted: 30 20% 16%;
+  --muted-foreground: 30 8% 80%;
+  --accent: 45 75% 50%;
+  --accent-foreground: 30 100% 100%;
+  --text-primary: 30 8% 98%;
+  --text-secondary: 30 8% 85%;
+  --text-muted: 30 8% 75%;
+  --text-contrast: 30 100% 100%;
+  --text-glow-color: 30 80% 55%;
+  --rpg-border: 30 50% 35%;
+  --rpg-border-glow: 30 80% 60%;
+}
+
+/* Dark Theme - Enhanced */
+[data-theme="dark"] {
+  --background: 220 20% 12%;
+  --foreground: 220 8% 98%;
+  --card: 220 20% 16%;
+  --card-foreground: 220 8% 98%;
+  --popover: 220 20% 16%;
+  --popover-foreground: 220 8% 98%;
+  --primary: 265 90% 72%;
+  --primary-foreground: 220 100% 100%;
+  --secondary: 220 15% 20%;
+  --secondary-foreground: 220 8% 98%;
+  --muted: 220 15% 20%;
+  --muted-foreground: 220 8% 80%;
+  --accent: 265 85% 68%;
+  --accent-foreground: 220 100% 100%;
+  --text-primary: 220 8% 98%;
+  --text-secondary: 220 8% 85%;
+  --text-muted: 220 8% 75%;
+  --text-contrast: 220 100% 100%;
+  --text-glow-color: 265 90% 72%;
+  --rpg-border: 265 40% 35%;
+  --rpg-border-glow: 265 80% 60%;
+}
+
 
 /* Base Layer Styles */
 @layer base {
@@ -146,11 +290,34 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background;
+    color: hsl(var(--text-primary));
     font-family: var(--font-fantasy-body);
     background: linear-gradient(135deg, hsl(var(--rpg-bg-primary)), hsl(var(--rpg-bg-secondary)));
     min-height: 100vh;
     position: relative;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    color: hsl(var(--text-contrast));
+    text-shadow: var(--text-glow);
+  }
+  
+  p, span, div {
+    color: hsl(var(--text-primary));
+  }
+  
+  .text-muted-foreground {
+    color: hsl(var(--text-muted)) !important;
+  }
+  
+  .text-foreground {
+    color: hsl(var(--text-primary)) !important;
+  }
+  
+  .text-primary {
+    color: hsl(var(--primary)) !important;
+    text-shadow: 0 0 10px hsl(var(--primary) / 0.5);
   }
   
   body::before {
@@ -289,9 +456,27 @@
     box-shadow: var(--glow-primary);
   }
 
-  /* Magic Effects */
+  /* Enhanced Text Effects */
   .text-glow {
-    text-shadow: 0 0 10px currentColor, 0 0 20px currentColor, 0 0 30px currentColor;
+    color: hsl(var(--text-contrast));
+    text-shadow: var(--text-glow);
+  }
+  
+  .text-enhanced {
+    color: hsl(var(--text-contrast));
+    text-shadow: 0 0 5px hsl(var(--text-glow-color) / 0.8),
+                 0 1px 2px rgba(0, 0, 0, 0.8);
+  }
+  
+  .text-outline {
+    color: hsl(var(--text-contrast));
+    -webkit-text-stroke: 1px hsl(var(--background));
+    text-shadow: 
+      0 0 5px hsl(var(--text-glow-color) / 0.6),
+      1px 1px 0 hsl(var(--background)),
+      -1px -1px 0 hsl(var(--background)),
+      1px -1px 0 hsl(var(--background)),
+      -1px 1px 0 hsl(var(--background));
   }
   
   .border-glow {
