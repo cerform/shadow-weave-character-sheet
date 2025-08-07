@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { Stage, Layer, Rect, Group, Text, Circle, Image as KonvaImage } from 'react-konva';
 import { Button } from '@/components/ui/button';
 import { Plus, Upload, Trash2, Edit, Settings, Users } from 'lucide-react';
@@ -150,6 +150,11 @@ const TacticalBattleMap: React.FC<TacticalBattleMapProps> = ({
   const [gridOpacity, setGridOpacity] = useState(0.5);
   const [gridScale, setGridScale] = useState(1);
   const [gridPosition, setGridPosition] = useState({ x: 0, y: 0 });
+  
+  // Состояние для управления мышью
+  const [isDragging, setIsDragging] = useState(false);
+  const [lastPointerPosition, setLastPointerPosition] = useState({ x: 0, y: 0 });
+  const stageRef = useRef(null);
   const [fogOfWar, setFogOfWar] = useState(false);
   const [revealRadius, setRevealRadius] = useState(3);
   const [isDynamicLighting, setDynamicLighting] = useState(false);
@@ -315,6 +320,74 @@ const TacticalBattleMap: React.FC<TacticalBattleMapProps> = ({
   const handleResetZoom = useCallback(() => {
     setZoom(1);
   }, []);
+
+  // Обработка колесика мыши для масштабирования
+  const handleWheel = useCallback((e: any) => {
+    e.evt.preventDefault();
+    
+    const stage = e.target.getStage();
+    const pointer = stage.getPointerPosition();
+    
+    const scaleBy = 1.1;
+    const oldScale = zoom;
+    
+    let newScale = e.evt.deltaY > 0 ? oldScale / scaleBy : oldScale * scaleBy;
+    newScale = Math.max(0.3, Math.min(5, newScale));
+    
+    if (newScale !== oldScale) {
+      // Масштабирование относительно позиции курсора
+      const mousePointTo = {
+        x: (pointer.x - mapPosition.x) / oldScale,
+        y: (pointer.y - mapPosition.y) / oldScale,
+      };
+
+      const newPos = {
+        x: pointer.x - mousePointTo.x * newScale,
+        y: pointer.y - mousePointTo.y * newScale,
+      };
+
+      setZoom(newScale);
+      setMapPosition(newPos);
+    }
+  }, [zoom, mapPosition]);
+
+  // Обработка перетаскивания карты
+  const handleMouseDown = useCallback((e: any) => {
+    const stage = e.target.getStage();
+    const pointer = stage.getPointerPosition();
+    
+    // Проверяем нажатие Alt или Ctrl
+    if (e.evt.altKey || e.evt.ctrlKey) {
+      setIsDragging(true);
+      setLastPointerPosition(pointer);
+      stage.container().style.cursor = 'move';
+    }
+  }, []);
+
+  const handleMouseMove = useCallback((e: any) => {
+    if (!isDragging) return;
+    
+    const stage = e.target.getStage();
+    const pointer = stage.getPointerPosition();
+    
+    const deltaX = pointer.x - lastPointerPosition.x;
+    const deltaY = pointer.y - lastPointerPosition.y;
+    
+    setMapPosition(prev => ({
+      x: prev.x + deltaX,
+      y: prev.y + deltaY
+    }));
+    
+    setLastPointerPosition(pointer);
+  }, [isDragging, lastPointerPosition]);
+
+  const handleMouseUp = useCallback((e: any) => {
+    if (isDragging) {
+      setIsDragging(false);
+      const stage = e.target.getStage();
+      stage.container().style.cursor = 'default';
+    }
+  }, [isDragging]);
 
   const handleMoveMap = useCallback((direction: 'up' | 'down' | 'left' | 'right') => {
     const step = 20;
@@ -548,16 +621,17 @@ const TacticalBattleMap: React.FC<TacticalBattleMapProps> = ({
       {/* Game Board */}
       <div className="flex-1 overflow-hidden">
         <Stage 
-          width={GRID_COLS * GRID_SIZE * zoom} 
-          height={GRID_ROWS * GRID_SIZE * zoom}
+          ref={stageRef}
+          width={window.innerWidth - 400} 
+          height={window.innerHeight - 100}
           className="bg-slate-700"
-          scaleX={zoom}
-          scaleY={zoom}
-          x={mapPosition.x}
-          y={mapPosition.y}
+          onWheel={handleWheel}
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
           onClick={(e) => {
-            // Клик по пустой области сетки
-            if (e.target === e.target.getStage()) {
+            // Проверяем что не нажаты Alt/Ctrl (чтобы не мешать перетаскиванию)
+            if (!e.evt.altKey && !e.evt.ctrlKey) {
               const pos = e.target.getStage().getPointerPosition();
               if (pos) {
                 // Корректируем координаты с учетом масштаба и позиции
@@ -569,78 +643,99 @@ const TacticalBattleMap: React.FC<TacticalBattleMapProps> = ({
           }}
         >
           <Layer>
-            {/* Background */}
-            {mapImage && (
-              <KonvaImage 
-                image={mapImage} 
-                width={GRID_COLS * GRID_SIZE} 
-                height={GRID_ROWS * GRID_SIZE} 
-              />
-            )}
+            {/* Map and Grid Group */}
+            <Group
+              x={mapPosition.x}
+              y={mapPosition.y}
+              scaleX={zoom}
+              scaleY={zoom}
+            >
+              {/* Background Map */}
+              {mapImage && (
+                <KonvaImage 
+                  image={mapImage} 
+                  width={GRID_COLS * GRID_SIZE} 
+                  height={GRID_ROWS * GRID_SIZE} 
+                />
+              )}
 
-            {/* Grid Lines */}
-            {gridVisible && (
-              <Group
-                x={gridPosition.x}
-                y={gridPosition.y}
-                scaleX={gridScale}
-                scaleY={gridScale}
-                opacity={gridOpacity}
-              >
-                {Array.from({ length: GRID_COLS + 1 }, (_, i) => (
-                  <Rect
-                    key={`v-${i}`}
-                    x={i * GRID_SIZE}
-                    y={0}
-                    width={2}
-                    height={GRID_ROWS * GRID_SIZE}
-                    fill="rgba(255,255,255,0.8)"
+              {/* Grid Lines */}
+              {gridVisible && (
+                <Group
+                  x={gridPosition.x}
+                  y={gridPosition.y}
+                  scaleX={gridScale}
+                  scaleY={gridScale}
+                  opacity={gridOpacity}
+                >
+                  {Array.from({ length: GRID_COLS + 1 }, (_, i) => (
+                    <Rect
+                      key={`v-${i}`}
+                      x={i * GRID_SIZE}
+                      y={0}
+                      width={2}
+                      height={GRID_ROWS * GRID_SIZE}
+                      fill="rgba(255,255,255,0.8)"
+                    />
+                  ))}
+                  {Array.from({ length: GRID_ROWS + 1 }, (_, i) => (
+                    <Rect
+                      key={`h-${i}`}
+                      x={0}
+                      y={i * GRID_SIZE}
+                      width={GRID_COLS * GRID_SIZE}
+                      height={2}
+                      fill="rgba(255,255,255,0.8)"
+                    />
+                  ))}
+                </Group>
+              )}
+
+              {/* Available Movement Squares */}
+              {availableSquares.map((square, index) => (
+                <Rect
+                  key={`available-${index}`}
+                  x={square.x}
+                  y={square.y}
+                  width={GRID_SIZE}
+                  height={GRID_SIZE}
+                  fill="rgba(34, 197, 94, 0.4)"
+                  stroke="#22c55e"
+                  strokeWidth={2}
+                  listening={true}
+                  onClick={() => handleSquareClick(square.x, square.y)}
+                />
+              ))}
+
+              {/* Tokens */}
+              {tokens.map((token) => (
+                <Group
+                  key={token.id}
+                  x={token.x}
+                  y={token.y}
+                  onClick={() => handleTokenClick(token.id)}
+                >
+                  {/* Token Base */}
+                  <Circle
+                    radius={25}
+                    fill={token.color}
+                    stroke={selectedTokenId === token.id ? '#fbbf24' : '#000000'}
+                    strokeWidth={selectedTokenId === token.id ? 4 : 2}
                   />
-                ))}
-                {Array.from({ length: GRID_ROWS + 1 }, (_, i) => (
-                  <Rect
-                    key={`h-${i}`}
-                    x={0}
-                    y={i * GRID_SIZE}
-                    width={GRID_COLS * GRID_SIZE}
-                    height={2}
-                    fill="rgba(255,255,255,0.8)"
+
+                  {/* Token Name */}
+                  <Text
+                    text={token.name}
+                    fontSize={12}
+                    fill="white"
+                    x={-20}
+                    y={-6}
+                    width={40}
+                    align="center"
                   />
-                ))}
-              </Group>
-            )}
-
-            {/* Available Movement Squares */}
-            {availableSquares.map((square, index) => (
-              <Rect
-                key={`available-${index}`}
-                x={square.x}
-                y={square.y}
-                width={GRID_SIZE}
-                height={GRID_SIZE}
-                fill="rgba(34, 197, 94, 0.4)"
-                stroke="#22c55e"
-                strokeWidth={2}
-                listening={true}
-                onClick={() => handleSquareClick(square.x, square.y)}
-              />
-            ))}
-
-          </Layer>
-          
-          {/* Separate Layer for Tokens - не зависит от масштаба карты */}
-          <Layer>
-            {/* Tokens */}
-            {tokens.map((token) => (
-              <TokenComponent
-                key={token.id}
-                token={token}
-                zoom={zoom}
-                mapPosition={mapPosition}
-                selectedTokenId={selectedTokenId}
-                onTokenClick={handleTokenClick}
-              />
-            ))}
+                </Group>
+              ))}
+            </Group>
           </Layer>
         </Stage>
       </div>
