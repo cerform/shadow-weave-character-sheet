@@ -39,11 +39,11 @@ const BattleMap3DPage: React.FC = () => {
       <div className="absolute top-4 left-4 z-20 flex gap-2">
         <Button 
           variant="outline" 
-          onClick={() => navigate('/battle-map-fixed')}
+          onClick={() => navigate('/dm')}
           className="border-slate-600 text-slate-300 bg-slate-800/90 backdrop-blur-sm"
         >
           <ArrowLeft className="h-4 w-4 mr-2" />
-          К 2D карте
+          К панели DM
         </Button>
         
         {currentStep === 'preview' && (
