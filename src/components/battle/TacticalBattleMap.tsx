@@ -709,31 +709,14 @@ const TacticalBattleMap: React.FC<TacticalBattleMapProps> = ({
 
               {/* Tokens */}
               {tokens.map((token) => (
-                <Group
+                <TokenComponent
                   key={token.id}
-                  x={token.x}
-                  y={token.y}
-                  onClick={() => handleTokenClick(token.id)}
-                >
-                  {/* Token Base */}
-                  <Circle
-                    radius={25}
-                    fill={token.color}
-                    stroke={selectedTokenId === token.id ? '#fbbf24' : '#000000'}
-                    strokeWidth={selectedTokenId === token.id ? 4 : 2}
-                  />
-
-                  {/* Token Name */}
-                  <Text
-                    text={token.name}
-                    fontSize={12}
-                    fill="white"
-                    x={-20}
-                    y={-6}
-                    width={40}
-                    align="center"
-                  />
-                </Group>
+                  token={token}
+                  zoom={1}
+                  mapPosition={{x: 0, y: 0}}
+                  selectedTokenId={selectedTokenId}
+                  onTokenClick={handleTokenClick}
+                />
               ))}
             </Group>
           </Layer>
