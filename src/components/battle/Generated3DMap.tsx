@@ -52,11 +52,17 @@ const TerrainMesh: React.FC<{
   const meshRef = useRef<THREE.Mesh>(null);
   const [geometry, setGeometry] = useState<THREE.PlaneGeometry | null>(null);
   
-  // Загружаем текстуры
-  const texture = useLoader(THREE.TextureLoader, textureUrl);
-  const heightTexture = useLoader(THREE.TextureLoader, heightMapUrl);
+  // Проверяем и создаем дефолтные значения для URL
+  const safeTextureUrl = textureUrl || 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
+  const safeHeightMapUrl = heightMapUrl || safeTextureUrl;
+  
+  // Загружаем текстуры только если URL определены
+  const texture = useLoader(THREE.TextureLoader, safeTextureUrl);
+  const heightTexture = useLoader(THREE.TextureLoader, safeHeightMapUrl);
 
   useEffect(() => {
+    if (!safeHeightMapUrl || !dimensions.width || !dimensions.height) return;
+    
     // Создаем геометрию плоскости с высоким разрешением
     const segments = Math.min(256, Math.max(64, Math.max(dimensions.width, dimensions.height) / 4));
     const planeGeometry = new THREE.PlaneGeometry(
@@ -90,7 +96,7 @@ const TerrainMesh: React.FC<{
         
         // Получаем высоту из красного канала (grayscale)
         const height = pixels[pixelIndex] / 255;
-        const scaledHeight = height * heightScale * (settings.heightIntensity / 100);
+        const scaledHeight = height * heightScale * (settings?.heightIntensity || 50) / 100;
         
         positions.setZ(i, scaledHeight);
       }
@@ -100,8 +106,8 @@ const TerrainMesh: React.FC<{
       setGeometry(planeGeometry);
     };
     
-    img.src = heightMapUrl;
-  }, [heightMapUrl, dimensions, settings, heightScale]);
+    img.src = safeHeightMapUrl;
+  }, [safeHeightMapUrl, dimensions, settings, heightScale]);
 
   // Настраиваем текстуру
   useEffect(() => {
@@ -112,7 +118,25 @@ const TerrainMesh: React.FC<{
     }
   }, [texture]);
 
-  if (!geometry) return null;
+  if (!geometry) {
+    // Возвращаем простую плоскость если геометрия не загружена
+    return (
+      <mesh
+        ref={meshRef}
+        rotation={[-Math.PI / 2, 0, 0]}
+        receiveShadow
+        castShadow
+      >
+        <planeGeometry args={[dimensions.width / 10 || 10, dimensions.height / 10 || 10]} />
+        <meshStandardMaterial
+          map={texture}
+          roughness={0.8}
+          metalness={0.1}
+          side={THREE.DoubleSide}
+        />
+      </mesh>
+    );
+  }
 
   return (
     <mesh
@@ -223,14 +247,13 @@ const Generated3DMap: React.FC<Generated3DMapProps> = ({ mapData, tokens = [], o
       )}
 
       {/* Террейн */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
-        <planeGeometry args={[mapData.dimensions.width / 10, mapData.dimensions.height / 10]} />
-        <meshStandardMaterial 
-          map={useLoader(THREE.TextureLoader, mapData.textureMap)}
-          roughness={0.8}
-          metalness={0.1}
-        />
-      </mesh>
+      <TerrainMesh
+        textureUrl={mapData.textureMap || 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=='}
+        heightMapUrl={mapData.heightMap || mapData.textureMap || 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=='}
+        dimensions={mapData.dimensions}
+        settings={mapData.settings}
+        heightScale={heightScale}
+      />
 
       {/* Токены */}
       {localTokens.map(token => {
