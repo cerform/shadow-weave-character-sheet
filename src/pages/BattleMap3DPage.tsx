@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Home, Map, ArrowLeft, Upload } from 'lucide-react';
+import { toast } from 'sonner';
 import MapUploadFor3D from '@/components/battle/MapUploadFor3D';
 import Generated3DMap from '@/components/battle/Generated3DMap';
 
@@ -10,6 +11,56 @@ const BattleMap3DPage: React.FC = () => {
   const navigate = useNavigate();
   const [generatedMapData, setGeneratedMapData] = useState<any>(null);
   const [currentStep, setCurrentStep] = useState<'upload' | 'preview'>('upload');
+
+  // Проверяем наличие переданного изображения
+  useEffect(() => {
+    const savedMapUrl = sessionStorage.getItem('current3DMapUrl');
+    if (savedMapUrl) {
+      // Автоматически генерируем 3D из переданного изображения
+      processExistingImage(savedMapUrl);
+      sessionStorage.removeItem('current3DMapUrl'); // Очищаем после использования
+    }
+  }, []);
+
+  const processExistingImage = async (imageUrl: string) => {
+    try {
+      // Создаем настройки по умолчанию
+      const defaultSettings = {
+        heightIntensity: 50,
+        smoothness: 20,
+        generateHeightFromColors: true,
+        invertHeight: false,
+        gridSize: 1
+      };
+
+      // Генерируем карту высот и текстуру из существующего изображения
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d')!;
+        canvas.width = img.width;
+        canvas.height = img.height;
+        ctx.drawImage(img, 0, 0);
+
+        // Используем оригинальное изображение как текстуру и генерируем карту высот
+        const mapData = {
+          originalImage: imageUrl,
+          heightMap: imageUrl, // Используем то же изображение для карты высот
+          textureMap: imageUrl,
+          dimensions: { width: img.width, height: img.height },
+          settings: defaultSettings
+        };
+
+        setGeneratedMapData(mapData);
+        setCurrentStep('preview');
+      };
+      img.src = imageUrl;
+    } catch (error) {
+      console.error('Ошибка обработки изображения:', error);
+      toast.error('Ошибка обработки изображения');
+    }
+  };
 
   const handleMapGenerated = (mapData: any) => {
     setGeneratedMapData(mapData);
@@ -39,11 +90,19 @@ const BattleMap3DPage: React.FC = () => {
       <div className="absolute top-4 left-4 z-20 flex gap-2">
         <Button 
           variant="outline" 
-          onClick={() => navigate('/dm')}
+          onClick={() => {
+            // Проверяем, есть ли ID сессии в URL для возврата
+            const sessionId = sessionStorage.getItem('currentSessionId');
+            if (sessionId) {
+              navigate(`/dm/battle-map/${sessionId}`);
+            } else {
+              navigate('/dm');
+            }
+          }}
           className="border-slate-600 text-slate-300 bg-slate-800/90 backdrop-blur-sm"
         >
           <ArrowLeft className="h-4 w-4 mr-2" />
-          К панели DM
+          К 2D карте
         </Button>
         
         {currentStep === 'preview' && (

@@ -266,7 +266,16 @@ const BattleMapPageFixed: React.FC = () => {
               Сохранить
             </Button>
             <Button 
-              onClick={() => navigate('/battle-map-3d')}
+              onClick={() => {
+                if (mapUrl) {
+                  // Передаем текущее изображение и ID сессии в 3D режим
+                  sessionStorage.setItem('current3DMapUrl', mapUrl);
+                  sessionStorage.setItem('currentSessionId', sessionId || '');
+                  navigate('/battle-map-3d');
+                } else {
+                  toast.error('Сначала загрузите карту');
+                }
+              }}
               className="bg-purple-600 hover:bg-purple-700"
               size="sm"
             >
