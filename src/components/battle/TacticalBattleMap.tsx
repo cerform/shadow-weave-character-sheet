@@ -7,6 +7,78 @@ import SimpleTokenEditor from './SimpleTokenEditor';
 import MapControls from './MapControls';
 import useImage from 'use-image';
 
+// Token component to fix hooks violation
+const TokenComponent = ({ token, zoom, mapPosition, selectedTokenId, onTokenClick }: {
+  token: Token;
+  zoom: number;
+  mapPosition: { x: number; y: number };
+  selectedTokenId: string | null;
+  onTokenClick: (tokenId: string) => void;
+}) => {
+  const [tokenImage] = useImage(token.avatar || '');
+  
+  return (
+    <Group
+      key={token.id}
+      x={(token.x * zoom) + mapPosition.x}
+      y={(token.y * zoom) + mapPosition.y}
+      onClick={() => onTokenClick(token.id)}
+    >
+      {/* Token Base */}
+      <Circle
+        radius={50 / 2 - 4}
+        offsetX={-50 / 2}
+        offsetY={-50 / 2}
+        fill={token.color}
+        stroke={selectedTokenId === token.id ? '#fbbf24' : '#000000'}
+        strokeWidth={selectedTokenId === token.id ? 4 : 2}
+      />
+
+      {/* Token Avatar */}
+      {tokenImage ? (
+        <KonvaImage
+          image={tokenImage}
+          x={4}
+          y={4}
+          width={50 - 8}
+          height={50 - 20}
+          cornerRadius={4}
+        />
+      ) : (
+        /* Token Name if no avatar */
+        <Text
+          text={token.name}
+          fontSize={10}
+          fill="#ffffff"
+          x={6}
+          y={6}
+          width={50 - 12}
+          height={15}
+          ellipsis={true}
+        />
+      )}
+
+      {/* HP Bar */}
+      <Rect
+        x={6}
+        y={50 - 12}
+        width={50 - 12}
+        height={4}
+        fill="#333333"
+        cornerRadius={2}
+      />
+      <Rect
+        x={6}
+        y={50 - 12}
+        width={(50 - 12) * (token.hp / token.maxHp)}
+        height={4}
+        fill={token.hp > token.maxHp * 0.5 ? '#22c55e' : token.hp > token.maxHp * 0.25 ? '#eab308' : '#ef4444'}
+        cornerRadius={2}
+      />
+    </Group>
+  );
+};
+
 export interface Token {
   id: string;
   name: string;
@@ -559,70 +631,16 @@ const TacticalBattleMap: React.FC<TacticalBattleMapProps> = ({
           {/* Separate Layer for Tokens - не зависит от масштаба карты */}
           <Layer>
             {/* Tokens */}
-            {tokens.map((token) => {
-              const [tokenImage] = useImage(token.avatar || '');
-              
-              return (
-                <Group
-                  key={token.id}
-                  x={(token.x * zoom) + mapPosition.x}
-                  y={(token.y * zoom) + mapPosition.y}
-                  onClick={() => handleTokenClick(token.id)}
-                >
-                  {/* Token Base */}
-                  <Circle
-                    radius={GRID_SIZE / 2 - 4}
-                    offsetX={-GRID_SIZE / 2}
-                    offsetY={-GRID_SIZE / 2}
-                    fill={token.color}
-                    stroke={selectedTokenId === token.id ? '#fbbf24' : '#000000'}
-                    strokeWidth={selectedTokenId === token.id ? 4 : 2}
-                  />
-
-                  {/* Token Avatar */}
-                  {tokenImage ? (
-                    <KonvaImage
-                      image={tokenImage}
-                      x={4}
-                      y={4}
-                      width={GRID_SIZE - 8}
-                      height={GRID_SIZE - 20}
-                      cornerRadius={4}
-                    />
-                  ) : (
-                    /* Token Name if no avatar */
-                    <Text
-                      text={token.name}
-                      fontSize={10}
-                      fill="#ffffff"
-                      x={6}
-                      y={6}
-                      width={GRID_SIZE - 12}
-                      height={15}
-                      ellipsis={true}
-                    />
-                  )}
-
-                  {/* HP Bar */}
-                  <Rect
-                    x={6}
-                    y={GRID_SIZE - 12}
-                    width={GRID_SIZE - 12}
-                    height={4}
-                    fill="#333333"
-                    cornerRadius={2}
-                  />
-                  <Rect
-                    x={6}
-                    y={GRID_SIZE - 12}
-                    width={(GRID_SIZE - 12) * (token.hp / token.maxHp)}
-                    height={4}
-                    fill={token.hp > token.maxHp * 0.5 ? '#22c55e' : token.hp > token.maxHp * 0.25 ? '#eab308' : '#ef4444'}
-                    cornerRadius={2}
-                  />
-                </Group>
-              );
-            })}
+            {tokens.map((token) => (
+              <TokenComponent
+                key={token.id}
+                token={token}
+                zoom={zoom}
+                mapPosition={mapPosition}
+                selectedTokenId={selectedTokenId}
+                onTokenClick={handleTokenClick}
+              />
+            ))}
           </Layer>
         </Stage>
       </div>
