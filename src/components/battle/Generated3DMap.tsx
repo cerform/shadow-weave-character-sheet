@@ -257,25 +257,36 @@ const Generated3DMap: React.FC<Generated3DMapProps> = ({ mapData, tokens = [], o
 
       {/* Токены */}
       {localTokens.map(token => {
+        console.log('🔍 Rendering token:', token);
+        console.log('🔍 MapData dimensions:', mapData.dimensions);
+        
+        // Безопасно проверяем размеры карты
+        const mapWidth = mapData.dimensions?.width || 800;
+        const mapHeight = mapData.dimensions?.height || 600;
+        
         // Преобразуем координаты для 3D сцены
-        const x = (token.x - mapData.dimensions.width / 2) / 10;
-        const y = (token.y - mapData.dimensions.height / 2) / 10;
+        const x = ((token.x || 0) - mapWidth / 2) / 10;
+        const y = ((token.y || 0) - mapHeight / 2) / 10;
         const z = 1;
+
+        const tokenData = {
+          id: token.id || `token_${Date.now()}`,
+          name: token.name || 'Unnamed Token',
+          type: (token.type as 'player' | 'monster' | 'npc' | 'boss') || 'monster',
+          color: token.color || '#3b82f6',
+          position: { x, y, z },
+          hp: token.hp || 30,
+          maxHp: token.maxHp || 30,
+          size: token.size || 50,
+          avatar: token.avatar
+        };
+
+        console.log('🔍 Token data for 3D:', tokenData);
 
         return (
           <Token3D
-            key={token.id}
-            token={{
-              id: token.id,
-              name: token.name,
-              type: token.type || 'monster',
-              color: token.color,
-              position: { x, y, z },
-              hp: token.hp,
-              maxHp: token.maxHp,
-              size: token.size || 50,
-              avatar: token.avatar
-            }}
+            key={tokenData.id}
+            token={tokenData}
             onClick={() => handleTokenClick(token)}
             isDM={isDM}
             isSelected={selectedToken?.id === token.id}

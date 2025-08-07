@@ -31,6 +31,12 @@ const Token3D: React.FC<Token3DProps> = ({
   const meshRef = useRef<THREE.Group>(null);
   const groupRef = useRef<THREE.Group>(null);
 
+  // Проверяем безопасность данных токена
+  if (!token || !token.position) {
+    console.warn('🚨 Token3D: Invalid token data:', token);
+    return null;
+  }
+
   // Анимация при наведении
   useFrame((state) => {
     if (meshRef.current) {
@@ -45,8 +51,15 @@ const Token3D: React.FC<Token3DProps> = ({
     }
   });
 
-  // Цвет токена
-  const tokenColor = useMemo(() => new THREE.Color(token.color), [token.color]);
+  // Цвет токена с дефолтным значением
+  const tokenColor = useMemo(() => {
+    try {
+      return new THREE.Color(token.color || '#3b82f6');
+    } catch (error) {
+      console.warn('🚨 Invalid token color:', token.color);
+      return new THREE.Color('#3b82f6');
+    }
+  }, [token.color]);
 
   // Модель токена в зависимости от типа
   const TokenModel = () => {
@@ -130,7 +143,7 @@ const Token3D: React.FC<Token3DProps> = ({
   return (
     <group
       ref={groupRef}
-      position={[token.position.x, 0, token.position.y]}
+      position={[token.position.x || 0, token.position.z || 0, token.position.y || 0]}
       onClick={onClick}
       onPointerOver={(e) => {
         e.stopPropagation();
