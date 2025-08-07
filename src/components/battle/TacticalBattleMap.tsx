@@ -393,10 +393,10 @@ const TacticalBattleMap: React.FC<TacticalBattleMapProps> = ({
     const step = 20;
     setMapPosition(prev => {
       switch (direction) {
-        case 'up': return { ...prev, y: prev.y + step };
-        case 'down': return { ...prev, y: prev.y - step };
-        case 'left': return { ...prev, x: prev.x + step };
-        case 'right': return { ...prev, x: prev.x - step };
+        case 'up': return { ...prev, y: prev.y - step };
+        case 'down': return { ...prev, y: prev.y + step };
+        case 'left': return { ...prev, x: prev.x - step };
+        case 'right': return { ...prev, x: prev.x + step };
         default: return prev;
       }
     });
