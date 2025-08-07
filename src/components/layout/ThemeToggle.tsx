@@ -19,24 +19,19 @@ const ThemeToggle: React.FC = () => {
   
   const themeOptions = [
     { name: 'default', label: 'По умолчанию' },
-    { name: 'warlock', label: 'Колдун' },
-    { name: 'wizard', label: 'Волшебник' },
-    { name: 'druid', label: 'Друид' },
-    { name: 'warrior', label: 'Воин' },
-    { name: 'bard', label: 'Бард' },
-    { name: 'monk', label: 'Монах' },
-    { name: 'ranger', label: 'Следопыт' },
-    { name: 'sorcerer', label: 'Чародей' },
+    { name: 'shadow', label: 'Колдун' },
+    { name: 'frost', label: 'Волшебник' },
+    { name: 'emerald', label: 'Друид' },
+    { name: 'flame', label: 'Воин' },
+    { name: 'mystic', label: 'Бард' },
+    { name: 'steel', label: 'Монах' },
+    { name: 'bronze', label: 'Следопыт' },
+    { name: 'dark', label: 'Чародей' },
   ];
   
   const handleThemeChange = (themeName: string) => {
     setTheme(themeName);
     setUserTheme(themeName);
-    
-    // Сохраняем тему в localStorage
-    localStorage.setItem('theme', themeName);
-    localStorage.setItem('userTheme', themeName);
-    localStorage.setItem('dnd-theme', themeName);
   };
   
   const currentAccent = themeStyles?.accent || themes.default.accent;

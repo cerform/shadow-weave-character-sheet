@@ -1,7 +1,7 @@
 
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
 
-export type Theme = 'default' | 'dark' | 'fantasy' | 'cyber' | 'nature' | 'warlock' | 'wizard' | 'druid' | 'warrior' | 'bard';
+export type Theme = 'default' | 'shadow' | 'frost' | 'flame' | 'emerald' | 'mystic' | 'steel' | 'bronze' | 'dark';
 
 interface ThemeContextType {
   theme: Theme;
@@ -28,7 +28,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
   useEffect(() => {
     try {
       const savedTheme = localStorage.getItem('theme');
-      if (savedTheme && ['default', 'dark', 'fantasy', 'cyber', 'nature', 'warlock', 'wizard', 'druid', 'warrior', 'bard'].includes(savedTheme)) {
+      if (savedTheme && ['default', 'shadow', 'frost', 'flame', 'emerald', 'mystic', 'steel', 'bronze', 'dark'].includes(savedTheme)) {
         setTheme(savedTheme as Theme);
       }
     } catch (error) {
