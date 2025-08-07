@@ -50,100 +50,40 @@ const Token3D: React.FC<Token3DProps> = ({
 
   // Модель токена в зависимости от типа
   const TokenModel = () => {
-    const baseSize = token.size * 0.5;
+    const baseSize = (token.size || 50) * 0.01; // Нормализуем размер
     
     switch (token.type) {
       case 'player':
-        // Игрок - цилиндр с короной
         return (
-          <group>
-            <Cylinder args={[baseSize, baseSize, 1, 8]} position={[0, 0.5, 0]}>
-              <meshStandardMaterial color={tokenColor} />
-            </Cylinder>
-            {/* Корона */}
-            <Cone args={[baseSize * 0.8, 0.3, 8]} position={[0, 1.2, 0]}>
-              <meshStandardMaterial color="#ffd700" />
-            </Cone>
-          </group>
+          <Cylinder args={[baseSize, baseSize, 1, 8]} position={[0, 0.5, 0]} castShadow receiveShadow>
+            <meshStandardMaterial color={tokenColor} />
+          </Cylinder>
         );
       
       case 'monster':
-        // Монстр - неровная сфера
         return (
-          <group>
-            <Sphere args={[baseSize, 8, 6]} position={[0, baseSize, 0]}>
-              <meshStandardMaterial 
-                color={tokenColor} 
-                roughness={0.8}
-                metalness={0.2}
-              />
-            </Sphere>
-            {/* Шипы */}
-            {[...Array(6)].map((_, i) => (
-              <Cone 
-                key={i}
-                args={[0.1, 0.3, 4]} 
-                position={[
-                  Math.cos((i / 6) * Math.PI * 2) * baseSize * 0.8,
-                  baseSize + Math.sin((i / 6) * Math.PI * 2) * 0.2,
-                  Math.sin((i / 6) * Math.PI * 2) * baseSize * 0.8
-                ]}
-                rotation={[
-                  Math.cos((i / 6) * Math.PI * 2) * 0.5,
-                  0,
-                  Math.sin((i / 6) * Math.PI * 2) * 0.5
-                ]}
-              >
-                <meshStandardMaterial color="#8b0000" />
-              </Cone>
-            ))}
-          </group>
+          <Sphere args={[baseSize, 8, 6]} position={[0, baseSize, 0]} castShadow receiveShadow>
+            <meshStandardMaterial color={tokenColor} />
+          </Sphere>
         );
       
       case 'npc':
-        // NPC - простой куб
         return (
-          <Box args={[baseSize * 2, 1, baseSize * 2]} position={[0, 0.5, 0]}>
+          <Box args={[baseSize * 2, 1, baseSize * 2]} position={[0, 0.5, 0]} castShadow receiveShadow>
             <meshStandardMaterial color={tokenColor} />
           </Box>
         );
       
       case 'boss':
-        // Босс - большая сложная модель
         return (
-          <group>
-            <Sphere args={[baseSize * 1.2, 12, 8]} position={[0, baseSize * 1.2, 0]}>
-              <meshStandardMaterial 
-                color={tokenColor} 
-                roughness={0.3}
-                metalness={0.7}
-                emissive={new THREE.Color(token.color).multiplyScalar(0.2)}
-              />
-            </Sphere>
-            {/* Энергетические орбы вокруг босса */}
-            {[...Array(8)].map((_, i) => (
-              <Sphere 
-                key={i}
-                args={[0.1, 8, 6]} 
-                position={[
-                  Math.cos((i / 8) * Math.PI * 2) * baseSize * 2,
-                  baseSize + Math.sin(Date.now() * 0.001 + i) * 0.3,
-                  Math.sin((i / 8) * Math.PI * 2) * baseSize * 2
-                ]}
-              >
-                <meshStandardMaterial 
-                  color="#ff6b6b" 
-                  emissive="#ff6b6b"
-                  emissiveIntensity={0.5}
-                />
-              </Sphere>
-            ))}
-          </group>
+          <Cone args={[baseSize * 1.5, 2, 6]} position={[0, 1, 0]} castShadow receiveShadow>
+            <meshStandardMaterial color={tokenColor} />
+          </Cone>
         );
       
       default:
         return (
-          <Sphere args={[baseSize, 8, 6]} position={[0, baseSize, 0]}>
+          <Sphere args={[baseSize, 8, 6]} position={[0, baseSize, 0]} castShadow receiveShadow>
             <meshStandardMaterial color={tokenColor} />
           </Sphere>
         );
@@ -155,11 +95,11 @@ const Token3D: React.FC<Token3DProps> = ({
     if (!token.hp || !token.maxHp) return null;
     
     const hpPercentage = token.hp / token.maxHp;
-    const barWidth = token.size;
+    const barWidth = (token.size || 50) * 0.02;
     const barHeight = 0.1;
     
     return (
-      <group position={[0, token.size * 1.5, 0]}>
+      <group position={[0, 2, 0]}>
         {/* Фон бара */}
         <Box args={[barWidth, barHeight, 0.05]} position={[0, 0, 0]}>
           <meshStandardMaterial color="#333333" />
@@ -180,8 +120,6 @@ const Token3D: React.FC<Token3DProps> = ({
           color="white"
           anchorX="center"
           anchorY="middle"
-          outlineWidth={0.02}
-          outlineColor="black"
         >
           {`${token.hp}/${token.maxHp}`}
         </Text>
@@ -192,7 +130,7 @@ const Token3D: React.FC<Token3DProps> = ({
   return (
     <group
       ref={groupRef}
-      position={[token.position.x / 50, 0, token.position.y / 50]}
+      position={[token.position.x, 0, token.position.y]}
       onClick={onClick}
       onPointerOver={(e) => {
         e.stopPropagation();
@@ -205,7 +143,7 @@ const Token3D: React.FC<Token3DProps> = ({
     >
       {/* Тень под токеном */}
       <Cylinder 
-        args={[token.size * 0.8, token.size * 0.8, 0.01, 16]} 
+        args={[0.5, 0.5, 0.01, 16]} 
         position={[0, 0.01, 0]}
       >
         <meshStandardMaterial color="#000000" opacity={0.3} transparent />
@@ -221,13 +159,11 @@ const Token3D: React.FC<Token3DProps> = ({
 
       {/* Имя токена */}
       <Text
-        position={[0, token.size * 1.8, 0]}
+        position={[0, 2.5, 0]}
         fontSize={0.4}
         color="white"
         anchorX="center"
         anchorY="middle"
-        outlineWidth={0.03}
-        outlineColor="black"
       >
         {token.name}
       </Text>
@@ -235,7 +171,7 @@ const Token3D: React.FC<Token3DProps> = ({
       {/* Индикатор выделения */}
       {(isSelected || isHovered) && (
         <Cylinder 
-          args={[token.size * 1.2, token.size * 1.2, 0.02, 16]} 
+          args={[0.8, 0.8, 0.02, 16]} 
           position={[0, 0.02, 0]}
         >
           <meshStandardMaterial 

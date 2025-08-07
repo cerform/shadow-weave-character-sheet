@@ -246,22 +246,32 @@ const Generated3DMap: React.FC<Generated3DMapProps> = ({ mapData, tokens = [], o
       />
 
       {/* Токены */}
-      {localTokens.map(token => (
-        <Token3D
-          key={token.id}
-          token={{
-            ...token,
-            position: { 
-              x: (token.x - mapData.dimensions.width / 2) / 10, 
-              y: (token.y - mapData.dimensions.height / 2) / 10, 
-              z: 1 
-            }
-          }}
-          onClick={() => handleTokenClick(token)}
-          isDM={isDM}
-          isSelected={selectedToken?.id === token.id}
-        />
-      ))}
+      {localTokens.map(token => {
+        // Преобразуем координаты для 3D сцены
+        const x = (token.x - mapData.dimensions.width / 2) / 10;
+        const y = (token.y - mapData.dimensions.height / 2) / 10;
+        const z = 1;
+
+        return (
+          <Token3D
+            key={token.id}
+            token={{
+              id: token.id,
+              name: token.name,
+              type: token.type || 'monster',
+              color: token.color,
+              position: { x, y, z },
+              hp: token.hp,
+              maxHp: token.maxHp,
+              size: token.size || 50,
+              avatar: token.avatar
+            }}
+            onClick={() => handleTokenClick(token)}
+            isDM={isDM}
+            isSelected={selectedToken?.id === token.id}
+          />
+        );
+      })}
 
       {/* Контролы камеры */}
       <OrbitControls 
