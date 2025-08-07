@@ -21,7 +21,7 @@ const NotFound: React.FC = () => {
   const isJoinGamePage = location.pathname === '/join-game';
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-background">
+    <div className="min-h-screen flex flex-col items-center justify-center">
       <div className="text-center p-6 max-w-md">
         <h1 className="text-6xl font-bold mb-4">404</h1>
         <p className="text-xl mb-8">Страница не найдена</p>

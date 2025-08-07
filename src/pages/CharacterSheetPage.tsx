@@ -88,7 +88,7 @@ const CharacterSheetPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background p-4">
+    <div className="min-h-screen p-4">
       {/* Session indicator */}
       {isConnected && sessionData && (
         <div className="bg-green-900/20 border border-green-700 rounded-lg p-2 mb-4 text-sm flex justify-between items-center">

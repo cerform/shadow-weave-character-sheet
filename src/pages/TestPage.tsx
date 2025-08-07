@@ -6,7 +6,7 @@ const TestPage: React.FC = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-background p-6">
+    <div className="min-h-screen p-6">
       <div className="max-w-2xl mx-auto">
         <h1 className="text-3xl font-bold mb-6">Тестовая страница</h1>
         <p className="mb-4">Эта страница нужна для проверки навигации.</p>

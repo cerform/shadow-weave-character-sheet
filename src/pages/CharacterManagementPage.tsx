@@ -56,7 +56,7 @@ const CharacterManagementPage: React.FC = () => {
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen flex flex-col justify-center items-center bg-gradient-to-br from-background to-background/80">
+      <div className="min-h-screen flex flex-col justify-center items-center">
         <div className="max-w-md text-center p-6">
           <h1 className="text-3xl font-bold mb-6">Требуется авторизация</h1>
           <p className="mb-8">Для управления персонажами необходимо войти в систему</p>

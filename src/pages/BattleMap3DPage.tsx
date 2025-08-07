@@ -9,7 +9,7 @@ const BattleMap3DPage: React.FC = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-slate-900 text-white">
+    <div className="min-h-screen text-white">
       {/* Заголовок */}
       <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-20">
         <Card className="bg-slate-800/90 border-slate-700 backdrop-blur-sm">
