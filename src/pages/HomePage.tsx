@@ -152,10 +152,10 @@ const HomePage = () => {
                 
                 {/* Главный заголовок */}
                 <div className="max-w-3xl">
-                  <h2 className="text-4xl lg:text-5xl font-bold mb-4 bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent leading-tight">
+                  <h2 className="text-4xl lg:text-5xl font-bold mb-4 text-contrast text-enhanced leading-tight">
                     Добро пожаловать в мир D&D
                   </h2>
-                  <p className="text-lg text-muted-foreground">
+                  <p className="text-lg text-secondary">
                     Создавайте персонажей, изучайте заклинания, проводите эпические сессии
                   </p>
                 </div>
