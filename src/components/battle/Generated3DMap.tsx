@@ -7,7 +7,9 @@ import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
-import { Eye, EyeOff, Grid3X3, Mountain, Download } from 'lucide-react';
+import { Eye, EyeOff, Grid3X3, Mountain, Download, Plus, Users } from 'lucide-react';
+import Token3D from './Token3D';
+import SimpleTokenEditor from './SimpleTokenEditor';
 
 interface Generated3DMapProps {
   mapData: {
@@ -23,6 +25,19 @@ interface Generated3DMapProps {
       gridSize: number;
     };
   };
+  tokens?: Array<{
+    id: string;
+    name: string;
+    x: number;
+    y: number;
+    color: string;
+    size: number;
+    hp?: number;
+    maxHp?: number;
+    type: 'player' | 'monster' | 'npc' | 'boss';
+    avatar?: string;
+  }>;
+  onTokenUpdate?: (tokens: any[]) => void;
   isDM?: boolean;
 }
 
@@ -117,12 +132,65 @@ const TerrainMesh: React.FC<{
   );
 };
 
-const Generated3DMap: React.FC<Generated3DMapProps> = ({ mapData, isDM = false }) => {
+const Generated3DMap: React.FC<Generated3DMapProps> = ({ mapData, tokens = [], onTokenUpdate, isDM = false }) => {
   const [showGrid, setShowGrid] = useState(true);
   const [showWireframe, setShowWireframe] = useState(false);
   const [cameraMode, setCameraMode] = useState<'orbit' | 'top'>('orbit');
   const [heightScale, setHeightScale] = useState(5);
   const [lightIntensity, setLightIntensity] = useState(1);
+  const [localTokens, setLocalTokens] = useState(tokens);
+  const [selectedToken, setSelectedToken] = useState<any>(null);
+  const [showTokenEditor, setShowTokenEditor] = useState(false);
+
+  // Обновляем локальные токены при изменении пропса
+  useEffect(() => {
+    setLocalTokens(tokens);
+  }, [tokens]);
+
+  // Функции для работы с токенами
+  const handleTokenClick = (token: any) => {
+    if (isDM) {
+      setSelectedToken(token);
+      setShowTokenEditor(true);
+    }
+  };
+
+  const handleAddToken = () => {
+    if (isDM) {
+      const newToken = {
+        id: `token_${Date.now()}`,
+        name: 'Новый токен',
+        x: 0,
+        y: 0,
+        color: '#ff0000',
+        size: 50,
+        hp: 30,
+        maxHp: 30,
+        type: 'monster' as const
+      };
+      const updatedTokens = [...localTokens, newToken];
+      setLocalTokens(updatedTokens);
+      onTokenUpdate?.(updatedTokens);
+    }
+  };
+
+  const handleTokenSave = (tokenData: any) => {
+    const updatedTokens = localTokens.map(token => 
+      token.id === tokenData.id ? { ...token, ...tokenData } : token
+    );
+    setLocalTokens(updatedTokens);
+    onTokenUpdate?.(updatedTokens);
+    setShowTokenEditor(false);
+    setSelectedToken(null);
+  };
+
+  const handleTokenDelete = (tokenId: string) => {
+    const updatedTokens = localTokens.filter(token => token.id !== tokenId);
+    setLocalTokens(updatedTokens);
+    onTokenUpdate?.(updatedTokens);
+    setShowTokenEditor(false);
+    setSelectedToken(null);
+  };
 
   // 3D Сцена
   const Scene3D = () => (
@@ -176,6 +244,24 @@ const Generated3DMap: React.FC<Generated3DMapProps> = ({ mapData, isDM = false }
         settings={mapData.settings}
         heightScale={heightScale}
       />
+
+      {/* Токены */}
+      {localTokens.map(token => (
+        <Token3D
+          key={token.id}
+          token={{
+            ...token,
+            position: { 
+              x: (token.x - mapData.dimensions.width / 2) / 10, 
+              y: (token.y - mapData.dimensions.height / 2) / 10, 
+              z: 1 
+            }
+          }}
+          onClick={() => handleTokenClick(token)}
+          isDM={isDM}
+          isSelected={selectedToken?.id === token.id}
+        />
+      ))}
 
       {/* Контролы камеры */}
       <OrbitControls 
@@ -273,6 +359,59 @@ const Generated3DMap: React.FC<Generated3DMapProps> = ({ mapData, isDM = false }
           </div>
         </CardContent>
       </Card>
+
+      {/* Панель токенов */}
+      {isDM && (
+        <Card className="absolute bottom-4 left-4 z-10 bg-slate-800/90 border-slate-700 backdrop-blur-sm">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-white text-sm flex items-center gap-2">
+              <Users className="h-4 w-4" />
+              Токены ({localTokens.length})
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <Button 
+              onClick={handleAddToken}
+              className="w-full bg-green-600 hover:bg-green-700"
+              size="sm"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Добавить токен
+            </Button>
+            <div className="text-slate-300 text-xs">
+              Кликните по токену для редактирования
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Редактор токенов в модальном окне */}
+      {showTokenEditor && selectedToken && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-slate-800 p-6 rounded-lg w-96 max-h-[80vh] overflow-y-auto">
+            <h3 className="text-white text-lg mb-4">Редактировать токен</h3>
+            <SimpleTokenEditor
+              token={selectedToken}
+              onSave={handleTokenSave}
+              onDelete={() => handleTokenDelete(selectedToken.id)}
+              onCancel={() => {
+                setShowTokenEditor(false);
+                setSelectedToken(null);
+              }}
+            />
+            <Button 
+              onClick={() => {
+                setShowTokenEditor(false);
+                setSelectedToken(null);
+              }}
+              variant="outline"
+              className="mt-4 w-full"
+            >
+              Закрыть
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* 3D Сцена */}
       <div className="w-full h-full">

@@ -11,14 +11,25 @@ const BattleMap3DPage: React.FC = () => {
   const navigate = useNavigate();
   const [generatedMapData, setGeneratedMapData] = useState<any>(null);
   const [currentStep, setCurrentStep] = useState<'upload' | 'preview'>('upload');
+  const [tokens, setTokens] = useState<any[]>([]);
 
-  // Проверяем наличие переданного изображения
+  // Проверяем наличие переданного изображения и токенов
   useEffect(() => {
     const savedMapUrl = sessionStorage.getItem('current3DMapUrl');
+    const savedTokens = sessionStorage.getItem('current3DTokens');
     if (savedMapUrl) {
       // Автоматически генерируем 3D из переданного изображения
       processExistingImage(savedMapUrl);
       sessionStorage.removeItem('current3DMapUrl'); // Очищаем после использования
+    }
+    if (savedTokens) {
+      try {
+        const parsedTokens = JSON.parse(savedTokens);
+        setTokens(parsedTokens);
+        sessionStorage.removeItem('current3DTokens');
+      } catch (error) {
+        console.error('Ошибка парсинга токенов:', error);
+      }
     }
   }, []);
 
@@ -70,6 +81,12 @@ const BattleMap3DPage: React.FC = () => {
   const handleBackToUpload = () => {
     setCurrentStep('upload');
     setGeneratedMapData(null);
+  };
+
+  const handleTokenUpdate = (updatedTokens: any[]) => {
+    setTokens(updatedTokens);
+    // Сохраняем обновленные токены обратно в sessionStorage для синхронизации с 2D
+    sessionStorage.setItem('updated3DTokens', JSON.stringify(updatedTokens));
   };
 
   return (
@@ -157,7 +174,12 @@ const BattleMap3DPage: React.FC = () => {
           </div>
         ) : (
           <div className="w-full h-full">
-            <Generated3DMap mapData={generatedMapData} isDM={true} />
+            <Generated3DMap 
+              mapData={generatedMapData} 
+              tokens={tokens}
+              onTokenUpdate={handleTokenUpdate}
+              isDM={true} 
+            />
           </div>
         )}
       </div>

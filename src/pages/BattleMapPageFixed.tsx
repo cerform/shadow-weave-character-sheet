@@ -268,8 +268,9 @@ const BattleMapPageFixed: React.FC = () => {
             <Button 
               onClick={() => {
                 if (mapUrl) {
-                  // Передаем текущее изображение и ID сессии в 3D режим
+                  // Передаем текущее изображение, токены и ID сессии в 3D режим
                   sessionStorage.setItem('current3DMapUrl', mapUrl);
+                  sessionStorage.setItem('current3DTokens', JSON.stringify(tokens));
                   sessionStorage.setItem('currentSessionId', sessionId || '');
                   navigate('/battle-map-3d');
                 } else {
