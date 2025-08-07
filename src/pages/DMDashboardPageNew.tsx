@@ -307,6 +307,13 @@ const DMDashboardPageNew: React.FC = () => {
                 <Button 
                   variant="outline" 
                   className="border-slate-600 text-slate-300"
+                  onClick={() => navigate('/dm-map-3d')}
+                >
+                  Генератор 3D карт
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className="border-slate-600 text-slate-300"
                   onClick={() => navigate('/battle-map-fixed')}
                 >
                   Открыть боевую карту

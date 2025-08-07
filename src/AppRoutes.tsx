@@ -21,6 +21,7 @@ import CharacterManagementPage from '@/pages/CharacterManagementPage';
 import DMDashboardPageNew from '@/pages/DMDashboardPageNew';
 import DMSessionPage from '@/pages/DMSessionPage';
 import BattleMapPageFixed from '@/pages/BattleMapPageFixed';
+import DMMapGenerator3D from '@/pages/DMMapGenerator3D';
 import BattleMap3DPage from '@/pages/BattleMap3DPage';
 
 // Ленивая загрузка страниц, зависящих от WebSocket
@@ -167,6 +168,11 @@ const AppRoutes: React.FC = () => {
       <Route path="/battle/:sessionId" element={
         <ProtectedDMRoute>
           <BattleMapPageFixed />
+        </ProtectedDMRoute>
+      } />
+      <Route path="/dm-map-3d" element={
+        <ProtectedDMRoute>
+          <DMMapGenerator3D />
         </ProtectedDMRoute>
       } />
       <Route path="/battle-map-3d" element={
