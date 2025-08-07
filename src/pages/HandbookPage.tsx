@@ -14,7 +14,7 @@ import { getAllClasses, getAllClassSources } from '@/data/classes';
 import { getAllBackgrounds, getAllBackgroundSources } from '@/data/backgrounds';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
-import BackgroundWrapper from '@/components/layout/BackgroundWrapper';
+
 
 import NavigationButtons from '@/components/ui/NavigationButtons';
 
@@ -116,9 +116,12 @@ const HandbookPage: React.FC = () => {
   };
 
   return (
-    <BackgroundWrapper>
+    <div className="min-h-screen">
       {/* Навигационная панель */}
-      <div className="p-4 flex items-center justify-between">
+      <div className="sticky top-0 z-50 w-full bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border/40">
+        <div className="container mx-auto px-4 py-3">
+          <NavigationButtons />
+        </div>
       </div>
       
       <div className="flex flex-1 overflow-hidden">
@@ -152,9 +155,7 @@ const HandbookPage: React.FC = () => {
           </div>
         </div>
       </div>
-      
-      
-    </BackgroundWrapper>
+    </div>
   );
 };
 

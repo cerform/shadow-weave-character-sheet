@@ -3,7 +3,7 @@ import { useSpellbook } from '@/contexts/SpellbookContext';
 import { useTheme } from '@/hooks/use-theme';
 import NavigationButtons from '@/components/ui/NavigationButtons';
 
-import BackgroundWrapper from '@/components/layout/BackgroundWrapper';
+
 import SpellBookViewer from '@/components/spellbook/SpellBookViewer';
 import SpellFilterPanel from '@/components/spellbook/SpellFilterPanel';
 import AdvancedFilters from '@/components/spellbook/AdvancedFilters';
@@ -123,8 +123,7 @@ const SpellbookPage: React.FC = () => {
   const basicFiltersCount = totalFiltersCount - advancedFiltersCount;
 
   return (
-    <BackgroundWrapper>
-      <div className="min-h-screen py-4">
+    <div className="min-h-screen py-4">
         <div className="container mx-auto px-4">
           <header className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center">
             <h1 className="text-3xl font-bold mb-4 sm:mb-0" style={{ color: themeStyles?.textColor }}>
@@ -471,9 +470,7 @@ const SpellbookPage: React.FC = () => {
           
           <SpellBookViewer />
         </div>
-      </div>
-      
-    </BackgroundWrapper>
+    </div>
   );
 };
 

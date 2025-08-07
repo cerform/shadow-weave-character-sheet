@@ -5,7 +5,7 @@ import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import SupabaseAuthForm from '@/components/auth/SupabaseAuthForm';
-import BackgroundWrapper from '@/components/layout/BackgroundWrapper';
+
 
 const AuthPage = () => {
   const navigate = useNavigate();
@@ -21,22 +21,18 @@ const AuthPage = () => {
   // Показываем загрузку если пользователь авторизован
   if (loading) {
     return (
-      <BackgroundWrapper>
-        <div className="min-h-screen flex items-center justify-center">
-          <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
-        </div>
-      </BackgroundWrapper>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
+      </div>
     );
   }
 
   // Если пользователь авторизован, показываем загрузку
   if (isAuthenticated) {
     return (
-      <BackgroundWrapper>
-        <div className="min-h-screen flex items-center justify-center">
-          <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
-        </div>
-      </BackgroundWrapper>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
+      </div>
     );
   }
 
@@ -45,32 +41,30 @@ const AuthPage = () => {
   };
 
   return (
-    <BackgroundWrapper>
-      <div className="min-h-screen flex items-center justify-center p-4">
-        <div className="w-full max-w-md space-y-6">
-          <Button 
-            variant="outline" 
-            onClick={() => navigate('/')} 
-            className="mb-4"
-          >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            На главную
-          </Button>
-          
-          <Card className="bg-card/80 backdrop-blur-sm border-border/50">
-            <CardHeader className="text-center">
-              <CardTitle className="text-2xl text-foreground">Добро пожаловать</CardTitle>
-              <CardDescription className="text-muted-foreground">
-                Войдите или создайте аккаунт для доступа к своим персонажам
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <SupabaseAuthForm onSuccess={handleAuthSuccess} />
-            </CardContent>
-          </Card>
-        </div>
+    <div className="min-h-screen flex items-center justify-center p-4">
+      <div className="w-full max-w-md space-y-6">
+        <Button 
+          variant="outline" 
+          onClick={() => navigate('/')} 
+          className="mb-4"
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          На главную
+        </Button>
+        
+        <Card className="bg-card/80 backdrop-blur-sm border-border/50">
+          <CardHeader className="text-center">
+            <CardTitle className="text-2xl text-foreground">Добро пожаловать</CardTitle>
+            <CardDescription className="text-muted-foreground">
+              Войдите или создайте аккаунт для доступа к своим персонажам
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <SupabaseAuthForm onSuccess={handleAuthSuccess} />
+          </CardContent>
+        </Card>
       </div>
-    </BackgroundWrapper>
+    </div>
   );
 };
 
