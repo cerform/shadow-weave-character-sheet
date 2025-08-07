@@ -194,27 +194,13 @@ const Generated3DMap: React.FC<Generated3DMapProps> = ({ mapData, tokens = [], o
 
   // 3D Сцена
   const Scene3D = () => (
-    <Canvas shadows>
-      {/* Камера */}
-      <PerspectiveCamera 
-        makeDefault 
-        position={cameraMode === 'top' ? [0, 50, 0] : [20, 20, 20]} 
-        fov={60}
-      />
-      
+    <Canvas shadows camera={{ position: [20, 20, 20], fov: 60 }}>
       {/* Освещение */}
       <ambientLight intensity={0.3} />
       <directionalLight 
         position={[20, 20, 10]} 
         intensity={lightIntensity} 
         castShadow 
-        shadow-mapSize-width={2048}
-        shadow-mapSize-height={2048}
-        shadow-camera-far={100}
-        shadow-camera-left={-50}
-        shadow-camera-right={50}
-        shadow-camera-top={50}
-        shadow-camera-bottom={-50}
       />
       <pointLight position={[0, 10, 0]} intensity={0.3} />
 
@@ -223,10 +209,10 @@ const Generated3DMap: React.FC<Generated3DMapProps> = ({ mapData, tokens = [], o
         <Grid
           position={[0, 0.01, 0]}
           args={[mapData.dimensions.width / 5, mapData.dimensions.height / 5]}
-          cellSize={mapData.settings.gridSize}
+          cellSize={1}
           cellThickness={0.5}
           cellColor="#6f6f6f"
-          sectionSize={mapData.settings.gridSize * 5}
+          sectionSize={5}
           sectionThickness={1}
           sectionColor="#9d4edd"
           fadeDistance={100}
@@ -237,13 +223,14 @@ const Generated3DMap: React.FC<Generated3DMapProps> = ({ mapData, tokens = [], o
       )}
 
       {/* Террейн */}
-      <TerrainMesh
-        textureUrl={mapData.textureMap}
-        heightMapUrl={mapData.heightMap}
-        dimensions={mapData.dimensions}
-        settings={mapData.settings}
-        heightScale={heightScale}
-      />
+      <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
+        <planeGeometry args={[mapData.dimensions.width / 10, mapData.dimensions.height / 10]} />
+        <meshStandardMaterial 
+          map={useLoader(THREE.TextureLoader, mapData.textureMap)}
+          roughness={0.8}
+          metalness={0.1}
+        />
+      </mesh>
 
       {/* Токены */}
       {localTokens.map(token => {
@@ -277,10 +264,7 @@ const Generated3DMap: React.FC<Generated3DMapProps> = ({ mapData, tokens = [], o
       <OrbitControls 
         enablePan={true}
         enableZoom={true}
-        enableRotate={cameraMode === 'orbit'}
-        maxPolarAngle={cameraMode === 'top' ? 0 : Math.PI / 2}
-        minDistance={5}
-        maxDistance={100}
+        enableRotate={true}
         target={[0, 0, 0]}
       />
     </Canvas>
