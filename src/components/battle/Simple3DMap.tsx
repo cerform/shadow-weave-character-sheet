@@ -19,6 +19,8 @@ interface Simple3DMapProps {
     hp?: number;
     maxHp?: number;
   }>;
+  onTokenSelect?: (tokenId: string | null) => void;
+  selectedTokenId?: string | null;
 }
 
 // Компонент плоскости с текстурой карты
@@ -83,8 +85,12 @@ const Token3D: React.FC<{
   );
 };
 
-const Simple3DMap: React.FC<Simple3DMapProps> = ({ mapImageUrl, tokens = [] }) => {
-  const [selectedToken, setSelectedToken] = useState<string | null>(null);
+const Simple3DMap: React.FC<Simple3DMapProps> = ({ 
+  mapImageUrl, 
+  tokens = [], 
+  onTokenSelect,
+  selectedTokenId 
+}) => {
   const [hoveredToken, setHoveredToken] = useState<string | null>(null);
   
   console.log('🗺️ Simple3DMap rendering with:', { mapImageUrl, tokensCount: tokens.length });
@@ -123,9 +129,9 @@ const Simple3DMap: React.FC<Simple3DMapProps> = ({ mapImageUrl, tokens = [] }) =
                   key={token.id}
                   type={token.monsterType}
                   position={[x, 0.4, -z]}
-                  isSelected={selectedToken === token.id}
+                  isSelected={selectedTokenId === token.id}
                   isHovered={hoveredToken === token.id}
-                  onClick={() => setSelectedToken(selectedToken === token.id ? null : token.id)}
+                  onClick={() => onTokenSelect?.(selectedTokenId === token.id ? null : token.id)}
                 />
               );
             }
