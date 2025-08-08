@@ -1,7 +1,9 @@
-import React, { Suspense } from 'react';
+import React, { Suspense, useState } from 'react';
 import { Canvas, useLoader } from '@react-three/fiber';
 import { OrbitControls, Text } from '@react-three/drei';
 import * as THREE from 'three';
+import { MonsterModel } from './MonsterModel';
+import { monsterTypes } from '@/data/monsterTypes';
 
 interface Simple3DMapProps {
   mapImageUrl?: string;
@@ -13,6 +15,9 @@ interface Simple3DMapProps {
     color: string;
     size: number;
     type: string;
+    monsterType?: string; // Add monster type for 3D models
+    hp?: number;
+    maxHp?: number;
   }>;
 }
 
@@ -79,6 +84,9 @@ const Token3D: React.FC<{
 };
 
 const Simple3DMap: React.FC<Simple3DMapProps> = ({ mapImageUrl, tokens = [] }) => {
+  const [selectedToken, setSelectedToken] = useState<string | null>(null);
+  const [hoveredToken, setHoveredToken] = useState<string | null>(null);
+  
   console.log('🗺️ Simple3DMap rendering with:', { mapImageUrl, tokensCount: tokens.length });
   
   return (
@@ -107,6 +115,20 @@ const Simple3DMap: React.FC<Simple3DMapProps> = ({ mapImageUrl, tokens = [] }) =
             // Предполагаем, что карта 1200x800 пикселей соответствует 24x16 единицам в 3D
             const x = ((token.x || 0) / 1200) * 24 - 12; // Центрируем по X
             const z = ((token.y || 0) / 800) * 16 - 8;   // Центрируем по Z
+            
+            // Use 3D monster model if monsterType is specified, otherwise fallback to basic token
+            if (token.monsterType && monsterTypes[token.monsterType]) {
+              return (
+                <MonsterModel
+                  key={token.id}
+                  type={token.monsterType}
+                  position={[x, 0.4, -z]}
+                  isSelected={selectedToken === token.id}
+                  isHovered={hoveredToken === token.id}
+                  onClick={() => setSelectedToken(selectedToken === token.id ? null : token.id)}
+                />
+              );
+            }
             
             return (
               <Token3D
