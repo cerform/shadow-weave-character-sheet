@@ -13,6 +13,7 @@ export interface SimpleToken {
   type: 'player' | 'monster' | 'npc';
   controlledBy: string;
   image?: string;
+  monsterType?: string; // Add monster type for 3D models
 }
 
 interface SimpleBattleStore {
@@ -53,16 +54,17 @@ export const useSimpleBattleStore = create<SimpleBattleStore>((set, get) => ({
     },
     {
       id: 'goblin1',
-      name: 'Goblin Scout',
+      name: 'Гоблин',
       x: 400,
       y: 300,
-      color: '#ef4444',
+      color: '#4ade80',
       size: 40,
       hp: 7,
-      maxHp: 12,
+      maxHp: 7,
       ac: 15,
       type: 'monster',
-      controlledBy: 'dm'
+      controlledBy: 'dm',
+      monsterType: 'goblin'
     },
     {
       id: 'wizard1',
@@ -76,6 +78,34 @@ export const useSimpleBattleStore = create<SimpleBattleStore>((set, get) => ({
       ac: 12,
       type: 'player',
       controlledBy: 'player2'
+    },
+    {
+      id: 'orc1',
+      name: 'Орк',
+      x: 600,
+      y: 250,
+      color: '#22c55e',
+      size: 50,
+      hp: 15,
+      maxHp: 15,
+      ac: 13,
+      type: 'monster',
+      controlledBy: 'dm',
+      monsterType: 'orc'
+    },
+    {
+      id: 'skeleton1',
+      name: 'Скелет',
+      x: 300,
+      y: 150,
+      color: '#e5e7eb',
+      size: 45,
+      hp: 13,
+      maxHp: 13,
+      ac: 13,
+      type: 'monster',
+      controlledBy: 'dm',
+      monsterType: 'skeleton'
     }
   ],
   selectedTokenId: null,
