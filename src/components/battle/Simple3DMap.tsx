@@ -9,6 +9,7 @@ import { Plus, Minus, Edit, Heart } from 'lucide-react';
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import DraggableToken3D from './DraggableToken3D';
 
 interface Simple3DMapProps {
   mapImageUrl?: string;
@@ -34,7 +35,7 @@ interface Simple3DMapProps {
   isDM?: boolean;
 }
 
-// Компонент плоскости с текстурой карты
+// Компонент плоскости с текстурой карты (интерактивная)
 const TexturedPlane: React.FC<{ imageUrl?: string }> = ({ imageUrl }) => {
   let texture = null;
   
@@ -50,7 +51,15 @@ const TexturedPlane: React.FC<{ imageUrl?: string }> = ({ imageUrl }) => {
   }
 
   return (
-    <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
+    <mesh 
+      rotation={[-Math.PI / 2, 0, 0]} 
+      position={[0, 0, 0]} 
+      receiveShadow
+      // Делаем плоскость интерактивной для получения координат
+      onPointerMove={(e) => {
+        // Этот обработчик нужен для корректной работы raycasting
+      }}
+    >
       <planeGeometry args={[24, 16]} />
       <meshStandardMaterial 
         map={texture} 
@@ -72,51 +81,82 @@ const InteractiveToken3D: React.FC<{
 }> = ({ token, position, isSelected, isHovered, onSelect, onMove, isDM }) => {
   const meshRef = useRef<any>(null);
   const [isDragging, setIsDragging] = useState(false);
-  const { camera, raycaster, mouse, scene } = useThree();
-
+  
   const handlePointerDown = (e: any) => {
     e.stopPropagation();
     onSelect();
     if (isDM || token.controlledBy === 'player1') {
       setIsDragging(true);
+      document.body.style.cursor = 'grabbing';
+    }
+  };
+
+  const handlePointerUp = (e: any) => {
+    if (isDragging) {
+      setIsDragging(false);
+      document.body.style.cursor = 'default';
+      
+      // Выполняем raycast для определения позиции на плоскости
+      const intersects = e.intersections;
+      if (intersects && intersects.length > 0) {
+        const intersection = intersects[0];
+        const point = intersection.point;
+        
+        // Конвертируем 3D координаты обратно в 2D координаты карты
+        const mapX = ((point.x + 12) / 24) * 1200;
+        const mapY = ((-point.z + 8) / 16) * 800;
+        
+        // Ограничиваем границами карты
+        const boundedX = Math.max(0, Math.min(mapX, 1200));
+        const boundedY = Math.max(0, Math.min(mapY, 800));
+        
+        console.log('🎯 Token dropped at:', { x: boundedX, y: boundedY });
+        onMove?.(boundedX, boundedY);
+      }
     }
   };
 
   const handlePointerMove = (e: any) => {
     if (!isDragging || !onMove) return;
     
-    // Raycast to get position on ground plane
-    raycaster.setFromCamera(mouse, camera);
-    const groundPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
-    const intersectPoint = new THREE.Vector3();
-    raycaster.ray.intersectPlane(groundPlane, intersectPoint);
-    
-    if (intersectPoint) {
-      // Convert 3D coordinates back to 2D map coordinates
-      const mapX = ((intersectPoint.x + 12) / 24) * 1200;
-      const mapY = ((-intersectPoint.z + 8) / 16) * 800;
-      onMove(mapX, mapY);
+    const intersects = e.intersections;
+    if (intersects && intersects.length > 0) {
+      const intersection = intersects[0];
+      const point = intersection.point;
+      
+      // Обновляем позицию токена в реальном времени
+      if (meshRef.current) {
+        meshRef.current.position.x = point.x;
+        meshRef.current.position.z = point.z;
+      }
     }
   };
 
-  const handlePointerUp = () => {
-    setIsDragging(false);
-  };
-
   return (
-    <group position={position}>
+    <group ref={meshRef} position={position}>
       {/* Главный токен */}
       <mesh 
-        ref={meshRef}
         castShadow
         onPointerDown={handlePointerDown}
-        onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
+        onPointerMove={handlePointerMove}
+        onPointerEnter={() => {
+          if (isDM || token.controlledBy === 'player1') {
+            document.body.style.cursor = 'pointer';
+          }
+        }}
+        onPointerLeave={() => {
+          if (!isDragging) {
+            document.body.style.cursor = 'default';
+          }
+        }}
       >
         <cylinderGeometry args={[0.4, 0.4, 0.8, 12]} />
         <meshStandardMaterial 
           color={token.color || '#3b82f6'} 
           emissive={isSelected ? '#444444' : '#000000'}
+          opacity={isDragging ? 0.7 : 1}
+          transparent={isDragging}
         />
       </mesh>
       
@@ -168,7 +208,7 @@ const InteractiveToken3D: React.FC<{
         <meshBasicMaterial color="#000000" opacity={0.3} transparent />
       </mesh>
 
-      {/* Выделение при наведении */}
+      {/* Выделение при наведении или выборе */}
       {(isSelected || isHovered) && (
         <mesh position={[0, 0.01, 0]} rotation={[-Math.PI / 2, 0, 0]}>
           <ringGeometry args={[0.6, 0.8, 16]} />
@@ -326,12 +366,11 @@ const Simple3DMap: React.FC<Simple3DMapProps> = ({
             }
             
             return (
-              <InteractiveToken3D
+              <DraggableToken3D
                 key={token.id}
                 token={token}
                 position={[x, 0.4, -z]}
                 isSelected={selectedTokenId === token.id}
-                isHovered={hoveredToken === token.id}
                 onSelect={() => onTokenSelect?.(selectedTokenId === token.id ? null : token.id)}
                 onMove={(mapX, mapY) => handleTokenMove(token.id, mapX, mapY)}
                 isDM={isDM}
