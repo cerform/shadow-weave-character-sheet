@@ -35,6 +35,7 @@ interface SimpleBattleStore {
   setGridSize: (size: number) => void;
   toggleGrid: () => void;
   clearTokens: () => void;
+  setTokens: (tokens: SimpleToken[]) => void;
 }
 
 export const useSimpleBattleStore = create<SimpleBattleStore>((set, get) => ({
@@ -172,5 +173,9 @@ export const useSimpleBattleStore = create<SimpleBattleStore>((set, get) => ({
 
   clearTokens: () => {
     set({ tokens: [] });
+  },
+
+  setTokens: (tokens) => {
+    set({ tokens });
   }
 }));
