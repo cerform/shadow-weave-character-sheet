@@ -107,6 +107,48 @@ export const useSimpleBattleStore = create<SimpleBattleStore>((set, get) => ({
       type: 'monster',
       controlledBy: 'dm',
       monsterType: 'skeleton'
+    },
+    {
+      id: 'dragon1',
+      name: 'Дракон',
+      x: 500,
+      y: 400,
+      color: '#dc2626',
+      size: 80,
+      hp: 256,
+      maxHp: 256,
+      ac: 19,
+      type: 'monster',
+      controlledBy: 'dm',
+      monsterType: 'dragon'
+    },
+    {
+      id: 'wolf1',
+      name: 'Волк',
+      x: 450,
+      y: 150,
+      color: '#6b7280',
+      size: 45,
+      hp: 11,
+      maxHp: 11,
+      ac: 13,
+      type: 'monster',
+      controlledBy: 'dm',
+      monsterType: 'wolf'
+    },
+    {
+      id: 'golem1',
+      name: 'Голем',
+      x: 700,
+      y: 350,
+      color: '#78716c',
+      size: 70,
+      hp: 178,
+      maxHp: 178,
+      ac: 17,
+      type: 'monster',
+      controlledBy: 'dm',
+      monsterType: 'golem'
     }
   ],
   selectedTokenId: null,
