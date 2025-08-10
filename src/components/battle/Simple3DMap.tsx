@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import DraggableToken3D from './DraggableToken3D';
+import DraggableMonsterModel from './DraggableMonsterModel';
 
 interface Simple3DMapProps {
   mapImageUrl?: string;
@@ -351,60 +352,19 @@ const Simple3DMap: React.FC<Simple3DMapProps> = ({
             const x = ((token.x || 0) / 1200) * 24 - 12;
             const z = ((token.y || 0) / 800) * 16 - 8;
             
-            // Всегда используем 3D модели монстров, если тип указан
+            // Используем перетаскиваемые 3D модели монстров, если тип указан
             if (token.monsterType && monsterTypes[token.monsterType]) {
               return (
-                <group key={token.id}>
-                  <MonsterModel
-                    type={token.monsterType}
-                    position={[x, 0.4, -z]}
-                    isSelected={selectedTokenId === token.id}
-                    isHovered={hoveredToken === token.id}
-                    onClick={() => onTokenSelect?.(selectedTokenId === token.id ? null : token.id)}
-                  />
-                  
-                  {/* HP бар над 3D моделью */}
-                  {token.hp !== undefined && token.maxHp !== undefined && (
-                    <group position={[x, 1.8, -z]}>
-                      {/* Фон HP бара */}
-                      <mesh position={[0, 0, 0.01]}>
-                        <planeGeometry args={[1, 0.1]} />
-                        <meshBasicMaterial color="#333333" />
-                      </mesh>
-                      {/* HP бар */}
-                      <mesh position={[-(1 - (token.hp / token.maxHp)) / 2, 0, 0.02]}>
-                        <planeGeometry args={[token.hp / token.maxHp, 0.08]} />
-                        <meshBasicMaterial color={
-                          token.hp > token.maxHp * 0.5 ? '#22c55e' : 
-                          token.hp > token.maxHp * 0.25 ? '#eab308' : '#ef4444'
-                        } />
-                      </mesh>
-                      {/* HP текст */}
-                      <Text
-                        position={[0, -0.15, 0.03]}
-                        fontSize={0.08}
-                        color="white"
-                        anchorX="center"
-                        anchorY="middle"
-                      >
-                        {`${token.hp}/${token.maxHp}`}
-                      </Text>
-                    </group>
-                  )}
-                  
-                  {/* Название токена */}
-                  <Text
-                    position={[x, 2.2, -z]}
-                    fontSize={0.3}
-                    color="white"
-                    anchorX="center"
-                    anchorY="middle"
-                    outlineWidth={0.05}
-                    outlineColor="black"
-                  >
-                    {token.name}
-                  </Text>
-                </group>
+                <DraggableMonsterModel
+                  key={token.id}
+                  token={token}
+                  position={[x, 0.4, -z]}
+                  isSelected={selectedTokenId === token.id}
+                  isHovered={hoveredToken === token.id}
+                  onSelect={() => onTokenSelect?.(selectedTokenId === token.id ? null : token.id)}
+                  onMove={(mapX, mapY) => handleTokenMove(token.id, mapX, mapY)}
+                  isDM={isDM}
+                />
               );
             }
             
