@@ -51,7 +51,8 @@ export const useSimpleBattleStore = create<SimpleBattleStore>((set, get) => ({
       maxHp: 45,
       ac: 18,
       type: 'player',
-      controlledBy: 'player1'
+      controlledBy: 'player1',
+      monsterType: 'fighter' // Добавляем 3D модель для игрока
     },
     {
       id: 'goblin1',
@@ -78,7 +79,8 @@ export const useSimpleBattleStore = create<SimpleBattleStore>((set, get) => ({
       maxHp: 28,
       ac: 12,
       type: 'player',
-      controlledBy: 'player2'
+      controlledBy: 'player2',
+      monsterType: 'fighter' // Используем ту же модель для волшебника
     },
     {
       id: 'orc1',

@@ -11,7 +11,7 @@ export interface MonsterType {
 export const monsterTypes: Record<string, MonsterType> = {
   goblin: {
     name: "Гоблин",
-    modelPath: "/models/goblin.glb",
+    modelPath: "/models/creature.glb", // Использует загруженную модель
     scale: [0.3, 0.3, 0.3],
     color: "#4ade80",
     size: "small",
@@ -20,7 +20,7 @@ export const monsterTypes: Record<string, MonsterType> = {
   },
   orc: {
     name: "Орк", 
-    modelPath: "/models/orc.glb",
+    modelPath: "/models/robot.glb", // Робот как временная замена орка
     scale: [0.4, 0.4, 0.4],
     color: "#22c55e",
     size: "medium",
@@ -29,8 +29,8 @@ export const monsterTypes: Record<string, MonsterType> = {
   },
   dragon: {
     name: "Дракон",
-    modelPath: "/models/dragon.glb", 
-    scale: [1.5, 1.5, 1.5],
+    modelPath: "/models/duck.glb", // Утка как дракон (фантазийная интерпретация)
+    scale: [2.0, 2.0, 2.0],
     color: "#dc2626",
     size: "huge",
     hp: 256,
@@ -38,7 +38,7 @@ export const monsterTypes: Record<string, MonsterType> = {
   },
   skeleton: {
     name: "Скелет",
-    modelPath: "/models/skeleton.glb",
+    modelPath: "/models/human-fighter.glb", // Человек как скелет
     scale: [0.35, 0.35, 0.35], 
     color: "#e5e7eb",
     size: "medium",
@@ -47,8 +47,8 @@ export const monsterTypes: Record<string, MonsterType> = {
   },
   wolf: {
     name: "Волк",
-    modelPath: "/models/wolf.glb",
-    scale: [0.4, 0.4, 0.4],
+    modelPath: "/models/duck.glb", // Используем утку с другим масштабом
+    scale: [0.6, 0.6, 0.6],
     color: "#6b7280",
     size: "medium", 
     hp: 11,
@@ -56,12 +56,22 @@ export const monsterTypes: Record<string, MonsterType> = {
   },
   golem: {
     name: "Голем",
-    modelPath: "/models/golem.glb",
+    modelPath: "/models/robot.glb", // Робот отлично подходит для голема
     scale: [0.8, 0.8, 0.8],
     color: "#78716c",
     size: "large",
     hp: 178,
     ac: 17,
+  },
+  // Добавляем новый тип персонажа
+  fighter: {
+    name: "Воин",
+    modelPath: "/models/human-fighter.glb",
+    scale: [0.5, 0.5, 0.5],
+    color: "#3b82f6",
+    size: "medium",
+    hp: 45,
+    ac: 18,
   },
 };
 

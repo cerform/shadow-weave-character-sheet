@@ -321,8 +321,9 @@ export function preloadMonsterModels() {
   Object.values(monsterTypes).forEach(monster => {
     try {
       useGLTF.preload(monster.modelPath);
+      console.log(`📥 Preloading model: ${monster.name} from ${monster.modelPath}`);
     } catch (error) {
-      console.warn(`Failed to preload model: ${monster.modelPath}`);
+      console.warn(`Failed to preload model: ${monster.modelPath}`, error);
     }
   });
 }

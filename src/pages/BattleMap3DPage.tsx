@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import Simple3DMap from '@/components/battle/Simple3DMap';
 import { useSimpleBattleStore } from '@/stores/simpleBattleStore';
 import { sessionService } from '@/services/sessionService';
+import { preloadMonsterModels } from '@/components/battle/MonsterModel';
 
 const BattleMap3DPage: React.FC = () => {
   const navigate = useNavigate();
@@ -25,6 +26,12 @@ const BattleMap3DPage: React.FC = () => {
 
   const [mapUrl, setMapUrl] = useState<string>('');
   const [isSaving, setIsSaving] = useState(false);
+
+  // Предзагружаем все 3D модели при загрузке страницы
+  useEffect(() => {
+    console.log('🎮 Loading 3D Battle Map with real models...');
+    preloadMonsterModels();
+  }, []);
 
   // Синхронизация с 2D картой
   useEffect(() => {
@@ -80,6 +87,7 @@ const BattleMap3DPage: React.FC = () => {
     if (lowerName.includes('дракон') || lowerName.includes('dragon')) return 'dragon';
     if (lowerName.includes('волк') || lowerName.includes('wolf')) return 'wolf';
     if (lowerName.includes('голем') || lowerName.includes('golem')) return 'golem';
+    if (type === 'player' || lowerName.includes('воин') || lowerName.includes('fighter') || lowerName.includes('wizard')) return 'fighter';
     return undefined;
   };
 
