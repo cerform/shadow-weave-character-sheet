@@ -19,8 +19,8 @@ export const monsterTypes: Record<string, MonsterType> = {
     ac: 15,
   },
   orc: {
-    name: "Орк", 
-    modelPath: "/models/robot.glb", // Робот как временная замена орка
+    name: "Орк",
+    modelPath: "/models/orc.glb",
     scale: [0.4, 0.4, 0.4],
     color: "#22c55e",
     size: "medium",
@@ -38,8 +38,8 @@ export const monsterTypes: Record<string, MonsterType> = {
   },
   skeleton: {
     name: "Скелет",
-    modelPath: "/models/human-fighter.glb", // Временная замена до лёгкой skeleton GLB
-    scale: [0.35, 0.35, 0.35], 
+    modelPath: "/models/skeleton.glb",
+    scale: [0.35, 0.35, 0.35],
     color: "#e5e7eb",
     size: "medium",
     hp: 13,
@@ -47,16 +47,16 @@ export const monsterTypes: Record<string, MonsterType> = {
   },
   wolf: {
     name: "Волк",
-    modelPath: "/models/fox.glb", // Временная замена: лиса как волк (GLB)
+    modelPath: "/models/wolf.glb",
     scale: [0.6, 0.6, 0.6],
     color: "#6b7280",
-    size: "medium", 
+    size: "medium",
     hp: 11,
     ac: 13,
   },
   golem: {
     name: "Голем",
-    modelPath: "/models/robot.glb", // Робот отлично подходит для голема
+    modelPath: "/models/golem.glb",
     scale: [0.8, 0.8, 0.8],
     color: "#78716c",
     size: "large",
