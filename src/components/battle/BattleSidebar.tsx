@@ -231,7 +231,7 @@ const BattleSidebar: React.FC<BattleSidebarProps> = ({
                                 />
                                 <span>{token.name || `Токен ${index + 1}`}</span>
                               </div>
-                              {token.hp && (
+                              {token.hp !== undefined && (
                                 <Badge variant="outline" className="text-xs">
                                   {token.hp}/{token.maxHp}
                                 </Badge>
