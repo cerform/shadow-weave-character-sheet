@@ -82,11 +82,12 @@ export const calculateMaxHP = (characterClass: string, level: number, constituti
   };
 
   const hitDie = hitDiceByClass[characterClass] || 8;
-  
+
   // На 1 уровне = макс хит дайс + модификатор телосложения
   // На каждом следующем уровне в среднем половина хит дайса + 1 + модификатор телосложения
   const baseHP = hitDie + constitutionModifier;
-  const additionalHP = (level - 1) * (Math.floor(hitDie / 2) + 1 + constitutionModifier);
-  
+  const perLevelGain = Math.max(1, Math.floor(hitDie / 2) + 1 + constitutionModifier);
+  const additionalHP = (level - 1) * perLevelGain;
+
   return Math.max(1, baseHP + additionalHP);
 };
