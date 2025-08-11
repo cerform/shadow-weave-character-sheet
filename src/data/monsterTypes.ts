@@ -29,8 +29,8 @@ export const monsterTypes: Record<string, MonsterType> = {
   },
   dragon: {
     name: "Дракон",
-    modelPath: "/models/duck.glb", // Утка как дракон (фантазийная интерпретация)
-    scale: [2.0, 2.0, 2.0],
+    modelPath: "/models/dragon.glb", // Реальная GLB модель дракона (Khronos sample)
+    scale: [1.2, 1.2, 1.2],
     color: "#dc2626",
     size: "huge",
     hp: 256,
@@ -38,7 +38,7 @@ export const monsterTypes: Record<string, MonsterType> = {
   },
   skeleton: {
     name: "Скелет",
-    modelPath: "/models/human-fighter.glb", // Человек как скелет
+    modelPath: "/models/human-fighter.glb", // Временная замена до лёгкой skeleton GLB
     scale: [0.35, 0.35, 0.35], 
     color: "#e5e7eb",
     size: "medium",
@@ -47,7 +47,7 @@ export const monsterTypes: Record<string, MonsterType> = {
   },
   wolf: {
     name: "Волк",
-    modelPath: "/models/duck.glb", // Используем утку с другим масштабом
+    modelPath: "/models/fox.glb", // Временная замена: лиса как волк (GLB)
     scale: [0.6, 0.6, 0.6],
     color: "#6b7280",
     size: "medium", 

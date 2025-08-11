@@ -1,7 +1,8 @@
 import React, { Suspense, useRef } from 'react';
 import { useGLTF } from '@react-three/drei';
-import { useFrame } from '@react-three/fiber';
+import { useFrame, useLoader } from '@react-three/fiber';
 import * as THREE from 'three';
+import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader';
 import { monsterTypes, MonsterType } from '@/data/monsterTypes';
 
 // Enhanced fallback geometry for different monster types
@@ -180,6 +181,31 @@ function MonsterFallback({ monsterData, isHovered }: { monsterData: MonsterType;
   return <>{getMonsterGeometry()}</>;
 }
 
+// Lightweight wrappers to load GLTF/GLB and FBX models via hooks safely
+function GLTFModel({ path, scale }: { path: string; scale: [number, number, number] }) {
+  const gltf = useGLTF(path);
+  return (
+    <primitive
+      object={gltf.scene.clone()}
+      scale={scale}
+      castShadow
+      receiveShadow
+    />
+  );
+}
+
+function FBXModel({ path, scale }: { path: string; scale: [number, number, number] }) {
+  const fbx = useLoader(FBXLoader, path) as unknown as THREE.Group;
+  return (
+    <primitive
+      object={fbx.clone()}
+      scale={scale}
+      castShadow
+      receiveShadow
+    />
+  );
+}
+
 interface MonsterModelProps {
   type: string;
   position: [number, number, number];
@@ -206,13 +232,8 @@ function Model({
 }) {
   const groupRef = useRef<THREE.Group>(null);
   
-  // Try to load the model, fallback to basic geometry if model doesn't exist
-  let gltf = null;
-  try {
-    gltf = useGLTF(monsterData.modelPath);
-  } catch (error) {
-    console.warn(`Failed to load model: ${monsterData.modelPath}`, error);
-  }
+  // Determine loader by file extension
+  const isFBX = monsterData.modelPath.toLowerCase().endsWith('.fbx');
 
   useFrame((state) => {
     if (groupRef.current) {
@@ -244,18 +265,12 @@ function Model({
         document.body.style.cursor = 'auto';
       }}
     >
-      {gltf ? (
-        <primitive
-          object={gltf.scene.clone()}
-          scale={monsterData.scale}
-          castShadow
-          receiveShadow
-        />
+      {isFBX ? (
+        <FBXModel path={monsterData.modelPath} scale={monsterData.scale} />
       ) : (
-        // Enhanced fallback geometry based on monster type
-        <MonsterFallback monsterData={monsterData} isHovered={isHovered} />
+        <GLTFModel path={monsterData.modelPath} scale={monsterData.scale} />
       )}
-      
+
       {/* Selection indicator */}
       {isSelected && (
         <mesh position={[0, -0.05, 0]} rotation={[-Math.PI / 2, 0, 0]}>
