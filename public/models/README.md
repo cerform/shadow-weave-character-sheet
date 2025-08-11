@@ -10,17 +10,24 @@ This project uses free 3D models for D&D characters and monsters:
   - Source: Khronos Group glTF Sample Models
 
 ### Monsters
-- **Goblin**: `creature.glb` - Abstract creature model 
+- **Goblin**: `creature.glb` - Abstract creature model
   - Used for: Small monsters like goblins
   - Source: Khronos Group glTF Sample Models
 
-- **Orc/Golem**: `robot.glb` - Robotic character model
-  - Used for: Medium/large creatures like orcs and golems
-  - Source: Three.js examples
+- **Orc**: `orc.glb` - Fantasy orc model
+  - Used for: Medium-sized brutish monsters
 
-- **Dragon/Wolf**: `duck.glb` - Simple duck model (fantasy interpretation)
-  - Used for: Various creatures with different scales
-  - Source: Khronos Group glTF Sample Models
+- **Golem**: `golem.glb` - Construct or golem model
+  - Used for: Large magical constructs
+
+- **Wolf**: `wolf.glb` - Low poly wolf model
+  - Used for: Medium beast enemies
+
+- **Skeleton**: `skeleton.glb` - Animated skeleton model
+  - Used for: Undead minions
+
+- **Dragon**: `dragon.glb` - Realistic dragon model (Khronos sample)
+  - Used for: Huge dragons
 
 ## Model Usage
 - All models are stored in `/public/models/` directory
