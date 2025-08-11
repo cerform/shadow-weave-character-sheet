@@ -1,93 +1,74 @@
 
-import { Character } from '@/types/character';
+import { CharacterSpell } from "@/types/character";
+import { SpellData } from "@/types/spells";
+import { componentsToString } from "./spellProcessors";
 
-export const createDefaultCharacter = (): Character => {
+/**
+ * Преобразует заклинание из базы данных в формат для персонажа
+ */
+export const convertSpellToCharacterSpell = (spell: SpellData): CharacterSpell => {
   return {
-    name: '',
-    race: '',
-    class: '',
-    level: 1,
-    strength: 10,
-    dexterity: 10,
-    constitution: 10,
-    intelligence: 10,
-    wisdom: 10,
-    charisma: 10,
-    stats: {
-      strength: 10,
-      dexterity: 10,
-      constitution: 10,
-      intelligence: 10,
-      wisdom: 10,
-      charisma: 10,
-    },
-    hitPoints: {
-      current: 8,
-      maximum: 8,
-      temporary: 0,
-    },
-    maxHp: 8,
-    currentHp: 8,
-    armorClass: 10,
-    speed: 30,
-    proficiencyBonus: 2,
-    equipment: [],
-    spells: [],
-    money: {
-      gp: 0,
-      sp: 0,
-      cp: 0,
-    },
-    userId: '', // Добавляем поле userId
+    id: spell.id,
+    name: spell.name,
+    level: spell.level,
+    school: spell.school,
+    castingTime: spell.castingTime,
+    range: spell.range,
+    components: spell.components || componentsToString({
+      verbal: spell.verbal,
+      somatic: spell.somatic,
+      material: spell.material,
+      materials: spell.materials
+    }),
+    duration: spell.duration,
+    description: spell.description,
+    prepared: false,
+    ritual: spell.ritual,
+    concentration: spell.concentration,
+    verbal: spell.verbal,
+    somatic: spell.somatic,
+    material: spell.material,
+    materials: spell.materials,
+    classes: spell.classes,
+    source: spell.source,
+    higherLevels: spell.higherLevels
   };
 };
 
-// Вычисление модификатора характеристики
-export const calculateModifier = (abilityScore: number): number => {
-  return Math.floor((abilityScore - 10) / 2);
+/**
+ * Считает количество подготовленных заклинаний
+ */
+export const countPreparedSpells = (spells: CharacterSpell[]): number => {
+  return spells.filter(spell => spell.prepared && spell.level > 0).length;
 };
 
-// Получение модификатора как строки
-export const getModifierFromAbilityScore = (abilityScore: number): string => {
-  const modifier = calculateModifier(abilityScore);
-  return modifier >= 0 ? `+${modifier}` : `${modifier}`;
+/**
+ * Группирует заклинания по уровням
+ */
+export const groupSpellsByLevel = (spells: CharacterSpell[]): Record<number, CharacterSpell[]> => {
+  const grouped: Record<number, CharacterSpell[]> = {};
+  
+  spells.forEach(spell => {
+    if (!grouped[spell.level]) {
+      grouped[spell.level] = [];
+    }
+    grouped[spell.level].push(spell);
+  });
+  
+  return grouped;
 };
 
-// Получение числового модификатора
-export const getNumericModifier = (abilityScore: number): number => {
-  return calculateModifier(abilityScore);
-};
-
-// Вычисление бонуса мастерства по уровню
-export const calculateProficiencyBonus = (level: number): number => {
-  return Math.ceil(level / 4) + 1;
-};
-
-// Вычисление макс HP на основе класса, уровня и модификатора телосложения
-export const calculateMaxHP = (characterClass: string, level: number, constitutionModifier: number): number => {
-  // Hit dice по классам (согласно D&D 5e)
-  const hitDiceByClass: Record<string, number> = {
-    'Варвар': 12,
-    'Воин': 10,
-    'Паладин': 10,
-    'Следопыт': 10,
-    'Бард': 8,
-    'Жрец': 8,
-    'Друид': 8,
-    'Монах': 8,
-    'Плут': 8,
-    'Колдун': 8,
-    'Волшебник': 6,
-    'Чародей': 6,
-  };
-
-  const hitDie = hitDiceByClass[characterClass] || 8;
-
-  // На 1 уровне = макс хит дайс + модификатор телосложения
-  // На каждом следующем уровне в среднем половина хит дайса + 1 + модификатор телосложения
-  const baseHP = hitDie + constitutionModifier;
-  const perLevelGain = Math.max(1, Math.floor(hitDie / 2) + 1 + constitutionModifier);
-  const additionalHP = (level - 1) * perLevelGain;
-
-  return Math.max(1, baseHP + additionalHP);
+/**
+ * Сортирует заклинания по имени и по уровню
+ */
+export const sortSpells = (spells: CharacterSpell[]): CharacterSpell[] => {
+  return [...spells].sort((a, b) => {
+    // Сначала сортируем по уровню
+    if (a.level !== b.level) {
+      return a.level - b.level;
+    }
+    
+    // Затем по имени
+    return a.name.localeCompare(b.name);
+  });
 };
