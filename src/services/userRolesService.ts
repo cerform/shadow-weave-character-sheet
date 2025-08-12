@@ -17,6 +17,15 @@ export class UserRolesService {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return [];
 
+      // Сначала пробуем безопасную функцию БД (SECURITY DEFINER)
+      const { data: rpcRoles, error: rpcError } = await supabase
+        .rpc('get_user_roles', { _user_id: user.id });
+
+      if (!rpcError && Array.isArray(rpcRoles)) {
+        return (rpcRoles as any[]).map((r) => r as AppRole);
+      }
+
+      // Фолбэк на прямое чтение таблицы (может быть заблокировано RLS)
       const { data, error } = await supabase
         .from('user_roles')
         .select('role')
