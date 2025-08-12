@@ -43,6 +43,7 @@ interface Simple3DMapProps {
   selectedTokenId?: string | null;
   onTokenMove?: (tokenId: string, x: number, y: number) => void;
   onTokenUpdate?: (tokenId: string, updates: Partial<any>) => void;
+  onAssetMove?: (id: string, x: number, y: number) => void;
   isDM?: boolean;
 }
 
@@ -89,6 +90,63 @@ const AssetModelNode: React.FC<{ path: string; position: [number, number, number
     ? scale
     : [Number(scale ?? 1), Number(scale ?? 1), Number(scale ?? 1)];
   return <primitive object={scene.clone()} position={position} scale={s} castShadow receiveShadow />;
+};
+
+// Перетаскиваемая 3D‑модель ассета
+const DraggableAssetModel: React.FC<{ asset: AssetModel; position: [number, number, number]; onMove?: (x: number, y: number) => void; isDM?: boolean; }>
+= ({ asset, position, onMove, isDM }) => {
+  const groupRef = useRef<any>(null);
+  const [isDragging, setIsDragging] = useState(false);
+
+  const handlePointerDown = (e: any) => {
+    e.stopPropagation();
+    if (isDM) {
+      setIsDragging(true);
+      document.body.style.cursor = 'grabbing';
+    }
+  };
+
+  const handlePointerUp = (e: any) => {
+    if (!isDragging) return;
+    setIsDragging(false);
+    document.body.style.cursor = 'default';
+    const intersects = e.intersections;
+    if (intersects && intersects.length > 0) {
+      const point = intersects[0].point;
+      const mapX = ((point.x + 12) / 24) * 1200;
+      const mapY = ((-point.z + 8) / 16) * 800;
+      const boundedX = Math.max(0, Math.min(mapX, 1200));
+      const boundedY = Math.max(0, Math.min(mapY, 800));
+      onMove?.(boundedX, boundedY);
+    }
+  };
+
+  const handlePointerMove = (e: any) => {
+    if (!isDragging) return;
+    const intersects = e.intersections;
+    if (intersects && intersects.length > 0) {
+      const p = intersects[0].point;
+      if (groupRef.current) {
+        groupRef.current.position.x = p.x;
+        groupRef.current.position.z = p.z;
+      }
+    }
+  };
+
+  return (
+    <group ref={groupRef} position={position}>
+      <mesh
+        onPointerDown={handlePointerDown}
+        onPointerUp={handlePointerUp}
+        onPointerMove={handlePointerMove}
+        visible={false}
+      >
+        <boxGeometry args={[0.8, 0.8, 0.8]} />
+        <meshBasicMaterial transparent opacity={0} />
+      </mesh>
+      <AssetModelNode path={asset.storage_path} position={[0, 0, 0]} scale={asset.scale} />
+    </group>
+  );
 };
 
 // Компонент для интерактивного токена
@@ -316,11 +374,14 @@ const TokenControlPanel: React.FC<{
 const Simple3DMap: React.FC<Simple3DMapProps> = ({ 
   mapImageUrl, 
   tokens = [], 
+  assetModels = [],
   onTokenSelect,
   selectedTokenId,
   onTokenMove,
   onTokenUpdate,
-  isDM = false
+  onAssetMove,
+  isDM = false,
+  ...rest
 }) => {
   const [hoveredToken, setHoveredToken] = useState<string | null>(null);
   const [showTokenEditor, setShowTokenEditor] = useState(false);
@@ -366,6 +427,21 @@ const Simple3DMap: React.FC<Simple3DMapProps> = ({
           
           {/* Плоскость с текстурой карты */}
           <TexturedPlane imageUrl={mapImageUrl} />
+
+          {/* 3D ассеты из Storage */}
+          {assetModels.map((a) => {
+            const x = ((a.x || 0) / 1200) * 24 - 12;
+            const z = ((a.y || 0) / 800) * 16 - 8;
+            return (
+              <DraggableAssetModel
+                key={a.id}
+                asset={a}
+                position={[x, 0.2, -z]}
+                onMove={(mx, my) => onAssetMove?.(a.id, mx, my)}
+                isDM={isDM}
+              />
+            );
+          })}
           
           {/* Токены */}
           {tokens.map((token) => {

@@ -1,12 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Home, Save } from 'lucide-react';
+import { Home, Save, Plus } from 'lucide-react';
 import { toast } from 'sonner';
 import Simple3DMap from '@/components/battle/Simple3DMap';
 import { useSimpleBattleStore } from '@/stores/simpleBattleStore';
 import { sessionService } from '@/services/sessionService';
 import { preloadMonsterModels } from '@/components/battle/MonsterModel';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { supabase } from '@/integrations/supabase/client';
+import { v4 as uuidv4 } from 'uuid';
 
 const BattleMap3DPage: React.FC = () => {
   const navigate = useNavigate();
@@ -26,6 +30,14 @@ const BattleMap3DPage: React.FC = () => {
 
   const [mapUrl, setMapUrl] = useState<string>('');
   const [isSaving, setIsSaving] = useState(false);
+
+  // 3D ассеты из Supabase Storage (эпhemeral + sessionStorage)
+  type AssetModel = { id: string; storage_path: string; x: number; y: number; scale?: number | [number, number, number] };
+  const [assets3D, setAssets3D] = useState<AssetModel[]>([]);
+  const [addOpen, setAddOpen] = useState(false);
+  const [prefix, setPrefix] = useState<string>('');
+  const [files, setFiles] = useState<{ name: string; id?: string }[]>([]);
+  const [fileQuery, setFileQuery] = useState('');
 
   // Предзагружаем все 3D модели при загрузке страницы
   useEffect(() => {
@@ -77,6 +89,57 @@ const BattleMap3DPage: React.FC = () => {
       tokens: savedTokens 
     });
   }, [setTokens, setMapBackground]);
+
+  // Восстанавливаем добавленные 3D ассеты
+  useEffect(() => {
+    const saved = sessionStorage.getItem('current3DAssets');
+    if (saved) {
+      try {
+        setAssets3D(JSON.parse(saved));
+      } catch {}
+    }
+  }, []);
+
+  // Загрузка файлов из bucket models по префиксу
+  const loadFiles = async (p: string = prefix) => {
+    const { data, error } = await supabase.storage.from('models').list(p, {
+      limit: 1000,
+      offset: 0,
+      sortBy: { column: 'name', order: 'asc' },
+    });
+    if (error) {
+      console.error('Ошибка чтения storage:', error.message);
+      return;
+    }
+    setFiles((data as any) || []);
+  };
+
+  useEffect(() => {
+    if (addOpen) loadFiles(prefix);
+  }, [addOpen, prefix]);
+
+  const parentPrefix = (p: string) => {
+    const n = p.replace(/\\/g, '/').replace(/\/$/, '');
+    const idx = n.lastIndexOf('/');
+    return idx >= 0 ? n.slice(0, idx) : '';
+  };
+
+  const handleAddAsset = (name: string) => {
+    const full = prefix ? `${prefix}/${name}` : name;
+    const newItem: AssetModel = { id: uuidv4(), storage_path: full, x: 600, y: 400 };
+    const next = [...assets3D, newItem];
+    setAssets3D(next);
+    sessionStorage.setItem('current3DAssets', JSON.stringify(next));
+    setAddOpen(false);
+  };
+
+  const handleAssetMove = (id: string, x: number, y: number) => {
+    setAssets3D((prev) => {
+      const next = prev.map((a) => (a.id === id ? { ...a, x, y } : a));
+      sessionStorage.setItem('current3DAssets', JSON.stringify(next));
+      return next;
+    });
+  };
 
   // Определяем тип монстра по имени и типу
   const determineMonsterType = (name: string, type: string): string | undefined => {
@@ -202,6 +265,14 @@ const BattleMap3DPage: React.FC = () => {
               size="sm"
             >
               Переключить на 2D
+            </Button>
+            <Button 
+              onClick={() => setAddOpen(true)}
+              className="bg-emerald-600 hover:bg-emerald-700"
+              size="sm"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Добавить 3D ассет
             </Button>
             <Button 
               onClick={() => navigate('/dm')}
