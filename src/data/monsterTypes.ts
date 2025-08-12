@@ -11,7 +11,7 @@ export interface MonsterType {
 export const monsterTypes: Record<string, MonsterType> = {
   goblin: {
     name: "Гоблин",
-    modelPath: "fallback",
+    modelPath: "storage:monsters/goblin/low/model.glb",
     scale: [0.3, 0.3, 0.3],
     color: "#4ade80",
     size: "small",
@@ -20,7 +20,7 @@ export const monsterTypes: Record<string, MonsterType> = {
   },
   orc: {
     name: "Орк",
-    modelPath: "fallback",
+    modelPath: "storage:monsters/orc/low/model.glb",
     scale: [0.45, 0.45, 0.45],
     color: "#22c55e",
     size: "medium",
@@ -29,7 +29,7 @@ export const monsterTypes: Record<string, MonsterType> = {
   },
   dragon: {
     name: "Дракон",
-    modelPath: "fallback",
+    modelPath: "storage:monsters/dragon/low/model.glb",
     scale: [1.2, 1.2, 1.2],
     color: "#dc2626",
     size: "huge",
@@ -38,7 +38,7 @@ export const monsterTypes: Record<string, MonsterType> = {
   },
   skeleton: {
     name: "Скелет",
-    modelPath: "fallback",
+    modelPath: "storage:monsters/skeleton/low/model.glb",
     scale: [0.35, 0.35, 0.35],
     color: "#e5e7eb",
     size: "medium",
@@ -47,7 +47,7 @@ export const monsterTypes: Record<string, MonsterType> = {
   },
   wolf: {
     name: "Волк",
-    modelPath: "fallback",
+    modelPath: "storage:monsters/wolf/low/model.glb",
     scale: [0.6, 0.6, 0.6],
     color: "#6b7280",
     size: "medium",
@@ -56,7 +56,7 @@ export const monsterTypes: Record<string, MonsterType> = {
   },
   golem: {
     name: "Голем",
-    modelPath: "fallback",
+    modelPath: "storage:monsters/golem/low/model.glb",
     scale: [0.8, 0.8, 0.8],
     color: "#78716c",
     size: "large",
@@ -65,7 +65,7 @@ export const monsterTypes: Record<string, MonsterType> = {
   },
   fighter: {
     name: "Воин",
-    modelPath: "fallback",
+    modelPath: "storage:monsters/fighter/low/model.glb",
     scale: [0.5, 0.5, 0.5],
     color: "#3b82f6",
     size: "medium",

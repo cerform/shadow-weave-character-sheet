@@ -199,6 +199,46 @@ export const ModelUploader: React.FC = () => {
     }
   };
 
+  // Seed a small set of CC0 demo monsters from /public (Khronos samples)
+  const seedDemo = async () => {
+    if (!isAdmin) return;
+    setLoading(true);
+    const mapping: { src: string; dest: string }[] = [
+      { src: '/models/seed/RiggedFigure.glb', dest: 'monsters/goblin/low/model.glb' },
+      { src: '/models/seed/CesiumMan.glb', dest: 'monsters/orc/low/model.glb' },
+      { src: '/models/seed/CesiumMan.glb', dest: 'monsters/skeleton/low/model.glb' },
+      { src: '/models/seed/Fox.glb', dest: 'monsters/wolf/low/model.glb' },
+      { src: '/models/seed/Dragon.glb', dest: 'monsters/dragon/low/model.glb' },
+      { src: '/models/seed/CesiumMan.glb', dest: 'monsters/golem/low/model.glb' },
+      { src: '/models/seed/CesiumMan.glb', dest: 'monsters/fighter/low/model.glb' },
+    ];
+    try {
+      let ok = 0;
+      for (const { src, dest } of mapping) {
+        try {
+          const res = await fetch(src, { cache: 'no-cache' });
+          if (!res.ok) throw new Error(`GET ${src} -> ${res.status}`);
+          const blob = await res.blob();
+          const { error } = await supabase.storage.from('models').upload(dest, blob, {
+            contentType: 'model/gltf-binary',
+            upsert: true,
+            cacheControl: '3600',
+          });
+          if (error) throw error;
+          ok++;
+        } catch (e) {
+          console.warn('Seed upload failed for', src, '→', dest, e);
+        }
+      }
+      toast({ title: 'Демо-модели загружены', description: `Создано путей: ${ok}/${mapping.length}` });
+      await listFiles();
+    } catch (e: any) {
+      toast({ title: 'Ошибка при засеивании', description: e.message || String(e), variant: 'destructive' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -209,6 +249,9 @@ export const ModelUploader: React.FC = () => {
           <Input type="file" accept=".glb,.gltf,.bin,.png,.jpg,.jpeg,.webp,.ktx2,.gif,.bmp,.tga,.svg,.zip" multiple onChange={(e) => setFilesToUpload(Array.from(e.target.files || []))} />
           <Button onClick={onUpload} disabled={filesToUpload.length === 0 || !isAdmin || loading}>
             <Upload className="h-4 w-4 mr-2" /> Загрузить
+          </Button>
+          <Button variant="outline" onClick={seedDemo} disabled={!isAdmin || loading}>
+            Засеять демо-модели (6)
           </Button>
           {!isAdmin && (
             <Badge variant="destructive">Только админ</Badge>
