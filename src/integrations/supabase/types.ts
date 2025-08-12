@@ -14,6 +14,86 @@ export type Database = {
   }
   public: {
     Tables: {
+      asset_categories: {
+        Row: {
+          created_at: string | null
+          id: string
+          key: string
+          name: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          key: string
+          name: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          key?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      assets: {
+        Row: {
+          approved: boolean | null
+          category_id: string
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          id: string
+          name: string
+          pivot: Json | null
+          preview_url: string | null
+          scale_x: number | null
+          scale_y: number | null
+          scale_z: number | null
+          storage_path: string
+          tags: string[] | null
+        }
+        Insert: {
+          approved?: boolean | null
+          category_id: string
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          pivot?: Json | null
+          preview_url?: string | null
+          scale_x?: number | null
+          scale_y?: number | null
+          scale_z?: number | null
+          storage_path: string
+          tags?: string[] | null
+        }
+        Update: {
+          approved?: boolean | null
+          category_id?: string
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          pivot?: Json | null
+          preview_url?: string | null
+          scale_x?: number | null
+          scale_y?: number | null
+          scale_z?: number | null
+          storage_path?: string
+          tags?: string[] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assets_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "asset_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       battle_maps: {
         Row: {
           background_color: string | null
@@ -417,6 +497,96 @@ export type Database = {
             columns: ["token_id"]
             isOneToOne: false
             referencedRelation: "battle_tokens"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      map_entities: {
+        Row: {
+          ac: number | null
+          asset_id: string
+          created_at: string | null
+          data: Json | null
+          hp: number | null
+          id: string
+          initiative: number | null
+          is_locked: boolean | null
+          map_id: string
+          max_hp: number | null
+          owner_id: string | null
+          rot_x: number | null
+          rot_y: number | null
+          rot_z: number | null
+          scale_x: number | null
+          scale_y: number | null
+          scale_z: number | null
+          type: string
+          updated_at: string | null
+          x: number
+          y: number
+          z: number
+        }
+        Insert: {
+          ac?: number | null
+          asset_id: string
+          created_at?: string | null
+          data?: Json | null
+          hp?: number | null
+          id?: string
+          initiative?: number | null
+          is_locked?: boolean | null
+          map_id: string
+          max_hp?: number | null
+          owner_id?: string | null
+          rot_x?: number | null
+          rot_y?: number | null
+          rot_z?: number | null
+          scale_x?: number | null
+          scale_y?: number | null
+          scale_z?: number | null
+          type: string
+          updated_at?: string | null
+          x: number
+          y: number
+          z: number
+        }
+        Update: {
+          ac?: number | null
+          asset_id?: string
+          created_at?: string | null
+          data?: Json | null
+          hp?: number | null
+          id?: string
+          initiative?: number | null
+          is_locked?: boolean | null
+          map_id?: string
+          max_hp?: number | null
+          owner_id?: string | null
+          rot_x?: number | null
+          rot_y?: number | null
+          rot_z?: number | null
+          scale_x?: number | null
+          scale_y?: number | null
+          scale_z?: number | null
+          type?: string
+          updated_at?: string | null
+          x?: number
+          y?: number
+          z?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "map_entities_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "assets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "map_entities_map_id_fkey"
+            columns: ["map_id"]
+            isOneToOne: false
+            referencedRelation: "battle_maps"
             referencedColumns: ["id"]
           },
         ]
