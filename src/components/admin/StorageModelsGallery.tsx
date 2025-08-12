@@ -200,8 +200,9 @@ const copyUrl = async (name: string) => {
           const v = validations[fullPath];
           const isGltf = lower.endsWith('.gltf');
           const isGlb = lower.endsWith('.glb');
+          const isImage = /(\.png|\.jpg|\.jpeg|\.webp|\.gif|\.bmp|\.svg)$/.test(lower);
           const hasMissing = isGltf && ((v?.missing?.length ?? 0) > 0);
-          const canPreview = !isFolder && (isGlb || (isGltf && !hasMissing));
+          const canPreview3D = !isFolder && (isGlb || (isGltf && !hasMissing));
           return (
             <Card key={fullPath} className="overflow-hidden">
               <CardHeader className="p-3 flex items-center justify-between">
@@ -228,7 +229,15 @@ const copyUrl = async (name: string) => {
                     <div className="w-full h-full flex items-center justify-center text-[11px] text-muted-foreground p-3 text-center">
                       Не хватает файлов: {v?.missing?.slice(0, 3).join(', ') || '—'}. Загрузите их или воспользуйтесь кнопкой «В GLB».
                     </div>
-                  ) : canPreview ? (
+                  ) : isImage ? (
+                    <img
+                      src={publicUrl}
+                      alt={`Предпросмотр изображения ${f.name} из хранилища models`}
+                      loading="lazy"
+                      className="w-full h-48 object-contain"
+                      onError={() => console.error('Image preview failed', publicUrl)}
+                    />
+                  ) : canPreview3D ? (
                     <ErrorBoundary fallback={<div className="w-full h-full flex items-center justify-center text-[11px] text-muted-foreground p-3 text-center">Не удалось загрузить 3D-превью. Для .gltf нужен сопутствующий .bin и текстуры. Рекомендуется загружать .glb.</div>}>
                       <Suspense fallback={<div className="w-full h-full flex items-center justify-center text-xs text-muted-foreground">Загрузка...</div>}>
                         <Canvas camera={{ position: [1.6, 1.6, 1.6], fov: 50 }}>
@@ -243,7 +252,7 @@ const copyUrl = async (name: string) => {
                     </ErrorBoundary>
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-[11px] text-muted-foreground p-3 text-center">
-                      Превью доступно только для .glb и валидных .gltf.
+                      Превью доступно для .png/.jpg/.webp, .glb и валидных .gltf.
                     </div>
                   )}
                 </div>
