@@ -13,7 +13,7 @@ function encodePath(p: string): string {
 }
 
 export function publicModelUrl(path: string): string {
-  const encoded = encodePath(path);
-  const { data } = supabase.storage.from('models').getPublicUrl(encoded);
+  const clean = cleanStoragePath(path);
+  const { data } = supabase.storage.from('models').getPublicUrl(clean);
   return data.publicUrl;
 }
