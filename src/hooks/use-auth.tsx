@@ -10,6 +10,7 @@ export const useProtectedRoute = () => {
   const { user, loading, isAuthenticated } = useAuth();
   const [userRoles, setUserRoles] = useState<AppRole[]>([]);
   const [rolesLoading, setRolesLoading] = useState(true);
+  const [rolesFetched, setRolesFetched] = useState(false);
   
   useEffect(() => {
     const fetchUserRoles = async () => {
@@ -19,9 +20,11 @@ export const useProtectedRoute = () => {
         setUserRoles(roles);
         console.log('Загружены роли пользователя:', roles);
         setRolesLoading(false);
+        setRolesFetched(true);
       } else {
         setUserRoles([]);
         setRolesLoading(false);
+        setRolesFetched(true);
       }
     };
 
@@ -32,17 +35,21 @@ export const useProtectedRoute = () => {
   const isDM = userRoles.includes('dm') || isAdmin;
   const isPlayer = userRoles.includes('player') || userRoles.length === 0;
 
+  const combinedLoading = loading || rolesLoading || (isAuthenticated && !rolesFetched);
+
   console.log('useProtectedRoute состояние:', {
-    loading: loading || rolesLoading,
+    loading: combinedLoading,
     isAuthenticated,
     userRoles,
     isAdmin,
     isDM,
+    rolesLoading,
+    rolesFetched,
     canAccessDMDashboard: isAuthenticated && isDM
   });
 
   return {
-    loading: loading || rolesLoading,
+    loading: combinedLoading,
     isAuthenticated,
     user,
     userRoles,
@@ -50,7 +57,7 @@ export const useProtectedRoute = () => {
     isDM,
     isPlayer,
     canAccessDMDashboard: isAuthenticated && isDM,
-    canAccessPlayerDashboard: isAuthenticated && !loading
+    canAccessPlayerDashboard: isAuthenticated && !combinedLoading
   };
 };
 
