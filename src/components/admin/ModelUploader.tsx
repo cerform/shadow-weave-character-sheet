@@ -173,8 +173,8 @@ export const ModelUploader: React.FC = () => {
   };
 
   const getPublicUrl = (name: string) => {
-    const { data } = supabase.storage.from('models').getPublicUrl(name);
-    return data.publicUrl;
+    return publicModelUrl(name);
+  }
   };
 
   const onCopy = async (url: string) => {

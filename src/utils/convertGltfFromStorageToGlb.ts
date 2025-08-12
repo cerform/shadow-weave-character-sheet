@@ -1,7 +1,7 @@
 import JSZip from 'jszip';
 import { supabase } from '@/integrations/supabase/client';
 import { convertGltfZipToGlb, GlbResult } from './convertGltfZipToGlb';
-
+import { publicModelUrl } from '@/utils/storageUrls';
 function normalizePath(p: string): string {
   return p.replace(/\\/g, '/').replace(/^\.\//, '');
 }
@@ -30,7 +30,7 @@ function isDataUri(u: string): boolean {
 
 export async function convertGltfFromStorageToGlb(storagePath: string): Promise<GlbResult | null> {
   const baseDir = dirname(storagePath);
-  const gltfUrl = supabase.storage.from('models').getPublicUrl(storagePath).data.publicUrl;
+  const gltfUrl = publicModelUrl(storagePath);
 
   // Fetch glTF JSON
   const res = await fetch(gltfUrl);
@@ -56,7 +56,7 @@ export async function convertGltfFromStorageToGlb(storagePath: string): Promise<
   for (const dep of deps) {
     if (isDataUri(dep)) continue;
     const depPath = resolveRelative(baseDir, dep);
-    const depUrl = supabase.storage.from('models').getPublicUrl(depPath).data.publicUrl;
+    const depUrl = publicModelUrl(depPath);
     const r = await fetch(depUrl);
     if (!r.ok) throw new Error(`Не найден ресурс: ${dep}`);
     const blob = await r.blob();

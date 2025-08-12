@@ -10,7 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import type { AssetItem, AssetCategory } from '@/stores/assetsStore';
 
 function ModelPreview({ path }: { path: string }) {
-  const url = useMemo(() => supabase.storage.from('models').getPublicUrl(path).data.publicUrl, [path]);
+  const url = useMemo(() => publicModelUrl(path), [path]);
   const { scene } = useGLTF(url);
   return <primitive object={scene} position={[0, -0.6, 0]} />;
 }
@@ -21,7 +21,7 @@ const AssetCard3D: React.FC<{
   onToggleApproved: (approved: boolean) => void;
   onDelete: () => void;
 }> = ({ asset, category, onToggleApproved, onDelete }) => {
-  const modelUrl = supabase.storage.from('models').getPublicUrl(asset.storage_path).data.publicUrl;
+  const modelUrl = publicModelUrl(asset.storage_path);
   const [error, setError] = useState<string | null>(null);
 
   return (

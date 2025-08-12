@@ -5,9 +5,10 @@ import { OrbitControls, useGLTF } from '@react-three/drei';
 import { useAssetsStore } from '@/stores/assetsStore';
 import { useMapEntitiesStore } from '@/stores/mapEntitiesStore';
 import { supabase } from '@/integrations/supabase/client';
+import { publicModelUrl } from '@/utils/storageUrls';
 
 function GLTFModel({ path, position = [0,0,0], rotation = [0,0,0], scale = [1,1,1] }: any) {
-  const url = supabase.storage.from('models').getPublicUrl(path).data.publicUrl;
+  const url = publicModelUrl(path);
   const { scene } = useGLTF(url);
   return <primitive object={scene} position={position} rotation={rotation} scale={scale} />;
 }

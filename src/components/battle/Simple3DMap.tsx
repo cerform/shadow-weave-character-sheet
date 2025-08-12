@@ -12,6 +12,7 @@ import { Label } from '@/components/ui/label';
 import DraggableToken3D from './DraggableToken3D';
 import DraggableMonsterModel from './DraggableMonsterModel';
 import { supabase } from '@/integrations/supabase/client';
+import { publicModelUrl } from '@/utils/storageUrls';
 
 interface AssetModel {
   id: string;
@@ -86,7 +87,7 @@ const TexturedPlane: React.FC<{ imageUrl?: string }> = ({ imageUrl }) => {
 // Примитив для GLTF/GLB ассета из Supabase Storage
 const AssetModelNode: React.FC<{ path: string; position: [number, number, number]; scale?: number | [number, number, number]; }>
 = ({ path, position, scale }) => {
-  const url = useMemo(() => supabase.storage.from('models').getPublicUrl(path).data.publicUrl, [path]);
+  const url = useMemo(() => publicModelUrl(path), [path]);
   const { scene } = useGLTF(url);
   const s: [number, number, number] = Array.isArray(scale)
     ? scale
@@ -174,8 +175,9 @@ const DraggableAssetModel: React.FC<{ asset: AssetModel; position: [number, numb
         <cylinderGeometry args={[0.6, 0.6, 1.2, 8]} />
         <meshBasicMaterial transparent opacity={0} />
       </mesh>
-
-      <AssetModelNode path={asset.storage_path} position={[0, 0, 0]} scale={asset.scale} />
+      <Suspense fallback={<mesh position={[0,0,0]}><cylinderGeometry args={[0.3,0.3,0.6,8]} /><meshStandardMaterial color="#6b7280" /></mesh>}>
+        <AssetModelNode path={asset.storage_path} position={[0, 0, 0]} scale={asset.scale} />
+      </Suspense>
     </group>
   );
 };
