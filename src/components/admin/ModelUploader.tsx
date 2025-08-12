@@ -9,6 +9,9 @@ import JSZip from 'jszip';
 import { supabase } from '@/integrations/supabase/client';
 import { useProtectedRoute } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
+import { convertGltfZipToGlb } from '@/utils/convertGltfZipToGlb';
 
 interface FileItem {
   name: string;
@@ -24,6 +27,7 @@ export const ModelUploader: React.FC = () => {
   const [filesToUpload, setFilesToUpload] = useState<File[]>([]);
   const [files, setFiles] = useState<FileItem[]>([]);
   const [loading, setLoading] = useState(false);
+  const [autoConvert, setAutoConvert] = useState(true);
 
   const listFiles = async () => {
     const { data, error } = await supabase.storage.from('models').list('', {
@@ -98,35 +102,49 @@ export const ModelUploader: React.FC = () => {
       return targetPath;
     };
 
-    const processZipFile = async (zipFile: File) => {
-      const zip = await JSZip.loadAsync(zipFile);
-      const entries = Object.values(zip.files) as any[];
+  const processZipFile = async (zipFile: File) => {
+    const zip = await JSZip.loadAsync(zipFile);
+    const entries = Object.values(zip.files) as any[];
 
-      // Вычисляем общий верхний каталог (если в архиве всё лежит внутри одной папки) и отбрасываем его
-      const allFilePaths = entries
-        .filter((e: any) => !e.dir)
-        .map((e: any) => String(e.name).replace(/\\/g, '/'));
-      const firstSeg = allFilePaths.length ? allFilePaths[0].split('/')[0] : '';
-      const hasCommonRoot = !!firstSeg && allFilePaths.every((p) => p.startsWith(firstSeg + '/'));
-      const stripPrefix = hasCommonRoot ? firstSeg + '/' : '';
+    // Вычисляем общий верхний каталог (если в архиве всё лежит внутри одной папки) и отбрасываем его
+    const allFilePaths = entries
+      .filter((e: any) => !e.dir)
+      .map((e: any) => String(e.name).replace(/\\/g, '/'));
+    const firstSeg = allFilePaths.length ? allFilePaths[0].split('/')[0] : '';
+    const hasCommonRoot = !!firstSeg && allFilePaths.every((p) => p.startsWith(firstSeg + '/'));
+    const stripPrefix = hasCommonRoot ? firstSeg + '/' : '';
 
-      let uploaded = 0;
-      for (const entry of entries) {
-        if ((entry as any).dir) continue;
-        let rawPath = String((entry as any).name).replace(/\\/g, '/');
-        let relPath = stripPrefix && rawPath.startsWith(stripPrefix) ? rawPath.slice(stripPrefix.length) : rawPath;
-        relPath = relPath.replace(/^\.\//, '');
-        const basename = relPath.split('/').pop() || relPath;
-        if (!isAllowedZipAsset(basename)) continue;
-        const blob = await (entry as any).async('blob');
-        await uploadExact(relPath, blob);
-        uploaded++;
+    let uploaded = 0;
+    for (const entry of entries) {
+      if ((entry as any).dir) continue;
+      let rawPath = String((entry as any).name).replace(/\\/g, '/');
+      let relPath = stripPrefix && rawPath.startsWith(stripPrefix) ? rawPath.slice(stripPrefix.length) : rawPath;
+      relPath = relPath.replace(/^\.\//, '');
+      const basename = relPath.split('/').pop() || relPath;
+      if (!isAllowedZipAsset(basename)) continue;
+      const blob = await (entry as any).async('blob');
+      await uploadExact(relPath, blob);
+      uploaded++;
+    }
+
+    let converted = 0;
+    if (autoConvert) {
+      try {
+        const glbs = await convertGltfZipToGlb(zip);
+        for (const g of glbs) {
+          await uploadExact(g.name, g.blob);
+          converted++;
+        }
+      } catch (e) {
+        console.error('Ошибка автоконвертации в GLB:', e);
       }
-      return uploaded;
-    };
+    }
+
+    return { uploaded, converted };
+  };
     setLoading(true);
     try {
-      let totalUploaded = 0;
+      let totalUploaded = 0; let totalConverted = 0;
       for (const f of filesToUpload) {
         if (f.size > MAX_SIZE) {
           toast({ title: 'Файл пропущен (слишком большой)', description: `${f.name} > 100MB`, variant: 'destructive' });
@@ -134,7 +152,9 @@ export const ModelUploader: React.FC = () => {
         }
         const ext = f.name.split('.').pop()?.toLowerCase();
         if (ext === 'zip') {
-          totalUploaded += await processZipFile(f);
+          const res = await processZipFile(f);
+          totalUploaded += res.uploaded;
+          totalConverted += res.converted;
         } else if (isAllowedZipAsset(f.name)) {
           await uploadExact(f.name, f);
           totalUploaded += 1;
@@ -142,7 +162,7 @@ export const ModelUploader: React.FC = () => {
           toast({ title: 'Неподдерживаемый формат', description: f.name, variant: 'destructive' });
         }
       }
-      toast({ title: 'Загрузка завершена', description: `Загружено файлов: ${totalUploaded}` });
+      toast({ title: 'Загрузка завершена', description: `Загружено файлов: ${totalUploaded}. Конвертировано в GLB: ${totalConverted}` });
       setFilesToUpload([]);
       await listFiles();
     } catch (e: any) {
@@ -193,6 +213,10 @@ export const ModelUploader: React.FC = () => {
           {!isAdmin && (
             <Badge variant="destructive">Только админ</Badge>
           )}
+        </div>
+        <div className="flex items-center gap-3">
+          <Switch id="auto-glb" checked={autoConvert} onCheckedChange={setAutoConvert} />
+          <Label htmlFor="auto-glb" className="text-sm cursor-pointer select-none">Автоконвертировать glTF (+bin, текстуры) → один .glb</Label>
         </div>
 
         <div className="space-y-2">
