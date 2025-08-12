@@ -7,6 +7,7 @@
 
 import os, json, zipfile, io, shutil, csv, sys, re
 from pathlib import Path
+from urllib.parse import urljoin, urlparse
 
 # external deps
 try:
@@ -27,6 +28,7 @@ except Exception as e:
 
 ALLOWED_CATS = {"characters","mobs","bosses","props","animals","tilesets","icons"}
 IMG_EXT = {".png",".jpg",".jpeg",".webp"}
+DIRECT_EXT = IMG_EXT | {".zip"}
 
 def slugify(s: str) -> str:
     s = s.strip().lower()
@@ -85,6 +87,60 @@ def copy_if_image(fp: Path, category_dir: Path, base_name: str, previews_dir: Pa
         except Exception as e:
             print("Copy failed:", fp, e)
 
+# --- Auto-resolve direct links from a source HTML page ---
+HREF_RE = re.compile(r'href=["\\']([^"\']+)["\']', re.IGNORECASE)
+SRC_RE = re.compile(r'src=["\']([^"\']+)["\']', re.IGNORECASE)
+
+def looks_like_direct(u: str) -> bool:
+    try:
+        path = urlparse(u).path.lower()
+        return any(path.endswith(ext) for ext in DIRECT_EXT)
+    except Exception:
+        return False
+
+def resolve_direct_url(source_page: str) -> str | None:
+    try:
+        resp = requests.get(source_page, timeout=30, headers={"User-Agent":"Mozilla/5.0"})
+        resp.raise_for_status()
+        html = resp.text
+    except Exception as e:
+        print("Resolve failed (fetch):", source_page, e)
+        return None
+
+    candidates = []
+    for m in HREF_RE.findall(html) + SRC_RE.findall(html):
+        try:
+            candidates.append(urljoin(source_page, m))
+        except Exception:
+            continue
+
+    # Filter to direct-looking assets
+    direct = [u for u in candidates if looks_like_direct(u)]
+
+    def score(u: str) -> int:
+        p = urlparse(u).path.lower()
+        if p.endswith('.zip'): return 3
+        if p.endswith('.png'): return 2
+        if p.endswith('.jpg') or p.endswith('.jpeg'): return 2
+        if p.endswith('.webp'): return 1
+        return 0
+
+    direct.sort(key=score, reverse=True)
+
+    # Validate via HEAD
+    for u in direct:
+        try:
+            h = requests.head(u, allow_redirects=True, timeout=20)
+            if h.status_code < 400:
+                ct = (h.headers.get('content-type') or '').lower()
+                if any(x in ct for x in ('zip','image','octet-stream')):
+                    return u
+        except Exception:
+            continue
+
+    # Fallback: return the first candidate
+    return direct[0] if direct else None
+
 def main():
     root = Path.cwd() / "dnd-2d-assets"
     previews = root / "previews"
@@ -106,10 +162,31 @@ def main():
         category = it.get("category","").strip().lower()
         url = it.get("url","").strip()
         typ = it.get("type","").strip().lower()
+        source_page = it.get("source_page", "").strip()
 
         if category not in ALLOWED_CATS:
             print(f"Skip '{name}': invalid category '{category}'")
             continue
+
+        # Try to auto-resolve direct URL from source_page if url is empty
+        if not url and source_page:
+            print(f"Resolving direct link for '{name}' from page: {source_page}")
+            resolved = resolve_direct_url(source_page)
+            if resolved:
+                url = resolved
+                it["url"] = url
+                # infer type if missing
+                path_l = urlparse(url).path.lower()
+                if not typ:
+                    if path_l.endswith('.zip'):
+                        typ = 'zip'
+                        it['type'] = 'zip'
+                    elif any(path_l.endswith(ext) for ext in IMG_EXT):
+                        typ = 'image'
+                        it['type'] = 'image'
+            else:
+                print(f"Could not resolve direct link for '{name}'.")
+
         if not url:
             print(f"Skip '{name}': empty url")
             continue
@@ -158,6 +235,14 @@ def main():
                 print("Write failed:", name, e)
         else:
             print("Unknown type, skipping:", name, url)
+
+    # persist any resolved URLs back to manifest
+    try:
+        data["items"] = items
+        manifest_path.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+        print("Updated manifest_2d_assets.json with resolved direct URLs.")
+    except Exception as e:
+        print("Could not update manifest:", e)
 
     # write CSV
     csv_path = root / "assets.csv"
