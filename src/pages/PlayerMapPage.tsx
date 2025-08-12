@@ -47,12 +47,19 @@ const PlayerMapPage: React.FC = () => {
 
           {entities.map(e => (
             <group key={e.id} position={[e.x, e.y, e.z]} rotation={[e.rot_x || 0, e.rot_y || 0, e.rot_z || 0]}>
-              <GLTFModel
-                path={(assets.find(a => a.id === e.asset_id)?.storage_path) || ''}
-                position={[0,0,0]}
-                rotation={[0,0,0]}
-                scale={[e.scale_x || 1, e.scale_y || 1, e.scale_z || 1]}
-              />
+              {/* Находим соответствующий ассет */}
+              {(() => {
+                const a = assets.find(a => a.id === e.asset_id);
+                if (!a) return null;
+                return (
+                  <GLTFModel
+                    path={a.storage_path}
+                    position={[0,0,0]}
+                    rotation={[0,0,0]}
+                    scale={[e.scale_x || 1, e.scale_y || 1, e.scale_z || 1]}
+                  />
+                );
+              })()}
             </group>
           ))}
 

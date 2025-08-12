@@ -36,6 +36,7 @@ interface AssetsState {
   removeCategory: (id: string) => Promise<void>;
   createAsset: (payload: Omit<AssetItem, 'id' | 'approved'> & { approved?: boolean }) => Promise<void>;
   setApproved: (id: string, approved: boolean) => Promise<void>;
+  deleteAsset: (asset: AssetItem, removeFile?: boolean) => Promise<void>;
 }
 
 export const useAssetsStore = create<AssetsState>((set, get) => ({
@@ -92,7 +93,6 @@ export const useAssetsStore = create<AssetsState>((set, get) => ({
   },
 
   createAsset: async (payload) => {
-    // sanitize undefined
     const clean = JSON.parse(JSON.stringify(payload));
     const { error } = await supabase.from('assets').insert([clean]);
     if (error) {
@@ -106,6 +106,19 @@ export const useAssetsStore = create<AssetsState>((set, get) => ({
     const { error } = await supabase.from('assets').update({ approved }).eq('id', id);
     if (error) {
       console.error('Ошибка смены статуса ассета:', error.message);
+      return;
+    }
+    await get().reloadAssets();
+  },
+
+  deleteAsset: async (asset, removeFile = false) => {
+    if (removeFile && asset.storage_path) {
+      const { error: stErr } = await supabase.storage.from('models').remove([asset.storage_path]);
+      if (stErr) console.warn('Не удалось удалить файл из storage:', stErr.message);
+    }
+    const { error } = await supabase.from('assets').delete().eq('id', asset.id);
+    if (error) {
+      console.error('Ошибка удаления ассета:', error.message);
       return;
     }
     await get().reloadAssets();

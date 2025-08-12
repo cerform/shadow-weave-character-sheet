@@ -188,18 +188,27 @@ const AppRoutes: React.FC = () => {
           <DMSessionPage />
         </ProtectedDMRoute>
       } />
-      <Route path="/game-room/:id" element={
+      <Route path="/dm/map-editor/:mapId" element={
         <ProtectedDMRoute>
-          <React.Suspense fallback={<LazyLoading />}>
-            <GameRoomPage />
-          </React.Suspense>
+          <DMMapEditorPage />
         </ProtectedDMRoute>
       } />
+      <Route path="/player/map/:mapId" element={
+        <ProtectedPlayerRoute>
+          <PlayerMapPage />
+        </ProtectedPlayerRoute>
+      } />
+
       
       {/* Админские маршруты */}
       <Route path="/admin" element={
         <ProtectedAdminRoute>
           <AdminPage />
+        </ProtectedAdminRoute>
+      } />
+      <Route path="/admin/assets" element={
+        <ProtectedAdminRoute>
+          <AdminAssetsPage />
         </ProtectedAdminRoute>
       } />
       
@@ -209,6 +218,16 @@ const AppRoutes: React.FC = () => {
           <React.Suspense fallback={<LazyLoading />}>
             <JoinSessionPage />
           </React.Suspense>
+        </ProtectedPlayerRoute>
+      } />
+      <Route path="/dm/map-2d/:mapId" element={
+        <ProtectedDMRoute>
+          {React.createElement(require('@/pages/Synced2DMapPage').default)}
+        </ProtectedDMRoute>
+      } />
+      <Route path="/player/map-2d/:mapId" element={
+        <ProtectedPlayerRoute>
+          {React.createElement(require('@/pages/Synced2DMapPage').default)}
         </ProtectedPlayerRoute>
       } />
       <Route path="/session" element={
