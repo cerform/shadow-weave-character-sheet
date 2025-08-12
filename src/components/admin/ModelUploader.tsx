@@ -54,53 +54,76 @@ export const ModelUploader: React.FC = () => {
 
     const MAX_SIZE = 100 * 1024 * 1024; // 100MB
 
-    const isAllowedModelFile = (name: string) => /\.(glb|gltf)$/i.test(name);
+    const isAllowedZipAsset = (name: string) => /\.(glb|gltf|bin|png|jpg|jpeg|webp|ktx2|gif|bmp|tga|svg)$/i.test(name);
 
-    const getContentType = (ext?: string) =>
-      ext === 'glb' ? 'model/gltf-binary' : 'model/gltf+json';
-
-    const uploadWithRename = async (desiredName: string, data: Blob) => {
-      const dot = desiredName.lastIndexOf('.');
-      const base = dot >= 0 ? desiredName.slice(0, dot) : desiredName;
-      const ext = dot >= 0 ? desiredName.slice(dot + 1) : '';
-      const contentType = getContentType(ext.toLowerCase());
-      let attempt = 0;
-      while (true) {
-        const candidate =
-          attempt === 0
-            ? desiredName
-            : `${base} (${attempt}).${ext}`;
-        const { error } = await supabase.storage.from('models').upload(candidate, data, {
-          contentType,
-          cacheControl: '3600',
-          upsert: false,
-        });
-        if (!error) return candidate;
-        const msg = (error as any).message?.toLowerCase?.() || '';
-        if (msg.includes('exists') || (error as any).statusCode === '409' || (error as any).status === 409) {
-          attempt++;
-          continue;
-        }
-        throw error;
+    const getContentType = (ext?: string) => {
+      switch ((ext || '').toLowerCase()) {
+        case 'glb':
+          return 'model/gltf-binary';
+        case 'gltf':
+          return 'model/gltf+json';
+        case 'bin':
+          return 'application/octet-stream';
+        case 'png':
+          return 'image/png';
+        case 'jpg':
+        case 'jpeg':
+          return 'image/jpeg';
+        case 'webp':
+          return 'image/webp';
+        case 'gif':
+          return 'image/gif';
+        case 'bmp':
+          return 'image/bmp';
+        case 'svg':
+          return 'image/svg+xml';
+        case 'ktx2':
+          return 'application/octet-stream';
+        case 'tga':
+          return 'application/octet-stream';
+        default:
+          return 'application/octet-stream';
       }
+    };
+
+    const uploadExact = async (targetPath: string, data: Blob) => {
+      const ext = targetPath.split('.').pop();
+      const contentType = getContentType(ext);
+      const { error } = await supabase.storage.from('models').upload(targetPath, data, {
+        contentType,
+        cacheControl: '3600',
+        upsert: true, // перезаписываем, чтобы не появлялись суффиксы (1)
+      });
+      if (error) throw error;
+      return targetPath;
     };
 
     const processZipFile = async (zipFile: File) => {
       const zip = await JSZip.loadAsync(zipFile);
-      const entries = Object.values(zip.files);
+      const entries = Object.values(zip.files) as any[];
+
+      // Вычисляем общий верхний каталог (если в архиве всё лежит внутри одной папки) и отбрасываем его
+      const allFilePaths = entries
+        .filter((e: any) => !e.dir)
+        .map((e: any) => String(e.name).replace(/\\/g, '/'));
+      const firstSeg = allFilePaths.length ? allFilePaths[0].split('/')[0] : '';
+      const hasCommonRoot = !!firstSeg && allFilePaths.every((p) => p.startsWith(firstSeg + '/'));
+      const stripPrefix = hasCommonRoot ? firstSeg + '/' : '';
+
       let uploaded = 0;
       for (const entry of entries) {
         if ((entry as any).dir) continue;
-        const rawName = (entry as any).name as string;
-        const innerName = rawName.split('/').pop()?.split('\\').pop() || rawName;
-        if (!isAllowedModelFile(innerName)) continue;
+        let rawPath = String((entry as any).name).replace(/\\/g, '/');
+        let relPath = stripPrefix && rawPath.startsWith(stripPrefix) ? rawPath.slice(stripPrefix.length) : rawPath;
+        relPath = relPath.replace(/^\.\//, '');
+        const basename = relPath.split('/').pop() || relPath;
+        if (!isAllowedZipAsset(basename)) continue;
         const blob = await (entry as any).async('blob');
-        await uploadWithRename(innerName, blob);
+        await uploadExact(relPath, blob);
         uploaded++;
       }
       return uploaded;
     };
-
     setLoading(true);
     try {
       let totalUploaded = 0;
@@ -112,8 +135,8 @@ export const ModelUploader: React.FC = () => {
         const ext = f.name.split('.').pop()?.toLowerCase();
         if (ext === 'zip') {
           totalUploaded += await processZipFile(f);
-        } else if (isAllowedModelFile(f.name)) {
-          await uploadWithRename(f.name, f);
+        } else if (isAllowedZipAsset(f.name)) {
+          await uploadExact(f.name, f);
           totalUploaded += 1;
         } else {
           toast({ title: 'Неподдерживаемый формат', description: f.name, variant: 'destructive' });
@@ -159,11 +182,11 @@ export const ModelUploader: React.FC = () => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Управление 3D ассетами (GLB/GLTF)</CardTitle>
+        <CardTitle>Управление 3D ассетами (GLB/GLTF/ZIP)</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="flex flex-col md:flex-row gap-2 items-stretch md:items-center">
-          <Input type="file" accept=".glb,.gltf,.zip" multiple onChange={(e) => setFilesToUpload(Array.from(e.target.files || []))} />
+          <Input type="file" accept=".glb,.gltf,.bin,.png,.jpg,.jpeg,.webp,.ktx2,.gif,.bmp,.tga,.svg,.zip" multiple onChange={(e) => setFilesToUpload(Array.from(e.target.files || []))} />
           <Button onClick={onUpload} disabled={filesToUpload.length === 0 || !isAdmin || loading}>
             <Upload className="h-4 w-4 mr-2" /> Загрузить
           </Button>
