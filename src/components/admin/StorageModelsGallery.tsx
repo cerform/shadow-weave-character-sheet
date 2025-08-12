@@ -157,7 +157,9 @@ const StorageModelsGallery: React.FC = () => {
           const lower = f.name.toLowerCase();
           const v = validations[f.name];
           const isGltf = lower.endsWith('.gltf');
+          const isGlb = lower.endsWith('.glb');
           const hasMissing = isGltf && ((v?.missing?.length ?? 0) > 0);
+          const canPreview = isGlb || (isGltf && !hasMissing);
           return (
             <Card key={f.name} className="overflow-hidden">
               <CardHeader className="p-3 flex items-center justify-between">
@@ -178,8 +180,7 @@ const StorageModelsGallery: React.FC = () => {
                     <div className="w-full h-full flex items-center justify-center text-[11px] text-muted-foreground p-3 text-center">
                       Не хватает файлов: {v?.missing?.slice(0, 3).join(', ') || '—'}. Загрузите их или воспользуйтесь кнопкой «В GLB».
                     </div>
-                  ) : (
-
+                  ) : canPreview ? (
                     <ErrorBoundary fallback={<div className="w-full h-full flex items-center justify-center text-[11px] text-muted-foreground p-3 text-center">Не удалось загрузить 3D-превью. Для .gltf нужен сопутствующий .bin и текстуры. Рекомендуется загружать .glb.</div>}>
                       <Suspense fallback={<div className="w-full h-full flex items-center justify-center text-xs text-muted-foreground">Загрузка...</div>}>
                         <Canvas camera={{ position: [1.6, 1.6, 1.6], fov: 50 }}>
@@ -192,6 +193,10 @@ const StorageModelsGallery: React.FC = () => {
                         </Canvas>
                       </Suspense>
                     </ErrorBoundary>
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-[11px] text-muted-foreground p-3 text-center">
+                      Превью доступно только для .glb и валидных .gltf.
+                    </div>
                   )}
                 </div>
               </CardContent>
