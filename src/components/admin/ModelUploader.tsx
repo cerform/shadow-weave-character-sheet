@@ -171,32 +171,8 @@ export const ModelUploader: React.FC = () => {
         </div>
 
         <div className="space-y-2">
-          <div className="text-sm text-muted-foreground">Загруженные файлы</div>
-          {files.length === 0 ? (
-            <div className="text-sm text-muted-foreground">Пока пусто</div>
-          ) : (
-            <ul className="space-y-2">
-              {files.map((f) => {
-                const url = getPublicUrl(f.name);
-                return (
-                  <li key={f.name} className="flex items-center justify-between border rounded p-2">
-                    <div className="flex-1 min-w-0">
-                      <div className="font-mono text-sm truncate">{f.name}</div>
-                      <div className="text-xs text-muted-foreground truncate">{url}</div>
-                    </div>
-                    <div className="flex items-center gap-2 ml-4">
-                      <Button size="sm" variant="secondary" onClick={() => onCopy(url)}>
-                        <Copy className="h-3 w-3 mr-1" />Копировать URL
-                      </Button>
-                      <Button size="sm" variant="ghost" className="text-destructive" onClick={() => onDelete(f.name)} disabled={!isAdmin || loading}>
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
+          <div className="text-sm text-muted-foreground">Список файлов перемещён в галерею</div>
+          <Button variant="secondary" onClick={() => window.location.assign('/admin/assets')}>Открыть галерею ассетов</Button>
         </div>
       </CardContent>
     </Card>
