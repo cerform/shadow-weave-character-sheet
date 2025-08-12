@@ -27,10 +27,18 @@ const StorageModelsGallery: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [query, setQuery] = useState('');
   const [validations, setValidations] = useState<Record<string, { missing: string[]; checked: boolean }>>({});
+  const [prefix, setPrefix] = useState<string>('');
 
-  const listFiles = async (): Promise<FileItem[] | undefined> => {
+  const joinPath = (a: string, b: string) => (a ? `${a.replace(/\\/g, '/').replace(/\/$/, '')}/${b}` : b);
+  const parentPrefix = (p: string) => {
+    const n = p.replace(/\\/g, '/').replace(/\/$/, '');
+    const idx = n.lastIndexOf('/');
+    return idx >= 0 ? n.slice(0, idx) : '';
+  };
+
+  const listFiles = async (p: string = prefix): Promise<FileItem[] | undefined> => {
     setLoading(true);
-    const { data, error } = await supabase.storage.from('models').list('', {
+    const { data, error } = await supabase.storage.from('models').list(p, {
       limit: 1000,
       offset: 0,
       sortBy: { column: 'name', order: 'asc' },
@@ -47,20 +55,21 @@ const StorageModelsGallery: React.FC = () => {
     }
   };
 
-  const validateFiles = async (items: FileItem[]) => {
+  const validateFiles = async (items: FileItem[], p: string = prefix) => {
     const names = new Set(items.map((i) => i.name));
     const results: Record<string, { missing: string[]; checked: boolean }> = {};
 
     await Promise.all(
       items.map(async (f) => {
+        const fullPath = joinPath(p, f.name);
         const lower = f.name.toLowerCase();
         if (lower.endsWith('.glb')) {
-          results[f.name] = { missing: [], checked: true };
+          results[fullPath] = { missing: [], checked: true };
           return;
         }
         if (lower.endsWith('.gltf')) {
           try {
-            const { data } = supabase.storage.from('models').getPublicUrl(f.name);
+            const { data } = supabase.storage.from('models').getPublicUrl(fullPath);
             const res = await fetch(data.publicUrl);
             const json = await res.json();
             const deps: string[] = [];
@@ -70,19 +79,19 @@ const StorageModelsGallery: React.FC = () => {
             if (Array.isArray(json.images)) {
               json.images.forEach((img: any) => img?.uri && deps.push(String(img.uri)));
             }
-            // check only basenames in the same bucket root
+            // check only basenames in the same folder
             const missing = deps
               .map((u) => u.split('/').pop() as string)
               .filter((n) => n && !names.has(n));
-            results[f.name] = { missing, checked: true };
+            results[fullPath] = { missing, checked: true };
           } catch (e) {
             // Не смогли прочитать gltf — пометим как требующий проверку
-            results[f.name] = { missing: ['.bin/текстуры?'], checked: true };
+            results[fullPath] = { missing: ['.bin/текстуры?'], checked: true };
           }
           return;
         }
-        // Other files
-        results[f.name] = { missing: [], checked: true };
+        // Other files and folders
+        results[fullPath] = { missing: [], checked: true };
       })
     );
 
@@ -91,10 +100,10 @@ const StorageModelsGallery: React.FC = () => {
 
   useEffect(() => {
     (async () => {
-      const data = await listFiles();
-      if (data) await validateFiles(data);
+      const data = await listFiles(prefix);
+      if (data) await validateFiles(data, prefix);
     })();
-  }, []);
+  }, [prefix]);
 
   const filtered = files.filter(f => f.name.toLowerCase().includes(query.toLowerCase()));
 
@@ -140,33 +149,48 @@ const StorageModelsGallery: React.FC = () => {
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-3">
         <Input value={query} onChange={e => setQuery(e.target.value)} placeholder="Поиск по имени файла" className="max-w-md" />
-        <Button
-          variant="secondary"
-          onClick={async () => {
-            const data = await listFiles();
-            if (data) await validateFiles(data);
-          }}
-          disabled={loading}
-        >
-          <RefreshCcw className="h-4 w-4 mr-2" />Обновить
-        </Button>
+        <div className="flex items-center gap-2">
+          {prefix && (
+            <Button
+              variant="outline"
+              onClick={() => setPrefix(parentPrefix(prefix))}
+              disabled={loading}
+            >
+              Вверх
+            </Button>
+          )}
+          <Button
+            variant="secondary"
+            onClick={async () => {
+              const data = await listFiles();
+              if (data) await validateFiles(data);
+            }}
+            disabled={loading}
+          >
+            <RefreshCcw className="h-4 w-4 mr-2" />Обновить
+          </Button>
+        </div>
       </div>
       <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {filtered.map((f) => {
-          const publicUrl = supabase.storage.from('models').getPublicUrl(f.name).data.publicUrl;
+          const fullPath = prefix ? `${prefix}/${f.name}` : f.name;
+          const publicUrl = supabase.storage.from('models').getPublicUrl(fullPath).data.publicUrl;
           const lower = f.name.toLowerCase();
-          const v = validations[f.name];
+          const isFolder = !f.id && !/\.[a-z0-9]+$/i.test(f.name);
+          const v = validations[fullPath];
           const isGltf = lower.endsWith('.gltf');
           const isGlb = lower.endsWith('.glb');
           const hasMissing = isGltf && ((v?.missing?.length ?? 0) > 0);
-          const canPreview = isGlb || (isGltf && !hasMissing);
+          const canPreview = !isFolder && (isGlb || (isGltf && !hasMissing));
           return (
-            <Card key={f.name} className="overflow-hidden">
+            <Card key={fullPath} className="overflow-hidden">
               <CardHeader className="p-3 flex items-center justify-between">
                 <CardTitle className="text-sm font-semibold truncate" title={f.name}>{f.name}</CardTitle>
                 <div className="flex items-center gap-1">
                   <Badge variant="secondary">models</Badge>
+                  {isFolder && <Badge variant="outline">folder</Badge>}
                   {isGltf && <Badge variant="outline">gltf</Badge>}
+                  {isGlb && <Badge variant="outline">glb</Badge>}
                   {hasMissing && (
                     <Badge variant="destructive" title={`Отсутствует: ${v?.missing?.join(', ')}`}>
                       deps
@@ -176,7 +200,11 @@ const StorageModelsGallery: React.FC = () => {
               </CardHeader>
               <CardContent className="p-0">
                 <div className="h-48 bg-muted/40">
-                  {hasMissing ? (
+                  {isFolder ? (
+                    <div className="w-full h-full flex items-center justify-center text-[11px] text-muted-foreground p-3 text-center">
+                      Папка. Откройте для просмотра содержимого.
+                    </div>
+                  ) : hasMissing ? (
                     <div className="w-full h-full flex items-center justify-center text-[11px] text-muted-foreground p-3 text-center">
                       Не хватает файлов: {v?.missing?.slice(0, 3).join(', ') || '—'}. Загрузите их или воспользуйтесь кнопкой «В GLB».
                     </div>
@@ -187,7 +215,7 @@ const StorageModelsGallery: React.FC = () => {
                           <ambientLight intensity={0.8} />
                           <directionalLight position={[2, 2, 2]} intensity={0.6} />
                           <Suspense fallback={null}>
-                            <ModelPreview path={f.name} />
+                            <ModelPreview path={fullPath} />
                           </Suspense>
                           <OrbitControls enablePan={false} enableZoom={false} maxPolarAngle={Math.PI / 2.2} />
                         </Canvas>
@@ -202,24 +230,34 @@ const StorageModelsGallery: React.FC = () => {
               </CardContent>
               <CardFooter className="p-3 flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Button size="sm" variant="secondary" asChild>
-                    <a href={publicUrl} target="_blank" rel="noreferrer">
-                      <ExternalLink className="h-3 w-3 mr-1" />Открыть
-                    </a>
-                  </Button>
-                  <Button size="sm" variant="outline" onClick={() => copyUrl(f.name)}>
-                    <Copy className="h-3 w-3 mr-1" />Копировать URL
-                  </Button>
+                  {isFolder ? (
+                    <Button size="sm" variant="secondary" onClick={() => setPrefix(joinPath(prefix, f.name))}>
+                      Открыть папку
+                    </Button>
+                  ) : (
+                    <>
+                      <Button size="sm" variant="secondary" asChild>
+                        <a href={publicUrl} target="_blank" rel="noreferrer">
+                          <ExternalLink className="h-3 w-3 mr-1" />Открыть
+                        </a>
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={() => copyUrl(fullPath)}>
+                        <Copy className="h-3 w-3 mr-1" />Копировать URL
+                      </Button>
+                    </>
+                  )}
                 </div>
                 <div className="flex items-center gap-2">
-                  {isGltf && (
-                    <Button size="sm" variant="outline" onClick={() => convertToGlb(f.name)} disabled={loading}>
+                  {!isFolder && isGltf && (
+                    <Button size="sm" variant="outline" onClick={() => convertToGlb(fullPath)} disabled={loading}>
                       В GLB
                     </Button>
                   )}
-                  <Button size="sm" variant="ghost" className="text-destructive" onClick={() => remove(f.name)} disabled={!isAdmin || loading}>
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                  {!isFolder && (
+                    <Button size="sm" variant="ghost" className="text-destructive" onClick={() => remove(fullPath)} disabled={!isAdmin || loading}>
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  )}
                 </div>
               </CardFooter>
             </Card>
