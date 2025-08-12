@@ -74,7 +74,8 @@ const [assets3D, setAssets3D] = useState<AssetModel[]>([]);
           ac: token.ac || 15,
           type: token.type || 'monster',
           controlledBy: token.controlledBy || 'dm',
-          monsterType: determineMonsterType(token.name, token.type)
+          // Сохраняем 3D тип, если уже задан на 2D; иначе пытаемся угадать
+          monsterType: token.monsterType || determineMonsterType(token.name, token.type)
         }));
         
         setTokens(convertedTokens);

@@ -519,6 +519,9 @@ const Simple3DMap: React.FC<Simple3DMapProps> = ({
                 asset={a}
                 position={[x, 0.2, -z]}
                 onMove={(mx, my) => onAssetMove?.(a.id, mx, my)}
+                onDragChange={(v) => setIsDraggingAny(v)}
+                isSelected={selectedAssetId === a.id}
+                onSelect={() => setSelectedAssetId(prev => prev === a.id ? null : a.id)}
                 isDM={isDM}
               />
             );
