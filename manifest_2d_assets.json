@@ -1,0 +1,21 @@
+{
+  "notes": [
+    "Put DIRECT download links here (ideally .zip or .png/.jpg).",
+    "Allowed categories: characters, mobs, bosses, props, animals, tilesets, icons",
+    "The script will download, organize, generate previews, and produce a single zip."
+  ],
+  "items": [
+    {
+      "name": "Fantasy Knight (CraftPix)",
+      "category": "characters",
+      "url": "https://example.com/path/to/fantasy_knight_free.zip",
+      "type": "zip"
+    },
+    {
+      "name": "Green Slime",
+      "category": "mobs",
+      "url": "https://example.com/path/to/green_slime.png",
+      "type": "image"
+    }
+  ]
+}
