@@ -5,10 +5,12 @@ import * as THREE from 'three';
 import { MonsterModel } from './MonsterModel';
 import { monsterTypes } from '@/data/monsterTypes';
 import { Button } from '@/components/ui/button';
-import { Plus, Minus, Edit, Heart } from 'lucide-react';
+import { Plus, Minus, Edit, Heart, Trash2, Settings, Video, Ruler } from 'lucide-react';
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Slider } from '@/components/ui/slider';
+import { Switch } from '@/components/ui/switch';
 import DraggableToken3D from './DraggableToken3D';
 import DraggableMonsterModel from './DraggableMonsterModel';
 import { supabase } from '@/integrations/supabase/client';
@@ -21,6 +23,8 @@ interface AssetModel {
   x: number; // map pixel coords (0..1200)
   y: number; // map pixel coords (0..800)
   scale?: number | [number, number, number];
+  rotationY?: number; // radians
+  animate?: boolean; // idle animation toggle
   controlledBy?: string; // кто управляет (например, 'dm' | 'player1')
   ownerId?: string; // владелец (опционально)
 }
@@ -48,6 +52,8 @@ interface Simple3DMapProps {
   onTokenMove?: (tokenId: string, x: number, y: number) => void;
   onTokenUpdate?: (tokenId: string, updates: Partial<any>) => void;
   onAssetMove?: (id: string, x: number, y: number) => void;
+  onAssetUpdate?: (id: string, updates: Partial<AssetModel>) => void;
+  onAssetDelete?: (id: string) => void;
   isDM?: boolean;
   // NEW: визуальная сетка и клик по плоскости (для калибровки)
   showGrid?: boolean;
@@ -115,8 +121,8 @@ const AssetModelNode: React.FC<{ path: string; position: [number, number, number
 };
 
 // Перетаскиваемая 3D‑модель ассета (с глобальным drag, как у токенов)
-const DraggableAssetModel: React.FC<{ asset: AssetModel; position: [number, number, number]; onMove?: (x: number, y: number) => void; isDM?: boolean; onDragChange?: (dragging: boolean) => void; }>
-= ({ asset, position, onMove, isDM, onDragChange }) => {
+const DraggableAssetModel: React.FC<{ asset: AssetModel; position: [number, number, number]; onMove?: (x: number, y: number) => void; isDM?: boolean; onDragChange?: (dragging: boolean) => void; isSelected?: boolean; onSelect?: () => void; }>
+= ({ asset, position, onMove, isDM, onDragChange, isSelected, onSelect }) => {
   const groupRef = useRef<THREE.Group>(null);
   const [isDragging, setIsDragging] = useState(false);
   const { camera, gl } = useThree();
@@ -126,15 +132,32 @@ const DraggableAssetModel: React.FC<{ asset: AssetModel; position: [number, numb
 
   const canMove = isDM || asset.controlledBy === 'player1';
 
+  // Apply external rotation updates and idle animation
+  React.useEffect(() => {
+    if (groupRef.current && typeof asset.rotationY === 'number') {
+      groupRef.current.rotation.y = asset.rotationY;
+    }
+  }, [asset.rotationY]);
+
+  useFrame((state) => {
+    if (!groupRef.current) return;
+    if (asset.animate) {
+      groupRef.current.rotation.y += 0.01;
+      groupRef.current.position.y = position[1] + Math.sin(state.clock.elapsedTime * 2) * 0.05;
+    } else {
+      groupRef.current.position.y = position[1];
+    }
+  });
+
   const handlePointerDown = (e: any) => {
     e.stopPropagation();
+    onSelect?.();
     if (canMove) {
       setIsDragging(true);
       gl.domElement.style.cursor = 'grabbing';
       try { onDragChange?.(true); } catch {}
     }
   };
-
   React.useEffect(() => {
     if (!isDragging) return;
 
@@ -160,6 +183,7 @@ const DraggableAssetModel: React.FC<{ asset: AssetModel; position: [number, numb
     const handleMouseUp = () => {
       setIsDragging(false);
       gl.domElement.style.cursor = 'default';
+      try { onDragChange?.(false); } catch {}
       if (groupRef.current) {
         const newPos = groupRef.current.position;
         const mapX = ((newPos.x + 12) / 24) * 1200;
@@ -169,7 +193,6 @@ const DraggableAssetModel: React.FC<{ asset: AssetModel; position: [number, numb
         onMove?.(boundedMapX, boundedMapY);
       }
     };
-
     document.addEventListener('mousemove', handleMouseMove);
     document.addEventListener('mouseup', handleMouseUp);
     return () => {
@@ -442,9 +465,11 @@ const Simple3DMap: React.FC<Simple3DMapProps> = ({
   const [hoveredToken, setHoveredToken] = useState<string | null>(null);
   const [showTokenEditor, setShowTokenEditor] = useState(false);
   const [isDraggingAny, setIsDraggingAny] = useState(false);
+  const [selectedAssetId, setSelectedAssetId] = useState<string | null>(null);
   console.log('🗺️ Simple3DMap rendering with:', { mapImageUrl, tokensCount: tokens.length });
 
   const selectedToken = tokens.find(t => t.id === selectedTokenId);
+  const selectedAsset = useMemo(() => assetModels.find(a => a.id === selectedAssetId) || null, [assetModels, selectedAssetId]);
 
   const handleTokenMove = (tokenId: string, mapX: number, mapY: number) => {
     console.log('🏃 Token move in 3D:', { tokenId, mapX, mapY });
