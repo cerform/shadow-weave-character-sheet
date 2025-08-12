@@ -49,10 +49,15 @@ interface Simple3DMapProps {
   onTokenUpdate?: (tokenId: string, updates: Partial<any>) => void;
   onAssetMove?: (id: string, x: number, y: number) => void;
   isDM?: boolean;
+  // NEW: визуальная сетка и клик по плоскости (для калибровки)
+  showGrid?: boolean;
+  gridSizePx?: number; // размер клетки в "пикселях карты" (0..1200 x 0..800)
+  onPlaneClick?: (mapX: number, mapY: number) => void;
 }
 
 // Компонент плоскости с текстурой карты (интерактивная)
-const TexturedPlane: React.FC<{ imageUrl?: string }> = ({ imageUrl }) => {
+const TexturedPlane: React.FC<{ imageUrl?: string; onClick?: (mapX: number, mapY: number) => void }>
+= ({ imageUrl, onClick }) => {
   let texture = null;
   
   try {
@@ -71,9 +76,13 @@ const TexturedPlane: React.FC<{ imageUrl?: string }> = ({ imageUrl }) => {
       rotation={[-Math.PI / 2, 0, 0]} 
       position={[0, 0, 0]} 
       receiveShadow
-      // Делаем плоскость интерактивной для получения координат
-      onPointerMove={(e) => {
-        // Этот обработчик нужен для корректной работы raycasting
+      // Позволяем кликом отдавать координаты карты в пикселях (1200x800)
+      onClick={(e) => {
+        if (!onClick) return;
+        const p = e.point; // world coords
+        const mapX = Math.max(0, Math.min(1200, ((p.x + 12) / 24) * 1200));
+        const mapY = Math.max(0, Math.min(800, ((-p.z + 8) / 16) * 800));
+        onClick(mapX, mapY);
       }}
     >
       <planeGeometry args={[24, 16]} />
@@ -424,6 +433,9 @@ const Simple3DMap: React.FC<Simple3DMapProps> = ({
   onTokenUpdate,
   onAssetMove,
   isDM = false,
+  showGrid = true,
+  gridSizePx = 50,
+  onPlaneClick,
   ...rest
 }) => {
   const [hoveredToken, setHoveredToken] = useState<string | null>(null);
