@@ -9,6 +9,8 @@ import { Trash2, Plus, Home, Shield } from 'lucide-react';
 import { useProtectedRoute } from '@/hooks/use-auth';
 import { UserRolesService, AppRole, UserRole } from '@/services/userRolesService';
 import { useToast } from '@/hooks/use-toast';
+import { UsersWithRoles } from '@/components/admin/UsersWithRoles';
+import { ModelUploader } from '@/components/admin/ModelUploader';
 
 const AdminPage: React.FC = () => {
   console.log('AdminPage: компонент загружается');
@@ -174,9 +176,9 @@ const AdminPage: React.FC = () => {
 
           {/* Загрузка 3D моделей */}
           <div>
-            {/* Lazy import to avoid SSR issues */}
-            {React.createElement(require('@/components/admin/ModelUploader').ModelUploader)}
+            <ModelUploader />
           </div>
+          <UsersWithRoles />
 
           {/* Список пользователей и их ролей */}
           <Card className="lg:col-span-2">
