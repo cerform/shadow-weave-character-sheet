@@ -115,8 +115,8 @@ const AssetModelNode: React.FC<{ path: string; position: [number, number, number
 };
 
 // Перетаскиваемая 3D‑модель ассета (с глобальным drag, как у токенов)
-const DraggableAssetModel: React.FC<{ asset: AssetModel; position: [number, number, number]; onMove?: (x: number, y: number) => void; isDM?: boolean; }>
-= ({ asset, position, onMove, isDM }) => {
+const DraggableAssetModel: React.FC<{ asset: AssetModel; position: [number, number, number]; onMove?: (x: number, y: number) => void; isDM?: boolean; onDragChange?: (dragging: boolean) => void; }>
+= ({ asset, position, onMove, isDM, onDragChange }) => {
   const groupRef = useRef<THREE.Group>(null);
   const [isDragging, setIsDragging] = useState(false);
   const { camera, gl } = useThree();
@@ -131,6 +131,7 @@ const DraggableAssetModel: React.FC<{ asset: AssetModel; position: [number, numb
     if (canMove) {
       setIsDragging(true);
       gl.domElement.style.cursor = 'grabbing';
+      try { onDragChange?.(true); } catch {}
     }
   };
 
@@ -440,7 +441,7 @@ const Simple3DMap: React.FC<Simple3DMapProps> = ({
 }) => {
   const [hoveredToken, setHoveredToken] = useState<string | null>(null);
   const [showTokenEditor, setShowTokenEditor] = useState(false);
-  
+  const [isDraggingAny, setIsDraggingAny] = useState(false);
   console.log('🗺️ Simple3DMap rendering with:', { mapImageUrl, tokensCount: tokens.length });
 
   const selectedToken = tokens.find(t => t.id === selectedTokenId);
@@ -536,6 +537,7 @@ const Simple3DMap: React.FC<Simple3DMapProps> = ({
           
           {/* Контролы */}
           <OrbitControls 
+            enabled={!isDraggingAny}
             enablePan 
             enableZoom 
             enableRotate

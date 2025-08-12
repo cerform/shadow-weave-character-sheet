@@ -12,6 +12,7 @@ interface DraggableMonsterModelProps {
   onSelect: () => void;
   onMove: (x: number, y: number) => void;
   isDM?: boolean;
+  onDragChange?: (dragging: boolean) => void;
 }
 
 const DraggableMonsterModel: React.FC<DraggableMonsterModelProps> = ({
@@ -21,7 +22,8 @@ const DraggableMonsterModel: React.FC<DraggableMonsterModelProps> = ({
   isHovered,
   onSelect,
   onMove,
-  isDM = false
+  isDM = false,
+  onDragChange,
 }) => {
   const groupRef = useRef<THREE.Group>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -39,6 +41,7 @@ const DraggableMonsterModel: React.FC<DraggableMonsterModelProps> = ({
     if (canMove) {
       setIsDragging(true);
       gl.domElement.style.cursor = 'grabbing';
+      try { onDragChange?.(true); } catch {}
     }
   };
 
@@ -68,6 +71,7 @@ const DraggableMonsterModel: React.FC<DraggableMonsterModelProps> = ({
       const handleMouseUp = () => {
         setIsDragging(false);
         gl.domElement.style.cursor = 'default';
+        try { onDragChange?.(false); } catch {}
         
         if (groupRef.current) {
           const newPos = groupRef.current.position;

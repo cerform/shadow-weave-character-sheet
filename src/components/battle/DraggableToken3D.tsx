@@ -10,6 +10,7 @@ interface DraggableToken3DProps {
   onSelect: () => void;
   onMove: (x: number, y: number) => void;
   isDM?: boolean;
+  onDragChange?: (dragging: boolean) => void;
 }
 
 const DraggableToken3D: React.FC<DraggableToken3DProps> = ({
@@ -18,7 +19,8 @@ const DraggableToken3D: React.FC<DraggableToken3DProps> = ({
   isSelected,
   onSelect,
   onMove,
-  isDM = false
+  isDM = false,
+  onDragChange,
 }) => {
   const meshRef = useRef<any>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -36,9 +38,10 @@ const DraggableToken3D: React.FC<DraggableToken3DProps> = ({
       setIsDragging(true);
       setStartPosition(meshRef.current?.position.clone() || new THREE.Vector3());
       gl.domElement.style.cursor = 'grabbing';
+      // Disable camera controls while dragging
+      try { onDragChange?.(true); } catch {}
     }
   };
-
   const handlePointerMove = (e: any) => {
     if (!isDragging) return;
 
@@ -69,6 +72,7 @@ const DraggableToken3D: React.FC<DraggableToken3DProps> = ({
     
     setIsDragging(false);
     gl.domElement.style.cursor = 'default';
+    try { onDragChange?.(false); } catch {}
     
     if (meshRef.current) {
       const newPos = meshRef.current.position;
@@ -117,6 +121,7 @@ const DraggableToken3D: React.FC<DraggableToken3DProps> = ({
       const handleMouseUp = () => {
         setIsDragging(false);
         gl.domElement.style.cursor = 'default';
+        try { onDragChange?.(false); } catch {}
         
         if (meshRef.current) {
           const newPos = meshRef.current.position;
