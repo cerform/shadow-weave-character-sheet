@@ -1,6 +1,7 @@
 import React, { Suspense, useMemo, useState } from 'react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { publicModelUrl } from '@/utils/storageUrls';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Trash2, ExternalLink } from 'lucide-react';

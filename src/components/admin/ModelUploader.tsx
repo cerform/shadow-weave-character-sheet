@@ -12,6 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { convertGltfZipToGlb } from '@/utils/convertGltfZipToGlb';
+import { publicModelUrl } from '@/utils/storageUrls';
 
 interface FileItem {
   name: string;
@@ -174,7 +175,6 @@ export const ModelUploader: React.FC = () => {
 
   const getPublicUrl = (name: string) => {
     return publicModelUrl(name);
-  }
   };
 
   const onCopy = async (url: string) => {
