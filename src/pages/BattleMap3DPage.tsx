@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Home, Save, Plus } from 'lucide-react';
+import { Home, Save, Plus, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import Simple3DMap from '@/components/battle/Simple3DMap';
 import { useSimpleBattleStore } from '@/stores/simpleBattleStore';
@@ -15,7 +15,7 @@ import { v4 as uuidv4 } from 'uuid';
 const BattleMap3DPage: React.FC = () => {
   const navigate = useNavigate();
   const { id: sessionId } = useParams<{ id: string }>();
-  
+  const sKey = (name: string) => (sessionId ? `${name}:${sessionId}` : name);
   const { 
     tokens, 
     selectedTokenId, 
@@ -47,9 +47,8 @@ const [assets3D, setAssets3D] = useState<AssetModel[]>([]);
 
   // Синхронизация с 2D картой
   useEffect(() => {
-    const savedMapUrl = sessionStorage.getItem('current3DMapUrl');
-    const savedTokens = sessionStorage.getItem('current3DTokens');
-    const savedSessionId = sessionStorage.getItem('currentSessionId');
+    const savedMapUrl = sessionStorage.getItem(sKey('current3DMapUrl'));
+    const savedTokens = sessionStorage.getItem(sKey('current3DTokens'));
     
     if (savedMapUrl) {
       setMapUrl(savedMapUrl);
@@ -86,20 +85,19 @@ const [assets3D, setAssets3D] = useState<AssetModel[]>([]);
     
     console.log('🗺️ BattleMap3DPage: Loaded from session storage', { 
       mapUrl: savedMapUrl, 
-      sessionId: savedSessionId,
       tokens: savedTokens 
     });
   }, [setTokens, setMapBackground]);
 
   // Восстанавливаем добавленные 3D ассеты
   useEffect(() => {
-    const saved = sessionStorage.getItem('current3DAssets');
+    const saved = sessionStorage.getItem(sKey('current3DAssets'));
     if (saved) {
       try {
         setAssets3D(JSON.parse(saved));
       } catch {}
     }
-  }, []);
+  }, [sessionId]);
 
   // Загрузка файлов из bucket models по префиксу
   const loadFiles = async (p: string = prefix) => {
@@ -143,17 +141,17 @@ const handleAddAsset = (name: string) => {
   const newItem: AssetModel = { id: uuidv4(), storage_path: full, x, y, controlledBy: 'dm' };
   const next = [...assets3D, newItem];
   setAssets3D(next);
-  sessionStorage.setItem('current3DAssets', JSON.stringify(next));
-  sessionStorage.setItem(`asset3D:${newItem.id}`, JSON.stringify(newItem));
+  sessionStorage.setItem(sKey('current3DAssets'), JSON.stringify(next));
+  sessionStorage.setItem(sKey(`asset3D:${newItem.id}`), JSON.stringify(newItem));
   setAddOpen(false);
 };
 
 const handleAssetMove = (id: string, x: number, y: number) => {
   setAssets3D((prev) => {
     const next = prev.map((a) => (a.id === id ? { ...a, x, y } : a));
-    sessionStorage.setItem('current3DAssets', JSON.stringify(next));
+    sessionStorage.setItem(sKey('current3DAssets'), JSON.stringify(next));
     const moved = next.find(a => a.id === id);
-    if (moved) sessionStorage.setItem(`asset3D:${id}`, JSON.stringify(moved));
+    if (moved) sessionStorage.setItem(sKey(`asset3D:${id}`), JSON.stringify(moved));
     return next;
   });
 };
@@ -177,14 +175,14 @@ const handleAssetMove = (id: string, x: number, y: number) => {
     moveToken(tokenId, x, y);
     
     // Синхронизируем с sessionStorage для 2D карты
-    const currentTokens = sessionStorage.getItem('current3DTokens');
+    const currentTokens = sessionStorage.getItem(sKey('current3DTokens'));
     if (currentTokens) {
       try {
         const parsedTokens = JSON.parse(currentTokens);
         const updatedTokens = parsedTokens.map((token: any) => 
           token.id === tokenId ? { ...token, x, y } : token
         );
-        sessionStorage.setItem('current3DTokens', JSON.stringify(updatedTokens));
+        sessionStorage.setItem(sKey('current3DTokens'), JSON.stringify(updatedTokens));
       } catch (error) {
         console.error('Error updating tokens in session storage:', error);
       }

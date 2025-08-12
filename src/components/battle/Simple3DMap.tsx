@@ -545,6 +545,7 @@ const Simple3DMap: React.FC<Simple3DMapProps> = ({
                   onSelect={() => onTokenSelect?.(selectedTokenId === token.id ? null : token.id)}
                   onMove={(mapX, mapY) => handleTokenMove(token.id, mapX, mapY)}
                   isDM={isDM}
+                  onDragChange={(v) => setIsDraggingAny(v)}
                 />
               );
             }
@@ -559,6 +560,7 @@ const Simple3DMap: React.FC<Simple3DMapProps> = ({
                 onSelect={() => onTokenSelect?.(selectedTokenId === token.id ? null : token.id)}
                 onMove={(mapX, mapY) => handleTokenMove(token.id, mapX, mapY)}
                 isDM={isDM}
+                onDragChange={(v) => setIsDraggingAny(v)}
               />
             );
           })}
