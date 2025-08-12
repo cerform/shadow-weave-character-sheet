@@ -1,6 +1,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import StorageModelsGallery from '@/components/admin/StorageModelsGallery';
+import AssetsCategorizer from '@/components/admin/AssetsCategorizer';
 
 const AdminAssetsPage: React.FC = () => {
   return (
@@ -16,6 +17,15 @@ const AdminAssetsPage: React.FC = () => {
         </CardHeader>
         <CardContent>
           <StorageModelsGallery />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Категоризация ассетов (БД)</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <AssetsCategorizer />
         </CardContent>
       </Card>
     </main>
