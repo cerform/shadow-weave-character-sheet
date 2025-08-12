@@ -295,9 +295,78 @@ const BattleMap3DPage: React.FC = () => {
           onTokenSelect={selectToken}
           onTokenMove={handleTokenMove}
           onTokenUpdate={handleTokenUpdate}
+          assetModels={assets3D}
+          onAssetMove={handleAssetMove}
           isDM={true}
         />
       </div>
+
+      {/* Gallery dialog for adding 3D assets */}
+      <Dialog open={addOpen} onOpenChange={setAddOpen}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Выбор 3D ассета</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="flex flex-wrap gap-2 items-center">
+              <Input
+                placeholder="Фильтр по имени..."
+                value={fileQuery}
+                onChange={(e) => setFileQuery(e.target.value)}
+              />
+              <Input
+                placeholder="Префикс (папка), напр. creatures/"
+                value={prefix}
+                onChange={(e) => setPrefix(e.target.value)}
+              />
+              <Button size="sm" onClick={() => loadFiles(prefix)}>Обновить</Button>
+              {prefix && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    const p = parentPrefix(prefix);
+                    setPrefix(p);
+                    loadFiles(p);
+                  }}
+                >
+                  Назад
+                </Button>
+              )}
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 max-h-[60vh] overflow-auto">
+              {files
+                .filter((f) => !fileQuery || f.name.toLowerCase().includes(fileQuery.toLowerCase()))
+                .map((f) => {
+                  const isFile = /\.(glb|gltf)$/i.test(f.name);
+                  return (
+                    <button
+                      key={f.name}
+                      className="p-3 rounded-md border hover:bg-muted text-left"
+                      onClick={() => {
+                        if (isFile) {
+                          handleAddAsset(f.name);
+                        } else {
+                          const next = prefix ? `${prefix}/${f.name}` : f.name;
+                          setPrefix(next);
+                          loadFiles(next);
+                        }
+                      }}
+                    >
+                      <div className="font-medium truncate">{f.name}</div>
+                      <div className="text-xs opacity-70">{isFile ? 'Модель' : 'Папка'}</div>
+                    </button>
+                  );
+                })}
+
+              {files.length === 0 && (
+                <div className="col-span-full text-sm opacity-70">Нет элементов в этой папке.</div>
+              )}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
