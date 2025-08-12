@@ -32,8 +32,8 @@ const BattleMap3DPage: React.FC = () => {
   const [isSaving, setIsSaving] = useState(false);
 
   // 3D ассеты из Supabase Storage (эпhemeral + sessionStorage)
-  type AssetModel = { id: string; storage_path: string; x: number; y: number; scale?: number | [number, number, number] };
-  const [assets3D, setAssets3D] = useState<AssetModel[]>([]);
+type AssetModel = { id: string; storage_path: string; x: number; y: number; scale?: number | [number, number, number]; controlledBy?: string; ownerId?: string };
+const [assets3D, setAssets3D] = useState<AssetModel[]>([]);
   const [addOpen, setAddOpen] = useState(false);
   const [prefix, setPrefix] = useState<string>('');
   const [files, setFiles] = useState<{ name: string; id?: string }[]>([]);
@@ -124,22 +124,38 @@ const BattleMap3DPage: React.FC = () => {
     return idx >= 0 ? n.slice(0, idx) : '';
   };
 
-  const handleAddAsset = (name: string) => {
-    const full = prefix ? `${prefix}/${name}` : name;
-    const newItem: AssetModel = { id: uuidv4(), storage_path: full, x: 600, y: 400 };
-    const next = [...assets3D, newItem];
-    setAssets3D(next);
-    sessionStorage.setItem('current3DAssets', JSON.stringify(next));
-    setAddOpen(false);
-  };
+const handleAddAsset = (name: string) => {
+  const full = prefix ? `${prefix}/${name}` : name;
 
-  const handleAssetMove = (id: string, x: number, y: number) => {
-    setAssets3D((prev) => {
-      const next = prev.map((a) => (a.id === id ? { ...a, x, y } : a));
-      sessionStorage.setItem('current3DAssets', JSON.stringify(next));
-      return next;
-    });
-  };
+  // Раскладываем новые ассеты по сетке вокруг центра, чтобы не накладывались
+  const centerX = 600;
+  const centerY = 400;
+  const spacingX = 120;
+  const spacingY = 100;
+  const cols = 5;
+  const i = assets3D.length;
+  const col = i % cols;
+  const row = Math.floor(i / cols);
+  const x = Math.max(0, Math.min(1200, centerX + (col - Math.floor(cols / 2)) * spacingX));
+  const y = Math.max(0, Math.min(800, centerY + row * spacingY));
+
+  const newItem: AssetModel = { id: uuidv4(), storage_path: full, x, y, controlledBy: 'dm' };
+  const next = [...assets3D, newItem];
+  setAssets3D(next);
+  sessionStorage.setItem('current3DAssets', JSON.stringify(next));
+  sessionStorage.setItem(`asset3D:${newItem.id}`, JSON.stringify(newItem));
+  setAddOpen(false);
+};
+
+const handleAssetMove = (id: string, x: number, y: number) => {
+  setAssets3D((prev) => {
+    const next = prev.map((a) => (a.id === id ? { ...a, x, y } : a));
+    sessionStorage.setItem('current3DAssets', JSON.stringify(next));
+    const moved = next.find(a => a.id === id);
+    if (moved) sessionStorage.setItem(`asset3D:${id}`, JSON.stringify(moved));
+    return next;
+  });
+};
 
   // Определяем тип монстра по имени и типу
   const determineMonsterType = (name: string, type: string): string | undefined => {

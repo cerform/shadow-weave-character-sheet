@@ -19,6 +19,8 @@ interface AssetModel {
   x: number; // map pixel coords (0..1200)
   y: number; // map pixel coords (0..800)
   scale?: number | [number, number, number];
+  controlledBy?: string; // кто управляет (например, 'dm' | 'player1')
+  ownerId?: string; // владелец (опционально)
 }
 
 interface Simple3DMapProps {
@@ -92,58 +94,87 @@ const AssetModelNode: React.FC<{ path: string; position: [number, number, number
   return <primitive object={scene.clone()} position={position} scale={s} castShadow receiveShadow />;
 };
 
-// Перетаскиваемая 3D‑модель ассета
+// Перетаскиваемая 3D‑модель ассета (с глобальным drag, как у токенов)
 const DraggableAssetModel: React.FC<{ asset: AssetModel; position: [number, number, number]; onMove?: (x: number, y: number) => void; isDM?: boolean; }>
 = ({ asset, position, onMove, isDM }) => {
-  const groupRef = useRef<any>(null);
+  const groupRef = useRef<THREE.Group>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const { camera, gl } = useThree();
+
+  const raycaster = useMemo(() => new THREE.Raycaster(), []);
+  const mouse = useMemo(() => new THREE.Vector2(), []);
+
+  const canMove = isDM || asset.controlledBy === 'player1';
 
   const handlePointerDown = (e: any) => {
     e.stopPropagation();
-    if (isDM) {
+    if (canMove) {
       setIsDragging(true);
-      document.body.style.cursor = 'grabbing';
+      gl.domElement.style.cursor = 'grabbing';
     }
   };
 
-  const handlePointerUp = (e: any) => {
+  React.useEffect(() => {
     if (!isDragging) return;
-    setIsDragging(false);
-    document.body.style.cursor = 'default';
-    const intersects = e.intersections;
-    if (intersects && intersects.length > 0) {
-      const point = intersects[0].point;
-      const mapX = ((point.x + 12) / 24) * 1200;
-      const mapY = ((-point.z + 8) / 16) * 800;
-      const boundedX = Math.max(0, Math.min(mapX, 1200));
-      const boundedY = Math.max(0, Math.min(mapY, 800));
-      onMove?.(boundedX, boundedY);
-    }
-  };
 
-  const handlePointerMove = (e: any) => {
-    if (!isDragging) return;
-    const intersects = e.intersections;
-    if (intersects && intersects.length > 0) {
-      const p = intersects[0].point;
-      if (groupRef.current) {
-        groupRef.current.position.x = p.x;
-        groupRef.current.position.z = p.z;
+    const handleMouseMove = (e: MouseEvent) => {
+      const rect = gl.domElement.getBoundingClientRect();
+      mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+      mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+
+      raycaster.setFromCamera(mouse, camera);
+      const plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+      const p = new THREE.Vector3();
+
+      if (raycaster.ray.intersectPlane(plane, p)) {
+        const boundedX = Math.max(-12, Math.min(12, p.x));
+        const boundedZ = Math.max(-8, Math.min(8, p.z));
+        if (groupRef.current) {
+          groupRef.current.position.x = boundedX;
+          groupRef.current.position.z = boundedZ;
+        }
       }
-    }
-  };
+    };
+
+    const handleMouseUp = () => {
+      setIsDragging(false);
+      gl.domElement.style.cursor = 'default';
+      if (groupRef.current) {
+        const newPos = groupRef.current.position;
+        const mapX = ((newPos.x + 12) / 24) * 1200;
+        const mapY = ((-newPos.z + 8) / 16) * 800;
+        const boundedMapX = Math.max(0, Math.min(1200, mapX));
+        const boundedMapY = Math.max(0, Math.min(800, mapY));
+        onMove?.(boundedMapX, boundedMapY);
+      }
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isDragging, camera, gl.domElement, onMove]);
 
   return (
     <group ref={groupRef} position={position}>
+      {/* Невидимая зона захвата */}
       <mesh
-        onPointerDown={handlePointerDown}
-        onPointerUp={handlePointerUp}
-        onPointerMove={handlePointerMove}
+        position={[0, 0.5, 0]}
         visible={false}
+        onPointerDown={handlePointerDown}
+        onPointerEnter={() => {
+          if (canMove) gl.domElement.style.cursor = 'grab';
+        }}
+        onPointerLeave={() => {
+          if (!isDragging) gl.domElement.style.cursor = 'default';
+        }}
       >
-        <boxGeometry args={[0.8, 0.8, 0.8]} />
+        <cylinderGeometry args={[0.6, 0.6, 1.2, 8]} />
         <meshBasicMaterial transparent opacity={0} />
       </mesh>
+
       <AssetModelNode path={asset.storage_path} position={[0, 0, 0]} scale={asset.scale} />
     </group>
   );
