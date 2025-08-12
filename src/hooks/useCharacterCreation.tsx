@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { Character } from '@/types/character';
 import { useNavigate } from 'react-router-dom';
-import { createDefaultCharacter } from '@/utils/characterUtils';
+import { createDefaultCharacter } from '@/utils/characterDefaults';
 import { useCharacter } from '@/contexts/CharacterContext';
 
 // Определяем тип возвращаемых значений из хука

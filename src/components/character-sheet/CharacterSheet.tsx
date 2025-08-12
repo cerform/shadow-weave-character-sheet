@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useSocket } from '@/contexts/SocketContext';
 import { Character } from '@/types/character';
-import { createDefaultCharacter } from '@/utils/characterUtils';
+import { createDefaultCharacter } from '@/utils/characterDefaults';
 
 // Custom components
 import CharacterContent from './CharacterContent';

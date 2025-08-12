@@ -12,7 +12,7 @@ import { themes } from '@/lib/themes';
 import { Input } from '@/components/ui/input';
 import { Token } from '@/stores/battleStore';
 import { LightSource } from '@/types/battle';
-import { createDefaultCharacter } from '@/utils/characterUtils';
+import { createDefaultCharacter } from '@/utils/characterDefaults';
 
 interface RightPanelProps {
   tokens: Token[];
