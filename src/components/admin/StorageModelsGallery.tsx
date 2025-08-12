@@ -4,18 +4,39 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { ExternalLink, Trash2, Copy, RefreshCcw } from 'lucide-react';
-import { Canvas } from '@react-three/fiber';
-import { OrbitControls, useGLTF } from '@react-three/drei';
+import { Canvas, useLoader } from '@react-three/fiber';
+import { OrbitControls } from '@react-three/drei';
 import { supabase } from '@/integrations/supabase/client';
 import { useProtectedRoute } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import { convertGltfFromStorageToGlb } from '@/utils/convertGltfFromStorageToGlb';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
+
+import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader';
+import { publicModelUrl } from '@/utils/storageUrls';
 
 function ModelPreview({ path }: { path: string }) {
-  const url = useMemo(() => supabase.storage.from('models').getPublicUrl(path).data.publicUrl, [path]);
-  const { scene } = useGLTF(url);
-  return <primitive object={scene} position={[0, -0.6, 0]} />;
+  const url = useMemo(() => publicModelUrl(path), [path]);
+
+  useEffect(() => {
+    fetch(url, { method: 'GET' })
+      .then((r) => {
+        const msg = `Storage check ${r.status} for ${url}`;
+        if (!r.ok) console.error(msg);
+        else console.info(msg);
+      })
+      .catch((e) => console.error('Storage fetch failed', url, e));
+  }, [url]);
+
+  const gltf: any = useLoader(GLTFLoader as any, url, (loader: any) => {
+    loader.setCrossOrigin('anonymous');
+    const draco = new DRACOLoader();
+    draco.setDecoderPath('/draco/');
+    // @ts-ignore - setDRACOLoader is available at runtime
+    loader.setDRACOLoader(draco);
+  });
+  return <primitive object={gltf.scene} position={[0, -0.6, 0]} />;
 }
 
 interface FileItem { name: string; id?: string; updated_at?: string; created_at?: string; }
@@ -69,8 +90,8 @@ const StorageModelsGallery: React.FC = () => {
         }
         if (lower.endsWith('.gltf')) {
           try {
-            const { data } = supabase.storage.from('models').getPublicUrl(fullPath);
-            const res = await fetch(data.publicUrl);
+            const url = publicModelUrl(fullPath);
+            const res = await fetch(url);
             const json = await res.json();
             const deps: string[] = [];
             if (Array.isArray(json.buffers)) {
@@ -85,7 +106,6 @@ const StorageModelsGallery: React.FC = () => {
               .filter((n) => n && !names.has(n));
             results[fullPath] = { missing, checked: true };
           } catch (e) {
-            // Не смогли прочитать gltf — пометим как требующий проверку
             results[fullPath] = { missing: ['.bin/текстуры?'], checked: true };
           }
           return;
@@ -107,13 +127,13 @@ const StorageModelsGallery: React.FC = () => {
 
   const filtered = files.filter(f => f.name.toLowerCase().includes(query.toLowerCase()));
 
-  const copyUrl = async (name: string) => {
-    const { data } = supabase.storage.from('models').getPublicUrl(name);
-    try {
-      await navigator.clipboard.writeText(data.publicUrl);
-      toast({ title: 'Ссылка скопирована' });
-    } catch {}
-  };
+const copyUrl = async (name: string) => {
+  const url = publicModelUrl(name);
+  try {
+    await navigator.clipboard.writeText(url);
+    toast({ title: 'Ссылка скопирована' });
+  } catch {}
+};
 
   const remove = async (name: string) => {
     if (!isAdmin) return;
@@ -174,7 +194,7 @@ const StorageModelsGallery: React.FC = () => {
       <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {filtered.map((f) => {
           const fullPath = prefix ? `${prefix}/${f.name}` : f.name;
-          const publicUrl = supabase.storage.from('models').getPublicUrl(fullPath).data.publicUrl;
+          const publicUrl = publicModelUrl(fullPath);
           const lower = f.name.toLowerCase();
           const isFolder = !f.id && !/\.[a-z0-9]+$/i.test(f.name);
           const v = validations[fullPath];

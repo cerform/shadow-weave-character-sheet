@@ -58,3 +58,12 @@ declare module 'three/examples/jsm/exporters/GLTFExporter' {
     ): void;
   }
 }
+
+declare module 'three/examples/jsm/loaders/DRACOLoader' {
+  export class DRACOLoader {
+    setDecoderPath(path: string): this;
+    setDecoderConfig(config: Record<string, any>): this;
+    dispose(): void;
+  }
+}
+
