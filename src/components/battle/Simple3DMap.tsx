@@ -13,6 +13,7 @@ import DraggableToken3D from './DraggableToken3D';
 import DraggableMonsterModel from './DraggableMonsterModel';
 import { supabase } from '@/integrations/supabase/client';
 import { publicModelUrl } from '@/utils/storageUrls';
+import { SafeGLTFLoader } from './SafeGLTFLoader';
 
 interface AssetModel {
   id: string;
@@ -84,15 +85,24 @@ const TexturedPlane: React.FC<{ imageUrl?: string }> = ({ imageUrl }) => {
   );
 };
 
-// Примитив для GLTF/GLB ассета из Supabase Storage
+// Компонент для безопасной загрузки ассетов
 const AssetModelNode: React.FC<{ path: string; position: [number, number, number]; scale?: number | [number, number, number]; }>
 = ({ path, position, scale }) => {
   const url = useMemo(() => publicModelUrl(path), [path]);
-  const { scene } = useGLTF(url);
-  const s: [number, number, number] = Array.isArray(scale)
-    ? scale
-    : [Number(scale ?? 1), Number(scale ?? 1), Number(scale ?? 1)];
-  return <primitive object={scene.clone()} position={position} scale={s} castShadow receiveShadow />;
+  
+  return (
+    <SafeGLTFLoader 
+      url={url} 
+      position={position} 
+      scale={scale}
+      fallback={
+        <mesh position={position} castShadow receiveShadow>
+          <boxGeometry args={[1, 1, 1]} />
+          <meshStandardMaterial color="#6b7280" />
+        </mesh>
+      }
+    />
+  );
 };
 
 // Перетаскиваемая 3D‑модель ассета (с глобальным drag, как у токенов)
