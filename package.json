@@ -60,6 +60,7 @@
     "input-otp": "^1.2.4",
     "jspdf": "^3.0.1",
     "jspdf-autotable": "^5.0.2",
+    "jszip": "^3.10.1",
     "konva": "^9.3.22",
     "lucide-react": "^0.507.0",
     "next-themes": "^0.3.0",

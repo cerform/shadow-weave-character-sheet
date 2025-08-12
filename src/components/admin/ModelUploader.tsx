@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Trash2, Upload, Copy } from 'lucide-react';
+import JSZip from 'jszip';
 import { supabase } from '@/integrations/supabase/client';
 import { useProtectedRoute } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
@@ -18,7 +19,7 @@ interface FileItem {
 export const ModelUploader: React.FC = () => {
   const { isAdmin } = useProtectedRoute();
   const { toast } = useToast();
-  const [file, setFile] = useState<File | null>(null);
+  const [filesToUpload, setFilesToUpload] = useState<File[]>([]);
   const [files, setFiles] = useState<FileItem[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -40,27 +41,84 @@ export const ModelUploader: React.FC = () => {
   }, []);
 
   const onUpload = async () => {
-    if (!file) {
-      toast({ title: 'Файл не выбран', variant: 'destructive' });
-      return;
-    }
     if (!isAdmin) {
       toast({ title: 'Недостаточно прав', description: 'Загрузка доступна только администратору', variant: 'destructive' });
       return;
     }
+    if (!filesToUpload || filesToUpload.length === 0) {
+      toast({ title: 'Файлы не выбраны', variant: 'destructive' });
+      return;
+    }
+
+    const MAX_SIZE = 100 * 1024 * 1024; // 100MB
+
+    const isAllowedModelFile = (name: string) => /\.(glb|gltf)$/i.test(name);
+
+    const getContentType = (ext?: string) =>
+      ext === 'glb' ? 'model/gltf-binary' : 'model/gltf+json';
+
+    const uploadWithRename = async (desiredName: string, data: Blob) => {
+      const dot = desiredName.lastIndexOf('.');
+      const base = dot >= 0 ? desiredName.slice(0, dot) : desiredName;
+      const ext = dot >= 0 ? desiredName.slice(dot + 1) : '';
+      const contentType = getContentType(ext.toLowerCase());
+      let attempt = 0;
+      while (true) {
+        const candidate =
+          attempt === 0
+            ? desiredName
+            : `${base} (${attempt}).${ext}`;
+        const { error } = await supabase.storage.from('models').upload(candidate, data, {
+          contentType,
+          cacheControl: '3600',
+          upsert: false,
+        });
+        if (!error) return candidate;
+        const msg = (error as any).message?.toLowerCase?.() || '';
+        if (msg.includes('exists') || (error as any).statusCode === '409' || (error as any).status === 409) {
+          attempt++;
+          continue;
+        }
+        throw error;
+      }
+    };
+
+    const processZipFile = async (zipFile: File) => {
+      const zip = await JSZip.loadAsync(zipFile);
+      const entries = Object.values(zip.files);
+      let uploaded = 0;
+      for (const entry of entries) {
+        if ((entry as any).dir) continue;
+        const rawName = (entry as any).name as string;
+        const innerName = rawName.split('/').pop()?.split('\\').pop() || rawName;
+        if (!isAllowedModelFile(innerName)) continue;
+        const blob = await (entry as any).async('blob');
+        await uploadWithRename(innerName, blob);
+        uploaded++;
+      }
+      return uploaded;
+    };
+
     setLoading(true);
     try {
-      const ext = file.name.split('.').pop()?.toLowerCase();
-      const contentType = ext === 'glb' ? 'model/gltf-binary' : 'model/gltf+json';
-      const path = `${Date.now()}_${file.name}`;
-      const { error } = await supabase.storage.from('models').upload(path, file, {
-        contentType,
-        cacheControl: '3600',
-        upsert: false,
-      });
-      if (error) throw error;
-      toast({ title: 'Загружено', description: path });
-      setFile(null);
+      let totalUploaded = 0;
+      for (const f of filesToUpload) {
+        if (f.size > MAX_SIZE) {
+          toast({ title: 'Файл пропущен (слишком большой)', description: `${f.name} > 100MB`, variant: 'destructive' });
+          continue;
+        }
+        const ext = f.name.split('.').pop()?.toLowerCase();
+        if (ext === 'zip') {
+          totalUploaded += await processZipFile(f);
+        } else if (isAllowedModelFile(f.name)) {
+          await uploadWithRename(f.name, f);
+          totalUploaded += 1;
+        } else {
+          toast({ title: 'Неподдерживаемый формат', description: f.name, variant: 'destructive' });
+        }
+      }
+      toast({ title: 'Загрузка завершена', description: `Загружено файлов: ${totalUploaded}` });
+      setFilesToUpload([]);
       await listFiles();
     } catch (e: any) {
       toast({ title: 'Ошибка загрузки', description: e.message, variant: 'destructive' });
@@ -103,8 +161,8 @@ export const ModelUploader: React.FC = () => {
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="flex flex-col md:flex-row gap-2 items-stretch md:items-center">
-          <Input type="file" accept=".glb,.gltf" onChange={(e) => setFile(e.target.files?.[0] || null)} />
-          <Button onClick={onUpload} disabled={!file || !isAdmin || loading}>
+          <Input type="file" accept=".glb,.gltf,.zip" multiple onChange={(e) => setFilesToUpload(Array.from(e.target.files || []))} />
+          <Button onClick={onUpload} disabled={filesToUpload.length === 0 || !isAdmin || loading}>
             <Upload className="h-4 w-4 mr-2" /> Загрузить
           </Button>
           {!isAdmin && (
