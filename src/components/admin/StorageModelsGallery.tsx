@@ -15,6 +15,7 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader';
 import { publicModelUrl } from '@/utils/storageUrls';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 function ModelPreview({ path }: { path: string }) {
   const url = useMemo(() => publicModelUrl(path), [path]);
@@ -49,6 +50,13 @@ const StorageModelsGallery: React.FC = () => {
   const [query, setQuery] = useState('');
   const [validations, setValidations] = useState<Record<string, { missing: string[]; checked: boolean }>>({});
   const [prefix, setPrefix] = useState<string>('');
+  // Dialog state for linking .bin from any folder
+  const [linkOpen, setLinkOpen] = useState(false);
+  const [targetGltf, setTargetGltf] = useState<string | null>(null);
+  const [binPrefix, setBinPrefix] = useState<string>('');
+  const [binFiles, setBinFiles] = useState<FileItem[]>([]);
+  const [binQuery, setBinQuery] = useState('');
+  const [selectedBin, setSelectedBin] = useState<string>('');
 
   const joinPath = (a: string, b: string) => (a ? `${a.replace(/\\/g, '/').replace(/\/$/, '')}/${b}` : b);
   const parentPrefix = (p: string) => {
@@ -100,8 +108,9 @@ const StorageModelsGallery: React.FC = () => {
             if (Array.isArray(json.images)) {
               json.images.forEach((img: any) => img?.uri && deps.push(String(img.uri)));
             }
-            // check only basenames in the same folder
+            // consider only relative deps (ignore absolute URLs like https://)
             const missing = deps
+              .filter((u) => !/^[a-zA-Z][a-zA-Z0-9+.-]*:\/\//.test(u))
               .map((u) => u.split('/').pop() as string)
               .filter((n) => n && !names.has(n));
             results[fullPath] = { missing, checked: true };
@@ -165,6 +174,69 @@ const copyUrl = async (name: string) => {
       toast({ title: 'Ошибка конвертации', description: e.message || String(e), variant: 'destructive' });
     }
   };
+
+  const openLinkDialog = (gltfPath: string) => {
+    setTargetGltf(gltfPath);
+    setLinkOpen(true);
+    setBinPrefix('');
+    setSelectedBin('');
+    setBinQuery('');
+  };
+
+  const loadBinFiles = async (p: string = binPrefix) => {
+    const { data, error } = await supabase.storage.from('models').list(p, {
+      limit: 1000,
+      offset: 0,
+      sortBy: { column: 'name', order: 'asc' },
+    });
+    if (error) {
+      console.error('Ошибка получения списка .bin:', error);
+      return;
+    }
+    setBinFiles((data as any) || []);
+  };
+
+  useEffect(() => {
+    if (linkOpen) {
+      loadBinFiles(binPrefix);
+    }
+  }, [linkOpen, binPrefix]);
+
+  const filteredBin = binFiles.filter((f) => f.name.toLowerCase().includes(binQuery.toLowerCase()));
+  const selectedBinFullPath = selectedBin || '';
+
+  const linkBinToGltf = async () => {
+    if (!targetGltf || !selectedBinFullPath) return;
+    try {
+      const gltfUrl = publicModelUrl(targetGltf);
+      const res = await fetch(gltfUrl, { cache: 'no-cache' });
+      if (!res.ok) throw new Error(`GLTF ${res.status}`);
+      const json = await res.json();
+
+      if (!Array.isArray(json.buffers) || json.buffers.length === 0) {
+        json.buffers = [{ uri: '' }];
+      }
+
+      const binUrl = publicModelUrl(selectedBinFullPath);
+      json.buffers = json.buffers.map((b: any, i: number) => (i === 0 ? { ...b, uri: binUrl } : b));
+
+      const blob = new Blob([JSON.stringify(json, null, 2)], { type: 'application/json' });
+      const { error } = await supabase.storage.from('models').upload(targetGltf, blob, {
+        upsert: true,
+        contentType: 'model/gltf+json',
+        cacheControl: '3600',
+      });
+      if (error) throw error;
+
+      toast({ title: 'BIN привязан', description: `${selectedBinFullPath} → ${targetGltf}` });
+      setLinkOpen(false);
+      const data = await listFiles(prefix);
+      if (data) await validateFiles(data, prefix);
+    } catch (e: any) {
+      toast({ title: 'Ошибка привязки', description: e.message || String(e), variant: 'destructive' });
+    }
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-3">
@@ -278,9 +350,14 @@ const copyUrl = async (name: string) => {
                 </div>
                 <div className="flex items-center gap-2">
                   {!isFolder && isGltf && (
-                    <Button size="sm" variant="outline" onClick={() => convertToGlb(fullPath)} disabled={loading}>
-                      В GLB
-                    </Button>
+                    <>
+                      <Button size="sm" variant="outline" onClick={() => convertToGlb(fullPath)} disabled={loading}>
+                        В GLB
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={() => openLinkDialog(fullPath)} disabled={loading}>
+                        Привязать .bin
+                      </Button>
+                    </>
                   )}
                   {!isFolder && (
                     <Button size="sm" variant="ghost" className="text-destructive" onClick={() => remove(fullPath)} disabled={!isAdmin || loading}>
