@@ -249,6 +249,15 @@ class SessionService {
     return data;
   }
 
+  // Обновление параметров карты (например, image_url)
+  async updateMap(mapId: string, patch: Partial<BattleMap>): Promise<void> {
+    const { error } = await supabase
+      .from('battle_maps')
+      .update(patch)
+      .eq('id', mapId);
+    if (error) throw error;
+  }
+
   // Установка активной карты
   async setActiveMap(sessionId: string, mapId: string): Promise<void> {
     // Сначала деактивируем все карты

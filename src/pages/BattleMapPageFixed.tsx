@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import TacticalBattleMap, { Token } from '@/components/battle/TacticalBattleMap';
 import { sessionService } from '@/services/sessionService';
 import type { BattleToken, GameSession } from '@/services/sessionService';
+import { supabase } from '@/integrations/supabase/client';
 
 const BattleMapPageFixed: React.FC = () => {
   console.log('🔍 BattleMapPageFixed: компонент загружается');
@@ -180,26 +181,48 @@ const BattleMapPageFixed: React.FC = () => {
   }, [sessionId, session, isLoading]);
 
   // Обработчик изменения карты
-  const handleMapChange = useCallback(async (newMapUrl: string) => {
-    setMapUrl(newMapUrl);
-    
+  const handleMapChange = useCallback(async (incomingUrl: string) => {
+    setMapUrl(incomingUrl);
     if (!sessionId) return;
-    
+
     try {
       setIsSaving(true);
-      
-      // Создаем новую карту или обновляем существующую
-      if (session?.current_map_id) {
-        // Обновляем существующую карту
-        await sessionService.updateSessionSettings(sessionId, {
-          current_map_id: session.current_map_id
-        });
-      } else {
-        // Создаем новую карту
-        const newMap = await sessionService.createMap(sessionId, 'Battle Map', newMapUrl);
-        await sessionService.setActiveMap(sessionId, newMap.id);
+
+      // Если пришёл data URL — загружаем в Supabase Storage и получаем публичный URL
+      let finalUrl = incomingUrl;
+      if (/^data:/i.test(incomingUrl)) {
+        const res = await fetch(incomingUrl);
+        const blob = await res.blob();
+        const ext = (blob.type.split('/')[1] || 'png').replace('jpeg', 'jpg');
+        const fileName = `map_${Date.now()}.${ext}`;
+        const { error: uploadError } = await supabase.storage
+          .from('battle-maps')
+          .upload(fileName, blob, { upsert: true });
+        if (uploadError) throw uploadError;
+        const { data } = supabase.storage.from('battle-maps').getPublicUrl(fileName);
+        finalUrl = data.publicUrl;
+        setMapUrl(finalUrl);
       }
-      
+
+      // Определяем и обновляем активную карту
+      let currentMapId = session?.current_map_id;
+      if (!currentMapId) {
+        const maps = await sessionService.getSessionMaps(sessionId);
+        const activeMap = maps.find(m => m.is_active) || maps[0];
+        if (activeMap) {
+          currentMapId = activeMap.id;
+          await sessionService.setActiveMap(sessionId, activeMap.id);
+        }
+      }
+
+      if (currentMapId) {
+        await sessionService.updateMap(currentMapId, { image_url: finalUrl });
+      } else {
+        const newMap = await sessionService.createMap(sessionId, 'Battle Map', finalUrl);
+        await sessionService.setActiveMap(sessionId, newMap.id);
+        setSession(prev => (prev ? { ...prev, current_map_id: newMap.id } : prev));
+      }
+
       toast.success('Карта сохранена');
     } catch (error) {
       console.error('Ошибка сохранения карты:', error);
