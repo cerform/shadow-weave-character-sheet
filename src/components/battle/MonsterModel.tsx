@@ -4,6 +4,7 @@ import { useFrame, useLoader } from '@react-three/fiber';
 import * as THREE from 'three';
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader';
 import { monsterTypes, MonsterType } from '@/data/monsterTypes';
+import { publicModelUrl } from '@/utils/storageUrls';
 
 // Enhanced fallback geometry for different monster types
 function MonsterFallback({ monsterData, isHovered }: { monsterData: MonsterType; isHovered?: boolean }) {
@@ -312,6 +313,18 @@ export function MonsterModel({
     return null;
   }
 
+  // Resolve model path
+  const rawPath = monsterData.modelPath || 'fallback';
+  if (rawPath === 'fallback') {
+    return (
+      <MonsterFallback monsterData={monsterData} isHovered={isHovered || isSelected} />
+    );
+  }
+  const finalPath = rawPath.startsWith('storage:')
+    ? publicModelUrl(rawPath.replace(/^storage:/, ''))
+    : rawPath;
+  const resolved = { ...monsterData, modelPath: finalPath };
+
   return (
     <Suspense fallback={
       <mesh position={position} castShadow>
@@ -320,7 +333,7 @@ export function MonsterModel({
       </mesh>
     }>
       <Model
-        monsterData={monsterData}
+        monsterData={resolved}
         position={position}
         rotation={rotation}
         isSelected={isSelected}
@@ -335,8 +348,12 @@ export function MonsterModel({
 export function preloadMonsterModels() {
   Object.values(monsterTypes).forEach(monster => {
     try {
-      useGLTF.preload(monster.modelPath);
-      console.log(`📥 Preloading model: ${monster.name} from ${monster.modelPath}`);
+      if (!monster.modelPath || monster.modelPath === 'fallback') return;
+      const path = monster.modelPath.startsWith('storage:')
+        ? publicModelUrl(monster.modelPath.replace(/^storage:/, ''))
+        : monster.modelPath;
+      useGLTF.preload(path);
+      console.log(`📥 Preloading model: ${monster.name} from ${path}`);
     } catch (error) {
       console.warn(`Failed to preload model: ${monster.modelPath}`, error);
     }

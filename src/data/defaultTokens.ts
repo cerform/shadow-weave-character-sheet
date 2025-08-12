@@ -1,14 +1,7 @@
-import dragonImg from '@/assets/tokens/dragon.png';
-import goblinImg from '@/assets/tokens/goblin.png';
-import skeletonImg from '@/assets/tokens/skeleton.png';
-import golemImg from '@/assets/tokens/golem.png';
-import orcImg from '@/assets/tokens/orc.png';
-import wolfImg from '@/assets/tokens/wolf.png';
-
 export interface DefaultToken {
   id: string;
   name: string;
-  image: string;
+  image: string; // inline SVG data URL (no external files)
   type: 'monster' | 'beast' | 'undead' | 'construct' | 'humanoid';
   size: number;
   suggestedHP?: number;
@@ -16,67 +9,81 @@ export interface DefaultToken {
   description: string;
 }
 
+const svgIcon = (label: string, color: string) =>
+  `data:image/svg+xml;utf8,${encodeURIComponent(
+    `<svg xmlns='http://www.w3.org/2000/svg' width='128' height='128' viewBox='0 0 128 128'>
+      <defs>
+        <radialGradient id='g' cx='50%' cy='40%'>
+          <stop offset='0%' stop-color='${color}' stop-opacity='0.95'/>
+          <stop offset='100%' stop-color='${color}' stop-opacity='0.6'/>
+        </radialGradient>
+      </defs>
+      <circle cx='64' cy='64' r='58' fill='url(#g)' stroke='black' stroke-width='4'/>
+      <text x='50%' y='66%' font-size='44' font-family='Arial, sans-serif' font-weight='700' text-anchor='middle' fill='white' stroke='black' stroke-width='2'>${label}</text>
+    </svg>`
+  )}`;
+
 export const defaultTokens: DefaultToken[] = [
   {
     id: 'dragon',
     name: 'Дракон',
-    image: dragonImg,
+    image: svgIcon('D', '#ef4444'),
     type: 'monster',
     size: 4,
     suggestedHP: 200,
     suggestedAC: 18,
-    description: 'Могучий древний дракон'
+    description: 'Могучий древний дракон',
   },
   {
     id: 'goblin',
     name: 'Гоблин',
-    image: goblinImg,
+    image: svgIcon('G', '#22c55e'),
     type: 'humanoid',
     size: 0.5,
     suggestedHP: 7,
     suggestedAC: 15,
-    description: 'Мелкий зеленокожий разбойник'
+    description: 'Мелкий зеленокожий разбойник',
   },
   {
     id: 'skeleton',
     name: 'Скелет',
-    image: skeletonImg,
+    image: svgIcon('S', '#e5e7eb'),
     type: 'undead',
     size: 1,
     suggestedHP: 13,
     suggestedAC: 13,
-    description: 'Воскрешенный костяной воин'
+    description: 'Воскрешенный костяной воин',
   },
   {
     id: 'golem',
     name: 'Голем',
-    image: golemImg,
+    image: svgIcon('Gm', '#78716c'),
     type: 'construct',
     size: 2,
     suggestedHP: 100,
     suggestedAC: 17,
-    description: 'Каменный страж'
+    description: 'Каменный страж',
   },
   {
     id: 'orc',
     name: 'Орк',
-    image: orcImg,
+    image: svgIcon('O', '#16a34a'),
     type: 'humanoid',
     size: 1,
     suggestedHP: 15,
     suggestedAC: 13,
-    description: 'Дикий воин-варвар'
+    description: 'Дикий воин-варвар',
   },
   {
     id: 'wolf',
     name: 'Волк',
-    image: wolfImg,
+    image: svgIcon('W', '#64748b'),
     type: 'beast',
     size: 1,
     suggestedHP: 11,
     suggestedAC: 13,
-    description: 'Хищный лесной зверь'
-  }
+    description: 'Хищный лесной зверь',
+  },
 ];
 
 export const getTokenByType = (type: string): DefaultToken | undefined => {
