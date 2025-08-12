@@ -275,7 +275,7 @@ const handleAssetMove = (id: string, x: number, y: number) => {
                 // Синхронизируем данные перед переходом на 2D
                 sessionStorage.setItem('current3DMapUrl', mapUrl);
                 sessionStorage.setItem('current3DTokens', JSON.stringify(tokens));
-                navigate(sessionId ? `/battle-map/${sessionId}` : '/battle-map');
+                navigate(sessionId ? `/battle/${sessionId}` : '/battle-map-fixed');
               }}
               className="bg-blue-600 hover:bg-blue-700"
               size="sm"
