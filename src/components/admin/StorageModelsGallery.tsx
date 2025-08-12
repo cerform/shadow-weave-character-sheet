@@ -3,13 +3,13 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/componen
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Switch } from '@/components/ui/switch';
 import { ExternalLink, Trash2, Copy, RefreshCcw } from 'lucide-react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, useGLTF } from '@react-three/drei';
 import { supabase } from '@/integrations/supabase/client';
 import { useProtectedRoute } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
+import ErrorBoundary from '@/components/ErrorBoundary';
 
 function ModelPreview({ path }: { path: string }) {
   const url = useMemo(() => supabase.storage.from('models').getPublicUrl(path).data.publicUrl, [path]);
@@ -83,16 +83,18 @@ const StorageModelsGallery: React.FC = () => {
               </CardHeader>
               <CardContent className="p-0">
                 <div className="h-48 bg-muted/40">
-                  <Suspense fallback={<div className="w-full h-full flex items-center justify-center text-xs text-muted-foreground">Загрузка...</div>}>
-                    <Canvas camera={{ position: [1.6, 1.6, 1.6], fov: 50 }}>
-                      <ambientLight intensity={0.8} />
-                      <directionalLight position={[2, 2, 2]} intensity={0.6} />
-                      <Suspense fallback={null}>
-                        <ModelPreview path={f.name} />
-                      </Suspense>
-                      <OrbitControls enablePan={false} enableZoom={false} maxPolarAngle={Math.PI / 2.2} />
-                    </Canvas>
-                  </Suspense>
+                  <ErrorBoundary fallback={<div className="w-full h-full flex items-center justify-center text-[11px] text-muted-foreground p-3 text-center">Не удалось загрузить 3D-превью. Для .gltf нужен сопутствующий .bin и текстуры. Рекомендуется загружать .glb.</div>}>
+                    <Suspense fallback={<div className="w-full h-full flex items-center justify-center text-xs text-muted-foreground">Загрузка...</div>}>
+                      <Canvas camera={{ position: [1.6, 1.6, 1.6], fov: 50 }}>
+                        <ambientLight intensity={0.8} />
+                        <directionalLight position={[2, 2, 2]} intensity={0.6} />
+                        <Suspense fallback={null}>
+                          <ModelPreview path={f.name} />
+                        </Suspense>
+                        <OrbitControls enablePan={false} enableZoom={false} maxPolarAngle={Math.PI / 2.2} />
+                      </Canvas>
+                    </Suspense>
+                  </ErrorBoundary>
                 </div>
               </CardContent>
               <CardFooter className="p-3 flex items-center justify-between">
