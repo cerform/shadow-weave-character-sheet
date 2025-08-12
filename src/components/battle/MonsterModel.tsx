@@ -1,10 +1,10 @@
 import React, { Suspense, useRef } from 'react';
-import { useGLTF } from '@react-three/drei';
 import { useFrame, useLoader } from '@react-three/fiber';
 import * as THREE from 'three';
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader';
 import { monsterTypes, MonsterType } from '@/data/monsterTypes';
 import { publicModelUrl } from '@/utils/storageUrls';
+import { SafeGLTFLoader } from './SafeGLTFLoader';
 
 // Enhanced fallback geometry for different monster types
 function MonsterFallback({ monsterData, isHovered }: { monsterData: MonsterType; isHovered?: boolean }) {
@@ -184,13 +184,17 @@ function MonsterFallback({ monsterData, isHovered }: { monsterData: MonsterType;
 
 // Lightweight wrappers to load GLTF/GLB and FBX models via hooks safely
 function GLTFModel({ path, scale }: { path: string; scale: [number, number, number] }) {
-  const gltf = useGLTF(path);
   return (
-    <primitive
-      object={gltf.scene.clone()}
+    <SafeGLTFLoader 
+      url={path} 
+      position={[0, 0, 0]} 
       scale={scale}
-      castShadow
-      receiveShadow
+      fallback={
+        <mesh castShadow receiveShadow>
+          <cylinderGeometry args={[0.4, 0.4, 0.8, 8]} />
+          <meshStandardMaterial color="#6b7280" />
+        </mesh>
+      }
     />
   );
 }
@@ -352,10 +356,10 @@ export function preloadMonsterModels() {
       const path = monster.modelPath.startsWith('storage:')
         ? publicModelUrl(monster.modelPath.replace(/^storage:/, ''))
         : monster.modelPath;
-      useGLTF.preload(path);
-      console.log(`📥 Preloading model: ${monster.name} from ${path}`);
+      // Skip preloading to avoid errors, loading will happen on-demand with error handling
+      console.log(`📝 Model available for: ${monster.name} at ${path}`);
     } catch (error) {
-      console.warn(`Failed to preload model: ${monster.modelPath}`, error);
+      console.warn(`Failed to check model: ${monster.modelPath}`, error);
     }
   });
 }

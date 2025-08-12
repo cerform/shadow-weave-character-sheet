@@ -1,6 +1,6 @@
 import React, { Suspense, useState, useRef, useMemo } from 'react';
 import { Canvas, useLoader, useFrame, useThree } from '@react-three/fiber';
-import { OrbitControls, Text, useGLTF } from '@react-three/drei';
+import { OrbitControls, Text } from '@react-three/drei';
 import * as THREE from 'three';
 import { MonsterModel } from './MonsterModel';
 import { monsterTypes } from '@/data/monsterTypes';

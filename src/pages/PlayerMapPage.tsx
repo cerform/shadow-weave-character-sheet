@@ -1,16 +1,28 @@
 import React, { useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { Canvas } from '@react-three/fiber';
-import { OrbitControls, useGLTF } from '@react-three/drei';
+import { OrbitControls } from '@react-three/drei';
 import { useAssetsStore } from '@/stores/assetsStore';
 import { useMapEntitiesStore } from '@/stores/mapEntitiesStore';
 import { supabase } from '@/integrations/supabase/client';
 import { publicModelUrl } from '@/utils/storageUrls';
+import { SafeGLTFLoader } from '@/components/battle/SafeGLTFLoader';
 
 function GLTFModel({ path, position = [0,0,0], rotation = [0,0,0], scale = [1,1,1] }: any) {
   const url = publicModelUrl(path);
-  const { scene } = useGLTF(url);
-  return <primitive object={scene} position={position} rotation={rotation} scale={scale} />;
+  return (
+    <SafeGLTFLoader 
+      url={url} 
+      position={position} 
+      scale={scale}
+      fallback={
+        <mesh position={position}>
+          <boxGeometry args={[1, 1, 1]} />
+          <meshStandardMaterial color="#6b7280" />
+        </mesh>
+      }
+    />
+  );
 }
 
 const PlayerMapPage: React.FC = () => {

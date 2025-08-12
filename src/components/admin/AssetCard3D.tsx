@@ -6,14 +6,25 @@ import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Trash2, ExternalLink } from 'lucide-react';
 import { Canvas } from '@react-three/fiber';
-import { OrbitControls, useGLTF } from '@react-three/drei';
+import { OrbitControls } from '@react-three/drei';
 import { supabase } from '@/integrations/supabase/client';
 import type { AssetItem, AssetCategory } from '@/stores/assetsStore';
+import { SafeGLTFLoader } from '@/components/battle/SafeGLTFLoader';
 
 function ModelPreview({ path }: { path: string }) {
   const url = useMemo(() => publicModelUrl(path), [path]);
-  const { scene } = useGLTF(url);
-  return <primitive object={scene} position={[0, -0.6, 0]} />;
+  return (
+    <SafeGLTFLoader 
+      url={url} 
+      position={[0, -0.6, 0]} 
+      fallback={
+        <mesh position={[0, -0.6, 0]}>
+          <boxGeometry args={[1, 1, 1]} />
+          <meshStandardMaterial color="#6b7280" />
+        </mesh>
+      }
+    />
+  );
 }
 
 const AssetCard3D: React.FC<{
