@@ -1,21 +1,86 @@
 {
   "notes": [
-    "Put DIRECT download links here (ideally .zip or .png/.jpg).",
+    "Replace 'url' with a DIRECT file link (zip/png/jpg). The 'source_page' is provided for convenience.",
     "Allowed categories: characters, mobs, bosses, props, animals, tilesets, icons",
-    "The script will download, organize, generate previews, and produce a single zip."
+    "Run: python tools/build_2d_assets.py (requires: pip install requests pillow tqdm)"
   ],
   "items": [
     {
-      "name": "Fantasy Knight (CraftPix)",
+      "name": "Fantasy Knight",
       "category": "characters",
-      "url": "https://example.com/path/to/fantasy_knight_free.zip",
+      "url": "",
+      "source_page": "https://craftpix.net/freebies/2d-fantasy-knight-free-sprite-sheets/",
       "type": "zip"
     },
     {
-      "name": "Green Slime",
+      "name": "Pixel Hero Pack",
+      "category": "characters",
+      "url": "",
+      "source_page": "https://anokolisa.itch.io/free-pixel-art-asset-pack-topdown-tileset-rpg-16x16-sprites",
+      "type": "zip"
+    },
+    {
+      "name": "Free Knight Sprites",
+      "category": "characters",
+      "url": "",
+      "source_page": "https://craftpix.net/freebies/free-knight-character-sprites-pixel-art/",
+      "type": "zip"
+    },
+    {
+      "name": "Slime Pack",
       "category": "mobs",
-      "url": "https://example.com/path/to/green_slime.png",
-      "type": "image"
+      "url": "",
+      "source_page": "https://itch.io/game-assets/tag-top-down",
+      "type": "zip"
+    },
+    {
+      "name": "Top-down 2D RPG Enemies",
+      "category": "mobs",
+      "url": "",
+      "source_page": "https://opengameart.org/content/top-down-2d-rpg",
+      "type": "zip"
+    },
+    {
+      "name": "Pixel Art Top Down Basic",
+      "category": "props",
+      "url": "",
+      "source_page": "https://cainos.itch.io/pixel-art-top-down-basic",
+      "type": "zip"
+    },
+    {
+      "name": "RPG Pixel Art Props",
+      "category": "props",
+      "url": "",
+      "source_page": "https://opengameart.org/content/top-down-rpg-pixel-art",
+      "type": "zip"
+    },
+    {
+      "name": "Fantasy Characters Animals",
+      "category": "animals",
+      "url": "",
+      "source_page": "https://craftpix.net/sets/fantasy-characters-pixel-art-for-platformer/",
+      "type": "zip"
+    },
+    {
+      "name": "NPC Sprite Pack",
+      "category": "animals",
+      "url": "",
+      "source_page": "https://opengameart.org/content/34-directional-sprite-sets",
+      "type": "zip"
+    },
+    {
+      "name": "Cursed Land Tileset",
+      "category": "tilesets",
+      "url": "",
+      "source_page": "https://free-game-assets.itch.io/free-cursed-land-top-down-pixel-art-tileset",
+      "type": "zip"
+    },
+    {
+      "name": "Top-down Adventure Assets",
+      "category": "tilesets",
+      "url": "",
+      "source_page": "https://opengameart.org/content/top-down-adventure-assets",
+      "type": "zip"
     }
   ]
 }
