@@ -26,6 +26,7 @@ import BattleMap3DPage from '@/pages/BattleMap3DPage';
 import AdminAssetsPage from '@/pages/AdminAssetsPage';
 import DMMapEditorPage from '@/pages/DMMapEditorPage';
 import PlayerMapPage from '@/pages/PlayerMapPage';
+import Synced2DMapPage from '@/pages/Synced2DMapPage';
 
 // Ленивая загрузка страниц, зависящих от WebSocket
 const GameRoomPage = React.lazy(() => import('@/pages/GameRoomPage'));
@@ -222,12 +223,12 @@ const AppRoutes: React.FC = () => {
       } />
       <Route path="/dm/map-2d/:mapId" element={
         <ProtectedDMRoute>
-          {React.createElement(require('@/pages/Synced2DMapPage').default)}
+          <Synced2DMapPage />
         </ProtectedDMRoute>
       } />
       <Route path="/player/map-2d/:mapId" element={
         <ProtectedPlayerRoute>
-          {React.createElement(require('@/pages/Synced2DMapPage').default)}
+          <Synced2DMapPage />
         </ProtectedPlayerRoute>
       } />
       <Route path="/session" element={
