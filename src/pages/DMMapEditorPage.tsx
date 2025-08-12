@@ -9,9 +9,10 @@ import { useMapEntitiesStore } from '@/stores/mapEntitiesStore';
 import { supabase } from '@/integrations/supabase/client';
 import { publicModelUrl } from '@/utils/storageUrls';
 import { SafeGLTFLoader } from '@/components/battle/SafeGLTFLoader';
+import { GithubAssetsLibrary } from '@/components/admin/GithubAssetsLibrary';
 
 function GLTFModel({ path, position = [0,0,0], rotation = [0,0,0], scale = [1,1,1] }: any) {
-  const url = useMemo(() => publicModelUrl(path), [path]);
+  const url = useMemo(() => (typeof path === 'string' && /^https?:/i.test(path) ? path : publicModelUrl(path)), [path]);
   return (
     <SafeGLTFLoader 
       url={url} 
@@ -93,6 +94,7 @@ const DMMapEditorPage: React.FC = () => {
             ))}
           </CardContent>
         </Card>
+        <GithubAssetsLibrary mapId={mapId} />
 
         <Card>
           <CardHeader>
