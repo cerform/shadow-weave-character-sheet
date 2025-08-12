@@ -23,6 +23,9 @@ import DMSessionPage from '@/pages/DMSessionPage';
 import BattleMapPageFixed from '@/pages/BattleMapPageFixed';
 import DMMapGenerator3D from '@/pages/DMMapGenerator3D';
 import BattleMap3DPage from '@/pages/BattleMap3DPage';
+import AdminAssetsPage from '@/pages/AdminAssetsPage';
+import DMMapEditorPage from '@/pages/DMMapEditorPage';
+import PlayerMapPage from '@/pages/PlayerMapPage';
 
 // Ленивая загрузка страниц, зависящих от WebSocket
 const GameRoomPage = React.lazy(() => import('@/pages/GameRoomPage'));
@@ -227,7 +230,7 @@ const AppRoutes: React.FC = () => {
           <TestPage />
         </React.Suspense>
       } />
-      
+
       {/* Fallback - страница не найдена */}
       <Route path="*" element={<NotFound />} />
     </Routes>
