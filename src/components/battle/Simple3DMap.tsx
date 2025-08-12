@@ -1,6 +1,6 @@
-import React, { Suspense, useState, useRef } from 'react';
+import React, { Suspense, useState, useRef, useMemo } from 'react';
 import { Canvas, useLoader, useFrame, useThree } from '@react-three/fiber';
-import { OrbitControls, Text } from '@react-three/drei';
+import { OrbitControls, Text, useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 import { MonsterModel } from './MonsterModel';
 import { monsterTypes } from '@/data/monsterTypes';
@@ -11,6 +11,15 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import DraggableToken3D from './DraggableToken3D';
 import DraggableMonsterModel from './DraggableMonsterModel';
+import { supabase } from '@/integrations/supabase/client';
+
+interface AssetModel {
+  id: string;
+  storage_path: string; // path in 'models' bucket
+  x: number; // map pixel coords (0..1200)
+  y: number; // map pixel coords (0..800)
+  scale?: number | [number, number, number];
+}
 
 interface Simple3DMapProps {
   mapImageUrl?: string;
@@ -29,6 +38,7 @@ interface Simple3DMapProps {
     speed?: number;
     controlledBy?: string;
   }>;
+  assetModels?: AssetModel[]; // доп. 3D ассеты из Supabase Storage
   onTokenSelect?: (tokenId: string | null) => void;
   selectedTokenId?: string | null;
   onTokenMove?: (tokenId: string, x: number, y: number) => void;
@@ -68,6 +78,17 @@ const TexturedPlane: React.FC<{ imageUrl?: string }> = ({ imageUrl }) => {
       />
     </mesh>
   );
+};
+
+// Примитив для GLTF/GLB ассета из Supabase Storage
+const AssetModelNode: React.FC<{ path: string; position: [number, number, number]; scale?: number | [number, number, number]; }>
+= ({ path, position, scale }) => {
+  const url = useMemo(() => supabase.storage.from('models').getPublicUrl(path).data.publicUrl, [path]);
+  const { scene } = useGLTF(url);
+  const s: [number, number, number] = Array.isArray(scale)
+    ? scale
+    : [Number(scale ?? 1), Number(scale ?? 1), Number(scale ?? 1)];
+  return <primitive object={scene.clone()} position={position} scale={s} castShadow receiveShadow />;
 };
 
 // Компонент для интерактивного токена
