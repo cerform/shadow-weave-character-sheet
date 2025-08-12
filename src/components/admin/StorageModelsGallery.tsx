@@ -10,6 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useProtectedRoute } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import ErrorBoundary from '@/components/ErrorBoundary';
+import { convertGltfFromStorageToGlb } from '@/utils/convertGltfFromStorageToGlb';
 
 function ModelPreview({ path }: { path: string }) {
   const url = useMemo(() => supabase.storage.from('models').getPublicUrl(path).data.publicUrl, [path]);
@@ -115,6 +116,26 @@ const StorageModelsGallery: React.FC = () => {
     setLoading(false);
   };
 
+  const convertToGlb = async (name: string) => {
+    try {
+      const res = await convertGltfFromStorageToGlb(name);
+      if (!res) {
+        toast({ title: 'Конвертация', description: 'Не удалось создать GLB', variant: 'destructive' });
+        return;
+      }
+      // upload GLB next to .gltf
+      const { error } = await supabase.storage.from('models').upload(res.name, res.blob, {
+        contentType: 'model/gltf-binary',
+        upsert: true,
+        cacheControl: '3600',
+      });
+      if (error) throw error;
+      toast({ title: 'Готово', description: `Создан ${res.name}` });
+      await listFiles();
+    } catch (e: any) {
+      toast({ title: 'Ошибка конвертации', description: e.message || String(e), variant: 'destructive' });
+    }
+  };
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-3">
@@ -155,9 +176,10 @@ const StorageModelsGallery: React.FC = () => {
                 <div className="h-48 bg-muted/40">
                   {hasMissing ? (
                     <div className="w-full h-full flex items-center justify-center text-[11px] text-muted-foreground p-3 text-center">
-                      Не хватает файлов: {v?.missing?.slice(0, 3).join(', ') || '—'}. Загрузите их или используйте .glb.
+                      Не хватает файлов: {v?.missing?.slice(0, 3).join(', ') || '—'}. Загрузите их или воспользуйтесь кнопкой «В GLB».
                     </div>
                   ) : (
+
                     <ErrorBoundary fallback={<div className="w-full h-full flex items-center justify-center text-[11px] text-muted-foreground p-3 text-center">Не удалось загрузить 3D-превью. Для .gltf нужен сопутствующий .bin и текстуры. Рекомендуется загружать .glb.</div>}>
                       <Suspense fallback={<div className="w-full h-full flex items-center justify-center text-xs text-muted-foreground">Загрузка...</div>}>
                         <Canvas camera={{ position: [1.6, 1.6, 1.6], fov: 50 }}>
@@ -184,9 +206,16 @@ const StorageModelsGallery: React.FC = () => {
                     <Copy className="h-3 w-3 mr-1" />Копировать URL
                   </Button>
                 </div>
-                <Button size="sm" variant="ghost" className="text-destructive" onClick={() => remove(f.name)} disabled={!isAdmin || loading}>
-                  <Trash2 className="h-4 w-4" />
-                </Button>
+                <div className="flex items-center gap-2">
+                  {isGltf && (
+                    <Button size="sm" variant="outline" onClick={() => convertToGlb(f.name)} disabled={loading}>
+                      В GLB
+                    </Button>
+                  )}
+                  <Button size="sm" variant="ghost" className="text-destructive" onClick={() => remove(f.name)} disabled={!isAdmin || loading}>
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
               </CardFooter>
             </Card>
           );
