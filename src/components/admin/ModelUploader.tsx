@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,6 +18,7 @@ interface FileItem {
 }
 
 export const ModelUploader: React.FC = () => {
+  const navigate = useNavigate();
   const { isAdmin } = useProtectedRoute();
   const { toast } = useToast();
   const [filesToUpload, setFilesToUpload] = useState<File[]>([]);
@@ -172,7 +174,7 @@ export const ModelUploader: React.FC = () => {
 
         <div className="space-y-2">
           <div className="text-sm text-muted-foreground">Список файлов перемещён в галерею</div>
-          <Button variant="secondary" onClick={() => window.location.assign('/admin/assets')}>Открыть галерею ассетов</Button>
+          <Button variant="secondary" onClick={() => navigate('/admin/assets')}>Открыть галерею ассетов</Button>
         </div>
       </CardContent>
     </Card>
