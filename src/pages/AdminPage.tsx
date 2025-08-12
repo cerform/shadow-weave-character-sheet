@@ -172,8 +172,14 @@ const AdminPage: React.FC = () => {
             </CardContent>
           </Card>
 
+          {/* Загрузка 3D моделей */}
+          <div>
+            {/* Lazy import to avoid SSR issues */}
+            {React.createElement(require('@/components/admin/ModelUploader').ModelUploader)}
+          </div>
+
           {/* Список пользователей и их ролей */}
-          <Card>
+          <Card className="lg:col-span-2">
             <CardHeader>
               <CardTitle>Пользователи и роли</CardTitle>
             </CardHeader>
@@ -238,7 +244,7 @@ const AdminPage: React.FC = () => {
               <div className="text-center">
                 <Badge variant="destructive" className="mb-2">Admin</Badge>
                 <p className="text-sm text-muted-foreground">
-                  Администратор. Полный доступ ко всем функциям, включая управление ролями.
+                  Администратор. Полный доступ ко всем функциям, включая управление ролями и загрузку моделей.
                 </p>
               </div>
             </div>
