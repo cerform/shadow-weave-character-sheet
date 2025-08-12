@@ -43,12 +43,17 @@ export type Database = {
           created_by: string | null
           description: string | null
           id: string
+          license: string | null
+          lod: number | null
+          meta: Json | null
           name: string
           pivot: Json | null
           preview_url: string | null
           scale_x: number | null
           scale_y: number | null
           scale_z: number | null
+          size_bytes: number | null
+          source_url: string | null
           storage_path: string
           tags: string[] | null
         }
@@ -59,12 +64,17 @@ export type Database = {
           created_by?: string | null
           description?: string | null
           id?: string
+          license?: string | null
+          lod?: number | null
+          meta?: Json | null
           name: string
           pivot?: Json | null
           preview_url?: string | null
           scale_x?: number | null
           scale_y?: number | null
           scale_z?: number | null
+          size_bytes?: number | null
+          source_url?: string | null
           storage_path: string
           tags?: string[] | null
         }
@@ -75,12 +85,17 @@ export type Database = {
           created_by?: string | null
           description?: string | null
           id?: string
+          license?: string | null
+          lod?: number | null
+          meta?: Json | null
           name?: string
           pivot?: Json | null
           preview_url?: string | null
           scale_x?: number | null
           scale_y?: number | null
           scale_z?: number | null
+          size_bytes?: number | null
+          source_url?: string | null
           storage_path?: string
           tags?: string[] | null
         }
@@ -715,6 +730,228 @@ export type Database = {
           },
         ]
       }
+      srd_classes: {
+        Row: {
+          asset_id: string | null
+          created_at: string
+          features: Json | null
+          hit_die: number | null
+          id: string
+          name: string
+          proficiencies: Json | null
+          saving_throws: string[] | null
+          slug: string
+          spellcasting: Json | null
+          starting_equipment: Json | null
+          token_asset_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          asset_id?: string | null
+          created_at?: string
+          features?: Json | null
+          hit_die?: number | null
+          id?: string
+          name: string
+          proficiencies?: Json | null
+          saving_throws?: string[] | null
+          slug: string
+          spellcasting?: Json | null
+          starting_equipment?: Json | null
+          token_asset_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          asset_id?: string | null
+          created_at?: string
+          features?: Json | null
+          hit_die?: number | null
+          id?: string
+          name?: string
+          proficiencies?: Json | null
+          saving_throws?: string[] | null
+          slug?: string
+          spellcasting?: Json | null
+          starting_equipment?: Json | null
+          token_asset_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "srd_classes_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "assets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "srd_classes_token_asset_id_fkey"
+            columns: ["token_asset_id"]
+            isOneToOne: false
+            referencedRelation: "assets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      srd_creatures: {
+        Row: {
+          actions: Json | null
+          alignment: string | null
+          armor_class: number | null
+          asset_id: string | null
+          cr: number | null
+          created_at: string
+          hit_dice: string | null
+          hit_points: number | null
+          id: string
+          languages: string | null
+          legendary_actions: Json | null
+          meta: Json | null
+          name: string
+          reactions: Json | null
+          saves: Json | null
+          senses: Json | null
+          size: string
+          skills: Json | null
+          slug: string
+          speed: Json | null
+          stats: Json
+          token_asset_id: string | null
+          traits: Json | null
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          actions?: Json | null
+          alignment?: string | null
+          armor_class?: number | null
+          asset_id?: string | null
+          cr?: number | null
+          created_at?: string
+          hit_dice?: string | null
+          hit_points?: number | null
+          id?: string
+          languages?: string | null
+          legendary_actions?: Json | null
+          meta?: Json | null
+          name: string
+          reactions?: Json | null
+          saves?: Json | null
+          senses?: Json | null
+          size: string
+          skills?: Json | null
+          slug: string
+          speed?: Json | null
+          stats: Json
+          token_asset_id?: string | null
+          traits?: Json | null
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          actions?: Json | null
+          alignment?: string | null
+          armor_class?: number | null
+          asset_id?: string | null
+          cr?: number | null
+          created_at?: string
+          hit_dice?: string | null
+          hit_points?: number | null
+          id?: string
+          languages?: string | null
+          legendary_actions?: Json | null
+          meta?: Json | null
+          name?: string
+          reactions?: Json | null
+          saves?: Json | null
+          senses?: Json | null
+          size?: string
+          skills?: Json | null
+          slug?: string
+          speed?: Json | null
+          stats?: Json
+          token_asset_id?: string | null
+          traits?: Json | null
+          type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "srd_creatures_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "assets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "srd_creatures_token_asset_id_fkey"
+            columns: ["token_asset_id"]
+            isOneToOne: false
+            referencedRelation: "assets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      srd_races: {
+        Row: {
+          ability_bonuses: Json | null
+          asset_id: string | null
+          created_at: string
+          id: string
+          languages: string | null
+          name: string
+          size: string | null
+          slug: string
+          speed: number | null
+          token_asset_id: string | null
+          traits: Json | null
+          updated_at: string
+        }
+        Insert: {
+          ability_bonuses?: Json | null
+          asset_id?: string | null
+          created_at?: string
+          id?: string
+          languages?: string | null
+          name: string
+          size?: string | null
+          slug: string
+          speed?: number | null
+          token_asset_id?: string | null
+          traits?: Json | null
+          updated_at?: string
+        }
+        Update: {
+          ability_bonuses?: Json | null
+          asset_id?: string | null
+          created_at?: string
+          id?: string
+          languages?: string | null
+          name?: string
+          size?: string | null
+          slug?: string
+          speed?: number | null
+          token_asset_id?: string | null
+          traits?: Json | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "srd_races_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "assets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "srd_races_token_asset_id_fkey"
+            columns: ["token_asset_id"]
+            isOneToOne: false
+            referencedRelation: "assets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string | null
@@ -744,6 +981,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      clear_assets: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
       generate_session_code: {
         Args: Record<PropertyKey, never>
         Returns: string
@@ -758,6 +999,10 @@ export type Database = {
           _role: Database["public"]["Enums"]["app_role"]
         }
         Returns: boolean
+      }
+      import_models_bucket_assets: {
+        Args: Record<PropertyKey, never>
+        Returns: number
       }
       is_user_dm_of_session: {
         Args: { _session_id: string }
