@@ -180,48 +180,6 @@ const AdminPage: React.FC = () => {
           </div>
           <UsersWithRoles />
 
-          {/* Список пользователей и их ролей */}
-          <Card className="lg:col-span-2">
-            <CardHeader>
-              <CardTitle>Пользователи и роли</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {isLoading ? (
-                <div className="text-center py-4">Загрузка...</div>
-              ) : Object.keys(groupedRoles).length === 0 ? (
-                <div className="text-center py-4 text-muted-foreground">
-                  Пользователи с ролями не найдены
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {Object.entries(groupedRoles).map(([userId, roles]) => (
-                    <div key={userId} className="border rounded p-4">
-                      <div className="font-mono text-sm text-muted-foreground mb-2">
-                        {userId}
-                      </div>
-                      <div className="flex flex-wrap gap-2">
-                        {roles.map((userRole) => (
-                          <div key={userRole.id} className="flex items-center gap-2">
-                            <Badge variant={getRoleBadgeVariant(userRole.role)}>
-                              {userRole.role}
-                            </Badge>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => handleRemoveRole(userId, userRole.role)}
-                              className="h-6 w-6 p-0 text-destructive hover:text-destructive"
-                            >
-                              <Trash2 className="h-3 w-3" />
-                            </Button>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
         </div>
 
         {/* Информация о ролях */}
