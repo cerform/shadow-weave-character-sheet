@@ -13,7 +13,7 @@ import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
 import DraggableToken3D from './DraggableToken3D';
-import DraggableMonsterModel from './DraggableMonsterModel';
+import DraggableMonsterModelFixed from './DraggableMonsterModelFixed';
 import { supabase } from '@/integrations/supabase/client';
 import { publicModelUrl } from '@/utils/storageUrls';
 import { SafeGLTFLoader } from './SafeGLTFLoader';
@@ -621,7 +621,7 @@ const Simple3DMap: React.FC<Simple3DMapProps> = ({
             if (token.monsterType && monsterTypes[token.monsterType]) {
               console.log(`🎭 Rendering 3D model for ${token.name}: ${token.monsterType}`);
               return (
-                <DraggableMonsterModel
+                <DraggableMonsterModelFixed
                   key={token.id}
                   token={token}
                   position={[x, yOffset, -z]}
