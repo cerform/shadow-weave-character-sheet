@@ -6,11 +6,22 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { Plus, Settings, RotateCcw, Eye, EyeOff, Map, Box as BoxIcon } from 'lucide-react';
+import { Plus, Settings, RotateCcw, Eye, EyeOff, Map, Box as BoxIcon, Sword } from 'lucide-react';
+import EquipmentManager from './EquipmentManager';
 import { useToast } from '@/hooks/use-toast';
 import Token3D from './Token3D';
 import SimpleTokenEditor from './SimpleTokenEditor';
 import * as THREE from 'three';
+
+interface Equipment {
+  id: string;
+  name: string;
+  type: 'weapon' | 'armor' | 'helmet' | 'boots' | 'accessory';
+  modelPath?: string;
+  position?: { x: number; y: number; z: number };
+  rotation?: { x: number; y: number; z: number };
+  scale?: { x: number; y: number; z: number };
+}
 
 interface Token {
   id: string;
@@ -30,6 +41,7 @@ interface Token {
   isActive?: boolean;
   controlledBy?: string;
   isVisible?: boolean;
+  equipment?: Equipment[];
 }
 
 interface BattleMap3DProps {
@@ -82,7 +94,23 @@ const BattleMap3D: React.FC<BattleMap3DProps> = ({ isDM = false }) => {
         hp: 120,
         maxHp: 120,
         ac: 18,
-        isVisible: true
+        isVisible: true,
+        equipment: [
+          {
+            id: 'sword1',
+            name: 'Длинный меч',
+            type: 'weapon',
+            position: { x: 0.5, y: 0.5, z: 0 },
+            scale: { x: 0.3, y: 0.3, z: 0.3 }
+          },
+          {
+            id: 'armor1',
+            name: 'Кольчуга',
+            type: 'armor',
+            position: { x: 0, y: 0.2, z: 0 },
+            scale: { x: 0.8, y: 0.8, z: 0.8 }
+          }
+        ]
       },
       {
         id: 'player2',
@@ -95,7 +123,23 @@ const BattleMap3D: React.FC<BattleMap3DProps> = ({ isDM = false }) => {
         hp: 80,
         maxHp: 80,
         ac: 12,
-        isVisible: true
+        isVisible: true,
+        equipment: [
+          {
+            id: 'staff1',
+            name: 'Посох мага',
+            type: 'weapon',
+            position: { x: -0.5, y: 0.8, z: 0 },
+            scale: { x: 0.2, y: 0.5, z: 0.2 }
+          },
+          {
+            id: 'robes1',
+            name: 'Мантия мага',
+            type: 'armor',
+            position: { x: 0, y: 0.3, z: 0 },
+            scale: { x: 0.9, y: 0.9, z: 0.9 }
+          }
+        ]
       },
       {
         id: 'monster1',
@@ -137,6 +181,32 @@ const BattleMap3D: React.FC<BattleMap3DProps> = ({ isDM = false }) => {
       setSelectedToken(token);
       setEditingToken(token);
     }
+  };
+
+  // Обработка перемещения токена
+  const handleTokenMove = (tokenId: string, newPosition: { x: number; y: number; z?: number }) => {
+    setTokens(prev => 
+      prev.map(token => 
+        token.id === tokenId 
+          ? { ...token, x: newPosition.x, y: newPosition.y, z: newPosition.z || 0 }
+          : token
+      )
+    );
+  };
+
+  // Обработка изменения экипировки
+  const handleEquipmentChange = (tokenId: string, newEquipment: Equipment[]) => {
+    setTokens(prev => 
+      prev.map(token => 
+        token.id === tokenId 
+          ? { ...token, equipment: newEquipment }
+          : token
+      )
+    );
+    toast({
+      title: "Экипировка обновлена",
+      description: "Экипировка персонажа успешно изменена",
+    });
   };
 
   // Сохранение изменений токена
@@ -235,6 +305,7 @@ const BattleMap3D: React.FC<BattleMap3DProps> = ({ isDM = false }) => {
             position: { x: token.x, y: token.y, z: token.z || 0 }
           }}
           onClick={() => handleTokenClick(token)}
+          onMove={(newPosition) => handleTokenMove(token.id, newPosition)}
           isDM={isDM}
           isSelected={selectedToken?.id === token.id}
           isHovered={hoveredTokenId === token.id}
@@ -333,6 +404,23 @@ const BattleMap3D: React.FC<BattleMap3DProps> = ({ isDM = false }) => {
               >
                 {selectedToken.type}
               </Badge>
+              
+              {/* Управление экипировкой для игроков */}
+              {isDM && selectedToken.type === 'player' && (
+                <div className="mt-2">
+                  <EquipmentManager
+                    currentEquipment={selectedToken.equipment || []}
+                    availableEquipment={[
+                      { id: 'sword', name: 'Меч', type: 'weapon', stats: { damage: '1d8+3' } },
+                      { id: 'shield', name: 'Щит', type: 'armor', stats: { ac: 2 } },
+                      { id: 'helmet', name: 'Шлем', type: 'helmet', stats: { ac: 1 } },
+                      { id: 'boots', name: 'Сапоги', type: 'boots', stats: { bonus: 'Скорость +5' } },
+                      { id: 'ring', name: 'Кольцо силы', type: 'accessory', stats: { bonus: 'Сила +1' } }
+                    ]}
+                    onEquipmentChange={(equipment) => handleEquipmentChange(selectedToken.id, equipment)}
+                  />
+                </div>
+              )}
             </div>
           )}
         </CardContent>

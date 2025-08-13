@@ -1,5 +1,17 @@
 import { create } from 'zustand';
 
+interface Equipment {
+  id: string;
+  name: string;
+  type: 'weapon' | 'armor' | 'accessory' | 'helmet' | 'boots';
+  modelPath?: string;
+  stats?: {
+    damage?: string;
+    ac?: number;
+    bonus?: string;
+  };
+}
+
 export interface SimpleToken {
   id: string;
   name: string;
@@ -14,6 +26,7 @@ export interface SimpleToken {
   controlledBy: string;
   image?: string;
   monsterType?: string; // Add monster type for 3D models
+  equipment?: Equipment[];
 }
 
 interface SimpleBattleStore {
@@ -52,7 +65,21 @@ export const useSimpleBattleStore = create<SimpleBattleStore>((set, get) => ({
       ac: 18,
       type: 'player',
       controlledBy: 'player1',
-      monsterType: 'fighter' // Добавляем 3D модель для игрока
+      monsterType: 'fighter', // Добавляем 3D модель для игрока
+      equipment: [
+        {
+          id: 'sword1',
+          name: 'Длинный меч',
+          type: 'weapon',
+          stats: { damage: '1d8+3' }
+        },
+        {
+          id: 'armor1',
+          name: 'Кольчуга',
+          type: 'armor',
+          stats: { ac: 14 }
+        }
+      ]
     },
     {
       id: 'goblin1',
@@ -80,7 +107,21 @@ export const useSimpleBattleStore = create<SimpleBattleStore>((set, get) => ({
       ac: 12,
       type: 'player',
       controlledBy: 'player2',
-      monsterType: 'fighter' // Используем ту же модель для волшебника
+      monsterType: 'fighter', // Используем ту же модель для волшебника
+      equipment: [
+        {
+          id: 'staff1',
+          name: 'Посох мага',
+          type: 'weapon',
+          stats: { damage: '1d6+2' }
+        },
+        {
+          id: 'robes1',
+          name: 'Мантия мага',
+          type: 'armor',
+          stats: { ac: 12 }
+        }
+      ]
     },
     {
       id: 'orc1',

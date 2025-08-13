@@ -3,6 +3,18 @@ import { useFrame, useThree } from '@react-three/fiber';
 import { Text } from '@react-three/drei';
 import * as THREE from 'three';
 
+interface Equipment {
+  id: string;
+  name: string;
+  type: 'weapon' | 'armor' | 'accessory' | 'helmet' | 'boots';
+  modelPath?: string;
+  stats?: {
+    damage?: string;
+    ac?: number;
+    bonus?: string;
+  };
+}
+
 interface DraggableToken3DProps {
   token: any;
   position: [number, number, number];
@@ -12,6 +24,79 @@ interface DraggableToken3DProps {
   isDM?: boolean;
   onDragChange?: (dragging: boolean) => void;
 }
+
+// Компонент экипировки для токена
+const TokenEquipment: React.FC<{ equipment: Equipment[] }> = ({ equipment }) => {
+  return (
+    <>
+      {equipment.map((item) => {
+        const equipmentColor = item.type === 'weapon' ? '#fbbf24' : 
+                              item.type === 'armor' ? '#6b7280' : 
+                              item.type === 'helmet' ? '#3b82f6' : '#8b5cf6';
+        
+        const equipmentPosition = getDefaultEquipmentPosition(item.type);
+        
+        return (
+          <group key={item.id} position={[equipmentPosition.x, equipmentPosition.y, equipmentPosition.z]}>
+            {getEquipmentGeometry(item.type, equipmentColor)}
+          </group>
+        );
+      })}
+    </>
+  );
+};
+
+// Получение позиции экипировки по умолчанию
+const getDefaultEquipmentPosition = (type: string) => {
+  switch (type) {
+    case 'weapon': return { x: 0.3, y: 0.3, z: 0 };
+    case 'armor': return { x: 0, y: 0.1, z: 0 };
+    case 'helmet': return { x: 0, y: 0.8, z: 0 };
+    case 'boots': return { x: 0, y: -0.2, z: 0 };
+    default: return { x: 0, y: 0, z: 0 };
+  }
+};
+
+// Получение геометрии экипировки
+const getEquipmentGeometry = (type: string, color: string) => {
+  switch (type) {
+    case 'weapon':
+      return (
+        <mesh>
+          <cylinderGeometry args={[0.03, 0.03, 0.6]} />
+          <meshStandardMaterial color={color} />
+        </mesh>
+      );
+    case 'armor':
+      return (
+        <mesh>
+          <boxGeometry args={[0.6, 0.7, 0.2]} />
+          <meshStandardMaterial color={color} transparent opacity={0.6} />
+        </mesh>
+      );
+    case 'helmet':
+      return (
+        <mesh>
+          <sphereGeometry args={[0.2]} />
+          <meshStandardMaterial color={color} />
+        </mesh>
+      );
+    case 'boots':
+      return (
+        <mesh>
+          <boxGeometry args={[0.2, 0.15, 0.3]} />
+          <meshStandardMaterial color={color} />
+        </mesh>
+      );
+    default:
+      return (
+        <mesh>
+          <boxGeometry args={[0.1, 0.1, 0.1]} />
+          <meshStandardMaterial color={color} />
+        </mesh>
+      );
+  }
+};
 
 const DraggableToken3D: React.FC<DraggableToken3DProps> = ({
   token,
@@ -168,6 +253,11 @@ const DraggableToken3D: React.FC<DraggableToken3DProps> = ({
           transparent={isDragging}
         />
       </mesh>
+      
+      {/* Экипировка токена */}
+      {token.equipment && token.equipment.length > 0 && (
+        <TokenEquipment equipment={token.equipment} />
+      )}
       
       {/* Название токена */}
       <Text

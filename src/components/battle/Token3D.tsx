@@ -1,7 +1,17 @@
-import React, { useRef, useMemo } from 'react';
-import { useFrame } from '@react-three/fiber';
-import { Text, Box, Sphere, Cylinder, Cone } from '@react-three/drei';
+import React, { useRef, useMemo, useState } from 'react';
+import { useFrame, useThree } from '@react-three/fiber';
+import { Text, Box, Sphere, Cylinder, Cone, useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
+
+interface Equipment {
+  id: string;
+  name: string;
+  type: 'weapon' | 'armor' | 'helmet' | 'boots' | 'accessory';
+  modelPath?: string;
+  position?: { x: number; y: number; z: number };
+  rotation?: { x: number; y: number; z: number };
+  scale?: { x: number; y: number; z: number };
+}
 
 interface Token3DProps {
   token: {
@@ -14,8 +24,10 @@ interface Token3DProps {
     maxHp?: number;
     size: number;
     avatar?: string;
+    equipment?: Equipment[];
   };
   onClick?: () => void;
+  onMove?: (newPosition: { x: number; y: number; z?: number }) => void;
   isDM?: boolean;
   isSelected?: boolean;
   isHovered?: boolean;
@@ -24,12 +36,15 @@ interface Token3DProps {
 const Token3D: React.FC<Token3DProps> = ({ 
   token, 
   onClick, 
+  onMove,
   isDM = false, 
   isSelected = false, 
   isHovered = false 
 }) => {
   const meshRef = useRef<THREE.Group>(null);
   const groupRef = useRef<THREE.Group>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
 
   // Проверяем безопасность данных токена
   if (!token || !token.position) {
@@ -103,6 +118,120 @@ const Token3D: React.FC<Token3DProps> = ({
     }
   };
 
+  // Компонент экипировки
+  const EquipmentRenderer = () => {
+    if (!token.equipment || token.equipment.length === 0) return null;
+
+    return (
+      <>
+        {token.equipment.map((item) => {
+          // Простая визуализация экипировки
+          const equipmentColor = item.type === 'weapon' ? '#fbbf24' : 
+                                item.type === 'armor' ? '#6b7280' : 
+                                item.type === 'helmet' ? '#3b82f6' : '#8b5cf6';
+          
+          const equipmentPosition = item.position || getDefaultEquipmentPosition(item.type);
+          const equipmentScale = item.scale || { x: 0.3, y: 0.3, z: 0.3 };
+          
+          return (
+            <group key={item.id} position={[equipmentPosition.x, equipmentPosition.y, equipmentPosition.z]}>
+              {getEquipmentGeometry(item.type, equipmentColor, equipmentScale)}
+            </group>
+          );
+        })}
+      </>
+    );
+  };
+
+  // Получение позиции экипировки по умолчанию
+  const getDefaultEquipmentPosition = (type: string) => {
+    switch (type) {
+      case 'weapon': return { x: 0.5, y: 0.5, z: 0 };
+      case 'armor': return { x: 0, y: 0.2, z: 0 };
+      case 'helmet': return { x: 0, y: 1.2, z: 0 };
+      case 'boots': return { x: 0, y: -0.3, z: 0 };
+      default: return { x: 0, y: 0, z: 0 };
+    }
+  };
+
+  // Получение геометрии экипировки
+  const getEquipmentGeometry = (type: string, color: string, scale: any) => {
+    switch (type) {
+      case 'weapon':
+        return (
+          <Cylinder args={[0.05, 0.05, 1]} scale={[scale.x, scale.y, scale.z]}>
+            <meshStandardMaterial color={color} />
+          </Cylinder>
+        );
+      case 'armor':
+        return (
+          <Box args={[0.8, 1, 0.3]} scale={[scale.x, scale.y, scale.z]}>
+            <meshStandardMaterial color={color} transparent opacity={0.7} />
+          </Box>
+        );
+      case 'helmet':
+        return (
+          <Sphere args={[0.3]} scale={[scale.x, scale.y, scale.z]}>
+            <meshStandardMaterial color={color} />
+          </Sphere>
+        );
+      case 'boots':
+        return (
+          <Box args={[0.3, 0.2, 0.4]} scale={[scale.x, scale.y, scale.z]}>
+            <meshStandardMaterial color={color} />
+          </Box>
+        );
+      default:
+        return (
+          <Box args={[0.2, 0.2, 0.2]} scale={[scale.x, scale.y, scale.z]}>
+            <meshStandardMaterial color={color} />
+          </Box>
+        );
+    }
+  };
+
+  // Обработка перемещения
+  const { camera, raycaster } = useThree();
+  
+  const handlePointerDown = (e: any) => {
+    if (!isDM) return;
+    e.stopPropagation();
+    setIsDragging(true);
+    setDragStart({ x: e.clientX, y: e.clientY });
+  };
+
+  const handlePointerMove = (e: any) => {
+    if (!isDragging || !isDM || !onMove) return;
+    
+    const deltaX = (e.clientX - dragStart.x) * 0.01;
+    const deltaY = (e.clientY - dragStart.y) * 0.01;
+    
+    const newPosition = {
+      x: token.position.x + deltaX,
+      y: token.position.y - deltaY, // Инвертируем Y для правильного направления
+      z: token.position.z || 0
+    };
+    
+    onMove(newPosition);
+    setDragStart({ x: e.clientX, y: e.clientY });
+  };
+
+  const handlePointerUp = () => {
+    setIsDragging(false);
+  };
+
+  // Добавляем слушатели мыши к окну для перемещения
+  React.useEffect(() => {
+    if (isDragging) {
+      window.addEventListener('mousemove', handlePointerMove);
+      window.addEventListener('mouseup', handlePointerUp);
+      return () => {
+        window.removeEventListener('mousemove', handlePointerMove);
+        window.removeEventListener('mouseup', handlePointerUp);
+      };
+    }
+  }, [isDragging, dragStart]);
+
   // HP бар над токеном
   const HPBar = () => {
     if (!token.hp || !token.maxHp) return null;
@@ -145,9 +274,10 @@ const Token3D: React.FC<Token3DProps> = ({
       ref={groupRef}
       position={[token.position.x || 0, token.position.z || 0, token.position.y || 0]}
       onClick={onClick}
+      onPointerDown={handlePointerDown}
       onPointerOver={(e) => {
         e.stopPropagation();
-        document.body.style.cursor = 'pointer';
+        document.body.style.cursor = isDM ? 'grab' : 'pointer';
       }}
       onPointerOut={(e) => {
         e.stopPropagation();
@@ -165,6 +295,8 @@ const Token3D: React.FC<Token3DProps> = ({
       {/* Основная модель токена */}
       <group ref={meshRef}>
         <TokenModel />
+        {/* Экипировка привязана к основной модели */}
+        <EquipmentRenderer />
       </group>
 
       {/* HP бар */}
