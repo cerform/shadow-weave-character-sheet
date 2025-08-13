@@ -1,11 +1,6 @@
 
-"use client"
-
-import * as React from "react"
-import { ThemeProvider as NextThemesProvider } from "next-themes"
-import { type ThemeProviderProps } from "next-themes/dist/types"
-import { themes } from '@/lib/themes'
-
+import React, { createContext, useState, useEffect, useMemo } from 'react';
+import { themes } from '@/lib/themes';
 
 export interface ThemeContextType {
   theme: string;
@@ -14,17 +9,21 @@ export interface ThemeContextType {
   effectiveTheme?: string;
 }
 
-export const ThemeProviderContext = React.createContext<ThemeContextType>({
+export const ThemeProviderContext = createContext<ThemeContextType>({
   theme: 'default',
   setTheme: () => null,
   themeStyles: themes.default
 });
 
-export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
-  const [theme, setTheme] = React.useState<string>('default');
+interface CustomThemeProviderProps {
+  children: React.ReactNode;
+}
+
+export function ThemeProvider({ children }: CustomThemeProviderProps) {
+  const [theme, setTheme] = useState<string>('default');
 
   // Загружаем сохраненную тему при инициализации
-  React.useEffect(() => {
+  useEffect(() => {
     try {
       const savedTheme = localStorage.getItem('theme') || 'default';
       if (themes[savedTheme as keyof typeof themes]) {
@@ -36,7 +35,7 @@ export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
   }, []);
 
   // Применяем тему к корневому элементу при изменении темы
-  React.useEffect(() => {
+  useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
     document.body.className = '';
     document.body.classList.add(`theme-${theme}`);
@@ -61,7 +60,7 @@ export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
     console.log("Theme set in ThemeProvider:", newTheme);
   };
 
-  const themeContextValue = React.useMemo(() => ({
+  const themeContextValue = useMemo(() => ({
     theme,
     setTheme: handleSetTheme,
     themeStyles: themes[theme as keyof typeof themes] || themes.default,
@@ -69,10 +68,8 @@ export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
   }), [theme]);
 
   return (
-    <NextThemesProvider {...props}>
-      <ThemeProviderContext.Provider value={themeContextValue}>
-        {children}
-      </ThemeProviderContext.Provider>
-    </NextThemesProvider>
+    <ThemeProviderContext.Provider value={themeContextValue}>
+      {children}
+    </ThemeProviderContext.Provider>
   )
 }
