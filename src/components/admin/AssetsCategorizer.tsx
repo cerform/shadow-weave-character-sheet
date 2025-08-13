@@ -15,10 +15,9 @@ import { Card, CardContent } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 
 const defaultCategories = [
-  { key: 'monster', name: 'Монстр' },
-  { key: 'player', name: 'Игрок' },
-  { key: 'tools', name: 'Инструменты' },
-  { key: 'weapons', name: 'Оружие' },
+  { key: 'character', name: 'Персонаж' },
+  { key: 'monster', name: 'Монстры' },
+  { key: 'structure', name: 'Строения' },
 ] as const;
 
 const AssetsCategorizer: React.FC = () => {

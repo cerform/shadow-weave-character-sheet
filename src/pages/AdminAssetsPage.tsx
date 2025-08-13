@@ -2,6 +2,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import StorageModelsGallery from '@/components/admin/StorageModelsGallery';
 import AssetsCategorizer from '@/components/admin/AssetsCategorizer';
+import InteractiveZipImporter from '@/components/admin/InteractiveZipImporter';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -31,7 +32,7 @@ const callRpc = async (fn: 'clear_assets' | 'import_models_bucket_assets') => {
       {/* Админ‑действия: очистка/импорт ассетов из bucket */}
       <Card>
         <CardHeader>
-          <CardTitle>Импорт DnD ассетов</CardTitle>
+          <CardTitle>Администрирование ассетов</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-wrap gap-2">
           <Button
@@ -44,11 +45,53 @@ const callRpc = async (fn: 'clear_assets' | 'import_models_bucket_assets') => {
           </Button>
           <Button
             disabled={!isAdmin}
+            onClick={async () => {
+              if (!isAdmin) return;
+              try {
+                // Полная очистка bucket models
+                const listAll = async (prefix = ''): Promise<string[]> => {
+                  const { data, error } = await supabase.storage.from('models').list(prefix, { limit: 1000, offset: 0, sortBy: { column: 'name', order: 'asc' } });
+                  if (error) throw error;
+                  const files: string[] = [];
+                  for (const it of (data as any) || []) {
+                    if (it.id) files.push(prefix ? `${prefix}/${it.name}` : it.name);
+                    else {
+                      const nested = await listAll(prefix ? `${prefix}/${it.name}` : it.name);
+                      files.push(...nested);
+                    }
+                  }
+                  return files;
+                };
+                const all = await listAll('');
+                if (all.length) {
+                  const { error } = await supabase.storage.from('models').remove(all);
+                  if (error) throw error;
+                }
+                toast({ title: 'Готово', description: `Очистили bucket models (${all.length})` });
+              } catch (e: any) {
+                toast({ title: 'Ошибка очистки bucket', description: e?.message || String(e), variant: 'destructive' });
+              }
+            }}
+            title={isAdmin ? 'Удалить все файлы из bucket models' : 'Доступно только админам'}
+          >
+            Очистить bucket models
+          </Button>
+          <Button
+            disabled={!isAdmin}
             onClick={() => callRpc('import_models_bucket_assets')}
             title={isAdmin ? 'Импортировать все .glb/.gltf из bucket models (по папкам → категории)' : 'Доступно только админам'}
           >
             Импортировать из bucket models
           </Button>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Интерактивный ZIP‑импорт</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <InteractiveZipImporter />
         </CardContent>
       </Card>
 
