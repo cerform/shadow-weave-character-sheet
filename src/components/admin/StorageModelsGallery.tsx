@@ -242,6 +242,13 @@ const copyUrl = async (name: string) => {
       <div className="flex items-center justify-between gap-3">
         <Input value={query} onChange={e => setQuery(e.target.value)} placeholder="Поиск по имени файла" className="max-w-md" />
         <div className="flex items-center gap-2">
+          <Button
+            variant={prefix === 'trash' ? 'default' : 'outline'}
+            onClick={() => setPrefix('trash')}
+            title="Показать содержимое папки корзины (models/trash)"
+          >
+            Корзина
+          </Button>
           {prefix && (
             <Button
               variant="outline"
