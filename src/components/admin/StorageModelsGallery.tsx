@@ -3,7 +3,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/componen
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { ExternalLink, Trash2, Copy, RefreshCcw, Users, Swords, Building, Shield, User } from 'lucide-react';
+import { ExternalLink, Trash2, Copy, RefreshCcw, Users, Swords, Building, Shield, User, ArrowLeft, Home } from 'lucide-react';
 import { Canvas, useLoader } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
 import { supabase } from '@/integrations/supabase/client';
@@ -251,6 +251,25 @@ const copyUrl = async (name: string) => {
 
   return (
     <div className="space-y-4">
+      {/* Навигационная панель */}
+      {prefix && (
+        <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg border">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setPrefix('')}
+            disabled={loading}
+            className="flex items-center gap-2"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Назад к категориям
+          </Button>
+          <div className="text-sm text-muted-foreground">
+            Текущая папка: <span className="font-mono text-foreground">{prefix}</span>
+          </div>
+        </div>
+      )}
+
       <div className="flex items-center justify-between gap-3">
         <Input value={query} onChange={e => setQuery(e.target.value)} placeholder="Поиск по имени файла" className="max-w-md" />
         <div className="flex items-center gap-2">
@@ -261,12 +280,14 @@ const copyUrl = async (name: string) => {
           >
             Корзина
           </Button>
-          {prefix && (
+          {!showCategories && (
             <Button
               variant="outline"
               onClick={() => setPrefix('')}
               disabled={loading}
+              className="flex items-center gap-2"
             >
+              <Home className="h-4 w-4" />
               К категориям
             </Button>
           )}
