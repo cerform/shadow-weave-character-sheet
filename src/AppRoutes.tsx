@@ -12,7 +12,7 @@ import ProfilePage from '@/pages/ProfilePage';
 import HandbookPage from '@/pages/HandbookPage';
 import CharacterViewPage from '@/pages/CharacterViewPage';
 import CharacterSheetPage from '@/pages/CharacterSheetPage';
-import BattleScenePage from '@/pages/BattleScenePage';
+
 import UnauthorizedPage from '@/pages/UnauthorizedPage';
 import DebugPage from '@/pages/DebugPage';
 import AdminPage from '@/pages/AdminPage';
@@ -20,7 +20,7 @@ import CharactersListPage from '@/pages/CharactersListPage';
 import CharacterManagementPage from '@/pages/CharacterManagementPage';
 import DMDashboardPageNew from '@/pages/DMDashboardPageNew';
 import DMSessionPage from '@/pages/DMSessionPage';
-import BattleMapPageFixed from '@/pages/BattleMapPageFixed';
+
 import DMMapGenerator3D from '@/pages/DMMapGenerator3D';
 import BattleMap3DPage from '@/pages/BattleMap3DPage';
 import AdminAssetsPage from '@/pages/AdminAssetsPage';
@@ -119,7 +119,7 @@ const AppRoutes: React.FC = () => {
   console.log('DndSpellsPage импортирована:', DndSpellsPage);
   console.log('AdminPage импортирована:', AdminPage);
   console.log('DMDashboardPageNew импортирована:', DMDashboardPageNew);
-  console.log('BattleMapPageFixed импортирована:', BattleMapPageFixed);
+  console.log('BattleMap3DPage импортирована:', BattleMap3DPage);
   console.log('HomePage импортирована:', HomePage);
   console.log('window.location.pathname:', window.location.pathname);
   
@@ -152,26 +152,6 @@ const AppRoutes: React.FC = () => {
       <Route path="/dm" element={
         <ProtectedDMRoute>
           <DMDashboardPageNew />
-        </ProtectedDMRoute>
-      } />
-      <Route path="/dm/battle-map/:id" element={
-        <ProtectedDMRoute>
-          <BattleMapPageFixed />
-        </ProtectedDMRoute>
-      } />
-      <Route path="/battle-map-fixed" element={
-        <ProtectedDMRoute>
-          <BattleMapPageFixed />
-        </ProtectedDMRoute>
-      } />
-      <Route path="/battle" element={
-        <ProtectedDMRoute>
-          <BattleScenePage />
-        </ProtectedDMRoute>
-      } />
-      <Route path="/battle/:sessionId" element={
-        <ProtectedDMRoute>
-          <BattleMapPageFixed />
         </ProtectedDMRoute>
       } />
       <Route path="/dm-map-3d" element={
