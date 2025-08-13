@@ -1,7 +1,7 @@
 import React from 'react';
 import { Text } from '@react-three/drei';
 import * as THREE from 'three';
-import Monster2DAvatar from './Monster2DAvatar';
+
 import { useDraggable3D } from '@/hooks/useDraggable3D';
 
 interface Equipment {
@@ -136,14 +136,14 @@ const DraggableMonsterModel: React.FC<DraggableMonsterModelProps> = ({
         <meshBasicMaterial transparent opacity={0} />
       </mesh>
 
-      {/* 2D Аватар монстра вместо 3D модели */}
-      <Monster2DAvatar
-        type={token.monsterType}
-        position={[0, 0, 0]}
-        isSelected={isSelected}
-        isHovered={isHovered}
-        onClick={onSelect}
-      />
+      {/* Простой цилиндр как токен */}
+      <mesh castShadow onClick={onSelect}>
+        <cylinderGeometry args={[0.4, 0.4, 0.8, 12]} />
+        <meshStandardMaterial 
+          color={token.color || '#3b82f6'}
+          emissive={isSelected ? '#333333' : '#000000'}
+        />
+      </mesh>
       
       {/* Экипировка токена */}
       {token.equipment && token.equipment.length > 0 && (

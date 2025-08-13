@@ -5,12 +5,10 @@ import { Home, Save, Plus, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { determineMonsterType, updateTokenWithModelType } from '@/utils/tokenModelMapping';
 import Simple3DMap from '@/components/battle/Simple3DMap';
-import { useSimpleBattleStore } from '@/stores/simpleBattleStore';
+
 import { sessionService } from '@/services/sessionService';
 import { preloadMonsterModels } from '@/components/battle/MonsterModel';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import TokenModelDebugger from '@/components/debug/TokenModelDebugger';
-import AvatarGallery from '@/components/debug/AvatarGallery';
 import { Input } from '@/components/ui/input';
 import { supabase } from '@/integrations/supabase/client';
 import { v4 as uuidv4 } from 'uuid';
@@ -19,17 +17,9 @@ const BattleMap3DPage: React.FC = () => {
   const navigate = useNavigate();
   const { id: sessionId } = useParams<{ id: string }>();
   const sKey = (name: string) => (sessionId ? `${name}:${sessionId}` : name);
-  const { 
-    tokens, 
-    selectedTokenId, 
-    mapBackground,
-    selectToken,
-    addToken,
-    updateToken,
-    moveToken,
-    setTokens,
-    setMapBackground
-  } = useSimpleBattleStore();
+  const [tokens, setTokens] = useState<any[]>([]);
+  const [selectedTokenId, setSelectedTokenId] = useState<string | null>(null);
+  const [mapBackground, setMapBackground] = useState<string>('');
 
   const [mapUrl, setMapUrl] = useState<string>('');
   const [isSaving, setIsSaving] = useState(false);
@@ -100,7 +90,7 @@ const [assets3D, setAssets3D] = useState<AssetModel[]>([]);
       mapUrl: savedMapUrl, 
       tokens: savedTokens 
     });
-  }, [setTokens, setMapBackground]);
+  }, []);
 
   // Восстанавливаем добавленные 3D ассеты
   useEffect(() => {
@@ -242,7 +232,9 @@ const handleClearAssets = () => {
   // Обработчик перемещения токена в 3D
   const handleTokenMove = (tokenId: string, x: number, y: number) => {
     console.log('🏃 3D Token move:', { tokenId, x, y });
-    moveToken(tokenId, x, y);
+    setTokens(prev => prev.map(token => 
+      token.id === tokenId ? { ...token, x, y } : token
+    ));
     
     // Синхронизируем с sessionStorage для 2D карты
     const currentTokens = sessionStorage.getItem(sKey('current3DTokens'));
@@ -262,7 +254,9 @@ const handleClearAssets = () => {
 // Обработчик обновления токена
 const handleTokenUpdate = (tokenId: string, updates: any) => {
   console.log('📝 3D Token update:', { tokenId, updates });
-  updateToken(tokenId, updates);
+  setTokens(prev => prev.map(token => 
+    token.id === tokenId ? { ...token, ...updates } : token
+  ));
   
   // Синхронизация с sessionStorage (по сессии)
   const currentTokens = sessionStorage.getItem(sKey('current3DTokens'));
@@ -385,7 +379,7 @@ const handleTokenUpdate = (tokenId: string, updates: any) => {
           mapImageUrl={mapUrl}
           tokens={tokens}
           selectedTokenId={selectedTokenId}
-          onTokenSelect={selectToken}
+          onTokenSelect={setSelectedTokenId}
           onTokenMove={handleTokenMove}
           onTokenUpdate={handleTokenUpdate}
 assetModels={assets3D}
@@ -395,13 +389,6 @@ assetModels={assets3D}
         />
       </div>
 
-      {/* Отладчик соответствий моделей и галерея аватаров (только в dev режиме) */}
-      {process.env.NODE_ENV === 'development' && (
-        <div className="absolute bottom-4 right-4 z-30 max-w-sm space-y-2">
-          <TokenModelDebugger tokens={tokens} />
-          <AvatarGallery />
-        </div>
-      )}
 
       {/* Gallery dialog for adding 3D assets */}
       <Dialog open={addOpen} onOpenChange={setAddOpen}>
