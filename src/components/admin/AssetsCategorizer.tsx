@@ -18,6 +18,8 @@ const defaultCategories = [
   { key: 'character', name: 'Персонаж' },
   { key: 'monster', name: 'Монстры' },
   { key: 'structure', name: 'Строения' },
+  { key: 'weapon', name: 'Оружие' },
+  { key: 'armor', name: 'Одежда' },
 ] as const;
 
 const AssetsCategorizer: React.FC = () => {

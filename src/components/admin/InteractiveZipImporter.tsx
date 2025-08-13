@@ -15,7 +15,7 @@ interface Candidate {
   base: string; // basename
   slug: string;
   displayName: string;
-  categoryKey: 'monster' | 'character' | 'structure';
+  categoryKey: 'monster' | 'character' | 'structure' | 'weapon' | 'armor';
   tagsText: string;
   selected: boolean;
   isGlb: boolean;
@@ -33,6 +33,8 @@ const guessCategory = (p: string): Candidate['categoryKey'] => {
   if (/(monster|monsters|bestiary|creature|creatures)/.test(n)) return 'monster';
   if (/(character|characters|hero|player|players)/.test(n)) return 'character';
   if (/(structure|structures|building|buildings|props?)/.test(n)) return 'structure';
+  if (/(weapon|weapons|sword|axe|bow|staff|gun|blade)/.test(n)) return 'weapon';
+  if (/(armor|armour|cloth|robe|helmet|shield|boots|glove)/.test(n)) return 'armor';
   return 'monster';
 };
 
@@ -85,12 +87,19 @@ const InteractiveZipImporter: React.FC = () => {
 
   const ensureCategories = async () => {
     await assetsStore.reloadCategories();
-    const keysNeeded: Candidate['categoryKey'][] = ['monster', 'character', 'structure'];
+    const keysNeeded: Candidate['categoryKey'][] = ['monster', 'character', 'structure', 'weapon', 'armor'];
     const existing = new Map(assetsStore.categories.map((c) => [c.key, c.id] as const));
     for (const k of keysNeeded) {
       if (!existing.has(k)) {
         try {
-          await assetsStore.addCategory({ key: k, name: k === 'monster' ? 'Монстры' : k === 'character' ? 'Персонаж' : 'Строения' });
+          const names = {
+            monster: 'Монстры',
+            character: 'Персонаж', 
+            structure: 'Строения',
+            weapon: 'Оружие',
+            armor: 'Одежда'
+          };
+          await assetsStore.addCategory({ key: k, name: names[k] });
         } catch {}
       }
     }
@@ -125,7 +134,14 @@ const InteractiveZipImporter: React.FC = () => {
       for (const c of candidates.filter((x) => x.selected)) {
         try {
           const slug = toSlug(c.slug || c.base);
-          const folder = c.categoryKey === 'monster' ? 'monsters' : c.categoryKey === 'character' ? 'characters' : 'structures';
+          const folderMap = {
+            monster: 'monsters',
+            character: 'characters', 
+            structure: 'structures',
+            weapon: 'weapons',
+            armor: 'armor'
+          };
+          const folder = folderMap[c.categoryKey];
           const targetPath = `${folder}/${slug}/low/model.glb`;
 
           let blob: Blob | undefined;
@@ -219,6 +235,8 @@ const InteractiveZipImporter: React.FC = () => {
                           <SelectItem value="monster">Монстры</SelectItem>
                           <SelectItem value="character">Персонаж</SelectItem>
                           <SelectItem value="structure">Строения</SelectItem>
+                          <SelectItem value="weapon">Оружие</SelectItem>
+                          <SelectItem value="armor">Одежда</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -246,7 +264,12 @@ const InteractiveZipImporter: React.FC = () => {
                     </div>
                   </div>
 
-                  <div className="text-xs text-muted-foreground">Целевой путь: { (c.categoryKey === 'monster' ? 'monsters' : c.categoryKey === 'character' ? 'characters' : 'structures') + '/' + toSlug(c.slug || c.base) + '/low/model.glb' }</div>
+                  <div className="text-xs text-muted-foreground">Целевой путь: { 
+                    (() => {
+                      const folderMap = { monster: 'monsters', character: 'characters', structure: 'structures', weapon: 'weapons', armor: 'armor' };
+                      return folderMap[c.categoryKey] + '/' + toSlug(c.slug || c.base) + '/low/model.glb';
+                    })()
+                  }</div>
                 </div>
               ))}
             </div>
