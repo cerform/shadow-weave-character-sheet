@@ -55,6 +55,8 @@ export interface TokenData {
     wisdom: number;
     charisma: number;
   };
+  // Связка с 3D моделью
+  monsterType?: string;
 }
 
 interface TokenEditorProps {
@@ -241,7 +243,8 @@ const TokenEditor: React.FC<TokenEditorProps> = ({
                                 size: prev.size || token.size,
                                 max_hp: prev.max_hp || token.suggestedHP,
                                 current_hp: prev.current_hp || token.suggestedHP,
-                                armor_class: prev.armor_class || token.suggestedAC
+                                armor_class: prev.armor_class || token.suggestedAC,
+                                monsterType: token.monsterType,
                               }));
                             }}
                             className="w-16 h-16 bg-slate-600 border border-slate-500 rounded-lg overflow-hidden hover:border-blue-400 transition-colors"

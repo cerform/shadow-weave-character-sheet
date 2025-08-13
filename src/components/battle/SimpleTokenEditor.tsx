@@ -24,6 +24,8 @@ export interface Token {
   controlledBy?: string;
   tags?: string[];
   notes?: string;
+  // Связка с 3D моделью
+  monsterType?: string;
 }
 
 interface SimpleTokenEditorProps {
@@ -218,6 +220,10 @@ const SimpleTokenEditor: React.FC<SimpleTokenEditorProps> = ({
                           updateField('avatar', token.image);
                           if (!editedToken.name || editedToken.name === 'Новый токен') {
                             updateField('name', token.name);
+                          }
+                          // Привязка 2D к 3D по monsterType
+                          if (token.monsterType) {
+                            updateField('monsterType', token.monsterType);
                           }
                         }}
                         className="w-12 h-12 bg-slate-600 border border-slate-500 rounded-lg overflow-hidden hover:border-blue-400 transition-colors"

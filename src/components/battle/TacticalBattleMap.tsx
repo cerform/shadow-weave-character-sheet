@@ -2,7 +2,7 @@ import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { Stage, Layer, Rect, Group, Text, Circle, Image as KonvaImage } from 'react-konva';
 import { Button } from '@/components/ui/button';
 import { Plus, Upload, Trash2, Edit, Settings, Users } from 'lucide-react';
-import { defaultTokens } from '@/data/defaultTokens';
+import { defaultTokens, DefaultToken } from '@/data/defaultTokens';
 import SimpleTokenEditor from './SimpleTokenEditor';
 import MapControls from './MapControls';
 import useImage from 'use-image';
@@ -95,6 +95,8 @@ export interface Token {
   controlledBy?: string;
   tags?: string[];
   notes?: string;
+  // Связка с 3D-моделью при переходе в 3D
+  monsterType?: string;
 }
 
 interface TacticalBattleMapProps {
@@ -257,27 +259,28 @@ const TacticalBattleMap: React.FC<TacticalBattleMapProps> = ({
     setShowTokenLibrary(true);
   }, []);
 
-  const addTokenFromLibrary = useCallback((defaultToken: any) => {
-    const newToken: Token = {
-      id: `token_${Date.now()}`,
-      name: defaultToken.name,
-      avatar: defaultToken.image,
-      x: 100,
-      y: 100,
-      color: '#3b82f6',
-      size: 40,
-      hp: defaultToken.suggestedHP || 30,
-      maxHp: defaultToken.suggestedHP || 30,
-      ac: defaultToken.suggestedAC || 15,
-      speed: 30,
-      type: defaultToken.type === 'humanoid' ? 'player' : 'monster',
-      controlledBy: defaultToken.type === 'humanoid' ? 'player1' : 'dm',
-      tags: [defaultToken.type],
-      notes: defaultToken.description
-    };
-    onTokensChange([...tokens, newToken]);
-    setShowTokenLibrary(false);
-  }, [tokens, onTokensChange]);
+const addTokenFromLibrary = useCallback((defaultToken: DefaultToken) => {
+  const newToken: Token = {
+    id: `token_${Date.now()}`,
+    name: defaultToken.name,
+    avatar: defaultToken.image,
+    x: 100,
+    y: 100,
+    color: '#3b82f6',
+    size: 40,
+    hp: defaultToken.suggestedHP || 30,
+    maxHp: defaultToken.suggestedHP || 30,
+    ac: defaultToken.suggestedAC || 15,
+    speed: 30,
+    type: defaultToken.type === 'humanoid' ? 'player' : 'monster',
+    controlledBy: defaultToken.type === 'humanoid' ? 'player1' : 'dm',
+    tags: [defaultToken.type],
+    notes: defaultToken.description,
+    monsterType: defaultToken.monsterType,
+  };
+  onTokensChange([...tokens, newToken]);
+  setShowTokenLibrary(false);
+}, [tokens, onTokensChange]);
 
   const handleEditToken = useCallback((token: Token) => {
     setEditingToken(token);

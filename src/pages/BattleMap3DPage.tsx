@@ -113,9 +113,13 @@ const [assets3D, setAssets3D] = useState<AssetModel[]>([]);
     setFiles((data as any) || []);
   };
 
-  useEffect(() => {
-    if (addOpen) loadFiles(prefix);
-  }, [addOpen, prefix]);
+useEffect(() => {
+  if (addOpen) {
+    const initial = prefix || 'monsters';
+    if (!prefix) setPrefix(initial);
+    loadFiles(initial);
+  }
+}, [addOpen, prefix]);
 
   const parentPrefix = (p: string) => {
     const n = p.replace(/\\/g, '/').replace(/\/$/, '');
@@ -156,6 +160,21 @@ const handleAssetMove = (id: string, x: number, y: number) => {
   });
 };
 
+const handleAssetDelete = (id: string) => {
+  setAssets3D((prev) => {
+    const next = prev.filter((a) => a.id !== id);
+    sessionStorage.setItem(sKey('current3DAssets'), JSON.stringify(next));
+    sessionStorage.removeItem(sKey(`asset3D:${id}`));
+    return next;
+  });
+};
+
+const handleClearAssets = () => {
+  setAssets3D([]);
+  sessionStorage.removeItem(sKey('current3DAssets'));
+  toast.success('Поле очищено');
+};
+
   // Определяем тип монстра по имени и типу
   const determineMonsterType = (name: string, type: string): string | undefined => {
     const lowerName = name.toLowerCase();
@@ -189,25 +208,25 @@ const handleAssetMove = (id: string, x: number, y: number) => {
     }
   };
 
-  // Обработчик обновления токена
-  const handleTokenUpdate = (tokenId: string, updates: any) => {
-    console.log('📝 3D Token update:', { tokenId, updates });
-    updateToken(tokenId, updates);
-    
-    // Синхронизируем с sessionStorage
-    const currentTokens = sessionStorage.getItem('current3DTokens');
-    if (currentTokens) {
-      try {
-        const parsedTokens = JSON.parse(currentTokens);
-        const updatedTokens = parsedTokens.map((token: any) => 
-          token.id === tokenId ? { ...token, ...updates } : token
-        );
-        sessionStorage.setItem('current3DTokens', JSON.stringify(updatedTokens));
-      } catch (error) {
-        console.error('Error updating tokens in session storage:', error);
-      }
+// Обработчик обновления токена
+const handleTokenUpdate = (tokenId: string, updates: any) => {
+  console.log('📝 3D Token update:', { tokenId, updates });
+  updateToken(tokenId, updates);
+  
+  // Синхронизация с sessionStorage (по сессии)
+  const currentTokens = sessionStorage.getItem(sKey('current3DTokens'));
+  if (currentTokens) {
+    try {
+      const parsedTokens = JSON.parse(currentTokens);
+      const updatedTokens = parsedTokens.map((token: any) => 
+        token.id === tokenId ? { ...token, ...updates } : token
+      );
+      sessionStorage.setItem(sKey('current3DTokens'), JSON.stringify(updatedTokens));
+    } catch (error) {
+      console.error('Error updating tokens in session storage:', error);
     }
-  };
+  }
+};
 
   // Сохранение изменений в базу данных
   const handleSave = async () => {
@@ -269,11 +288,11 @@ const handleAssetMove = (id: string, x: number, y: number) => {
               <Save className="w-4 h-4 mr-2" />
               {isSaving ? 'Сохранение...' : 'Сохранить'}
             </Button>
-            <Button 
+<Button 
               onClick={() => {
                 // Синхронизируем данные перед переходом на 2D
-                sessionStorage.setItem('current3DMapUrl', mapUrl);
-                sessionStorage.setItem('current3DTokens', JSON.stringify(tokens));
+                sessionStorage.setItem(sKey('current3DMapUrl'), mapUrl);
+                sessionStorage.setItem(sKey('current3DTokens'), JSON.stringify(tokens));
                 navigate(sessionId ? `/battle/${sessionId}` : '/battle-map-fixed');
               }}
               className="bg-blue-600 hover:bg-blue-700"
@@ -281,13 +300,21 @@ const handleAssetMove = (id: string, x: number, y: number) => {
             >
               Переключить на 2D
             </Button>
-            <Button 
+<Button 
               onClick={() => setAddOpen(true)}
               className="bg-emerald-600 hover:bg-emerald-700"
               size="sm"
             >
               <Plus className="w-4 h-4 mr-2" />
               Добавить 3D ассет
+            </Button>
+            <Button 
+              onClick={handleClearAssets}
+              className="bg-red-600 hover:bg-red-700"
+              size="sm"
+            >
+              <Trash2 className="w-4 h-4 mr-2" />
+              Очистить ассеты
             </Button>
             <Button 
               onClick={() => navigate('/dm')}
@@ -310,8 +337,9 @@ const handleAssetMove = (id: string, x: number, y: number) => {
           onTokenSelect={selectToken}
           onTokenMove={handleTokenMove}
           onTokenUpdate={handleTokenUpdate}
-          assetModels={assets3D}
+assetModels={assets3D}
           onAssetMove={handleAssetMove}
+          onAssetDelete={handleAssetDelete}
           isDM={true}
         />
       </div>
@@ -322,64 +350,71 @@ const handleAssetMove = (id: string, x: number, y: number) => {
           <DialogHeader>
             <DialogTitle>Выбор 3D ассета</DialogTitle>
           </DialogHeader>
-          <div className="space-y-3">
-            <div className="flex flex-wrap gap-2 items-center">
-              <Input
-                placeholder="Фильтр по имени..."
-                value={fileQuery}
-                onChange={(e) => setFileQuery(e.target.value)}
-              />
-              <Input
-                placeholder="Префикс (папка), напр. creatures/"
-                value={prefix}
-                onChange={(e) => setPrefix(e.target.value)}
-              />
-              <Button size="sm" onClick={() => loadFiles(prefix)}>Обновить</Button>
-              {prefix && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    const p = parentPrefix(prefix);
-                    setPrefix(p);
-                    loadFiles(p);
-                  }}
-                >
-                  Назад
-                </Button>
-              )}
-            </div>
+<div className="space-y-3">
+  {/* Категории */}
+  <div className="flex flex-wrap gap-2 items-center">
+    <Button size="sm" variant={prefix.startsWith('monsters') ? 'default' : 'outline'} onClick={() => { setPrefix('monsters'); loadFiles('monsters'); }}>Монстры</Button>
+    <Button size="sm" variant={prefix.startsWith('characters') ? 'default' : 'outline'} onClick={() => { setPrefix('characters'); loadFiles('characters'); }}>Персонажи</Button>
+    <Button size="sm" variant={prefix.startsWith('structures') ? 'default' : 'outline'} onClick={() => { setPrefix('structures'); loadFiles('structures'); }}>Строения</Button>
+  </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 max-h-[60vh] overflow-auto">
-              {files
-                .filter((f) => !fileQuery || f.name.toLowerCase().includes(fileQuery.toLowerCase()))
-                .map((f) => {
-                  const isFile = /\.(glb|gltf)$/i.test(f.name);
-                  return (
-                    <button
-                      key={f.name}
-                      className="p-3 rounded-md border hover:bg-muted text-left"
-                      onClick={() => {
-                        if (isFile) {
-                          handleAddAsset(f.name);
-                        } else {
-                          const next = prefix ? `${prefix}/${f.name}` : f.name;
-                          setPrefix(next);
-                          loadFiles(next);
-                        }
-                      }}
-                    >
-                      <div className="font-medium truncate">{f.name}</div>
-                      <div className="text-xs opacity-70">{isFile ? 'Модель' : 'Папка'}</div>
-                    </button>
-                  );
-                })}
+  <div className="flex flex-wrap gap-2 items-center">
+    <Input
+      placeholder="Фильтр по имени..."
+      value={fileQuery}
+      onChange={(e) => setFileQuery(e.target.value)}
+    />
+    <Input
+      placeholder="Префикс (папка), напр. monsters/"
+      value={prefix}
+      onChange={(e) => setPrefix(e.target.value)}
+    />
+    <Button size="sm" onClick={() => loadFiles(prefix)}>Обновить</Button>
+    {prefix && (
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={() => {
+          const p = parentPrefix(prefix);
+          setPrefix(p);
+          loadFiles(p);
+        }}
+      >
+        Назад
+      </Button>
+    )}
+  </div>
 
-              {files.length === 0 && (
-                <div className="col-span-full text-sm opacity-70">Нет элементов в этой папке.</div>
-              )}
-            </div>
-          </div>
+  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 max-h-[60vh] overflow-auto">
+    {files
+      .filter((f) => !fileQuery || f.name.toLowerCase().includes(fileQuery.toLowerCase()))
+      .map((f) => {
+        const isFile = /\.(glb|gltf)$/i.test(f.name);
+        return (
+          <button
+            key={f.name}
+            className="p-3 rounded-md border hover:bg-muted text-left"
+            onClick={() => {
+              if (isFile) {
+                handleAddAsset(f.name);
+              } else {
+                const next = prefix ? `${prefix}/${f.name}` : f.name;
+                setPrefix(next);
+                loadFiles(next);
+              }
+            }}
+          >
+            <div className="font-medium truncate">{f.name}</div>
+            <div className="text-xs opacity-70">{isFile ? 'Модель' : 'Папка'}</div>
+          </button>
+        );
+      })}
+
+    {files.length === 0 && (
+      <div className="col-span-full text-sm opacity-70">Нет элементов в этой папке.</div>
+    )}
+  </div>
+</div>
         </DialogContent>
       </Dialog>
     </div>

@@ -456,6 +456,8 @@ const Simple3DMap: React.FC<Simple3DMapProps> = ({
   onTokenMove,
   onTokenUpdate,
   onAssetMove,
+  onAssetUpdate,
+  onAssetDelete,
   isDM = false,
   showGrid = true,
   gridSizePx = 50,
@@ -619,6 +621,19 @@ const Simple3DMap: React.FC<Simple3DMapProps> = ({
               />
             </DialogContent>
           </Dialog>
+        </div>
+      )}
+
+      {/* Панель управления ассетом */}
+      {selectedAsset && isDM && (
+        <div className="absolute bottom-4 right-4 bg-slate-800 text-white p-4 rounded-lg shadow-lg space-y-2">
+          <h4 className="font-bold">Ассет</h4>
+          <div className="text-xs opacity-80 max-w-[40vw] truncate">{selectedAsset.storage_path}</div>
+          <div className="flex gap-2">
+            <Button size="sm" variant="destructive" onClick={() => onAssetDelete?.(selectedAsset.id)}>
+              <Trash2 className="w-3 h-3 mr-1" /> Удалить ассет
+            </Button>
+          </div>
         </div>
       )}
     </div>
