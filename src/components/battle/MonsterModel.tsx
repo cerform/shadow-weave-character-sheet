@@ -242,16 +242,19 @@ function Model({
 
   useFrame((state) => {
     if (groupRef.current) {
+      // Базовая позиция - всегда остается на исходной Y позиции
+      const baseY = position[1];
+      
       // Subtle floating animation for hovered/selected monsters
       if (isHovered || isSelected) {
-        groupRef.current.position.y = position[1] + Math.sin(state.clock.elapsedTime * 2) * 0.1;
+        groupRef.current.position.y = baseY + Math.sin(state.clock.elapsedTime * 2) * 0.05;
       } else {
-        groupRef.current.position.y = position[1];
+        groupRef.current.position.y = baseY;
       }
       
       // Subtle rotation for selected monsters
       if (isSelected) {
-        groupRef.current.rotation.y += 0.01;
+        groupRef.current.rotation.y += 0.005; // Медленнее поворот
       }
     }
   });

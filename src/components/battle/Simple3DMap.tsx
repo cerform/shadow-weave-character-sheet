@@ -6,6 +6,7 @@ import { MonsterModel } from './MonsterModel';
 import { monsterTypes } from '@/data/monsterTypes';
 import { Button } from '@/components/ui/button';
 import { Plus, Minus, Edit, Heart, Trash2, Settings, Video, Ruler } from 'lucide-react';
+import EquipmentManager from './EquipmentManager';
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -29,6 +30,18 @@ interface AssetModel {
   ownerId?: string; // владелец (опционально)
 }
 
+interface Equipment {
+  id: string;
+  name: string;
+  type: 'weapon' | 'armor' | 'accessory' | 'helmet' | 'boots';
+  modelPath?: string;
+  stats?: {
+    damage?: string;
+    ac?: number;
+    bonus?: string;
+  };
+}
+
 interface Simple3DMapProps {
   mapImageUrl?: string;
   tokens?: Array<{
@@ -45,6 +58,7 @@ interface Simple3DMapProps {
     ac?: number;
     speed?: number;
     controlledBy?: string;
+    equipment?: Equipment[];
   }>;
   assetModels?: AssetModel[]; // доп. 3D ассеты из Supabase Storage
   onTokenSelect?: (tokenId: string | null) => void;
@@ -529,11 +543,14 @@ const Simple3DMap: React.FC<Simple3DMapProps> = ({
             );
           })}
           
-          {/* Токены */}
-          {tokens.map((token) => {
+          {/* Токены с правильным позиционированием */}
+          {tokens.map((token, index) => {
             // Конвертируем координаты из пикселей в 3D координаты
             const x = ((token.x || 0) / 1200) * 24 - 12;
             const z = ((token.y || 0) / 800) * 16 - 8;
+            
+            // Добавляем небольшое смещение по Y для предотвращения наложения
+            const yOffset = 0.1 + (index * 0.05); // Каждый токен немного выше предыдущего
             
             // Используем перетаскиваемые 3D модели монстров, если тип указан
             if (token.monsterType && monsterTypes[token.monsterType]) {
@@ -541,7 +558,7 @@ const Simple3DMap: React.FC<Simple3DMapProps> = ({
                 <DraggableMonsterModel
                   key={token.id}
                   token={token}
-                  position={[x, 0.4, -z]}
+                  position={[x, yOffset, -z]}
                   isSelected={selectedTokenId === token.id}
                   isHovered={hoveredToken === token.id}
                   onSelect={() => onTokenSelect?.(selectedTokenId === token.id ? null : token.id)}
@@ -557,7 +574,7 @@ const Simple3DMap: React.FC<Simple3DMapProps> = ({
               <DraggableToken3D
                 key={token.id}
                 token={token}
-                position={[x, 0.4, -z]}
+                position={[x, yOffset, -z]}
                 isSelected={selectedTokenId === token.id}
                 onSelect={() => onTokenSelect?.(selectedTokenId === token.id ? null : token.id)}
                 onMove={(mapX, mapY) => handleTokenMove(token.id, mapX, mapY)}
@@ -582,7 +599,7 @@ const Simple3DMap: React.FC<Simple3DMapProps> = ({
 
       {/* UI панель управления */}
       {selectedToken && isDM && (
-        <div className="absolute top-4 right-4 bg-slate-800 text-white p-4 rounded-lg shadow-lg space-y-2">
+        <div className="absolute top-4 right-4 bg-slate-800 text-white p-4 rounded-lg shadow-lg space-y-2 max-w-sm">
           <h4 className="font-bold">{selectedToken.name}</h4>
           <div className="text-sm">HP: {selectedToken.hp}/{selectedToken.maxHp}</div>
           <div className="text-sm">AC: {selectedToken.ac}</div>
@@ -605,6 +622,19 @@ const Simple3DMap: React.FC<Simple3DMapProps> = ({
               +5 HP
             </Button>
           </div>
+
+          {/* Экипировка */}
+          <EquipmentManager
+            currentEquipment={selectedToken.equipment || []}
+            availableEquipment={[
+              { id: '1', name: 'Железный меч', type: 'weapon', stats: { damage: '1d8+3' } },
+              { id: '2', name: 'Кольчуга', type: 'armor', stats: { ac: 14 } },
+              { id: '3', name: 'Щит', type: 'accessory', stats: { ac: 2 } },
+              { id: '4', name: 'Шлем рыцаря', type: 'helmet', stats: { ac: 1, bonus: '+1 к Восприятию' } },
+              { id: '5', name: 'Быстрые сапоги', type: 'boots', stats: { bonus: '+10 футов скорости' } },
+            ]}
+            onEquipmentChange={(equipment) => onTokenUpdate?.(selectedToken.id, { equipment })}
+          />
 
           <Dialog open={showTokenEditor} onOpenChange={setShowTokenEditor}>
             <DialogTrigger asChild>

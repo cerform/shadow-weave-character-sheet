@@ -47,7 +47,7 @@ const DraggableMonsterModel: React.FC<DraggableMonsterModelProps> = ({
 
   // Обработка событий мыши на уровне документа для плавного перетаскивания
   React.useEffect(() => {
-    if (isDragging) {
+    if (isDragging && groupRef.current) {
       const handleMouseMove = (e: MouseEvent) => {
         const rect = gl.domElement.getBoundingClientRect();
         mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
@@ -61,9 +61,12 @@ const DraggableMonsterModel: React.FC<DraggableMonsterModelProps> = ({
           const boundedX = Math.max(-12, Math.min(12, intersectionPoint.x));
           const boundedZ = Math.max(-8, Math.min(8, intersectionPoint.z));
           
+          // Плавное движение модели в реальном времени
           if (groupRef.current) {
             groupRef.current.position.x = boundedX;
             groupRef.current.position.z = boundedZ;
+            // Держим Y координату постоянной во время перетаскивания
+            groupRef.current.position.y = position[1];
           }
         }
       };
@@ -83,7 +86,8 @@ const DraggableMonsterModel: React.FC<DraggableMonsterModelProps> = ({
           console.log('🎯 Monster moved to:', { 
             x: boundedMapX, 
             y: boundedMapY,
-            from3D: { x: newPos.x, z: newPos.z }
+            from3D: { x: newPos.x, z: newPos.z },
+            tokenId: token.id
           });
           
           onMove(boundedMapX, boundedMapY);
@@ -98,7 +102,7 @@ const DraggableMonsterModel: React.FC<DraggableMonsterModelProps> = ({
         document.removeEventListener('mouseup', handleMouseUp);
       };
     }
-  }, [isDragging, camera, gl.domElement, onMove]);
+  }, [isDragging, camera, gl.domElement, onMove, position, token.id]);
 
   return (
     <group ref={groupRef} position={position}>
