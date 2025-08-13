@@ -333,12 +333,12 @@ const handleTokenUpdate = (tokenId: string, updates: any) => {
               <Save className="w-4 h-4 mr-2" />
               {isSaving ? 'Сохранение...' : 'Сохранить'}
             </Button>
-<Button 
+            <Button 
               onClick={() => {
                 // Синхронизируем данные перед переходом на 2D
                 sessionStorage.setItem(sKey('current3DMapUrl'), mapUrl);
                 sessionStorage.setItem(sKey('current3DTokens'), JSON.stringify(tokens));
-                navigate(sessionId ? `/battle/${sessionId}` : '/battle-map-fixed');
+                navigate(`/battle-map-2d${sessionId ? `/${sessionId}` : ''}`);
               }}
               className="bg-blue-600 hover:bg-blue-700"
               size="sm"

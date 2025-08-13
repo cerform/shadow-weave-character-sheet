@@ -23,6 +23,7 @@ import DMSessionPage from '@/pages/DMSessionPage';
 
 import DMMapGenerator3D from '@/pages/DMMapGenerator3D';
 import BattleMap3DPage from '@/pages/BattleMap3DPage';
+import BattleMap2DPage from '@/pages/BattleMap2DPage';
 import AdminAssetsPage from '@/pages/AdminAssetsPage';
 import DMMapEditorPage from '@/pages/DMMapEditorPage';
 import PlayerMapPage from '@/pages/PlayerMapPage';
@@ -162,6 +163,21 @@ const AppRoutes: React.FC = () => {
       <Route path="/battle-map-3d" element={
         <ProtectedDMRoute>
           <BattleMap3DPage />
+        </ProtectedDMRoute>
+      } />
+      <Route path="/battle-map-3d/:id" element={
+        <ProtectedDMRoute>
+          <BattleMap3DPage />
+        </ProtectedDMRoute>
+      } />
+      <Route path="/battle-map-2d" element={
+        <ProtectedDMRoute>
+          <BattleMap2DPage />
+        </ProtectedDMRoute>
+      } />
+      <Route path="/battle-map-2d/:id" element={
+        <ProtectedDMRoute>
+          <BattleMap2DPage />
         </ProtectedDMRoute>
       } />
       <Route path="/dm-session/:sessionId" element={
