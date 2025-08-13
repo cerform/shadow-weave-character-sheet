@@ -3,7 +3,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/componen
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { ExternalLink, Trash2, Copy, RefreshCcw } from 'lucide-react';
+import { ExternalLink, Trash2, Copy, RefreshCcw, Users, Swords, Building, Shield, User } from 'lucide-react';
 import { Canvas, useLoader } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
 import { supabase } from '@/integrations/supabase/client';
@@ -237,6 +237,18 @@ const copyUrl = async (name: string) => {
     }
   };
 
+  // Список категорий для отображения
+  const categories = [
+    { key: 'monsters', name: 'Монстры', icon: Users, description: 'Существа и монстры' },
+    { key: 'characters', name: 'Персонажи', icon: User, description: 'Игровые персонажи' },
+    { key: 'structures', name: 'Строения', icon: Building, description: 'Здания и сооружения' },
+    { key: 'armor', name: 'Одежда', icon: Shield, description: 'Броня и одежда' },
+    { key: 'weapons', name: 'Оружие', icon: Swords, description: 'Оружие и инструменты' },
+  ];
+
+  // Если prefix пустой - показываем категории
+  const showCategories = !prefix;
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-3">
@@ -252,10 +264,10 @@ const copyUrl = async (name: string) => {
           {prefix && (
             <Button
               variant="outline"
-              onClick={() => setPrefix(parentPrefix(prefix))}
+              onClick={() => setPrefix('')}
               disabled={loading}
             >
-              Вверх
+              К категориям
             </Button>
           )}
           <Button
@@ -270,113 +282,194 @@ const copyUrl = async (name: string) => {
           </Button>
         </div>
       </div>
-      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        {filtered.map((f) => {
-          const fullPath = prefix ? `${prefix}/${f.name}` : f.name;
-          const publicUrl = publicModelUrl(fullPath);
-          const lower = f.name.toLowerCase();
-          const isFolder = !f.id && !/\.[a-z0-9]+$/i.test(f.name);
-          const v = validations[fullPath];
-          const isGltf = lower.endsWith('.gltf');
-          const isGlb = lower.endsWith('.glb');
-          const isImage = /(\.png|\.jpg|\.jpeg|\.webp|\.gif|\.bmp|\.svg)$/.test(lower);
-          const hasMissing = isGltf && ((v?.missing?.length ?? 0) > 0);
-          const canPreview3D = !isFolder && (isGlb || (isGltf && !hasMissing));
-          return (
-            <Card key={fullPath} className="overflow-hidden">
-              <CardHeader className="p-3 flex items-center justify-between">
-                <CardTitle className="text-sm font-semibold truncate" title={f.name}>{f.name}</CardTitle>
-                <div className="flex items-center gap-1">
-                  <Badge variant="secondary">models</Badge>
-                  {isFolder && <Badge variant="outline">folder</Badge>}
-                  {isGltf && <Badge variant="outline">gltf</Badge>}
-                  {isGlb && <Badge variant="outline">glb</Badge>}
-                  {hasMissing && (
-                    <Badge variant="destructive" title={`Отсутствует: ${v?.missing?.join(', ')}`}>
-                      deps
-                    </Badge>
-                  )}
-                </div>
-              </CardHeader>
-              <CardContent className="p-0">
-                <div className="h-48 bg-muted/40">
-                  {isFolder ? (
-                    <div className="w-full h-full flex items-center justify-center text-[11px] text-muted-foreground p-3 text-center">
-                      Папка. Откройте для просмотра содержимого.
+
+      {showCategories ? (
+        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+          {categories.map((category) => {
+            const IconComponent = category.icon;
+            return (
+              <Card key={category.key} className="overflow-hidden cursor-pointer hover:shadow-lg transition-shadow"
+                    onClick={() => setPrefix(category.key)}>
+                <CardContent className="p-6 text-center">
+                  <div className="flex flex-col items-center gap-3">
+                    <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+                      <IconComponent className="w-8 h-8 text-primary" />
                     </div>
-                  ) : hasMissing ? (
-                    <div className="w-full h-full flex items-center justify-center text-[11px] text-muted-foreground p-3 text-center">
-                      Не хватает файлов: {v?.missing?.slice(0, 3).join(', ') || '—'}. Загрузите их или воспользуйтесь кнопкой «В GLB».
+                    <div>
+                      <h3 className="font-semibold text-lg">{category.name}</h3>
+                      <p className="text-sm text-muted-foreground mt-1">{category.description}</p>
                     </div>
-                  ) : isImage ? (
-                    <img
-                      src={publicUrl}
-                      alt={`Предпросмотр изображения ${f.name} из хранилища models`}
-                      loading="lazy"
-                      className="w-full h-48 object-contain"
-                      onError={() => console.error('Image preview failed', publicUrl)}
-                    />
-                  ) : canPreview3D ? (
-                    <ErrorBoundary fallback={<div className="w-full h-full flex items-center justify-center text-[11px] text-muted-foreground p-3 text-center">Не удалось загрузить 3D-превью. Для .gltf нужен сопутствующий .bin и текстуры. Рекомендуется загружать .glb.</div>}>
-                      <Suspense fallback={<div className="w-full h-full flex items-center justify-center text-xs text-muted-foreground">Загрузка...</div>}>
-                        <Canvas camera={{ position: [1.6, 1.6, 1.6], fov: 50 }}>
-                          <ambientLight intensity={0.8} />
-                          <directionalLight position={[2, 2, 2]} intensity={0.6} />
-                          <Suspense fallback={null}>
-                            <ModelPreview path={fullPath} />
-                          </Suspense>
-                          <OrbitControls enablePan={false} enableZoom={false} maxPolarAngle={Math.PI / 2.2} />
-                        </Canvas>
-                      </Suspense>
-                    </ErrorBoundary>
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-[11px] text-muted-foreground p-3 text-center">
-                      Превью доступно для .png/.jpg/.webp, .glb и валидных .gltf.
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-              <CardFooter className="p-3 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  {isFolder ? (
-                    <Button size="sm" variant="secondary" onClick={() => setPrefix(joinPath(prefix, f.name))}>
-                      Открыть папку
-                    </Button>
-                  ) : (
-                    <>
-                      <Button size="sm" variant="secondary" asChild>
-                        <a href={publicUrl} target="_blank" rel="noreferrer">
-                          <ExternalLink className="h-3 w-3 mr-1" />Открыть
-                        </a>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      ) : (
+        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {filtered.map((f) => {
+            const fullPath = prefix ? `${prefix}/${f.name}` : f.name;
+            const publicUrl = publicModelUrl(fullPath);
+            const lower = f.name.toLowerCase();
+            const isFolder = !f.id && !/\.[a-z0-9]+$/i.test(f.name);
+            const v = validations[fullPath];
+            const isGltf = lower.endsWith('.gltf');
+            const isGlb = lower.endsWith('.glb');
+            const isImage = /(\.png|\.jpg|\.jpeg|\.webp|\.gif|\.bmp|\.svg)$/.test(lower);
+            const hasMissing = isGltf && ((v?.missing?.length ?? 0) > 0);
+            const canPreview3D = !isFolder && (isGlb || (isGltf && !hasMissing));
+            return (
+              <Card key={fullPath} className="overflow-hidden">
+                <CardHeader className="p-3 flex items-center justify-between">
+                  <CardTitle className="text-sm font-semibold truncate" title={f.name}>{f.name}</CardTitle>
+                  <div className="flex items-center gap-1">
+                    <Badge variant="secondary">models</Badge>
+                    {isFolder && <Badge variant="outline">folder</Badge>}
+                    {isGltf && <Badge variant="outline">gltf</Badge>}
+                    {isGlb && <Badge variant="outline">glb</Badge>}
+                    {hasMissing && (
+                      <Badge variant="destructive" title={`Отсутствует: ${v?.missing?.join(', ')}`}>
+                        deps
+                      </Badge>
+                    )}
+                  </div>
+                </CardHeader>
+                <CardContent className="p-0">
+                  <div className="h-48 bg-muted/40">
+                    {isFolder ? (
+                      <div className="w-full h-full flex items-center justify-center text-[11px] text-muted-foreground p-3 text-center">
+                        Папка. Откройте для просмотра содержимого.
+                      </div>
+                    ) : hasMissing ? (
+                      <div className="w-full h-full flex items-center justify-center text-[11px] text-muted-foreground p-3 text-center">
+                        Не хватает файлов: {v?.missing?.slice(0, 3).join(', ') || '—'}. Загрузите их или воспользуйтесь кнопкой «В GLB».
+                      </div>
+                    ) : isImage ? (
+                      <img
+                        src={publicUrl}
+                        alt={`Предпросмотр изображения ${f.name} из хранилища models`}
+                        loading="lazy"
+                        className="w-full h-48 object-contain"
+                        onError={() => console.error('Image preview failed', publicUrl)}
+                      />
+                    ) : canPreview3D ? (
+                      <ErrorBoundary fallback={<div className="w-full h-full flex items-center justify-center text-[11px] text-muted-foreground p-3 text-center">Не удалось загрузить 3D-превью. Для .gltf нужен сопутствующий .bin и текстуры. Рекомендуется загружать .glb.</div>}>
+                        <Suspense fallback={<div className="w-full h-full flex items-center justify-center text-xs text-muted-foreground">Загрузка...</div>}>
+                          <Canvas camera={{ position: [1.6, 1.6, 1.6], fov: 50 }}>
+                            <ambientLight intensity={0.8} />
+                            <directionalLight position={[2, 2, 2]} intensity={0.6} />
+                            <Suspense fallback={null}>
+                              <ModelPreview path={fullPath} />
+                            </Suspense>
+                            <OrbitControls enablePan={false} enableZoom={false} maxPolarAngle={Math.PI / 2.2} />
+                          </Canvas>
+                        </Suspense>
+                      </ErrorBoundary>
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-[11px] text-muted-foreground p-3 text-center">
+                        Превью доступно для .png/.jpg/.webp, .glb и валидных .gltf.
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+                <CardFooter className="p-3 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    {isFolder ? (
+                      <Button size="sm" variant="secondary" onClick={() => setPrefix(joinPath(prefix, f.name))}>
+                        Открыть папку
                       </Button>
-                      <Button size="sm" variant="outline" onClick={() => copyUrl(fullPath)}>
-                        <Copy className="h-3 w-3 mr-1" />Копировать URL
+                    ) : (
+                      <>
+                        <Button size="sm" variant="secondary" asChild>
+                          <a href={publicUrl} target="_blank" rel="noreferrer">
+                            <ExternalLink className="h-3 w-3 mr-1" />Открыть
+                          </a>
+                        </Button>
+                        <Button size="sm" variant="outline" onClick={() => copyUrl(fullPath)}>
+                          <Copy className="h-3 w-3 mr-1" />Копировать URL
+                        </Button>
+                      </>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {!isFolder && isGltf && (
+                      <>
+                        <Button size="sm" variant="outline" onClick={() => convertToGlb(fullPath)} disabled={loading}>
+                          В GLB
+                        </Button>
+                        <Button size="sm" variant="outline" onClick={() => openLinkDialog(fullPath)} disabled={loading}>
+                          Привязать .bin
+                        </Button>
+                      </>
+                    )}
+                    {!isFolder && (
+                      <Button size="sm" variant="ghost" className="text-destructive" onClick={() => remove(fullPath)} disabled={!isAdmin || loading}>
+                        <Trash2 className="h-4 w-4" />
                       </Button>
-                    </>
-                  )}
-                </div>
-                <div className="flex items-center gap-2">
-                  {!isFolder && isGltf && (
-                    <>
-                      <Button size="sm" variant="outline" onClick={() => convertToGlb(fullPath)} disabled={loading}>
-                        В GLB
-                      </Button>
-                      <Button size="sm" variant="outline" onClick={() => openLinkDialog(fullPath)} disabled={loading}>
-                        Привязать .bin
-                      </Button>
-                    </>
-                  )}
-                  {!isFolder && (
-                    <Button size="sm" variant="ghost" className="text-destructive" onClick={() => remove(fullPath)} disabled={!isAdmin || loading}>
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  )}
-                </div>
-              </CardFooter>
-            </Card>
-          );
-        })}
-      </div>
+                    )}
+                  </div>
+                </CardFooter>
+              </Card>
+            );
+          })}
+        </div>
+      )}
+
+      <Dialog open={linkOpen} onOpenChange={setLinkOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Привязать .bin файл к GLTF</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Цель: <code>{targetGltf}</code>
+            </p>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm font-medium">Папка для поиска .bin</label>
+                <Input
+                  value={binPrefix}
+                  onChange={(e) => setBinPrefix(e.target.value)}
+                  placeholder="Оставьте пустым для корня"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium">Поиск .bin файлов</label>
+                <Input
+                  value={binQuery}
+                  onChange={(e) => setBinQuery(e.target.value)}
+                  placeholder="Фильтр по имени"
+                />
+              </div>
+            </div>
+            <div className="max-h-64 overflow-y-auto border rounded p-2">
+              {filteredBin.map((bin) => {
+                const binPath = binPrefix ? `${binPrefix}/${bin.name}` : bin.name;
+                const isSelected = selectedBin === binPath;
+                return (
+                  <div
+                    key={binPath}
+                    className={`p-2 cursor-pointer rounded ${
+                      isSelected ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'
+                    }`}
+                    onClick={() => setSelectedBin(binPath)}
+                  >
+                    {binPath}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setLinkOpen(false)}>
+              Отмена
+            </Button>
+            <Button onClick={linkBinToGltf} disabled={!selectedBinFullPath}>
+              Привязать
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
