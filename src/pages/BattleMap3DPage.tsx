@@ -170,9 +170,23 @@ const handleAssetDelete = (id: string) => {
 };
 
 const handleClearAssets = () => {
+  // Удаляем кэш по каждому ассету этой сессии
+  const ids = assets3D.map(a => a.id);
+  ids.forEach((id) => sessionStorage.removeItem(sKey(`asset3D:${id}`)));
+
+  // На всякий случай выметаем «сиротские» ключи текущей сессии
+  for (let i = sessionStorage.length - 1; i >= 0; i--) {
+    const key = sessionStorage.key(i);
+    if (!key) continue;
+    const sessionSuffix = sessionId ? `:${sessionId}` : '';
+    if (key.startsWith('asset3D:') && key.endsWith(sessionSuffix)) {
+      sessionStorage.removeItem(key);
+    }
+  }
+
   setAssets3D([]);
   sessionStorage.removeItem(sKey('current3DAssets'));
-  toast.success('Поле очищено');
+  toast.success('Ассеты очищены');
 };
 
   // Определяем тип монстра по имени и типу
