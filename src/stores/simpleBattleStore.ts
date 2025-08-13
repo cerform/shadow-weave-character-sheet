@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { updateTokenWithModelType } from '@/utils/tokenModelMapping';
 
 interface Equipment {
   id: string;
@@ -205,8 +206,11 @@ export const useSimpleBattleStore = create<SimpleBattleStore>((set, get) => ({
       ...tokenData,
       id: `token_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
     };
+    // Применяем утилиту для определения правильного типа модели
+    const tokenWithModel = updateTokenWithModelType(newToken);
+    
     set((state) => ({
-      tokens: [...state.tokens, newToken]
+      tokens: [...state.tokens, tokenWithModel]
     }));
   },
 
@@ -261,6 +265,8 @@ export const useSimpleBattleStore = create<SimpleBattleStore>((set, get) => ({
   },
 
   setTokens: (tokens) => {
-    set({ tokens });
+    // Применяем утилиту для обновления типов моделей у всех токенов
+    const tokensWithCorrectModels = tokens.map(token => updateTokenWithModelType(token));
+    set({ tokens: tokensWithCorrectModels });
   }
 }));

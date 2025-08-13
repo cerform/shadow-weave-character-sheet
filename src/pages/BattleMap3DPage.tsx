@@ -3,11 +3,13 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Home, Save, Plus, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { determineMonsterType, updateTokenWithModelType } from '@/utils/tokenModelMapping';
 import Simple3DMap from '@/components/battle/Simple3DMap';
 import { useSimpleBattleStore } from '@/stores/simpleBattleStore';
 import { sessionService } from '@/services/sessionService';
 import { preloadMonsterModels } from '@/components/battle/MonsterModel';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import TokenModelDebugger from '@/components/debug/TokenModelDebugger';
 import { Input } from '@/components/ui/input';
 import { supabase } from '@/integrations/supabase/client';
 import { v4 as uuidv4 } from 'uuid';
@@ -32,7 +34,17 @@ const BattleMap3DPage: React.FC = () => {
   const [isSaving, setIsSaving] = useState(false);
 
   // 3D ассеты из Supabase Storage (эпhemeral + sessionStorage)
-type AssetModel = { id: string; storage_path: string; x: number; y: number; scale?: number | [number, number, number]; controlledBy?: string; ownerId?: string };
+type AssetModel = { 
+  id: string; 
+  storage_path: string; 
+  x: number; 
+  y: number; 
+  scale?: number | [number, number, number]; 
+  rotationY?: number; 
+  animate?: boolean; 
+  controlledBy?: string; 
+  ownerId?: string; 
+};
 const [assets3D, setAssets3D] = useState<AssetModel[]>([]);
   const [addOpen, setAddOpen] = useState(false);
   const [prefix, setPrefix] = useState<string>('');
@@ -73,7 +85,7 @@ const [assets3D, setAssets3D] = useState<AssetModel[]>([]);
           ac: token.ac || 15,
           type: token.type || 'monster',
           controlledBy: token.controlledBy || 'dm',
-          // Сохраняем 3D тип, если уже задан на 2D; иначе пытаемся угадать
+          // Применяем утилиту для определения правильного типа модели
           monsterType: token.monsterType || determineMonsterType(token.name, token.type)
         }));
         
@@ -130,6 +142,14 @@ useEffect(() => {
 const handleAddAsset = (name: string) => {
   const full = prefix ? `${prefix}/${name}` : name;
 
+  // Проверяем, нет ли уже такого ассета на карте
+  const existingAsset = assets3D.find(asset => asset.storage_path === full);
+  if (existingAsset) {
+    toast.error('Этот ассет уже добавлен на карту');
+    setAddOpen(false);
+    return;
+  }
+
   // Раскладываем новые ассеты по сетке вокруг центра, чтобы не накладывались
   const centerX = 600;
   const centerY = 400;
@@ -142,11 +162,23 @@ const handleAddAsset = (name: string) => {
   const x = Math.max(0, Math.min(1200, centerX + (col - Math.floor(cols / 2)) * spacingX));
   const y = Math.max(0, Math.min(800, centerY + row * spacingY));
 
-  const newItem: AssetModel = { id: uuidv4(), storage_path: full, x, y, controlledBy: 'dm' };
+  const newItem: AssetModel = { 
+    id: `asset_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`, 
+    storage_path: full, 
+    x, 
+    y, 
+    controlledBy: 'dm',
+    scale: 1,
+    rotationY: 0,
+    animate: false
+  };
+  
   const next = [...assets3D, newItem];
   setAssets3D(next);
   sessionStorage.setItem(sKey('current3DAssets'), JSON.stringify(next));
   sessionStorage.setItem(sKey(`asset3D:${newItem.id}`), JSON.stringify(newItem));
+  
+  toast.success(`3D ассет "${name}" добавлен на карту`);
   setAddOpen(false);
 };
 
@@ -189,18 +221,22 @@ const handleClearAssets = () => {
   toast.success('Ассеты очищены');
 };
 
-  // Определяем тип монстра по имени и типу
-  const determineMonsterType = (name: string, type: string): string | undefined => {
-    const lowerName = name.toLowerCase();
-    if (lowerName.includes('гоблин') || lowerName.includes('goblin')) return 'goblin';
-    if (lowerName.includes('орк') || lowerName.includes('orc')) return 'orc';
-    if (lowerName.includes('скелет') || lowerName.includes('skeleton')) return 'skeleton';
-    if (lowerName.includes('дракон') || lowerName.includes('dragon')) return 'dragon';
-    if (lowerName.includes('волк') || lowerName.includes('wolf')) return 'wolf';
-    if (lowerName.includes('голем') || lowerName.includes('golem')) return 'golem';
-    if (type === 'player' || lowerName.includes('воин') || lowerName.includes('fighter') || lowerName.includes('wizard')) return 'fighter';
-    return undefined;
-  };
+  // Обновляем токены при загрузке с правильными типами моделей
+  useEffect(() => {
+    const savedTokens = sessionStorage.getItem(sKey('current3DTokens'));
+    if (savedTokens) {
+      try {
+        const parsedTokens = JSON.parse(savedTokens);
+        // Применяем утилиту для определения правильных типов моделей
+        const tokensWithCorrectModels = parsedTokens.map((token: any) => 
+          updateTokenWithModelType(token)
+        );
+        setTokens(tokensWithCorrectModels);
+      } catch (error) {
+        console.error('Error updating token models:', error);
+      }
+    }
+  }, [setTokens]);
 
   // Обработчик перемещения токена в 3D
   const handleTokenMove = (tokenId: string, x: number, y: number) => {
@@ -357,6 +393,13 @@ assetModels={assets3D}
           isDM={true}
         />
       </div>
+
+      {/* Отладчик соответствий моделей (в dev режиме) */}
+      {process.env.NODE_ENV === 'development' && (
+        <div className="absolute bottom-4 right-4 z-30 max-w-sm">
+          <TokenModelDebugger tokens={tokens} />
+        </div>
+      )}
 
       {/* Gallery dialog for adding 3D assets */}
       <Dialog open={addOpen} onOpenChange={setAddOpen}>
