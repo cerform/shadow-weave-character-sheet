@@ -18,6 +18,7 @@ import { useProtectedRoute } from '@/hooks/use-auth';
 const defaultCategories = [
   { key: 'character', name: 'Персонаж' },
   { key: 'monster', name: 'Монстры' },
+  { key: 'boss', name: 'Босы' },
   { key: 'structure', name: 'Строения' },
   { key: 'weapon', name: 'Оружие' },
   { key: 'armor', name: 'Одежда' },
