@@ -1,7 +1,6 @@
-import React, { useState, useRef } from 'react';
-import { useFrame, useThree } from '@react-three/fiber';
+import React from 'react';
 import { Text } from '@react-three/drei';
-import * as THREE from 'three';
+import { useDraggable3D } from '@/hooks/useDraggable3D';
 
 interface Equipment {
   id: string;
@@ -107,143 +106,24 @@ const DraggableToken3D: React.FC<DraggableToken3DProps> = ({
   isDM = false,
   onDragChange,
 }) => {
-  const meshRef = useRef<any>(null);
-  const [isDragging, setIsDragging] = useState(false);
-  const [startPosition, setStartPosition] = useState<THREE.Vector3>(new THREE.Vector3());
-  const { camera, gl, scene } = useThree();
-
-  const raycaster = new THREE.Raycaster();
-  const mouse = new THREE.Vector2();
-
-  const handlePointerDown = (e: any) => {
-    e.stopPropagation();
-    onSelect();
-    
-    if (isDM || token.controlledBy === 'player1') {
-      setIsDragging(true);
-      setStartPosition(meshRef.current?.position.clone() || new THREE.Vector3());
-      gl.domElement.style.cursor = 'grabbing';
-      // Disable camera controls while dragging
-      try { onDragChange?.(true); } catch {}
-    }
-  };
-  const handlePointerMove = (e: any) => {
-    if (!isDragging) return;
-
-    // Обновляем позицию мыши
-    const rect = gl.domElement.getBoundingClientRect();
-    mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
-    mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
-
-    // Создаем raycast на плоскость Y=0
-    raycaster.setFromCamera(mouse, camera);
-    const plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
-    const intersectionPoint = new THREE.Vector3();
-    
-    if (raycaster.ray.intersectPlane(plane, intersectionPoint)) {
-      // Ограничиваем движение в пределах карты
-      const boundedX = Math.max(-12, Math.min(12, intersectionPoint.x));
-      const boundedZ = Math.max(-8, Math.min(8, intersectionPoint.z));
-      
-      if (meshRef.current) {
-        meshRef.current.position.x = boundedX;
-        meshRef.current.position.z = boundedZ;
-      }
-    }
-  };
-
-  const handlePointerUp = (e: any) => {
-    if (!isDragging) return;
-    
-    setIsDragging(false);
-    gl.domElement.style.cursor = 'default';
-    try { onDragChange?.(false); } catch {}
-    
-    if (meshRef.current) {
-      const newPos = meshRef.current.position;
-      
-      // Конвертируем 3D координаты обратно в 2D координаты карты
-      const mapX = ((newPos.x + 12) / 24) * 1200;
-      const mapY = ((-newPos.z + 8) / 16) * 800;
-      
-      // Ограничиваем границами карты
-      const boundedMapX = Math.max(0, Math.min(1200, mapX));
-      const boundedMapY = Math.max(0, Math.min(800, mapY));
-      
-      console.log('🎯 Token moved to:', { 
-        x: boundedMapX, 
-        y: boundedMapY,
-        from3D: { x: newPos.x, z: newPos.z }
-      });
-      
-      onMove(boundedMapX, boundedMapY);
-    }
-  };
-
-  // Обработка событий мыши на уровне документа для плавного перетаскивания
-  React.useEffect(() => {
-    if (isDragging) {
-      const handleMouseMove = (e: MouseEvent) => {
-        const rect = gl.domElement.getBoundingClientRect();
-        mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
-        mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
-
-        raycaster.setFromCamera(mouse, camera);
-        const plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
-        const intersectionPoint = new THREE.Vector3();
-        
-        if (raycaster.ray.intersectPlane(plane, intersectionPoint)) {
-          const boundedX = Math.max(-12, Math.min(12, intersectionPoint.x));
-          const boundedZ = Math.max(-8, Math.min(8, intersectionPoint.z));
-          
-          if (meshRef.current) {
-            meshRef.current.position.x = boundedX;
-            meshRef.current.position.z = boundedZ;
-          }
-        }
-      };
-
-      const handleMouseUp = () => {
-        setIsDragging(false);
-        gl.domElement.style.cursor = 'default';
-        try { onDragChange?.(false); } catch {}
-        
-        if (meshRef.current) {
-          const newPos = meshRef.current.position;
-          const mapX = ((newPos.x + 12) / 24) * 1200;
-          const mapY = ((-newPos.z + 8) / 16) * 800;
-          const boundedMapX = Math.max(0, Math.min(1200, mapX));
-          const boundedMapY = Math.max(0, Math.min(800, mapY));
-          onMove(boundedMapX, boundedMapY);
-        }
-      };
-
-      document.addEventListener('mousemove', handleMouseMove);
-      document.addEventListener('mouseup', handleMouseUp);
-
-      return () => {
-        document.removeEventListener('mousemove', handleMouseMove);
-        document.removeEventListener('mouseup', handleMouseUp);
-      };
-    }
-  }, [isDragging, camera, gl.domElement, onMove]);
+  const canMove = isDM || token.controlledBy === 'player1';
+  
+  const {
+    groupRef,
+    isDragging,
+    handlePointerDown,
+    handlePointerEnter,
+    handlePointerLeave,
+  } = useDraggable3D(canMove, onMove, onDragChange, onSelect);
 
   return (
-    <group ref={meshRef} position={position}>
+    <group ref={groupRef} position={position}>
       {/* Главный токен */}
       <mesh 
         castShadow
         onPointerDown={handlePointerDown}
-        onPointerEnter={() => {
-          if (isDM || token.controlledBy === 'player1') {
-            gl.domElement.style.cursor = 'grab';
-          }
-        }}
-        onPointerLeave={() => {
-          if (!isDragging) {
-            gl.domElement.style.cursor = 'default';
-          }
-        }}
+        onPointerEnter={handlePointerEnter}
+        onPointerLeave={handlePointerLeave}
       >
         <cylinderGeometry args={[0.4, 0.4, 0.8, 12]} />
         <meshStandardMaterial 

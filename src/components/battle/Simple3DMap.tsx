@@ -17,6 +17,7 @@ import DraggableMonsterModel from './DraggableMonsterModel';
 import { supabase } from '@/integrations/supabase/client';
 import { publicModelUrl } from '@/utils/storageUrls';
 import { SafeGLTFLoader } from './SafeGLTFLoader';
+import { useDraggable3D } from '@/hooks/useDraggable3D';
 
 interface AssetModel {
   id: string;
@@ -134,17 +135,25 @@ const AssetModelNode: React.FC<{ path: string; position: [number, number, number
   );
 };
 
-// Перетаскиваемая 3D‑модель ассета (с глобальным drag, как у токенов)
-const DraggableAssetModel: React.FC<{ asset: AssetModel; position: [number, number, number]; onMove?: (x: number, y: number) => void; isDM?: boolean; onDragChange?: (dragging: boolean) => void; isSelected?: boolean; onSelect?: () => void; }>
-= ({ asset, position, onMove, isDM, onDragChange, isSelected, onSelect }) => {
-  const groupRef = useRef<THREE.Group>(null);
-  const [isDragging, setIsDragging] = useState(false);
-  const { camera, gl } = useThree();
-
-  const raycaster = useMemo(() => new THREE.Raycaster(), []);
-  const mouse = useMemo(() => new THREE.Vector2(), []);
-
+// Перетаскиваемая 3D‑модель ассета с унифицированной системой перемещения
+const DraggableAssetModel: React.FC<{ 
+  asset: AssetModel; 
+  position: [number, number, number]; 
+  onMove?: (x: number, y: number) => void; 
+  isDM?: boolean; 
+  onDragChange?: (dragging: boolean) => void; 
+  isSelected?: boolean; 
+  onSelect?: () => void; 
+}> = ({ asset, position, onMove, isDM, onDragChange, isSelected, onSelect }) => {
   const canMove = isDM || asset.controlledBy === 'player1';
+  
+  const {
+    groupRef,
+    isDragging,
+    handlePointerDown,
+    handlePointerEnter,
+    handlePointerLeave,
+  } = useDraggable3D(canMove, onMove, onDragChange, onSelect);
 
   // Apply external rotation updates and idle animation
   React.useEffect(() => {
@@ -163,57 +172,7 @@ const DraggableAssetModel: React.FC<{ asset: AssetModel; position: [number, numb
     }
   });
 
-  const handlePointerDown = (e: any) => {
-    e.stopPropagation();
-    onSelect?.();
-    if (canMove) {
-      setIsDragging(true);
-      gl.domElement.style.cursor = 'grabbing';
-      try { onDragChange?.(true); } catch {}
-    }
-  };
-  React.useEffect(() => {
-    if (!isDragging) return;
-
-    const handleMouseMove = (e: MouseEvent) => {
-      const rect = gl.domElement.getBoundingClientRect();
-      mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
-      mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
-
-      raycaster.setFromCamera(mouse, camera);
-      const plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
-      const p = new THREE.Vector3();
-
-      if (raycaster.ray.intersectPlane(plane, p)) {
-        const boundedX = Math.max(-12, Math.min(12, p.x));
-        const boundedZ = Math.max(-8, Math.min(8, p.z));
-        if (groupRef.current) {
-          groupRef.current.position.x = boundedX;
-          groupRef.current.position.z = boundedZ;
-        }
-      }
-    };
-
-    const handleMouseUp = () => {
-      setIsDragging(false);
-      gl.domElement.style.cursor = 'default';
-      try { onDragChange?.(false); } catch {}
-      if (groupRef.current) {
-        const newPos = groupRef.current.position;
-        const mapX = ((newPos.x + 12) / 24) * 1200;
-        const mapY = ((-newPos.z + 8) / 16) * 800;
-        const boundedMapX = Math.max(0, Math.min(1200, mapX));
-        const boundedMapY = Math.max(0, Math.min(800, mapY));
-        onMove?.(boundedMapX, boundedMapY);
-      }
-    };
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
-    return () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-    };
-  }, [isDragging, camera, gl.domElement, onMove]);
+  const url = useMemo(() => publicModelUrl(asset.storage_path), [asset.storage_path]);
 
   return (
     <group ref={groupRef} position={position}>
@@ -222,19 +181,47 @@ const DraggableAssetModel: React.FC<{ asset: AssetModel; position: [number, numb
         position={[0, 0.5, 0]}
         visible={false}
         onPointerDown={handlePointerDown}
-        onPointerEnter={() => {
-          if (canMove) gl.domElement.style.cursor = 'grab';
-        }}
-        onPointerLeave={() => {
-          if (!isDragging) gl.domElement.style.cursor = 'default';
-        }}
+        onPointerEnter={handlePointerEnter}
+        onPointerLeave={handlePointerLeave}
       >
         <cylinderGeometry args={[0.6, 0.6, 1.2, 8]} />
         <meshBasicMaterial transparent opacity={0} />
       </mesh>
+      
+      {/* 3D Модель */}
       <Suspense fallback={<mesh position={[0,0,0]}><cylinderGeometry args={[0.3,0.3,0.6,8]} /><meshStandardMaterial color="#6b7280" /></mesh>}>
-        <AssetModelNode path={asset.storage_path} position={[0, 0, 0]} scale={asset.scale} />
+        <SafeGLTFLoader 
+          url={url} 
+          position={[0, 0, 0]} 
+          scale={asset.scale}
+          fallback={
+            <mesh position={[0, 0, 0]} castShadow receiveShadow>
+              <boxGeometry args={[1, 1, 1]} />
+              <meshStandardMaterial color="#6b7280" />
+            </mesh>
+          }
+        />
       </Suspense>
+      
+      {/* Выделение при выборе */}
+      {isSelected && (
+        <mesh position={[0, 0.01, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+          <ringGeometry args={[0.8, 1.0, 16]} />
+          <meshBasicMaterial 
+            color="#fbbf24"
+            opacity={0.6} 
+            transparent 
+          />
+        </mesh>
+      )}
+      
+      {/* Индикатор перемещения */}
+      {isDragging && (
+        <mesh position={[0, 2, 0]}>
+          <sphereGeometry args={[0.1]} />
+          <meshBasicMaterial color="#ff4444" />
+        </mesh>
+      )}
     </group>
   );
 };
