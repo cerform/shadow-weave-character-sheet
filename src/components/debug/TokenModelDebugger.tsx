@@ -2,7 +2,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { getModelTypeFromTokenName, determineMonsterType } from '@/utils/tokenModelMapping';
-import { monsterTypes } from '@/data/monsterTypes';
+import { getMonsterAvatar } from '@/data/monsterAvatars';
 
 interface TokenModelDebuggerProps {
   tokens: Array<{
@@ -24,14 +24,15 @@ const TokenModelDebugger: React.FC<TokenModelDebuggerProps> = ({ tokens }) => {
           const suggestedModel = getModelTypeFromTokenName(token.name);
           const finalModel = determineMonsterType(token.name, token.type);
           const currentModel = token.monsterType;
-          const hasRealModel = finalModel && monsterTypes[finalModel];
+          const avatar = getMonsterAvatar(finalModel);
+          const hasAvatar = !!avatar;
           
           return (
             <div key={token.id} className="p-2 bg-slate-700/50 rounded text-xs">
               <div className="flex items-center justify-between mb-1">
                 <span className="text-white font-medium">{token.name}</span>
-                <Badge variant={hasRealModel ? "default" : "destructive"} className="text-xs">
-                  {hasRealModel ? "✅ 3D модель" : "❌ Кубик"}
+                <Badge variant={hasAvatar ? "default" : "destructive"} className="text-xs">
+                  {hasAvatar ? `✅ ${avatar.emoji} 2D аватар` : "❌ Базовый токен"}
                 </Badge>
               </div>
               
@@ -41,15 +42,16 @@ const TokenModelDebugger: React.FC<TokenModelDebuggerProps> = ({ tokens }) => {
                 <div>Предложенная модель: <span className="text-green-300">{suggestedModel || 'не найдена'}</span></div>
                 <div>Финальная модель: <span className="text-purple-300">{finalModel}</span></div>
                 
-                {hasRealModel && (
+                {hasAvatar && (
                   <div className="text-green-400">
-                    ✓ Будет отображаться как 3D модель {monsterTypes[finalModel].name}
+                    ✓ Будет отображаться как 2D аватар: {avatar.emoji} {avatar.name} 
+                    <span className="text-xs">(цвет: {avatar.backgroundColor})</span>
                   </div>
                 )}
                 
-                {!hasRealModel && (
-                  <div className="text-red-400">
-                    ⚠ Будет отображаться как простой кубик
+                {!hasAvatar && (
+                  <div className="text-yellow-400">
+                    ⚠ Будет отображаться как стандартный цилиндр
                   </div>
                 )}
               </div>

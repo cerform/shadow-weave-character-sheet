@@ -1,8 +1,7 @@
 import React from 'react';
-import { useFrame, useThree } from '@react-three/fiber';
 import { Text } from '@react-three/drei';
 import * as THREE from 'three';
-import { MonsterModel } from './MonsterModel';
+import Monster2DAvatar from './Monster2DAvatar';
 import { useDraggable3D } from '@/hooks/useDraggable3D';
 
 interface Equipment {
@@ -137,8 +136,8 @@ const DraggableMonsterModel: React.FC<DraggableMonsterModelProps> = ({
         <meshBasicMaterial transparent opacity={0} />
       </mesh>
 
-      {/* 3D модель монстра */}
-      <MonsterModel
+      {/* 2D Аватар монстра вместо 3D модели */}
+      <Monster2DAvatar
         type={token.monsterType}
         position={[0, 0, 0]}
         isSelected={isSelected}

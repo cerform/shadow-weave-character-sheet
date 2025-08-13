@@ -1,6 +1,7 @@
 import React from 'react';
 import { Text } from '@react-three/drei';
 import { useDraggable3D } from '@/hooks/useDraggable3D';
+import { getMonsterAvatar } from '@/data/monsterAvatars';
 
 interface Equipment {
   id: string;
@@ -116,9 +117,12 @@ const DraggableToken3D: React.FC<DraggableToken3DProps> = ({
     handlePointerLeave,
   } = useDraggable3D(canMove, onMove, onDragChange, onSelect);
 
+  // Получаем аватар для токена, если он есть
+  const avatar = getMonsterAvatar(token.monsterType || 'fighter');
+  
   return (
     <group ref={groupRef} position={position}>
-      {/* Главный токен */}
+      {/* Главный токен с улучшенным дизайном */}
       <mesh 
         castShadow
         onPointerDown={handlePointerDown}
@@ -127,12 +131,27 @@ const DraggableToken3D: React.FC<DraggableToken3DProps> = ({
       >
         <cylinderGeometry args={[0.4, 0.4, 0.8, 12]} />
         <meshStandardMaterial 
-          color={token.color || '#3b82f6'} 
+          color={avatar ? avatar.backgroundColor : (token.color || '#3b82f6')} 
           emissive={isSelected ? '#444444' : '#000000'}
           opacity={isDragging ? 0.7 : 1}
           transparent={isDragging}
         />
       </mesh>
+
+      {/* Эмодзи аватар если есть */}
+      {avatar && (
+        <Text
+          position={[0, 0.5, 0]}
+          fontSize={0.4}
+          color={avatar.color}
+          anchorX="center"
+          anchorY="middle"
+          outlineWidth={0.02}
+          outlineColor="black"
+        >
+          {avatar.emoji}
+        </Text>
+      )}
       
       {/* Экипировка токена */}
       {token.equipment && token.equipment.length > 0 && (

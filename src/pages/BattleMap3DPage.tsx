@@ -10,6 +10,7 @@ import { sessionService } from '@/services/sessionService';
 import { preloadMonsterModels } from '@/components/battle/MonsterModel';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import TokenModelDebugger from '@/components/debug/TokenModelDebugger';
+import AvatarGallery from '@/components/debug/AvatarGallery';
 import { Input } from '@/components/ui/input';
 import { supabase } from '@/integrations/supabase/client';
 import { v4 as uuidv4 } from 'uuid';
@@ -394,10 +395,11 @@ assetModels={assets3D}
         />
       </div>
 
-      {/* Отладчик соответствий моделей (в dev режиме) */}
+      {/* Отладчик соответствий моделей и галерея аватаров (только в dev режиме) */}
       {process.env.NODE_ENV === 'development' && (
-        <div className="absolute bottom-4 right-4 z-30 max-w-sm">
+        <div className="absolute bottom-4 right-4 z-30 max-w-sm space-y-2">
           <TokenModelDebugger tokens={tokens} />
+          <AvatarGallery />
         </div>
       )}
 
