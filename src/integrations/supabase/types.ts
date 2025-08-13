@@ -981,7 +981,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      clear_asset_categories: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
       clear_assets: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
+      create_standard_categories: {
         Args: Record<PropertyKey, never>
         Returns: number
       }

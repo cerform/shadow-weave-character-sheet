@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/select';
 import { Card, CardContent } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
+import { useProtectedRoute } from '@/hooks/use-auth';
 
 const defaultCategories = [
   { key: 'character', name: 'Персонаж' },
@@ -25,9 +26,11 @@ const defaultCategories = [
 const AssetsCategorizer: React.FC = () => {
   const { categories, assets, loadAll, addCategory, reloadAssets, reloadCategories } = useAssetsStore();
   const { toast } = useToast();
+  const { isAdmin } = useProtectedRoute();
   const [query, setQuery] = useState('');
   const [savingId, setSavingId] = useState<string | null>(null);
   const [initializing, setInitializing] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const init = async () => {
@@ -82,6 +85,34 @@ const AssetsCategorizer: React.FC = () => {
     setSavingId(null);
   };
 
+  const clearCategories = async () => {
+    if (!isAdmin) return;
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.rpc('clear_asset_categories');
+      if (error) throw error;
+      toast({ title: 'Категории очищены', description: `Удалено ${data} категорий` });
+      await reloadCategories();
+    } catch (error: any) {
+      toast({ title: 'Ошибка очистки', description: error.message, variant: 'destructive' });
+    }
+    setLoading(false);
+  };
+
+  const createStandardCategories = async () => {
+    if (!isAdmin) return;
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.rpc('create_standard_categories');
+      if (error) throw error;
+      toast({ title: 'Стандартные категории созданы', description: `Создано ${data} категорий` });
+      await reloadCategories();
+    } catch (error: any) {
+      toast({ title: 'Ошибка создания', description: error.message, variant: 'destructive' });
+    }
+    setLoading(false);
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
@@ -95,7 +126,27 @@ const AssetsCategorizer: React.FC = () => {
           />
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" onClick={() => loadAll()} disabled={initializing}>
+          {isAdmin && (
+            <>
+              <Button 
+                variant="destructive" 
+                size="sm"
+                onClick={clearCategories} 
+                disabled={loading || initializing}
+              >
+                Очистить категории
+              </Button>
+              <Button 
+                variant="secondary" 
+                size="sm"
+                onClick={createStandardCategories} 
+                disabled={loading || initializing}
+              >
+                Создать стандартные
+              </Button>
+            </>
+          )}
+          <Button variant="outline" onClick={() => loadAll()} disabled={initializing || loading}>
             Обновить
           </Button>
         </div>
