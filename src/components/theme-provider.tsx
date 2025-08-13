@@ -20,7 +20,18 @@ interface CustomThemeProviderProps {
 }
 
 export function ThemeProvider({ children }: CustomThemeProviderProps) {
-  const [theme, setTheme] = useState<string>('default');
+  // Add safety check for React hooks
+  let theme: string;
+  let setTheme: (theme: string) => void;
+  
+  try {
+    [theme, setTheme] = useState<string>('default');
+  } catch (error) {
+    console.error('Hook error in ThemeProvider:', error);
+    // Fallback values if hooks fail
+    theme = 'default';
+    setTheme = () => {};
+  }
 
   // Загружаем сохраненную тему при инициализации
   useEffect(() => {
