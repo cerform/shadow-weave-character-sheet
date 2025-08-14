@@ -180,6 +180,11 @@ const AppRoutes: React.FC = () => {
           <BattleMap2DPage />
         </ProtectedDMRoute>
       } />
+      
+      {/* Редиректы для старых маршрутов карт */}
+      <Route path="/battle-map-fixed" element={<Navigate to="/battle-map-3d" replace />} />
+      <Route path="/battle-map-fixed/:id" element={<Navigate to="/battle-map-3d" replace />} />
+      
       <Route path="/dm-session/:sessionId" element={
         <ProtectedDMRoute>
           <DMSessionPage />
