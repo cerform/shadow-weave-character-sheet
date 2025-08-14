@@ -61,7 +61,7 @@ const HomePage = () => {
       icon: Map,
       title: "Боевая карта",
       description: "Интерактивная карта для проведения тактических боёв",
-      href: "/battle-map-fixed",
+      href: "/battle-map-3d",
       gradient: "from-green-500/20 to-emerald-500/20"
     }
   ];

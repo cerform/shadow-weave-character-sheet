@@ -16,7 +16,7 @@ const TestPage: React.FC = () => {
         <Button onClick={() => navigate('/dm-dashboard-new')} className="mr-4">
           DM Dashboard
         </Button>
-        <Button onClick={() => navigate('/battle-map-fixed')}>
+        <Button onClick={() => navigate('/battle-map-3d')}>
           Battle Map
         </Button>
       </div>
