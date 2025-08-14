@@ -1,5 +1,4 @@
-// Состояние для персонажей
-import React, { useState, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { Character } from '@/types/character';
 
 export const useCharacterState = () => {
