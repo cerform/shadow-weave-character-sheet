@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Environment } from '@react-three/drei';
+import * as THREE from 'three';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -11,6 +12,7 @@ import { toast } from 'sonner';
 import Asset2DAvatar from './Asset2DAvatar';
 import { useDraggable3D } from '@/hooks/useDraggable3D';
 import { getAsset3DAvatar, findAsset3DAvatarByPath } from '@/data/asset3DAvatars';
+import MapUploader from './MapUploader';
 
 interface Asset2D {
   id: string;
@@ -103,6 +105,9 @@ const Simple2DMapFromAssets: React.FC<Simple2DMapFromAssetsProps> = ({
   const [showControls, setShowControls] = useState(true);
   const [showGrid, setShowGrid] = useState(true);
   const [cameraPosition, setCameraPosition] = useState([0, 15, 10]);
+  const [currentMapUrl, setCurrentMapUrl] = useState<string>(mapImageUrl || '');
+  const [mapScale, setMapScale] = useState<number>(100);
+  const [showMapUploader, setShowMapUploader] = useState(false);
   const canvasRef = useRef<HTMLDivElement>(null);
 
   // Конвертируем 3D ассеты в 2D при загрузке
@@ -163,6 +168,33 @@ const Simple2DMapFromAssets: React.FC<Simple2DMapFromAssetsProps> = ({
     toast.success('Позиции скопированы в буфер обмена');
   };
 
+  // Обработка загрузки карты
+  const handleMapLoaded = (imageUrl: string, scale?: number) => {
+    setCurrentMapUrl(imageUrl);
+    setMapScale(scale || 100);
+    setShowMapUploader(false);
+    
+    // Сохраняем карту в sessionStorage
+    const sessionId = window.location.pathname.split('/').pop();
+    const sKey = (name: string) => (sessionId ? `${name}:${sessionId}` : name);
+    sessionStorage.setItem(sKey('current3DMapUrl'), imageUrl);
+    
+    toast.success('Карта загружена');
+  };
+
+  // Удаление карты
+  const handleMapRemove = () => {
+    setCurrentMapUrl('');
+    setMapScale(100);
+    
+    // Удаляем карту из sessionStorage
+    const sessionId = window.location.pathname.split('/').pop();
+    const sKey = (name: string) => (sessionId ? `${name}:${sessionId}` : name);
+    sessionStorage.removeItem(sKey('current3DMapUrl'));
+    
+    toast.success('Карта удалена');
+  };
+
   // Синхронизация с 3D картой
   const handleSyncWith3D = () => {
     const sessionId = window.location.pathname.split('/').pop();
@@ -221,6 +253,15 @@ const Simple2DMapFromAssets: React.FC<Simple2DMapFromAssetsProps> = ({
               <Button onClick={handleExportImage} className="w-full" variant="outline">
                 <Download className="w-4 h-4 mr-2" />
                 Экспорт в PNG
+              </Button>
+              
+              <Button 
+                onClick={() => setShowMapUploader(true)} 
+                className="w-full" 
+                variant="outline"
+              >
+                <Upload className="w-4 h-4 mr-2" />
+                Загрузить карту
               </Button>
             </div>
 
@@ -285,6 +326,43 @@ const Simple2DMapFromAssets: React.FC<Simple2DMapFromAssetsProps> = ({
               </div>
             )}
 
+            {/* Загрузчик карты */}
+            {showMapUploader && (
+              <div className="space-y-2">
+                <MapUploader 
+                  onMapLoaded={handleMapLoaded}
+                  currentMapUrl={currentMapUrl}
+                  onMapRemove={handleMapRemove}
+                />
+                <Button 
+                  onClick={() => setShowMapUploader(false)} 
+                  variant="ghost" 
+                  size="sm"
+                  className="w-full"
+                >
+                  Закрыть
+                </Button>
+              </div>
+            )}
+
+            {/* Информация о карте */}
+            {currentMapUrl && !showMapUploader && (
+              <div className="p-3 bg-slate-700 rounded">
+                <h5 className="font-medium mb-2">Текущая карта</h5>
+                <div className="text-sm space-y-1">
+                  <div>Масштаб: {mapScale}%</div>
+                  <Button 
+                    onClick={handleMapRemove} 
+                    variant="outline" 
+                    size="sm"
+                    className="w-full mt-2"
+                  >
+                    Удалить карту
+                  </Button>
+                </div>
+              </div>
+            )}
+
             {/* Статистика */}
             <div className="text-xs text-gray-400 space-y-1">
               <div>Всего ассетов: {assets2D.length}</div>
@@ -328,10 +406,21 @@ const Simple2DMapFromAssets: React.FC<Simple2DMapFromAssetsProps> = ({
           />
 
           {/* Фон карты */}
-          {mapImageUrl && (
+          {currentMapUrl && (
             <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.01, 0]}>
-              <planeGeometry args={[24, 16]} />
-              <meshLambertMaterial map={null} transparent opacity={0.8} />
+              <planeGeometry args={[24 * (mapScale / 100), 16 * (mapScale / 100)]} />
+              <meshLambertMaterial>
+                <primitive 
+                  attach="map" 
+                  object={(() => {
+                    const loader = new THREE.TextureLoader();
+                    const texture = loader.load(currentMapUrl);
+                    texture.wrapS = THREE.ClampToEdgeWrapping;
+                    texture.wrapT = THREE.ClampToEdgeWrapping;
+                    return texture;
+                  })()} 
+                />
+              </meshLambertMaterial>
             </mesh>
           )}
 
