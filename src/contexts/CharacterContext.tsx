@@ -30,7 +30,7 @@ export const useCharacter = () => {
   return context;
 };
 
-export const CharacterProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const CharacterProvider = ({ children }: { children: React.ReactNode }) => {
   const state = useCharacterState();
   const operations = useCharacterOperations();
 
