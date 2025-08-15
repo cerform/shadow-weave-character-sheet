@@ -664,30 +664,64 @@ const Simple3DMap: React.FC<Simple3DMapProps> = ({
         </Suspense>
       </Canvas>
 
-      {/* UI панель управления */}
+      {/* UI панель управления токеном */}
       {selectedToken && isDM && (
-        <div className="absolute top-4 right-4 bg-slate-800 text-white p-4 rounded-lg shadow-lg space-y-2 max-w-sm">
-          <h4 className="font-bold">{selectedToken.name}</h4>
-          <div className="text-sm">HP: {selectedToken.hp}/{selectedToken.maxHp}</div>
-          <div className="text-sm">AC: {selectedToken.ac}</div>
+        <div className="absolute top-4 right-4 bg-slate-800/90 backdrop-blur-sm text-white p-4 rounded-lg shadow-lg space-y-3 max-w-sm border border-slate-600">
+          <h4 className="font-bold text-lg text-center">{selectedToken.name}</h4>
           
-          <div className="flex gap-2">
-            <Button 
-              size="sm" 
-              variant="destructive"
-              onClick={() => handleDamage(5)}
-            >
-              <Minus className="w-3 h-3" />
-              -5 HP
-            </Button>
-            <Button 
-              size="sm" 
-              variant="outline"
-              onClick={() => handleHeal(5)}
-            >
-              <Plus className="w-3 h-3" />
-              +5 HP
-            </Button>
+          {/* Статистики */}
+          <div className="grid grid-cols-2 gap-3 text-sm">
+            <div className="bg-slate-700 p-2 rounded">
+              <div className="text-xs opacity-80">HP</div>
+              <div className="text-lg font-bold">{selectedToken.hp}/{selectedToken.maxHp}</div>
+            </div>
+            <div className="bg-slate-700 p-2 rounded">
+              <div className="text-xs opacity-80">AC</div>
+              <div className="text-lg font-bold">{selectedToken.ac}</div>
+            </div>
+          </div>
+          
+          {/* Управление HP */}
+          <div className="space-y-2">
+            <div className="text-sm font-medium">Управление здоровьем:</div>
+            <div className="grid grid-cols-2 gap-2">
+              <Button 
+                size="sm" 
+                variant="destructive"
+                onClick={() => handleDamage(1)}
+                className="text-xs"
+              >
+                <Minus className="w-3 h-3 mr-1" />
+                -1 HP
+              </Button>
+              <Button 
+                size="sm" 
+                variant="destructive"
+                onClick={() => handleDamage(5)}
+                className="text-xs"
+              >
+                <Minus className="w-3 h-3 mr-1" />
+                -5 HP
+              </Button>
+              <Button 
+                size="sm" 
+                variant="outline"
+                onClick={() => handleHeal(1)}
+                className="text-xs"
+              >
+                <Plus className="w-3 h-3 mr-1" />
+                +1 HP
+              </Button>
+              <Button 
+                size="sm" 
+                variant="outline"
+                onClick={() => handleHeal(5)}
+                className="text-xs"
+              >
+                <Plus className="w-3 h-3 mr-1" />
+                +5 HP
+              </Button>
+            </div>
           </div>
 
           {/* Экипировка */}
@@ -707,7 +741,7 @@ const Simple3DMap: React.FC<Simple3DMapProps> = ({
             <DialogTrigger asChild>
               <Button size="sm" variant="outline" className="w-full">
                 <Edit className="w-3 h-3 mr-2" />
-                Редактировать
+                Редактировать токен
               </Button>
             </DialogTrigger>
             <DialogContent>
@@ -718,18 +752,26 @@ const Simple3DMap: React.FC<Simple3DMapProps> = ({
               />
             </DialogContent>
           </Dialog>
+          
+          {/* Инструкции по управлению */}
+          <div className="text-xs opacity-70 border-t border-slate-600 pt-2">
+            💡 Кликните и перетащите токен для перемещения
+          </div>
         </div>
       )}
 
       {/* Панель управления ассетом */}
       {selectedAsset && isDM && (
-        <div className="absolute bottom-4 right-4 bg-slate-800 text-white p-4 rounded-lg shadow-lg space-y-2">
-          <h4 className="font-bold">Ассет</h4>
+        <div className="absolute bottom-4 right-4 bg-slate-800/90 backdrop-blur-sm text-white p-4 rounded-lg shadow-lg space-y-2 border border-slate-600">
+          <h4 className="font-bold">3D Ассет</h4>
           <div className="text-xs opacity-80 max-w-[40vw] truncate">{selectedAsset.storage_path}</div>
           <div className="flex gap-2">
             <Button size="sm" variant="destructive" onClick={() => onAssetDelete?.(selectedAsset.id)}>
-              <Trash2 className="w-3 h-3 mr-1" /> Удалить ассет
+              <Trash2 className="w-3 h-3 mr-1" /> Удалить
             </Button>
+          </div>
+          <div className="text-xs opacity-70 border-t border-slate-600 pt-2">
+            💡 Кликните и перетащите ассет для перемещения
           </div>
         </div>
       )}

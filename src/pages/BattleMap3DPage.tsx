@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Home, Save, Plus, Trash2, Upload } from 'lucide-react';
+import { Home, Save, Plus, Trash2, Upload, Sword } from 'lucide-react';
 import MapUploader from '@/components/battle/MapUploader';
+import InitiativeTracker from '@/components/battle/InitiativeTracker';
 import { toast } from 'sonner';
 import { determineMonsterType, updateTokenWithModelType } from '@/utils/tokenModelMapping';
 import Simple3DMap from '@/components/battle/Simple3DMap';
@@ -40,6 +41,7 @@ type AssetModel = {
   const [assets3D, setAssets3D] = useState<AssetModel[]>([]);
   const [addOpen, setAddOpen] = useState(false);
   const [mapUploadOpen, setMapUploadOpen] = useState(false);
+  const [showInitiative, setShowInitiative] = useState(false);
   const [prefix, setPrefix] = useState<string>('');
   const [files, setFiles] = useState<{ name: string; id?: string }[]>([]);
   const [fileQuery, setFileQuery] = useState('');
@@ -382,6 +384,14 @@ const handleTokenUpdate = (tokenId: string, updates: any) => {
               Очистить ассеты
             </Button>
             <Button 
+              onClick={() => setShowInitiative(!showInitiative)}
+              className="bg-red-600 hover:bg-red-700"
+              size="sm"
+            >
+              <Sword className="w-4 h-4 mr-2" />
+              Инициатива
+            </Button>
+            <Button 
               onClick={() => setMapUploadOpen(true)}
               className="bg-purple-600 hover:bg-purple-700"
               size="sm"
@@ -397,7 +407,18 @@ const handleTokenUpdate = (tokenId: string, updates: any) => {
               <Home className="w-4 h-4 mr-2" />
               Панель DM
             </Button>
-          </div>
+      </div>
+
+      {/* Initiative Tracker */}
+      {showInitiative && (
+        <div className="absolute top-20 left-4 z-30">
+          <InitiativeTracker 
+            initiative={[]}
+            tokens={tokens}
+            battleActive={false}
+          />
+        </div>
+      )}
         </div>
       </div>
 

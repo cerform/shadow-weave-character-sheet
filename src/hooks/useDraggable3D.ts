@@ -55,6 +55,8 @@ export const useDraggable3D = (
       mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
 
       raycaster.setFromCamera(mouse, camera);
+      
+      // Создаем плоскость на уровне Y=0 для более точного пересечения
       const plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
       const intersectionPoint = new THREE.Vector3();
       
@@ -66,6 +68,9 @@ export const useDraggable3D = (
         // Обновляем позицию объекта в реальном времени
         groupRef.current.position.x = boundedX;
         groupRef.current.position.z = boundedZ;
+        
+        // Добавляем визуальную обратную связь - немного поднимаем объект при перетаскивании
+        groupRef.current.position.y = groupRef.current.position.y + 0.1;
         
         console.log('🏃 Dragging object to:', { x: boundedX, z: boundedZ });
       }
@@ -79,6 +84,9 @@ export const useDraggable3D = (
       
       if (groupRef.current && onMove) {
         const newPos = groupRef.current.position;
+        
+        // Возвращаем объект на исходную высоту
+        groupRef.current.position.y = groupRef.current.position.y - 0.1;
         
         // Конвертируем 3D координаты обратно в 2D координаты карты (0-1200 x 0-800)
         const mapX = ((newPos.x + 12) / 24) * 1200;
@@ -98,10 +106,13 @@ export const useDraggable3D = (
       }
     };
 
+    // Предотвращаем выделение текста во время перетаскивания
+    document.body.style.userSelect = 'none';
     document.addEventListener('mousemove', handleMouseMove);
     document.addEventListener('mouseup', handleMouseUp);
 
     return () => {
+      document.body.style.userSelect = '';
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
     };

@@ -124,7 +124,7 @@ const DraggableMonsterModel: React.FC<DraggableMonsterModelProps> = ({
 
   return (
     <group ref={groupRef} position={position}>
-      {/* Интерактивная область для перетаскивания */}
+      {/* Интерактивная область для перетаскивания - увеличиваем размер для лучшего захвата */}
       <mesh 
         position={[0, 0.5, 0]}
         visible={false}
@@ -132,16 +132,18 @@ const DraggableMonsterModel: React.FC<DraggableMonsterModelProps> = ({
         onPointerEnter={handlePointerEnter}
         onPointerLeave={handlePointerLeave}
       >
-        <cylinderGeometry args={[0.6, 0.6, 1.2, 8]} />
+        <cylinderGeometry args={[0.8, 0.8, 1.5, 8]} />
         <meshBasicMaterial transparent opacity={0} />
       </mesh>
 
-      {/* Простой цилиндр как токен */}
-      <mesh castShadow onClick={onSelect}>
+      {/* Простой цилиндр как токен с улучшенным внешним видом */}
+      <mesh castShadow receiveShadow>
         <cylinderGeometry args={[0.4, 0.4, 0.8, 12]} />
         <meshStandardMaterial 
           color={token.color || '#3b82f6'}
           emissive={isSelected ? '#333333' : '#000000'}
+          roughness={0.7}
+          metalness={0.3}
         />
       </mesh>
       
@@ -150,30 +152,31 @@ const DraggableMonsterModel: React.FC<DraggableMonsterModelProps> = ({
         <TokenEquipment equipment={token.equipment} />
       )}
 
-      {/* HP Bar */}
+      {/* HP Bar с улучшенным дизайном */}
       {token.hp !== undefined && token.maxHp !== undefined && (
         <group position={[0, 2.5, 0]}>
           {/* Фон HP бара */}
           <mesh position={[0, 0, 0.01]}>
             <planeGeometry args={[1.5, 0.15]} />
-            <meshBasicMaterial color="#333333" />
+            <meshBasicMaterial color="#1a1a1a" />
           </mesh>
           {/* HP бар */}
           <mesh position={[-(1.5 - (1.5 * token.hp / token.maxHp)) / 2, 0, 0.02]}>
             <planeGeometry args={[1.5 * token.hp / token.maxHp, 0.12]} />
             <meshBasicMaterial color={
-              token.hp > token.maxHp * 0.5 ? '#22c55e' : 
-              token.hp > token.maxHp * 0.25 ? '#eab308' : '#ef4444'
+              token.hp > token.maxHp * 0.7 ? '#22c55e' : 
+              token.hp > token.maxHp * 0.4 ? '#eab308' : 
+              token.hp > token.maxHp * 0.1 ? '#f97316' : '#ef4444'
             } />
           </mesh>
-          {/* HP текст */}
+          {/* HP текст с улучшенной читаемостью */}
           <Text
-            position={[0, -0.2, 0.03]}
+            position={[0, -0.25, 0.03]}
             fontSize={0.12}
             color="white"
             anchorX="center"
             anchorY="middle"
-            outlineWidth={0.02}
+            outlineWidth={0.03}
             outlineColor="black"
           >
             {`${token.hp}/${token.maxHp}`}
@@ -181,36 +184,60 @@ const DraggableMonsterModel: React.FC<DraggableMonsterModelProps> = ({
         </group>
       )}
 
-      {/* Название монстра */}
+      {/* Название монстра с улучшенной читаемостью */}
       <Text
         position={[0, 3, 0]}
         fontSize={0.4}
         color="white"
         anchorX="center"
         anchorY="middle"
-        outlineWidth={0.05}
+        outlineWidth={0.08}
         outlineColor="black"
       >
         {token.name}
       </Text>
 
-      {/* Выделение при выборе или наведении */}
+      {/* Выделение при выборе или наведении с анимацией */}
       {(isSelected || isHovered) && (
         <mesh position={[0, 0.02, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-          <ringGeometry args={[0.8, 1.2, 16]} />
+          <ringGeometry args={[0.8, 1.2, 32]} />
           <meshBasicMaterial 
             color={isSelected ? '#fbbf24' : '#ffffff'} 
-            opacity={0.6} 
+            opacity={isSelected ? 0.8 : 0.4} 
             transparent 
           />
         </mesh>
       )}
 
-      {/* Индикатор перемещения */}
+      {/* Индикатор перемещения с пульсацией */}
       {isDragging && (
-        <mesh position={[0, 3.5, 0]}>
-          <sphereGeometry args={[0.1]} />
-          <meshBasicMaterial color="#ff4444" />
+        <group position={[0, 3.5, 0]}>
+          <mesh>
+            <sphereGeometry args={[0.15]} />
+            <meshBasicMaterial color="#ff4444" transparent opacity={0.8} />
+          </mesh>
+          <mesh position={[0, 0, 0]}>
+            <ringGeometry args={[0.15, 0.25, 16]} />
+            <meshBasicMaterial color="#ff6666" transparent opacity={0.4} />
+          </mesh>
+        </group>
+      )}
+
+      {/* Тень под токеном */}
+      <mesh position={[0, -0.4, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <circleGeometry args={[0.6, 32]} />
+        <meshBasicMaterial color="#000000" opacity={0.2} transparent />
+      </mesh>
+
+      {/* Индикатор возможности управления */}
+      {canMove && !isDragging && (
+        <mesh position={[0, 0.05, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+          <ringGeometry args={[0.9, 1.0, 16]} />
+          <meshBasicMaterial 
+            color="#00ff00" 
+            opacity={0.2} 
+            transparent 
+          />
         </mesh>
       )}
     </group>
