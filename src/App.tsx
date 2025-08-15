@@ -16,19 +16,21 @@ function App() {
   return (
     <ThemeProvider>
       <AuthProvider>
-        <SpellbookProvider>
-          <SessionProvider>
-            <SocketProvider>
-            <Router>
-              <DynamicFantasyBackground>
-                <AppRoutes />
-                <FloatingActionWidget />
-                <Toaster />
-              </DynamicFantasyBackground>
-            </Router>
-            </SocketProvider>
-          </SessionProvider>
-        </SpellbookProvider>
+        <CharacterProvider>
+          <SpellbookProvider>
+            <SessionProvider>
+              <SocketProvider>
+              <Router>
+                <DynamicFantasyBackground>
+                  <AppRoutes />
+                  <FloatingActionWidget />
+                  <Toaster />
+                </DynamicFantasyBackground>
+              </Router>
+              </SocketProvider>
+            </SessionProvider>
+          </SpellbookProvider>
+        </CharacterProvider>
       </AuthProvider>
     </ThemeProvider>
   );

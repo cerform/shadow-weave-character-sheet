@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Home, Save, Plus, Trash2 } from 'lucide-react';
+import { Home, Save, Plus, Trash2, Upload } from 'lucide-react';
+import MapUploader from '@/components/battle/MapUploader';
 import { toast } from 'sonner';
 import { determineMonsterType, updateTokenWithModelType } from '@/utils/tokenModelMapping';
 import Simple3DMap from '@/components/battle/Simple3DMap';
@@ -36,8 +37,9 @@ type AssetModel = {
   controlledBy?: string; 
   ownerId?: string; 
 };
-const [assets3D, setAssets3D] = useState<AssetModel[]>([]);
+  const [assets3D, setAssets3D] = useState<AssetModel[]>([]);
   const [addOpen, setAddOpen] = useState(false);
+  const [mapUploadOpen, setMapUploadOpen] = useState(false);
   const [prefix, setPrefix] = useState<string>('');
   const [files, setFiles] = useState<{ name: string; id?: string }[]>([]);
   const [fileQuery, setFileQuery] = useState('');
@@ -212,6 +214,24 @@ const handleClearAssets = () => {
   toast.success('Ассеты очищены');
 };
 
+// Обработчик загрузки карты
+const handleMapLoaded = (imageUrl: string, scale?: number) => {
+  setMapUrl(imageUrl);
+  setMapBackground(imageUrl);
+  sessionStorage.setItem(sKey('current3DMapUrl'), imageUrl);
+  toast.success('Карта загружена в 3D режим');
+  setMapUploadOpen(false);
+};
+
+// Обработчик удаления карты
+const handleMapRemove = () => {
+  setMapUrl('');
+  setMapBackground('');
+  sessionStorage.removeItem(sKey('current3DMapUrl'));
+  toast.success('Карта удалена');
+  setMapUploadOpen(false);
+};
+
   // Обновляем токены при загрузке с правильными типами моделей
   useEffect(() => {
     const savedTokens = sessionStorage.getItem(sKey('current3DTokens'));
@@ -362,6 +382,14 @@ const handleTokenUpdate = (tokenId: string, updates: any) => {
               Очистить ассеты
             </Button>
             <Button 
+              onClick={() => setMapUploadOpen(true)}
+              className="bg-purple-600 hover:bg-purple-700"
+              size="sm"
+            >
+              <Upload className="w-4 h-4 mr-2" />
+              Загрузить карту
+            </Button>
+            <Button 
               onClick={() => navigate('/dm')}
               className="bg-slate-600 hover:bg-slate-700"
               size="sm"
@@ -389,6 +417,19 @@ assetModels={assets3D}
         />
       </div>
 
+      {/* Map Upload Dialog */}
+      <Dialog open={mapUploadOpen} onOpenChange={setMapUploadOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Загрузить карту</DialogTitle>
+          </DialogHeader>
+          <MapUploader
+            onMapLoaded={handleMapLoaded}
+            currentMapUrl={mapUrl}
+            onMapRemove={handleMapRemove}
+          />
+        </DialogContent>
+      </Dialog>
 
       {/* Gallery dialog for adding 3D assets */}
       <Dialog open={addOpen} onOpenChange={setAddOpen}>
