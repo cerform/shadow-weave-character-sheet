@@ -55,10 +55,10 @@ export const useFogOfWarStore = create<FogOfWarStore>((set, get) => ({
   fogSettings: {
     enabled: true,
     globalReveal: false,
-    fogColor: '#000000',
-    fogOpacity: 0.9,
-    transitionSpeed: 0.3,
-    blurAmount: 8,
+    fogColor: '#505055',
+    fogOpacity: 0.4,
+    transitionSpeed: 0.5,
+    blurAmount: 12,
     brushSize: 50
   },
   isDrawingMode: false,
