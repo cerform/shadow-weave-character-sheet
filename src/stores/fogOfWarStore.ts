@@ -37,6 +37,7 @@ interface FogOfWarStore {
   isDM: boolean;
   isDrawing: boolean;
   isPanning: boolean;
+  activeMode: 'map' | 'fog';
 
   // Actions
   setIsDM: (isDM: boolean) => void;
@@ -53,6 +54,7 @@ interface FogOfWarStore {
   setDrawingMode: (drawing: boolean) => void;
   setIsDrawing: (drawing: boolean) => void;
   setIsPanning: (panning: boolean) => void;
+  setActiveMode: (mode: 'map' | 'fog') => void;
   selectArea: (id: string | null) => void;
   drawVisibleArea: (x: number, y: number) => void;
   hideVisibleArea: (x: number, y: number) => void;
@@ -87,6 +89,7 @@ export const useFogOfWarStore = create<FogOfWarStore>((set, get) => ({
   isDM: false,
   isDrawing: false,
   isPanning: false,
+  activeMode: 'map',
 
   setIsDM: (isDM) => set({ isDM }),
 
@@ -148,6 +151,9 @@ export const useFogOfWarStore = create<FogOfWarStore>((set, get) => ({
 
   setIsPanning: (panning) =>
     set({ isPanning: panning }),
+
+  setActiveMode: (mode) =>
+    set({ activeMode: mode }),
 
   setFogTransform: (transform) =>
     set((state) => ({

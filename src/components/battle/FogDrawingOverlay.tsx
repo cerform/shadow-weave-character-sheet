@@ -16,6 +16,7 @@ export const FogDrawingOverlay: React.FC<FogDrawingOverlayProps> = ({
     visibleAreas,
     fogSettings,
     fogTransform,
+    activeMode,
     isDrawingMode,
     isDM,
     isDrawing,
@@ -55,7 +56,7 @@ export const FogDrawingOverlay: React.FC<FogDrawingOverlayProps> = ({
       }
     };
 
-    if (isDM && fogSettings.enabled) {
+    if (isDM && fogSettings.enabled && activeMode === 'fog') {
       window.addEventListener('keydown', handleKeyDown);
       window.addEventListener('keyup', handleKeyUp);
     }
@@ -64,7 +65,7 @@ export const FogDrawingOverlay: React.FC<FogDrawingOverlayProps> = ({
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
     };
-  }, [isDM, fogSettings.enabled]);
+  }, [isDM, fogSettings.enabled, activeMode]);
 
   const getMapCoordinates = useCallback((clientX: number, clientY: number) => {
     const rect = containerRef.current?.getBoundingClientRect();
@@ -77,7 +78,7 @@ export const FogDrawingOverlay: React.FC<FogDrawingOverlayProps> = ({
   }, [scale]);
 
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
-    if (!isDM) return;
+    if (!isDM || activeMode !== 'fog') return;
     
     e.preventDefault();
     const { x, y } = getMapCoordinates(e.clientX, e.clientY);
@@ -106,13 +107,13 @@ export const FogDrawingOverlay: React.FC<FogDrawingOverlayProps> = ({
       setIsDrawing(true);
       drawVisibleArea(x, y);
     }
-  }, [isDM, isDrawingMode, keyPressed, getMapCoordinates, drawVisibleArea, hideVisibleArea, setIsDrawing, setIsPanning]);
+  }, [isDM, activeMode, isDrawingMode, keyPressed, getMapCoordinates, drawVisibleArea, hideVisibleArea, setIsDrawing, setIsPanning]);
 
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
     const { x, y } = getMapCoordinates(e.clientX, e.clientY);
     setMousePos({ x: x * scale, y: y * scale });
 
-    if (!isDM) return;
+    if (!isDM || activeMode !== 'fog') return;
     
     // Перемещение тумана
     if (isPanning && keyPressed.ctrl) {
@@ -133,14 +134,14 @@ export const FogDrawingOverlay: React.FC<FogDrawingOverlayProps> = ({
       const mapCoords = getMapCoordinates(e.clientX, e.clientY);
       drawVisibleArea(mapCoords.x, mapCoords.y);
     }
-  }, [isDM, isDrawingMode, isDrawing, isPanning, keyPressed.ctrl, fogTransform, getMapCoordinates, drawVisibleArea, scale, lastMousePos, setFogTransform]);
+  }, [isDM, activeMode, isDrawingMode, isDrawing, isPanning, keyPressed.ctrl, fogTransform, getMapCoordinates, drawVisibleArea, scale, lastMousePos, setFogTransform]);
 
   const handleMouseUp = useCallback(() => {
     setIsDrawing(false);
     setIsPanning(false);
   }, [setIsDrawing, setIsPanning]);
 
-  if (!fogSettings.enabled || !isDM) {
+  if (!fogSettings.enabled || !isDM || activeMode !== 'fog') {
     return null;
   }
 
@@ -215,6 +216,13 @@ export const FogDrawingOverlay: React.FC<FogDrawingOverlayProps> = ({
           </div>
         </div>
       )}
+      
+      {/* Mode indicator */}
+      <div className="absolute bottom-4 right-4 bg-background/90 border rounded-lg p-2 text-xs pointer-events-none">
+        <div className="font-medium">
+          Режим: 🌫️ Туман
+        </div>
+      </div>
     </div>
   );
 };

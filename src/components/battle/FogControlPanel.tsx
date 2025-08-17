@@ -15,6 +15,7 @@ export const FogControlPanel: React.FC = () => {
     fogTransform,
     isDrawingMode,
     selectedArea,
+    activeMode,
     isDM,
     enableFog,
     revealAll,
@@ -24,6 +25,7 @@ export const FogControlPanel: React.FC = () => {
     setFogTransform,
     resetFogTransform,
     setDrawingMode,
+    setActiveMode,
     removeVisibleArea,
     selectArea
   } = useFogOfWarStore();
@@ -81,18 +83,51 @@ export const FogControlPanel: React.FC = () => {
 
         <Separator />
 
-        {/* Drawing mode toggle */}
-        <div className="flex items-center justify-between">
-          <span className="text-sm font-medium">Режим рисования</span>
-          <Switch
-            checked={isDrawingMode}
-            onCheckedChange={setDrawingMode}
-            disabled={!fogSettings.enabled}
-          />
+        {/* Mode selection */}
+        <div className="space-y-3">
+          <span className="text-sm font-medium">Режим работы</span>
+          <div className="grid grid-cols-2 gap-2">
+            <Button
+              variant={activeMode === 'map' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setActiveMode('map')}
+              className="flex items-center gap-2"
+            >
+              🗺️ Карта
+            </Button>
+            <Button
+              variant={activeMode === 'fog' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setActiveMode('fog')}
+              className="flex items-center gap-2"
+            >
+              🌫️ Туман
+            </Button>
+          </div>
+          <div className="text-xs text-muted-foreground">
+            {activeMode === 'map' 
+              ? 'Управление картой: перемещение, масштабирование' 
+              : 'Управление туманом: рисование, трансформация'
+            }
+          </div>
         </div>
 
-        {/* Brush size */}
-        {isDrawingMode && (
+        <Separator />
+
+        {/* Drawing mode toggle - только в режиме тумана */}
+        {activeMode === 'fog' && (
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-medium">Режим рисования</span>
+            <Switch
+              checked={isDrawingMode}
+              onCheckedChange={setDrawingMode}
+              disabled={!fogSettings.enabled}
+            />
+          </div>
+        )}
+
+        {/* Brush size - только в режиме тумана и рисования */}
+        {activeMode === 'fog' && isDrawingMode && (
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
               <span>Размер кисти</span>
@@ -111,7 +146,8 @@ export const FogControlPanel: React.FC = () => {
 
         <Separator />
 
-        {/* Transform controls */}
+        {/* Transform controls - только в режиме тумана */}
+        {activeMode === 'fog' && (
         <div className="space-y-3">
           <span className="text-sm font-medium">Позиция и масштаб</span>
           
@@ -185,6 +221,7 @@ export const FogControlPanel: React.FC = () => {
             />
           </div>
         </div>
+        )}
 
         <Separator />
 
@@ -317,15 +354,18 @@ export const FogControlPanel: React.FC = () => {
 
         <Separator />
 
-        {/* Keyboard shortcuts info */}
+        {/* Keyboard shortcuts info - только в режиме тумана */}
+        {activeMode === 'fog' && (
         <div className="space-y-2">
-          <span className="text-sm font-medium">Управление видимостью токенов</span>
+          <span className="text-sm font-medium">Управление туманом</span>
           <div className="text-xs text-muted-foreground space-y-1">
             <div>Размер кисти: {fogSettings.brushSize}</div>
-            <div><kbd className="px-1 py-0.5 bg-muted rounded text-xs">Клик + Shift</kbd> = Открыть область</div>
-            <div><kbd className="px-1 py-0.5 bg-muted rounded text-xs">Клик + Alt</kbd> = Скрыть область</div>
+            <div><kbd className="px-1 py-0.5 bg-muted rounded text-xs">Shift + Клик</kbd> = Открыть область</div>
+            <div><kbd className="px-1 py-0.5 bg-muted rounded text-xs">Alt + Клик</kbd> = Скрыть область</div>
+            <div><kbd className="px-1 py-0.5 bg-muted rounded text-xs">Ctrl + Тащить</kbd> = Переместить туман</div>
           </div>
         </div>
+        )}
       </CardContent>
     </Card>
   );
