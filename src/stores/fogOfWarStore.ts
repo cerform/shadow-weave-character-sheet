@@ -44,6 +44,7 @@ interface FogOfWarStore {
   setIsDrawing: (drawing: boolean) => void;
   selectArea: (id: string | null) => void;
   drawVisibleArea: (x: number, y: number) => void;
+  hideVisibleArea: (x: number, y: number) => void;
   
   // Utility functions
   isPositionRevealed: (x: number, y: number) => boolean;
@@ -137,6 +138,21 @@ export const useFogOfWarStore = create<FogOfWarStore>((set, get) => ({
     };
     
     get().addVisibleArea(newArea);
+  },
+
+  hideVisibleArea: (x, y) => {
+    const { fogSettings, visibleAreas } = get();
+    
+    // Находим области, которые нужно удалить (те, которые пересекаются с кистью)
+    const areasToRemove = visibleAreas.filter((area) => {
+      const distance = Math.sqrt((x - area.x) ** 2 + (y - area.y) ** 2);
+      return distance <= fogSettings.brushSize;
+    });
+    
+    // Удаляем найденные области
+    areasToRemove.forEach((area) => {
+      get().removeVisibleArea(area.id);
+    });
   },
 
   isPositionRevealed: (x, y) => {

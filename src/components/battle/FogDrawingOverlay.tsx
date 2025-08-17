@@ -1,4 +1,4 @@
-import React, { useRef, useCallback, useState } from 'react';
+import React, { useRef, useCallback, useState, useEffect } from 'react';
 import { useFogOfWarStore } from '@/stores/fogOfWarStore';
 
 interface FogDrawingOverlayProps {
@@ -19,11 +19,43 @@ export const FogDrawingOverlay: React.FC<FogDrawingOverlayProps> = ({
     isDM,
     isDrawing,
     setIsDrawing,
-    drawVisibleArea
+    drawVisibleArea,
+    hideVisibleArea
   } = useFogOfWarStore();
 
   const containerRef = useRef<HTMLDivElement>(null);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+  const [keyPressed, setKeyPressed] = useState<{ shift: boolean; alt: boolean }>({ shift: false, alt: false });
+
+  // Обработчики клавиатуры
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Shift') {
+        setKeyPressed(prev => ({ ...prev, shift: true }));
+      } else if (e.key === 'Alt') {
+        e.preventDefault(); // Предотвращаем открытие меню
+        setKeyPressed(prev => ({ ...prev, alt: true }));
+      }
+    };
+
+    const handleKeyUp = (e: KeyboardEvent) => {
+      if (e.key === 'Shift') {
+        setKeyPressed(prev => ({ ...prev, shift: false }));
+      } else if (e.key === 'Alt') {
+        setKeyPressed(prev => ({ ...prev, alt: false }));
+      }
+    };
+
+    if (isDM && fogSettings.enabled) {
+      window.addEventListener('keydown', handleKeyDown);
+      window.addEventListener('keyup', handleKeyUp);
+    }
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+    };
+  }, [isDM, fogSettings.enabled]);
 
   const getMapCoordinates = useCallback((clientX: number, clientY: number) => {
     const rect = containerRef.current?.getBoundingClientRect();
@@ -36,20 +68,35 @@ export const FogDrawingOverlay: React.FC<FogDrawingOverlayProps> = ({
   }, [scale]);
 
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
-    if (!isDM || !isDrawingMode) return;
+    if (!isDM) return;
     
     e.preventDefault();
-    setIsDrawing(true);
-    
     const { x, y } = getMapCoordinates(e.clientX, e.clientY);
-    drawVisibleArea(x, y);
-  }, [isDM, isDrawingMode, getMapCoordinates, drawVisibleArea, setIsDrawing]);
+    
+    // Shift + Клик = открыть область
+    if (keyPressed.shift) {
+      drawVisibleArea(x, y);
+      return;
+    }
+    
+    // Alt + Клик = скрыть область
+    if (keyPressed.alt) {
+      hideVisibleArea(x, y);
+      return;
+    }
+    
+    // Обычное рисование только в режиме рисования
+    if (isDrawingMode) {
+      setIsDrawing(true);
+      drawVisibleArea(x, y);
+    }
+  }, [isDM, isDrawingMode, keyPressed, getMapCoordinates, drawVisibleArea, hideVisibleArea, setIsDrawing]);
 
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
     const { x, y } = getMapCoordinates(e.clientX, e.clientY);
     setMousePos({ x: x * scale, y: y * scale });
 
-    if (!isDM || !isDrawingMode || !isDrawing) return;
+    if (!isDM || !isDrawing || !isDrawingMode) return;
     
     const mapCoords = getMapCoordinates(e.clientX, e.clientY);
     drawVisibleArea(mapCoords.x, mapCoords.y);
@@ -63,6 +110,14 @@ export const FogDrawingOverlay: React.FC<FogDrawingOverlayProps> = ({
     return null;
   }
 
+  // Определяем курсор в зависимости от режима и нажатых клавиш
+  const getCursor = () => {
+    if (keyPressed.shift) return 'copy'; // Открыть область
+    if (keyPressed.alt) return 'not-allowed'; // Скрыть область
+    if (isDrawingMode) return 'crosshair';
+    return 'default';
+  };
+
   return (
     <div
       ref={containerRef}
@@ -70,8 +125,8 @@ export const FogDrawingOverlay: React.FC<FogDrawingOverlayProps> = ({
       style={{
         width: mapWidth * scale,
         height: mapHeight * scale,
-        cursor: isDrawingMode ? 'crosshair' : 'default',
-        pointerEvents: isDrawingMode ? 'auto' : 'none'
+        cursor: getCursor(),
+        pointerEvents: 'auto' // Всегда включаем для клавиатурных сочетаний
       }}
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
@@ -79,21 +134,37 @@ export const FogDrawingOverlay: React.FC<FogDrawingOverlayProps> = ({
       onMouseLeave={handleMouseUp}
     >
       {/* Brush cursor preview */}
-      {isDrawingMode && (
+      {(isDrawingMode || keyPressed.shift || keyPressed.alt) && (
         <div
-          className="absolute pointer-events-none border-2 border-primary/50 rounded-full"
+          className={`absolute pointer-events-none border-2 rounded-full ${
+            keyPressed.alt 
+              ? 'border-red-500/70 bg-red-500/10' 
+              : 'border-primary/50 bg-primary/10'
+          }`}
           style={{
             left: mousePos.x - (fogSettings.brushSize * scale) / 2,
             top: mousePos.y - (fogSettings.brushSize * scale) / 2,
             width: fogSettings.brushSize * scale,
-            height: fogSettings.brushSize * scale,
-            backgroundColor: 'rgba(59, 130, 246, 0.1)'
+            height: fogSettings.brushSize * scale
           }}
         />
       )}
 
+      {/* Keyboard shortcuts instructions */}
+      {(keyPressed.shift || keyPressed.alt) && (
+        <div className="absolute top-4 left-4 bg-background/90 border rounded-lg p-3 text-sm pointer-events-none">
+          <div className="font-medium mb-1">
+            {keyPressed.shift && 'Открыть область'}
+            {keyPressed.alt && 'Скрыть область'}
+          </div>
+          <div className="text-muted-foreground">
+            Нажмите на карту чтобы {keyPressed.shift ? 'открыть' : 'скрыть'} область
+          </div>
+        </div>
+      )}
+
       {/* Drawing instructions */}
-      {isDrawingMode && (
+      {isDrawingMode && !keyPressed.shift && !keyPressed.alt && (
         <div className="absolute top-4 left-4 bg-background/90 border rounded-lg p-3 text-sm pointer-events-none">
           <div className="font-medium mb-1">Режим рисования</div>
           <div className="text-muted-foreground">

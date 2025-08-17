@@ -234,6 +234,18 @@ export const FogControlPanel: React.FC = () => {
             </div>
           )}
         </div>
+
+        <Separator />
+
+        {/* Keyboard shortcuts info */}
+        <div className="space-y-2">
+          <span className="text-sm font-medium">Управление видимостью токенов</span>
+          <div className="text-xs text-muted-foreground space-y-1">
+            <div>Размер кисти: {fogSettings.brushSize}</div>
+            <div><kbd className="px-1 py-0.5 bg-muted rounded text-xs">Клик + Shift</kbd> = Открыть область</div>
+            <div><kbd className="px-1 py-0.5 bg-muted rounded text-xs">Клик + Alt</kbd> = Скрыть область</div>
+          </div>
+        </div>
       </CardContent>
     </Card>
   );
