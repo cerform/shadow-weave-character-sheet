@@ -1,11 +1,10 @@
 import { create } from 'zustand';
 
-export interface FogArea {
+export interface VisibleArea {
   id: string;
   x: number;
   y: number;
   radius: number;
-  revealed: boolean;
   type: 'circle' | 'rectangle' | 'polygon';
   width?: number;
   height?: number;
@@ -19,30 +18,32 @@ export interface FogSettings {
   fogOpacity: number;
   transitionSpeed: number;
   blurAmount: number;
+  brushSize: number;
 }
 
 interface FogOfWarStore {
   // State
-  fogAreas: FogArea[];
+  visibleAreas: VisibleArea[];
   fogSettings: FogSettings;
-  isEditingFog: boolean;
-  selectedFogArea: string | null;
+  isDrawingMode: boolean;
+  selectedArea: string | null;
   isDM: boolean;
+  isDrawing: boolean;
 
   // Actions
   setIsDM: (isDM: boolean) => void;
   enableFog: (enabled: boolean) => void;
-  addFogArea: (area: Omit<FogArea, 'id'>) => void;
-  updateFogArea: (id: string, updates: Partial<FogArea>) => void;
-  removeFogArea: (id: string) => void;
-  revealArea: (id: string) => void;
-  hideArea: (id: string) => void;
+  addVisibleArea: (area: Omit<VisibleArea, 'id'>) => void;
+  updateVisibleArea: (id: string, updates: Partial<VisibleArea>) => void;
+  removeVisibleArea: (id: string) => void;
   revealAll: () => void;
   hideAll: () => void;
-  clearAllFog: () => void;
+  clearAllVisible: () => void;
   setFogSettings: (settings: Partial<FogSettings>) => void;
-  setEditingMode: (editing: boolean) => void;
-  selectFogArea: (id: string | null) => void;
+  setDrawingMode: (drawing: boolean) => void;
+  setIsDrawing: (drawing: boolean) => void;
+  selectArea: (id: string | null) => void;
+  drawVisibleArea: (x: number, y: number) => void;
   
   // Utility functions
   isPositionRevealed: (x: number, y: number) => boolean;
@@ -50,18 +51,20 @@ interface FogOfWarStore {
 }
 
 export const useFogOfWarStore = create<FogOfWarStore>((set, get) => ({
-  fogAreas: [],
+  visibleAreas: [],
   fogSettings: {
-    enabled: false,
+    enabled: true,
     globalReveal: false,
     fogColor: '#000000',
-    fogOpacity: 0.8,
+    fogOpacity: 0.9,
     transitionSpeed: 0.3,
-    blurAmount: 10
+    blurAmount: 8,
+    brushSize: 50
   },
-  isEditingFog: false,
-  selectedFogArea: null,
+  isDrawingMode: false,
+  selectedArea: null,
   isDM: false,
+  isDrawing: false,
 
   setIsDM: (isDM) => set({ isDM }),
 
@@ -70,59 +73,44 @@ export const useFogOfWarStore = create<FogOfWarStore>((set, get) => ({
       fogSettings: { ...state.fogSettings, enabled }
     })),
 
-  addFogArea: (area) => {
-    const id = `fog_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    const newArea: FogArea = { ...area, id };
+  addVisibleArea: (area) => {
+    const id = `visible_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const newArea: VisibleArea = { ...area, id };
     
     set((state) => ({
-      fogAreas: [...state.fogAreas, newArea]
+      visibleAreas: [...state.visibleAreas, newArea]
     }));
   },
 
-  updateFogArea: (id, updates) =>
+  updateVisibleArea: (id, updates) =>
     set((state) => ({
-      fogAreas: state.fogAreas.map((area) =>
+      visibleAreas: state.visibleAreas.map((area) =>
         area.id === id ? { ...area, ...updates } : area
       )
     })),
 
-  removeFogArea: (id) =>
+  removeVisibleArea: (id) =>
     set((state) => ({
-      fogAreas: state.fogAreas.filter((area) => area.id !== id),
-      selectedFogArea: state.selectedFogArea === id ? null : state.selectedFogArea
-    })),
-
-  revealArea: (id) =>
-    set((state) => ({
-      fogAreas: state.fogAreas.map((area) =>
-        area.id === id ? { ...area, revealed: true } : area
-      )
-    })),
-
-  hideArea: (id) =>
-    set((state) => ({
-      fogAreas: state.fogAreas.map((area) =>
-        area.id === id ? { ...area, revealed: false } : area
-      )
+      visibleAreas: state.visibleAreas.filter((area) => area.id !== id),
+      selectedArea: state.selectedArea === id ? null : state.selectedArea
     })),
 
   revealAll: () =>
     set((state) => ({
-      fogAreas: state.fogAreas.map((area) => ({ ...area, revealed: true })),
       fogSettings: { ...state.fogSettings, globalReveal: true }
     })),
 
   hideAll: () =>
     set((state) => ({
-      fogAreas: state.fogAreas.map((area) => ({ ...area, revealed: false })),
+      visibleAreas: [],
       fogSettings: { ...state.fogSettings, globalReveal: false }
     })),
 
-  clearAllFog: () =>
+  clearAllVisible: () =>
     set({
-      fogAreas: [],
-      selectedFogArea: null,
-      isEditingFog: false
+      visibleAreas: [],
+      selectedArea: null,
+      isDrawingMode: false
     }),
 
   setFogSettings: (settings) =>
@@ -130,22 +118,35 @@ export const useFogOfWarStore = create<FogOfWarStore>((set, get) => ({
       fogSettings: { ...state.fogSettings, ...settings }
     })),
 
-  setEditingMode: (editing) =>
-    set({ isEditingFog: editing }),
+  setDrawingMode: (drawing) =>
+    set({ isDrawingMode: drawing }),
 
-  selectFogArea: (id) =>
-    set({ selectedFogArea: id }),
+  setIsDrawing: (drawing) =>
+    set({ isDrawing: drawing }),
+
+  selectArea: (id) =>
+    set({ selectedArea: id }),
+
+  drawVisibleArea: (x, y) => {
+    const { fogSettings } = get();
+    const newArea: Omit<VisibleArea, 'id'> = {
+      x,
+      y,
+      radius: fogSettings.brushSize,
+      type: 'circle'
+    };
+    
+    get().addVisibleArea(newArea);
+  },
 
   isPositionRevealed: (x, y) => {
-    const { fogAreas, fogSettings } = get();
+    const { visibleAreas, fogSettings } = get();
     
     if (!fogSettings.enabled || fogSettings.globalReveal) {
       return true;
     }
 
-    return fogAreas.some((area) => {
-      if (!area.revealed) return false;
-
+    return visibleAreas.some((area) => {
       switch (area.type) {
         case 'circle':
           const distance = Math.sqrt((x - area.x) ** 2 + (y - area.y) ** 2);

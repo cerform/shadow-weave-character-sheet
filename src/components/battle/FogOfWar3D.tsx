@@ -10,7 +10,7 @@ interface FogOfWar3DProps {
 
 const FogPlane: React.FC<FogOfWar3DProps> = ({ mapWidth, mapHeight }) => {
   const meshRef = useRef<THREE.Mesh>(null);
-  const { fogSettings, fogAreas, isPositionRevealed } = useFogOfWarStore();
+  const { fogSettings, visibleAreas, isPositionRevealed } = useFogOfWarStore();
   const { camera } = useThree();
 
   // Create fog texture
@@ -179,13 +179,13 @@ const RevealedArea: React.FC<{
 };
 
 export const FogOfWar3D: React.FC<FogOfWar3DProps> = ({ mapWidth, mapHeight }) => {
-  const { fogAreas, fogSettings } = useFogOfWarStore();
+  const { visibleAreas, fogSettings } = useFogOfWarStore();
 
   if (!fogSettings.enabled) {
     return null;
   }
 
-  const revealedAreas = fogAreas.filter(area => area.revealed);
+  const revealedAreas = visibleAreas;
 
   return (
     <>

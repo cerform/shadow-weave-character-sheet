@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { FogOfWarPanel } from './FogOfWarPanel';
-import { FogAreaEditor2D } from './FogAreaEditor2D';
-import { AnimatedFogOverlay } from './AnimatedFogOverlay';
+import { FogControlPanel } from './FogControlPanel';
+import { FogVisualOverlay } from './FogVisualOverlay';
+import { FogDrawingOverlay } from './FogDrawingOverlay';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Environment } from '@react-three/drei';
 import * as THREE from 'three';
@@ -390,7 +390,7 @@ const Simple2DMapFromAssets: React.FC<Simple2DMapFromAssetsProps> = ({
       {/* Fog of War Panel */}
       {showFogPanel && (
         <Card className="absolute top-4 left-4 w-80 z-20 bg-background/95 backdrop-blur-sm">
-          <FogOfWarPanel />
+          <FogControlPanel />
         </Card>
       )}
 
@@ -469,15 +469,13 @@ const Simple2DMapFromAssets: React.FC<Simple2DMapFromAssetsProps> = ({
           <Environment preset="city" />
         </Canvas>
         
-        {/* Animated Fog Overlay */}
-        <AnimatedFogOverlay 
+        {/* Fog of War Overlays */}
+        <FogVisualOverlay 
           mapWidth={24 * 50} 
           mapHeight={16 * 50} 
           scale={1}
         />
-        
-        {/* Fog of War Editor */}
-        <FogAreaEditor2D 
+        <FogDrawingOverlay 
           mapWidth={24 * 50} 
           mapHeight={16 * 50} 
           scale={1}

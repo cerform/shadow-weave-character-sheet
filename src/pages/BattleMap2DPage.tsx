@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Home, RefreshCw, Cloud } from 'lucide-react';
 import { toast } from 'sonner';
 import Simple2DMapFromAssets from '@/components/battle/Simple2DMapFromAssets';
-import { FogAreaEditor2D } from '@/components/battle/FogAreaEditor2D';
+import { FogControlPanel } from '@/components/battle/FogControlPanel';
 import { useFogOfWarStore } from '@/stores/fogOfWarStore';
 
 const BattleMap2DPage: React.FC = () => {
@@ -143,12 +143,12 @@ const BattleMap2DPage: React.FC = () => {
           mapImageUrl={mapUrl}
         />
         
-        {/* Fog of War Editor Overlay */}
-        <FogAreaEditor2D 
-          mapWidth={1200} 
-          mapHeight={800} 
-          scale={1}
-        />
+        {/* Fog of War Control Panel */}
+        {showFogPanel && (
+          <div className="absolute top-20 right-4 z-30 w-80">
+            <FogControlPanel />
+          </div>
+        )}
       </div>
     </div>
   );

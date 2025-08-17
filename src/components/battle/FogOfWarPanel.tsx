@@ -21,27 +21,25 @@ import {
   Globe,
   Settings
 } from 'lucide-react';
-import { useFogOfWarStore, FogArea } from '@/stores/fogOfWarStore';
+import { useFogOfWarStore, VisibleArea } from '@/stores/fogOfWarStore';
 import { toast } from 'sonner';
 
 export const FogOfWarPanel: React.FC = () => {
   const {
-    fogAreas,
+    visibleAreas,
     fogSettings,
-    isEditingFog,
-    selectedFogArea,
+    isDrawingMode,
+    selectedArea,
     isDM,
     enableFog,
-    addFogArea,
-    removeFogArea,
-    revealArea,
-    hideArea,
+    addVisibleArea,
+    removeVisibleArea,
     revealAll,
     hideAll,
-    clearAllFog,
+    clearAllVisible,
     setFogSettings,
-    setEditingMode,
-    selectFogArea
+    setDrawingMode,
+    selectArea
   } = useFogOfWarStore();
 
   const [newAreaType, setNewAreaType] = useState<'circle' | 'rectangle'>('circle');
@@ -53,17 +51,16 @@ export const FogOfWarPanel: React.FC = () => {
     const centerX = 600;
     const centerY = 400;
 
-    const newArea: Omit<FogArea, 'id'> = {
+    const newArea: Omit<VisibleArea, 'id'> = {
       x: centerX,
       y: centerY,
       radius: newAreaType === 'circle' ? 100 : 0,
       width: newAreaType === 'rectangle' ? 200 : undefined,
       height: newAreaType === 'rectangle' ? 150 : undefined,
-      revealed: false,
       type: newAreaType
     };
 
-    addFogArea(newArea);
+    addVisibleArea(newArea);
     toast.success(`Добавлена область тумана: ${newAreaType === 'circle' ? 'круг' : 'прямоугольник'}`);
   };
 
@@ -78,7 +75,7 @@ export const FogOfWarPanel: React.FC = () => {
   };
 
   const handleClearAll = () => {
-    clearAllFog();
+    clearAllVisible();
     toast.success('Все области тумана удалены');
   };
 
@@ -223,105 +220,17 @@ export const FogOfWarPanel: React.FC = () => {
           </div>
         </div>
 
-        {/* Fog Areas List */}
-        {fogAreas.length > 0 && (
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Label className="text-sm font-medium">
-                Области ({fogAreas.length})
-              </Label>
-              <Button
-                onClick={handleClearAll}
-                variant="ghost"
-                size="sm"
-                className="text-destructive hover:text-destructive"
-              >
-                <Trash2 className="w-4 h-4" />
-              </Button>
-            </div>
-            
-            <div className="max-h-48 overflow-y-auto space-y-1">
-              {fogAreas.map((area, index) => (
-                <div
-                  key={area.id}
-                  className={`flex items-center justify-between p-2 rounded-lg border ${
-                    selectedFogArea === area.id 
-                      ? 'bg-primary/10 border-primary' 
-                      : 'bg-card border-transparent'
-                  }`}
-                  onClick={() => selectFogArea(area.id)}
-                >
-                  <div className="flex items-center gap-2 flex-1 min-w-0">
-                    {area.type === 'circle' ? (
-                      <Circle className="w-4 h-4 flex-shrink-0" />
-                    ) : (
-                      <Square className="w-4 h-4 flex-shrink-0" />
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <div className="text-xs font-medium truncate">
-                        Область {index + 1}
-                      </div>
-                      <div className="text-xs text-muted-foreground">
-                        {area.type === 'circle' ? `r: ${area.radius}` : `${area.width}×${area.height}`}
-                      </div>
-                    </div>
-                    <Badge
-                      variant={area.revealed ? "default" : "secondary"}
-                      className="text-xs"
-                    >
-                      {area.revealed ? 'Видна' : 'Скрыта'}
-                    </Badge>
-                  </div>
-                  
-                  <div className="flex gap-1">
-                    <Button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        if (area.revealed) {
-                          hideArea(area.id);
-                        } else {
-                          revealArea(area.id);
-                        }
-                      }}
-                      variant="ghost"
-                      size="sm"
-                      className="w-8 h-8 p-0"
-                    >
-                      {area.revealed ? (
-                        <EyeOff className="w-3 h-3" />
-                      ) : (
-                        <Eye className="w-3 h-3" />
-                      )}
-                    </Button>
-                    <Button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        removeFogArea(area.id);
-                      }}
-                      variant="ghost"
-                      size="sm"
-                      className="w-8 h-8 p-0 text-destructive hover:text-destructive"
-                    >
-                      <Trash2 className="w-3 h-3" />
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Edit Mode Toggle */}
+        {/* Drawing Mode Toggle */}
         <div className="flex items-center justify-between">
-          <Label className="text-sm">Режим редактирования</Label>
+          <Label className="text-sm">Режим рисования</Label>
           <Switch
-            checked={isEditingFog}
-            onCheckedChange={setEditingMode}
-            disabled={!fogSettings.enabled || fogAreas.length === 0}
+            checked={isDrawingMode}
+            onCheckedChange={setDrawingMode}
+            disabled={!fogSettings.enabled}
           />
         </div>
 
-        {isEditingFog && (
+        {isDrawingMode && (
           <div className="text-xs text-muted-foreground p-2 bg-muted/20 rounded">
             💡 Кликните и перетаскивайте области на карте для изменения их размера и положения
           </div>

@@ -5,6 +5,7 @@ import { Home, Save, Plus, Trash2, Upload, Sword, Cloud } from 'lucide-react';
 import MapUploader from '@/components/battle/MapUploader';
 import { EnhancedBattleManager } from '../components/battle/EnhancedBattleManager';
 import { FogOfWarToggle } from '../components/battle/FogOfWarToggle';
+import { FogControlPanel } from '@/components/battle/FogControlPanel';
 import { toast } from 'sonner';
 import { determineMonsterType, updateTokenWithModelType } from '@/utils/tokenModelMapping';
 import Simple3DMap from '@/components/battle/Simple3DMap';
@@ -432,7 +433,7 @@ const handleTokenUpdate = (tokenId: string, updates: any) => {
       {showFogPanel && (
         <div className="absolute top-20 right-4 z-30 w-80">
           <div className="bg-background/95 backdrop-blur-sm border rounded-lg shadow-lg">
-            <EnhancedBattleManager />
+            <FogControlPanel />
           </div>
         </div>
       )}
