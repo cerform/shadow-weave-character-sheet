@@ -1,167 +1,221 @@
-// /src/components/battle/fog/FogOfWar3D.tsx
-import * as React from "react";
-import { useMemo, useRef } from "react";
-import { useFrame, useThree } from "@react-three/fiber";
-import * as THREE from "three";
-import { createFogCompositeMaterial } from "./shaders/FogCompositeMaterial";
-import { createRadialRevealMaterial } from "./shaders/RadialRevealMaterial";
-import { FogOfWarProps, VisionSource } from "./types";
-import { useFogPainter } from "./FogPainter";
+import React, { useMemo, useRef, useEffect } from 'react';
+import { useFrame, useThree } from '@react-three/fiber';
+import * as THREE from 'three';
+import { useFogOfWarStore } from '@/stores/fogOfWarStore';
 
-// Basic LOS helper — cast N rays and build a triangle fan polygon mesh (optional)
-function buildVisibilityMesh(source: VisionSource, occluders: THREE.Mesh[], raycaster: THREE.Raycaster, segments = 128){
-  const angleStep = (Math.PI * 2) / segments;
-  const points: THREE.Vector2[] = [];
-  const origin = new THREE.Vector3(source.position.x, source.position.y, source.position.z);
-  const up = new THREE.Vector3(0,1,0);
-  const maxDist = source.radius;
-
-  for(let i=0;i<segments;i++){
-    const angle = i * angleStep;
-    const dir = new THREE.Vector3(Math.cos(angle), 0, Math.sin(angle));
-    raycaster.set(origin.clone().add(up.clone().multiplyScalar(0.1)), dir);
-    const intersects = raycaster.intersectObjects(occluders, true);
-    let dist = maxDist;
-    if(intersects.length > 0){
-      const t = intersects[0];
-      const d = t.distance;
-      if(d < maxDist) dist = d;
-    }
-    const px = source.position.x + Math.cos(angle) * dist;
-    const pz = source.position.z + Math.sin(angle) * dist;
-    points.push(new THREE.Vector2(px, pz));
-  }
-
-  const shape = new THREE.Shape(points);
-  const geom = new THREE.ShapeGeometry(shape);
-  return geom;
+interface FogOfWar3DProps {
+  mapSize: { width: number; height: number };
+  isDM: boolean;
 }
 
-export function FogOfWar3D(props: FogOfWarProps){
+export const FogOfWar3D: React.FC<FogOfWar3DProps> = ({
+  mapSize,
+  isDM
+}) => {
+  const { gl, camera } = useThree();
   const {
-    mapSize,
-    mapCenter = new THREE.Vector3(0,0,0),
-    visionSources,
-    occluders = [],
-    fogColor = 0x0b0e14,
-    density = 0.9,
-    maskResolution = { width: 1024, height: 1024 },
-    enableDMPaint = true,
-    brushRadius = 2,
-    debugMask = false,
-  } = props;
+    visibleAreas,
+    fogSettings,
+    fogTransform,
+    activeMode,
+    isDrawing,
+    drawVisibleArea,
+    hideVisibleArea
+  } = useFogOfWarStore();
+  
+  const fogMesh = useRef<THREE.Mesh>(null);
+  const raycaster = useRef(new THREE.Raycaster());
+  const mouse = useRef(new THREE.Vector2());
+  
+  // Grid dimensions for fog texture
+  const gridWidth = Math.ceil(mapSize.width / 25); // 25px grid
+  const gridHeight = Math.ceil(mapSize.height / 25);
 
-  const { gl } = useThree();
-  const orthoCam = useMemo(() => new THREE.OrthographicCamera(-mapSize.x/2, mapSize.x/2, mapSize.y/2, -mapSize.y/2, 0.1, 50), [mapSize]);
-  const maskScene = useMemo(() => new THREE.Scene(), []);
-  const maskTarget = useMemo(() => new THREE.WebGLRenderTarget(maskResolution.width, maskResolution.height, {
-    minFilter: THREE.LinearFilter,
-    magFilter: THREE.LinearFilter,
-    format: THREE.RGBAFormat,
-    depthBuffer: false,
-    stencilBuffer: false,
-  }), [maskResolution.width, maskResolution.height]);
+  // Create fog texture based on visible areas
+  const fogTexture = useMemo(() => {
+    const canvas = document.createElement('canvas');
+    canvas.width = gridWidth;
+    canvas.height = gridHeight;
+    const ctx = canvas.getContext('2d');
+    
+    if (!ctx) return null;
 
-  // Circle brush for each source (no‑LOS). We'll swap to polygon if occluders provided.
-  const brushGeo = useMemo(() => new THREE.PlaneGeometry(1,1), []);
-  const brushMat = useMemo(() => createRadialRevealMaterial(0xffffff, 0.7, 1.0), []);
+    // Fill with black (hidden)
+    ctx.fillStyle = 'black';
+    ctx.fillRect(0, 0, gridWidth, gridHeight);
 
-  // Prepare per‑source meshes for mask rendering
-  const sourceMeshes = useMemo(() => 
-    visionSources.map(() => new THREE.Mesh(brushGeo, brushMat)),
-  [visionSources.length, brushGeo, brushMat]);
+    // Draw revealed areas in white
+    ctx.fillStyle = 'white';
+    visibleAreas.forEach(area => {
+      if (area.type === 'circle') {
+        const gridX = Math.floor((area.x / mapSize.width) * gridWidth);
+        const gridY = Math.floor((area.y / mapSize.height) * gridHeight);
+        const gridRadius = Math.ceil((area.radius / 25));
+        
+        // Draw circle
+        ctx.beginPath();
+        ctx.arc(gridX, gridY, gridRadius, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    });
 
-  // LOS raycaster
-  const raycaster = useMemo(() => new THREE.Raycaster(), []);
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.needsUpdate = true;
+    texture.minFilter = THREE.NearestFilter;
+    texture.magFilter = THREE.NearestFilter;
+    
+    return texture;
+  }, [visibleAreas, gridWidth, gridHeight, mapSize]);
 
-  // Add all brushes to mask scene once
-  React.useEffect(() => {
-    sourceMeshes.forEach(m => maskScene.add(m));
-    return () => { sourceMeshes.forEach(m => maskScene.remove(m)); };
-  }, [maskScene, sourceMeshes]);
+  // Create fog shader material
+  const fogShaderMaterial = useMemo(() => {
+    return new THREE.ShaderMaterial({
+      transparent: true,
+      depthWrite: false,
+      uniforms: {
+        fogTexture: { value: fogTexture },
+        fogColor: { value: new THREE.Color(fogSettings.fogColor) },
+        fogOpacity: { value: isDM ? fogSettings.fogOpacity * 0.5 : fogSettings.fogOpacity },
+        time: { value: 0 },
+        offsetX: { value: fogTransform.offsetX },
+        offsetY: { value: fogTransform.offsetY },
+        scale: { value: fogTransform.scale }
+      },
+      vertexShader: `
+        varying vec2 vUv;
+        void main() {
+          vUv = uv;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }
+      `,
+      fragmentShader: `
+        uniform sampler2D fogTexture;
+        uniform vec3 fogColor;
+        uniform float fogOpacity;
+        uniform float time;
+        uniform float offsetX;
+        uniform float offsetY;
+        uniform float scale;
+        varying vec2 vUv;
+        
+        float noise(vec2 p) {
+          return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
+        }
+        
+        void main() {
+          // Apply transform to UV coordinates
+          vec2 transformedUv = vUv;
+          transformedUv.x = (transformedUv.x - offsetX / 1200.0) / scale;
+          transformedUv.y = (transformedUv.y - offsetY / 800.0) / scale;
+          
+          // Clamp to texture bounds
+          if (transformedUv.x < 0.0 || transformedUv.x > 1.0 || transformedUv.y < 0.0 || transformedUv.y > 1.0) {
+            gl_FragColor = vec4(fogColor, fogOpacity);
+            return;
+          }
+          
+          float revealed = texture2D(fogTexture, transformedUv).r;
+          
+          // Add some animated noise for atmospheric effect
+          float n = noise(vUv * 20.0 + time * 0.5) * 0.1;
+          float alpha = (1.0 - revealed) * fogOpacity + n;
+          
+          // Smooth edges
+          float edge = smoothstep(0.0, 0.1, revealed) * smoothstep(1.0, 0.9, revealed);
+          alpha *= (1.0 - edge * 0.5);
+          
+          gl_FragColor = vec4(fogColor, alpha);
+        }
+      `
+    });
+  }, [fogTexture, fogSettings, fogTransform, isDM]);
 
-  // Fog composite plane (drawn in main scene)
-  const fogPlane = useRef<THREE.Mesh>(null);
-  const fogMat = useMemo(() => createFogCompositeMaterial(), []);
-  React.useEffect(() => {
-    (fogMat.uniforms.uFogColor.value as THREE.Color).set(fogColor as any);
-    fogMat.uniforms.uDensity.value = density;
-    fogMat.uniforms.uResolution.value.set(maskResolution.width, maskResolution.height);
-    fogMat.uniforms.uMapSize.value.set(mapSize.x, mapSize.y);
-  }, [fogMat, fogColor, density, maskResolution.width, maskResolution.height, mapSize.x, mapSize.y]);
-
-  // DM paint hook
-  useFogPainter({
-    enabled: enableDMPaint,
-    renderer: gl,
-    maskTarget,
-    mapSize,
-    mapCenter,
-    brushRadius,
+  // Update shader uniforms
+  useFrame((state) => {
+    if (fogShaderMaterial) {
+      fogShaderMaterial.uniforms.time.value = state.clock.elapsedTime;
+      fogShaderMaterial.uniforms.fogColor.value.setHex(parseInt(fogSettings.fogColor.replace('#', ''), 16));
+      fogShaderMaterial.uniforms.fogOpacity.value = isDM ? fogSettings.fogOpacity * 0.5 : fogSettings.fogOpacity;
+      fogShaderMaterial.uniforms.offsetX.value = fogTransform.offsetX;
+      fogShaderMaterial.uniforms.offsetY.value = fogTransform.offsetY;
+      fogShaderMaterial.uniforms.scale.value = fogTransform.scale;
+    }
   });
 
-  // A helper scene clear (black = fog)
-  const clearColor = new THREE.Color(0x000000);
+  // Handle mouse interactions for DM painting
+  const handlePointerDown = (event: PointerEvent) => {
+    if (!isDM || activeMode !== 'fog') return;
+    
+    event.preventDefault();
+    event.stopPropagation();
+    
+    paintFog(event);
+  };
 
-  useFrame((state, dt) => {
-    // 1) REBUILD MASK each frame (sources + optional LOS)
-    const oldBg = maskScene.background as THREE.Color | null;
-    maskScene.background = clearColor; // black background
+  const handlePointerMove = (event: PointerEvent) => {
+    if (!isDM || !isDrawing || activeMode !== 'fog') return;
+    
+    event.preventDefault();
+    event.stopPropagation();
+    paintFog(event);
+  };
 
-    // Position/update vision meshes
-    for(let i = 0; i < visionSources.length; i++){
-      const src = visionSources[i];
-      const m = sourceMeshes[i];
-      if(!m) continue;
+  const paintFog = (event: PointerEvent) => {
+    if (!isDM || !fogMesh.current) return;
 
-      // If LOS and occluders exist, build polygon geometry, else use radial plane
-      if(occluders.length > 0){
-        const geom = buildVisibilityMesh(src, occluders, raycaster, 128);
-        m.geometry.dispose();
-        m.geometry = geom as any; // rendered face‑on in ortho; no need to rotate
-        (m.material as any).uniforms = undefined; // using the same material is fine (alpha is from shader)
-      } else {
-        // circle brush centered at source
-        if (m.geometry !== brushGeo) {
-          m.geometry.dispose();
-          m.geometry = brushGeo.clone();
+    const canvas = gl.domElement;
+    const rect = canvas.getBoundingClientRect();
+    
+    mouse.current.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+    mouse.current.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+    raycaster.current.setFromCamera(mouse.current, camera);
+    const intersects = raycaster.current.intersectObject(fogMesh.current);
+
+    if (intersects.length > 0) {
+      const intersection = intersects[0];
+      const uv = intersection.uv;
+      
+      if (uv) {
+        // Convert UV to map coordinates
+        const mapX = uv.x * mapSize.width;
+        const mapY = (1 - uv.y) * mapSize.height;
+        
+        // Check if we should reveal or hide based on modifier keys
+        if (event.shiftKey) {
+          drawVisibleArea(mapX, mapY);
+        } else if (event.altKey) {
+          hideVisibleArea(mapX, mapY);
         }
-        m.position.set(src.position.x, 0, src.position.z);
-        m.scale.setScalar(src.radius * 2);
       }
     }
+  };
 
-    // Render into mask target (top‑down)
-    const oldTarget = gl.getRenderTarget();
-    gl.setRenderTarget(maskTarget);
-    gl.clearColor();
-    gl.clear(true, true, true);
-    gl.render(maskScene, orthoCam);
-    gl.setRenderTarget(oldTarget);
+  // Add event listeners for DM painting
+  useEffect(() => {
+    if (!isDM || activeMode !== 'fog') return;
 
-    // 2) Update fog shader uniforms
-    fogMat.uniforms.uMask.value = maskTarget.texture;
-    fogMat.uniforms.uTime.value += dt;
-  });
+    const canvas = gl.domElement;
+    canvas.addEventListener('pointerdown', handlePointerDown);
+    window.addEventListener('pointermove', handlePointerMove);
 
-  // Main fog mesh — a big plane over the map (slightly above ground to avoid z‑fight)
+    return () => {
+      canvas.removeEventListener('pointerdown', handlePointerDown);
+      window.removeEventListener('pointermove', handlePointerMove);
+    };
+  }, [isDM, isDrawing, activeMode]);
+
+  if (!fogSettings.enabled || !fogTexture) return null;
+
   return (
-    <group>
-      <mesh ref={fogPlane} position={[mapCenter.x, mapCenter.y + 0.05, mapCenter.z]} rotation-x={-Math.PI/2}>
-        <planeGeometry args={[mapSize.x, mapSize.y, 1, 1]} />
-        <primitive object={fogMat} attach="material" />
-      </mesh>
-
-      {debugMask && (
-        // small quad in the corner to preview the mask
-        <mesh position={[mapCenter.x - mapSize.x/2 + 8, mapCenter.y + 0.1, mapCenter.z - mapSize.y/2 + 8]} rotation-x={-Math.PI/2}>
-          <planeGeometry args={[16, 16]} />
-          {/* Basic material to display the mask texture */}
-          <meshBasicMaterial map={maskTarget.texture} transparent opacity={0.9} />
-        </mesh>
-      )}
-    </group>
+    <mesh
+      ref={fogMesh}
+      position={[0, 0.01, 0]}
+      rotation={[-Math.PI / 2, 0, 0]}
+      renderOrder={100}
+    >
+      <planeGeometry args={[24, 16]} />
+      <primitive object={fogShaderMaterial} attach="material" />
+    </mesh>
   );
-}
-
-export default FogOfWar3D;
+};

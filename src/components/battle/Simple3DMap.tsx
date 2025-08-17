@@ -5,6 +5,8 @@ import * as THREE from 'three';
 import { MonsterModel } from './MonsterModel';
 import { monsterTypes } from '@/data/monsterTypes';
 import { FogOfWar3DEnhanced } from './FogOfWar3DEnhanced';
+import { FogOfWar3D } from './fog/FogOfWar3D';
+import { useFogOfWarStore } from '@/stores/fogOfWarStore';
 import { BattleSystem } from './BattleSystem';
 import { Button } from '@/components/ui/button';
 import { Plus, Minus, Edit, Heart, Trash2, Settings, Video, Ruler } from 'lucide-react';
@@ -545,6 +547,7 @@ const Simple3DMap: React.FC<Simple3DMapProps> = ({
   onPlaneClick,
   ...rest
 }) => {
+  const { setIsDM, fogSettings } = useFogOfWarStore();
   const [hoveredToken, setHoveredToken] = useState<string | null>(null);
   const [showTokenEditor, setShowTokenEditor] = useState(false);
   const [isDraggingAny, setIsDraggingAny] = useState(false);
@@ -552,6 +555,10 @@ const Simple3DMap: React.FC<Simple3DMapProps> = ({
   const [showBattleSystem, setShowBattleSystem] = useState(false);
   const [sessionId] = useState('current-session'); // In real app, get from props or context
   const [currentMapId] = useState('current-map'); // In real app, get from props or context
+  
+  React.useEffect(() => {
+    setIsDM(isDM);
+  }, [isDM, setIsDM]);
   console.log('🗺️ Simple3DMap rendering with:', { mapImageUrl, tokensCount: tokens.length });
 
   const selectedToken = tokens.find(t => t.id === selectedTokenId);
@@ -595,15 +602,13 @@ const Simple3DMap: React.FC<Simple3DMapProps> = ({
           {/* Плоскость с текстурой карты */}
           <TexturedPlane imageUrl={mapImageUrl} />
           
-          {/* Enhanced 3D Fog of War with Database Integration */}
-          <FogOfWar3DEnhanced
-            sessionId={sessionId}
-            mapId={currentMapId}
-            mapSize={{ width: 1200, height: 800 }}
-            gridSize={25}
-            isDM={isDM || false}
-            brushSize={3}
-          />
+          {/* Fog of War Layer - используем новую систему тумана */}
+          {fogSettings.enabled && (
+            <FogOfWar3D
+              mapSize={{ width: 1200, height: 800 }}
+              isDM={isDM}
+            />
+          )}
 
           {/* 3D ассеты из Storage */}
           {assetModels.map((a) => {

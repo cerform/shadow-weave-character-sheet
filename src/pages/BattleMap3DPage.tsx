@@ -6,6 +6,7 @@ import MapUploader from '@/components/battle/MapUploader';
 import { EnhancedBattleManager } from '../components/battle/EnhancedBattleManager';
 import { FogOfWarToggle } from '../components/battle/FogOfWarToggle';
 import { FogControlPanel } from '@/components/battle/FogControlPanel';
+import { FogDrawingOverlay3D } from '@/components/battle/FogDrawingOverlay3D';
 import { toast } from 'sonner';
 import { determineMonsterType, updateTokenWithModelType } from '@/utils/tokenModelMapping';
 import Simple3DMap from '@/components/battle/Simple3DMap';
@@ -444,7 +445,7 @@ const handleTokenUpdate = (tokenId: string, updates: any) => {
       </div>
 
       {/* 3D Map */}
-      <div className="w-full h-full pt-20">
+      <div className="w-full h-full pt-20 relative">
         <Simple3DMap
           mapImageUrl={mapUrl}
           tokens={tokens}
@@ -457,6 +458,9 @@ const handleTokenUpdate = (tokenId: string, updates: any) => {
           onAssetDelete={handleAssetDelete}
           isDM={true}
         />
+        
+        {/* 3D Fog Drawing Overlay */}
+        <FogDrawingOverlay3D />
       </div>
 
       {/* Map Upload Dialog */}
