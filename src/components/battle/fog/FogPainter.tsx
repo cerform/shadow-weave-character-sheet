@@ -38,6 +38,10 @@ export function useFogPainter(
       if(!enabled || !renderer || !maskTarget) return;
       if (!(event.buttons & 1)) return; // Only if left mouse button is pressed
       
+      // Prevent default to avoid interfering with other controls
+      event.preventDefault();
+      event.stopPropagation();
+      
       const canvas = renderer.domElement;
       // get NDC
       const rect = canvas.getBoundingClientRect();
@@ -61,11 +65,26 @@ export function useFogPainter(
       renderer.setRenderTarget(oldTarget);
     }
 
-    window.addEventListener('pointerdown', onPointer);
-    window.addEventListener('pointermove', onPointer);
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Shift' || event.key === 'Alt') {
+        event.preventDefault();
+      }
+    }
+
+    // Only attach to canvas element, not window, to avoid interfering with camera controls
+    const canvas = renderer?.domElement;
+    if (canvas && enabled) {
+      canvas.addEventListener('pointerdown', onPointer, { passive: false });
+      canvas.addEventListener('pointermove', onPointer, { passive: false });
+      window.addEventListener('keydown', onKeyDown);
+    }
+    
     return () => {
-      window.removeEventListener('pointerdown', onPointer);
-      window.removeEventListener('pointermove', onPointer);
+      if (canvas) {
+        canvas.removeEventListener('pointerdown', onPointer);
+        canvas.removeEventListener('pointermove', onPointer);
+        window.removeEventListener('keydown', onKeyDown);
+      }
     };
   }, [enabled, renderer, maskTarget, mapSize, mapCenter, brushRadius, paintScene, cam, revealMat, hideMat]);
 }
