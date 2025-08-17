@@ -45,51 +45,62 @@ export const FogAreaEditor2D: React.FC<FogAreaEditor2DProps> = ({
     const rect = containerRef.current?.getBoundingClientRect();
     if (!rect) return;
 
+    const offsetX = e.clientX - rect.left;
+    const offsetY = e.clientY - rect.top;
+
     setDragState({
       isDragging: true,
       dragType,
-      startX: e.clientX - rect.left,
-      startY: e.clientY - rect.top,
+      startX: offsetX,
+      startY: offsetY,
       areaId,
       originalArea: { ...area }
     });
 
     selectFogArea(areaId);
-  }, [isDM, isEditingFog, fogAreas, selectFogArea]);
+    
+    // Add global mouse listeners for better dragging
+    const handleGlobalMouseMove = (globalE: MouseEvent) => {
+      const rect = containerRef.current?.getBoundingClientRect();
+      if (!rect) return;
 
-  const handleMouseMove = useCallback((e: React.MouseEvent) => {
-    if (!dragState || !isDM) return;
+      const currentX = globalE.clientX - rect.left;
+      const currentY = globalE.clientY - rect.top;
+      const deltaX = currentX - offsetX;
+      const deltaY = currentY - offsetY;
 
-    const rect = containerRef.current?.getBoundingClientRect();
-    if (!rect) return;
-
-    const currentX = e.clientX - rect.left;
-    const currentY = e.clientY - rect.top;
-    const deltaX = currentX - dragState.startX;
-    const deltaY = currentY - dragState.startY;
-
-    const area = dragState.originalArea;
-    if (!area) return;
-
-    if (dragState.dragType === 'move') {
-      updateFogArea(dragState.areaId, {
-        x: Math.max(0, Math.min(mapWidth, area.x + deltaX / scale)),
-        y: Math.max(0, Math.min(mapHeight, area.y + deltaY / scale))
-      });
-    } else if (dragState.dragType === 'resize') {
-      if (area.type === 'circle') {
-        const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY) / scale;
-        updateFogArea(dragState.areaId, {
-          radius: Math.max(10, area.radius + distance / 2)
+      if (dragType === 'move') {
+        updateFogArea(areaId, {
+          x: Math.max(50, Math.min(mapWidth - 50, area.x + deltaX / scale)),
+          y: Math.max(50, Math.min(mapHeight - 50, area.y + deltaY / scale))
         });
-      } else if (area.type === 'rectangle') {
-        updateFogArea(dragState.areaId, {
-          width: Math.max(20, (area.width || 100) + deltaX / scale),
-          height: Math.max(20, (area.height || 100) + deltaY / scale)
-        });
+      } else if (dragType === 'resize') {
+        if (area.type === 'circle') {
+          const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY) / scale;
+          updateFogArea(areaId, {
+            radius: Math.max(20, Math.min(200, area.radius + distance / 2))
+          });
+        } else if (area.type === 'rectangle') {
+          updateFogArea(areaId, {
+            width: Math.max(50, Math.min(300, (area.width || 100) + deltaX / scale)),
+            height: Math.max(50, Math.min(300, (area.height || 100) + deltaY / scale))
+          });
+        }
       }
-    }
-  }, [dragState, isDM, mapWidth, mapHeight, scale, updateFogArea]);
+    };
+
+    const handleGlobalMouseUp = () => {
+      document.removeEventListener('mousemove', handleGlobalMouseMove);
+      document.removeEventListener('mouseup', handleGlobalMouseUp);
+      setDragState(null);
+    };
+
+    document.addEventListener('mousemove', handleGlobalMouseMove);
+    document.addEventListener('mouseup', handleGlobalMouseUp);
+
+  }, [isDM, isEditingFog, fogAreas, selectFogArea, mapWidth, mapHeight, scale, updateFogArea]);
+
+  // Remove this function as we now handle it globally
 
   const handleMouseUp = useCallback(() => {
     setDragState(null);
@@ -107,18 +118,35 @@ export const FogAreaEditor2D: React.FC<FogAreaEditor2DProps> = ({
         width: mapWidth * scale,
         height: mapHeight * scale,
       }}
-      onMouseMove={handleMouseMove}
-      onMouseUp={handleMouseUp}
-      onMouseLeave={handleMouseUp}
     >
-      {/* Fog overlay */}
+      {/* Animated fog overlay */}
+      <div
+        className="absolute inset-0 animate-pulse"
+        style={{
+          background: `
+            radial-gradient(circle at 20% 30%, ${fogSettings.fogColor}AA 10%, transparent 40%),
+            radial-gradient(circle at 80% 70%, ${fogSettings.fogColor}77 15%, transparent 50%),
+            radial-gradient(circle at 40% 80%, ${fogSettings.fogColor}55 20%, transparent 60%),
+            linear-gradient(45deg, ${fogSettings.fogColor}${Math.round(fogSettings.fogOpacity * 255).toString(16).padStart(2, '0')} 0%, transparent 100%)
+          `,
+          filter: `blur(${fogSettings.blurAmount}px)`,
+          transition: `all ${fogSettings.transitionSpeed}s ease-in-out`,
+          pointerEvents: fogSettings.globalReveal ? 'none' : 'auto',
+          animation: 'fogFlow 10s ease-in-out infinite'
+        }}
+      />
+      
+      {/* Secondary fog layer for depth */}
       <div
         className="absolute inset-0"
         style={{
-          background: `radial-gradient(circle, transparent 30%, ${fogSettings.fogColor}${Math.round(fogSettings.fogOpacity * 255).toString(16).padStart(2, '0')} 100%)`,
-          filter: `blur(${fogSettings.blurAmount}px)`,
-          transition: `all ${fogSettings.transitionSpeed}s ease-in-out`,
-          pointerEvents: fogSettings.globalReveal ? 'none' : 'auto'
+          background: `
+            radial-gradient(ellipse at 60% 40%, transparent 20%, ${fogSettings.fogColor}44 70%),
+            radial-gradient(ellipse at 10% 90%, transparent 30%, ${fogSettings.fogColor}33 80%)
+          `,
+          filter: `blur(${fogSettings.blurAmount + 5}px)`,
+          animation: 'fogFlow2 15s ease-in-out infinite reverse',
+          pointerEvents: 'none'
         }}
       />
 
