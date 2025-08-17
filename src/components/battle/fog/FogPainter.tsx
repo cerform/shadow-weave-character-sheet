@@ -1,0 +1,71 @@
+// /src/components/battle/fog/FogPainter.tsx
+import { useEffect, useMemo, useRef } from "react";
+import * as THREE from "three";
+import { OrthographicCamera, PlaneGeometry, Mesh, WebGLRenderTarget, Scene, Vector2, AdditiveBlending } from "three";
+import { createRadialRevealMaterial } from "./shaders/RadialRevealMaterial";
+
+/**
+ * Minimal DM brush to REVEAL/HIDE areas by painting into the mask render target.
+ * Shift = reveal (white). Alt = hide (paint black by rendering an inverse circle).
+ */
+export function useFogPainter(
+  params: {
+    enabled: boolean;
+    renderer: THREE.WebGLRenderer | null;
+    maskTarget: WebGLRenderTarget | null;
+    mapSize: Vector2;
+    mapCenter: THREE.Vector3;
+    brushRadius: number;
+  }
+){
+  const { enabled, renderer, maskTarget, mapSize, mapCenter, brushRadius } = params;
+  const paintScene = useMemo(() => new Scene(), []);
+  const cam = useMemo(() => new OrthographicCamera(-mapSize.x/2, mapSize.x/2, mapSize.y/2, -mapSize.y/2, 0.1, 10), [mapSize]);
+  const quadGeo = useMemo(() => new PlaneGeometry(1,1), []);
+  const revealMat = useMemo(() => createRadialRevealMaterial(0xffffff, 0.75, 1.0), []);
+  const hideMat = useMemo(() => createRadialRevealMaterial(0x000000, 0.75, 1.0), []);
+  const brush = useRef<Mesh>(new Mesh(quadGeo, revealMat));
+
+  useEffect(() => {
+    brush.current.renderOrder = 10;
+    (brush.current.material as any).blending = AdditiveBlending;
+    paintScene.add(brush.current);
+    return () => { paintScene.remove(brush.current); };
+  }, [paintScene]);
+
+  useEffect(() => {
+    function onPointer(event: PointerEvent){
+      if(!enabled || !renderer || !maskTarget) return;
+      if (!(event.buttons & 1)) return; // Only if left mouse button is pressed
+      
+      const canvas = renderer.domElement;
+      // get NDC
+      const rect = canvas.getBoundingClientRect();
+      const x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+      const y = -(((event.clientY - rect.top) / rect.height) * 2 - 1);
+      // project to world on map plane (y = mapCenter.y)
+      // we assume top‑down ortho projection during mask rendering, so map NDC to world directly
+      const worldX = (x * 0.5 + 0.5) * mapSize.x - mapSize.x/2 + mapCenter.x;
+      const worldZ = (y * 0.5 + 0.5) * mapSize.y - mapSize.y/2 + mapCenter.z;
+
+      brush.current.position.set(worldX, 0, worldZ);
+      brush.current.scale.setScalar(brushRadius * 2);
+      brush.current.material = event.shiftKey ? revealMat : (event.altKey ? hideMat : revealMat);
+
+      const oldTarget = renderer.getRenderTarget();
+      renderer.setRenderTarget(maskTarget);
+      renderer.setClearColor(0x000000, 1);
+      renderer.clear(true, true, false);
+      // additive brush for reveal, to hide we actually blend black — in practice to "hide" we clear & redraw everything.
+      renderer.render(paintScene, cam);
+      renderer.setRenderTarget(oldTarget);
+    }
+
+    window.addEventListener('pointerdown', onPointer);
+    window.addEventListener('pointermove', onPointer);
+    return () => {
+      window.removeEventListener('pointerdown', onPointer);
+      window.removeEventListener('pointermove', onPointer);
+    };
+  }, [enabled, renderer, maskTarget, mapSize, mapCenter, brushRadius, paintScene, cam, revealMat, hideMat]);
+}

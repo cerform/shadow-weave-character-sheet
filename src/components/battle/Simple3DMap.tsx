@@ -4,7 +4,7 @@ import { OrbitControls, Text } from '@react-three/drei';
 import * as THREE from 'three';
 import { MonsterModel } from './MonsterModel';
 import { monsterTypes } from '@/data/monsterTypes';
-import { FogOfWar3D } from './FogOfWar3D';
+import FogOfWar3D from './fog/FogOfWar3D';
 import { useFogOfWarStore } from '@/stores/fogOfWarStore';
 import { Button } from '@/components/ui/button';
 import { Plus, Minus, Edit, Heart, Trash2, Settings, Video, Ruler } from 'lucide-react';
@@ -592,8 +592,30 @@ const Simple3DMap: React.FC<Simple3DMapProps> = ({
           {/* Плоскость с текстурой карты */}
           <TexturedPlane imageUrl={mapImageUrl} />
           
-          {/* Fog of War 3D Integration */}
-          <FogOfWar3D mapWidth={1200} mapHeight={800} />
+          {/* Advanced Fog of War 3D Integration */}
+          <FogOfWar3D 
+            mapSize={new THREE.Vector2(24, 16)}
+            mapCenter={new THREE.Vector3(0, 0, 0)}
+            visionSources={tokens
+              .filter(token => token.controlledBy !== 'dm' || selectedTokenId === token.id)
+              .map(token => ({
+                id: token.id,
+                position: new THREE.Vector3(
+                  ((token.x || 0) / 1200) * 24 - 12,
+                  0,
+                  ((token.y || 0) / 800) * 16 - 8
+                ),
+                radius: 4,
+                intensity: 1
+              }))
+            }
+            fogColor={0x1a1a1a}
+            density={0.85}
+            maskResolution={{ width: 1024, height: 1024 }}
+            enableDMPaint={isDM}
+            brushRadius={3}
+            debugMask={false}
+          />
 
           {/* 3D ассеты из Storage */}
           {assetModels.map((a) => {
