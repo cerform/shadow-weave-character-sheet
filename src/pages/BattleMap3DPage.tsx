@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Home, Save, Plus, Trash2, Upload, Sword } from 'lucide-react';
 import MapUploader from '@/components/battle/MapUploader';
-import InitiativeTracker from '@/components/battle/InitiativeTracker';
+import { EnhancedBattleManager } from '@/components/battle/EnhancedBattleManager';
 import { toast } from 'sonner';
 import { determineMonsterType, updateTokenWithModelType } from '@/utils/tokenModelMapping';
 import Simple3DMap from '@/components/battle/Simple3DMap';
@@ -409,14 +409,10 @@ const handleTokenUpdate = (tokenId: string, updates: any) => {
             </Button>
       </div>
 
-      {/* Initiative Tracker */}
+      {/* Enhanced Battle Manager */}
       {showInitiative && (
-        <div className="absolute top-20 left-4 z-30">
-          <InitiativeTracker 
-            initiative={[]}
-            tokens={tokens}
-            battleActive={false}
-          />
+        <div className="absolute top-20 left-4 z-30 w-80">
+          <EnhancedBattleManager />
         </div>
       )}
         </div>
