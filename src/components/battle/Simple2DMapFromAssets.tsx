@@ -134,6 +134,14 @@ const Simple2DMapFromAssets: React.FC<Simple2DMapFromAssetsProps> = ({
     setAssets2D(converted2D);
   }, [assets3D]);
 
+  // Обновляем currentMapUrl когда меняется mapImageUrl prop
+  useEffect(() => {
+    if (mapImageUrl && mapImageUrl !== currentMapUrl) {
+      setCurrentMapUrl(mapImageUrl);
+      console.log('📋 Map URL updated from props:', mapImageUrl);
+    }
+  }, [mapImageUrl, currentMapUrl]);
+
   // Обработка движения ассета
   const handleAssetMove = (assetId: string, x: number, y: number) => {
     setAssets2D(prev => prev.map(asset => 
