@@ -6,12 +6,13 @@ import { Slider } from '@/components/ui/slider';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { useFogOfWarStore } from '@/stores/fogOfWarStore';
-import { Eye, EyeOff, Trash2, Settings2, Brush, Eraser } from 'lucide-react';
+import { Eye, EyeOff, Trash2, Settings2, Brush, Eraser, Move, RotateCcw, ZoomIn, ZoomOut } from 'lucide-react';
 
 export const FogControlPanel: React.FC = () => {
   const {
     visibleAreas,
     fogSettings,
+    fogTransform,
     isDrawingMode,
     selectedArea,
     isDM,
@@ -20,6 +21,8 @@ export const FogControlPanel: React.FC = () => {
     hideAll,
     clearAllVisible,
     setFogSettings,
+    setFogTransform,
+    resetFogTransform,
     setDrawingMode,
     removeVisibleArea,
     selectArea
@@ -105,6 +108,83 @@ export const FogControlPanel: React.FC = () => {
             />
           </div>
         )}
+
+        <Separator />
+
+        {/* Transform controls */}
+        <div className="space-y-3">
+          <span className="text-sm font-medium">Позиция и масштаб</span>
+          
+          <div className="grid grid-cols-3 gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setFogTransform({ scale: Math.min(fogTransform.scale + 0.1, 2.0) })}
+              disabled={!fogSettings.enabled}
+              title="Увеличить масштаб"
+            >
+              <ZoomIn size={16} />
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={resetFogTransform}
+              disabled={!fogSettings.enabled}
+              title="Сбросить трансформацию"
+            >
+              <RotateCcw size={16} />
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setFogTransform({ scale: Math.max(fogTransform.scale - 0.1, 0.5) })}
+              disabled={!fogSettings.enabled}
+              title="Уменьшить масштаб"
+            >
+              <ZoomOut size={16} />
+            </Button>
+          </div>
+          
+          <div className="grid grid-cols-2 gap-2">
+            <div className="space-y-1">
+              <div className="text-xs text-muted-foreground">Смещение X</div>
+              <Slider
+                value={[fogTransform.offsetX]}
+                onValueChange={([value]) => setFogTransform({ offsetX: value })}
+                min={-500}
+                max={500}
+                step={10}
+                className="w-full"
+              />
+            </div>
+            <div className="space-y-1">
+              <div className="text-xs text-muted-foreground">Смещение Y</div>
+              <Slider
+                value={[fogTransform.offsetY]}
+                onValueChange={([value]) => setFogTransform({ offsetY: value })}
+                min={-500}
+                max={500}
+                step={10}
+                className="w-full"
+              />
+            </div>
+          </div>
+          
+          <div className="space-y-1">
+            <div className="flex justify-between text-xs">
+              <span>Масштаб</span>
+              <span>{Math.round(fogTransform.scale * 100)}%</span>
+            </div>
+            <Slider
+              value={[fogTransform.scale]}
+              onValueChange={([value]) => setFogTransform({ scale: value })}
+              min={0.5}
+              max={2.0}
+              step={0.1}
+              className="w-full"
+            />
+          </div>
+        </div>
 
         <Separator />
 

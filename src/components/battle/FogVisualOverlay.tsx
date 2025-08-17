@@ -12,7 +12,7 @@ export const FogVisualOverlay: React.FC<FogVisualOverlayProps> = ({
   mapHeight, 
   scale = 1 
 }) => {
-  const { visibleAreas, fogSettings } = useFogOfWarStore();
+  const { visibleAreas, fogSettings, fogTransform } = useFogOfWarStore();
 
   const fogStyle = useMemo(() => ({
     background: `
@@ -52,6 +52,8 @@ export const FogVisualOverlay: React.FC<FogVisualOverlayProps> = ({
       style={{
         width: mapWidth * scale,
         height: mapHeight * scale,
+        transform: `translate(${fogTransform.offsetX}px, ${fogTransform.offsetY}px) scale(${fogTransform.scale})`,
+        transformOrigin: '0 0'
       }}
     >
       {/* Base fog layer - covers everything */}

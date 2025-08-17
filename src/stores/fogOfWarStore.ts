@@ -21,14 +21,22 @@ export interface FogSettings {
   brushSize: number;
 }
 
+export interface FogTransform {
+  offsetX: number;
+  offsetY: number;
+  scale: number;
+}
+
 interface FogOfWarStore {
   // State
   visibleAreas: VisibleArea[];
   fogSettings: FogSettings;
+  fogTransform: FogTransform;
   isDrawingMode: boolean;
   selectedArea: string | null;
   isDM: boolean;
   isDrawing: boolean;
+  isPanning: boolean;
 
   // Actions
   setIsDM: (isDM: boolean) => void;
@@ -40,11 +48,18 @@ interface FogOfWarStore {
   hideAll: () => void;
   clearAllVisible: () => void;
   setFogSettings: (settings: Partial<FogSettings>) => void;
+  setFogTransform: (transform: Partial<FogTransform>) => void;
+  resetFogTransform: () => void;
   setDrawingMode: (drawing: boolean) => void;
   setIsDrawing: (drawing: boolean) => void;
+  setIsPanning: (panning: boolean) => void;
   selectArea: (id: string | null) => void;
   drawVisibleArea: (x: number, y: number) => void;
   hideVisibleArea: (x: number, y: number) => void;
+  
+  // Transform utilities
+  transformPoint: (x: number, y: number) => { x: number; y: number };
+  inverseTransformPoint: (x: number, y: number) => { x: number; y: number };
   
   // Utility functions
   isPositionRevealed: (x: number, y: number) => boolean;
@@ -62,10 +77,16 @@ export const useFogOfWarStore = create<FogOfWarStore>((set, get) => ({
     blurAmount: 12,
     brushSize: 50
   },
+  fogTransform: {
+    offsetX: 0,
+    offsetY: 0,
+    scale: 1
+  },
   isDrawingMode: false,
   selectedArea: null,
   isDM: false,
   isDrawing: false,
+  isPanning: false,
 
   setIsDM: (isDM) => set({ isDM }),
 
@@ -125,14 +146,29 @@ export const useFogOfWarStore = create<FogOfWarStore>((set, get) => ({
   setIsDrawing: (drawing) =>
     set({ isDrawing: drawing }),
 
+  setIsPanning: (panning) =>
+    set({ isPanning: panning }),
+
+  setFogTransform: (transform) =>
+    set((state) => ({
+      fogTransform: { ...state.fogTransform, ...transform }
+    })),
+
+  resetFogTransform: () =>
+    set({
+      fogTransform: { offsetX: 0, offsetY: 0, scale: 1 }
+    }),
+
   selectArea: (id) =>
     set({ selectedArea: id }),
 
   drawVisibleArea: (x, y) => {
-    const { fogSettings } = get();
+    const { fogSettings, inverseTransformPoint } = get();
+    const transformedPoint = inverseTransformPoint(x, y);
+    
     const newArea: Omit<VisibleArea, 'id'> = {
-      x,
-      y,
+      x: transformedPoint.x,
+      y: transformedPoint.y,
       radius: fogSettings.brushSize,
       type: 'circle'
     };
@@ -141,11 +177,12 @@ export const useFogOfWarStore = create<FogOfWarStore>((set, get) => ({
   },
 
   hideVisibleArea: (x, y) => {
-    const { fogSettings, visibleAreas } = get();
+    const { fogSettings, visibleAreas, inverseTransformPoint } = get();
+    const transformedPoint = inverseTransformPoint(x, y);
     
     // Находим области, которые нужно удалить (те, которые пересекаются с кистью)
     const areasToRemove = visibleAreas.filter((area) => {
-      const distance = Math.sqrt((x - area.x) ** 2 + (y - area.y) ** 2);
+      const distance = Math.sqrt((transformedPoint.x - area.x) ** 2 + (transformedPoint.y - area.y) ** 2);
       return distance <= fogSettings.brushSize;
     });
     
@@ -153,6 +190,22 @@ export const useFogOfWarStore = create<FogOfWarStore>((set, get) => ({
     areasToRemove.forEach((area) => {
       get().removeVisibleArea(area.id);
     });
+  },
+
+  transformPoint: (x, y) => {
+    const { fogTransform } = get();
+    return {
+      x: (x * fogTransform.scale) + fogTransform.offsetX,
+      y: (y * fogTransform.scale) + fogTransform.offsetY
+    };
+  },
+
+  inverseTransformPoint: (x, y) => {
+    const { fogTransform } = get();
+    return {
+      x: (x - fogTransform.offsetX) / fogTransform.scale,
+      y: (y - fogTransform.offsetY) / fogTransform.scale
+    };
   },
 
   isPositionRevealed: (x, y) => {
