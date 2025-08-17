@@ -591,6 +591,9 @@ const Simple3DMap: React.FC<Simple3DMapProps> = ({
           
           {/* Плоскость с текстурой карты */}
           <TexturedPlane imageUrl={mapImageUrl} />
+          
+          {/* Fog of War 3D Integration */}
+          <FogOfWar3D mapWidth={1200} mapHeight={800} />
 
           {/* 3D ассеты из Storage */}
           {assetModels.map((a) => {

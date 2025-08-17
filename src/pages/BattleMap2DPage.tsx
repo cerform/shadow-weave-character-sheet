@@ -4,6 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Home, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import Simple2DMapFromAssets from '@/components/battle/Simple2DMapFromAssets';
+import { FogAreaEditor2D } from '@/components/battle/FogAreaEditor2D';
+import { useFogOfWarStore } from '@/stores/fogOfWarStore';
 
 const BattleMap2DPage: React.FC = () => {
   const navigate = useNavigate();
@@ -13,8 +15,12 @@ const BattleMap2DPage: React.FC = () => {
   const [assets3D, setAssets3D] = useState<any[]>([]);
   const [tokens, setTokens] = useState<any[]>([]);
   const [mapUrl, setMapUrl] = useState<string>('');
+  
+  // Fog of War integration
+  const { setIsDM } = useFogOfWarStore();
 
   useEffect(() => {
+    setIsDM(true); // Enable DM mode for 2D map
     document.title = '2D Карта из 3D Ассетов';
     
     // Загружаем данные из sessionStorage
@@ -47,7 +53,7 @@ const BattleMap2DPage: React.FC = () => {
       tokensCount: savedTokens ? JSON.parse(savedTokens).length : 0,
       mapUrl: savedMapUrl
     });
-  }, [sessionId]);
+  }, [sessionId, setIsDM]);
 
   const handleBack = () => {
     navigate(`/battle-map-3d${sessionId ? `/${sessionId}` : ''}`);
@@ -119,13 +125,19 @@ const BattleMap2DPage: React.FC = () => {
         </div>
       </div>
 
-      {/* 2D Map */}
-      <div className="w-full h-full pt-20">
+      {/* 2D Map with Fog of War */}
+      <div className="w-full h-full pt-20 relative">
         <Simple2DMapFromAssets
           assets3D={assets3D}
           tokens={tokens}
           mapImageUrl={mapUrl}
-          onBack={handleBack}
+        />
+        
+        {/* Fog of War Editor Overlay */}
+        <FogAreaEditor2D 
+          mapWidth={1200} 
+          mapHeight={800} 
+          scale={1}
         />
       </div>
     </div>
