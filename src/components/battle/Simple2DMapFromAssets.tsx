@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { FogOfWarPanel } from './FogOfWarPanel';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Environment } from '@react-three/drei';
 import * as THREE from 'three';
@@ -7,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { Eye, EyeOff, Copy, RefreshCw, Download, Upload, Home } from 'lucide-react';
+import { Eye, EyeOff, Copy, RefreshCw, Download, Upload, Home, Cloud } from 'lucide-react';
 import { toast } from 'sonner';
 import Asset2DAvatar from './Asset2DAvatar';
 import { useDraggable3D } from '@/hooks/useDraggable3D';
@@ -108,6 +109,7 @@ const Simple2DMapFromAssets: React.FC<Simple2DMapFromAssetsProps> = ({
   const [currentMapUrl, setCurrentMapUrl] = useState<string>(mapImageUrl || '');
   const [mapScale, setMapScale] = useState<number>(100);
   const [showMapUploader, setShowMapUploader] = useState(false);
+  const [showFogPanel, setShowFogPanel] = useState(false);
   const canvasRef = useRef<HTMLDivElement>(null);
 
   // Конвертируем 3D ассеты в 2D при загрузке
@@ -239,6 +241,14 @@ const Simple2DMapFromAssets: React.FC<Simple2DMapFromAssetsProps> = ({
                   Назад к 3D
                 </Button>
               )}
+              
+              <Button 
+                onClick={() => setShowFogPanel(!showFogPanel)}
+                className="w-full justify-start gap-2 bg-purple-600 hover:bg-purple-700"
+              >
+                <Cloud className="w-4 h-4" />
+                Туман войны
+              </Button>
               
               <Button onClick={handleSyncWith3D} className="w-full" variant="default">
                 <RefreshCw className="w-4 h-4 mr-2" />
@@ -375,17 +385,22 @@ const Simple2DMapFromAssets: React.FC<Simple2DMapFromAssetsProps> = ({
         </Card>
       )}
 
-      {/* Кнопка сворачивания панели */}
-      <div className="relative">
-        <Button
-          variant="ghost"
-          size="sm"
-          className="absolute top-4 left-2 z-20 bg-slate-800/80 hover:bg-slate-700"
-          onClick={() => setShowControls(!showControls)}
-        >
-          {showControls ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-        </Button>
-      </div>
+      {/* Fog of War Panel */}
+      {showFogPanel && (
+        <Card className="absolute top-4 left-4 w-80 z-20 bg-background/95 backdrop-blur-sm">
+          <FogOfWarPanel />
+        </Card>
+      )}
+
+      {/* Toggle controls button */}
+      <Button
+        variant="ghost"
+        size="sm"
+        className="absolute top-4 left-2 z-20 bg-slate-800/80 hover:bg-slate-700"
+        onClick={() => setShowControls(!showControls)}
+      >
+        {showControls ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+      </Button>
 
       {/* 3D Сцена с 2D аватарами */}
       <div ref={canvasRef} className="flex-1 h-full">

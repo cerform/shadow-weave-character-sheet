@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Home, Save, Plus, Trash2, Upload, Sword } from 'lucide-react';
+import { Home, Save, Plus, Trash2, Upload, Sword, Cloud } from 'lucide-react';
 import MapUploader from '@/components/battle/MapUploader';
-import { EnhancedBattleManager } from '@/components/battle/EnhancedBattleManager';
+import { EnhancedBattleManager } from '../components/battle/EnhancedBattleManager';
+import { FogOfWarToggle } from '../components/battle/FogOfWarToggle';
 import { toast } from 'sonner';
 import { determineMonsterType, updateTokenWithModelType } from '@/utils/tokenModelMapping';
 import Simple3DMap from '@/components/battle/Simple3DMap';
@@ -25,6 +26,7 @@ const BattleMap3DPage: React.FC = () => {
 
   const [mapUrl, setMapUrl] = useState<string>('');
   const [isSaving, setIsSaving] = useState(false);
+  const [showFogPanel, setShowFogPanel] = useState(false);
 
   // 3D ассеты из Supabase Storage (эпhemeral + sessionStorage)
 type AssetModel = { 
@@ -367,7 +369,7 @@ const handleTokenUpdate = (tokenId: string, updates: any) => {
             >
               Переключить на 2D
             </Button>
-<Button 
+            <Button 
               onClick={() => setAddOpen(true)}
               className="bg-emerald-600 hover:bg-emerald-700"
               size="sm"
@@ -382,6 +384,14 @@ const handleTokenUpdate = (tokenId: string, updates: any) => {
             >
               <Trash2 className="w-4 h-4 mr-2" />
               Очистить ассеты
+            </Button>
+            <Button 
+              onClick={() => setShowFogPanel(!showFogPanel)}
+              className="bg-purple-600 hover:bg-purple-700"
+              size="sm"
+            >
+              <Cloud className="w-4 h-4 mr-2" />
+              Туман войны
             </Button>
             <Button 
               onClick={() => setShowInitiative(!showInitiative)}
@@ -407,6 +417,8 @@ const handleTokenUpdate = (tokenId: string, updates: any) => {
               <Home className="w-4 h-4 mr-2" />
               Панель DM
             </Button>
+          </div>
+        </div>
       </div>
 
       {/* Enhanced Battle Manager */}
@@ -415,7 +427,19 @@ const handleTokenUpdate = (tokenId: string, updates: any) => {
           <EnhancedBattleManager />
         </div>
       )}
+
+      {/* Fog of War Panel */}
+      {showFogPanel && (
+        <div className="absolute top-20 right-4 z-30 w-80">
+          <div className="bg-background/95 backdrop-blur-sm border rounded-lg shadow-lg">
+            <EnhancedBattleManager />
+          </div>
         </div>
+      )}
+
+      {/* Quick Fog of War Toggle */}
+      <div className="absolute bottom-4 right-4 z-30">
+        <FogOfWarToggle />
       </div>
 
       {/* 3D Map */}
@@ -427,7 +451,7 @@ const handleTokenUpdate = (tokenId: string, updates: any) => {
           onTokenSelect={setSelectedTokenId}
           onTokenMove={handleTokenMove}
           onTokenUpdate={handleTokenUpdate}
-assetModels={assets3D}
+          assetModels={assets3D}
           onAssetMove={handleAssetMove}
           onAssetDelete={handleAssetDelete}
           isDM={true}
@@ -454,71 +478,71 @@ assetModels={assets3D}
           <DialogHeader>
             <DialogTitle>Выбор 3D ассета</DialogTitle>
           </DialogHeader>
-<div className="space-y-3">
-  {/* Категории */}
-  <div className="flex flex-wrap gap-2 items-center">
-    <Button size="sm" variant={prefix.startsWith('monsters') ? 'default' : 'outline'} onClick={() => { setPrefix('monsters'); loadFiles('monsters'); }}>Монстры</Button>
-    <Button size="sm" variant={prefix.startsWith('characters') ? 'default' : 'outline'} onClick={() => { setPrefix('characters'); loadFiles('characters'); }}>Персонажи</Button>
-    <Button size="sm" variant={prefix.startsWith('structures') ? 'default' : 'outline'} onClick={() => { setPrefix('structures'); loadFiles('structures'); }}>Строения</Button>
-  </div>
+          <div className="space-y-3">
+            {/* Категории */}
+            <div className="flex flex-wrap gap-2 items-center">
+              <Button size="sm" variant={prefix.startsWith('monsters') ? 'default' : 'outline'} onClick={() => { setPrefix('monsters'); loadFiles('monsters'); }}>Монстры</Button>
+              <Button size="sm" variant={prefix.startsWith('characters') ? 'default' : 'outline'} onClick={() => { setPrefix('characters'); loadFiles('characters'); }}>Персонажи</Button>
+              <Button size="sm" variant={prefix.startsWith('structures') ? 'default' : 'outline'} onClick={() => { setPrefix('structures'); loadFiles('structures'); }}>Строения</Button>
+            </div>
 
-  <div className="flex flex-wrap gap-2 items-center">
-    <Input
-      placeholder="Фильтр по имени..."
-      value={fileQuery}
-      onChange={(e) => setFileQuery(e.target.value)}
-    />
-    <Input
-      placeholder="Префикс (папка), напр. monsters/"
-      value={prefix}
-      onChange={(e) => setPrefix(e.target.value)}
-    />
-    <Button size="sm" onClick={() => loadFiles(prefix)}>Обновить</Button>
-    {prefix && (
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={() => {
-          const p = parentPrefix(prefix);
-          setPrefix(p);
-          loadFiles(p);
-        }}
-      >
-        Назад
-      </Button>
-    )}
-  </div>
+            <div className="flex flex-wrap gap-2 items-center">
+              <Input
+                placeholder="Фильтр по имени..."
+                value={fileQuery}
+                onChange={(e) => setFileQuery(e.target.value)}
+              />
+              <Input
+                placeholder="Префикс (папка), напр. monsters/"
+                value={prefix}
+                onChange={(e) => setPrefix(e.target.value)}
+              />
+              <Button size="sm" onClick={() => loadFiles(prefix)}>Обновить</Button>
+              {prefix && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    const p = parentPrefix(prefix);
+                    setPrefix(p);
+                    loadFiles(p);
+                  }}
+                >
+                  Назад
+                </Button>
+              )}
+            </div>
 
-  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 max-h-[60vh] overflow-auto">
-    {files
-      .filter((f) => !fileQuery || f.name.toLowerCase().includes(fileQuery.toLowerCase()))
-      .map((f) => {
-        const isFile = /\.(glb|gltf)$/i.test(f.name);
-        return (
-          <button
-            key={f.name}
-            className="p-3 rounded-md border hover:bg-muted text-left"
-            onClick={() => {
-              if (isFile) {
-                handleAddAsset(f.name);
-              } else {
-                const next = prefix ? `${prefix}/${f.name}` : f.name;
-                setPrefix(next);
-                loadFiles(next);
-              }
-            }}
-          >
-            <div className="font-medium truncate">{f.name}</div>
-            <div className="text-xs opacity-70">{isFile ? 'Модель' : 'Папка'}</div>
-          </button>
-        );
-      })}
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 max-h-[60vh] overflow-auto">
+              {files
+                .filter((f) => !fileQuery || f.name.toLowerCase().includes(fileQuery.toLowerCase()))
+                .map((f) => {
+                  const isFile = /\.(glb|gltf)$/i.test(f.name);
+                  return (
+                    <button
+                      key={f.name}
+                      className="p-3 rounded-md border hover:bg-muted text-left"
+                      onClick={() => {
+                        if (isFile) {
+                          handleAddAsset(f.name);
+                        } else {
+                          const next = prefix ? `${prefix}/${f.name}` : f.name;
+                          setPrefix(next);
+                          loadFiles(next);
+                        }
+                      }}
+                    >
+                      <div className="font-medium truncate">{f.name}</div>
+                      <div className="text-xs opacity-70">{isFile ? 'Модель' : 'Папка'}</div>
+                    </button>
+                  );
+                })}
 
-    {files.length === 0 && (
-      <div className="col-span-full text-sm opacity-70">Нет элементов в этой папке.</div>
-    )}
-  </div>
-</div>
+              {files.length === 0 && (
+                <div className="col-span-full text-sm opacity-70">Нет элементов в этой папке.</div>
+              )}
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

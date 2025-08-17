@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Home, RefreshCw } from 'lucide-react';
+import { Home, RefreshCw, Cloud } from 'lucide-react';
 import { toast } from 'sonner';
 import Simple2DMapFromAssets from '@/components/battle/Simple2DMapFromAssets';
 import { FogAreaEditor2D } from '@/components/battle/FogAreaEditor2D';
@@ -15,9 +15,10 @@ const BattleMap2DPage: React.FC = () => {
   const [assets3D, setAssets3D] = useState<any[]>([]);
   const [tokens, setTokens] = useState<any[]>([]);
   const [mapUrl, setMapUrl] = useState<string>('');
+  const [showFogPanel, setShowFogPanel] = useState(false);
   
   // Fog of War integration
-  const { setIsDM } = useFogOfWarStore();
+  const { setIsDM, fogSettings, enableFog } = useFogOfWarStore();
 
   useEffect(() => {
     setIsDM(true); // Enable DM mode for 2D map
@@ -96,6 +97,15 @@ const BattleMap2DPage: React.FC = () => {
         <div className="flex items-center justify-between gap-4">
           <h1 className="text-xl font-bold text-white">2D Карта из 3D Ассетов</h1>
           <div className="flex gap-2">
+            <Button 
+              onClick={() => enableFog(!fogSettings.enabled)}
+              className={`${fogSettings.enabled ? 'bg-purple-600 hover:bg-purple-700' : 'bg-gray-600 hover:bg-gray-700'}`}
+              size="sm"
+            >
+              <Cloud className="w-4 h-4 mr-2" />
+              {fogSettings.enabled ? 'Туман ВКЛ' : 'Туман ВЫКЛ'}
+            </Button>
+            
             <Button 
               onClick={handleSyncFromStorage}
               className="bg-green-600 hover:bg-green-700"
