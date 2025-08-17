@@ -16,25 +16,30 @@ export const FogVisualOverlay: React.FC<FogVisualOverlayProps> = ({
 
   const fogStyle = useMemo(() => ({
     background: `
-      radial-gradient(circle at 20% 30%, rgba(40, 44, 52, 0.3) 10%, rgba(40, 44, 52, 0.6) 40%),
-      radial-gradient(circle at 80% 70%, rgba(45, 50, 58, 0.4) 15%, rgba(45, 50, 58, 0.7) 50%),
-      radial-gradient(circle at 40% 80%, rgba(50, 55, 63, 0.35) 20%, rgba(50, 55, 63, 0.65) 60%),
-      linear-gradient(45deg, rgba(45, 50, 58, ${fogSettings.fogOpacity * 0.4}) 0%, rgba(55, 60, 68, ${fogSettings.fogOpacity * 0.6}) 100%)
+      radial-gradient(circle at 20% 10%, rgba(135, 140, 150, 0.1) 5%, rgba(135, 140, 150, 0.3) 25%),
+      radial-gradient(circle at 80% 20%, rgba(140, 145, 155, 0.15) 8%, rgba(140, 145, 155, 0.35) 30%),
+      radial-gradient(circle at 40% 15%, rgba(145, 150, 160, 0.12) 10%, rgba(145, 150, 160, 0.32) 35%),
+      linear-gradient(180deg, rgba(140, 145, 155, ${fogSettings.fogOpacity * 0.4}) 0%, rgba(140, 145, 155, ${fogSettings.fogOpacity * 0.15}) 40%, transparent 70%)
     `,
     filter: `blur(${fogSettings.blurAmount}px)`,
     transition: `all ${fogSettings.transitionSpeed}s ease-in-out`,
-    animation: 'fogFlow 12s ease-in-out infinite',
-    mixBlendMode: 'multiply' as const
+    animation: 'fogFlow 15s ease-in-out infinite',
+    mixBlendMode: 'multiply' as const,
+    backgroundPosition: '0 0, 100% 0, 50% 0, 0 0',
+    backgroundSize: '60% 40%, 70% 45%, 80% 50%, 100% 100%'
   }), [fogSettings]);
 
   const secondaryFogStyle = useMemo(() => ({
     background: `
-      radial-gradient(ellipse at 60% 40%, rgba(65, 70, 78, 0.2) 20%, rgba(65, 70, 78, 0.5) 70%),
-      radial-gradient(ellipse at 10% 90%, rgba(70, 75, 83, 0.25) 30%, rgba(70, 75, 83, 0.45) 80%)
+      radial-gradient(ellipse at 60% 5%, rgba(150, 155, 165, 0.08) 15%, rgba(150, 155, 165, 0.25) 60%),
+      radial-gradient(ellipse at 10% 12%, rgba(155, 160, 170, 0.12) 20%, rgba(155, 160, 170, 0.28) 70%),
+      linear-gradient(180deg, rgba(150, 155, 165, ${fogSettings.fogOpacity * 0.2}) 0%, transparent 50%)
     `,
-    filter: `blur(${fogSettings.blurAmount + 3}px)`,
-    animation: 'fogFlow2 18s ease-in-out infinite reverse',
-    mixBlendMode: 'multiply' as const
+    filter: `blur(${fogSettings.blurAmount + 2}px)`,
+    animation: 'fogFlow2 20s ease-in-out infinite reverse',
+    mixBlendMode: 'multiply' as const,
+    backgroundPosition: '0 0, 100% 0, 0 0',
+    backgroundSize: '80% 60%, 90% 65%, 100% 80%'
   }), [fogSettings]);
 
   if (!fogSettings.enabled || fogSettings.globalReveal) {
@@ -113,11 +118,21 @@ export const FogVisualOverlay: React.FC<FogVisualOverlayProps> = ({
           </mask>
         </defs>
         
-        {/* Apply mask to a realistic fog texture */}
+        {/* Sky fog gradient definition */}
+        <defs>
+          <linearGradient id="skyFogGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="rgba(160, 165, 175, 0.8)" />
+            <stop offset="30%" stopColor="rgba(140, 145, 155, 0.6)" />
+            <stop offset="70%" stopColor="rgba(120, 125, 135, 0.3)" />
+            <stop offset="100%" stopColor="rgba(100, 105, 115, 0.1)" />
+          </linearGradient>
+        </defs>
+        
+        {/* Apply mask to a sky-oriented fog texture */}
         <rect 
           width="100%" 
           height="100%" 
-          fill="rgba(80, 85, 95, 0.7)"
+          fill="url(#skyFogGradient)"
           mask="url(#visibleMask)"
           style={{
             filter: `blur(${fogSettings.blurAmount * 0.5}px)`
@@ -125,18 +140,20 @@ export const FogVisualOverlay: React.FC<FogVisualOverlayProps> = ({
         />
       </svg>
 
-      {/* Realistic fog particles effect */}
+      {/* Sky-oriented fog particles effect */}
       <div
-        className="absolute inset-0 opacity-20"
+        className="absolute inset-0 opacity-15"
         style={{
           background: `
-            radial-gradient(2px 2px at 20px 30px, rgba(120, 125, 135, 0.6), transparent),
-            radial-gradient(3px 3px at 40px 70px, rgba(125, 130, 140, 0.5), transparent),
-            radial-gradient(1px 1px at 90px 40px, rgba(130, 135, 145, 0.7), transparent),
-            radial-gradient(2px 2px at 130px 80px, rgba(115, 120, 130, 0.4), transparent)
+            radial-gradient(3px 3px at 20px 15px, rgba(160, 165, 175, 0.4), transparent),
+            radial-gradient(4px 4px at 40px 25px, rgba(165, 170, 180, 0.3), transparent),
+            radial-gradient(2px 2px at 90px 20px, rgba(170, 175, 185, 0.5), transparent),
+            radial-gradient(3px 3px at 130px 30px, rgba(155, 160, 170, 0.3), transparent),
+            linear-gradient(180deg, rgba(160, 165, 175, 0.2) 0%, transparent 40%)
           `,
-          backgroundSize: '200px 100px',
-          animation: 'fogParticles 25s linear infinite',
+          backgroundSize: '250px 80px, 200px 60px, 180px 70px, 220px 65px, 100% 50%',
+          backgroundPosition: '0 0, 50px 10px, 100px 5px, 150px 15px, 0 0',
+          animation: 'fogParticles 30s linear infinite',
           mixBlendMode: 'multiply'
         }}
       />
