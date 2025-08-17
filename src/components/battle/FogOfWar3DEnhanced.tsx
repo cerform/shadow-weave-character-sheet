@@ -36,6 +36,14 @@ export const FogOfWar3DEnhanced: React.FC<FogOfWar3DEnhancedProps> = ({
   const [isPainting, setIsPainting] = useState(false);
   const [paintMode, setPaintMode] = useState<'reveal' | 'hide'>('reveal');
   
+  // Generate a proper map ID if one isn't provided
+  const actualMapId = useMemo(() => {
+    if (!mapId || mapId === 'current-map') {
+      return `map_${sessionId}_${Date.now()}`;
+    }
+    return mapId;
+  }, [mapId, sessionId]);
+  
   const fogGeometry = useRef<THREE.PlaneGeometry>();
   const fogMaterial = useRef<THREE.ShaderMaterial>();
   const fogMesh = useRef<THREE.Mesh>();
@@ -52,9 +60,9 @@ export const FogOfWar3DEnhanced: React.FC<FogOfWar3DEnhancedProps> = ({
     
     // Subscribe to real-time updates
     const channel = supabase
-      .channel(`fog_${mapId}`)
+      .channel(`fog_${actualMapId}`)
       .on('postgres_changes',
-        { event: '*', schema: 'public', table: 'fog_of_war', filter: `map_id=eq.${mapId}` },
+        { event: '*', schema: 'public', table: 'fog_of_war', filter: `map_id=eq.${actualMapId}` },
         () => loadFogCells()
       )
       .subscribe();
@@ -62,14 +70,14 @@ export const FogOfWar3DEnhanced: React.FC<FogOfWar3DEnhancedProps> = ({
     return () => {
       channel.unsubscribe();
     };
-  }, [mapId]);
+  }, [actualMapId]);
 
   const loadFogCells = async () => {
     try {
       const { data, error } = await supabase
         .from('fog_of_war')
         .select('*')
-        .eq('map_id', mapId);
+        .eq('map_id', actualMapId);
 
       if (error) throw error;
       setFogCells(data || []);
@@ -165,7 +173,11 @@ export const FogOfWar3DEnhanced: React.FC<FogOfWar3DEnhancedProps> = ({
   const handlePointerDown = (event: PointerEvent) => {
     if (!isDM) return;
     
+    // Only handle fog painting when modifier keys are pressed
+    if (!event.shiftKey && !event.altKey) return;
+    
     event.preventDefault();
+    event.stopPropagation();
     setIsPainting(true);
     
     // Determine paint mode based on modifier keys
@@ -180,6 +192,15 @@ export const FogOfWar3DEnhanced: React.FC<FogOfWar3DEnhancedProps> = ({
 
   const handlePointerMove = (event: PointerEvent) => {
     if (!isDM || !isPainting) return;
+    
+    // Only continue painting if modifier keys are still pressed
+    if (!event.shiftKey && !event.altKey) {
+      setIsPainting(false);
+      return;
+    }
+    
+    event.preventDefault();
+    event.stopPropagation();
     paintFog(event);
   };
 
@@ -222,7 +243,7 @@ export const FogOfWar3DEnhanced: React.FC<FogOfWar3DEnhancedProps> = ({
           if (distance <= brushSize && x >= 0 && x < gridWidth && y >= 0 && y < gridHeight) {
             cellsToUpdate.push({
               session_id: sessionId,
-              map_id: mapId,
+              map_id: actualMapId,
               grid_x: x,
               grid_y: y,
               is_revealed: reveal,
