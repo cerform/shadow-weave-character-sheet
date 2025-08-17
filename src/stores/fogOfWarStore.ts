@@ -73,11 +73,11 @@ export const useFogOfWarStore = create<FogOfWarStore>((set, get) => ({
   fogSettings: {
     enabled: true,
     globalReveal: false,
-    fogColor: '#505055',
-    fogOpacity: 0.4,
+    fogColor: '#1a1f3a', // Более темный и контрастный цвет
+    fogOpacity: 0.85, // Увеличенная непрозрачность для лучшего контраста
     transitionSpeed: 0.5,
-    blurAmount: 12,
-    brushSize: 50
+    blurAmount: 8, // Уменьшенное размытие для четких границ
+    brushSize: 60 // Увеличенный размер кисти
   },
   fogTransform: {
     offsetX: 0,

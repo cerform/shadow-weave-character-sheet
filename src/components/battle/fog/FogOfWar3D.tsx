@@ -75,7 +75,7 @@ export const FogOfWar3D: React.FC<FogOfWar3DProps> = ({
       uniforms: {
         fogTexture: { value: fogTexture },
         fogColor: { value: new THREE.Color(fogSettings.fogColor) },
-        fogOpacity: { value: isDM ? fogSettings.fogOpacity * 0.5 : fogSettings.fogOpacity },
+        fogOpacity: { value: isDM ? fogSettings.fogOpacity * 0.6 : fogSettings.fogOpacity },
         time: { value: 0 },
         offsetX: { value: fogTransform.offsetX },
         offsetY: { value: fogTransform.offsetY },
@@ -102,29 +102,68 @@ export const FogOfWar3D: React.FC<FogOfWar3DProps> = ({
           return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
         }
         
+        float smoothNoise(vec2 p) {
+          vec2 i = floor(p);
+          vec2 f = fract(p);
+          f = f * f * (3.0 - 2.0 * f);
+          
+          float a = noise(i);
+          float b = noise(i + vec2(1.0, 0.0));
+          float c = noise(i + vec2(0.0, 1.0));
+          float d = noise(i + vec2(1.0, 1.0));
+          
+          return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
+        }
+        
         void main() {
           // Apply transform to UV coordinates
           vec2 transformedUv = vUv;
           transformedUv.x = (transformedUv.x - offsetX / 1200.0) / scale;
           transformedUv.y = (transformedUv.y - offsetY / 800.0) / scale;
           
-          // Clamp to texture bounds
+          // Check if coordinates are outside texture bounds
           if (transformedUv.x < 0.0 || transformedUv.x > 1.0 || transformedUv.y < 0.0 || transformedUv.y > 1.0) {
-            gl_FragColor = vec4(fogColor, fogOpacity);
+            // Full fog opacity for areas outside bounds
+            vec3 darkFog = mix(fogColor, vec3(0.1, 0.1, 0.2), 0.3);
+            gl_FragColor = vec4(darkFog, min(fogOpacity + 0.3, 0.95));
             return;
           }
           
           float revealed = texture2D(fogTexture, transformedUv).r;
           
-          // Add some animated noise for atmospheric effect
-          float n = noise(vUv * 20.0 + time * 0.5) * 0.1;
-          float alpha = (1.0 - revealed) * fogOpacity + n;
+          // Create animated fog effect with multiple noise layers
+          float time1 = time * 0.3;
+          float time2 = time * 0.5;
           
-          // Smooth edges
-          float edge = smoothstep(0.0, 0.1, revealed) * smoothstep(1.0, 0.9, revealed);
-          alpha *= (1.0 - edge * 0.5);
+          float noise1 = smoothNoise(vUv * 8.0 + vec2(time1, time2));
+          float noise2 = smoothNoise(vUv * 16.0 - vec2(time2, time1)) * 0.5;
+          float noise3 = smoothNoise(vUv * 32.0 + vec2(time1 * 2.0, time2 * 1.5)) * 0.25;
           
-          gl_FragColor = vec4(fogColor, alpha);
+          float combinedNoise = noise1 + noise2 + noise3;
+          
+          if (revealed > 0.5) {
+            // Revealed area - very transparent or completely transparent
+            float edgeFade = smoothstep(0.5, 0.7, revealed);
+            float alpha = (1.0 - edgeFade) * 0.1 + combinedNoise * 0.02;
+            
+            // Very light tint for revealed areas to show they're cleared
+            vec3 clearColor = mix(fogColor, vec3(1.0, 1.0, 1.0), 0.8);
+            gl_FragColor = vec4(clearColor, max(0.0, alpha));
+          } else {
+            // Hidden area - strong fog with enhanced contrast
+            float alpha = fogOpacity + combinedNoise * 0.15;
+            
+            // Enhance fog color for better contrast
+            vec3 enhancedFogColor = mix(fogColor, vec3(0.0, 0.0, 0.1), 0.4);
+            
+            // Add subtle color variation based on noise
+            enhancedFogColor = mix(enhancedFogColor, vec3(0.1, 0.1, 0.3), combinedNoise * 0.2);
+            
+            // Ensure strong opacity for hidden areas
+            alpha = clamp(alpha, 0.7, 0.95);
+            
+            gl_FragColor = vec4(enhancedFogColor, alpha);
+          }
         }
       `
     });
@@ -135,7 +174,7 @@ export const FogOfWar3D: React.FC<FogOfWar3DProps> = ({
     if (fogShaderMaterial) {
       fogShaderMaterial.uniforms.time.value = state.clock.elapsedTime;
       fogShaderMaterial.uniforms.fogColor.value.setHex(parseInt(fogSettings.fogColor.replace('#', ''), 16));
-      fogShaderMaterial.uniforms.fogOpacity.value = isDM ? fogSettings.fogOpacity * 0.5 : fogSettings.fogOpacity;
+      fogShaderMaterial.uniforms.fogOpacity.value = isDM ? fogSettings.fogOpacity * 0.6 : fogSettings.fogOpacity;
       fogShaderMaterial.uniforms.offsetX.value = fogTransform.offsetX;
       fogShaderMaterial.uniforms.offsetY.value = fogTransform.offsetY;
       fogShaderMaterial.uniforms.scale.value = fogTransform.scale;
