@@ -4,6 +4,8 @@ import { OrbitControls, Text } from '@react-three/drei';
 import * as THREE from 'three';
 import { MonsterModel } from './MonsterModel';
 import { monsterTypes } from '@/data/monsterTypes';
+import { FogOfWar3D } from './FogOfWar3D';
+import { useFogOfWarStore } from '@/stores/fogOfWarStore';
 import { Button } from '@/components/ui/button';
 import { Plus, Minus, Edit, Heart, Trash2, Settings, Video, Ruler } from 'lucide-react';
 import EquipmentManager from './EquipmentManager';

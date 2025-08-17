@@ -6,6 +6,7 @@ import { ConditionsPanel } from './ConditionsPanel';
 import InitiativeTracker from './InitiativeTracker';
 import useBattleStore from '@/stores/battleStore';
 import { useCombatStore } from '@/stores/combatStore';
+import { FogOfWarPanel } from './FogOfWarPanel';
 
 export const EnhancedBattleManager: React.FC = () => {
   const { tokens, selectedTokenId, isDM } = useBattleStore();
@@ -29,10 +30,11 @@ export const EnhancedBattleManager: React.FC = () => {
   return (
     <div className="w-full">
       <Tabs defaultValue="combat" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="combat">Бой</TabsTrigger>
           <TabsTrigger value="initiative">Инициатива</TabsTrigger>
           <TabsTrigger value="conditions">Состояния</TabsTrigger>
+          <TabsTrigger value="fog">Туман</TabsTrigger>
           <TabsTrigger value="log">Лог</TabsTrigger>
         </TabsList>
         
@@ -50,6 +52,10 @@ export const EnhancedBattleManager: React.FC = () => {
         
         <TabsContent value="conditions" className="space-y-4">
           <ConditionsPanel tokenId={selectedTokenId?.toString()} />
+        </TabsContent>
+        
+        <TabsContent value="fog" className="space-y-4">
+          <FogOfWarPanel />
         </TabsContent>
         
         <TabsContent value="log" className="space-y-4">
