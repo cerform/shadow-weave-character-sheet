@@ -180,26 +180,25 @@ const DraggableAssetModel: React.FC<{
 
   return (
     <group ref={groupRef} position={position}>
-      {/* Невидимая зона захвата */}
-      <mesh
-        position={[0, 0.5, 0]}
-        visible={false}
-        onPointerDown={handlePointerDown}
-        onPointerEnter={handlePointerEnter}
-        onPointerLeave={handlePointerLeave}
-      >
-        <cylinderGeometry args={[0.6, 0.6, 1.2, 8]} />
-        <meshBasicMaterial transparent opacity={0} />
-      </mesh>
-      
-      {/* 3D Модель */}
+      {/* 3D Модель - делаем всю модель интерактивной */}
       <Suspense fallback={<mesh position={[0,0,0]}><cylinderGeometry args={[0.3,0.3,0.6,8]} /><meshStandardMaterial color="#6b7280" /></mesh>}>
         <SafeGLTFLoader 
           url={url} 
           position={[0, 0, 0]} 
           scale={asset.scale}
+          makeInteractive={canMove}
+          onPointerDown={handlePointerDown}
+          onPointerEnter={handlePointerEnter}
+          onPointerLeave={handlePointerLeave}
           fallback={
-            <mesh position={[0, 0, 0]} castShadow receiveShadow>
+            <mesh 
+              position={[0, 0, 0]} 
+              castShadow 
+              receiveShadow
+              onPointerDown={canMove ? handlePointerDown : undefined}
+              onPointerEnter={canMove ? handlePointerEnter : undefined}
+              onPointerLeave={canMove ? handlePointerLeave : undefined}
+            >
               <boxGeometry args={[1, 1, 1]} />
               <meshStandardMaterial color="#6b7280" />
             </mesh>
@@ -224,6 +223,18 @@ const DraggableAssetModel: React.FC<{
         <mesh position={[0, 2, 0]}>
           <sphereGeometry args={[0.1]} />
           <meshBasicMaterial color="#ff4444" />
+        </mesh>
+      )}
+      
+      {/* Подсказка курсора при наведении */}
+      {canMove && (
+        <mesh 
+          position={[0, -0.1, 0]} 
+          rotation={[-Math.PI / 2, 0, 0]} 
+          visible={false}
+        >
+          <circleGeometry args={[1.2, 32]} />
+          <meshBasicMaterial transparent opacity={0} />
         </mesh>
       )}
     </group>

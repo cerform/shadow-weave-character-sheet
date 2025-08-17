@@ -1,11 +1,16 @@
-import React, { Suspense, useState, useEffect } from 'react';
+import React, { Suspense, useState, useEffect, useMemo } from 'react';
 import { useGLTF } from '@react-three/drei';
+import * as THREE from 'three';
 
 interface SafeGLTFLoaderProps {
   url: string;
   position: [number, number, number];
   scale?: number | [number, number, number];
   fallback?: React.ReactNode;
+  onPointerDown?: (event: any) => void;
+  onPointerEnter?: (event: any) => void;
+  onPointerLeave?: (event: any) => void;
+  makeInteractive?: boolean;
 }
 
 // Error boundary component for GLTF loading
@@ -37,21 +42,85 @@ class GLTFErrorBoundary extends React.Component<
 }
 
 // Internal component that uses useGLTF
-const GLTFModel: React.FC<{ url: string; position: [number, number, number]; scale: [number, number, number] }> = ({ 
+const GLTFModel: React.FC<{ 
+  url: string; 
+  position: [number, number, number]; 
+  scale: [number, number, number];
+  onPointerDown?: (event: any) => void;
+  onPointerEnter?: (event: any) => void;
+  onPointerLeave?: (event: any) => void;
+  makeInteractive?: boolean;
+}> = ({ 
   url, 
   position, 
-  scale 
+  scale,
+  onPointerDown,
+  onPointerEnter,
+  onPointerLeave,
+  makeInteractive = false
 }) => {
   const { scene } = useGLTF(url);
-  return <primitive object={scene.clone()} position={position} scale={scale} castShadow receiveShadow />;
+  
+  const clonedScene = useMemo(() => {
+    const cloned = scene.clone();
+    
+    if (makeInteractive) {
+      // Рекурсивно добавляем обработчики событий ко всем мешам в модели
+      cloned.traverse((child) => {
+        if (child instanceof THREE.Mesh) {
+          // Делаем все части модели интерактивными
+          child.userData.isInteractive = true;
+          
+          // Добавляем обработчики событий если они заданы
+          if (onPointerDown) {
+            child.userData.onPointerDown = onPointerDown;
+          }
+          if (onPointerEnter) {
+            child.userData.onPointerEnter = onPointerEnter;
+          }
+          if (onPointerLeave) {
+            child.userData.onPointerLeave = onPointerLeave;
+          }
+        }
+      });
+    }
+    
+    return cloned;
+  }, [scene, makeInteractive, onPointerDown, onPointerEnter, onPointerLeave]);
+  
+  const handlePointerEvent = (eventType: string) => (event: any) => {
+    if (eventType === 'pointerdown' && onPointerDown) {
+      onPointerDown(event);
+    } else if (eventType === 'pointerenter' && onPointerEnter) {
+      onPointerEnter(event);
+    } else if (eventType === 'pointerleave' && onPointerLeave) {
+      onPointerLeave(event);
+    }
+  };
+  
+  return (
+    <primitive 
+      object={clonedScene} 
+      position={position} 
+      scale={scale} 
+      castShadow 
+      receiveShadow
+      onPointerDown={makeInteractive ? handlePointerEvent('pointerdown') : undefined}
+      onPointerEnter={makeInteractive ? handlePointerEvent('pointerenter') : undefined}
+      onPointerLeave={makeInteractive ? handlePointerEvent('pointerleave') : undefined}
+    />
+  );
 };
 
-// Main safe GLTF loader component
 export const SafeGLTFLoader: React.FC<SafeGLTFLoaderProps> = ({ 
   url, 
   position, 
-  scale, 
-  fallback 
+  scale,
+  fallback,
+  onPointerDown,
+  onPointerEnter,
+  onPointerLeave,
+  makeInteractive = false
 }) => {
   const [loadError, setLoadError] = useState(false);
   const s: [number, number, number] = Array.isArray(scale)
@@ -93,7 +162,15 @@ export const SafeGLTFLoader: React.FC<SafeGLTFLoaderProps> = ({
           <meshStandardMaterial color="#9ca3af" />
         </mesh>
       }>
-        <GLTFModel url={url} position={position} scale={s} />
+        <GLTFModel 
+          url={url} 
+          position={position} 
+          scale={s}
+          onPointerDown={onPointerDown}
+          onPointerEnter={onPointerEnter}
+          onPointerLeave={onPointerLeave}
+          makeInteractive={makeInteractive}
+        />
       </Suspense>
     </GLTFErrorBoundary>
   );
