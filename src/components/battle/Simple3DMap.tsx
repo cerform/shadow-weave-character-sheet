@@ -4,8 +4,8 @@ import { OrbitControls, Text } from '@react-three/drei';
 import * as THREE from 'three';
 import { MonsterModel } from './MonsterModel';
 import { monsterTypes } from '@/data/monsterTypes';
-import FogOfWar3D from './fog/FogOfWar3D';
-import { useFogOfWarStore } from '@/stores/fogOfWarStore';
+import { FogOfWar3DEnhanced } from './FogOfWar3DEnhanced';
+import { BattleSystem } from './BattleSystem';
 import { Button } from '@/components/ui/button';
 import { Plus, Minus, Edit, Heart, Trash2, Settings, Video, Ruler } from 'lucide-react';
 import EquipmentManager from './EquipmentManager';
@@ -549,6 +549,9 @@ const Simple3DMap: React.FC<Simple3DMapProps> = ({
   const [showTokenEditor, setShowTokenEditor] = useState(false);
   const [isDraggingAny, setIsDraggingAny] = useState(false);
   const [selectedAssetId, setSelectedAssetId] = useState<string | null>(null);
+  const [showBattleSystem, setShowBattleSystem] = useState(false);
+  const [sessionId] = useState('current-session'); // In real app, get from props or context
+  const [currentMapId] = useState('current-map'); // In real app, get from props or context
   console.log('🗺️ Simple3DMap rendering with:', { mapImageUrl, tokensCount: tokens.length });
 
   const selectedToken = tokens.find(t => t.id === selectedTokenId);
@@ -592,29 +595,14 @@ const Simple3DMap: React.FC<Simple3DMapProps> = ({
           {/* Плоскость с текстурой карты */}
           <TexturedPlane imageUrl={mapImageUrl} />
           
-          {/* Advanced Fog of War 3D Integration */}
-          <FogOfWar3D 
-            mapSize={new THREE.Vector2(24, 16)}
-            mapCenter={new THREE.Vector3(0, 0, 0)}
-            visionSources={tokens
-              .filter(token => token.controlledBy !== 'dm' || selectedTokenId === token.id)
-              .map(token => ({
-                id: token.id,
-                position: new THREE.Vector3(
-                  ((token.x || 0) / 1200) * 24 - 12,
-                  0,
-                  ((token.y || 0) / 800) * 16 - 8
-                ),
-                radius: 4,
-                intensity: 1
-              }))
-            }
-            fogColor={0x1a1a1a}
-            density={0.85}
-            maskResolution={{ width: 1024, height: 1024 }}
-            enableDMPaint={isDM}
-            brushRadius={3}
-            debugMask={false}
+          {/* Enhanced 3D Fog of War with Database Integration */}
+          <FogOfWar3DEnhanced
+            sessionId={sessionId}
+            mapId={currentMapId}
+            mapSize={{ width: 1200, height: 800 }}
+            gridSize={25}
+            isDM={isDM || false}
+            brushSize={3}
           />
 
           {/* 3D ассеты из Storage */}
@@ -690,6 +678,37 @@ const Simple3DMap: React.FC<Simple3DMapProps> = ({
           />
         </Suspense>
       </Canvas>
+
+      {/* Sidebar with battle controls */}
+      <div className="absolute top-4 right-4 w-80 space-y-4 z-50">
+        {/* Battle System Toggle */}
+        <Button
+          onClick={() => setShowBattleSystem(!showBattleSystem)}
+          className="w-full"
+          variant={showBattleSystem ? "default" : "outline"}
+        >
+          {showBattleSystem ? "Скрыть" : "Показать"} Боевую Систему
+        </Button>
+
+        {/* Battle System Panel */}
+        {showBattleSystem && (
+          <div className="bg-background/95 backdrop-blur-sm rounded-lg border p-4 max-h-[70vh] overflow-y-auto">
+            <BattleSystem
+              sessionId={sessionId}
+              mapId={currentMapId}
+              isDM={isDM || false}
+              onTokenVisibilityChange={(tokenId, visible) => {
+                // Update token visibility in the 3D scene
+                console.log(`Token ${tokenId} visibility changed to ${visible}`);
+              }}
+              onInitiativeChange={(currentTurn) => {
+                // Highlight current turn token
+                console.log(`Current turn: ${currentTurn}`);
+              }}
+            />
+          </div>
+        )}
+      </div>
 
       {/* UI панель управления токеном */}
       {selectedToken && isDM && (
