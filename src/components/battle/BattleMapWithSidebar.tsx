@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import BattleSidebar from './BattleSidebar';
-import AdvancedBattleMap from './AdvancedBattleMap';
+import Simple2DMapFromAssets from './Simple2DMapFromAssets';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Maximize } from 'lucide-react';
@@ -110,10 +110,10 @@ const BattleMapWithSidebar: React.FC<BattleMapWithSidebarProps> = ({ isDM = fals
           />
 
           <main className="flex-1 p-4">
-            <AdvancedBattleMap
-              isDM={isDM}
+            <Simple2DMapFromAssets
+              assets3D={[]}
+              tokens={tokens}
               mapImageUrl={mapImageUrl}
-              onMapUpload={setMapImageUrl}
             />
           </main>
         </div>
