@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Home, Save, Plus, Trash2, Upload, Sword, Cloud } from 'lucide-react';
 import MapUploader from '@/components/battle/MapUploader';
 import { EquipmentPanel } from '@/components/battle/enhanced/EquipmentPanel';
+import { useEnhancedBattleStore } from '@/stores/enhancedBattleStore';
 import { EnhancedBattleManager } from '../components/battle/EnhancedBattleManager';
 import { FogOfWarToggle } from '../components/battle/FogOfWarToggle';
 import { FogControlPanel } from '@/components/battle/FogControlPanel';
@@ -27,6 +28,7 @@ const BattleMap3DPage: React.FC = () => {
   const [tokens, setTokens] = useState<any[]>([]);
   const [selectedTokenId, setSelectedTokenId] = useState<string | null>(null);
   const [mapBackground, setMapBackground] = useState<string>('');
+  const { clearAllTokens } = useEnhancedBattleStore();
 
   const [mapUrl, setMapUrl] = useState<string>('');
   const [isSaving, setIsSaving] = useState(false);
@@ -220,7 +222,10 @@ const handleAssetDelete = (id: string) => {
 };
 
 const handleClearAssets = () => {
-  // Удаляем кэш по каждому ассету этой сессии
+  // Очищаем токены из enhanced battle store
+  clearAllTokens();
+  
+  // Удаляем кэш по каждому ассету этой сессии (старая система)
   const ids = assets3D.map(a => a.id);
   ids.forEach((id) => sessionStorage.removeItem(sKey(`asset3D:${id}`)));
 
@@ -236,7 +241,7 @@ const handleClearAssets = () => {
 
   setAssets3D([]);
   sessionStorage.removeItem(sKey('current3DAssets'));
-  toast.success('Ассеты очищены');
+  toast.success('Все ассеты и токены очищены');
 };
 
 // Обработчик загрузки карты

@@ -85,6 +85,9 @@ interface EnhancedBattleState {
   // Combat log
   addCombatEvent: (event: Omit<CombatEvent, 'id' | 'timestamp'>) => void;
   clearCombatLog: () => void;
+  
+  // Token management helpers
+  clearAllTokens: () => void;
 }
 
 export const useEnhancedBattleStore = create<EnhancedBattleState>((set, get) => ({
@@ -255,4 +258,13 @@ export const useEnhancedBattleStore = create<EnhancedBattleState>((set, get) => 
   },
   
   clearCombatLog: () => set({ combatLog: [] }),
+  
+  clearAllTokens: () => {
+    set({ 
+      tokens: [],
+      selectedTokenId: null,
+      activeId: null,
+      contextMenu: { visible: false, x: 0, y: 0, tokenId: null }
+    });
+  },
 }));
