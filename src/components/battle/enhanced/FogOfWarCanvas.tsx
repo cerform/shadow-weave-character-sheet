@@ -21,15 +21,18 @@ export const FogOfWarCanvas: React.FC = () => {
       
       ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
       
-      // Fill with initial fog
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
-      ctx.fillRect(0, 0, rect.width, rect.height);
+      // Fill with initial fog only if fog is enabled
+      if (fogEnabled) {
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
+        ctx.fillRect(0, 0, rect.width, rect.height);
+        console.log('🌫️ Fog canvas initialized', { fogEnabled, fogEditMode, width: rect.width, height: rect.height });
+      }
     };
 
     resizeCanvas();
     window.addEventListener('resize', resizeCanvas);
     return () => window.removeEventListener('resize', resizeCanvas);
-  }, [fogEnabled]);
+  }, [fogEnabled, fogEditMode]); // Перерисовываем когда включается режим редактирования
 
   const paint = (e: React.MouseEvent<HTMLCanvasElement>) => {
     if (!isDrawing || !fogEnabled || !fogEditMode) return;
@@ -71,7 +74,11 @@ export const FogOfWarCanvas: React.FC = () => {
   };
 
   const startDrawing = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!fogEditMode) return;
+    if (!fogEditMode) {
+      console.log('🌫️ Drawing blocked - fog edit mode disabled');
+      return;
+    }
+    console.log('🌫️ Starting fog drawing', { fogMode, fogBrushSize });
     setIsDrawing(true);
     paint(e);
   };

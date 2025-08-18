@@ -337,7 +337,10 @@ export const EnhancedBattleMap: React.FC = () => {
         <div className="bg-black/70 backdrop-blur-sm px-3 py-2 rounded-lg text-white">
           <div className="flex items-center gap-2 text-sm">
             <button
-              onClick={() => toggleFog()}
+              onClick={() => {
+                console.log('🌫️ Toggling fog:', !fogEnabled);
+                toggleFog();
+              }}
               className={`px-2 py-1 rounded text-xs ${
                 fogEnabled ? 'bg-purple-600 hover:bg-purple-700' : 'bg-gray-600 hover:bg-gray-700'
               }`}
@@ -346,7 +349,10 @@ export const EnhancedBattleMap: React.FC = () => {
             </button>
             {fogEnabled && (
               <button
-                onClick={() => setFogEditMode(!fogEditMode)}
+                onClick={() => {
+                  console.log('🌫️ Toggling edit mode:', !fogEditMode);
+                  setFogEditMode(!fogEditMode);
+                }}
                 className={`px-2 py-1 rounded text-xs ${
                   fogEditMode ? 'bg-orange-600 hover:bg-orange-700' : 'bg-gray-600 hover:bg-gray-700'
                 }`}
