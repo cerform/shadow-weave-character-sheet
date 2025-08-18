@@ -7,12 +7,14 @@ import { useEnhancedBattleStore } from '@/stores/enhancedBattleStore';
 import { useAssetEquipStore } from '@/stores/assetEquipStore';
 import { CharacterManager } from '@/utils/CharacterManager';
 import { useCharacterPicking } from '@/hooks/useCharacterPicking';
-import { EnhancedToken3D } from './EnhancedToken3D';
+import { Enhanced3DModel } from './Enhanced3DModel';
 import { MovementGrid } from './MovementGrid';
 import { FogOfWarCanvas } from './FogOfWarCanvas';
 import { FogBrushCursor } from './FogBrushCursor';
 import { TokenContextMenu } from './TokenContextMenu';
 import { TokenUI } from './TokenUI';
+import { determineMonsterType } from '@/utils/tokenModelMapping';
+import { publicModelUrl } from '@/utils/storageUrls';
 
 // Component for handling asset loading and character management
 function SceneContent() {
@@ -34,45 +36,6 @@ function SceneContent() {
   }
 
   const { pickFromPointer } = useCharacterPicking(scene, managerRef.current);
-
-  // Initialize default tokens in CharacterManager only once
-  useEffect(() => {
-    if (!managerRef.current) return;
-    
-    const manager = managerRef.current;
-    
-    // Only add tokens that aren't already managed
-    tokens.forEach((token) => {
-      const existing = manager.getHandle(token.id);
-      if (!existing) {
-        // Create simple cylinder geometry for token if no 3D model loaded yet
-        const geometry = new THREE.CylinderGeometry(0.6, 0.6, 0.3, 24);
-        const material = new THREE.MeshStandardMaterial({
-          color: token.isEnemy ? '#ef4444' : '#3b82f6'
-        });
-        const mesh = new THREE.Mesh(geometry, material);
-        
-        const handle = manager.addCharacter(token.id, mesh);
-        handle.group.position.set(...token.position);
-        handle.group.userData.tokenData = token;
-        
-        console.log(`🎭 Created default token for ${token.id}`);
-      }
-    });
-  }, []); // Only run once on mount
-
-  // Update token positions when store changes
-  useEffect(() => {
-    if (!managerRef.current) return;
-    
-    tokens.forEach((token) => {
-      const handle = managerRef.current!.getHandle(token.id);
-      if (handle) {
-        handle.group.position.set(...token.position);
-        handle.group.userData.tokenData = token;
-      }
-    });
-  }, [tokens]);
 
   // Process asset queue
   useEffect(() => {
@@ -266,10 +229,24 @@ export const EnhancedBattleMap: React.FC = () => {
             />
           )}
 
+          {/* Enhanced 3D Tokens */}
+          {visibleTokens.map((token) => {
+            const monsterType = determineMonsterType(token.name);
+            const modelUrl = publicModelUrl(`models/monsters/${monsterType}/low/model.glb`);
+            
+            return (
+              <Enhanced3DModel 
+                key={token.id} 
+                token={token}
+                modelUrl={modelUrl}
+              />
+            );
+          })}
+
           {/* Token UI overlays */}
           {visibleTokens.map((token) => (
             <TokenUI 
-              key={token.id} 
+              key={`ui-${token.id}`} 
               tokenId={token.id} 
               position={token.position} 
             />

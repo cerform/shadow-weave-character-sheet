@@ -5,12 +5,11 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { equipmentHelpers } from '@/stores/assetEquipStore';
 import { SlotName } from '@/utils/CharacterManager';
 import { useEnhancedBattleStore } from '@/stores/enhancedBattleStore';
 import { useAssetsStore } from '@/stores/assetsStore';
 import { publicModelUrl } from '@/utils/storageUrls';
-import { assetUrl } from '@/config/assets';
+import { determineMonsterType } from '@/utils/tokenModelMapping';
 
 const slotOptions: { value: SlotName; label: string }[] = [
   { value: 'head', label: 'Голова' },
@@ -64,6 +63,9 @@ export const EquipmentPanel: React.FC = () => {
   const handleAddCharacter = () => {
     if (!characterId || !selectedAsset) return;
     
+    // Создаем новый токен с уникальным ID
+    const newTokenId = `${characterId}-${Date.now()}`;
+    
     // Find a random position to avoid overlapping
     const randomOffset: [number, number, number] = [
       Math.random() * 4 - 2, // -2 to 2
@@ -71,19 +73,33 @@ export const EquipmentPanel: React.FC = () => {
       Math.random() * 4 - 2  // -2 to 2
     ];
     
-    const assetUrl = publicModelUrl(selectedAsset.storage_path);
-    equipmentHelpers.addCharacter(characterId, assetUrl, randomOffset);
+    // Добавляем новый токен в store
+    const { addToken } = useEnhancedBattleStore.getState();
+    const monsterType = determineMonsterType(selectedAsset.name);
+    
+    const newToken = {
+      id: newTokenId,
+      name: selectedAsset.name,
+      hp: 20,
+      maxHp: 20,
+      ac: 14,
+      position: randomOffset,
+      conditions: [],
+      isEnemy: characterId.includes('enemy') || characterId.includes('monster'),
+      isVisible: true,
+      size: 1,
+    };
+    
+    addToken(newToken);
     setSelectedAssetId('');
+    console.log(`✨ Added new character: ${newToken.name} (${newTokenId})`);
   };
 
   const handleAddEquipment = () => {
     if (!characterId || !selectedAsset || !selectedSlot) return;
     
-    const assetUrl = publicModelUrl(selectedAsset.storage_path);
-    equipmentHelpers.addEquipment(characterId, assetUrl, selectedSlot, {
-      boneName: boneName && boneName !== 'none' ? boneName : undefined,
-      scale: scale !== 1 ? scale : undefined
-    });
+    // Эта функция пока заглушена, так как экипировка токенов будет доработана позже
+    console.log('Equipment functionality will be implemented later');
     
     setSelectedAssetId('');
     setBoneName('');
