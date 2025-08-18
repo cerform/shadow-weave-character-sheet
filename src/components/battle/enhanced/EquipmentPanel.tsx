@@ -54,7 +54,7 @@ export const EquipmentPanel: React.FC = () => {
     if (!characterId || !assetUrl || !selectedSlot) return;
     
     equipmentHelpers.addEquipment(characterId, assetUrl, selectedSlot, {
-      boneName: boneName || undefined,
+      boneName: boneName && boneName !== 'none' ? boneName : undefined,
       scale: scale !== 1 ? scale : undefined
     });
     
@@ -150,7 +150,7 @@ export const EquipmentPanel: React.FC = () => {
                 <SelectValue placeholder="Выберите кость или оставьте пустым" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Без кости (якорная точка)</SelectItem>
+                <SelectItem value="none">Без кости (якорная точка)</SelectItem>
                 {commonBones.map((bone) => (
                   <SelectItem key={bone} value={bone}>
                     {bone}
