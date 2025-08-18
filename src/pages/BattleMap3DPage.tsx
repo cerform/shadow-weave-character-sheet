@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Home, Save, Plus, Trash2, Upload, Sword, Cloud } from 'lucide-react';
 import MapUploader from '@/components/battle/MapUploader';
+import { EquipmentPanel } from '@/components/battle/enhanced/EquipmentPanel';
 import { EnhancedBattleManager } from '../components/battle/EnhancedBattleManager';
 import { FogOfWarToggle } from '../components/battle/FogOfWarToggle';
 import { FogControlPanel } from '@/components/battle/FogControlPanel';
@@ -450,7 +451,7 @@ const handleTokenUpdate = (tokenId: string, updates: any) => {
 
       {/* Fog of War Panel */}
       {showFogPanel && (
-        <div className="absolute top-20 right-4 z-30 w-80">
+        <div className="absolute top-20 left-96 z-30 w-80">
           <div className="bg-background/95 backdrop-blur-sm border rounded-lg shadow-lg">
             <FogControlPanel />
           </div>
@@ -468,6 +469,11 @@ const handleTokenUpdate = (tokenId: string, updates: any) => {
         
         {/* 3D Fog Drawing Overlay */}
         <FogDrawingOverlay3D />
+      </div>
+
+      {/* Equipment Panel */}
+      <div className="absolute top-20 right-4 z-40 w-80">
+        <EquipmentPanel />
       </div>
 
       {/* Map Upload Dialog */}
