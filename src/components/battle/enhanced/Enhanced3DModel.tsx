@@ -202,8 +202,9 @@ export const Enhanced3DModel: React.FC<Enhanced3DModelProps> = ({ token, modelUr
         transform={false}
         sprite
         style={{
-          pointerEvents: 'none',
+          pointerEvents: isDragging ? 'none' : 'auto', // Отключаем события только во время перетаскивания
           userSelect: 'none',
+          zIndex: isDragging ? 1000 : 10, // Поднимаем выше во время перетаскивания
         }}
       >
         <div className="text-center space-y-1">
