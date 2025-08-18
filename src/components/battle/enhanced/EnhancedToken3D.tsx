@@ -39,12 +39,15 @@ export const EnhancedToken3D: React.FC<EnhancedToken3DProps> = ({ token }) => {
   } = useDraggable3D(
     canMove,
     (mapX: number, mapY: number) => {
-      // Конвертируем 2D координаты карты обратно в 3D координаты
-      const newX = ((mapX / 1200) * 24) - 12; // Преобразуем 0-1200 в -12 до 12
-      const newZ = -(((mapY / 800) * 16) - 8); // Преобразуем 0-800 в -8 до 8 (с обратным знаком)
+      // Простое прямое перемещение в 3D пространстве
+      const newX = (mapX - 400) / 40; // Центрируем и масштабируем
+      const newZ = (mapY - 300) / 40; // Центрируем и масштабируем
       moveToken(token.id, [newX, token.position[1], newZ]);
     },
-    undefined,
+    (dragging: boolean) => {
+      // Обновляем состояние перетаскивания
+      console.log(`Dragging ${token.name}:`, dragging);
+    },
     () => selectToken(token.id)
   );
 
