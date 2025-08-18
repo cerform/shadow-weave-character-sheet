@@ -19,7 +19,6 @@ export const Enhanced3DModel: React.FC<Enhanced3DModelProps> = ({ token, modelUr
   const [hovered, setHovered] = useState(false);
   const [model, setModel] = useState<any>(null);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<any>(null);
   
   const {
     activeId,
@@ -42,7 +41,6 @@ export const Enhanced3DModel: React.FC<Enhanced3DModelProps> = ({ token, modelUr
     }
     
     setLoading(true);
-    setError(null);
     
     console.log(`🔄 Loading model for ${token.name}:`, modelUrl);
     
@@ -60,9 +58,8 @@ export const Enhanced3DModel: React.FC<Enhanced3DModelProps> = ({ token, modelUr
       (error) => {
         console.error(`❌ Failed to load model for ${token.name}:`, error);
         console.error(`❌ Model URL was:`, modelUrl);
-        setError(error);
         setLoading(false);
-        // Не устанавливаем model = null, оставляем для fallback геометрии
+        // Оставляем model = null для fallback геометрии
       }
     );
   }, [modelUrl, token.name]);
