@@ -64,8 +64,8 @@ export const Enhanced3DModel: React.FC<Enhanced3DModelProps> = ({ token, modelUr
     );
   }, [modelUrl, token.name]);
 
-  // Логика перетаскивания для активного токена
-  const canMove = isActive;
+  // Логика перетаскивания для выбранного токена
+  const canMove = isSelected;
   const {
     groupRef: draggableRef,
     isDragging,
@@ -74,14 +74,11 @@ export const Enhanced3DModel: React.FC<Enhanced3DModelProps> = ({ token, modelUr
     handlePointerLeave,
   } = useDraggable3D(
     canMove,
-    (mapX: number, mapY: number) => {
-      // Простое прямое перемещение в 3D пространстве
-      const newX = (mapX - 400) / 40; // Центрируем и масштабируем
-      const newZ = (mapY - 300) / 40; // Центрируем и масштабируем
-      moveToken(token.id, [newX, token.position[1], newZ]);
+    (mapX: number, mapZ: number) => {
+      // Сохраняем Y координату неизменной
+      moveToken(token.id, [mapX, token.position[1], mapZ]);
     },
     (dragging: boolean) => {
-      // Обновляем состояние перетаскивания
       console.log(`Dragging ${token.name}:`, dragging);
     },
     () => selectToken(token.id)
@@ -91,6 +88,9 @@ export const Enhanced3DModel: React.FC<Enhanced3DModelProps> = ({ token, modelUr
   useFrame((state) => {
     if (groupRef.current && isActive && !isDragging) {
       groupRef.current.position.y = token.position[1] + Math.sin(state.clock.elapsedTime * 2) * 0.1;
+    } else if (groupRef.current && !isDragging) {
+      // Убеждаемся, что неактивные токены остаются на своем месте
+      groupRef.current.position.set(token.position[0], token.position[1], token.position[2]);
     }
   });
 

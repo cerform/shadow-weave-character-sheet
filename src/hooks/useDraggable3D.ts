@@ -61,15 +61,17 @@ export const useDraggable3D = (
       const intersectionPoint = new THREE.Vector3();
       
       if (raycaster.ray.intersectPlane(plane, intersectionPoint)) {
-        // Ограничиваем движение в пределах карты
-        const boundedX = Math.max(-20, Math.min(20, intersectionPoint.x));
-        const boundedZ = Math.max(-20, Math.min(20, intersectionPoint.z));
+        // Ограничиваем движение в пределах карты (расширяем границы)
+        const boundedX = Math.max(-25, Math.min(25, intersectionPoint.x));
+        const boundedZ = Math.max(-25, Math.min(25, intersectionPoint.z));
         
-        // Обновляем позицию объекта в реальном времени
+        // Обновляем позицию объекта в реальном времени, сохраняя Y
+        const currentY = groupRef.current.position.y;
         groupRef.current.position.x = boundedX;
         groupRef.current.position.z = boundedZ;
+        groupRef.current.position.y = currentY; // Сохраняем Y координату
         
-        console.log('🏃 Dragging object to:', { x: boundedX, z: boundedZ });
+        console.log('🏃 Dragging object to:', { x: boundedX, z: boundedZ, y: currentY });
       }
     };
 
@@ -84,10 +86,11 @@ export const useDraggable3D = (
         
         console.log('📍 Final position:', { 
           x: newPos.x, 
-          z: newPos.z
+          z: newPos.z,
+          y: newPos.y
         });
         
-        // Вызываем callback с 3D координатами
+        // Вызываем callback с 3D координатами (X и Z)
         onMove(newPos.x, newPos.z);
       }
     };
