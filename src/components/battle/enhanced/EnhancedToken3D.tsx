@@ -3,6 +3,7 @@ import { useFrame, ThreeEvent } from '@react-three/fiber';
 import { Html } from '@react-three/drei';
 import { Mesh } from 'three';
 import { useEnhancedBattleStore, EnhancedToken } from '@/stores/enhancedBattleStore';
+import { useDraggable3D } from '@/hooks/useDraggable3D';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 
@@ -20,15 +21,36 @@ export const EnhancedToken3D: React.FC<EnhancedToken3DProps> = ({ token }) => {
     selectToken,
     showContextMenu,
     hideContextMenu,
+    moveToken,
   } = useEnhancedBattleStore();
 
   const isActive = token.id === activeId;
   const isSelected = token.id === selectedTokenId;
   const hpPercentage = (token.hp / token.maxHp) * 100;
+  
+  // Логика перетаскивания для активного токена
+  const canMove = isActive;
+  const {
+    groupRef,
+    isDragging,
+    handlePointerDown,
+    handlePointerEnter,
+    handlePointerLeave,
+  } = useDraggable3D(
+    canMove,
+    (mapX: number, mapY: number) => {
+      // Конвертируем 2D координаты карты обратно в 3D координаты
+      const newX = ((mapX / 1200) * 24) - 12; // Преобразуем 0-1200 в -12 до 12
+      const newZ = -(((mapY / 800) * 16) - 8); // Преобразуем 0-800 в -8 до 8 (с обратным знаком)
+      moveToken(token.id, [newX, token.position[1], newZ]);
+    },
+    undefined,
+    () => selectToken(token.id)
+  );
 
   // Gentle floating animation for active token
   useFrame((state) => {
-    if (meshRef.current && isActive) {
+    if (meshRef.current && isActive && !isDragging) {
       meshRef.current.position.y = token.position[1] + Math.sin(state.clock.elapsedTime * 2) * 0.1;
     }
   });
@@ -61,21 +83,29 @@ export const EnhancedToken3D: React.FC<EnhancedToken3DProps> = ({ token }) => {
   const ringColor = isActive ? '#22c55e' : isSelected ? '#eab308' : tokenColor;
 
   return (
-    <group position={token.position}>
+    <group ref={groupRef} position={token.position}>
       {/* Base token mesh */}
       <mesh
         ref={meshRef}
         onClick={handleClick}
         onContextMenu={handleRightClick}
-        onPointerOver={handlePointerOver}
-        onPointerOut={handlePointerOut}
+        onPointerOver={(e) => {
+          handlePointerOver();
+          handlePointerEnter();
+        }}
+        onPointerOut={(e) => {
+          handlePointerOut();
+          handlePointerLeave();
+        }}
+        onPointerDown={handlePointerDown}
         scale={hovered ? 1.1 : 1}
+        style={{ cursor: canMove ? 'grab' : 'pointer' } as any}
       >
         <cylinderGeometry args={[tokenSize, tokenSize, 0.3, 24]} />
         <meshStandardMaterial
           color={tokenColor}
-          emissive={hovered ? tokenColor : '#000000'}
-          emissiveIntensity={hovered ? 0.2 : 0}
+          emissive={hovered || isDragging ? tokenColor : '#000000'}
+          emissiveIntensity={hovered || isDragging ? 0.2 : 0}
         />
       </mesh>
 

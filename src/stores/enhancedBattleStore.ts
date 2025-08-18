@@ -56,6 +56,7 @@ interface EnhancedBattleState {
   // Actions
   setTokens: (tokens: EnhancedToken[]) => void;
   updateToken: (id: string, updates: Partial<EnhancedToken>) => void;
+  moveToken: (id: string, position: [number, number, number]) => void;
   setTokenVisibility: (id: string, visible: boolean) => void;
   
   // Initiative
@@ -137,6 +138,13 @@ export const useEnhancedBattleStore = create<EnhancedBattleState>((set, get) => 
     set((state) => ({
       tokens: state.tokens.map((token) =>
         token.id === id ? { ...token, ...updates } : token
+      ),
+    })),
+    
+  moveToken: (id: string, position: [number, number, number]) =>
+    set((state) => ({
+      tokens: state.tokens.map((token) =>
+        token.id === id ? { ...token, position } : token
       ),
     })),
     

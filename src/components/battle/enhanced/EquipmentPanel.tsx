@@ -90,14 +90,6 @@ export const EquipmentPanel: React.FC = () => {
     setScale(1);
   };
 
-  const handleQuickEquip = (slot: SlotName, url: string, bone?: string) => {
-    if (!characterId) return;
-    
-    equipmentHelpers.addEquipment(characterId, url, slot, {
-      boneName: bone,
-      scale: 1
-    });
-  };
 
   return (
     <Card className="fixed bottom-4 left-4 w-96 bg-background/95 backdrop-blur-sm border-border z-40">
@@ -232,44 +224,6 @@ export const EquipmentPanel: React.FC = () => {
 
         <hr className="border-border" />
 
-        {/* Quick equipment buttons */}
-        <div className="space-y-2">
-          <h4 className="font-semibold text-sm">Быстрая экипировка</h4>
-          <div className="grid grid-cols-2 gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => handleQuickEquip('head', '/models/hat.glb', 'Head')}
-              disabled={!characterId}
-            >
-              🎩 Шляпа
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => handleQuickEquip('mainHand', '/models/sword.glb', 'RightHand')}
-              disabled={!characterId}
-            >
-              ⚔️ Меч
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => handleQuickEquip('back', '/models/cloak.glb')}
-              disabled={!characterId}
-            >
-              🧥 Плащ
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => handleQuickEquip('body', '/models/armor.glb')}
-              disabled={!characterId}
-            >
-              🛡️ Доспех
-            </Button>
-          </div>
-        </div>
 
         {/* Instructions */}
         <div className="text-xs text-muted-foreground space-y-1">
