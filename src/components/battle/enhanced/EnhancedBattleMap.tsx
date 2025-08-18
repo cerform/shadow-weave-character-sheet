@@ -201,88 +201,91 @@ export const EnhancedBattleMap: React.FC = () => {
 
   return (
     <div className="w-full h-full relative bg-slate-900 rounded-lg overflow-hidden">
-      {/* 3D Scene */}
-      <Canvas
-        shadows
-        camera={{ position: [10, 12, 10], fov: 50 }}
-        onClick={() => hideContextMenu()}
-        onPointerMissed={() => hideContextMenu()}
-      >
-        <SceneContent />
-        {/* Lighting */}
-        <ambientLight intensity={0.4} />
-        <directionalLight
-          position={[10, 15, 5]}
-          intensity={1}
-          castShadow
-          shadow-mapSize-width={2048}
-          shadow-mapSize-height={2048}
-          shadow-camera-near={0.5}
-          shadow-camera-far={50}
-          shadow-camera-left={-20}
-          shadow-camera-right={20}
-          shadow-camera-top={20}
-          shadow-camera-bottom={-20}
-        />
-
-        {/* Environment */}
-        <Environment preset="warehouse" />
-
-        {/* Ground grid */}
-        <Grid
-          position={[0, -0.1, 0]}
-          args={[50, 50]}
-          cellSize={1}
-          cellThickness={0.5}
-          cellColor="#64748b"
-          sectionSize={5}
-          sectionThickness={1}
-          sectionColor="#94a3b8"
-          fadeDistance={30}
-          fadeStrength={1}
-          followCamera={false}
-          infiniteGrid={true}
-        />
-
-        {/* Ground plane for shadows */}
-        <mesh
-          receiveShadow
-          position={[0, -0.15, 0]}
-          rotation={[-Math.PI / 2, 0, 0]}
+      {/* 3D Scene Container */}
+      <div className="w-full h-full relative">
+        {/* 3D Scene */}
+        <Canvas
+          shadows
+          camera={{ position: [10, 12, 10], fov: 50 }}
+          onClick={() => hideContextMenu()}
+          onPointerMissed={() => hideContextMenu()}
         >
-          <planeGeometry args={[100, 100]} />
-          <meshStandardMaterial color="#1e293b" transparent opacity={0.8} />
-        </mesh>
-
-        {/* Movement grid */}
-        {movementTarget && showMovementGrid && (
-          <MovementGrid
-            center={movementTarget.position}
-            radius={6}
-            visible={showMovementGrid}
+          <SceneContent />
+          {/* Lighting */}
+          <ambientLight intensity={0.4} />
+          <directionalLight
+            position={[10, 15, 5]}
+            intensity={1}
+            castShadow
+            shadow-mapSize-width={2048}
+            shadow-mapSize-height={2048}
+            shadow-camera-near={0.5}
+            shadow-camera-far={50}
+            shadow-camera-left={-20}
+            shadow-camera-right={20}
+            shadow-camera-top={20}
+            shadow-camera-bottom={-20}
           />
-        )}
 
-        {/* Token UI overlays */}
-        {visibleTokens.map((token) => (
-          <TokenUI 
-            key={token.id} 
-            tokenId={token.id} 
-            position={token.position} 
+          {/* Environment */}
+          <Environment preset="warehouse" />
+
+          {/* Ground grid */}
+          <Grid
+            position={[0, -0.1, 0]}
+            args={[50, 50]}
+            cellSize={1}
+            cellThickness={0.5}
+            cellColor="#64748b"
+            sectionSize={5}
+            sectionThickness={1}
+            sectionColor="#94a3b8"
+            fadeDistance={30}
+            fadeStrength={1}
+            followCamera={false}
+            infiniteGrid={true}
           />
-        ))}
-        <OrbitControls
-          enableDamping
-          dampingFactor={0.05}
-          minDistance={5}
-          maxDistance={50}
-          maxPolarAngle={Math.PI / 2.1}
-          target={activeToken ? activeToken.position : [0, 0, 0]}
-        />
-      </Canvas>
 
-      {/* Fog of War overlay */}
-      <FogOfWarCanvas />
+          {/* Ground plane for shadows */}
+          <mesh
+            receiveShadow
+            position={[0, -0.15, 0]}
+            rotation={[-Math.PI / 2, 0, 0]}
+          >
+            <planeGeometry args={[100, 100]} />
+            <meshStandardMaterial color="#1e293b" transparent opacity={0.8} />
+          </mesh>
+
+          {/* Movement grid */}
+          {movementTarget && showMovementGrid && (
+            <MovementGrid
+              center={movementTarget.position}
+              radius={6}
+              visible={showMovementGrid}
+            />
+          )}
+
+          {/* Token UI overlays */}
+          {visibleTokens.map((token) => (
+            <TokenUI 
+              key={token.id} 
+              tokenId={token.id} 
+              position={token.position} 
+            />
+          ))}
+          <OrbitControls
+            enableDamping
+            dampingFactor={0.05}
+            minDistance={5}
+            maxDistance={50}
+            maxPolarAngle={Math.PI / 2.1}
+            target={activeToken ? activeToken.position : [0, 0, 0]}
+          />
+        </Canvas>
+
+        {/* Fog of War overlay - ограничен только областью Canvas */}
+        <FogOfWarCanvas />
+      </div>
       
       {/* Fog brush cursor */}
       <FogBrushCursor />
