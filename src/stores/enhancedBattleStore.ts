@@ -70,6 +70,7 @@ interface EnhancedBattleState {
   setFogBrushSize: (size: number) => void;
   setFogMode: (mode: FogMode) => void;
   setFogEditMode: (editMode: boolean) => void;
+  clearFog: () => void;
   
   // UI actions
   selectToken: (id: string | null) => void;
@@ -201,6 +202,8 @@ export const useEnhancedBattleStore = create<EnhancedBattleState>((set, get) => 
   setFogMode: (mode) => set({ fogMode: mode }),
   
   setFogEditMode: (editMode) => set({ fogEditMode: editMode }),
+  
+  clearFog: () => set({}), // Функция для очистки тумана - будет обрабатываться в компоненте
   
   // UI actions
   selectToken: (id) => set({ selectedTokenId: id }),

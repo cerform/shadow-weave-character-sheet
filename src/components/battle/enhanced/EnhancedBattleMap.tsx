@@ -189,6 +189,7 @@ export const EnhancedBattleMap: React.FC = () => {
     fogEditMode,
     toggleFog,
     setFogEditMode,
+    clearFog,
   } = useEnhancedBattleStore();
 
   // Only show visible tokens
@@ -355,17 +356,36 @@ export const EnhancedBattleMap: React.FC = () => {
               {fogEnabled ? '🌫️ Туман ВКЛ' : '🌫️ Туман ВЫКЛ'}
             </button>
             {fogEnabled && (
-              <button
-                onClick={() => {
-                  console.log('🌫️ Toggling edit mode:', !fogEditMode);
-                  setFogEditMode(!fogEditMode);
-                }}
-                className={`px-2 py-1 rounded text-xs ${
-                  fogEditMode ? 'bg-orange-600 hover:bg-orange-700' : 'bg-gray-600 hover:bg-gray-700'
-                }`}
-              >
-                {fogEditMode ? '🖌️ Редактирование' : '🗺️ Просмотр'}
-              </button>
+              <>
+                <button
+                  onClick={() => {
+                    console.log('🌫️ Toggling edit mode:', !fogEditMode);
+                    setFogEditMode(!fogEditMode);
+                  }}
+                  className={`px-2 py-1 rounded text-xs ${
+                    fogEditMode ? 'bg-orange-600 hover:bg-orange-700' : 'bg-gray-600 hover:bg-gray-700'
+                  }`}
+                >
+                  {fogEditMode ? '🖌️ Редактирование' : '🗺️ Просмотр'}
+                </button>
+                <button
+                  onClick={() => {
+                    console.log('🌫️ Clearing fog');
+                    clearFog();
+                    // Принудительно очищаем canvas
+                    const canvas = document.querySelector('canvas[style*="z-index: 10"]') as HTMLCanvasElement;
+                    if (canvas) {
+                      const ctx = canvas.getContext('2d');
+                      if (ctx) {
+                        ctx.clearRect(0, 0, canvas.width, canvas.height);
+                      }
+                    }
+                  }}
+                  className="px-2 py-1 rounded text-xs bg-red-600 hover:bg-red-700"
+                >
+                  🧹 Очистить
+                </button>
+              </>
             )}
           </div>
         </div>

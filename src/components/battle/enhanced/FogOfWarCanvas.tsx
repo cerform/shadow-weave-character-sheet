@@ -6,10 +6,10 @@ export const FogOfWarCanvas: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
 
-  // Initialize canvas with fog
+  // Initialize canvas with fog only when fog is first enabled
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
+    if (!canvas || !fogEnabled) return;
 
     const resizeCanvas = () => {
       const rect = canvas.getBoundingClientRect();
@@ -21,18 +21,16 @@ export const FogOfWarCanvas: React.FC = () => {
       
       ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
       
-      // Fill with initial fog only if fog is enabled
-      if (fogEnabled) {
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
-        ctx.fillRect(0, 0, rect.width, rect.height);
-        console.log('🌫️ Fog canvas initialized', { fogEnabled, fogEditMode, width: rect.width, height: rect.height });
-      }
+      // Fill with initial fog only on first initialization
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
+      ctx.fillRect(0, 0, rect.width, rect.height);
+      console.log('🌫️ Fog canvas initialized', { fogEnabled, width: rect.width, height: rect.height });
     };
 
     resizeCanvas();
     window.addEventListener('resize', resizeCanvas);
     return () => window.removeEventListener('resize', resizeCanvas);
-  }, [fogEnabled, fogEditMode]); // Перерисовываем когда включается режим редактирования
+  }, [fogEnabled]); // Убрал fogEditMode из зависимостей чтобы не сбрасывать нарисованное
 
   const paint = (e: React.MouseEvent<HTMLCanvasElement>) => {
     if (!isDrawing || !fogEnabled || !fogEditMode) return;
