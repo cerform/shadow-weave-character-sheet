@@ -9,7 +9,7 @@ import { FogControlPanel } from '@/components/battle/FogControlPanel';
 import { FogDrawingOverlay3D } from '@/components/battle/FogDrawingOverlay3D';
 import { toast } from 'sonner';
 import { determineMonsterType, updateTokenWithModelType } from '@/utils/tokenModelMapping';
-import Simple3DMap from '@/components/battle/Simple3DMap';
+import { EnhancedBattleMap } from '@/components/battle/enhanced/EnhancedBattleMap';
 import { useFogOfWarStore } from '@/stores/fogOfWarStore';
 
 import { sessionService } from '@/services/sessionService';
@@ -464,18 +464,7 @@ const handleTokenUpdate = (tokenId: string, updates: any) => {
 
       {/* 3D Map */}
       <div className="w-full h-full pt-20 relative">
-        <Simple3DMap
-          mapImageUrl={mapUrl}
-          tokens={tokens}
-          selectedTokenId={selectedTokenId}
-          onTokenSelect={setSelectedTokenId}
-          onTokenMove={handleTokenMove}
-          onTokenUpdate={handleTokenUpdate}
-          assetModels={assets3D}
-          onAssetMove={handleAssetMove}
-          onAssetDelete={handleAssetDelete}
-          isDM={true}
-        />
+        <EnhancedBattleMap />
         
         {/* 3D Fog Drawing Overlay */}
         <FogDrawingOverlay3D />
