@@ -1,42 +1,188 @@
-import { useMemo } from "react";
-import { DoubleSide } from "three";
+import { useEffect, useRef, useState, useMemo } from "react";
 import { useBattleUIStore } from "@/stores/battleUIStore";
+import { Button } from "@/components/ui/button";
+import { Brush, Eraser } from "lucide-react";
 
-export default function BattleFogOfWar() {
+interface FogCanvasProps {
+  isDM?: boolean;
+  brushSize?: number;
+}
+
+export default function BattleFogOfWar({ isDM = false, brushSize = 60 }: FogCanvasProps) {
   const fogEnabled = useBattleUIStore((s) => s.fogEnabled);
-  
-  // Материал тумана с улучшенной визуализацией
-  const materialProps = useMemo(
-    () => ({ 
-      color: "#000000", 
-      opacity: 0.7, 
-      transparent: true, 
-      side: DoubleSide,
-      depthWrite: false
-    }),
-    []
-  );
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [drawing, setDrawing] = useState(false);
+  const [brushMode, setBrushMode] = useState<'reveal' | 'hide'>('reveal');
+  const [currentBrushSize, setCurrentBrushSize] = useState(brushSize);
+
+  // Инициализация canvas с черным фоном (туман)
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas || !fogEnabled) return;
+
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    // Устанавливаем размер canvas
+    const updateCanvasSize = () => {
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width * window.devicePixelRatio;
+      canvas.height = rect.height * window.devicePixelRatio;
+      ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+      
+      // Заполняем черным (туман)
+      ctx.fillStyle = "rgba(0, 0, 0, 0.85)";
+      ctx.fillRect(0, 0, rect.width, rect.height);
+    };
+
+    updateCanvasSize();
+    window.addEventListener('resize', updateCanvasSize);
+    
+    return () => window.removeEventListener('resize', updateCanvasSize);
+  }, [fogEnabled]);
+
+  // Обработка рисования
+  const handleDrawing = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (!drawing || !isDM || !fogEnabled) return;
+    
+    const canvas = canvasRef.current;
+    const ctx = canvas?.getContext("2d");
+    if (!canvas || !ctx) return;
+
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
+    ctx.globalCompositeOperation = brushMode === 'reveal' ? "destination-out" : "source-over";
+    
+    if (brushMode === 'hide') {
+      ctx.fillStyle = "rgba(0, 0, 0, 0.85)";
+    }
+    
+    ctx.beginPath();
+    ctx.arc(x, y, currentBrushSize, 0, Math.PI * 2);
+    ctx.fill();
+  };
+
+  const startDrawing = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (!isDM || !fogEnabled) return;
+    setDrawing(true);
+    handleDrawing(e);
+  };
+
+  const stopDrawing = () => {
+    setDrawing(false);
+  };
+
+  // Очистить весь туман
+  const clearAll = () => {
+    const canvas = canvasRef.current;
+    const ctx = canvas?.getContext("2d");
+    if (!canvas || !ctx) return;
+    
+    const rect = canvas.getBoundingClientRect();
+    ctx.clearRect(0, 0, rect.width, rect.height);
+  };
+
+  // Восстановить весь туман
+  const resetFog = () => {
+    const canvas = canvasRef.current;
+    const ctx = canvas?.getContext("2d");
+    if (!canvas || !ctx) return;
+    
+    const rect = canvas.getBoundingClientRect();
+    ctx.fillStyle = "rgba(0, 0, 0, 0.85)";
+    ctx.fillRect(0, 0, rect.width, rect.height);
+  };
 
   if (!fogEnabled) return null;
 
   return (
-    <group>
-      {/* Основной слой тумана */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.02, 0]}>
-        <planeGeometry args={[100, 100]} />
-        <meshBasicMaterial {...materialProps} />
-      </mesh>
-      
-      {/* Дополнительный эффект границ */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.03, 0]}>
-        <ringGeometry args={[48, 50, 64]} />
-        <meshBasicMaterial 
-          color="#111111" 
-          transparent 
-          opacity={0.9} 
-          side={DoubleSide}
+    <div className="absolute inset-0 pointer-events-none z-40">
+      {/* Canvas маска тумана */}
+      <canvas
+        ref={canvasRef}
+        className={`absolute inset-0 w-full h-full ${isDM ? 'pointer-events-auto' : 'pointer-events-none'}`}
+        style={{ 
+          cursor: isDM ? (drawing ? 'none' : brushMode === 'reveal' ? 'crosshair' : 'grab') : 'default',
+          mixBlendMode: 'multiply'
+        }}
+        onMouseDown={startDrawing}
+        onMouseMove={handleDrawing}
+        onMouseUp={stopDrawing}
+        onMouseLeave={stopDrawing}
+      />
+
+      {/* Кисть-индикатор */}
+      {isDM && drawing && (
+        <div 
+          className="absolute pointer-events-none rounded-full border-2 border-yellow-400"
+          style={{
+            width: currentBrushSize * 2,
+            height: currentBrushSize * 2,
+            transform: 'translate(-50%, -50%)',
+            left: 0,
+            top: 0,
+            opacity: 0.7
+          }}
         />
-      </mesh>
-    </group>
+      )}
+
+      {/* DM контролы */}
+      {isDM && (
+        <div className="absolute top-4 left-4 pointer-events-auto z-50">
+          <div className="bg-black/70 p-3 rounded-xl backdrop-blur">
+            <h3 className="text-yellow-400 font-bold text-sm mb-2">Туман Войны</h3>
+            
+            <div className="flex gap-2 mb-3">
+              <Button
+                size="sm"
+                variant={brushMode === 'reveal' ? 'default' : 'outline'}
+                onClick={() => setBrushMode('reveal')}
+                className="text-xs"
+              >
+                <Brush className="w-3 h-3 mr-1" />
+                Открыть
+              </Button>
+              <Button
+                size="sm"
+                variant={brushMode === 'hide' ? 'default' : 'outline'}
+                onClick={() => setBrushMode('hide')}
+                className="text-xs"
+              >
+                <Eraser className="w-3 h-3 mr-1" />
+                Скрыть
+              </Button>
+            </div>
+
+            <div className="mb-3">
+              <label className="text-xs text-gray-300 block mb-1">Размер кисти</label>
+              <input
+                type="range"
+                min="20"
+                max="120"
+                value={currentBrushSize}
+                onChange={(e) => setCurrentBrushSize(Number(e.target.value))}
+                className="w-full"
+              />
+              <span className="text-xs text-gray-400">{currentBrushSize}px</span>
+            </div>
+
+            <div className="flex gap-1">
+              <Button size="sm" variant="outline" onClick={clearAll} className="text-xs">
+                Очистить всё
+              </Button>
+              <Button size="sm" variant="outline" onClick={resetFog} className="text-xs">
+                Сбросить
+              </Button>
+            </div>
+
+            <div className="mt-2 text-xs text-gray-400">
+              ЛКМ: рисовать | Ctrl: открыть | Alt: скрыть
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
