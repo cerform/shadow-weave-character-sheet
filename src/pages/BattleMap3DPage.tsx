@@ -5,6 +5,7 @@ import { Home, Save, Plus, Trash2, Upload, Sword, Cloud } from 'lucide-react';
 import MapUploader from '@/components/battle/MapUploader';
 import { EquipmentPanel } from '@/components/battle/enhanced/EquipmentPanel';
 import { useEnhancedBattleStore } from '@/stores/enhancedBattleStore';
+import { useFogOfWarStore } from '@/stores/fogOfWarStore';
 import { EnhancedBattleManager } from '../components/battle/EnhancedBattleManager';
 import { FogOfWarToggle } from '../components/battle/FogOfWarToggle';
 import { FogControlPanel } from '@/components/battle/FogControlPanel';
@@ -12,7 +13,6 @@ import { FogDrawingOverlay3D } from '@/components/battle/FogDrawingOverlay3D';
 import { toast } from 'sonner';
 import { determineMonsterType, updateTokenWithModelType } from '@/utils/tokenModelMapping';
 import { EnhancedBattleMap } from '@/components/battle/enhanced/EnhancedBattleMap';
-import { useFogOfWarStore } from '@/stores/fogOfWarStore';
 
 import { sessionService } from '@/services/sessionService';
 import { preloadMonsterModels } from '@/components/battle/MonsterModel';
@@ -29,13 +29,12 @@ const BattleMap3DPage: React.FC = () => {
   const [selectedTokenId, setSelectedTokenId] = useState<string | null>(null);
   const [mapBackground, setMapBackground] = useState<string>('');
   const { clearAllTokens } = useEnhancedBattleStore();
+  const { setIsDM, initializeSync, disconnectSync } = useFogOfWarStore();
 
   const [mapUrl, setMapUrl] = useState<string>('');
   const [isSaving, setIsSaving] = useState(false);
   const [showFogPanel, setShowFogPanel] = useState(false);
 
-  // Fog of War store для синхронизации
-  const { initializeSync, disconnectSync } = useFogOfWarStore();
 
   // 3D ассеты из Supabase Storage (эпhemeral + sessionStorage)
 type AssetModel = { 
@@ -59,23 +58,27 @@ type AssetModel = {
 
   // Предзагружаем все 3D модели при загрузке страницы
   useEffect(() => {
-    console.log('🎮 Loading 3D Battle Map with real models...');
-    preloadMonsterModels();
-  }, []);
-
-  // Инициализация синхронизации тумана войны
-  useEffect(() => {
+    setIsDM(true); // Enable DM mode for fog
+    
+    // Initialize fog sync for 3D
     if (sessionId) {
       initializeSync(sessionId);
       console.log('🌫️ Initializing fog sync for 3D map, sessionId:', sessionId);
     }
+    
+    const loadSessionData = async () => {
+      console.log('🎮 Loading 3D Battle Map with real models...');
+      preloadMonsterModels();
+    };
+    
+    loadSessionData();
     
     return () => {
       if (sessionId) {
         disconnectSync();
       }
     };
-  }, [sessionId, initializeSync, disconnectSync]);
+  }, [sessionId, setIsDM, initializeSync, disconnectSync]);
 
   // Синхронизация с 2D картой
   useEffect(() => {

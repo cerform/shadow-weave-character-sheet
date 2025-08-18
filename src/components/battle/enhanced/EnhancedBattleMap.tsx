@@ -4,18 +4,18 @@ import { OrbitControls, Environment, Grid } from '@react-three/drei';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import * as THREE from 'three';
 import { useEnhancedBattleStore } from '@/stores/enhancedBattleStore';
+import { useFogOfWarStore } from '@/stores/fogOfWarStore';
 import { useAssetEquipStore } from '@/stores/assetEquipStore';
 import { CharacterManager } from '@/utils/CharacterManager';
 import { useCharacterPicking } from '@/hooks/useCharacterPicking';
 import { Enhanced3DModel } from './Enhanced3DModel';
 import { MovementGrid } from './MovementGrid';
-import { FogOfWarCanvas } from './FogOfWarCanvas';
-import { FogBrushCursor } from './FogBrushCursor';
 import { TokenContextMenu } from './TokenContextMenu';
 import { TokenUI } from './TokenUI';
 import { determineMonsterType } from '@/utils/tokenModelMapping';
 import { publicModelUrl } from '@/utils/storageUrls';
 import { useTexture } from '@react-three/drei';
+import { FogOfWar3DEnhanced } from '../FogOfWar3DEnhanced';
 
 // Component for handling asset loading and character management
 function SceneContent() {
@@ -169,12 +169,10 @@ export const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({ mapUrl }) 
     selectedTokenId,
     showMovementGrid,
     hideContextMenu,
-    fogEnabled,
-    fogEditMode,
-    toggleFog,
-    setFogEditMode,
-    clearFog,
   } = useEnhancedBattleStore();
+
+  // Используем centralized fog store для синхронизации между 2D и 3D
+  const { fogSettings } = useFogOfWarStore();
 
   // Only show visible tokens
   const visibleTokens = tokens.filter(token => token.isVisible !== false);
@@ -299,6 +297,17 @@ export const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({ mapUrl }) 
               position={token.position} 
             />
           ))}
+          {/* 3D Fog of War */}
+          {fogSettings.enabled && (
+            <FogOfWar3DEnhanced 
+              sessionId="current-session"
+              mapId="current-map"
+              mapSize={{ width: 100, height: 100 }}
+              gridSize={1}
+              isDM={true}
+            />
+          )}
+
           <OrbitControls
             enableDamping
             dampingFactor={0.05}
@@ -308,16 +317,8 @@ export const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({ mapUrl }) 
             target={activeToken ? activeToken.position : [0, 0, 0]}
           />
         </Canvas>
-
-        {/* Fog of War overlay - ограничен только областью Canvas */}
-        <FogOfWarCanvas />
       </div>
       
-      {/* Fog brush cursor */}
-      <div className="z-50">
-        <FogBrushCursor />
-      </div>
-
       {/* Context menu */}
       <div className="z-50">
         <TokenContextMenu />
@@ -345,8 +346,7 @@ export const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({ mapUrl }) 
             <div>🖱️ ЛКМ - выбрать токен</div>
             <div>🖱️ ПКМ - контекстное меню</div>
             <div>🎱 Колесо - приближение</div>
-            <div>🖌️ Shift - открыть туман</div>
-            <div>🧽 Alt - скрыть туман</div>
+            <div>🌫️ Туман синхронизирован с 2D</div>
           </div>
         </div>
       </div>
@@ -366,52 +366,12 @@ export const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({ mapUrl }) 
           </div>
         </div>
         
-        {/* Fog of War controls */}
+        {/* Fog of War status */}
         <div className="bg-black/70 backdrop-blur-sm px-3 py-2 rounded-lg text-white">
           <div className="flex items-center gap-2 text-sm">
-            <button
-              onClick={() => {
-                console.log('🌫️ Toggling fog:', !fogEnabled);
-                toggleFog();
-              }}
-              className={`px-2 py-1 rounded text-xs ${
-                fogEnabled ? 'bg-purple-600 hover:bg-purple-700' : 'bg-gray-600 hover:bg-gray-700'
-              }`}
-            >
-              {fogEnabled ? '🌫️ Туман ВКЛ' : '🌫️ Туман ВЫКЛ'}
-            </button>
-            {fogEnabled && (
-              <>
-                <button
-                  onClick={() => {
-                    console.log('🌫️ Toggling edit mode:', !fogEditMode);
-                    setFogEditMode(!fogEditMode);
-                  }}
-                  className={`px-2 py-1 rounded text-xs ${
-                    fogEditMode ? 'bg-orange-600 hover:bg-orange-700' : 'bg-gray-600 hover:bg-gray-700'
-                  }`}
-                >
-                  {fogEditMode ? '🖌️ Редактирование' : '🗺️ Просмотр'}
-                </button>
-                <button
-                  onClick={() => {
-                    console.log('🌫️ Clearing fog');
-                    clearFog();
-                    // Принудительно очищаем canvas
-                    const canvas = document.querySelector('canvas[style*="z-index: 10"]') as HTMLCanvasElement;
-                    if (canvas) {
-                      const ctx = canvas.getContext('2d');
-                      if (ctx) {
-                        ctx.clearRect(0, 0, canvas.width, canvas.height);
-                      }
-                    }
-                  }}
-                  className="px-2 py-1 rounded text-xs bg-red-600 hover:bg-red-700"
-                >
-                  🧹 Очистить
-                </button>
-              </>
-            )}
+            <div className={`w-2 h-2 rounded-full ${fogSettings.enabled ? 'bg-purple-500' : 'bg-gray-500'}`} />
+            <span>{fogSettings.enabled ? '🌫️ Туман ВКЛ' : '🌫️ Туман ВЫКЛ'}</span>
+            <span className="text-xs text-gray-400">(управление в 2D)</span>
           </div>
         </div>
       </div>
