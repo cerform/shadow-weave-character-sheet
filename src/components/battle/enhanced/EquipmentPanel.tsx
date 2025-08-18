@@ -10,6 +10,7 @@ import { SlotName } from '@/utils/CharacterManager';
 import { useEnhancedBattleStore } from '@/stores/enhancedBattleStore';
 import { useAssetsStore } from '@/stores/assetsStore';
 import { publicModelUrl } from '@/utils/storageUrls';
+import { assetUrl } from '@/config/assets';
 
 const slotOptions: { value: SlotName; label: string }[] = [
   { value: 'head', label: 'Голова' },
