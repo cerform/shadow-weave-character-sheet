@@ -185,6 +185,10 @@ export const EnhancedBattleMap: React.FC = () => {
     selectedTokenId,
     showMovementGrid,
     hideContextMenu,
+    fogEnabled,
+    fogEditMode,
+    toggleFog,
+    setFogEditMode,
   } = useEnhancedBattleStore();
 
   // Only show visible tokens
@@ -314,8 +318,8 @@ export const EnhancedBattleMap: React.FC = () => {
         </div>
       </div>
 
-      {/* Status indicators */}
-      <div className="absolute bottom-4 left-4 z-30">
+      {/* Status indicators and controls */}
+      <div className="absolute bottom-4 left-4 z-30 space-y-2">
         <div className="bg-black/70 backdrop-blur-sm px-3 py-2 rounded-lg text-white">
           <div className="flex items-center gap-4 text-sm">
             <div className="flex items-center gap-2">
@@ -326,6 +330,30 @@ export const EnhancedBattleMap: React.FC = () => {
               <div className="w-2 h-2 bg-blue-500 rounded-full" />
               <span>Синхронизация ВКЛ</span>
             </div>
+          </div>
+        </div>
+        
+        {/* Fog of War controls */}
+        <div className="bg-black/70 backdrop-blur-sm px-3 py-2 rounded-lg text-white">
+          <div className="flex items-center gap-2 text-sm">
+            <button
+              onClick={() => toggleFog()}
+              className={`px-2 py-1 rounded text-xs ${
+                fogEnabled ? 'bg-purple-600 hover:bg-purple-700' : 'bg-gray-600 hover:bg-gray-700'
+              }`}
+            >
+              {fogEnabled ? '🌫️ Туман ВКЛ' : '🌫️ Туман ВЫКЛ'}
+            </button>
+            {fogEnabled && (
+              <button
+                onClick={() => setFogEditMode(!fogEditMode)}
+                className={`px-2 py-1 rounded text-xs ${
+                  fogEditMode ? 'bg-orange-600 hover:bg-orange-700' : 'bg-gray-600 hover:bg-gray-700'
+                }`}
+              >
+                {fogEditMode ? '🖌️ Редактирование' : '🗺️ Просмотр'}
+              </button>
+            )}
           </div>
         </div>
       </div>

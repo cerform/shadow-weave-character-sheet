@@ -38,6 +38,7 @@ interface EnhancedBattleState {
   fogEnabled: boolean;
   fogBrushSize: number;
   fogMode: FogMode;
+  fogEditMode: boolean;
   
   // UI state
   selectedTokenId: string | null;
@@ -68,6 +69,7 @@ interface EnhancedBattleState {
   toggleFog: (enabled?: boolean) => void;
   setFogBrushSize: (size: number) => void;
   setFogMode: (mode: FogMode) => void;
+  setFogEditMode: (editMode: boolean) => void;
   
   // UI actions
   selectToken: (id: string | null) => void;
@@ -111,9 +113,10 @@ export const useEnhancedBattleStore = create<EnhancedBattleState>((set, get) => 
   currentRound: 1,
   combatStarted: true,
   
-  fogEnabled: true,
+  fogEnabled: false, // Выключаем по умолчанию чтобы не блокировать UI
   fogBrushSize: 60,
   fogMode: 'reveal',
+  fogEditMode: false,
   
   selectedTokenId: null,
   showMovementGrid: false,
@@ -196,6 +199,8 @@ export const useEnhancedBattleStore = create<EnhancedBattleState>((set, get) => 
     set({ fogBrushSize: Math.max(10, Math.min(120, size)) }),
     
   setFogMode: (mode) => set({ fogMode: mode }),
+  
+  setFogEditMode: (editMode) => set({ fogEditMode: editMode }),
   
   // UI actions
   selectToken: (id) => set({ selectedTokenId: id }),

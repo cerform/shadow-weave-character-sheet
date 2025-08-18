@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useEnhancedBattleStore } from '@/stores/enhancedBattleStore';
 
 export const FogOfWarCanvas: React.FC = () => {
-  const { fogEnabled, fogBrushSize, fogMode } = useEnhancedBattleStore();
+  const { fogEnabled, fogBrushSize, fogMode, fogEditMode } = useEnhancedBattleStore();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
 
@@ -32,7 +32,7 @@ export const FogOfWarCanvas: React.FC = () => {
   }, [fogEnabled]);
 
   const paint = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!isDrawing || !fogEnabled) return;
+    if (!isDrawing || !fogEnabled || !fogEditMode) return;
 
     const canvas = canvasRef.current;
     const ctx = canvas?.getContext('2d');
@@ -71,6 +71,7 @@ export const FogOfWarCanvas: React.FC = () => {
   };
 
   const startDrawing = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (!fogEditMode) return;
     setIsDrawing(true);
     paint(e);
   };
@@ -84,10 +85,11 @@ export const FogOfWarCanvas: React.FC = () => {
   return (
     <canvas
       ref={canvasRef}
-      className="absolute inset-0 w-full h-full z-40 pointer-events-auto"
+      className={`absolute inset-0 w-full h-full z-40 ${fogEditMode ? 'pointer-events-auto' : 'pointer-events-none'}`}
       style={{
-        cursor: isDrawing ? 'none' : fogMode === 'reveal' ? 'crosshair' : 'grab',
-        touchAction: 'none',
+        display: fogEnabled ? 'block' : 'none',
+        cursor: fogEditMode ? (isDrawing ? 'none' : fogMode === 'reveal' ? 'crosshair' : 'grab') : 'default',
+        touchAction: fogEditMode ? 'none' : 'auto',
       }}
       onMouseDown={startDrawing}
       onMouseMove={paint}
