@@ -15,6 +15,7 @@ import { TokenContextMenu } from './TokenContextMenu';
 import { TokenUI } from './TokenUI';
 import { determineMonsterType } from '@/utils/tokenModelMapping';
 import { publicModelUrl } from '@/utils/storageUrls';
+import { useTexture } from '@react-three/drei';
 
 // Component for handling asset loading and character management
 function SceneContent() {
@@ -141,7 +142,27 @@ function SceneContent() {
   return null;
 }
 
-export const EnhancedBattleMap: React.FC = () => {
+// Компонент для отображения карты как текстуры
+const MapPlane: React.FC<{ mapUrl: string }> = ({ mapUrl }) => {
+  const texture = useTexture(mapUrl);
+  
+  return (
+    <mesh
+      receiveShadow
+      position={[0, -0.15, 0]}
+      rotation={[-Math.PI / 2, 0, 0]}
+    >
+      <planeGeometry args={[100, 100]} />
+      <meshStandardMaterial map={texture} transparent opacity={0.9} />
+    </mesh>
+  );
+};
+
+interface EnhancedBattleMapProps {
+  mapUrl?: string;
+}
+
+export const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({ mapUrl }) => {
   const {
     tokens,
     activeId,
@@ -210,15 +231,30 @@ export const EnhancedBattleMap: React.FC = () => {
             infiniteGrid={true}
           />
 
-          {/* Ground plane for shadows */}
-          <mesh
-            receiveShadow
-            position={[0, -0.15, 0]}
-            rotation={[-Math.PI / 2, 0, 0]}
-          >
-            <planeGeometry args={[100, 100]} />
-            <meshStandardMaterial color="#1e293b" transparent opacity={0.8} />
-          </mesh>
+          {/* Ground plane with map texture or default color */}
+          {mapUrl ? (
+            <React.Suspense fallback={
+              <mesh
+                receiveShadow
+                position={[0, -0.15, 0]}
+                rotation={[-Math.PI / 2, 0, 0]}
+              >
+                <planeGeometry args={[100, 100]} />
+                <meshStandardMaterial color="#1e293b" transparent opacity={0.8} />
+              </mesh>
+            }>
+              <MapPlane mapUrl={mapUrl} />
+            </React.Suspense>
+          ) : (
+            <mesh
+              receiveShadow
+              position={[0, -0.15, 0]}
+              rotation={[-Math.PI / 2, 0, 0]}
+            >
+              <planeGeometry args={[100, 100]} />
+              <meshStandardMaterial color="#1e293b" transparent opacity={0.8} />
+            </mesh>
+          )}
 
           {/* Movement grid */}
           {movementTarget && showMovementGrid && (

@@ -470,7 +470,7 @@ const handleTokenUpdate = (tokenId: string, updates: any) => {
 
       {/* 3D Map */}
       <div className="w-full h-full pt-20 relative">
-        <EnhancedBattleMap />
+        <EnhancedBattleMap mapUrl={mapUrl} />
         
         {/* 3D Fog Drawing Overlay */}
         <FogDrawingOverlay3D />
