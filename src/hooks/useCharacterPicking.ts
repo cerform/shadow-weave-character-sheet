@@ -24,12 +24,18 @@ export function useCharacterPicking(scene: THREE.Scene, manager: CharacterManage
       return null;
     }
 
-    const intersectedObject = intersects[0].object;
-    const handle = manager.findCharacterByObject(intersectedObject);
+    // Always find the root character, even if clicked on equipment
+    for (const intersect of intersects) {
+      const handle = manager.findCharacterByObject(intersect.object);
+      if (handle) {
+        const characterId = handle.id;
+        setSelectedId(characterId);
+        return characterId;
+      }
+    }
     
-    const characterId = handle?.id ?? null;
-    setSelectedId(characterId);
-    return characterId;
+    setSelectedId(null);
+    return null;
   }, [scene, manager, raycaster]);
 
   const selectCharacter = useCallback((id: string | null) => {

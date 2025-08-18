@@ -29,6 +29,7 @@ export class CharacterManager {
     // Clone the base model to avoid issues
     const clonedBase = baseModel.clone();
     clonedBase.position.set(0, 0, 0);
+    clonedBase.userData.kind = "char"; // Mark as character part
     group.add(clonedBase);
 
     // Try to find skeleton/bones
@@ -152,6 +153,12 @@ export class CharacterManager {
 
     const asset = cloneAsset ? assetRoot.clone() : assetRoot;
     asset.name = `equip:${slot}`;
+    
+    // Mark all equipment parts to prevent direct selection
+    asset.traverse((obj: any) => {
+      obj.userData.kind = "equip";
+      obj.userData.parentCharacterId = id;
+    });
 
     // Determine parent for attachment
     let parent: THREE.Object3D = handle.group;

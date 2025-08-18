@@ -99,6 +99,13 @@ function SceneContent() {
             // Remove the old base model but keep the group and position
             const oldPosition = existingHandle.group.position.clone();
             existingHandle.group.remove(existingHandle.baseModel);
+            
+            // Mark new model as character part
+            model.traverse((obj: any) => {
+              obj.userData.kind = "char";
+              obj.userData.characterId = item.id;
+            });
+            
             existingHandle.baseModel = model;
             existingHandle.group.add(model);
             existingHandle.group.position.copy(oldPosition);
@@ -125,6 +132,7 @@ function SceneContent() {
           }
           
           try {
+            // CRITICAL: Equipment is never added to scene directly, only to character
             await manager.equipToSlot(
               item.targetCharId,
               item.slot,
