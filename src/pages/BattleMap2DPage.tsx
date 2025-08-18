@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Home, RefreshCw, Cloud } from 'lucide-react';
 import { toast } from 'sonner';
-import Simple2DMapFromAssets from '@/components/battle/Simple2DMapFromAssets';
+import Simple2DCanvasMap from '@/components/battle/Simple2DCanvasMap';
 import { FogControlPanel } from '@/components/battle/FogControlPanel';
 import { useFogOfWarStore } from '@/stores/fogOfWarStore';
 
@@ -137,7 +137,7 @@ const BattleMap2DPage: React.FC = () => {
 
       {/* 2D Map with Interactive Fog of War */}
       <div className="w-full h-full pt-20 relative">
-        <Simple2DMapFromAssets
+        <Simple2DCanvasMap
           assets3D={assets3D}
           tokens={tokens}
           mapImageUrl={mapUrl}
