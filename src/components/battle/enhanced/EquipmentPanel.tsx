@@ -39,7 +39,14 @@ export const EquipmentPanel: React.FC = () => {
   const handleAddCharacter = () => {
     if (!characterId || !assetUrl) return;
     
-    equipmentHelpers.addCharacter(characterId, assetUrl);
+    // Find a random position to avoid overlapping
+    const randomOffset: [number, number, number] = [
+      Math.random() * 4 - 2, // -2 to 2
+      0,
+      Math.random() * 4 - 2  // -2 to 2
+    ];
+    
+    equipmentHelpers.addCharacter(characterId, assetUrl, randomOffset);
     setAssetUrl('');
   };
 

@@ -35,18 +35,17 @@ function SceneContent() {
 
   const { pickFromPointer } = useCharacterPicking(scene, managerRef.current);
 
-  // Initialize default tokens in CharacterManager
+  // Initialize default tokens in CharacterManager only once
   useEffect(() => {
     if (!managerRef.current) return;
     
     const manager = managerRef.current;
-    const existingHandles = manager.list();
     
     // Only add tokens that aren't already managed
     tokens.forEach((token) => {
-      const existing = existingHandles.find(h => h.id === token.id);
+      const existing = manager.getHandle(token.id);
       if (!existing) {
-        // Create simple cylinder geometry for token
+        // Create simple cylinder geometry for token if no 3D model loaded yet
         const geometry = new THREE.CylinderGeometry(0.6, 0.6, 0.3, 24);
         const material = new THREE.MeshStandardMaterial({
           color: token.isEnemy ? '#ef4444' : '#3b82f6'
@@ -56,9 +55,11 @@ function SceneContent() {
         const handle = manager.addCharacter(token.id, mesh);
         handle.group.position.set(...token.position);
         handle.group.userData.tokenData = token;
+        
+        console.log(`🎭 Created default token for ${token.id}`);
       }
     });
-  }, [tokens]);
+  }, []); // Only run once on mount
 
   // Update token positions when store changes
   useEffect(() => {
@@ -90,39 +91,56 @@ function SceneContent() {
         const model = gltf.scene;
 
         if (item.type === 'character') {
-          // Remove existing character if it exists
-          if (managerRef.current!.getHandle(item.id)) {
-            managerRef.current!.removeCharacter(item.id);
-          }
+          const manager = managerRef.current!;
           
-          const handle = managerRef.current!.addCharacter(item.id, model);
-          
-          // Set initial position if provided
-          if (item.offset) {
-            handle.group.position.set(...item.offset);
-          }
-          
-          // Update token in store if it exists
-          const existingToken = tokens.find(t => t.id === item.id);
-          if (existingToken) {
-            updateToken(item.id, { 
-              position: item.offset || existingToken.position 
-            });
+          // Replace existing character model with new 3D model
+          const existingHandle = manager.getHandle(item.id);
+          if (existingHandle) {
+            // Remove the old base model but keep the group and position
+            const oldPosition = existingHandle.group.position.clone();
+            existingHandle.group.remove(existingHandle.baseModel);
+            existingHandle.baseModel = model;
+            existingHandle.group.add(model);
+            existingHandle.group.position.copy(oldPosition);
+            console.log(`🔄 Replaced base model for character ${item.id}`);
+          } else {
+            // Create new character
+            const handle = manager.addCharacter(item.id, model);
+            const existingToken = tokens.find(t => t.id === item.id);
+            if (existingToken) {
+              handle.group.position.set(...existingToken.position);
+            } else if (item.offset) {
+              handle.group.position.set(...item.offset);
+            }
+            console.log(`✨ Created new character ${item.id}`);
           }
           
         } else if (item.type === 'equipment' && item.targetCharId && item.slot) {
-          await managerRef.current!.equipToSlot(
-            item.targetCharId,
-            item.slot,
-            model,
-            {
-              boneName: item.boneName,
-              offset: item.offset ? new THREE.Vector3(...item.offset) : undefined,
-              rotation: item.rotation ? new THREE.Euler(...item.rotation) : undefined,
-              scale: item.scale,
-              cloneAsset: true
-            }
-          );
+          const manager = managerRef.current!;
+          const targetHandle = manager.getHandle(item.targetCharId);
+          
+          if (!targetHandle) {
+            console.error(`❌ Target character ${item.targetCharId} not found for equipment`);
+            return;
+          }
+          
+          try {
+            await manager.equipToSlot(
+              item.targetCharId,
+              item.slot,
+              model,
+              {
+                boneName: item.boneName,
+                offset: item.offset ? new THREE.Vector3(...item.offset) : undefined,
+                rotation: item.rotation ? new THREE.Euler(...item.rotation) : undefined,
+                scale: item.scale || 1,
+                cloneAsset: true
+              }
+            );
+            console.log(`⚔️ Equipped ${item.slot} to character ${item.targetCharId}`);
+          } catch (error) {
+            console.error(`❌ Failed to equip ${item.slot}:`, error);
+          }
         }
       } catch (error) {
         console.error('Failed to load asset:', error);

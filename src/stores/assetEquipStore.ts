@@ -49,11 +49,12 @@ export const useAssetEquipStore = create<AssetEquipState>((set, get) => ({
 
 // Helper functions for common equipment additions
 export const equipmentHelpers = {
-  addCharacter: (id: string, url: string) => {
+  addCharacter: (id: string, url: string, position?: [number, number, number]) => {
     useAssetEquipStore.getState().addToQueue({
       id,
       type: 'character',
-      url
+      url,
+      offset: position
     });
   },
 
@@ -69,7 +70,7 @@ export const equipmentHelpers = {
     }
   ) => {
     useAssetEquipStore.getState().addToQueue({
-      id: crypto.randomUUID(),
+      id: `${targetCharId}-${slot}-${Date.now()}`,
       type: 'equipment',
       url,
       targetCharId,
@@ -77,7 +78,7 @@ export const equipmentHelpers = {
       boneName: options?.boneName,
       offset: options?.offset,
       rotation: options?.rotation,
-      scale: options?.scale
+      scale: options?.scale || 1
     });
   }
 };
