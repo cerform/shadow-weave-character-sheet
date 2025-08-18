@@ -65,13 +65,12 @@ export const useDraggable3D = (
         const boundedX = Math.max(-25, Math.min(25, intersectionPoint.x));
         const boundedZ = Math.max(-25, Math.min(25, intersectionPoint.z));
         
-        // Обновляем позицию объекта в реальном времени, сохраняя Y
-        const currentY = groupRef.current.position.y;
+        // Обновляем позицию объекта в реальном времени, сохраняя исходную Y
         groupRef.current.position.x = boundedX;
         groupRef.current.position.z = boundedZ;
-        groupRef.current.position.y = currentY; // Сохраняем Y координату
+        // Y координата должна оставаться неизменной во время перетаскивания
         
-        console.log('🏃 Dragging object to:', { x: boundedX, z: boundedZ, y: currentY });
+        console.log('🏃 Dragging object to:', { x: boundedX, z: boundedZ, y: groupRef.current.position.y });
       }
     };
 

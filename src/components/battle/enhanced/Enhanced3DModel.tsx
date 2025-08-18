@@ -86,9 +86,14 @@ export const Enhanced3DModel: React.FC<Enhanced3DModelProps> = ({ token, modelUr
 
   // Gentle floating animation for active token
   useFrame((state) => {
-    if (groupRef.current && isActive && !isDragging) {
+    if (!groupRef.current) return;
+    
+    if (isActive && !isDragging) {
+      // Плавное покачивание для активного токена
       groupRef.current.position.y = token.position[1] + Math.sin(state.clock.elapsedTime * 2) * 0.1;
-    } else if (groupRef.current && !isDragging) {
+      groupRef.current.position.x = token.position[0];
+      groupRef.current.position.z = token.position[2];
+    } else if (!isDragging) {
       // Убеждаемся, что неактивные токены остаются на своем месте
       groupRef.current.position.set(token.position[0], token.position[1], token.position[2]);
     }
