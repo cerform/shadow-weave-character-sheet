@@ -230,18 +230,30 @@ export const EnhancedBattleMap: React.FC = () => {
           )}
 
           {/* Enhanced 3D Tokens */}
-          {visibleTokens.map((token) => {
+        {visibleTokens.map((token) => {
+          // Для токенов используем modelUrl если есть, иначе генерируем по типу
+          let modelUrl: string | undefined;
+          
+          if (token.modelUrl) {
+            // Используем modelUrl из токена (из библиотеки ассетов)
+            modelUrl = token.modelUrl;
+          } else {
+            // Генерируем URL по типу монстра
             const monsterType = determineMonsterType(token.name);
-            const modelUrl = publicModelUrl(`models/monsters/${monsterType}/low/model.glb`);
-            
-            return (
-              <Enhanced3DModel 
-                key={token.id} 
-                token={token}
-                modelUrl={modelUrl}
-              />
-            );
-          })}
+            // Используем более простую структуру путей
+            modelUrl = publicModelUrl(`models/${monsterType}/model.glb`);
+          }
+          
+          console.log(`🎭 Rendering token ${token.name} with modelUrl:`, modelUrl);
+
+          return (
+            <Enhanced3DModel
+              key={token.id}
+              token={token}
+              modelUrl={modelUrl}
+            />
+          );
+        })}
 
           {/* Token UI overlays */}
           {visibleTokens.map((token) => (

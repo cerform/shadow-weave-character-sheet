@@ -12,6 +12,7 @@ export interface EnhancedToken {
   isVisible?: boolean;
   avatarUrl?: string;
   size?: number;
+  modelUrl?: string; // URL для 3D модели
 }
 
 export interface CombatEvent {

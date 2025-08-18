@@ -33,9 +33,12 @@ export const EquipmentPanel: React.FC = () => {
   const handleAddAsset = (asset: any) => {
     console.log('📦 Adding asset:', asset);
     
+    // Формируем правильный URL для модели из библиотеки
+    const modelUrl = asset.storage_path ? `https://mqdjwhjtvjnktobgruuu.supabase.co/storage/v1/object/public/models/${asset.storage_path}` : undefined;
+    
     // Создаем уникальный ID и позицию
     const newToken = {
-      id: `${asset.name.toLowerCase()}-${Date.now()}`,
+      id: `${asset.name.toLowerCase().replace(/\s+/g, '_')}-${Date.now()}`,
       name: asset.name,
       hp: 100,
       maxHp: 100,
@@ -47,10 +50,11 @@ export const EquipmentPanel: React.FC = () => {
       ] as [number, number, number],
       conditions: [],
       isEnemy: false,
-      modelUrl: asset.model_url,
+      modelUrl: modelUrl, // Используем правильный URL
       scale: 1
     };
     
+    console.log('📦 Adding token with modelUrl:', modelUrl);
     addToken(newToken);
     console.log('✅ Token added:', newToken.id);
     setSelectedAssetId('');

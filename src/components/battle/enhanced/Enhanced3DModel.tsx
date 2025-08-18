@@ -7,6 +7,7 @@ import { useDraggable3D } from '@/hooks/useDraggable3D';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { SimpleTokenModel, getSimpleModelType } from './SimpleTokenModel';
 
 interface Enhanced3DModelProps {
   token: EnhancedToken;
@@ -18,6 +19,7 @@ export const Enhanced3DModel: React.FC<Enhanced3DModelProps> = ({ token, modelUr
   const [hovered, setHovered] = useState(false);
   const [model, setModel] = useState<any>(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<any>(null);
   
   const {
     activeId,
@@ -34,32 +36,33 @@ export const Enhanced3DModel: React.FC<Enhanced3DModelProps> = ({ token, modelUr
   
   // Load 3D model
   useEffect(() => {
-    if (!modelUrl) return;
-    
-    setLoading(true);
-    
-    // Исправляем URL для загрузки моделей
-    let fixedUrl = modelUrl;
-    if (modelUrl.includes('/models/models/')) {
-      // Убираем дублирование /models/
-      fixedUrl = modelUrl.replace('/models/models/', '/models/');
+    if (!modelUrl) {
+      console.log(`⚠️ No modelUrl provided for ${token.name}`);
+      return;
     }
     
-    console.log(`🔄 Loading model for ${token.name}:`, fixedUrl);
+    setLoading(true);
+    setError(null);
+    
+    console.log(`🔄 Loading model for ${token.name}:`, modelUrl);
     
     const loader = new GLTFLoader();
     loader.load(
-      fixedUrl,
+      modelUrl,
       (gltf) => {
-        console.log(`✅ Model loaded for ${token.name}`);
+        console.log(`✅ Model loaded successfully for ${token.name}`);
         setModel(gltf.scene);
         setLoading(false);
       },
-      undefined,
+      (progress) => {
+        console.log(`📊 Loading progress for ${token.name}:`, progress);
+      },
       (error) => {
         console.error(`❌ Failed to load model for ${token.name}:`, error);
+        console.error(`❌ Model URL was:`, modelUrl);
+        setError(error);
         setLoading(false);
-        // Fallback: показываем простую геометрию вместо модели
+        // Не устанавливаем model = null, оставляем для fallback геометрии
       }
     );
   }, [modelUrl, token.name]);
@@ -149,24 +152,23 @@ export const Enhanced3DModel: React.FC<Enhanced3DModelProps> = ({ token, modelUr
         ) : loading ? (
           // Loading state - small indicator only
           <mesh>
-            <sphereGeometry args={[0.1, 8, 8]} />
+            <sphereGeometry args={[0.2, 16, 16]} />
             <meshStandardMaterial
               color="#fbbf24"
               emissive="#fbbf24"
               emissiveIntensity={0.5}
             />
           </mesh>
-        ) : (
-          // Fallback: простая геометрия вместо цилиндра
-          <mesh>
-            <boxGeometry args={[tokenSize * 0.8, tokenSize * 1.5, tokenSize * 0.8]} />
-            <meshStandardMaterial
-              color={tokenColor}
-              emissive={hovered || isDragging ? tokenColor : '#000000'}
-              emissiveIntensity={hovered || isDragging ? 0.2 : 0}
-            />
-          </mesh>
-        )}
+        ) : !model ? (
+          // Fallback: красивая простая модель вместо кубика
+          <SimpleTokenModel
+            type={getSimpleModelType(token.name, token.isEnemy)}
+            color={tokenColor}
+            size={tokenSize}
+            emissive={hovered || isDragging ? tokenColor : '#000000'}
+            emissiveIntensity={hovered || isDragging ? 0.3 : 0}
+          />
+        ) : null}
       </group>
 
       {/* Selection/Active ring */}
