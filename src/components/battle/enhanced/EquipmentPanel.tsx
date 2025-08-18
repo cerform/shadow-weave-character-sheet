@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { equipmentHelpers } from '@/stores/assetEquipStore';
 import { SlotName } from '@/utils/CharacterManager';
+import { useEnhancedBattleStore } from '@/stores/enhancedBattleStore';
 
 const slotOptions: { value: SlotName; label: string }[] = [
   { value: 'head', label: 'Голова' },
@@ -28,6 +29,7 @@ const commonBones = [
 ];
 
 export const EquipmentPanel: React.FC = () => {
+  const { tokens } = useEnhancedBattleStore();
   const [characterId, setCharacterId] = useState('hero-1');
   const [assetUrl, setAssetUrl] = useState('');
   const [selectedSlot, setSelectedSlot] = useState<SlotName>('head');
@@ -72,13 +74,19 @@ export const EquipmentPanel: React.FC = () => {
       <CardContent className="space-y-4">
         {/* Character ID */}
         <div className="space-y-2">
-          <Label htmlFor="character-id">ID персонажа</Label>
-          <Input
-            id="character-id"
-            value={characterId}
-            onChange={(e) => setCharacterId(e.target.value)}
-            placeholder="hero-1"
-          />
+          <Label htmlFor="character-id">Персонаж</Label>
+          <Select value={characterId} onValueChange={setCharacterId}>
+            <SelectTrigger>
+              <SelectValue placeholder="Выберите персонажа" />
+            </SelectTrigger>
+            <SelectContent>
+              {tokens.map((token) => (
+                <SelectItem key={token.id} value={token.id}>
+                  {token.name} ({token.id})
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         {/* Asset URL */}

@@ -12,13 +12,20 @@ import { MovementGrid } from './MovementGrid';
 import { FogOfWarCanvas } from './FogOfWarCanvas';
 import { FogBrushCursor } from './FogBrushCursor';
 import { TokenContextMenu } from './TokenContextMenu';
+import { TokenUI } from './TokenUI';
 
 // Component for handling asset loading and character management
 function SceneContent() {
   const { scene, camera, gl } = useThree();
   const managerRef = useRef<CharacterManager>();
   const { queue, processNext, setProcessing } = useAssetEquipStore();
-  const { selectToken, hideContextMenu } = useEnhancedBattleStore();
+  const { 
+    selectToken, 
+    hideContextMenu, 
+    tokens, 
+    setTokens,
+    updateToken 
+  } = useEnhancedBattleStore();
   const loader = useMemo(() => new GLTFLoader(), []);
 
   // Initialize character manager
@@ -27,6 +34,44 @@ function SceneContent() {
   }
 
   const { pickFromPointer } = useCharacterPicking(scene, managerRef.current);
+
+  // Initialize default tokens in CharacterManager
+  useEffect(() => {
+    if (!managerRef.current) return;
+    
+    const manager = managerRef.current;
+    const existingHandles = manager.list();
+    
+    // Only add tokens that aren't already managed
+    tokens.forEach((token) => {
+      const existing = existingHandles.find(h => h.id === token.id);
+      if (!existing) {
+        // Create simple cylinder geometry for token
+        const geometry = new THREE.CylinderGeometry(0.6, 0.6, 0.3, 24);
+        const material = new THREE.MeshStandardMaterial({
+          color: token.isEnemy ? '#ef4444' : '#3b82f6'
+        });
+        const mesh = new THREE.Mesh(geometry, material);
+        
+        const handle = manager.addCharacter(token.id, mesh);
+        handle.group.position.set(...token.position);
+        handle.group.userData.tokenData = token;
+      }
+    });
+  }, [tokens]);
+
+  // Update token positions when store changes
+  useEffect(() => {
+    if (!managerRef.current) return;
+    
+    tokens.forEach((token) => {
+      const handle = managerRef.current!.getHandle(token.id);
+      if (handle) {
+        handle.group.position.set(...token.position);
+        handle.group.userData.tokenData = token;
+      }
+    });
+  }, [tokens]);
 
   // Process asset queue
   useEffect(() => {
@@ -45,11 +90,26 @@ function SceneContent() {
         const model = gltf.scene;
 
         if (item.type === 'character') {
+          // Remove existing character if it exists
+          if (managerRef.current!.getHandle(item.id)) {
+            managerRef.current!.removeCharacter(item.id);
+          }
+          
           const handle = managerRef.current!.addCharacter(item.id, model);
+          
           // Set initial position if provided
           if (item.offset) {
             handle.group.position.set(...item.offset);
           }
+          
+          // Update token in store if it exists
+          const existingToken = tokens.find(t => t.id === item.id);
+          if (existingToken) {
+            updateToken(item.id, { 
+              position: item.offset || existingToken.position 
+            });
+          }
+          
         } else if (item.type === 'equipment' && item.targetCharId && item.slot) {
           await managerRef.current!.equipToSlot(
             item.targetCharId,
@@ -72,7 +132,7 @@ function SceneContent() {
     };
 
     processAssets();
-  }, [queue, processNext, setProcessing, loader]);
+  }, [queue, processNext, setProcessing, loader, tokens, updateToken]);
 
   // Handle character selection
   useEffect(() => {
@@ -173,12 +233,14 @@ export const EnhancedBattleMap: React.FC = () => {
           />
         )}
 
-        {/* Tokens */}
+        {/* Token UI overlays */}
         {visibleTokens.map((token) => (
-          <EnhancedToken3D key={token.id} token={token} />
+          <TokenUI 
+            key={token.id} 
+            tokenId={token.id} 
+            position={token.position} 
+          />
         ))}
-
-        {/* Camera controls */}
         <OrbitControls
           enableDamping
           dampingFactor={0.05}
