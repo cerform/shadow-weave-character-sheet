@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Home, Settings, RotateCcw } from 'lucide-react';
 import { EnhancedBattleMap } from '@/components/battle/enhanced/EnhancedBattleMap';
 import { BattleHUD } from '@/components/battle/enhanced/BattleHUD';
+import { EquipmentPanel } from '@/components/battle/enhanced/EquipmentPanel';
 import { useEnhancedBattleStore } from '@/stores/enhancedBattleStore';
 import { useFogOfWarStore } from '@/stores/fogOfWarStore';
 
@@ -109,6 +110,9 @@ const EnhancedBattleScene: React.FC = () => {
 
       {/* Battle HUD */}
       <BattleHUD />
+
+      {/* Equipment Panel */}
+      <EquipmentPanel />
 
       {/* Status bar */}
       <div className="absolute bottom-4 right-1/2 transform translate-x-1/2 z-40">

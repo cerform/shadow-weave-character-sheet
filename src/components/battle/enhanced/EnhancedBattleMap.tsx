@@ -1,12 +1,96 @@
-import React from 'react';
-import { Canvas } from '@react-three/fiber';
+import React, { useRef, useEffect, useMemo } from 'react';
+import { Canvas, useThree } from '@react-three/fiber';
 import { OrbitControls, Environment, Grid } from '@react-three/drei';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import * as THREE from 'three';
 import { useEnhancedBattleStore } from '@/stores/enhancedBattleStore';
+import { useAssetEquipStore } from '@/stores/assetEquipStore';
+import { CharacterManager } from '@/utils/CharacterManager';
+import { useCharacterPicking } from '@/hooks/useCharacterPicking';
 import { EnhancedToken3D } from './EnhancedToken3D';
 import { MovementGrid } from './MovementGrid';
 import { FogOfWarCanvas } from './FogOfWarCanvas';
 import { FogBrushCursor } from './FogBrushCursor';
 import { TokenContextMenu } from './TokenContextMenu';
+
+// Component for handling asset loading and character management
+function SceneContent() {
+  const { scene, camera, gl } = useThree();
+  const managerRef = useRef<CharacterManager>();
+  const { queue, processNext, setProcessing } = useAssetEquipStore();
+  const { selectToken, hideContextMenu } = useEnhancedBattleStore();
+  const loader = useMemo(() => new GLTFLoader(), []);
+
+  // Initialize character manager
+  if (!managerRef.current) {
+    managerRef.current = new CharacterManager(scene);
+  }
+
+  const { pickFromPointer } = useCharacterPicking(scene, managerRef.current);
+
+  // Process asset queue
+  useEffect(() => {
+    if (queue.length === 0) return;
+
+    const processAssets = async () => {
+      setProcessing(true);
+      const item = processNext();
+      if (!item) {
+        setProcessing(false);
+        return;
+      }
+
+      try {
+        const gltf = await loader.loadAsync(item.url);
+        const model = gltf.scene;
+
+        if (item.type === 'character') {
+          const handle = managerRef.current!.addCharacter(item.id, model);
+          // Set initial position if provided
+          if (item.offset) {
+            handle.group.position.set(...item.offset);
+          }
+        } else if (item.type === 'equipment' && item.targetCharId && item.slot) {
+          await managerRef.current!.equipToSlot(
+            item.targetCharId,
+            item.slot,
+            model,
+            {
+              boneName: item.boneName,
+              offset: item.offset ? new THREE.Vector3(...item.offset) : undefined,
+              rotation: item.rotation ? new THREE.Euler(...item.rotation) : undefined,
+              scale: item.scale,
+              cloneAsset: true
+            }
+          );
+        }
+      } catch (error) {
+        console.error('Failed to load asset:', error);
+      }
+
+      setProcessing(false);
+    };
+
+    processAssets();
+  }, [queue, processNext, setProcessing, loader]);
+
+  // Handle character selection
+  useEffect(() => {
+    const handleClick = (event: MouseEvent) => {
+      const characterId = pickFromPointer(event, camera);
+      if (characterId) {
+        selectToken(characterId);
+      } else {
+        hideContextMenu();
+      }
+    };
+
+    gl.domElement.addEventListener('mousedown', handleClick);
+    return () => gl.domElement.removeEventListener('mousedown', handleClick);
+  }, [pickFromPointer, camera, gl, selectToken, hideContextMenu]);
+
+  return null;
+}
 
 export const EnhancedBattleMap: React.FC = () => {
   const {
@@ -34,6 +118,7 @@ export const EnhancedBattleMap: React.FC = () => {
         onClick={() => hideContextMenu()}
         onPointerMissed={() => hideContextMenu()}
       >
+        <SceneContent />
         {/* Lighting */}
         <ambientLight intensity={0.4} />
         <directionalLight
