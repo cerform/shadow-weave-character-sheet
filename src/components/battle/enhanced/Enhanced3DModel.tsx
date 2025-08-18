@@ -127,7 +127,6 @@ export const Enhanced3DModel: React.FC<Enhanced3DModelProps> = ({ token, modelUr
         }}
         onPointerDown={handlePointerDown}
         scale={hovered ? 1.1 : 1}
-        style={{ cursor: canMove ? 'grab' : 'pointer' } as any}
       >
         {model ? (
           // Use the loaded 3D model

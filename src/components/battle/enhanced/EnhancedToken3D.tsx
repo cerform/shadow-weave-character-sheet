@@ -102,7 +102,6 @@ export const EnhancedToken3D: React.FC<EnhancedToken3DProps> = ({ token }) => {
         }}
         onPointerDown={handlePointerDown}
         scale={hovered ? 1.1 : 1}
-        style={{ cursor: canMove ? 'grab' : 'pointer' } as any}
       >
         <cylinderGeometry args={[tokenSize, tokenSize, 0.3, 24]} />
         <meshStandardMaterial

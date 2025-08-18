@@ -1,16 +1,18 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Home, Settings, RotateCcw } from 'lucide-react';
+import { Home, Settings, RotateCcw, Building, Map } from 'lucide-react';
 import { EnhancedBattleMap } from '@/components/battle/enhanced/EnhancedBattleMap';
 import { BattleHUD } from '@/components/battle/enhanced/BattleHUD';
 import { EquipmentPanel } from '@/components/battle/enhanced/EquipmentPanel';
+import WorldEditor from '@/components/world/WorldEditor';
 import { useEnhancedBattleStore } from '@/stores/enhancedBattleStore';
 import { useFogOfWarStore } from '@/stores/fogOfWarStore';
 
 const EnhancedBattleScene: React.FC = () => {
   const navigate = useNavigate();
   const { id: sessionId } = useParams<{ id: string }>();
+  const [mode, setMode] = useState<'battle' | 'build'>('battle');
   
   const {
     currentRound,
@@ -74,6 +76,26 @@ const EnhancedBattleScene: React.FC = () => {
             
             <div className="flex gap-2">
               <Button
+                onClick={() => setMode('battle')}
+                variant={mode === 'battle' ? 'default' : 'outline'}
+                size="sm"
+                className="border-slate-600 hover:bg-slate-700"
+              >
+                <Map className="w-4 h-4 mr-2" />
+                Бой
+              </Button>
+              
+              <Button
+                onClick={() => setMode('build')}
+                variant={mode === 'build' ? 'default' : 'outline'}
+                size="sm"
+                className="border-slate-600 hover:bg-slate-700"
+              >
+                <Building className="w-4 h-4 mr-2" />
+                Строительство
+              </Button>
+              
+              <Button
                 onClick={() => navigate('/dm')}
                 variant="outline"
                 size="sm"
@@ -82,37 +104,25 @@ const EnhancedBattleScene: React.FC = () => {
                 <Home className="w-4 h-4 mr-2" />
                 Панель DM
               </Button>
-              
-              <Button
-                onClick={() => {
-                  if (sessionId) {
-                    navigate(`/battle-map-3d/${sessionId}`);
-                  } else {
-                    navigate('/battle-map-3d');
-                  }
-                }}
-                variant="outline"
-                size="sm"
-                className="border-slate-600 hover:bg-slate-700"
-              >
-                <RotateCcw className="w-4 h-4 mr-2" />
-                Старая версия
-              </Button>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Main battle area */}
-      <div className="w-full h-full pr-96 pt-20 pb-4 pl-4">
-        <EnhancedBattleMap />
-      </div>
-
-      {/* Battle HUD */}
-      <BattleHUD />
-
-      {/* Equipment Panel */}
-      <EquipmentPanel />
+      {/* Main area */}
+      {mode === 'battle' ? (
+        <>
+          <div className="w-full h-full pr-96 pt-20 pb-4 pl-4">
+            <EnhancedBattleMap />
+          </div>
+          <BattleHUD />
+          <EquipmentPanel />
+        </>
+      ) : (
+        <div className="w-full h-full pt-20">
+          <WorldEditor />
+        </div>
+      )}
 
       {/* Status bar */}
       <div className="absolute bottom-4 right-1/2 transform translate-x-1/2 z-40">
