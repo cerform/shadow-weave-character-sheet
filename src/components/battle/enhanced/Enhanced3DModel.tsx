@@ -137,26 +137,16 @@ export const Enhanced3DModel: React.FC<Enhanced3DModelProps> = ({ token, modelUr
             position={[0, 0, 0]}
           />
         ) : loading ? (
-          // Loading placeholder
+          // Loading state - small indicator only
           <mesh>
-            <cylinderGeometry args={[tokenSize, tokenSize, 0.3, 24]} />
+            <sphereGeometry args={[0.1, 8, 8]} />
             <meshStandardMaterial
-              color="#666666"
-              emissive="#333333"
-              emissiveIntensity={0.3}
+              color="#fbbf24"
+              emissive="#fbbf24"
+              emissiveIntensity={0.5}
             />
           </mesh>
-        ) : (
-          // Fallback cylinder if no model URL
-          <mesh>
-            <cylinderGeometry args={[tokenSize, tokenSize, 0.3, 24]} />
-            <meshStandardMaterial
-              color={tokenColor}
-              emissive={hovered || isDragging ? tokenColor : '#000000'}
-              emissiveIntensity={hovered || isDragging ? 0.2 : 0}
-            />
-          </mesh>
-        )}
+        ) : null}
       </group>
 
       {/* Selection/Active ring */}
