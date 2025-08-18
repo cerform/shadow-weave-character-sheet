@@ -1,12 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { equipmentHelpers } from '@/stores/assetEquipStore';
 import { SlotName } from '@/utils/CharacterManager';
 import { useEnhancedBattleStore } from '@/stores/enhancedBattleStore';
+import { useAssetsStore } from '@/stores/assetsStore';
+import { publicModelUrl } from '@/utils/storageUrls';
 
 const slotOptions: { value: SlotName; label: string }[] = [
   { value: 'head', label: 'Голова' },
@@ -30,14 +33,35 @@ const commonBones = [
 
 export const EquipmentPanel: React.FC = () => {
   const { tokens } = useEnhancedBattleStore();
+  const { assets, categories, loadAll } = useAssetsStore();
   const [characterId, setCharacterId] = useState('hero-1');
-  const [assetUrl, setAssetUrl] = useState('');
+  const [selectedAssetId, setSelectedAssetId] = useState('');
   const [selectedSlot, setSelectedSlot] = useState<SlotName>('head');
   const [boneName, setBoneName] = useState('');
   const [scale, setScale] = useState(1);
 
+  useEffect(() => {
+    loadAll();
+  }, [loadAll]);
+
+  // Мемоизированные данные
+  const selectedAsset = useMemo(() => {
+    return assets.find(asset => asset.id === selectedAssetId);
+  }, [assets, selectedAssetId]);
+
+  const categoriesById = useMemo(() => {
+    return categories.reduce((acc, cat) => {
+      acc[cat.id] = cat.name;
+      return acc;
+    }, {} as Record<string, string>);
+  }, [categories]);
+
+  const approvedAssets = useMemo(() => {
+    return assets.filter(asset => asset.approved);
+  }, [assets]);
+
   const handleAddCharacter = () => {
-    if (!characterId || !assetUrl) return;
+    if (!characterId || !selectedAsset) return;
     
     // Find a random position to avoid overlapping
     const randomOffset: [number, number, number] = [
@@ -46,19 +70,21 @@ export const EquipmentPanel: React.FC = () => {
       Math.random() * 4 - 2  // -2 to 2
     ];
     
+    const assetUrl = publicModelUrl(selectedAsset.storage_path);
     equipmentHelpers.addCharacter(characterId, assetUrl, randomOffset);
-    setAssetUrl('');
+    setSelectedAssetId('');
   };
 
   const handleAddEquipment = () => {
-    if (!characterId || !assetUrl || !selectedSlot) return;
+    if (!characterId || !selectedAsset || !selectedSlot) return;
     
+    const assetUrl = publicModelUrl(selectedAsset.storage_path);
     equipmentHelpers.addEquipment(characterId, assetUrl, selectedSlot, {
       boneName: boneName && boneName !== 'none' ? boneName : undefined,
       scale: scale !== 1 ? scale : undefined
     });
     
-    setAssetUrl('');
+    setSelectedAssetId('');
     setBoneName('');
     setScale(1);
   };
@@ -96,15 +122,33 @@ export const EquipmentPanel: React.FC = () => {
           </Select>
         </div>
 
-        {/* Asset URL */}
+        {/* Asset Selection */}
         <div className="space-y-2">
-          <Label htmlFor="asset-url">URL модели (.glb)</Label>
-          <Input
-            id="asset-url"
-            value={assetUrl}
-            onChange={(e) => setAssetUrl(e.target.value)}
-            placeholder="/models/character.glb"
-          />
+          <Label htmlFor="asset-select">Модель из библиотеки</Label>
+          <Select value={selectedAssetId} onValueChange={setSelectedAssetId}>
+            <SelectTrigger>
+              <SelectValue placeholder="Выберите модель" />
+            </SelectTrigger>
+            <SelectContent className="max-h-60">
+              {approvedAssets.map((asset) => (
+                <SelectItem key={asset.id} value={asset.id}>
+                  <div className="flex items-center gap-2">
+                    <span>{asset.name}</span>
+                    {categoriesById[asset.category_id] && (
+                      <Badge variant="secondary" className="text-xs">
+                        {categoriesById[asset.category_id]}
+                      </Badge>
+                    )}
+                  </div>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {selectedAsset && (
+            <div className="text-xs text-muted-foreground">
+              Путь: {selectedAsset.storage_path}
+            </div>
+          )}
         </div>
 
         {/* Quick actions for character */}
@@ -113,7 +157,7 @@ export const EquipmentPanel: React.FC = () => {
             onClick={handleAddCharacter}
             variant="outline"
             className="flex-1"
-            disabled={!characterId || !assetUrl}
+            disabled={!characterId || !selectedAsset}
           >
             Добавить персонажа
           </Button>
@@ -179,7 +223,7 @@ export const EquipmentPanel: React.FC = () => {
           <Button 
             onClick={handleAddEquipment}
             className="w-full"
-            disabled={!characterId || !assetUrl || !selectedSlot}
+            disabled={!characterId || !selectedAsset || !selectedSlot}
           >
             Экипировать
           </Button>
