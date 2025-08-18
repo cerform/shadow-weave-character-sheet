@@ -45,6 +45,7 @@ interface Simple2DMapFromAssetsProps {
     monsterType?: string;
   }>;
   mapImageUrl?: string;
+  fogEnabled?: boolean;
   onBack?: () => void;
 }
 
@@ -101,6 +102,7 @@ const Simple2DMapFromAssets: React.FC<Simple2DMapFromAssetsProps> = ({
   assets3D,
   tokens = [],
   mapImageUrl,
+  fogEnabled = false,
   onBack
 }) => {
   const [assets2D, setAssets2D] = useState<Asset2D[]>([]);

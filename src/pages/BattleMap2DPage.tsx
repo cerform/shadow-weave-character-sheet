@@ -98,12 +98,12 @@ const BattleMap2DPage: React.FC = () => {
           <h1 className="text-xl font-bold text-white">2D Карта из 3D Ассетов</h1>
           <div className="flex gap-2">
             <Button 
-              onClick={() => enableFog(!fogSettings.enabled)}
-              className={`${fogSettings.enabled ? 'bg-purple-600 hover:bg-purple-700' : 'bg-gray-600 hover:bg-gray-700'}`}
+              onClick={() => setShowFogPanel(!showFogPanel)}
+              className={`${showFogPanel ? 'bg-purple-600 hover:bg-purple-700' : 'bg-gray-600 hover:bg-gray-700'}`}
               size="sm"
             >
               <Cloud className="w-4 h-4 mr-2" />
-              {fogSettings.enabled ? 'Туман ВКЛ' : 'Туман ВЫКЛ'}
+              {showFogPanel ? 'Скрыть Туман' : 'Показать Туман'}
             </Button>
             
             <Button 
@@ -135,18 +135,38 @@ const BattleMap2DPage: React.FC = () => {
         </div>
       </div>
 
-      {/* 2D Map with Fog of War */}
+      {/* 2D Map with Interactive Fog of War */}
       <div className="w-full h-full pt-20 relative">
         <Simple2DMapFromAssets
           assets3D={assets3D}
           tokens={tokens}
           mapImageUrl={mapUrl}
+          fogEnabled={fogSettings.enabled}
         />
         
         {/* Fog of War Control Panel */}
         {showFogPanel && (
           <div className="absolute top-20 right-4 z-30 w-80">
-            <FogControlPanel />
+            <div className="bg-black/80 p-4 rounded-xl backdrop-blur">
+              <h3 className="text-yellow-400 font-bold mb-3">Контроль Тумана Войны</h3>
+              <div className="space-y-3">
+                <div className="flex gap-2">
+                  <Button 
+                    onClick={() => enableFog(!fogSettings.enabled)}
+                    className={`flex-1 ${fogSettings.enabled ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'}`}
+                    size="sm"
+                  >
+                    {fogSettings.enabled ? 'Включён' : 'Выключен'}
+                  </Button>
+                </div>
+                <div className="text-sm text-gray-300 space-y-1">
+                  <div>• Используйте кнопку режима в левом углу карты</div>
+                  <div>• Режим "Туман": рисование областей</div>
+                  <div>• Режим "Карта": перемещение и масштаб</div>
+                  <div>• Переключайтесь между режимами по необходимости</div>
+                </div>
+              </div>
+            </div>
           </div>
         )}
       </div>
