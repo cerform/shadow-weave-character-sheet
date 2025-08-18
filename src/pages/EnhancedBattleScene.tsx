@@ -112,11 +112,16 @@ const EnhancedBattleScene: React.FC = () => {
       {/* Main area */}
       {mode === 'battle' ? (
         <>
-          <div className="w-full h-full pr-96 pt-20 pb-4 pl-4">
+          <div className="w-full h-full pt-20 pb-4">
             <EnhancedBattleMap />
           </div>
-          <BattleHUD />
-          <EquipmentPanel />
+          {/* UI оверлеи только в режиме боя */}
+          <div className="absolute top-20 right-4 z-30">
+            <BattleHUD />
+          </div>
+          <div className="absolute bottom-4 right-4 z-30">
+            <EquipmentPanel />
+          </div>
         </>
       ) : (
         <div className="w-full h-full pt-20">

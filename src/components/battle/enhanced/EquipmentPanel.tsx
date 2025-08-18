@@ -1,50 +1,20 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { SlotName } from '@/utils/CharacterManager';
 import { useEnhancedBattleStore } from '@/stores/enhancedBattleStore';
 import { useAssetsStore } from '@/stores/assetsStore';
-import { publicModelUrl } from '@/utils/storageUrls';
-import { determineMonsterType } from '@/utils/tokenModelMapping';
-
-const slotOptions: { value: SlotName; label: string }[] = [
-  { value: 'head', label: 'Голова' },
-  { value: 'body', label: 'Тело' },
-  { value: 'mainHand', label: 'Основная рука' },
-  { value: 'offHand', label: 'Вторая рука' },
-  { value: 'back', label: 'Спина' },
-  { value: 'misc', label: 'Разное' }
-];
-
-const commonBones = [
-  'Head',
-  'mixamorigHead',
-  'RightHand',
-  'LeftHand',
-  'mixamorigRightHand',
-  'mixamorigLeftHand',
-  'Spine',
-  'mixamorigSpine'
-];
 
 export const EquipmentPanel: React.FC = () => {
-  const { tokens } = useEnhancedBattleStore();
+  const { tokens, addToken } = useEnhancedBattleStore();
   const { assets, categories, loadAll } = useAssetsStore();
-  const [characterId, setCharacterId] = useState('hero-1');
   const [selectedAssetId, setSelectedAssetId] = useState('');
-  const [selectedSlot, setSelectedSlot] = useState<SlotName>('head');
-  const [boneName, setBoneName] = useState('');
-  const [scale, setScale] = useState(1);
 
   useEffect(() => {
     loadAll();
   }, [loadAll]);
 
-  // Мемоизированные данные
   const selectedAsset = useMemo(() => {
     return assets.find(asset => asset.id === selectedAssetId);
   }, [assets, selectedAssetId]);
@@ -60,125 +30,90 @@ export const EquipmentPanel: React.FC = () => {
     return assets.filter(asset => asset.approved);
   }, [assets]);
 
-  const handleAddCharacter = () => {
-    if (!characterId || !selectedAsset) return;
+  const handleAddAsset = (asset: any) => {
+    console.log('📦 Adding asset:', asset);
     
-    // Создаем новый токен с уникальным ID
-    const newTokenId = `${characterId}-${Date.now()}`;
-    
-    // Find a random position to avoid overlapping
-    const randomOffset: [number, number, number] = [
-      Math.random() * 4 - 2, // -2 to 2
-      0,
-      Math.random() * 4 - 2  // -2 to 2
-    ];
-    
-    // Добавляем новый токен в store
-    const { addToken } = useEnhancedBattleStore.getState();
-    const monsterType = determineMonsterType(selectedAsset.name);
-    
+    // Создаем уникальный ID и позицию
     const newToken = {
-      id: newTokenId,
-      name: selectedAsset.name,
-      hp: 20,
-      maxHp: 20,
+      id: `${asset.name.toLowerCase()}-${Date.now()}`,
+      name: asset.name,
+      hp: 100,
+      maxHp: 100,
       ac: 14,
-      position: randomOffset,
+      position: [
+        Math.random() * 20 - 10, // случайная позиция X от -10 до 10
+        0,
+        Math.random() * 20 - 10  // случайная позиция Z от -10 до 10
+      ] as [number, number, number],
       conditions: [],
-      isEnemy: characterId.includes('enemy') || characterId.includes('monster'),
-      isVisible: true,
-      size: 1,
+      isEnemy: false,
+      modelUrl: asset.model_url,
+      scale: 1
     };
     
     addToken(newToken);
+    console.log('✅ Token added:', newToken.id);
     setSelectedAssetId('');
-    console.log(`✨ Added new character: ${newToken.name} (${newTokenId})`);
   };
-
-  const handleAddEquipment = () => {
-    if (!characterId || !selectedAsset || !selectedSlot) return;
-    
-    // Эта функция пока заглушена, так как экипировка токенов будет доработана позже
-    console.log('Equipment functionality will be implemented later');
-    
-    setSelectedAssetId('');
-    setBoneName('');
-    setScale(1);
-  };
-
 
   return (
-    <Card className="fixed bottom-4 left-4 w-96 bg-background/95 backdrop-blur-sm border-border z-40">
-      <CardHeader>
-        <CardTitle className="text-primary">Экипировка персонажей</CardTitle>
+    <Card className="w-80 bg-background/95 backdrop-blur-sm border-primary/20">
+      <CardHeader className="pb-3">
+        <CardTitle className="text-lg">Экипировка персонажей</CardTitle>
+        <div className="text-sm text-muted-foreground">
+          Выберите 3D модели из библиотеки для добавления на карту
+        </div>
       </CardHeader>
-      
       <CardContent className="space-y-4">
-        {/* Character ID */}
+        {/* Библиотека ассетов */}
+        <div className="space-y-3">
+          <h4 className="text-sm font-medium">3D Модели</h4>
+          <div className="grid grid-cols-2 gap-2 max-h-60 overflow-y-auto">
+            {approvedAssets.map((asset) => (
+              <Button
+                key={asset.id}
+                variant="outline"
+                className="h-auto p-3 flex flex-col items-center gap-2 text-xs"
+                onClick={() => handleAddAsset(asset)}
+              >
+                <div className="text-center">
+                  <div className="font-medium">{asset.name}</div>
+                  {categoriesById[asset.category_id] && (
+                    <Badge variant="secondary" className="text-xs mt-1">
+                      {categoriesById[asset.category_id]}
+                    </Badge>
+                  )}
+                </div>
+              </Button>
+            ))}
+          </div>
+        </div>
+
+        {/* Текущие токены */}
         <div className="space-y-2">
-          <Label htmlFor="character-id">Персонаж</Label>
-          <Select value={characterId} onValueChange={setCharacterId}>
-            <SelectTrigger>
-              <SelectValue placeholder="Выберите персонажа" />
-            </SelectTrigger>
-            <SelectContent>
-              {tokens.map((token) => (
-                <SelectItem key={token.id} value={token.id}>
-                  {token.name} ({token.id})
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <h4 className="text-sm font-medium">Токены на карте ({tokens.length})</h4>
+          <div className="max-h-32 overflow-y-auto space-y-1">
+            {tokens.map((token) => (
+              <div key={token.id} className="flex items-center justify-between p-2 bg-muted rounded text-sm">
+                <div className="flex items-center gap-2">
+                  <div className={`w-2 h-2 rounded-full ${
+                    token.isEnemy ? 'bg-red-500' : 'bg-blue-500'
+                  }`} />
+                  <span>{token.name}</span>
+                </div>
+                <span className="text-xs text-muted-foreground">
+                  {token.hp}/{token.maxHp} HP
+                </span>
+              </div>
+            ))}
+          </div>
         </div>
-
-        {/* Asset Selection */}
-        <div className="space-y-2">
-          <Label htmlFor="asset-select">Модель из библиотеки</Label>
-          <Select value={selectedAssetId} onValueChange={setSelectedAssetId}>
-            <SelectTrigger>
-              <SelectValue placeholder="Выберите модель" />
-            </SelectTrigger>
-            <SelectContent className="max-h-60">
-              {approvedAssets.map((asset) => (
-                <SelectItem key={asset.id} value={asset.id}>
-                  <div className="flex items-center gap-2">
-                    <span>{asset.name}</span>
-                    {categoriesById[asset.category_id] && (
-                      <Badge variant="secondary" className="text-xs">
-                        {categoriesById[asset.category_id]}
-                      </Badge>
-                    )}
-                  </div>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {selectedAsset && (
-            <div className="text-xs text-muted-foreground">
-              Путь: {selectedAsset.storage_path}
-            </div>
-          )}
-        </div>
-
-        {/* Quick actions for character */}
-        <div className="flex gap-2">
-          <Button 
-            onClick={handleAddCharacter}
-            variant="outline"
-            className="flex-1"
-            disabled={!characterId || !selectedAsset}
-          >
-            Добавить персонажа
-          </Button>
-        </div>
-
 
         {/* Instructions */}
         <div className="text-xs text-muted-foreground space-y-1">
-          <p>• Сначала добавьте персонажа, затем экипируйте его</p>
-          <p>• Если модель имеет скелет, указывайте название кости</p>
-          <p>• Без кости предмет крепится к якорной точке слота</p>
-          <p>• Клик по любой части персонажа выберет всего персонажа</p>
+          <p>• Нажмите на 3D модель чтобы добавить её на карту</p>
+          <p>• Активный токен можно перемещать мышью</p>
+          <p>• Используйте HUD для управления боем</p>
         </div>
       </CardContent>
     </Card>

@@ -61,16 +61,13 @@ export const useDraggable3D = (
       const intersectionPoint = new THREE.Vector3();
       
       if (raycaster.ray.intersectPlane(plane, intersectionPoint)) {
-        // Ограничиваем движение в пределах карты (-24 до +24 по X, -16 до +16 по Z)
-        const boundedX = Math.max(-24, Math.min(24, intersectionPoint.x));
-        const boundedZ = Math.max(-16, Math.min(16, intersectionPoint.z));
+        // Ограничиваем движение в пределах карты
+        const boundedX = Math.max(-20, Math.min(20, intersectionPoint.x));
+        const boundedZ = Math.max(-20, Math.min(20, intersectionPoint.z));
         
         // Обновляем позицию объекта в реальном времени
         groupRef.current.position.x = boundedX;
         groupRef.current.position.z = boundedZ;
-        
-        // Добавляем визуальную обратную связь - немного поднимаем объект при перетаскивании
-        groupRef.current.position.y = groupRef.current.position.y + 0.1;
         
         console.log('🏃 Dragging object to:', { x: boundedX, z: boundedZ });
       }
@@ -85,24 +82,13 @@ export const useDraggable3D = (
       if (groupRef.current && onMove) {
         const newPos = groupRef.current.position;
         
-        // Возвращаем объект на исходную высоту
-        groupRef.current.position.y = groupRef.current.position.y - 0.1;
-        
-        // Конвертируем 3D координаты обратно в 2D координаты карты (0-1200 x 0-800)
-        const mapX = ((newPos.x + 24) / 48) * 1200;
-        const mapY = ((-newPos.z + 16) / 32) * 800;
-        
-        // Ограничиваем границами карты
-        const boundedMapX = Math.max(0, Math.min(1200, mapX));
-        const boundedMapY = Math.max(0, Math.min(800, mapY));
-        
         console.log('📍 Final position:', { 
-          mapX: boundedMapX, 
-          mapY: boundedMapY,
-          from3D: { x: newPos.x, z: newPos.z }
+          x: newPos.x, 
+          z: newPos.z
         });
         
-        onMove(boundedMapX, boundedMapY);
+        // Вызываем callback с 3D координатами
+        onMove(newPos.x, newPos.z);
       }
     };
 

@@ -34,24 +34,35 @@ export const Enhanced3DModel: React.FC<Enhanced3DModelProps> = ({ token, modelUr
   
   // Load 3D model
   useEffect(() => {
-    if (!modelUrl || model) return;
+    if (!modelUrl) return;
     
     setLoading(true);
+    
+    // Исправляем URL для загрузки моделей
+    let fixedUrl = modelUrl;
+    if (modelUrl.includes('/models/models/')) {
+      // Убираем дублирование /models/
+      fixedUrl = modelUrl.replace('/models/models/', '/models/');
+    }
+    
+    console.log(`🔄 Loading model for ${token.name}:`, fixedUrl);
+    
     const loader = new GLTFLoader();
     loader.load(
-      modelUrl,
+      fixedUrl,
       (gltf) => {
+        console.log(`✅ Model loaded for ${token.name}`);
         setModel(gltf.scene);
         setLoading(false);
-        console.log(`✅ Loaded 3D model for ${token.name}`);
       },
       undefined,
       (error) => {
         console.error(`❌ Failed to load model for ${token.name}:`, error);
         setLoading(false);
+        // Fallback: показываем простую геометрию вместо модели
       }
     );
-  }, [modelUrl, token.name, model]);
+  }, [modelUrl, token.name]);
 
   // Логика перетаскивания для активного токена
   const canMove = isActive;
@@ -145,7 +156,17 @@ export const Enhanced3DModel: React.FC<Enhanced3DModelProps> = ({ token, modelUr
               emissiveIntensity={0.5}
             />
           </mesh>
-        ) : null}
+        ) : (
+          // Fallback: простая геометрия вместо цилиндра
+          <mesh>
+            <boxGeometry args={[tokenSize * 0.8, tokenSize * 1.5, tokenSize * 0.8]} />
+            <meshStandardMaterial
+              color={tokenColor}
+              emissive={hovered || isDragging ? tokenColor : '#000000'}
+              emissiveIntensity={hovered || isDragging ? 0.2 : 0}
+            />
+          </mesh>
+        )}
       </group>
 
       {/* Selection/Active ring */}
