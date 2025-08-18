@@ -4,8 +4,9 @@ import { Token, Initiative } from '@/stores/battleStore'; // Import from store
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { User, Skull, Crown } from "lucide-react";
+import { User, Skull, Crown, Cloud } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useFogOfWarStore } from '@/stores/fogOfWarStore';
 
 interface LeftPanelProps {
   tokens: Token[];
@@ -44,6 +45,9 @@ const LeftPanel: React.FC<LeftPanelProps> = ({
   const [monsterAC, setMonsterAC] = useState("");
   const [monsterType, setMonsterType] = useState<"monster" | "boss">("monster");
   const { toast } = useToast();
+  
+  // Используем fog of war store для синхронизации между картами
+  const { fogSettings, enableFog, isDM, setIsDM } = useFogOfWarStore();
 
   // Функция для добавления токена
   const onAddToken = (newToken: Token) => {
@@ -210,18 +214,38 @@ const LeftPanel: React.FC<LeftPanelProps> = ({
         </ScrollArea>
       </div>
 
-      {/* Настройки тумана войны */}
+      {/* Кнопка тумана войны с синхронизацией */}
       <div>
-        <h3 className="font-medium">Туман войны</h3>
-        <label className="inline-flex items-center space-x-2">
-          <input
-            type="checkbox"
-            className="h-5 w-5 border rounded"
-            checked={fogOfWar}
-            onChange={(e) => setFogOfWar(e.target.checked)}
-          />
-          <span>Включить</span>
-        </label>
+        <h3 className="font-medium mb-2">Туман войны</h3>
+        <div className="space-y-2">
+          <Button
+            onClick={() => {
+              const newState = !fogSettings.enabled;
+              enableFog(newState);
+              setFogOfWar(newState); // Синхронизация с локальным state
+            }}
+            className={`w-full ${
+              fogSettings.enabled 
+                ? 'bg-purple-600 hover:bg-purple-700 text-white' 
+                : 'bg-slate-600 hover:bg-slate-700 text-white'
+            }`}
+            size="sm"
+          >
+            <Cloud className="w-4 h-4 mr-2" />
+            {fogSettings.enabled ? 'Туман ВКЛ' : 'Туман ВЫКЛ'}
+          </Button>
+          
+          {/* DM режим */}
+          <label className="inline-flex items-center space-x-2">
+            <input
+              type="checkbox"
+              className="h-4 w-4 border rounded"
+              checked={isDM}
+              onChange={(e) => setIsDM(e.target.checked)}
+            />
+            <span className="text-sm">Режим DM</span>
+          </label>
+        </div>
       </div>
 
       {/* Настройки размера сетки */}
