@@ -92,11 +92,12 @@ export const FogOfWarCanvas: React.FC = () => {
   return (
     <canvas
       ref={canvasRef}
-      className={`absolute inset-0 w-full h-full z-40 ${fogEditMode ? 'pointer-events-auto' : 'pointer-events-none'}`}
+      className={`absolute inset-0 w-full h-full ${fogEditMode ? 'pointer-events-auto' : 'pointer-events-none'}`}
       style={{
         display: fogEnabled ? 'block' : 'none',
         cursor: fogEditMode ? (isDrawing ? 'none' : fogMode === 'reveal' ? 'crosshair' : 'grab') : 'default',
         touchAction: fogEditMode ? 'none' : 'auto',
+        zIndex: 10, // Ниже чем у элементов управления
       }}
       onMouseDown={startDrawing}
       onMouseMove={paint}

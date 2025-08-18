@@ -288,13 +288,17 @@ export const EnhancedBattleMap: React.FC = () => {
       </div>
       
       {/* Fog brush cursor */}
-      <FogBrushCursor />
+      <div className="z-50">
+        <FogBrushCursor />
+      </div>
 
       {/* Context menu */}
-      <TokenContextMenu />
+      <div className="z-50">
+        <TokenContextMenu />
+      </div>
 
       {/* Battle info overlay */}
-      <div className="absolute top-4 left-4 z-30 space-y-2">
+      <div className="absolute top-4 left-4 z-50 space-y-2">{/* z-50 чтобы быть выше тумана */}
         <div className="bg-black/70 backdrop-blur-sm px-3 py-2 rounded-lg text-white">
           <h2 className="text-lg font-bold text-amber-400">
             Боевая карта
@@ -322,7 +326,7 @@ export const EnhancedBattleMap: React.FC = () => {
       </div>
 
       {/* Status indicators and controls */}
-      <div className="absolute bottom-4 left-4 z-30 space-y-2">
+      <div className="absolute bottom-4 left-4 z-50 space-y-2">{/* z-50 чтобы быть выше тумана */}
         <div className="bg-black/70 backdrop-blur-sm px-3 py-2 rounded-lg text-white">
           <div className="flex items-center gap-4 text-sm">
             <div className="flex items-center gap-2">
