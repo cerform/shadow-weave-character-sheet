@@ -10,6 +10,7 @@ import { FogDrawingOverlay3D } from '@/components/battle/FogDrawingOverlay3D';
 import { toast } from 'sonner';
 import { determineMonsterType, updateTokenWithModelType } from '@/utils/tokenModelMapping';
 import Simple3DMap from '@/components/battle/Simple3DMap';
+import { useFogOfWarStore } from '@/stores/fogOfWarStore';
 
 import { sessionService } from '@/services/sessionService';
 import { preloadMonsterModels } from '@/components/battle/MonsterModel';
@@ -29,6 +30,9 @@ const BattleMap3DPage: React.FC = () => {
   const [mapUrl, setMapUrl] = useState<string>('');
   const [isSaving, setIsSaving] = useState(false);
   const [showFogPanel, setShowFogPanel] = useState(false);
+
+  // Fog of War store для синхронизации
+  const { initializeSync, disconnectSync } = useFogOfWarStore();
 
   // 3D ассеты из Supabase Storage (эпhemeral + sessionStorage)
 type AssetModel = { 
@@ -55,6 +59,20 @@ type AssetModel = {
     console.log('🎮 Loading 3D Battle Map with real models...');
     preloadMonsterModels();
   }, []);
+
+  // Инициализация синхронизации тумана войны
+  useEffect(() => {
+    if (sessionId) {
+      initializeSync(sessionId);
+      console.log('🌫️ Initializing fog sync for 3D map, sessionId:', sessionId);
+    }
+    
+    return () => {
+      if (sessionId) {
+        disconnectSync();
+      }
+    };
+  }, [sessionId, initializeSync, disconnectSync]);
 
   // Синхронизация с 2D картой
   useEffect(() => {

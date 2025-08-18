@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useMemo } from "react";
 import { useBattleUIStore } from "@/stores/battleUIStore";
+import { useFogOfWarStore } from "@/stores/fogOfWarStore";
 import { Button } from "@/components/ui/button";
 import { Brush, Eraser } from "lucide-react";
 
@@ -10,62 +11,87 @@ interface FogCanvasProps {
 
 export default function BattleFogOfWar({ isDM = false, brushSize = 60 }: FogCanvasProps) {
   const fogEnabled = useBattleUIStore((s) => s.fogEnabled);
+  
+  // Используем общий store тумана войны для синхронизации
+  const { 
+    fogSettings, 
+    visibleAreas, 
+    drawVisibleArea, 
+    hideVisibleArea,
+    getFogOpacityAtPosition 
+  } = useFogOfWarStore();
+  
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [drawing, setDrawing] = useState(false);
   const [brushMode, setBrushMode] = useState<'reveal' | 'hide'>('reveal');
   const [currentBrushSize, setCurrentBrushSize] = useState(brushSize);
 
-  // Инициализация canvas с черным фоном (туман)
+  // Обновляем canvas при изменении видимых областей
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas || !fogEnabled) return;
+    if (!canvas || !fogSettings.enabled) return;
 
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    // Устанавливаем размер canvas
     const updateCanvasSize = () => {
       const rect = canvas.getBoundingClientRect();
       canvas.width = rect.width * window.devicePixelRatio;
       canvas.height = rect.height * window.devicePixelRatio;
       ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
       
-      // Заполняем черным (туман)
-      ctx.fillStyle = "rgba(0, 0, 0, 0.85)";
-      ctx.fillRect(0, 0, rect.width, rect.height);
+      redrawFog();
+    };
+
+    const redrawFog = () => {
+      const rect = canvas.getBoundingClientRect();
+      ctx.clearRect(0, 0, rect.width, rect.height);
+      
+      // Создаем маску тумана
+      const imageData = ctx.createImageData(rect.width, rect.height);
+      const data = imageData.data;
+      
+      for (let x = 0; x < rect.width; x++) {
+        for (let y = 0; y < rect.height; y++) {
+          const opacity = getFogOpacityAtPosition(x, y);
+          const index = (y * rect.width + x) * 4;
+          
+          data[index] = 0;     // R
+          data[index + 1] = 0; // G  
+          data[index + 2] = 0; // B
+          data[index + 3] = opacity * 255; // A
+        }
+      }
+      
+      ctx.putImageData(imageData, 0, 0);
     };
 
     updateCanvasSize();
     window.addEventListener('resize', updateCanvasSize);
     
     return () => window.removeEventListener('resize', updateCanvasSize);
-  }, [fogEnabled]);
+  }, [fogSettings.enabled, visibleAreas, getFogOpacityAtPosition]);
 
-  // Обработка рисования
+  // Обработка рисования тумана
   const handleDrawing = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!drawing || !isDM || !fogEnabled) return;
+    if (!drawing || !isDM || !fogSettings.enabled) return;
     
     const canvas = canvasRef.current;
-    const ctx = canvas?.getContext("2d");
-    if (!canvas || !ctx) return;
+    if (!canvas) return;
 
     const rect = canvas.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
 
-    ctx.globalCompositeOperation = brushMode === 'reveal' ? "destination-out" : "source-over";
-    
-    if (brushMode === 'hide') {
-      ctx.fillStyle = "rgba(0, 0, 0, 0.85)";
+    if (brushMode === 'reveal') {
+      drawVisibleArea(x, y);
+    } else {
+      hideVisibleArea(x, y);
     }
-    
-    ctx.beginPath();
-    ctx.arc(x, y, currentBrushSize, 0, Math.PI * 2);
-    ctx.fill();
   };
 
   const startDrawing = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!isDM || !fogEnabled) return;
+    if (!isDM || !fogSettings.enabled) return;
     setDrawing(true);
     handleDrawing(e);
   };
@@ -95,7 +121,7 @@ export default function BattleFogOfWar({ isDM = false, brushSize = 60 }: FogCanv
     ctx.fillRect(0, 0, rect.width, rect.height);
   };
 
-  if (!fogEnabled) return null;
+  if (!fogSettings.enabled) return null;
 
   return (
     <div className="absolute inset-0 pointer-events-none z-40">

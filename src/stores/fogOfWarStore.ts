@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { fogSyncService } from '@/services/fogSyncService';
 
 export interface VisibleArea {
   id: string;
@@ -38,6 +39,8 @@ interface FogOfWarStore {
   isDrawing: boolean;
   isPanning: boolean;
   activeMode: 'map' | 'fog';
+  sessionId: string | null;
+  syncEnabled: boolean;
 
   // Actions
   setIsDM: (isDM: boolean) => void;
@@ -66,6 +69,12 @@ interface FogOfWarStore {
   // Utility functions
   isPositionRevealed: (x: number, y: number) => boolean;
   getFogOpacityAtPosition: (x: number, y: number) => number;
+  
+  // Sync functions
+  initializeSync: (sessionId: string) => Promise<void>;
+  syncToSession: () => void;
+  loadFromSync: (visibleAreas: VisibleArea[], fogSettings: FogSettings) => void;
+  disconnectSync: () => Promise<void>;
 }
 
 export const useFogOfWarStore = create<FogOfWarStore>((set, get) => ({
@@ -90,13 +99,22 @@ export const useFogOfWarStore = create<FogOfWarStore>((set, get) => ({
   isDrawing: false,
   isPanning: false,
   activeMode: 'map',
+  sessionId: null,
+  syncEnabled: false,
 
   setIsDM: (isDM) => set({ isDM }),
 
-  enableFog: (enabled) =>
+  enableFog: (enabled) => {
     set((state) => ({
       fogSettings: { ...state.fogSettings, enabled }
-    })),
+    }));
+    
+    // Синхронизируем изменения, если включена синхронизация
+    const { syncEnabled } = get();
+    if (syncEnabled) {
+      setTimeout(() => get().syncToSession(), 100);
+    }
+  },
 
   addVisibleArea: (area) => {
     const id = `visible_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
@@ -105,20 +123,40 @@ export const useFogOfWarStore = create<FogOfWarStore>((set, get) => ({
     set((state) => ({
       visibleAreas: [...state.visibleAreas, newArea]
     }));
+    
+    // Синхронизируем изменения
+    const { syncEnabled } = get();
+    if (syncEnabled) {
+      setTimeout(() => get().syncToSession(), 100);
+    }
   },
 
-  updateVisibleArea: (id, updates) =>
+  updateVisibleArea: (id, updates) => {
     set((state) => ({
       visibleAreas: state.visibleAreas.map((area) =>
         area.id === id ? { ...area, ...updates } : area
       )
-    })),
+    }));
+    
+    // Синхронизируем изменения
+    const { syncEnabled } = get();
+    if (syncEnabled) {
+      setTimeout(() => get().syncToSession(), 100);
+    }
+  },
 
-  removeVisibleArea: (id) =>
+  removeVisibleArea: (id) => {
     set((state) => ({
       visibleAreas: state.visibleAreas.filter((area) => area.id !== id),
       selectedArea: state.selectedArea === id ? null : state.selectedArea
-    })),
+    }));
+    
+    // Синхронизируем изменения
+    const { syncEnabled } = get();
+    if (syncEnabled) {
+      setTimeout(() => get().syncToSession(), 100);
+    }
+  },
 
   revealAll: () =>
     set((state) => ({
@@ -252,6 +290,44 @@ export const useFogOfWarStore = create<FogOfWarStore>((set, get) => ({
     if (isPositionRevealed(x, y)) return 0;
     
     return fogSettings.fogOpacity;
+  },
+  
+  // Sync functions
+  initializeSync: async (sessionId: string) => {
+    set({ sessionId, syncEnabled: true });
+    
+    await fogSyncService.initialize(sessionId);
+    
+    // Подписываемся на обновления от других пользователей
+    fogSyncService.onFogUpdate((data) => {
+      // Не применяем свои же изменения
+      if (data.updatedBy !== fogSyncService['userId']) {
+        get().loadFromSync(data.visibleAreas, data.fogSettings);
+      }
+    });
+    
+    console.log('🌫️ Fog sync initialized for session:', sessionId);
+  },
+  
+  syncToSession: () => {
+    const { visibleAreas, fogSettings, syncEnabled } = get();
+    if (syncEnabled) {
+      fogSyncService.broadcastFogUpdate(visibleAreas, fogSettings);
+    }
+  },
+  
+  loadFromSync: (visibleAreas: VisibleArea[], fogSettings: FogSettings) => {
+    set({
+      visibleAreas,
+      fogSettings
+    });
+    console.log('🔄 Fog data loaded from sync:', { visibleAreas, fogSettings });
+  },
+  
+  disconnectSync: async () => {
+    await fogSyncService.disconnect();
+    set({ sessionId: null, syncEnabled: false });
+    console.log('🔌 Fog sync disconnected');
   }
 }));
 

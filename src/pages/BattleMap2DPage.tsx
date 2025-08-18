@@ -18,11 +18,17 @@ const BattleMap2DPage: React.FC = () => {
   const [showFogPanel, setShowFogPanel] = useState(false);
   
   // Fog of War integration
-  const { setIsDM, fogSettings, enableFog } = useFogOfWarStore();
+  const { setIsDM, fogSettings, enableFog, initializeSync, disconnectSync } = useFogOfWarStore();
 
   useEffect(() => {
     setIsDM(true); // Enable DM mode for 2D map
     document.title = '2D Карта из 3D Ассетов';
+    
+    // Инициализация синхронизации тумана войны
+    if (sessionId) {
+      initializeSync(sessionId);
+      console.log('🌫️ Initializing fog sync for 2D map, sessionId:', sessionId);
+    }
     
     // Загружаем данные из sessionStorage
     const savedAssets = sessionStorage.getItem(sKey('current3DAssets'));
@@ -48,13 +54,14 @@ const BattleMap2DPage: React.FC = () => {
     if (savedMapUrl) {
       setMapUrl(savedMapUrl);
     }
+    
+    return () => {
+      if (sessionId) {
+        disconnectSync();
+      }
+    };
+  }, [sessionId, setIsDM, initializeSync, disconnectSync]);
 
-    console.log('📋 BattleMap2DPage: Loaded data', {
-      assetsCount: savedAssets ? JSON.parse(savedAssets).length : 0,
-      tokensCount: savedTokens ? JSON.parse(savedTokens).length : 0,
-      mapUrl: savedMapUrl
-    });
-  }, [sessionId, setIsDM]);
 
   const handleBack = () => {
     navigate(`/battle-map-3d${sessionId ? `/${sessionId}` : ''}`);
