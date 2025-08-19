@@ -473,7 +473,11 @@ const handleTokenUpdate = (tokenId: string, updates: any) => {
 
       {/* 3D Map */}
       <div className="w-full h-full pt-20 relative">
-        <EnhancedBattleMap mapUrl={mapUrl} />
+        <EnhancedBattleMap 
+          mapUrl={mapUrl} 
+          sessionId={sessionId || 'default-session'}
+          mapId={mapUrl ? `map_${sessionId}_${Date.now()}` : 'default-map'}
+        />
         
         {/* 3D Fog Drawing Overlay */}
         <FogDrawingOverlay3D />

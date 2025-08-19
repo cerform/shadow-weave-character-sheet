@@ -5,7 +5,15 @@ import { useBattleUIStore } from "@/stores/battleUIStore";
 import BattleToken3D from "./BattleToken3D";
 import BattleFogOfWar from "./BattleFogOfWar";
 
-export default function BattleMap3D() {
+interface BattleMap3DProps {
+  sessionId?: string;
+  mapId?: string;
+}
+
+export default function BattleMap3D({ 
+  sessionId = 'default-session', 
+  mapId = 'default-map' 
+}: BattleMap3DProps = {}) {
   const tokens = useBattleUIStore((s) => s.tokens);
   const fogEnabled = useBattleUIStore((s) => s.fogEnabled);
 
@@ -50,7 +58,7 @@ export default function BattleMap3D() {
         ))}
 
         {/* Туман войны */}
-        {fogEnabled && <BattleFogOfWar />}
+        {fogEnabled && <BattleFogOfWar sessionId={sessionId} mapId={mapId} />}
 
         {/* Контроллы камеры */}
         <OrbitControls 

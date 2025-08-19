@@ -160,9 +160,11 @@ const MapPlane: React.FC<{ mapUrl: string }> = ({ mapUrl }) => {
 
 interface EnhancedBattleMapProps {
   mapUrl?: string;
+  sessionId?: string;
+  mapId?: string;
 }
 
-export const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({ mapUrl }) => {
+export const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({ mapUrl, sessionId = 'default-session', mapId = 'default-map' }) => {
   const {
     tokens,
     activeId,
@@ -300,8 +302,8 @@ export const EnhancedBattleMap: React.FC<EnhancedBattleMapProps> = ({ mapUrl }) 
           {/* 3D Fog of War */}
           {fogSettings.enabled && (
             <FogOfWar3DEnhanced 
-              sessionId="current-session"
-              mapId="current-map"
+              sessionId={sessionId}
+              mapId={mapId}
               mapSize={{ width: 100, height: 100 }}
               gridSize={1}
               isDM={true}

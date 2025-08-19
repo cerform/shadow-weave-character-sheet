@@ -2,7 +2,7 @@ import React, { useMemo, useRef, useEffect, useState } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/use-auth';
+import { useFogOfWarStore } from '@/stores/fogOfWarStore';
 
 interface FogCell {
   id: string;
@@ -30,9 +30,16 @@ export const FogOfWar3DEnhanced: React.FC<FogOfWar3DEnhancedProps> = ({
   brushSize = 3,
   onFogUpdate
 }) => {
-  const { user } = useAuth();
+  // Используем общий store для синхронизации с 2D
+  const { 
+    visibleAreas, 
+    fogSettings, 
+    drawVisibleArea, 
+    hideVisibleArea,
+    loadFogFromDatabase,
+    saveFogToDatabase
+  } = useFogOfWarStore();
   const { gl, camera, scene } = useThree();
-  const [fogCells, setFogCells] = useState<FogCell[]>([]);
   const [isPainting, setIsPainting] = useState(false);
   const [paintMode, setPaintMode] = useState<'reveal' | 'hide'>('reveal');
   
@@ -54,40 +61,21 @@ export const FogOfWar3DEnhanced: React.FC<FogOfWar3DEnhancedProps> = ({
   const gridWidth = Math.ceil(mapSize.width / gridSize);
   const gridHeight = Math.ceil(mapSize.height / gridSize);
 
-  // Load fog cells from database
+  // Загружаем туман из базы данных при инициализации
   useEffect(() => {
-    loadFogCells();
-    
-    // Subscribe to real-time updates
-    const channel = supabase
-      .channel(`fog_${actualMapId}`)
-      .on('postgres_changes',
-        { event: '*', schema: 'public', table: 'fog_of_war', filter: `map_id=eq.${actualMapId}` },
-        () => loadFogCells()
-      )
-      .subscribe();
+    loadFogFromDatabase(sessionId, actualMapId);
+  }, [sessionId, actualMapId, loadFogFromDatabase]);
 
-    return () => {
-      channel.unsubscribe();
-    };
-  }, [actualMapId]);
+  // Автосохранение изменений в базу данных
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      saveFogToDatabase(sessionId, actualMapId);
+    }, 1000); // Сохраняем через 1 секунду после последнего изменения
 
-  const loadFogCells = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('fog_of_war')
-        .select('*')
-        .eq('map_id', actualMapId);
+    return () => clearTimeout(timeoutId);
+  }, [visibleAreas, sessionId, actualMapId, saveFogToDatabase]);
 
-      if (error) throw error;
-      setFogCells(data || []);
-      onFogUpdate?.(data || []);
-    } catch (error) {
-      console.error('Error loading fog cells:', error);
-    }
-  };
-
-  // Create fog texture based on revealed cells
+  // Create fog texture based on visible areas from store
   const fogTexture = useMemo(() => {
     const canvas = document.createElement('canvas');
     canvas.width = gridWidth;
@@ -102,9 +90,21 @@ export const FogOfWar3DEnhanced: React.FC<FogOfWar3DEnhancedProps> = ({
 
     // Draw revealed areas in white
     ctx.fillStyle = 'white';
-    fogCells.forEach(cell => {
-      if (cell.is_revealed) {
-        ctx.fillRect(cell.grid_x, cell.grid_y, 1, 1);
+    visibleAreas.forEach(area => {
+      if (area.type === 'circle') {
+        const centerX = (area.x / mapSize.width) * gridWidth;
+        const centerY = (area.y / mapSize.height) * gridHeight;
+        const radius = (area.radius / Math.min(mapSize.width, mapSize.height)) * Math.min(gridWidth, gridHeight);
+        
+        // Рисуем круг
+        for (let x = Math.max(0, Math.floor(centerX - radius)); x <= Math.min(gridWidth - 1, Math.ceil(centerX + radius)); x++) {
+          for (let y = Math.max(0, Math.floor(centerY - radius)); y <= Math.min(gridHeight - 1, Math.ceil(centerY + radius)); y++) {
+            const distance = Math.sqrt((x - centerX) ** 2 + (y - centerY) ** 2);
+            if (distance <= radius) {
+              ctx.fillRect(x, y, 1, 1);
+            }
+          }
+        }
       }
     });
 
@@ -114,7 +114,7 @@ export const FogOfWar3DEnhanced: React.FC<FogOfWar3DEnhancedProps> = ({
     texture.magFilter = THREE.NearestFilter;
     
     return texture;
-  }, [fogCells, gridWidth, gridHeight]);
+  }, [visibleAreas, gridWidth, gridHeight, mapSize]);
 
   // Create fog shader material
   const fogShaderMaterial = useMemo(() => {
@@ -225,44 +225,20 @@ export const FogOfWar3DEnhanced: React.FC<FogOfWar3DEnhancedProps> = ({
       const uv = intersection.uv;
       
       if (uv) {
-        const gridX = Math.floor(uv.x * gridWidth);
-        const gridY = Math.floor((1 - uv.y) * gridHeight);
+        // Конвертируем UV координаты в мировые координаты
+        const worldX = uv.x * mapSize.width;
+        const worldY = (1 - uv.y) * mapSize.height;
         
-        await updateFogArea(gridX, gridY, paintMode === 'reveal');
-      }
-    }
-  };
-
-  const updateFogArea = async (centerX: number, centerY: number, reveal: boolean) => {
-    try {
-      const cellsToUpdate = [];
-      
-      for (let x = centerX - brushSize; x <= centerX + brushSize; x++) {
-        for (let y = centerY - brushSize; y <= centerY + brushSize; y++) {
-          const distance = Math.sqrt((x - centerX) ** 2 + (y - centerY) ** 2);
-          if (distance <= brushSize && x >= 0 && x < gridWidth && y >= 0 && y < gridHeight) {
-            cellsToUpdate.push({
-              session_id: sessionId,
-              map_id: actualMapId,
-              grid_x: x,
-              grid_y: y,
-              is_revealed: reveal,
-              revealed_at: reveal ? new Date().toISOString() : null,
-              revealed_by_user_id: reveal ? user?.id : null
-            });
-          }
+        // Используем store методы для рисования
+        if (paintMode === 'reveal') {
+          drawVisibleArea(worldX, worldY);
+        } else {
+          hideVisibleArea(worldX, worldY);
         }
       }
-
-      const { error } = await supabase
-        .from('fog_of_war')
-        .upsert(cellsToUpdate, { onConflict: 'session_id,map_id,grid_x,grid_y' });
-
-      if (error) throw error;
-    } catch (error) {
-      console.error('Error updating fog area:', error);
     }
   };
+
 
   // Add event listeners for DM painting
   useEffect(() => {

@@ -7,9 +7,16 @@ import { Brush, Eraser } from "lucide-react";
 interface FogCanvasProps {
   isDM?: boolean;
   brushSize?: number;
+  sessionId?: string;
+  mapId?: string;
 }
 
-export default function BattleFogOfWar({ isDM = false, brushSize = 60 }: FogCanvasProps) {
+export default function BattleFogOfWar({ 
+  isDM = false, 
+  brushSize = 60,
+  sessionId = 'default-session',
+  mapId = 'default-map'
+}: FogCanvasProps) {
   const fogEnabled = useBattleUIStore((s) => s.fogEnabled);
   
   // Используем общий store тумана войны для синхронизации
@@ -18,13 +25,29 @@ export default function BattleFogOfWar({ isDM = false, brushSize = 60 }: FogCanv
     visibleAreas, 
     drawVisibleArea, 
     hideVisibleArea,
-    getFogOpacityAtPosition 
+    getFogOpacityAtPosition,
+    loadFogFromDatabase,
+    saveFogToDatabase
   } = useFogOfWarStore();
   
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [drawing, setDrawing] = useState(false);
   const [brushMode, setBrushMode] = useState<'reveal' | 'hide'>('reveal');
   const [currentBrushSize, setCurrentBrushSize] = useState(brushSize);
+
+  // Загружаем туман из базы данных при инициализации
+  useEffect(() => {
+    loadFogFromDatabase(sessionId, mapId);
+  }, [sessionId, mapId, loadFogFromDatabase]);
+
+  // Автосохранение изменений в базу данных
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      saveFogToDatabase(sessionId, mapId);
+    }, 1000); // Сохраняем через 1 секунду после последнего изменения
+
+    return () => clearTimeout(timeoutId);
+  }, [visibleAreas, sessionId, mapId, saveFogToDatabase]);
 
   // Обновляем canvas при изменении видимых областей
   useEffect(() => {

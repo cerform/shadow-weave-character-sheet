@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { fogSyncService } from '@/services/fogSyncService';
+import { supabase } from '@/integrations/supabase/client';
 
 export interface VisibleArea {
   id: string;
@@ -75,6 +76,10 @@ interface FogOfWarStore {
   syncToSession: () => void;
   loadFromSync: (visibleAreas: VisibleArea[], fogSettings: FogSettings) => void;
   disconnectSync: () => Promise<void>;
+  
+  // Database sync functions
+  saveFogToDatabase: (sessionId: string, mapId: string) => Promise<void>;
+  loadFogFromDatabase: (sessionId: string, mapId: string) => Promise<void>;
 }
 
 export const useFogOfWarStore = create<FogOfWarStore>((set, get) => ({
@@ -328,6 +333,111 @@ export const useFogOfWarStore = create<FogOfWarStore>((set, get) => ({
     await fogSyncService.disconnect();
     set({ sessionId: null, syncEnabled: false });
     console.log('🔌 Fog sync disconnected');
+  },
+
+  // Сохранение тумана в базу данных
+  saveFogToDatabase: async (sessionId: string, mapId: string) => {
+    const { visibleAreas } = get();
+    
+    try {
+      // Конвертируем видимые области в ячейки тумана для базы данных
+      const fogCells = [];
+      
+      // Предполагаем размер карты 1920x1280 и размер ячейки 40
+      const mapWidth = 1920;
+      const mapHeight = 1280;
+      const cellSize = 40;
+      const gridWidth = Math.ceil(mapWidth / cellSize);
+      const gridHeight = Math.ceil(mapHeight / cellSize);
+      
+      // Создаем сетку ячеек
+      for (let x = 0; x < gridWidth; x++) {
+        for (let y = 0; y < gridHeight; y++) {
+          const cellX = x * cellSize + cellSize / 2;
+          const cellY = y * cellSize + cellSize / 2;
+          
+          // Проверяем, видима ли эта ячейка
+          const isRevealed = visibleAreas.some(area => {
+            if (area.type === 'circle') {
+              const distance = Math.sqrt((cellX - area.x) ** 2 + (cellY - area.y) ** 2);
+              return distance <= area.radius;
+            }
+            return false;
+          });
+          
+          if (isRevealed) {
+            fogCells.push({
+              session_id: sessionId,
+              map_id: mapId,
+              grid_x: x,
+              grid_y: y,
+              is_revealed: true
+            });
+          }
+        }
+      }
+      
+      // Очищаем старые данные и вставляем новые
+      await supabase
+        .from('fog_of_war')
+        .delete()
+        .eq('session_id', sessionId)
+        .eq('map_id', mapId);
+        
+      if (fogCells.length > 0) {
+        const { error } = await supabase
+          .from('fog_of_war')
+          .insert(fogCells);
+        
+        if (error) throw error;
+      }
+      
+      console.log('✅ Fog saved to database:', fogCells.length, 'cells');
+    } catch (error) {
+      console.error('❌ Error saving fog to database:', error);
+    }
+  },
+
+  // Загрузка тумана из базы данных
+  loadFogFromDatabase: async (sessionId: string, mapId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('fog_of_war')
+        .select('*')
+        .eq('session_id', sessionId)
+        .eq('map_id', mapId)
+        .eq('is_revealed', true);
+
+      if (error) throw error;
+      
+      if (data && data.length > 0) {
+        // Конвертируем ячейки базы данных в видимые области
+        const cellSize = 40;
+        const visibleAreas: VisibleArea[] = [];
+        
+        // Группируем смежные ячейки в области
+        data.forEach(cell => {
+          const x = cell.grid_x * cellSize + cellSize / 2;
+          const y = cell.grid_y * cellSize + cellSize / 2;
+          
+          visibleAreas.push({
+            id: `cell_${cell.grid_x}_${cell.grid_y}`,
+            type: 'circle',
+            x,
+            y,
+            radius: cellSize / 2
+          });
+        });
+        
+        set({ visibleAreas });
+        console.log('✅ Fog loaded from database:', visibleAreas.length, 'areas');
+      } else {
+        set({ visibleAreas: [] });
+        console.log('📭 No fog data found in database');
+      }
+    } catch (error) {
+      console.error('❌ Error loading fog from database:', error);
+    }
   }
 }));
 
