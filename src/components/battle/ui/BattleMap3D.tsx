@@ -1,10 +1,12 @@
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
-import { useMemo, useRef } from "react";
+import { useMemo, useRef, useEffect } from "react";
 import { useBattleUIStore } from "@/stores/battleUIStore";
 import BattleToken3D from "./BattleToken3D";
 import { useBattle3DControls } from "@/hooks/useBattle3DControls";
 import { useBattle3DControlStore } from "@/stores/battle3DControlStore";
+import { SyncedFogOverlay3D } from "../SyncedFogOverlay3D";
+import { useFogGridStore } from "@/stores/fogGridStore";
 
 interface BattleMap3DProps {
   sessionId?: string;
@@ -18,6 +20,13 @@ export default function BattleMap3D({
   const tokens = useBattleUIStore((s) => s.tokens);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const { shouldHandleCameraControls } = useBattle3DControlStore();
+  const setMapSize = useFogGridStore(s => s.setMapSize);
+
+  // Initialize fog grid size for 3D map
+  useEffect(() => {
+    // 3D map logical size: 1200x800 px (corresponds to 24x16 world units)
+    setMapSize({ width: 1200, height: 800 }, 40);
+  }, [setMapSize]);
 
   // Инициализируем систему управления
   useBattle3DControls({ 
@@ -69,6 +78,12 @@ export default function BattleMap3D({
         {tokens.map((token) => (
           <BattleToken3D key={token.id} token={token} />
         ))}
+
+        {/* Synced Fog of War (3D overlay) */}
+        <SyncedFogOverlay3D 
+          mapSize={{ width: 1200, height: 800 }} 
+          planeSize={{ width: 24, height: 16 }} 
+        />
 
         {/* Контроллы камеры */}
         <OrbitControls 

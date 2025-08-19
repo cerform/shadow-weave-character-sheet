@@ -4,6 +4,8 @@ import { Move, Paintbrush2, Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
 import { UnifiedFogOverlay2D } from './fog/UnifiedFogOverlay2D';
 import { useUnifiedFogStore } from '@/stores/unifiedFogStore';
+import { SyncedFogOverlay2D } from './SyncedFogOverlay2D';
+import { useFogGridStore } from '@/stores/fogGridStore';
 
 interface Simple2DCanvasMapProps {
   assets3D?: any[];
@@ -25,6 +27,7 @@ const Simple2DCanvasMap: React.FC<Simple2DCanvasMapProps> = ({
   isDM = false
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
+  const setMapSize = useFogGridStore(s => s.setMapSize);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   
   // Unified fog store
@@ -66,6 +69,20 @@ const Simple2DCanvasMap: React.FC<Simple2DCanvasMapProps> = ({
   useEffect(() => {
     setCurrentMode(activeMode);
   }, [activeMode]);
+
+  
+  // Initialize fog grid size based on container
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(() => {
+      const rect = el.getBoundingClientRect();
+      // Use cellSize 40px for grid calculations
+      setMapSize({ width: Math.round(rect.width), height: Math.round(rect.height) }, 40);
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [setMapSize]);
 
   // Load map image
   useEffect(() => {
@@ -285,7 +302,10 @@ const Simple2DCanvasMap: React.FC<Simple2DCanvasMapProps> = ({
         />
       </div>
 
-      {/* Unified Fog Overlay - только когда туман включен и режим "fog" */}
+      {/* Synced Fog of War (2D overlay) */}
+      <SyncedFogOverlay2D />
+
+      {/* Interactive Fog of War - только когда туман включен и режим "fog" */}
       {fogEnabled && currentMode === 'fog' && (
         <UnifiedFogOverlay2D
           enabled={true}
