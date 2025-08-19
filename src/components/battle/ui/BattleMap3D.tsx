@@ -17,6 +17,7 @@ import { Upload, X, Eye, EyeOff, Paintbrush2, Eraser, RotateCcw, Square } from "
 import { useUnifiedFogStore } from "@/stores/unifiedFogStore";
 import { Fog3DInteractor } from "../Fog3DInteractor";
 import { FogCursor3D } from "../FogCursor3D";
+import { FogOfWar3D } from "../enhanced/FogOfWar3D";
 
 interface BattleMap3DProps {
   sessionId?: string;
@@ -215,7 +216,7 @@ export default function BattleMap3D({
               className="flex items-center gap-2 text-xs w-full"
             >
               {fogEnabled ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
-              {fogEnabled ? 'Вкл' : 'Выкл'}
+              {fogEnabled ? 'Реалистичный туман ВКЛ' : 'Туман ВЫКЛ'}
             </Button>
 
             {fogEnabled && (
@@ -335,6 +336,9 @@ export default function BattleMap3D({
             visible={showMovementGrid}
           />
         )}
+
+        {/* Realistic Volumetric Fog of War */}
+        <FogOfWar3D mapSize={{ width: 24, height: 16 }} />
 
         {/* Synced Fog of War (3D overlay) - только если включен */}
         {fogEnabled && (
