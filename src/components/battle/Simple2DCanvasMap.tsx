@@ -235,30 +235,30 @@ const Simple2DCanvasMap: React.FC<Simple2DCanvasMapProps> = ({
   return (
     <div className="relative w-full h-full overflow-hidden bg-slate-800">
       {/* Map Controls */}
-      <div className="absolute top-4 left-4 z-50 bg-black/80 p-3 rounded-xl backdrop-blur">
-        <div className="flex flex-col gap-2">
-          <button
+      <div className="absolute top-4 left-4 z-50 bg-background/90 border border-border p-4 rounded-xl backdrop-blur-sm shadow-lg">
+        <div className="flex flex-col gap-3">
+          <Button
             onClick={toggleMode}
-            className={`px-3 py-2 rounded text-sm font-medium transition-colors ${
-              currentMode === 'fog' 
-                ? 'bg-purple-600 text-white hover:bg-purple-700' 
-                : 'bg-blue-600 text-white hover:bg-blue-700'
-            }`}
+            variant={currentMode === 'fog' ? 'default' : 'outline'}
+            size="sm"
+            className="justify-start"
           >
-            {currentMode === 'fog' ? <Paintbrush2 className="w-4 h-4 inline mr-2" /> : <Move className="w-4 h-4 inline mr-2" />}
+            {currentMode === 'fog' ? <Paintbrush2 className="w-4 h-4 mr-2" /> : <Move className="w-4 h-4 mr-2" />}
             {currentMode === 'fog' ? 'Туман' : 'Карта'}
-          </button>
+          </Button>
           
-          <button
+          <Button
             onClick={() => setShowGrid(!showGrid)}
-            className="px-3 py-2 rounded text-sm bg-gray-600 text-white hover:bg-gray-700"
+            variant="outline"
+            size="sm"
+            className="justify-start"
           >
-            {showGrid ? <EyeOff className="w-4 h-4 inline mr-2" /> : <Eye className="w-4 h-4 inline mr-2" />}
+            {showGrid ? <EyeOff className="w-4 h-4 mr-2" /> : <Eye className="w-4 h-4 mr-2" />}
             Сетка
-          </button>
+          </Button>
           
-          <div className="text-xs text-gray-300 space-y-1">
-            <div>Масштаб: {Math.round(scale * 100)}%</div>
+          <div className="text-xs text-muted-foreground space-y-1 pt-2 border-t border-border">
+            <div className="font-medium">Масштаб: {Math.round(scale * 100)}%</div>
             {currentMode === 'map' ? (
               <div className="space-y-1">
                 <div>🖱️ Drag: перемещение</div>
@@ -306,11 +306,13 @@ const Simple2DCanvasMap: React.FC<Simple2DCanvasMapProps> = ({
       )}
 
       {/* Status Info */}
-      <div className="absolute bottom-4 right-4 z-50 bg-black/70 p-2 rounded-lg text-xs text-gray-300">
-        <div>Режим: {currentMode === 'map' ? 'Карта' : 'Туман'}</div>
-        <div>Токенов: {tokens.length}</div>
-        <div>Ассетов: {assets3D.length}</div>
-        {mapImageUrl && <div>Карта: загружена</div>}
+      <div className="absolute bottom-4 right-4 z-50 bg-background/80 border border-border p-3 rounded-lg backdrop-blur-sm shadow-lg">
+        <div className="text-xs text-muted-foreground space-y-1">
+          <div className="font-medium">Режим: {currentMode === 'map' ? 'Карта' : 'Туман'}</div>
+          <div>Токенов: {tokens.length}</div>
+          <div>Ассетов: {assets3D.length}</div>
+          {mapImageUrl && <div className="text-primary">Карта: загружена</div>}
+        </div>
       </div>
     </div>
   );
