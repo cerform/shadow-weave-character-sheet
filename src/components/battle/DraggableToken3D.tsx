@@ -142,18 +142,20 @@ const DraggableToken3D: React.FC<DraggableToken3DProps> = ({
         <TokenEquipment equipment={token.equipment} />
       )}
       
-      {/* Название токена */}
-      <Text
-        position={[0, 1.2, 0]}
-        fontSize={0.3}
-        color="white"
-        anchorX="center"
-        anchorY="middle"
-        outlineWidth={0.05}
-        outlineColor="black"
-      >
-        {token.name}
-      </Text>
+      {/* Название токена - только если не перетаскиваем */}
+      {!isDragging && (
+        <Text
+          position={[0, 1.2, 0]}
+          fontSize={0.3}
+          color="white"
+          anchorX="center"
+          anchorY="middle"
+          outlineWidth={0.05}
+          outlineColor="black"
+        >
+          {token.name}
+        </Text>
+      )}
 
       {/* HP бар над токеном */}
       {token.hp !== undefined && token.maxHp !== undefined && (

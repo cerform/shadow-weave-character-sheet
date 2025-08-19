@@ -184,18 +184,20 @@ const DraggableMonsterModel: React.FC<DraggableMonsterModelProps> = ({
         </group>
       )}
 
-      {/* Название монстра с улучшенной читаемостью */}
-      <Text
-        position={[0, 3, 0]}
-        fontSize={0.4}
-        color="white"
-        anchorX="center"
-        anchorY="middle"
-        outlineWidth={0.08}
-        outlineColor="black"
-      >
-        {token.name}
-      </Text>
+      {/* Название монстра с улучшенной читаемостью - только если не перетаскиваем */}
+      {!isDragging && (
+        <Text
+          position={[0, 3, 0]}
+          fontSize={0.4}
+          color="white"
+          anchorX="center"
+          anchorY="middle"
+          outlineWidth={0.08}
+          outlineColor="black"
+        >
+          {token.name}
+        </Text>
+      )}
 
       {/* Выделение при выборе или наведении с анимацией */}
       {(isSelected || isHovered) && (
