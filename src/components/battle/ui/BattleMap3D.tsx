@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Upload, X, Eye, EyeOff, Paintbrush2, Eraser, RotateCcw, Square } from "lucide-react";
 import { useUnifiedFogStore } from "@/stores/unifiedFogStore";
 import { Fog3DInteractor } from "../Fog3DInteractor";
+import { FogCursor3D } from "../FogCursor3D";
 
 interface BattleMap3DProps {
   sessionId?: string;
@@ -323,7 +324,10 @@ export default function BattleMap3D({
 
         {/* Interactive fog controls for DM */}
         {isDM && activeMode === 'fog' && (
-          <Fog3DInteractor />
+          <>
+            <Fog3DInteractor />
+            <FogCursor3D />
+          </>
         )}
 
         {/* Контроллы камеры - отключаем при рисовании тумана */}

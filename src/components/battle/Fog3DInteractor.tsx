@@ -66,8 +66,10 @@ export const Fog3DInteractor: React.FC = () => {
         const point = intersects[0].point;
         
         // Convert 3D world coordinates to 2D map coordinates
+        // 3D карта: x от -12 до +12 (24 units), z от -8 до +8 (16 units)
+        // 2D карта: x от 0 до 1200px, y от 0 до 800px
         const mapX = ((point.x + 12) / 24) * 1200; // Convert from [-12, 12] to [0, 1200]
-        const mapY = ((point.z + 8) / 16) * 800;   // Convert from [-8, 8] to [0, 800]
+        const mapY = ((-point.z + 8) / 16) * 800;  // Convert from [-8, 8] to [0, 800], инвертируем Z
         
         console.log('🌫️ Drawing at 3D:', { x: point.x, z: point.z }, 'Map:', { x: mapX, y: mapY });
 
@@ -104,7 +106,7 @@ export const Fog3DInteractor: React.FC = () => {
     <mesh 
       ref={planeRef}
       rotation={[-Math.PI / 2, 0, 0]} 
-      position={[0, 0.01, 0]}
+      position={[0, 0.001, 0]} // Чуть выше базовой плоскости, но ниже тумана
     >
       <planeGeometry args={[24, 16]} />
       <meshBasicMaterial transparent opacity={0} />
