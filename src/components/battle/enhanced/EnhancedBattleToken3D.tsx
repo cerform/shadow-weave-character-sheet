@@ -63,14 +63,27 @@ export const EnhancedBattleToken3D: React.FC<EnhancedBattleToken3DProps> = ({ to
     
     event.stopPropagation();
     
-    // Получаем позицию мыши в 3D пространстве
-    const intersection = event.intersections[0];
-    if (intersection) {
+    // Получаем позицию мыши в мире через raycasting с плоскостью
+    const mouse = new THREE.Vector2(
+      (event.nativeEvent.clientX / window.innerWidth) * 2 - 1,
+      -(event.nativeEvent.clientY / window.innerHeight) * 2 + 1
+    );
+    
+    const raycaster = new THREE.Raycaster();
+    raycaster.setFromCamera(mouse, event.camera);
+    
+    // Создаем плоскость на уровне земли
+    const plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+    const intersectionPoint = new THREE.Vector3();
+    
+    if (raycaster.ray.intersectPlane(plane, intersectionPoint)) {
       const newPosition = snapToGrid([
-        intersection.point.x,
+        intersectionPoint.x,
         0,
-        intersection.point.z
+        intersectionPoint.z
       ]);
+      
+      console.log('Trying to move to:', newPosition);
       
       // Проверяем, можем ли переместиться в эту позицию
       if (canMoveToPosition(
@@ -81,8 +94,11 @@ export const EnhancedBattleToken3D: React.FC<EnhancedBattleToken3DProps> = ({ to
         token.id,
         token.hasMovedThisTurn
       )) {
+        console.log('Movement allowed, updating position');
         // Обновляем позицию токена
         updateToken(token.id, { position: newPosition });
+      } else {
+        console.log('Movement not allowed');
       }
     }
   };
