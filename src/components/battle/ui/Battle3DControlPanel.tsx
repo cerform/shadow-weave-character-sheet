@@ -58,20 +58,20 @@ export const Battle3DControlPanel: React.FC = () => {
   const specialMode = getSpecialModeInfo();
 
   return (
-    <Card className="fixed bottom-4 left-4 z-50 w-80 bg-background/95 backdrop-blur-sm border-border shadow-lg">
-      <CardContent className="p-4 space-y-4">
+    <Card className="fixed bottom-4 left-4 z-[60] w-80 bg-background/95 backdrop-blur-sm border-border shadow-lg">
+      <CardContent className="p-3 space-y-3">
         {/* Текущий режим */}
         <div className="space-y-2">
-          <h3 className="text-sm font-medium text-muted-foreground">Текущий режим</h3>
+          <h3 className="text-xs font-medium text-muted-foreground">Текущий режим</h3>
           {specialMode ? (
-            <div className={`${specialMode.color} text-white px-3 py-2 rounded-lg flex items-center gap-2`}>
-              <specialMode.icon className="w-4 h-4" />
+            <div className={`${specialMode.color} text-white px-2 py-1.5 rounded-md flex items-center gap-1.5 text-sm`}>
+              <specialMode.icon className="w-3 h-3" />
               <span className="font-medium">{specialMode.text}</span>
             </div>
           ) : (
-            <div className={`${getModeColor(currentMode)} text-white px-3 py-2 rounded-lg flex items-center gap-2`}>
-              {React.createElement(getModeIcon(currentMode), { className: "w-4 h-4" })}
-              <span className="font-medium">
+            <div className={`${getModeColor(currentMode)} text-white px-2 py-1.5 rounded-md flex items-center gap-1.5 text-sm`}>
+              {React.createElement(getModeIcon(currentMode), { className: "w-3 h-3" })}
+              <span className="text-sm font-medium">
                 {currentMode === 'navigation' && 'Навигация'}
                 {currentMode === 'token' && 'Управление токенами'}
                 {currentMode === 'fog' && 'Туман войны'}
@@ -83,13 +83,13 @@ export const Battle3DControlPanel: React.FC = () => {
 
         {/* Кнопки переключения режимов */}
         <div className="space-y-2">
-          <h3 className="text-sm font-medium text-muted-foreground">Режимы управления</h3>
-          <div className="grid grid-cols-2 gap-2">
+          <h3 className="text-xs font-medium text-muted-foreground">Режимы управления</h3>
+          <div className="grid grid-cols-2 gap-1.5">
             <Button
               variant={currentMode === 'navigation' ? 'default' : 'outline'}
               size="sm"
               onClick={() => setMode('navigation')}
-              className="flex items-center gap-2"
+              className="flex items-center gap-1.5 h-8 text-xs"
             >
               <Navigation className="w-3 h-3" />
               <span className="text-xs">Навигация</span>
@@ -99,7 +99,7 @@ export const Battle3DControlPanel: React.FC = () => {
               variant={currentMode === 'token' ? 'default' : 'outline'}
               size="sm"
               onClick={() => setMode('token')}
-              className="flex items-center gap-2"
+              className="flex items-center gap-1.5 h-8 text-xs"
             >
               <User className="w-3 h-3" />
               <span className="text-xs">Токены</span>
@@ -110,7 +110,7 @@ export const Battle3DControlPanel: React.FC = () => {
                 variant={currentMode === 'fog' ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => setMode('fog')}
-                className="flex items-center gap-2"
+                className="flex items-center gap-1.5 h-8 text-xs"
               >
                 <Cloud className="w-3 h-3" />
                 <span className="text-xs">Туман</span>
@@ -121,7 +121,7 @@ export const Battle3DControlPanel: React.FC = () => {
               variant={currentMode === 'asset' ? 'default' : 'outline'}
               size="sm"
               onClick={() => setMode('asset')}
-              className="flex items-center gap-2"
+              className="flex items-center gap-1.5 h-8 text-xs"
             >
               <Box className="w-3 h-3" />
               <span className="text-xs">Ассеты</span>
@@ -131,7 +131,7 @@ export const Battle3DControlPanel: React.FC = () => {
 
         {/* Горячие клавиши */}
         <div className="space-y-2">
-          <h3 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+          <h3 className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
             <Keyboard className="w-3 h-3" />
             Горячие клавиши
           </h3>
