@@ -3,7 +3,7 @@ import {
   BattleInitiativeTracker, 
   BattleCombatLog
 } from "@/components/battle/ui";
-import EnhancedBattleActionPanel from "@/components/battle/ui/EnhancedBattleActionPanel";
+import CompleteBattleActionPanel from "@/components/battle/ui/CompleteBattleActionPanel";
 
 export default function BattleScenePage() {
   return (
@@ -26,7 +26,7 @@ export default function BattleScenePage() {
       {/* UI оверлеи */}
       <BattleInitiativeTracker />
       <BattleCombatLog />
-      <EnhancedBattleActionPanel />
+      <CompleteBattleActionPanel />
     </div>
   );
 }
