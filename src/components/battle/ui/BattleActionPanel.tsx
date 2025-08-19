@@ -1,4 +1,5 @@
 import { useBattleUIStore } from "@/stores/battleUIStore";
+import { useEnhancedBattleStore } from "@/stores/enhancedBattleStore";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -10,13 +11,21 @@ import {
   Eye, 
   EyeOff,
   Heart,
-  Settings
+  Settings,
+  Move
 } from "lucide-react";
 
 export default function BattleActionPanel() {
   const { fogEnabled, toggleFog, addCombatEvent, activeId, tokens } = useBattleUIStore();
+  const { 
+    showMovementGrid, 
+    setShowMovementGrid, 
+    tokens: enhancedTokens,
+    activeId: enhancedActiveId 
+  } = useEnhancedBattleStore();
   
   const activeToken = tokens.find(t => t.id === activeId);
+  const enhancedActiveToken = enhancedTokens.find(t => t.id === enhancedActiveId);
 
   const handleDiceRoll = () => {
     if (activeToken) {
@@ -69,6 +78,19 @@ export default function BattleActionPanel() {
         action: "Heal",
         description: `${activeToken.name} лечится`
       });
+    }
+  };
+
+  const handleMovement = () => {
+    if (enhancedActiveToken && !enhancedActiveToken.hasMovedThisTurn) {
+      setShowMovementGrid(!showMovementGrid);
+      if (activeToken) {
+        addCombatEvent({
+          actor: activeToken.name,
+          action: "Movement Mode",
+          description: `${activeToken.name} ${showMovementGrid ? 'отключает' : 'включает'} режим перемещения`
+        });
+      }
     }
   };
 
@@ -128,7 +150,7 @@ export default function BattleActionPanel() {
           </div>
 
           {/* Дополнительные действия */}
-          <div className="grid grid-cols-2 gap-2 pt-2 border-t border-border">
+          <div className="grid grid-cols-3 gap-2 pt-2 border-t border-border">
             <Button
               variant="outline"
               onClick={handleHeal}
@@ -136,6 +158,16 @@ export default function BattleActionPanel() {
             >
               <Heart className="h-4 w-4" />
               Лечение
+            </Button>
+
+            <Button
+              variant={showMovementGrid ? "default" : "outline"}
+              onClick={handleMovement}
+              disabled={enhancedActiveToken?.hasMovedThisTurn}
+              className="flex items-center gap-2"
+            >
+              <Move className="h-4 w-4" />
+              Ходьба
             </Button>
 
             <Button
