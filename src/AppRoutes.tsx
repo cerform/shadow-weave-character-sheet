@@ -28,6 +28,7 @@ import DMSessionPage from '@/pages/DMSessionPage';
 import AdminAssetsPage from '@/pages/AdminAssetsPage';
 import DMMapEditorPage from '@/pages/DMMapEditorPage';
 import PlayerMapPage from '@/pages/PlayerMapPage';
+import BattleScenePage from '@/pages/BattleScenePage';
 
 
 // Ленивая загрузка страниц, зависящих от WebSocket
@@ -178,6 +179,8 @@ const AppRoutes: React.FC = () => {
         </ProtectedPlayerRoute>
       } />
 
+      {/* 3D Battle Map */}
+      <Route path="/battle-map-3d" element={<BattleScenePage />} />
       
       {/* Админские маршруты */}
       <Route path="/admin" element={
