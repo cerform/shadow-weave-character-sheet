@@ -21,10 +21,10 @@ import CharacterManagementPage from '@/pages/CharacterManagementPage';
 import DMDashboardPageNew from '@/pages/DMDashboardPageNew';
 import DMSessionPage from '@/pages/DMSessionPage';
 
-import DMMapGenerator3D from '@/pages/DMMapGenerator3D';
-import BattleMap3DPage from '@/pages/BattleMap3DPage';
-import EnhancedBattleScene from '@/pages/EnhancedBattleScene';
-import BattleMap2DPage from '@/pages/BattleMap2DPage';
+// import DMMapGenerator3D from '@/pages/DMMapGenerator3D';
+// import BattleMap3DPage from '@/pages/BattleMap3DPage';
+// import EnhancedBattleScene from '@/pages/EnhancedBattleScene';
+// import BattleMap2DPage from '@/pages/BattleMap2DPage';
 import AdminAssetsPage from '@/pages/AdminAssetsPage';
 import DMMapEditorPage from '@/pages/DMMapEditorPage';
 import PlayerMapPage from '@/pages/PlayerMapPage';
@@ -121,7 +121,7 @@ const AppRoutes: React.FC = () => {
   console.log('DndSpellsPage импортирована:', DndSpellsPage);
   console.log('AdminPage импортирована:', AdminPage);
   console.log('DMDashboardPageNew импортирована:', DMDashboardPageNew);
-  console.log('BattleMap3DPage импортирована:', BattleMap3DPage);
+  // console.log('BattleMap3DPage импортирована:', BattleMap3DPage);
   console.log('HomePage импортирована:', HomePage);
   console.log('window.location.pathname:', window.location.pathname);
   
@@ -156,45 +156,11 @@ const AppRoutes: React.FC = () => {
           <DMDashboardPageNew />
         </ProtectedDMRoute>
       } />
-      <Route path="/dm-map-3d" element={
-        <ProtectedDMRoute>
-          <DMMapGenerator3D />
-        </ProtectedDMRoute>
-      } />
-      <Route path="/battle-map-3d" element={
-        <ProtectedDMRoute>
-          <BattleMap3DPage />
-        </ProtectedDMRoute>
-      } />
-      <Route path="/battle-map-3d/:id" element={
-        <ProtectedDMRoute>
-          <BattleMap3DPage />
-        </ProtectedDMRoute>
-      } />
-      <Route path="/enhanced-battle" element={
-        <ProtectedDMRoute>
-          <EnhancedBattleScene />
-        </ProtectedDMRoute>
-      } />
-      <Route path="/enhanced-battle/:id" element={
-        <ProtectedDMRoute>
-          <EnhancedBattleScene />
-        </ProtectedDMRoute>
-      } />
-      <Route path="/battle-map-2d" element={
-        <ProtectedDMRoute>
-          <BattleMap2DPage />
-        </ProtectedDMRoute>
-      } />
-      <Route path="/battle-map-2d/:id" element={
-        <ProtectedDMRoute>
-          <BattleMap2DPage />
-        </ProtectedDMRoute>
-      } />
+      {/* DM маршруты временно отключены - все карты удалены */}
       
       {/* Редиректы для старых маршрутов карт */}
-      <Route path="/battle-map-fixed" element={<Navigate to="/battle-map-3d" replace />} />
-      <Route path="/battle-map-fixed/:id" element={<Navigate to="/battle-map-3d" replace />} />
+      <Route path="/battle-map-fixed" element={<Navigate to="/dm" replace />} />
+      <Route path="/battle-map-fixed/:id" element={<Navigate to="/dm" replace />} />
       
       <Route path="/dm-session/:sessionId" element={
         <ProtectedDMRoute>

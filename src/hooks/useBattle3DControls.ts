@@ -1,6 +1,5 @@
 import { useEffect, useCallback } from 'react';
 import { useBattle3DControlStore } from '@/stores/battle3DControlStore';
-import { useFogOfWarStore } from '@/stores/fogOfWarStore';
 
 interface UseBattle3DControlsProps {
   canvasElement?: HTMLElement;
@@ -20,8 +19,6 @@ export const useBattle3DControls = ({ canvasElement, isDM = false }: UseBattle3D
     currentMode,
   } = useBattle3DControlStore();
 
-  const { fogSettings, setIsDrawing, setIsPanning } = useFogOfWarStore();
-
   // Обработчик клавиатуры
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     // Предотвращаем дефолтное поведение для важных клавиш
@@ -32,15 +29,9 @@ export const useBattle3DControls = ({ canvasElement, isDM = false }: UseBattle3D
     switch (e.key) {
       case 'Shift':
         setKeyPressed('shift', true);
-        if (isDM && fogSettings.enabled) {
-          setMode('fog');
-        }
         break;
       case 'Alt':
         setKeyPressed('alt', true);
-        if (isDM && fogSettings.enabled) {
-          setMode('fog');
-        }
         break;
       case 'Control':
         setKeyPressed('ctrl', true);
@@ -58,30 +49,19 @@ export const useBattle3DControls = ({ canvasElement, isDM = false }: UseBattle3D
       case '2':
         setMode('token');
         break;
-      case '3':
-        if (isDM && fogSettings.enabled) {
-          setMode('fog');
-        }
-        break;
       case '4':
         setMode('asset');
         break;
     }
-  }, [isDM, fogSettings.enabled, setKeyPressed, setMode]);
+  }, [isDM, setKeyPressed, setMode]);
 
   const handleKeyUp = useCallback((e: KeyboardEvent) => {
     switch (e.key) {
       case 'Shift':
         setKeyPressed('shift', false);
-        if (currentMode === 'fog' && !keysPressed.alt) {
-          setMode('navigation');
-        }
         break;
       case 'Alt':
         setKeyPressed('alt', false);
-        if (currentMode === 'fog' && !keysPressed.shift) {
-          setMode('navigation');
-        }
         break;
       case 'Control':
         setKeyPressed('ctrl', false);
@@ -98,15 +78,7 @@ export const useBattle3DControls = ({ canvasElement, isDM = false }: UseBattle3D
     if (e.button !== 0) return;
     
     setMouseState(true, false);
-    
-    if (shouldHandleFogInteraction() && isDM) {
-      if (keysPressed.ctrl) {
-        setIsPanning(true);
-      } else if (keysPressed.shift || keysPressed.alt) {
-        setIsDrawing(true);
-      }
-    }
-  }, [shouldHandleFogInteraction, isDM, keysPressed, setMouseState, setIsDrawing, setIsPanning]);
+  }, [setMouseState]);
 
   const handleMouseMove = useCallback((e: MouseEvent) => {
     // Обновляем дельта мыши только при активном движении
@@ -118,9 +90,7 @@ export const useBattle3DControls = ({ canvasElement, isDM = false }: UseBattle3D
 
   const handleMouseUp = useCallback(() => {
     setMouseState(false, false);
-    setIsDrawing(false);
-    setIsPanning(false);
-  }, [setMouseState, setIsDrawing, setIsPanning]);
+  }, [setMouseState]);
 
   // Обработчики фокуса канваса
   const handleCanvasFocus = useCallback(() => {

@@ -1,10 +1,8 @@
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useRef } from "react";
 import { useBattleUIStore } from "@/stores/battleUIStore";
 import BattleToken3D from "./BattleToken3D";
-import { NewFog3D } from "../NewFog3D";
-import { FogControls3D } from "../FogControls3D";
 import { useBattle3DControls } from "@/hooks/useBattle3DControls";
 import { useBattle3DControlStore } from "@/stores/battle3DControlStore";
 
@@ -20,9 +18,6 @@ export default function BattleMap3D({
   const tokens = useBattleUIStore((s) => s.tokens);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const { shouldHandleCameraControls } = useBattle3DControlStore();
-  
-  // Локальное состояние тумана
-  const [fogEnabled, setFogEnabled] = useState(true);
 
   // Инициализируем систему управления
   useBattle3DControls({ 
@@ -37,16 +32,6 @@ export default function BattleMap3D({
 
   return (
     <div className="w-full h-full relative bg-background rounded-xl overflow-hidden border border-border">
-      {/* Панель управления туманом */}
-      <div className="absolute top-4 right-4 z-10">
-        <FogControls3D
-          sessionId={sessionId}
-          mapId={mapId}
-          enabled={fogEnabled}
-          onToggleEnabled={setFogEnabled}
-        />
-      </div>
-
       <Canvas 
         ref={canvasRef}
         shadows 
@@ -84,14 +69,6 @@ export default function BattleMap3D({
         {tokens.map((token) => (
           <BattleToken3D key={token.id} token={token} />
         ))}
-
-        {/* Новый туман войны */}
-        <NewFog3D 
-          sessionId={sessionId} 
-          mapId={mapId} 
-          enabled={fogEnabled}
-          opacity={0.8}
-        />
 
         {/* Контроллы камеры */}
         <OrbitControls 
