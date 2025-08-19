@@ -31,7 +31,8 @@ export default function BattleMap3D({
   const { 
     tokens: enhancedTokens, 
     selectedTokenId, 
-    activeId: enhancedActiveId 
+    activeId: enhancedActiveId,
+    showMovementGrid
   } = useEnhancedBattleStore();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const { shouldHandleCameraControls } = useBattle3DControlStore();
@@ -39,6 +40,11 @@ export default function BattleMap3D({
   const setSources = useFogGridStore(s => s.setSources);
   const [mapImageUrl, setMapImageUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  // Проверяем, перетаскивается ли активный токен
+  const isActiveTokenDragging = enhancedTokens.some(token => 
+    token.id === enhancedActiveId && showMovementGrid
+  );
   
   // Fog controls from unified store + grid actions from fog grid store
   const { 
@@ -323,10 +329,10 @@ export default function BattleMap3D({
         ))}
 
         {/* Индикатор доступных клеток для движения */}
-        {selectedTokenId && (
+        {enhancedActiveId && (
           <MovementIndicator 
-            tokenId={selectedTokenId} 
-            visible={true}
+            tokenId={enhancedActiveId} 
+            visible={showMovementGrid}
           />
         )}
 
@@ -346,14 +352,18 @@ export default function BattleMap3D({
           </>
         )}
 
-        {/* Контроллы камеры - отключаем при рисовании тумана */}
+        {/* Контроллы камеры - отключаем при рисовании тумана или перетаскивании токена */}
         <OrbitControls 
           enableDamping 
           dampingFactor={0.1}
           maxPolarAngle={Math.PI / 2.2}
           minDistance={8}
           maxDistance={40}
-          enabled={shouldHandleCameraControls() && activeMode !== 'fog'}
+          enabled={
+            shouldHandleCameraControls() && 
+            activeMode !== 'fog' && 
+            !isActiveTokenDragging
+          }
         />
       </Canvas>
     </div>

@@ -55,6 +55,9 @@ export const EnhancedBattleToken3D: React.FC<EnhancedBattleToken3DProps> = ({ to
     if (isActive && !token.hasMovedThisTurn) {
       setDragging(true);
       (event.target as any).setPointerCapture(event.pointerId);
+      
+      // Показываем сетку перемещения
+      useEnhancedBattleStore.getState().setShowMovementGrid(true);
     }
   };
 
@@ -107,6 +110,9 @@ export const EnhancedBattleToken3D: React.FC<EnhancedBattleToken3DProps> = ({ to
     if (dragging) {
       setDragging(false);
       (event.target as any).releasePointerCapture(event.pointerId);
+      
+      // Скрываем сетку перемещения
+      useEnhancedBattleStore.getState().setShowMovementGrid(false);
       
       // Отмечаем, что токен переместился в этом ходу
       updateToken(token.id, { hasMovedThisTurn: true });
