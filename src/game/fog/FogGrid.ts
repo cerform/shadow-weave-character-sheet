@@ -39,11 +39,6 @@ export class FogGrid {
     this.data[this.index(x, y)] = 2;
   }
 
-  downgradeVisibleToExplored() {
-    for (let i = 0; i < this.data.length; i++) {
-      if (this.data[i] === 2) this.data[i] = 1;
-    }
-  }
 
   revealAll() {
     this.data.fill(2);
@@ -117,33 +112,49 @@ export class FogGrid {
     }
   }
 
-  // Create snapshot for serialization
-  createSnapshot(): FogStateSnapshot {
+
+  downgradeVisibleToExplored() {
+    for (let i = 0; i < this.data.length; i++) {
+      if (this.data[i] === 2) this.data[i] = 1; // visible -> explored
+    }
+  }
+
+  revealRect(worldX: number, worldY: number, worldW: number, worldH: number) {
+    const minX = Math.floor(worldX / this.cellSize);
+    const minY = Math.floor(worldY / this.cellSize);
+    const maxX = Math.ceil((worldX + worldW) / this.cellSize);
+    const maxY = Math.ceil((worldY + worldH) / this.cellSize);
+    for (let y = minY; y < maxY; y++) {
+      for (let x = minX; x < maxX; x++) if (this.inBounds(x, y)) this.set(x, y, 1);
+    }
+  }
+
+  hideRect(worldX: number, worldY: number, worldW: number, worldH: number) {
+    const minX = Math.floor(worldX / this.cellSize);
+    const minY = Math.floor(worldY / this.cellSize);
+    const maxX = Math.ceil((worldX + worldW) / this.cellSize);
+    const maxY = Math.ceil((worldY + worldH) / this.cellSize);
+    for (let y = minY; y < maxY; y++) {
+      for (let x = minX; x < maxX; x++) if (this.inBounds(x, y)) this.set(x, y, 0);
+    }
+  }
+
+  snapshot(): FogStateSnapshot {
     return {
       grid: new Uint8Array(this.data),
       version: FOG_VERSION,
       cols: this.cols,
       rows: this.rows,
-      cellSize: this.cellSize
+      cellSize: this.cellSize,
     };
   }
 
-  // Load from snapshot
-  loadSnapshot(snapshot: FogStateSnapshot) {
-    if (snapshot.version !== FOG_VERSION) {
-      console.warn('Fog version mismatch, resetting grid');
-      this.clearHidden();
-      return;
-    }
-    
-    if (snapshot.cols !== this.cols || snapshot.rows !== this.rows) {
-      console.warn('Fog grid size mismatch, resetting grid');
-      this.clearHidden();
-      return;
-    }
-    
-    this.data.set(snapshot.grid);
+  load(sn: FogStateSnapshot) {
+    if (sn.cols !== this.cols || sn.rows !== this.rows || sn.cellSize !== this.cellSize) return;
+    this.data.set(sn.grid);
   }
+
+  raw(): Uint8Array { return this.data; }
 
   // Get opacity for rendering (0 = fully visible, 1 = fully hidden)
   getOpacity(x: number, y: number): number {

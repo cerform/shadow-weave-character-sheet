@@ -207,14 +207,14 @@ export const useUnifiedFogStore = create<UnifiedFogState>((set, get) => ({
   // Snapshot management
   getFogSnapshot: () => {
     const { fogGrid } = get();
-    return fogGrid?.createSnapshot() || null;
+    return fogGrid?.snapshot() || null;
   },
 
   loadFogSnapshot: (snapshot) => {
     const { fogGrid } = get();
     if (!fogGrid) return;
     
-    fogGrid.loadSnapshot(snapshot);
+    fogGrid.load(snapshot);
     set({ fogGrid: fogGrid });
   },
 
