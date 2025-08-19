@@ -85,7 +85,7 @@ interface FogOfWarStore {
 export const useFogOfWarStore = create<FogOfWarStore>((set, get) => ({
   visibleAreas: [],
   fogSettings: {
-    enabled: true,
+    enabled: true, // Включаем туман по умолчанию
     globalReveal: false, // По умолчанию вся карта закрыта туманом
     fogColor: '#000000', // Черный туман для полного скрытия
     fogOpacity: 0.95, // Почти полная непрозрачность

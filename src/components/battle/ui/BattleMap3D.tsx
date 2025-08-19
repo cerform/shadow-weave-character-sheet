@@ -3,7 +3,7 @@ import { OrbitControls } from "@react-three/drei";
 import { useMemo, useRef, useEffect } from "react";
 import { useBattleUIStore } from "@/stores/battleUIStore";
 import BattleToken3D from "./BattleToken3D";
-import BattleFogOfWar from "./BattleFogOfWar";
+import { SimpleFog3D } from "../SimpleFog3D";
 import { useBattle3DControls } from "@/hooks/useBattle3DControls";
 import { useBattle3DControlStore } from "@/stores/battle3DControlStore";
 
@@ -73,7 +73,7 @@ export default function BattleMap3D({
         ))}
 
         {/* Туман войны */}
-        {fogEnabled && <BattleFogOfWar sessionId={sessionId} mapId={mapId} />}
+        {fogEnabled && <SimpleFog3D sessionId={sessionId} mapId={mapId} />}
 
         {/* Контроллы камеры */}
         <OrbitControls 
