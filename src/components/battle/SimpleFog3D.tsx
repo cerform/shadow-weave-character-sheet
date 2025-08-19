@@ -50,7 +50,10 @@ export const SimpleFog3D: React.FC<SimpleFog3DProps> = ({
 
   // Обработка рисования
   const paintFog = (event: PointerEvent) => {
-    if (!shouldHandleFogInteraction()) return;
+    if (!fogSettings.enabled || !shouldHandleFogInteraction()) return;
+    
+    // Добавляем предотвращение стандартного поведения
+    event.preventDefault();
     
     const canvas = gl.domElement;
     const rect = canvas.getBoundingClientRect();
@@ -66,9 +69,9 @@ export const SimpleFog3D: React.FC<SimpleFog3DProps> = ({
     raycaster.ray.intersectPlane(plane, target);
 
     if (target) {
-      // Конвертируем координаты в систему карты
-      const worldX = target.x;
-      const worldY = target.z;
+      // Возвращаем смещение для правильного позиционирования
+      const worldX = target.x + 25;
+      const worldY = target.z + 25;
       
       console.log('🌫️ SimpleFog3D: Painting fog at world coords:', worldX, worldY, 'keys:', keysPressed);
       

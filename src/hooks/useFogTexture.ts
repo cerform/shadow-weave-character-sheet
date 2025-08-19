@@ -38,7 +38,7 @@ export function useFogTexture() {
     ctx.globalCompositeOperation = "destination-out";
     visibleAreas.forEach(area => {
       if (area.type === 'circle') {
-        const { u: ux, v: vz } = toUV(area.x, area.y);
+        const { u: ux, v: vz } = toUV(area.x - WORLD_SIZE/2, area.y - WORLD_SIZE/2);
         const r = (area.radius / WORLD_SIZE) * canvas.width;
         
         console.log('🌫️ Drawing visible area at UV:', ux, vz, 'radius:', r);

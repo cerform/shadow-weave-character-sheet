@@ -46,6 +46,7 @@ interface FogOfWarStore {
   // Actions
   setIsDM: (isDM: boolean) => void;
   enableFog: (enabled: boolean) => void;
+  setBrushSize: (size: number) => void;
   addVisibleArea: (area: Omit<VisibleArea, 'id'>) => void;
   updateVisibleArea: (id: string, updates: Partial<VisibleArea>) => void;
   removeVisibleArea: (id: string) => void;
@@ -119,6 +120,16 @@ export const useFogOfWarStore = create<FogOfWarStore>((set, get) => ({
     if (syncEnabled) {
       setTimeout(() => get().syncToSession(), 100);
     }
+  },
+
+  // Добавляем настройки размера кисти
+  setBrushSize: (size: number) => {
+    set((state) => ({
+      fogSettings: { 
+        ...state.fogSettings, 
+        brushSize: Math.max(50, Math.min(300, size)) // ограничиваем диапазон
+      }
+    }));
   },
 
   addVisibleArea: (area) => {
