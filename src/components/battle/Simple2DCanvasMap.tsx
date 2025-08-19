@@ -2,8 +2,8 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Move, Paintbrush2, Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
-import InteractiveFogOfWar from './InteractiveFogOfWar';
-import { useFogOfWarStore } from '@/stores/fogOfWarStore';
+import { UnifiedFogOverlay2D } from './fog/UnifiedFogOverlay2D';
+import { useUnifiedFogStore } from '@/stores/unifiedFogStore';
 
 interface Simple2DCanvasMapProps {
   assets3D?: any[];
@@ -27,16 +27,14 @@ const Simple2DCanvasMap: React.FC<Simple2DCanvasMapProps> = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   
-  // Fog of War store
+  // Unified fog store
   const { 
     activeMode, 
     setActiveMode, 
-    setFogTransform, 
-    fogTransform,
     setIsDM,
-    initializeSync,
-    loadFogFromDatabase
-  } = useFogOfWarStore();
+    initializeFog,
+    loadFromDatabase
+  } = useUnifiedFogStore();
   
   // Map interaction state
   const [scale, setScale] = useState(1);
@@ -53,23 +51,16 @@ const Simple2DCanvasMap: React.FC<Simple2DCanvasMapProps> = ({
   const [mapImage, setMapImage] = useState<HTMLImageElement | null>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
 
-  // Initialize fog of war
+  // Initialize unified fog system
   useEffect(() => {
     setIsDM(isDM);
-    if (sessionId && fogEnabled) {
-      initializeSync(sessionId);
-      loadFogFromDatabase(sessionId, mapId);
+    if (fogEnabled) {
+      initializeFog(1920, 1280, 40); // Standard map size and cell size
+      if (sessionId && mapId) {
+        loadFromDatabase(sessionId, mapId);
+      }
     }
-  }, [isDM, sessionId, mapId, fogEnabled, setIsDM, initializeSync, loadFogFromDatabase]);
-
-  // Sync transform with store
-  useEffect(() => {
-    setFogTransform({
-      offsetX: offset.x,
-      offsetY: offset.y,
-      scale: scale
-    });
-  }, [offset, scale, setFogTransform]);
+  }, [isDM, fogEnabled, sessionId, mapId, setIsDM, initializeFog, loadFromDatabase]);
 
   // Sync mode with store
   useEffect(() => {
@@ -294,14 +285,12 @@ const Simple2DCanvasMap: React.FC<Simple2DCanvasMapProps> = ({
         />
       </div>
 
-      {/* Interactive Fog of War - только когда туман включен и режим "fog" */}
+      {/* Unified Fog Overlay - только когда туман включен и режим "fog" */}
       {fogEnabled && currentMode === 'fog' && (
-        <InteractiveFogOfWar
-          isDM={isDM}
+        <UnifiedFogOverlay2D
           enabled={true}
           sessionId={sessionId}
           mapId={mapId}
-          onFogUpdate={(data) => console.log('Fog updated:', data)}
         />
       )}
 
