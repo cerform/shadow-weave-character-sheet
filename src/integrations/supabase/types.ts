@@ -350,51 +350,36 @@ export type Database = {
       }
       fog_of_war: {
         Row: {
+          created_at: string
           grid_x: number
           grid_y: number
           id: string
-          is_revealed: boolean | null
+          is_revealed: boolean
           map_id: string
-          revealed_at: string | null
-          revealed_by_user_id: string | null
           session_id: string
+          updated_at: string
         }
         Insert: {
+          created_at?: string
           grid_x: number
           grid_y: number
           id?: string
-          is_revealed?: boolean | null
+          is_revealed?: boolean
           map_id: string
-          revealed_at?: string | null
-          revealed_by_user_id?: string | null
           session_id: string
+          updated_at?: string
         }
         Update: {
+          created_at?: string
           grid_x?: number
           grid_y?: number
           id?: string
-          is_revealed?: boolean | null
+          is_revealed?: boolean
           map_id?: string
-          revealed_at?: string | null
-          revealed_by_user_id?: string | null
           session_id?: string
+          updated_at?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "fog_of_war_map_id_fkey"
-            columns: ["map_id"]
-            isOneToOne: false
-            referencedRelation: "battle_maps"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "fog_of_war_session_id_fkey"
-            columns: ["session_id"]
-            isOneToOne: false
-            referencedRelation: "game_sessions"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       game_sessions: {
         Row: {
