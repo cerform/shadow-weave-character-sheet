@@ -13,6 +13,8 @@ export interface EnhancedToken {
   avatarUrl?: string;
   size?: number;
   modelUrl?: string; // URL для 3D модели
+  speed?: number; // Скорость перемещения в клетках за ход (по умолчанию 6)
+  hasMovedThisTurn?: boolean; // Переместился ли в этом ходу
 }
 
 export interface CombatEvent {
@@ -103,6 +105,8 @@ export const useEnhancedBattleStore = create<EnhancedBattleState>((set, get) => 
       conditions: [],
       isVisible: true,
       isEnemy: false,
+      speed: 6,
+      hasMovedThisTurn: false,
     },
     {
       id: 'goblin-1',
@@ -114,6 +118,8 @@ export const useEnhancedBattleStore = create<EnhancedBattleState>((set, get) => 
       conditions: ['отравлен'],
       isEnemy: true,
       isVisible: true,
+      speed: 6,
+      hasMovedThisTurn: false,
     },
   ],
   activeId: 'hero-1',
@@ -183,11 +189,22 @@ export const useEnhancedBattleStore = create<EnhancedBattleState>((set, get) => 
     const nextIndex = (currentIndex + 1) % initiativeOrder.length;
     const nextId = initiativeOrder[nextIndex];
     
+    // Reset movement for the current token
+    if (activeId) {
+      set((state) => ({
+        tokens: state.tokens.map((token) =>
+          token.id === activeId ? { ...token, hasMovedThisTurn: false } : token
+        ),
+      }));
+    }
+    
     // If we've gone through all characters, increment round
     if (nextIndex === 0) {
       set((state) => ({
         activeId: nextId,
         currentRound: state.currentRound + 1,
+        // Reset movement for all tokens at start of new round
+        tokens: state.tokens.map((token) => ({ ...token, hasMovedThisTurn: false })),
       }));
     } else {
       set({ activeId: nextId });

@@ -5,6 +5,9 @@ import { useMemo, useRef, useEffect, useState } from "react";
 import * as THREE from "three";
 import { useBattleUIStore } from "@/stores/battleUIStore";
 import BattleToken3D from "./BattleToken3D";
+import { useEnhancedBattleStore } from "@/stores/enhancedBattleStore";
+import { EnhancedBattleToken3D } from "../enhanced/EnhancedBattleToken3D";
+import { MovementIndicator } from "../enhanced/MovementIndicator";
 import { useBattle3DControls } from "@/hooks/useBattle3DControls";
 import { useBattle3DControlStore } from "@/stores/battle3DControlStore";
 import { SyncedFogOverlay3D } from "../SyncedFogOverlay3D";
@@ -25,6 +28,11 @@ export default function BattleMap3D({
   mapId = 'default-map' 
 }: BattleMap3DProps = {}) {
   const tokens = useBattleUIStore((s) => s.tokens);
+  const { 
+    tokens: enhancedTokens, 
+    selectedTokenId, 
+    activeId: enhancedActiveId 
+  } = useEnhancedBattleStore();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const { shouldHandleCameraControls } = useBattle3DControlStore();
   const setMapSize = useFogGridStore(s => s.setMapSize);
@@ -309,10 +317,18 @@ export default function BattleMap3D({
         {/* Сетка поля */}
         <gridHelper args={[24, 24, "hsl(var(--primary))", "hsl(var(--muted))"]} />
 
-        {/* Токены */}
-        {tokens.map((token) => (
-          <BattleToken3D key={token.id} token={token} />
+        {/* Токены с улучшенной механикой движения */}
+        {enhancedTokens.map((token) => (
+          <EnhancedBattleToken3D key={token.id} token={token} />
         ))}
+
+        {/* Индикатор доступных клеток для движения */}
+        {selectedTokenId && (
+          <MovementIndicator 
+            tokenId={selectedTokenId} 
+            visible={true}
+          />
+        )}
 
         {/* Synced Fog of War (3D overlay) - только если включен */}
         {fogEnabled && (

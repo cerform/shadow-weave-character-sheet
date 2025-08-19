@@ -10,6 +10,8 @@ export type Token = {
   isEnemy?: boolean;
   isVisible?: boolean;
   avatarUrl?: string;
+  speed?: number; // Скорость перемещения в клетках за ход
+  hasMovedThisTurn?: boolean; // Переместился ли в этом ходу
 };
 
 export type CombatEvent = {
