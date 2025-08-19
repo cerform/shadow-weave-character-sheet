@@ -95,39 +95,41 @@ export default function BattleToken3D({ token }: { token: Token }) {
         </mesh>
       )}
 
-      {/* HP-бар и UI */}
-      <Html 
-        center 
-        distanceFactor={15} 
-        position={[token.position[0], token.position[1] + 1.5, token.position[2]]}
-      >
-        <div className="min-w-20 text-center select-none pointer-events-none">
-          {/* Имя токена */}
-          <div className="text-xs font-bold text-primary mb-1 drop-shadow-md">
-            {token.name}
-          </div>
-          
-          {/* HP-бар */}
-          <div className="w-24 h-2 bg-destructive/20 rounded-full border border-border/50 backdrop-blur-sm">
-            <div
-              className={`h-full rounded-full transition-all duration-300 ${
-                hpPercent > 60 ? 'bg-green-500' : 
-                hpPercent > 30 ? 'bg-yellow-500' : 'bg-red-500'
-              }`}
-              style={{ width: `${hpPercent}%` }}
-              title={`${token.hp}/${token.maxHp} HP`}
-            />
-          </div>
-          
-          {/* Числовые HP */}
-          <div className="text-xs text-muted-foreground mt-0.5">
-            {token.hp}/{token.maxHp}
-          </div>
+      {/* HP-бар и UI - только если не перетаскиваем */}
+      {!dragging && (
+        <Html 
+          center 
+          distanceFactor={15} 
+          position={[token.position[0], token.position[1] + 1.5, token.position[2]]}
+        >
+          <div className="min-w-20 text-center select-none pointer-events-none">
+            {/* Имя токена */}
+            <div className="text-xs font-bold text-primary mb-1 drop-shadow-md">
+              {token.name}
+            </div>
+            
+            {/* HP-бар */}
+            <div className="w-24 h-2 bg-destructive/20 rounded-full border border-border/50 backdrop-blur-sm">
+              <div
+                className={`h-full rounded-full transition-all duration-300 ${
+                  hpPercent > 60 ? 'bg-green-500' : 
+                  hpPercent > 30 ? 'bg-yellow-500' : 'bg-red-500'
+                }`}
+                style={{ width: `${hpPercent}%` }}
+                title={`${token.hp}/${token.maxHp} HP`}
+              />
+            </div>
+            
+            {/* Числовые HP */}
+            <div className="text-xs text-muted-foreground mt-0.5">
+              {token.hp}/{token.maxHp}
+            </div>
 
-          {/* Иконки состояний */}
-          <StatusIcons conditions={token.conditions} />
-        </div>
-      </Html>
+            {/* Иконки состояний */}
+            <StatusIcons conditions={token.conditions} />
+          </div>
+        </Html>
+      )}
     </group>
   );
 }

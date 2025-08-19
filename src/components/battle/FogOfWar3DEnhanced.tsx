@@ -176,8 +176,10 @@ export const FogOfWar3DEnhanced: React.FC<FogOfWar3DEnhancedProps> = ({
   const handlePointerDown = (event: PointerEvent) => {
     if (!isDM || !shouldHandleFogInteraction()) return;
     
+    // Останавливаем всплытие событий только для тумана
     event.preventDefault();
     event.stopPropagation();
+    
     setIsPainting(true);
     
     // Determine paint mode based on modifier keys
@@ -193,13 +195,16 @@ export const FogOfWar3DEnhanced: React.FC<FogOfWar3DEnhancedProps> = ({
   const handlePointerMove = (event: PointerEvent) => {
     if (!isDM || !isPainting || !shouldHandleFogInteraction()) return;
     
+    // Останавливаем всплытие событий только для тумана
     event.preventDefault();
     event.stopPropagation();
     paintFog(event);
   };
 
   const handlePointerUp = () => {
-    setIsPainting(false);
+    if (isPainting) {
+      setIsPainting(false);
+    }
   };
 
   // Синхронизируем состояние рисования с центральным стором
@@ -243,12 +248,20 @@ export const FogOfWar3DEnhanced: React.FC<FogOfWar3DEnhancedProps> = ({
 
   // Add event listeners for DM painting
   useEffect(() => {
-    if (!isDM || !shouldHandleFogInteraction()) return;
+    if (!isDM) return;
 
     const canvas = gl.domElement;
     
-    const wrappedPointerDown = (e: Event) => handlePointerDown(e as PointerEvent);
-    const wrappedPointerMove = (e: Event) => handlePointerMove(e as PointerEvent);
+    const wrappedPointerDown = (e: Event) => {
+      if (shouldHandleFogInteraction()) {
+        handlePointerDown(e as PointerEvent);
+      }
+    };
+    const wrappedPointerMove = (e: Event) => {
+      if (shouldHandleFogInteraction()) {
+        handlePointerMove(e as PointerEvent);
+      }
+    };
     
     canvas.addEventListener('pointerdown', wrappedPointerDown);
     window.addEventListener('pointermove', wrappedPointerMove);
@@ -259,7 +272,7 @@ export const FogOfWar3DEnhanced: React.FC<FogOfWar3DEnhancedProps> = ({
       window.removeEventListener('pointermove', wrappedPointerMove);
       window.removeEventListener('pointerup', handlePointerUp);
     };
-  }, [isDM, shouldHandleFogInteraction, isPainting, brushSize]);
+  }, [isDM, shouldHandleFogInteraction, isPainting, brushSize, keysPressed]);
 
   if (!fogTexture) return null;
 

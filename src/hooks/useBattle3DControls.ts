@@ -94,6 +94,9 @@ export const useBattle3DControls = ({ canvasElement, isDM = false }: UseBattle3D
 
   // Обработчики мыши
   const handleMouseDown = useCallback((e: MouseEvent) => {
+    // Проверяем, что нажата левая кнопка мыши
+    if (e.button !== 0) return;
+    
     setMouseState(true, false);
     
     if (shouldHandleFogInteraction() && isDM) {
@@ -106,10 +109,12 @@ export const useBattle3DControls = ({ canvasElement, isDM = false }: UseBattle3D
   }, [shouldHandleFogInteraction, isDM, keysPressed, setMouseState, setIsDrawing, setIsPanning]);
 
   const handleMouseMove = useCallback((e: MouseEvent) => {
-    // Обновляем дельта мыши для всех интерактивных элементов
-    const delta = { x: e.movementX, y: e.movementY };
-    setMouseState(true, true, delta);
-  }, [setMouseState]);
+    // Обновляем дельта мыши только при активном движении
+    if (keysPressed.shift || keysPressed.alt || keysPressed.ctrl || keysPressed.space) {
+      const delta = { x: e.movementX, y: e.movementY };
+      setMouseState(true, true, delta);
+    }
+  }, [setMouseState, keysPressed]);
 
   const handleMouseUp = useCallback(() => {
     setMouseState(false, false);

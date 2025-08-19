@@ -137,7 +137,10 @@ export const useBattle3DControlStore = create<Battle3DControlState>((set, get) =
     return (
       state.canInteract && 
       !state.blockInteractions && 
-      (state.currentMode === 'fog' || state.keysPressed.shift || state.keysPressed.alt)
+      (state.currentMode === 'fog' || 
+       state.keysPressed.shift || 
+       state.keysPressed.alt ||
+       state.keysPressed.ctrl)
     );
   },
   
@@ -157,8 +160,9 @@ export const useBattle3DControlStore = create<Battle3DControlState>((set, get) =
     return (
       state.canInteract && 
       !state.blockInteractions && 
-      !state.isDragging && 
-      (state.currentMode === 'navigation' || state.keysPressed.space || state.keysPressed.ctrl)
+      (state.currentMode === 'navigation' || 
+       (state.keysPressed.space && !state.keysPressed.shift && !state.keysPressed.alt) ||
+       (!state.keysPressed.shift && !state.keysPressed.alt && !state.keysPressed.ctrl))
     );
   },
   
