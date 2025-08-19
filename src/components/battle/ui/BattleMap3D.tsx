@@ -10,7 +10,9 @@ import { useBattle3DControlStore } from "@/stores/battle3DControlStore";
 import { SyncedFogOverlay3D } from "../SyncedFogOverlay3D";
 import { useFogGridStore } from "@/stores/fogGridStore";
 import { Button } from "@/components/ui/button";
-import { Upload, X } from "lucide-react";
+import { Upload, X, Eye, EyeOff, Paintbrush2, Eraser, RotateCcw, Square } from "lucide-react";
+import { useUnifiedFogStore } from "@/stores/unifiedFogStore";
+import { Fog3DInteractor } from "../Fog3DInteractor";
 
 interface BattleMap3DProps {
   sessionId?: string;
@@ -28,13 +30,29 @@ export default function BattleMap3D({
   const setSources = useFogGridStore(s => s.setSources);
   const [mapImageUrl, setMapImageUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  // Fog controls
+  const { 
+    enabled: fogEnabled, 
+    activeMode, 
+    brushSize,
+    setEnabled: setFogEnabled,
+    setActiveMode,
+    setBrushSize,
+    revealAll,
+    hideAll,
+    revealArea,
+    hideArea
+  } = useUnifiedFogStore();
+  
+  const [isDM] = useState(true); // В реальном приложении это будет из контекста пользователя
 
   // Initialize fog grid size for 3D map
   useEffect(() => {
     console.log('🌫️ Initializing fog grid for 3D map');
-    // 3D map logical size: 1200x800 px (corresponds to 24x16 world units)
     setMapSize({ width: 1200, height: 800 }, 40);
-  }, [setMapSize]);
+    setFogEnabled(true); // Enable fog by default
+  }, [setMapSize, setFogEnabled]);
 
   // Create vision sources from tokens
   useEffect(() => {
@@ -112,9 +130,11 @@ export default function BattleMap3D({
 
   return (
     <div className="w-full h-full relative bg-background rounded-xl overflow-hidden border border-border">
-      {/* Map Upload Controls */}
-      <div className="absolute top-4 left-4 z-50 bg-black/80 p-3 rounded-xl backdrop-blur">
-        <div className="flex flex-col gap-2">
+      {/* Controls Panel */}
+      <div className="absolute top-4 left-4 z-50 bg-black/80 p-3 rounded-xl backdrop-blur space-y-3">
+        {/* Map Upload Controls */}
+        <div className="space-y-2">
+          <h3 className="text-sm font-medium text-white">Карта</h3>
           <input
             ref={fileInputRef}
             type="file"
@@ -123,31 +143,110 @@ export default function BattleMap3D({
             className="hidden"
           />
           
-          <Button
-            onClick={() => fileInputRef.current?.click()}
-            size="sm"
-            variant="secondary"
-            className="flex items-center gap-2"
-          >
-            <Upload className="w-4 h-4" />
-            {mapImageUrl ? 'Сменить карту' : 'Загрузить карту'}
-          </Button>
-          
-          {mapImageUrl && (
+          <div className="flex flex-col gap-2">
             <Button
-              onClick={clearMap}
+              onClick={() => fileInputRef.current?.click()}
               size="sm"
-              variant="destructive"
-              className="flex items-center gap-2"
+              variant="secondary"
+              className="flex items-center gap-2 text-xs"
             >
-              <X className="w-4 h-4" />
-              Убрать карту
+              <Upload className="w-3 h-3" />
+              {mapImageUrl ? 'Сменить' : 'Загрузить'}
             </Button>
-          )}
-          
-          <div className="text-xs text-gray-300">
-            {mapImageUrl ? 'Карта загружена' : 'Нет карты'}
+            
+            {mapImageUrl && (
+              <Button
+                onClick={clearMap}
+                size="sm"
+                variant="destructive"
+                className="flex items-center gap-2 text-xs"
+              >
+                <X className="w-3 h-3" />
+                Убрать
+              </Button>
+            )}
           </div>
+        </div>
+
+        {/* Fog Controls - только для DM */}
+        {isDM && (
+          <div className="space-y-2 border-t border-gray-600 pt-3">
+            <h3 className="text-sm font-medium text-white">Туман войны</h3>
+            
+            {/* Fog On/Off */}
+            <Button
+              onClick={() => setFogEnabled(!fogEnabled)}
+              size="sm"
+              variant={fogEnabled ? "default" : "secondary"}
+              className="flex items-center gap-2 text-xs w-full"
+            >
+              {fogEnabled ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
+              {fogEnabled ? 'Вкл' : 'Выкл'}
+            </Button>
+
+            {fogEnabled && (
+              <>
+                {/* Mode Toggle */}
+                <Button
+                  onClick={() => setActiveMode(activeMode === 'map' ? 'fog' : 'map')}
+                  size="sm"
+                  variant={activeMode === 'fog' ? "default" : "secondary"}
+                  className="flex items-center gap-2 text-xs w-full"
+                >
+                  {activeMode === 'fog' ? <Paintbrush2 className="w-3 h-3" /> : <Square className="w-3 h-3" />}
+                  {activeMode === 'fog' ? 'Редактор' : 'Просмотр'}
+                </Button>
+
+                {/* Brush Size */}
+                {activeMode === 'fog' && (
+                  <div className="space-y-1">
+                    <label className="text-xs text-gray-300">Кисть: {brushSize}px</label>
+                    <input
+                      type="range"
+                      min="50"
+                      max="300"
+                      step="25"
+                      value={brushSize}
+                      onChange={(e) => setBrushSize(Number(e.target.value))}
+                      className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer"
+                    />
+                  </div>
+                )}
+
+                {/* Quick Actions */}
+                <div className="flex gap-1">
+                  <Button
+                    onClick={() => revealAll()}
+                    size="sm"
+                    variant="outline"
+                    className="flex-1 text-xs"
+                  >
+                    Показать все
+                  </Button>
+                  <Button
+                    onClick={() => hideAll()}
+                    size="sm"
+                    variant="outline"
+                    className="flex-1 text-xs"
+                  >
+                    Скрыть все
+                  </Button>
+                </div>
+              </>
+            )}
+          </div>
+        )}
+
+        {/* Status */}
+        <div className="text-xs text-gray-400 border-t border-gray-600 pt-2">
+          <div>Режим: {activeMode === 'fog' ? 'Туман' : 'Карта'}</div>
+          <div>Карта: {mapImageUrl ? 'загружена' : 'нет'}</div>
+          <div>Туман: {fogEnabled ? 'включен' : 'выключен'}</div>
+          {activeMode === 'fog' && (
+            <div className="text-yellow-400 text-xs mt-1">
+              ЛКМ - открыть | Shift+ЛКМ - скрыть
+            </div>
+          )}
         </div>
       </div>
 
@@ -192,20 +291,27 @@ export default function BattleMap3D({
           <BattleToken3D key={token.id} token={token} />
         ))}
 
-        {/* Synced Fog of War (3D overlay) */}
-        <SyncedFogOverlay3D 
-          mapSize={{ width: 1200, height: 800 }} 
-          planeSize={{ width: 24, height: 16 }} 
-        />
+        {/* Synced Fog of War (3D overlay) - только если включен */}
+        {fogEnabled && (
+          <SyncedFogOverlay3D 
+            mapSize={{ width: 1200, height: 800 }} 
+            planeSize={{ width: 24, height: 16 }} 
+          />
+        )}
 
-        {/* Контроллы камеры */}
+        {/* Interactive fog controls for DM */}
+        {isDM && activeMode === 'fog' && (
+          <Fog3DInteractor />
+        )}
+
+        {/* Контроллы камеры - отключаем при рисовании тумана */}
         <OrbitControls 
           enableDamping 
           dampingFactor={0.1}
           maxPolarAngle={Math.PI / 2.2}
           minDistance={8}
           maxDistance={40}
-          enabled={shouldHandleCameraControls()}
+          enabled={shouldHandleCameraControls() && activeMode !== 'fog'}
         />
       </Canvas>
     </div>
