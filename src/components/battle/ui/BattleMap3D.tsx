@@ -21,12 +21,33 @@ export default function BattleMap3D({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const { shouldHandleCameraControls } = useBattle3DControlStore();
   const setMapSize = useFogGridStore(s => s.setMapSize);
+  const setSources = useFogGridStore(s => s.setSources);
 
   // Initialize fog grid size for 3D map
   useEffect(() => {
+    console.log('🌫️ Initializing fog grid for 3D map');
     // 3D map logical size: 1200x800 px (corresponds to 24x16 world units)
     setMapSize({ width: 1200, height: 800 }, 40);
   }, [setMapSize]);
+
+  // Create vision sources from tokens
+  useEffect(() => {
+    if (tokens.length > 0) {
+      const sources = tokens.map(token => ({
+        x: ((token.position[0] || 0) / 24) * 1200 + 600, // Convert 3D world coords to 2D pixel coords, center at 600px
+        y: ((token.position[2] || 0) / 16) * 800 + 400,  // z in 3D becomes y in 2D, center at 400px 
+        radius: 150, // Vision radius in pixels
+        angle: 0,
+        fov: Math.PI * 2 // 360 degree vision
+      }));
+      
+      console.log('🌫️ Setting vision sources from tokens:', sources);
+      setSources(sources);
+    } else {
+      console.log('🌫️ No tokens found, clearing vision sources');
+      setSources([]);
+    }
+  }, [tokens, setSources]);
 
   // Инициализируем систему управления
   useBattle3DControls({ 
@@ -65,14 +86,18 @@ export default function BattleMap3D({
           shadow-camera-bottom={-20}
         />
 
-        {/* Основание карты */}
+        {/* Основание карты с текстурой */}
         <mesh receiveShadow rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.1, 0]}>
-          <planeGeometry args={[50, 50]} />
-          <meshStandardMaterial color="#1a1a2e" />
+          <planeGeometry args={[24, 16]} />
+          <meshStandardMaterial 
+            color="#2a2a3e" 
+            transparent 
+            opacity={0.8}
+          />
         </mesh>
 
         {/* Сетка поля */}
-        <gridHelper args={[50, 50, "hsl(var(--primary))", "hsl(var(--muted))"]} />
+        <gridHelper args={[24, 24, "hsl(var(--primary))", "hsl(var(--muted))"]} />
 
         {/* Токены */}
         {tokens.map((token) => (

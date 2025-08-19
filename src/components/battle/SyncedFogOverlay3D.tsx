@@ -28,6 +28,15 @@ export const SyncedFogOverlay3D: React.FC<Props> = ({
   // make DataTexture RGBA from grid
   const texture = useMemo(() => {
     const { cols, rows } = dims();
+    
+    // Prevent creation with zero dimensions
+    if (cols === 0 || rows === 0) {
+      const data = new Uint8Array(4); // 1x1 transparent pixel
+      const tex = new THREE.DataTexture(data, 1, 1, THREE.RGBAFormat);
+      tex.needsUpdate = true;
+      return tex;
+    }
+    
     const data = new Uint8Array(cols * rows * 4);
     const tex = new THREE.DataTexture(data, cols, rows, THREE.RGBAFormat);
     tex.needsUpdate = true;
@@ -35,7 +44,7 @@ export const SyncedFogOverlay3D: React.FC<Props> = ({
     tex.minFilter = THREE.NearestFilter;
     return tex;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [dims]);
 
   const material = useMemo(() => {
     const mat = new THREE.MeshBasicMaterial({
@@ -51,6 +60,15 @@ export const SyncedFogOverlay3D: React.FC<Props> = ({
   useEffect(() => {
     const data = raw();
     const { cols, rows } = dims();
+    
+    // Skip if grid is not initialized
+    if (cols === 0 || rows === 0 || data.length === 0) {
+      console.log('🌫️ Fog grid not yet initialized, skipping texture update');
+      return;
+    }
+    
+    console.log('🌫️ Updating fog texture:', { cols, rows, dataLength: data.length });
+    
     const texData = texture.image.data;
 
     for (let y = 0; y < rows; y++) {
@@ -75,6 +93,13 @@ export const SyncedFogOverlay3D: React.FC<Props> = ({
 
     texture.needsUpdate = true;
   }, [version, texture, raw, dims, opacityHidden, opacityExplored]);
+
+  const { cols, rows } = dims();
+  
+  // Don't render if grid is not initialized
+  if (cols === 0 || rows === 0) {
+    return null;
+  }
 
   return (
     <mesh
