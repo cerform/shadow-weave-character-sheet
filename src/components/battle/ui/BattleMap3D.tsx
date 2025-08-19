@@ -1,9 +1,11 @@
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
-import { useMemo } from "react";
+import { useMemo, useRef, useEffect } from "react";
 import { useBattleUIStore } from "@/stores/battleUIStore";
 import BattleToken3D from "./BattleToken3D";
 import BattleFogOfWar from "./BattleFogOfWar";
+import { useBattle3DControls } from "@/hooks/useBattle3DControls";
+import { useBattle3DControlStore } from "@/stores/battle3DControlStore";
 
 interface BattleMap3DProps {
   sessionId?: string;
@@ -16,6 +18,14 @@ export default function BattleMap3D({
 }: BattleMap3DProps = {}) {
   const tokens = useBattleUIStore((s) => s.tokens);
   const fogEnabled = useBattleUIStore((s) => s.fogEnabled);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const { shouldHandleCameraControls } = useBattle3DControlStore();
+
+  // Инициализируем систему управления
+  useBattle3DControls({ 
+    canvasElement: canvasRef.current || undefined, 
+    isDM: true 
+  });
 
   const lighting = useMemo(() => ({
     ambient: { intensity: 0.6 },
@@ -25,9 +35,14 @@ export default function BattleMap3D({
   return (
     <div className="w-full h-full relative bg-background rounded-xl overflow-hidden border border-border">
       <Canvas 
+        ref={canvasRef}
         shadows 
         camera={{ position: [0, 20, 20], fov: 45 }}
         gl={{ antialias: true }}
+        onCreated={({ gl }) => {
+          // Устанавливаем ссылку на канвас для системы управления
+          canvasRef.current = gl.domElement;
+        }}
       >
         {/* Освещение */}
         <ambientLight intensity={lighting.ambient.intensity} />
@@ -67,6 +82,7 @@ export default function BattleMap3D({
           maxPolarAngle={Math.PI / 2.2}
           minDistance={8}
           maxDistance={40}
+          enabled={shouldHandleCameraControls()}
         />
       </Canvas>
     </div>

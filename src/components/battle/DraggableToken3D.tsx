@@ -1,6 +1,7 @@
 import React from 'react';
 import { Text } from '@react-three/drei';
 import { useDraggable3D } from '@/hooks/useDraggable3D';
+import { useBattle3DControlStore } from '@/stores/battle3DControlStore';
 
 
 interface Equipment {
@@ -108,6 +109,7 @@ const DraggableToken3D: React.FC<DraggableToken3DProps> = ({
   onDragChange,
 }) => {
   const canMove = isDM || token.controlledBy === 'player1';
+  const { shouldHandleTokenInteraction, setSelectedToken } = useBattle3DControlStore();
   
   const {
     groupRef,
@@ -115,7 +117,12 @@ const DraggableToken3D: React.FC<DraggableToken3DProps> = ({
     handlePointerDown,
     handlePointerEnter,
     handlePointerLeave,
-  } = useDraggable3D(canMove, onMove, onDragChange, onSelect);
+  } = useDraggable3D(canMove && shouldHandleTokenInteraction(), onMove, onDragChange, () => {
+    if (shouldHandleTokenInteraction()) {
+      setSelectedToken(token.id);
+      onSelect();
+    }
+  });
 
   
   return (

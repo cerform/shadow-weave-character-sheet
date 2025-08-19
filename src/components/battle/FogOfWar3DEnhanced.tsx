@@ -3,6 +3,7 @@ import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { supabase } from '@/integrations/supabase/client';
 import { useFogOfWarStore } from '@/stores/fogOfWarStore';
+import { useBattle3DControlStore } from '@/stores/battle3DControlStore';
 
 interface FogCell {
   id: string;
@@ -169,21 +170,20 @@ export const FogOfWar3DEnhanced: React.FC<FogOfWar3DEnhancedProps> = ({
     }
   });
 
+  const { shouldHandleFogInteraction, keysPressed, isMouseDown } = useBattle3DControlStore();
+
   // Handle mouse interactions for DM painting
   const handlePointerDown = (event: PointerEvent) => {
-    if (!isDM) return;
-    
-    // Only handle fog painting when modifier keys are pressed
-    if (!event.shiftKey && !event.altKey) return;
+    if (!isDM || !shouldHandleFogInteraction()) return;
     
     event.preventDefault();
     event.stopPropagation();
     setIsPainting(true);
     
     // Determine paint mode based on modifier keys
-    if (event.shiftKey) {
+    if (keysPressed.shift) {
       setPaintMode('reveal');
-    } else if (event.altKey) {
+    } else if (keysPressed.alt) {
       setPaintMode('hide');
     }
     
@@ -191,13 +191,7 @@ export const FogOfWar3DEnhanced: React.FC<FogOfWar3DEnhancedProps> = ({
   };
 
   const handlePointerMove = (event: PointerEvent) => {
-    if (!isDM || !isPainting) return;
-    
-    // Only continue painting if modifier keys are still pressed
-    if (!event.shiftKey && !event.altKey) {
-      setIsPainting(false);
-      return;
-    }
+    if (!isDM || !isPainting || !shouldHandleFogInteraction()) return;
     
     event.preventDefault();
     event.stopPropagation();
@@ -207,6 +201,13 @@ export const FogOfWar3DEnhanced: React.FC<FogOfWar3DEnhancedProps> = ({
   const handlePointerUp = () => {
     setIsPainting(false);
   };
+
+  // Синхронизируем состояние рисования с центральным стором
+  useEffect(() => {
+    if (!isMouseDown) {
+      setIsPainting(false);
+    }
+  }, [isMouseDown]);
 
   const paintFog = async (event: PointerEvent) => {
     if (!isDM || !fogMesh.current) return;
@@ -242,19 +243,23 @@ export const FogOfWar3DEnhanced: React.FC<FogOfWar3DEnhancedProps> = ({
 
   // Add event listeners for DM painting
   useEffect(() => {
-    if (!isDM) return;
+    if (!isDM || !shouldHandleFogInteraction()) return;
 
     const canvas = gl.domElement;
-    canvas.addEventListener('pointerdown', handlePointerDown);
-    window.addEventListener('pointermove', handlePointerMove);
+    
+    const wrappedPointerDown = (e: Event) => handlePointerDown(e as PointerEvent);
+    const wrappedPointerMove = (e: Event) => handlePointerMove(e as PointerEvent);
+    
+    canvas.addEventListener('pointerdown', wrappedPointerDown);
+    window.addEventListener('pointermove', wrappedPointerMove);
     window.addEventListener('pointerup', handlePointerUp);
 
     return () => {
-      canvas.removeEventListener('pointerdown', handlePointerDown);
-      window.removeEventListener('pointermove', handlePointerMove);
+      canvas.removeEventListener('pointerdown', wrappedPointerDown);
+      window.removeEventListener('pointermove', wrappedPointerMove);
       window.removeEventListener('pointerup', handlePointerUp);
     };
-  }, [isDM, isPainting, brushSize]);
+  }, [isDM, shouldHandleFogInteraction, isPainting, brushSize]);
 
   if (!fogTexture) return null;
 
