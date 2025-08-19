@@ -69,7 +69,10 @@ export default function EnhancedBattleActionPanel() {
     setShowMovementGrid, 
     tokens: enhancedTokens,
     activeId: enhancedActiveId,
-    addCombatEvent: addEnhancedCombatEvent
+    addCombatEvent: addEnhancedCombatEvent,
+    nextTurn,
+    combatStarted,
+    initiativeOrder
   } = useEnhancedBattleStore();
   
   const activeToken = tokens.find(t => t.id === activeId);
@@ -245,20 +248,52 @@ export default function EnhancedBattleActionPanel() {
     }
   };
 
+  const handleEndTurn = () => {
+    if (activeToken) {
+      addEnhancedCombatEvent({
+        actor: activeToken.name,
+        action: 'Завершение хода',
+        description: `${activeToken.name} завершает свой ход`,
+        playerName: activeToken.name
+      });
+      
+      // Переключаем на следующего игрока
+      nextTurn();
+    }
+  };
+
   return (
     <Card className="fixed bottom-4 left-4 w-80 bg-card/95 backdrop-blur-sm border-border shadow-xl">
       <CardHeader className="pb-3">
-        <CardTitle className="text-center">
+        <CardTitle className="text-center text-primary">
           {activeToken ? `Ход: ${activeToken.name}` : 'Боевые действия'}
         </CardTitle>
         {activeToken && (
-          <div className="flex justify-center gap-2">
-            <Badge variant="outline">
-              {activeToken.hp}/{activeToken.maxHp} HP
-            </Badge>
-            <Badge variant="secondary">
-              AC {enhancedActiveToken?.ac || 10}
-            </Badge>
+          <div className="space-y-2">
+            <div className="flex justify-center gap-2">
+              <Badge variant="outline">
+                {activeToken.hp}/{activeToken.maxHp} HP
+              </Badge>
+              <Badge variant="secondary">
+                AC {enhancedActiveToken?.ac || 10}
+              </Badge>
+            </div>
+            
+            {/* Показать порядок инициативы */}
+            {combatStarted && initiativeOrder.length > 0 && (
+              <div className="text-xs text-center text-muted-foreground">
+                Инициатива: {initiativeOrder.map((tokenId, index) => {
+                  const token = enhancedTokens.find(t => t.id === tokenId);
+                  const isActive = tokenId === enhancedActiveId;
+                  return (
+                    <span key={tokenId} className={isActive ? 'text-primary font-bold' : ''}>
+                      {token?.name || 'Unknown'}
+                      {index < initiativeOrder.length - 1 && ' → '}
+                    </span>
+                  );
+                })}
+              </div>
+            )}
           </div>
         )}
       </CardHeader>
@@ -409,6 +444,20 @@ export default function EnhancedBattleActionPanel() {
               </DialogContent>
             </Dialog>
           </div>
+        </div>
+
+        <Separator />
+
+        {/* Завершение хода */}
+        <div>
+          <Button
+            onClick={handleEndTurn}
+            disabled={!activeToken || !combatStarted}
+            className="w-full bg-green-600 hover:bg-green-700 text-white"
+          >
+            <Target className="w-4 h-4 mr-2" />
+            Завершить ход
+          </Button>
         </div>
 
         <Separator />

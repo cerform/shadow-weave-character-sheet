@@ -250,22 +250,25 @@ export const FogOfWar3D: React.FC<FogOfWar3DProps> = ({
         }
         
         void main() {
-          vec2 st = vUv * 10.0;
+          vec2 st = vUv * 5.0; // Reduced scale for larger fog patterns
           
           // Создаем многослойный шум
           float n = 0.0;
-          n += 0.5 * noise(st + uTime * 0.1);
-          n += 0.25 * noise(st * 2.0 + uTime * 0.15);
-          n += 0.125 * noise(st * 4.0 + uTime * 0.2);
+          n += 0.4 * noise(st + uTime * 0.05); // Slower movement
+          n += 0.2 * noise(st * 2.0 + uTime * 0.08);
+          n += 0.1 * noise(st * 4.0 + uTime * 0.1);
           
-          // Создаем мягкие края
+          // Создаем более мягкие края
           float dist = distance(vUv, vec2(0.5));
-          float edge = smoothstep(0.3, 0.5, dist);
+          float edge = smoothstep(0.2, 0.6, dist); // Softer edges
           
-          float alpha = n * uOpacity * (1.0 - edge);
-          alpha = clamp(alpha, 0.0, 1.0);
+          float alpha = n * uOpacity * 0.6 * (1.0 - edge); // Reduced base opacity
+          alpha = clamp(alpha, 0.0, 0.8); // Maximum alpha capped at 0.8
           
-          gl_FragColor = vec4(uColor, alpha);
+          // Make fog more visible with better color
+          vec3 fogColor = mix(uColor, vec3(0.4, 0.4, 0.6), n); // Add some variation
+          
+          gl_FragColor = vec4(fogColor, alpha);
         }
       `,
       transparent: true,
@@ -312,7 +315,7 @@ export const FogOfWar3D: React.FC<FogOfWar3DProps> = ({
     }
     
     if (volumetricFog.material.uniforms && volumetricFog.material.uniforms.uOpacity) {
-      volumetricFog.material.uniforms.uOpacity.value = fogEnabled ? 0.4 : 0.0;
+      volumetricFog.material.uniforms.uOpacity.value = fogEnabled ? 0.7 : 0.0; // Increased visibility
     }
   }, [fogEnabled, material, volumetricFog]);
   
@@ -320,11 +323,19 @@ export const FogOfWar3D: React.FC<FogOfWar3DProps> = ({
   useEffect(() => {
     if (material.uniforms && material.uniforms.uColor) {
       const color = fogMode === 'reveal' 
-        ? new THREE.Color(0.3, 0.6, 0.9) // Синеватый при раскрытии
-        : new THREE.Color(0.7, 0.7, 0.8); // Серый при скрытии
+        ? new THREE.Color(0.2, 0.4, 0.8) // More visible blue when revealing
+        : new THREE.Color(0.5, 0.5, 0.7); // Lighter gray when hiding
       material.uniforms.uColor.value = color;
     }
-  }, [fogMode, material]);
+    
+    // Also update volumetric fog color
+    if (volumetricFog.material.uniforms && volumetricFog.material.uniforms.uColor) {
+      const volColor = fogMode === 'reveal'
+        ? new THREE.Color(0.3, 0.5, 0.9)
+        : new THREE.Color(0.6, 0.6, 0.8);
+      volumetricFog.material.uniforms.uColor.value = volColor;
+    }
+  }, [fogMode, material, volumetricFog]);
   
   if (!fogEnabled) return null;
   
