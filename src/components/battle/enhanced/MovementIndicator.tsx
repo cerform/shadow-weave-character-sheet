@@ -8,9 +8,10 @@ import { useEnhancedBattleStore } from '@/stores/enhancedBattleStore';
 interface MovementIndicatorProps {
   tokenId: string;
   visible: boolean;
+  onCellClick?: (position: GridPosition) => void;
 }
 
-export const MovementIndicator: React.FC<MovementIndicatorProps> = ({ tokenId, visible }) => {
+export const MovementIndicator: React.FC<MovementIndicatorProps> = ({ tokenId, visible, onCellClick }) => {
   const groupRef = useRef<THREE.Group>(null);
   const tokens = useEnhancedBattleStore(s => s.tokens);
   
@@ -51,6 +52,18 @@ export const MovementIndicator: React.FC<MovementIndicatorProps> = ({ tokenId, v
             key={`movement-${cell.x}-${cell.z}`}
             position={[worldPos[0], 0.01, worldPos[2]]}
             rotation={[-Math.PI / 2, 0, 0]}
+            onClick={(e) => {
+              e.stopPropagation();
+              onCellClick?.(cell);
+            }}
+            onPointerOver={(e) => {
+              e.stopPropagation();
+              (e.object as any).material.color.setHex(0x60a5fa);
+            }}
+            onPointerOut={(e) => {
+              e.stopPropagation();
+              (e.object as any).material.color.setHex(0x3b82f6);
+            }}
           >
             <circleGeometry args={[0.4, 16]} />
             <meshBasicMaterial

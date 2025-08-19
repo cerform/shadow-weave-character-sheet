@@ -2,7 +2,8 @@ import { Html } from "@react-three/drei";
 import { ThreeEvent, useFrame } from "@react-three/fiber";
 import { useRef, useState } from "react";
 import { useEnhancedBattleStore, type EnhancedToken } from "@/stores/enhancedBattleStore";
-import { canMoveToPosition, snapToGrid } from "@/utils/movementUtils";
+import { canMoveToPosition, snapToGrid, gridToWorld, type GridPosition } from "@/utils/movementUtils";
+import { MovementIndicator } from "./MovementIndicator";
 import * as THREE from "three";
 
 interface EnhancedBattleToken3DProps {
@@ -126,12 +127,50 @@ export const EnhancedBattleToken3D: React.FC<EnhancedBattleToken3DProps> = ({ to
     }
   };
 
+  const handleCellClick = (cell: GridPosition) => {
+    if (!isActive || token.hasMovedThisTurn) return;
+    
+    const worldPosition = gridToWorld(cell);
+    
+    // Проверяем, можем ли переместиться в эту позицию
+    if (canMoveToPosition(
+      token.position,
+      worldPosition,
+      speed,
+      tokens,
+      token.id,
+      token.hasMovedThisTurn
+    )) {
+      // Обновляем позицию токена
+      updateToken(token.id, { 
+        position: worldPosition,
+        hasMovedThisTurn: true 
+      });
+      
+      // Добавляем событие в лог
+      addCombatEvent({
+        actor: token.name,
+        action: 'Перемещение',
+        description: `${token.name} переместился на позицию (${cell.x}, ${cell.z})`
+      });
+      
+      console.log(`Token ${token.name} moved to position:`, worldPosition);
+    }
+  };
+
   // Цвет токена
   const tokenColor = token.isEnemy ? "#ef4444" : "#22c55e";
   const emissiveColor = isSelected ? "#fbbf24" : (isActive ? "#3b82f6" : "#000000");
   
   return (
     <group position={token.position}>
+      {/* Индикатор доступных ходов */}
+      <MovementIndicator 
+        tokenId={token.id}
+        visible={isActive && !token.hasMovedThisTurn}
+        onCellClick={handleCellClick}
+      />
+      
       {/* Основной токен */}
       <mesh
         ref={meshRef}
