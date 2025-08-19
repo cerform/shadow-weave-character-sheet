@@ -1,3 +1,4 @@
+import React from "react";
 import { Canvas, useLoader } from "@react-three/fiber";
 import { OrbitControls, Text } from "@react-three/drei";
 import { useMemo, useRef, useEffect, useState } from "react";
@@ -82,23 +83,10 @@ export default function BattleMap3D({
     setMapImageUrl(null);
   };
 
-  // Map Texture Component
-  const MapPlane = ({ imageUrl }: { imageUrl: string | null }) => {
-    const texture = useLoader(THREE.TextureLoader, imageUrl || '');
+  // Map Texture Components
+  const MapPlaneWithTexture = ({ imageUrl }: { imageUrl: string }) => {
+    const texture = useLoader(THREE.TextureLoader, imageUrl);
     
-    if (!imageUrl) {
-      return (
-        <mesh receiveShadow rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.1, 0]}>
-          <planeGeometry args={[24, 16]} />
-          <meshStandardMaterial 
-            color="#2a2a3e" 
-            transparent 
-            opacity={0.8}
-          />
-        </mesh>
-      );
-    }
-
     return (
       <mesh receiveShadow rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.1, 0]}>
         <planeGeometry args={[24, 16]} />
@@ -110,6 +98,17 @@ export default function BattleMap3D({
       </mesh>
     );
   };
+
+  const MapPlaneDefault = () => (
+    <mesh receiveShadow rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.1, 0]}>
+      <planeGeometry args={[24, 16]} />
+      <meshStandardMaterial 
+        color="#2a2a3e" 
+        transparent 
+        opacity={0.8}
+      />
+    </mesh>
+  );
 
   return (
     <div className="w-full h-full relative bg-background rounded-xl overflow-hidden border border-border">
@@ -177,7 +176,13 @@ export default function BattleMap3D({
         />
 
         {/* Основание карты с текстурой */}
-        <MapPlane imageUrl={mapImageUrl} />
+        {mapImageUrl ? (
+          <React.Suspense fallback={<MapPlaneDefault />}>
+            <MapPlaneWithTexture imageUrl={mapImageUrl} />
+          </React.Suspense>
+        ) : (
+          <MapPlaneDefault />
+        )}
 
         {/* Сетка поля */}
         <gridHelper args={[24, 24, "hsl(var(--primary))", "hsl(var(--muted))"]} />
