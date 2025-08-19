@@ -1,7 +1,8 @@
 // src/components/battle/Fog3DInteractor.tsx
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { useThree, useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
+import { useFogGridStore } from '@/stores/fogGridStore';
 import { useUnifiedFogStore } from '@/stores/unifiedFogStore';
 
 export const Fog3DInteractor: React.FC = () => {
@@ -11,13 +12,13 @@ export const Fog3DInteractor: React.FC = () => {
   const isDrawingRef = useRef(false);
   
   const {
-    activeMode,
-    brushSize,
-    isDrawing,
-    setIsDrawing,
-    revealArea,
-    hideArea
-  } = useUnifiedFogStore();
+    revealRect,
+    hideRect
+  } = useFogGridStore();
+  
+  // Get current mode from unified store
+  const activeMode = useUnifiedFogStore(s => s.activeMode);
+  const brushSize = useUnifiedFogStore(s => s.brushSize);
 
   // Create invisible interaction plane
   useEffect(() => {
@@ -33,7 +34,6 @@ export const Fog3DInteractor: React.FC = () => {
     const handlePointerDown = (event: PointerEvent) => {
       event.preventDefault();
       isDrawingRef.current = true;
-      setIsDrawing(true);
       updateMouse(event);
       handleDraw(event);
     };
@@ -48,7 +48,6 @@ export const Fog3DInteractor: React.FC = () => {
     const handlePointerUp = (event: PointerEvent) => {
       event.preventDefault();
       isDrawingRef.current = false;
-      setIsDrawing(false);
     };
 
     const updateMouse = (event: PointerEvent) => {
@@ -72,11 +71,16 @@ export const Fog3DInteractor: React.FC = () => {
         
         console.log('🌫️ Drawing at 3D:', { x: point.x, z: point.z }, 'Map:', { x: mapX, y: mapY });
 
+        // Use rect drawing with brush size
+        const halfBrush = brushSize / 2;
+        
         // Draw based on mode (reveal with LMB, hide with Shift+LMB)
         if (event.shiftKey) {
-          hideArea(mapX, mapY, brushSize);
+          console.log('🌫️ Hiding area:', { x: mapX - halfBrush, y: mapY - halfBrush, w: brushSize, h: brushSize });
+          hideRect(mapX - halfBrush, mapY - halfBrush, brushSize, brushSize);
         } else {
-          revealArea(mapX, mapY, brushSize);
+          console.log('🌫️ Revealing area:', { x: mapX - halfBrush, y: mapY - halfBrush, w: brushSize, h: brushSize });
+          revealRect(mapX - halfBrush, mapY - halfBrush, brushSize, brushSize);
         }
       }
     };
@@ -94,7 +98,7 @@ export const Fog3DInteractor: React.FC = () => {
         gl.domElement.removeEventListener('pointerleave', handlePointerUp);
       };
     }
-  }, [activeMode, camera, gl, raycaster, brushSize, revealArea, hideArea, setIsDrawing]);
+  }, [activeMode, camera, gl, raycaster, brushSize, revealRect, hideRect]);
 
   return (
     <mesh 

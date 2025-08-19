@@ -31,21 +31,33 @@ export default function BattleMap3D({
   const [mapImageUrl, setMapImageUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
-  // Fog controls
+  // Fog controls from unified store + grid actions from fog grid store
   const { 
     enabled: fogEnabled, 
     activeMode, 
     brushSize,
     setEnabled: setFogEnabled,
     setActiveMode,
-    setBrushSize,
-    revealAll,
-    hideAll,
-    revealArea,
-    hideArea
+    setBrushSize
   } = useUnifiedFogStore();
   
+  const {
+    revealRect: gridRevealAll,
+    hideRect: gridHideAll
+  } = useFogGridStore();
+  
   const [isDM] = useState(true); // В реальном приложении это будет из контекста пользователя
+
+  // Quick actions that work with the grid
+  const revealAll = () => {
+    console.log('🌫️ Revealing all areas');
+    gridRevealAll(0, 0, 1200, 800); // Reveal entire map
+  };
+  
+  const hideAll = () => {
+    console.log('🌫️ Hiding all areas');
+    gridHideAll(0, 0, 1200, 800); // Hide entire map
+  };
 
   // Initialize fog grid size for 3D map
   useEffect(() => {
@@ -53,7 +65,13 @@ export default function BattleMap3D({
     setMapSize({ width: 1200, height: 800 }, 40);
     setFogEnabled(true); // Enable fog by default
     setActiveMode('map'); // Set map mode by default (not fog editing mode)
-  }, [setMapSize, setFogEnabled, setActiveMode]);
+    
+    // Initially hide everything for testing
+    setTimeout(() => {
+      console.log('🌫️ Hiding all fog initially');
+      gridHideAll(0, 0, 1200, 800);
+    }, 100);
+  }, [setMapSize, setFogEnabled, setActiveMode, gridHideAll]);
 
   // Create vision sources from tokens
   useEffect(() => {

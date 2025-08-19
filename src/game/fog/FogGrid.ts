@@ -125,7 +125,7 @@ export class FogGrid {
     const maxX = Math.ceil((worldX + worldW) / this.cellSize);
     const maxY = Math.ceil((worldY + worldH) / this.cellSize);
     for (let y = minY; y < maxY; y++) {
-      for (let x = minX; x < maxX; x++) if (this.inBounds(x, y)) this.set(x, y, 1);
+      for (let x = minX; x < maxX; x++) if (this.inBounds(x, y)) this.set(x, y, 2); // 2 = visible
     }
   }
 
