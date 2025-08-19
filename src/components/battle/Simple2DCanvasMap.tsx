@@ -3,22 +3,40 @@ import { Button } from '@/components/ui/button';
 import { Move, Paintbrush2, Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
 import InteractiveFogOfWar from './InteractiveFogOfWar';
+import { useFogOfWarStore } from '@/stores/fogOfWarStore';
 
 interface Simple2DCanvasMapProps {
   assets3D?: any[];
   tokens?: any[];
   mapImageUrl?: string;
   fogEnabled?: boolean;
+  sessionId?: string;
+  mapId?: string;
+  isDM?: boolean;
 }
 
 const Simple2DCanvasMap: React.FC<Simple2DCanvasMapProps> = ({
   assets3D = [],
   tokens = [],
   mapImageUrl = '',
-  fogEnabled = false
+  fogEnabled = false,
+  sessionId = 'default-session',
+  mapId = 'current-map',
+  isDM = false
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  
+  // Fog of War store
+  const { 
+    activeMode, 
+    setActiveMode, 
+    setFogTransform, 
+    fogTransform,
+    setIsDM,
+    initializeSync,
+    loadFogFromDatabase
+  } = useFogOfWarStore();
   
   // Map interaction state
   const [scale, setScale] = useState(1);
@@ -27,13 +45,36 @@ const Simple2DCanvasMap: React.FC<Simple2DCanvasMapProps> = ({
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [lastPanPoint, setLastPanPoint] = useState({ x: 0, y: 0 });
   
-  // Mode state
-  const [currentMode, setCurrentMode] = useState<'map' | 'fog'>('map');
+  // Mode state (synced with store)
+  const [currentMode, setCurrentMode] = useState<'map' | 'fog'>(activeMode);
   const [showGrid, setShowGrid] = useState(true);
 
   // Image loading
   const [mapImage, setMapImage] = useState<HTMLImageElement | null>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
+
+  // Initialize fog of war
+  useEffect(() => {
+    setIsDM(isDM);
+    if (sessionId && fogEnabled) {
+      initializeSync(sessionId);
+      loadFogFromDatabase(sessionId, mapId);
+    }
+  }, [isDM, sessionId, mapId, fogEnabled, setIsDM, initializeSync, loadFogFromDatabase]);
+
+  // Sync transform with store
+  useEffect(() => {
+    setFogTransform({
+      offsetX: offset.x,
+      offsetY: offset.y,
+      scale: scale
+    });
+  }, [offset, scale, setFogTransform]);
+
+  // Sync mode with store
+  useEffect(() => {
+    setCurrentMode(activeMode);
+  }, [activeMode]);
 
   // Load map image
   useEffect(() => {
@@ -185,11 +226,10 @@ const Simple2DCanvasMap: React.FC<Simple2DCanvasMapProps> = ({
 
   // Toggle mode
   const toggleMode = () => {
-    setCurrentMode(prev => {
-      const newMode = prev === 'map' ? 'fog' : 'map';
-      toast.success(newMode === 'map' ? 'Режим карты активирован' : 'Режим тумана активирован');
-      return newMode;
-    });
+    const newMode = currentMode === 'map' ? 'fog' : 'map';
+    setActiveMode(newMode); // Update store
+    setCurrentMode(newMode); // Update local state
+    toast.success(newMode === 'map' ? 'Режим карты активирован' : 'Режим тумана активирован');
   };
 
   return (
@@ -257,8 +297,10 @@ const Simple2DCanvasMap: React.FC<Simple2DCanvasMapProps> = ({
       {/* Interactive Fog of War - только когда туман включен и режим "fog" */}
       {fogEnabled && currentMode === 'fog' && (
         <InteractiveFogOfWar
-          isDM={true}
+          isDM={isDM}
           enabled={true}
+          sessionId={sessionId}
+          mapId={mapId}
           onFogUpdate={(data) => console.log('Fog updated:', data)}
         />
       )}

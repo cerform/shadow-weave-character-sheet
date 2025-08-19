@@ -1,24 +1,42 @@
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Brush, Eraser, RotateCcw, Square } from "lucide-react";
+import { useFogOfWarStore } from "@/stores/fogOfWarStore";
+import { toast } from "sonner";
 
 interface InteractiveFogOfWarProps {
   isDM?: boolean;
   enabled?: boolean;
+  sessionId?: string;
+  mapId?: string;
   onFogUpdate?: (fogData: string) => void;
 }
 
 export default function InteractiveFogOfWar({ 
   isDM = false, 
   enabled = true,
+  sessionId = 'default-session',
+  mapId = 'current-map',
   onFogUpdate 
 }: InteractiveFogOfWarProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [drawing, setDrawing] = useState(false);
   const [brushMode, setBrushMode] = useState<'reveal' | 'hide'>('reveal');
-  const [brushSize, setBrushSize] = useState(60);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [showControls, setShowControls] = useState(true);
+
+  // Use fog store
+  const { 
+    fogSettings, 
+    setBrushSize, 
+    drawVisibleArea, 
+    hideVisibleArea,
+    clearAllVisible,
+    hideAll,
+    saveFogToDatabase
+  } = useFogOfWarStore();
+
+  const brushSize = fogSettings.brushSize;
 
   // Инициализация canvas
   useEffect(() => {
@@ -53,9 +71,9 @@ export default function InteractiveFogOfWar({
       
       // Изменение размера кисти
       if (e.key === '+' || e.key === '=') {
-        setBrushSize(prev => Math.min(150, prev + 10));
+        setBrushSize(Math.min(300, brushSize + 10));
       } else if (e.key === '-') {
-        setBrushSize(prev => Math.max(20, prev - 10));
+        setBrushSize(Math.max(50, brushSize - 10));
       }
     };
 
@@ -87,15 +105,19 @@ export default function InteractiveFogOfWar({
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
 
-    // Настройка операции рисования
+    // Use store for drawing logic
     if (brushMode === 'reveal') {
+      drawVisibleArea(x, y);
+      // Visual feedback on canvas
       ctx.globalCompositeOperation = 'destination-out';
     } else {
+      hideVisibleArea(x, y);
+      // Visual feedback on canvas
       ctx.globalCompositeOperation = 'source-over';
       ctx.fillStyle = 'rgba(0, 0, 0, 0.9)';
     }
 
-    // Рисуем мягкую кисть
+    // Рисуем мягкую кисть для визуального feedback
     const gradient = ctx.createRadialGradient(x, y, 0, x, y, brushSize);
     if (brushMode === 'reveal') {
       gradient.addColorStop(0, 'rgba(0, 0, 0, 1)');
@@ -111,6 +133,11 @@ export default function InteractiveFogOfWar({
     ctx.beginPath();
     ctx.arc(x, y, brushSize, 0, Math.PI * 2);
     ctx.fill();
+
+    // Автосохранение в базу данных с задержкой
+    if (sessionId && mapId) {
+      setTimeout(() => saveFogToDatabase(sessionId, mapId), 500);
+    }
 
     // Отправляем обновление
     if (onFogUpdate) {
@@ -138,15 +165,21 @@ export default function InteractiveFogOfWar({
   };
 
   const clearAllFog = () => {
+    clearAllVisible();
     const canvas = canvasRef.current;
     const ctx = canvas?.getContext('2d');
     if (canvas && ctx) {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       if (onFogUpdate) onFogUpdate(canvas.toDataURL());
     }
+    if (sessionId && mapId) {
+      saveFogToDatabase(sessionId, mapId);
+    }
+    toast.success('Туман полностью очищен');
   };
 
   const resetAllFog = () => {
+    hideAll();
     const canvas = canvasRef.current;
     const ctx = canvas?.getContext('2d');
     if (canvas && ctx) {
@@ -154,6 +187,10 @@ export default function InteractiveFogOfWar({
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       if (onFogUpdate) onFogUpdate(canvas.toDataURL());
     }
+    if (sessionId && mapId) {
+      saveFogToDatabase(sessionId, mapId);
+    }
+    toast.success('Туман восстановлен');
   };
 
   if (!enabled) return null;
