@@ -151,7 +151,8 @@ export const EnhancedBattleToken3D: React.FC<EnhancedBattleToken3DProps> = ({ to
       addCombatEvent({
         actor: token.name,
         action: 'Перемещение',
-        description: `${token.name} переместился на позицию (${cell.x}, ${cell.z})`
+        description: `${token.name} переместился на позицию (${cell.x}, ${cell.z})`,
+        playerName: token.name
       });
       
       console.log(`Token ${token.name} moved to position:`, worldPosition);

@@ -25,6 +25,12 @@ export interface CombatEvent {
   target?: string;
   damage?: number;
   description: string;
+  diceRoll?: {
+    dice: string; // e.g., "1d20+5"
+    result: number;
+    breakdown?: string; // e.g., "15+5"
+  };
+  playerName?: string; // For dice rolls by players
 }
 
 export type FogMode = 'reveal' | 'hide';
@@ -141,7 +147,50 @@ export const useEnhancedBattleStore = create<EnhancedBattleState>((set, get) => 
     tokenId: null,
   },
   
-  combatLog: [],
+  combatLog: [
+    {
+      id: 'demo-1',
+      timestamp: Date.now() - 120000,
+      actor: 'Воин',
+      action: 'Атака',
+      target: 'Гоблин',
+      damage: 8,
+      description: 'Воин атакует мечом',
+      diceRoll: {
+        dice: '1d20+5',
+        result: 18,
+        breakdown: '13+5'
+      },
+      playerName: 'Игрок 1'
+    },
+    {
+      id: 'demo-2',
+      timestamp: Date.now() - 60000,
+      actor: 'Гоблин',
+      action: 'Бросок кубика',
+      description: 'Проверка на Скрытность',
+      diceRoll: {
+        dice: '1d20+2',
+        result: 15,
+        breakdown: '13+2'
+      },
+      playerName: 'ДМ'
+    },
+    {
+      id: 'demo-3',
+      timestamp: Date.now() - 30000,
+      actor: 'Воин',
+      action: 'Заклинание',
+      target: 'Воин',
+      description: 'Лечение',
+      diceRoll: {
+        dice: '1d8+3',
+        result: 7,
+        breakdown: '4+3'
+      },
+      playerName: 'Игрок 1'
+    }
+  ],
   
   // Actions
   setTokens: (tokens) => set({ tokens }),
