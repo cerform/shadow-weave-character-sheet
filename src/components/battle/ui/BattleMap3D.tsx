@@ -52,7 +52,8 @@ export default function BattleMap3D({
     console.log('🌫️ Initializing fog grid for 3D map');
     setMapSize({ width: 1200, height: 800 }, 40);
     setFogEnabled(true); // Enable fog by default
-  }, [setMapSize, setFogEnabled]);
+    setActiveMode('map'); // Set map mode by default (not fog editing mode)
+  }, [setMapSize, setFogEnabled, setActiveMode]);
 
   // Create vision sources from tokens
   useEffect(() => {
@@ -194,7 +195,7 @@ export default function BattleMap3D({
                   className="flex items-center gap-2 text-xs w-full"
                 >
                   {activeMode === 'fog' ? <Paintbrush2 className="w-3 h-3" /> : <Square className="w-3 h-3" />}
-                  {activeMode === 'fog' ? 'Редактор' : 'Просмотр'}
+                  {activeMode === 'fog' ? 'Редактор тумана' : 'Просмотр карты'}
                 </Button>
 
                 {/* Brush Size */}
@@ -239,9 +240,12 @@ export default function BattleMap3D({
 
         {/* Status */}
         <div className="text-xs text-gray-400 border-t border-gray-600 pt-2">
-          <div>Режим: {activeMode === 'fog' ? 'Туман' : 'Карта'}</div>
+          <div className={activeMode === 'fog' ? 'text-yellow-400 font-medium' : ''}>
+            Режим: {activeMode === 'fog' ? 'Редактор тумана' : 'Просмотр карты'}
+          </div>
           <div>Карта: {mapImageUrl ? 'загружена' : 'нет'}</div>
           <div>Туман: {fogEnabled ? 'включен' : 'выключен'}</div>
+          <div>Камера: {activeMode === 'fog' ? 'заблокирована' : 'свободна'}</div>
           {activeMode === 'fog' && (
             <div className="text-yellow-400 text-xs mt-1">
               ЛКМ - открыть | Shift+ЛКМ - скрыть
