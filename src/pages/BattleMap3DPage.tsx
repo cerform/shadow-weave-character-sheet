@@ -10,7 +10,7 @@ import { EnhancedBattleManager } from '../components/battle/EnhancedBattleManage
 import { FogOfWarToggle } from '../components/battle/FogOfWarToggle';
 import { FogControlPanel } from '@/components/battle/FogControlPanel';
 import { FogDrawingOverlay3D } from '@/components/battle/FogDrawingOverlay3D';
-import { ModeIndicator3D } from '@/components/battle/ui/ModeIndicator3D';
+import { Battle3DControlPanel } from '@/components/battle/ui/Battle3DControlPanel';
 import { toast } from 'sonner';
 import { determineMonsterType, updateTokenWithModelType } from '@/utils/tokenModelMapping';
 import { EnhancedBattleMap } from '@/components/battle/enhanced/EnhancedBattleMap';
@@ -467,8 +467,8 @@ const handleTokenUpdate = (tokenId: string, updates: any) => {
         </div>
       )}
 
-      {/* Mode Indicator */}
-      <ModeIndicator3D />
+      {/* 3D Control Panel */}
+      <Battle3DControlPanel />
 
       {/* Quick Fog of War Toggle */}
       <div className="absolute bottom-4 right-4 z-30">
