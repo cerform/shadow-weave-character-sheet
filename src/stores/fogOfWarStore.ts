@@ -86,12 +86,12 @@ export const useFogOfWarStore = create<FogOfWarStore>((set, get) => ({
   visibleAreas: [],
   fogSettings: {
     enabled: true,
-    globalReveal: false,
-    fogColor: '#1a1f3a', // Более темный и контрастный цвет
-    fogOpacity: 0.85, // Увеличенная непрозрачность для лучшего контраста
+    globalReveal: false, // По умолчанию вся карта закрыта туманом
+    fogColor: '#000000', // Черный туман для полного скрытия
+    fogOpacity: 0.95, // Почти полная непрозрачность
     transitionSpeed: 0.5,
-    blurAmount: 8, // Уменьшенное размытие для четких границ
-    brushSize: 60 // Увеличенный размер кисти
+    blurAmount: 2, // Минимальное размытие для четких границ
+    brushSize: 60 // Размер кисти для DM
   },
   fogTransform: {
     offsetX: 0,

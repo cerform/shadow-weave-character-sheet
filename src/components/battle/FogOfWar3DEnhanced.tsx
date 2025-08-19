@@ -124,7 +124,7 @@ export const FogOfWar3DEnhanced: React.FC<FogOfWar3DEnhancedProps> = ({
       uniforms: {
         fogTexture: { value: fogTexture },
         fogColor: { value: new THREE.Color(0x000000) },
-        fogOpacity: { value: isDM ? 0.3 : 0.8 }, // DM sees less fog for editing
+        fogOpacity: { value: isDM ? 0.4 : 0.95 }, // DM видит туман полупрозрачным для редактирования
         time: { value: 0 }
       },
       vertexShader: `
