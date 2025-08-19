@@ -1,9 +1,9 @@
 import { 
   BattleMap3D, 
   BattleInitiativeTracker, 
-  BattleCombatLog, 
-  BattleActionPanel 
+  BattleCombatLog
 } from "@/components/battle/ui";
+import EnhancedBattleActionPanel from "@/components/battle/ui/EnhancedBattleActionPanel";
 
 export default function BattleScenePage() {
   return (
@@ -26,7 +26,7 @@ export default function BattleScenePage() {
       {/* UI оверлеи */}
       <BattleInitiativeTracker />
       <BattleCombatLog />
-      <BattleActionPanel />
+      <EnhancedBattleActionPanel />
     </div>
   );
 }

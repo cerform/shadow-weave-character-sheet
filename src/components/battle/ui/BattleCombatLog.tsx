@@ -48,7 +48,7 @@ export default function BattleCombatLog() {
   };
 
   return (
-    <Card className="fixed bottom-4 right-4 w-96 h-64 bg-card/90 backdrop-blur-sm border-border shadow-xl">
+    <Card className="fixed top-4 right-4 w-96 h-80 bg-card/95 backdrop-blur-sm border-border shadow-xl z-40">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <CardTitle className="text-primary">Лог боя</CardTitle>
