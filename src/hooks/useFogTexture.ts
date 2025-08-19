@@ -20,7 +20,7 @@ export function useFogTexture() {
   const texRef = useRef(new THREE.CanvasTexture(canvas));
 
   useEffect(() => {
-    if (!fogSettings.enabled) return;
+    console.log('🌫️ useFogTexture: Updating texture, fog enabled:', fogSettings.enabled, 'visible areas:', visibleAreas.length);
     
     const WORLD_SIZE = 50; // размер мира в юнитах
     const toUV = (x: number, z: number) => ({
@@ -38,8 +38,10 @@ export function useFogTexture() {
     ctx.globalCompositeOperation = "destination-out";
     visibleAreas.forEach(area => {
       if (area.type === 'circle') {
-        const { u: ux, v: vz } = toUV(area.x - WORLD_SIZE/2, area.y - WORLD_SIZE/2);
+        const { u: ux, v: vz } = toUV(area.x, area.y);
         const r = (area.radius / WORLD_SIZE) * canvas.width;
+        
+        console.log('🌫️ Drawing visible area at UV:', ux, vz, 'radius:', r);
         
         // Создаем мягкий градиент для плавного края
         const gradient = ctx.createRadialGradient(ux, vz, 0, ux, vz, r);

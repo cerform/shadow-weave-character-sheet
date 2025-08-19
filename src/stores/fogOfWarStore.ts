@@ -88,10 +88,10 @@ export const useFogOfWarStore = create<FogOfWarStore>((set, get) => ({
     enabled: true, // Включаем туман по умолчанию
     globalReveal: false, // По умолчанию вся карта закрыта туманом
     fogColor: '#000000', // Черный туман для полного скрытия
-    fogOpacity: 0.95, // Почти полная непрозрачность
+    fogOpacity: 0.9, // Почти полная непрозрачность
     transitionSpeed: 0.5,
     blurAmount: 2, // Минимальное размытие для четких границ
-    brushSize: 60 // Размер кисти для DM
+    brushSize: 150 // Увеличиваем размер кисти для DM
   },
   fogTransform: {
     offsetX: 0,

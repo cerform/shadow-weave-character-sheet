@@ -50,6 +50,8 @@ export const SimpleFog3D: React.FC<SimpleFog3DProps> = ({
 
   // Обработка рисования
   const paintFog = (event: PointerEvent) => {
+    if (!shouldHandleFogInteraction()) return;
+    
     const canvas = gl.domElement;
     const rect = canvas.getBoundingClientRect();
     
@@ -65,16 +67,16 @@ export const SimpleFog3D: React.FC<SimpleFog3DProps> = ({
 
     if (target) {
       // Конвертируем координаты в систему карты
-      const worldX = target.x + 25;
-      const worldY = target.z + 25;
+      const worldX = target.x;
+      const worldY = target.z;
       
-      console.log('🌫️ SimpleFog3D: Painting fog at world coords:', worldX, worldY);
+      console.log('🌫️ SimpleFog3D: Painting fog at world coords:', worldX, worldY, 'keys:', keysPressed);
       
       if (keysPressed.shift) {
-        console.log('🌫️ Revealing area');
+        console.log('🌫️ Revealing area at:', worldX, worldY, 'brush size:', fogSettings.brushSize);
         drawVisibleArea(worldX, worldY);
       } else if (keysPressed.alt) {
-        console.log('🌫️ Hiding area');
+        console.log('🌫️ Hiding area at:', worldX, worldY);
         hideVisibleArea(worldX, worldY);
       }
     }
