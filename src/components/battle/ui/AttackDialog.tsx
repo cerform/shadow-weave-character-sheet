@@ -75,7 +75,7 @@ export const AttackDialog: React.FC<AttackDialogProps> = ({ children, attacker }
   const [open, setOpen] = useState(false);
   const [selectedAttackType, setSelectedAttackType] = useState<string>('');
   const [selectedTarget, setSelectedTarget] = useState<string>('');
-  const [attackPhase, setAttackPhase] = useState<'select' | 'roll' | 'damage'>('select');
+  const [attackPhase, setAttackPhase] = useState<'select' | 'roll' | 'rollResult' | 'damage' | 'damageResult'>('select');
   const [attackRollResult, setAttackRollResult] = useState<number | null>(null);
   const [diceKey, setDiceKey] = useState(0);
   
@@ -151,12 +151,16 @@ export const AttackDialog: React.FC<AttackDialogProps> = ({ children, attacker }
     });
 
     if (isHit) {
-      // Не переходим сразу к урону, показываем результат броска на несколько секунд
+      // Показываем результат броска
+      setAttackPhase('rollResult');
+      // Через 3 секунды переходим к броску урона
       setTimeout(() => {
         setAttackPhase('damage');
         setDiceKey(prev => prev + 1);
-      }, 2500);
+      }, 3000);
     } else {
+      // Показываем результат промаха
+      setAttackPhase('rollResult');
       // Промах - закрываем диалог через задержку
       setTimeout(() => {
         setOpen(false);
@@ -203,11 +207,14 @@ export const AttackDialog: React.FC<AttackDialogProps> = ({ children, attacker }
       playerName: 'ДМ'
     });
 
+    // Показываем результат урона
+    setAttackPhase('damageResult');
+
     // Закрываем диалог через небольшую задержку
     setTimeout(() => {
       setOpen(false);
       resetDialog();
-    }, 2000);
+    }, 3000);
   };
 
   const resetDialog = () => {
@@ -323,6 +330,48 @@ export const AttackDialog: React.FC<AttackDialogProps> = ({ children, attacker }
     );
   };
 
+  const renderRollResultPhase = () => {
+    const attackType = attackTypes.find(a => a.name === selectedAttackType);
+    const target = tokens.find(t => t.id === selectedTarget);
+    
+    if (!attackType || !target || attackRollResult === null) return null;
+
+    const isHit = attackRollResult >= target.ac;
+    const stat = dndStats[attackType.stat];
+    const modifier = getModifier(stat);
+    const proficiencyBonus = 3;
+
+    return (
+      <div className="space-y-4">
+        <div className="text-center">
+          <h3 className={`text-xl font-bold ${isHit ? 'text-green-400' : 'text-red-400'}`}>
+            {isHit ? 'ПОПАДАНИЕ!' : 'ПРОМАХ!'}
+          </h3>
+          <div className={`border rounded-lg p-4 mt-3 ${
+            isHit 
+              ? 'bg-green-900/30 border-green-400/30' 
+              : 'bg-red-900/30 border-red-400/30'
+          }`}>
+            <div className="text-lg font-semibold text-white">
+              Результат броска: {attackRollResult}
+            </div>
+            <div className="text-sm text-muted-foreground mt-1">
+              d20 + {modifier + proficiencyBonus} vs AC {target.ac}
+            </div>
+            <div className="text-xs text-muted-foreground">
+              {attackType.name} против {target.name}
+            </div>
+          </div>
+          {isHit && (
+            <p className="text-sm text-green-300 mt-3">
+              Переходим к броску урона...
+            </p>
+          )}
+        </div>
+      </div>
+    );
+  };
+
   const renderDamagePhase = () => {
     const attackType = attackTypes.find(a => a.name === selectedAttackType);
     const target = tokens.find(t => t.id === selectedTarget);
@@ -385,6 +434,31 @@ export const AttackDialog: React.FC<AttackDialogProps> = ({ children, attacker }
     );
   };
 
+  const renderDamageResultPhase = () => {
+    const target = tokens.find(t => t.id === selectedTarget);
+    
+    if (!target) return null;
+
+    return (
+      <div className="space-y-4">
+        <div className="text-center">
+          <h3 className="text-xl font-bold text-orange-400">УРОН НАНЕСЕН!</h3>
+          <div className="bg-orange-900/30 border border-orange-400/30 rounded-lg p-4 mt-3">
+            <div className="text-lg font-semibold text-white">
+              Цель получила урон
+            </div>
+            <div className="text-sm text-muted-foreground">
+              {target.name}: {target.hp}/{target.maxHp} HP
+              {target.hp === 0 && (
+                <span className="text-red-400 font-bold ml-2">ПОВЕРЖЕН!</span>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <Dialog open={open} onOpenChange={(newOpen) => {
       setOpen(newOpen);
@@ -403,7 +477,9 @@ export const AttackDialog: React.FC<AttackDialogProps> = ({ children, attacker }
 
         {attackPhase === 'select' && renderSelectPhase()}
         {attackPhase === 'roll' && renderRollPhase()}
+        {attackPhase === 'rollResult' && renderRollResultPhase()}
         {attackPhase === 'damage' && renderDamagePhase()}
+        {attackPhase === 'damageResult' && renderDamageResultPhase()}
 
         <DialogFooter>
           {attackPhase === 'select' && (
@@ -420,7 +496,7 @@ export const AttackDialog: React.FC<AttackDialogProps> = ({ children, attacker }
               </Button>
             </>
           )}
-          {(attackPhase === 'roll' || attackPhase === 'damage') && (
+          {(attackPhase === 'roll' || attackPhase === 'rollResult' || attackPhase === 'damage' || attackPhase === 'damageResult') && (
             <div className="w-full text-center">
               <Button variant="outline" onClick={() => setOpen(false)}>
                 Закрыть
