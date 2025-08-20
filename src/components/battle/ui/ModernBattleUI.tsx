@@ -171,11 +171,17 @@ export const ModernBattleUI: React.FC<ModernBattleUIProps> = ({
                         Карта
                       </h4>
                       <div className="grid grid-cols-2 gap-2">
-                        <Button onClick={onUploadMap} variant="outline" size="sm">
+                        <Button onClick={() => {
+                          console.log('📁 Upload map clicked');
+                          onUploadMap();
+                        }} variant="outline" size="sm">
                           <Upload className="w-3 h-3 mr-1" />
                           Загрузить
                         </Button>
-                        <Button onClick={onClearMap} variant="outline" size="sm">
+                        <Button onClick={() => {
+                          console.log('🗑️ Clear map clicked');
+                          onClearMap();
+                        }} variant="outline" size="sm">
                           <RotateCcw className="w-3 h-3 mr-1" />
                           Очистить
                         </Button>
@@ -211,7 +217,10 @@ export const ModernBattleUI: React.FC<ModernBattleUIProps> = ({
                             <Button
                               variant={paintMode === 'reveal' ? 'default' : 'outline'}
                               size="sm"
-                              onClick={() => setPaintMode('reveal')}
+                              onClick={() => {
+                                console.log('🔍 Paint mode set to reveal');
+                                setPaintMode('reveal');
+                              }}
                             >
                               <Eye className="w-3 h-3 mr-1" />
                               Показать
@@ -227,7 +236,10 @@ export const ModernBattleUI: React.FC<ModernBattleUIProps> = ({
                             <Button
                               variant={paintMode === 'hide' ? 'default' : 'outline'}
                               size="sm"
-                              onClick={() => setPaintMode('hide')}
+                              onClick={() => {
+                                console.log('🌫️ Paint mode set to hide');
+                                setPaintMode('hide');
+                              }}
                             >
                               <EyeOff className="w-3 h-3 mr-1" />
                               Скрыть
@@ -245,7 +257,10 @@ export const ModernBattleUI: React.FC<ModernBattleUIProps> = ({
                         </label>
                         <Slider
                           value={[brushSize]}
-                          onValueChange={(value) => setBrushSize(value[0])}
+                          onValueChange={(value) => {
+                            console.log('🖌️ Brush size changed to:', value[0]);
+                            setBrushSize(value[0]);
+                          }}
                           min={0}
                           max={5}
                           step={1}
