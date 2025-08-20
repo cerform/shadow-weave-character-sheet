@@ -40,15 +40,19 @@ export default function BattleScenePage() {
       {/* Правая панель HUD */}
       <BattleHUD />
 
-      {/* Плавающая кнопка для кубиков ДМ */}
-      <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50">
-        <Button
-          onClick={() => setDiceModalOpen(true)}
-          size="lg"
-          className="rounded-full w-16 h-16 bg-accent hover:bg-accent/80 shadow-lg"
-        >
-          <Dice6 className="w-8 h-8" />
-        </Button>
+      {/* Виджет кубиков ДМ */}
+      <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-2">
+        <div className="bg-card/90 backdrop-blur-sm border border-border rounded-lg p-3 shadow-xl">
+          <h3 className="text-sm font-semibold text-foreground mb-2 text-center">Кубики ДМ</h3>
+          <Button
+            onClick={() => setDiceModalOpen(true)}
+            size="lg"
+            className="w-full bg-accent hover:bg-accent/80 text-accent-foreground"
+          >
+            <Dice6 className="w-5 h-5 mr-2" />
+            Бросить кубик
+          </Button>
+        </div>
       </div>
 
       {/* Модальное окно бросков кубиков */}

@@ -300,7 +300,8 @@ export const AttackDialog: React.FC<AttackDialogProps> = ({ children, attacker }
           </p>
         </div>
         
-        <div className="h-[200px] w-full bg-black/20 rounded-lg overflow-hidden">
+        <div className="h-[300px] w-full bg-gradient-to-b from-blue-900/30 to-blue-800/20 rounded-lg border border-blue-400/30 overflow-hidden relative">
+          <div className="absolute inset-0 bg-black/10" />
           <DiceRoller3D 
             key={diceKey}
             initialDice="d20"
@@ -353,7 +354,8 @@ export const AttackDialog: React.FC<AttackDialogProps> = ({ children, attacker }
           </p>
         </div>
         
-        <div className="h-[200px] w-full bg-black/20 rounded-lg overflow-hidden">
+        <div className="h-[300px] w-full bg-gradient-to-b from-red-900/30 to-red-800/20 rounded-lg border border-red-400/30 overflow-hidden relative">
+          <div className="absolute inset-0 bg-black/10" />
           <DiceRoller3D 
             key={diceKey}
             initialDice={diceType}
@@ -398,7 +400,7 @@ export const AttackDialog: React.FC<AttackDialogProps> = ({ children, attacker }
                 disabled={!selectedAttackType || !selectedTarget}
                 style={{ backgroundColor: currentTheme.accent }}
               >
-                Урон
+                Атаковать
               </Button>
             </>
           )}
