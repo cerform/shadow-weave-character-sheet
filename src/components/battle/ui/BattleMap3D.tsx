@@ -1,7 +1,6 @@
-import React, { Suspense } from "react";
-import { Canvas, useLoader } from "@react-three/fiber";
+import React, { Suspense, useMemo, useRef, useEffect, useState } from "react";
+import { Canvas, useLoader, useThree } from "@react-three/fiber";
 import { OrbitControls, Text } from "@react-three/drei";
-import { useMemo, useRef, useEffect, useState } from "react";
 import * as THREE from "three";
 import { useBattleUIStore } from "@/stores/battleUIStore";
 import BattleToken3D from "./BattleToken3D";
@@ -13,7 +12,6 @@ import { useBattle3DControlStore } from "@/stores/battle3DControlStore";
 import { Button } from "@/components/ui/button";
 import { Upload, X } from "lucide-react";
 import { useFogLayer } from "@/components/battle/hooks/useFogLayer";
-import { useThree } from "@react-three/fiber";
 import { useFogStore } from "@/stores/fogStore";
 
 interface BattleMap3DProps {
