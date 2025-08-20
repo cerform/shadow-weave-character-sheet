@@ -68,7 +68,6 @@ const Character3DModel = ({ modelType, position, isActive, isSelected, isEnemy, 
 export const EnhancedBattleToken3D: React.FC<EnhancedBattleToken3DProps> = ({ token }) => {
   const meshRef = useRef<THREE.Group>(null);
   const ringRef = useRef<THREE.Mesh>(null);
-  const [dragging, setDragging] = useState(false);
   const [hovered, setHovered] = useState(false);
   
   const { 
@@ -120,86 +119,18 @@ export const EnhancedBattleToken3D: React.FC<EnhancedBattleToken3DProps> = ({ to
     }
   });
 
-  const handlePointerDown = (event: ThreeEvent<PointerEvent>) => {
+  const handleTokenClick = (event: ThreeEvent<PointerEvent>) => {
     event.stopPropagation();
     
-    // Выбираем токен
+    // Выбираем токен и показываем сетку перемещения
     selectToken(token.id);
     
-    // Начинаем перетаскивание для любого токена (не только активного)
+    // Показываем сетку перемещения если токен еще не двигался
     if (!token.hasMovedThisTurn) {
-      setDragging(true);
-      (event.target as any).setPointerCapture(event.pointerId);
-      
-      // Показываем сетку перемещения
       setShowMovementGrid(true);
     }
   };
 
-  const handlePointerMove = (event: ThreeEvent<PointerEvent>) => {
-    if (!dragging) return;
-    
-    event.stopPropagation();
-    
-    // Получаем позицию мыши в мире через raycasting с плоскостью
-    const mouse = new THREE.Vector2(
-      (event.nativeEvent.clientX / window.innerWidth) * 2 - 1,
-      -(event.nativeEvent.clientY / window.innerHeight) * 2 + 1
-    );
-    
-    const raycaster = new THREE.Raycaster();
-    raycaster.setFromCamera(mouse, event.camera);
-    
-    // Создаем плоскость на уровне земли
-    const plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
-    const intersectionPoint = new THREE.Vector3();
-    
-    if (raycaster.ray.intersectPlane(plane, intersectionPoint)) {
-      const newPosition = snapToGrid([
-        intersectionPoint.x,
-        0,
-        intersectionPoint.z
-      ]);
-      
-      console.log('Trying to move to:', newPosition);
-      
-      // Проверяем, можем ли переместиться в эту позицию
-      if (canMoveToPosition(
-        token.position,
-        newPosition,
-        speed,
-        tokens,
-        token.id,
-        token.hasMovedThisTurn
-      )) {
-        console.log('Movement allowed, updating position');
-        // Обновляем позицию токена
-        updateToken(token.id, { position: newPosition });
-      } else {
-        console.log('Movement not allowed');
-      }
-    }
-  };
-
-  const handlePointerUp = (event: ThreeEvent<PointerEvent>) => {
-    if (dragging) {
-      setDragging(false);
-      (event.target as any).releasePointerCapture(event.pointerId);
-      
-      // Скрываем сетку перемещения
-      setShowMovementGrid(false);
-      
-      // Отмечаем, что токен переместился в этом ходу
-      updateToken(token.id, { hasMovedThisTurn: true });
-      
-      // Добавляем событие в лог
-      addCombatEvent({
-        actor: token.name,
-        action: 'Перемещение',
-        description: `${token.name} переместился на новую позицию`
-      });
-    }
-  };
 
   const handleCellClick = (cell: GridPosition) => {
     if (token.hasMovedThisTurn) return;
@@ -220,6 +151,9 @@ export const EnhancedBattleToken3D: React.FC<EnhancedBattleToken3DProps> = ({ to
         position: worldPosition,
         hasMovedThisTurn: true 
       });
+      
+      // Скрываем сетку перемещения после хода
+      setShowMovementGrid(false);
       
       // Добавляем событие в лог
       addCombatEvent({
@@ -244,9 +178,7 @@ export const EnhancedBattleToken3D: React.FC<EnhancedBattleToken3DProps> = ({ to
       
       {/* 3D модель персонажа */}
       <group
-        onPointerDown={handlePointerDown}
-        onPointerMove={handlePointerMove}
-        onPointerUp={handlePointerUp}
+        onClick={handleTokenClick}
         onPointerOver={(e) => {
           e.stopPropagation();
           setHovered(true);
