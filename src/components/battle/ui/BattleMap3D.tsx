@@ -32,8 +32,8 @@ const VolumetricFog = ({ paintMode, brushSize }: { paintMode: 'reveal' | 'hide';
     tileSize: 1 // Каждая клетка сетки равна 1 единице (24/24=1)
   });
   
-  // Подключаем новую систему объемного тумана
-  useFogPlane('main-map', 1);
+  // Временно отключаем новую систему тумана до исправления ошибок
+  // useFogPlane('main-map', 1);
   
   // Инициализируем туман при первом запуске
   useEffect(() => {
