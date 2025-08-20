@@ -1,4 +1,4 @@
-import React from "react";
+import React, { Suspense } from "react";
 import { Canvas, useLoader } from "@react-three/fiber";
 import { OrbitControls, Text } from "@react-three/drei";
 import { useMemo, useRef, useEffect, useState } from "react";
@@ -10,19 +10,25 @@ import { EnhancedBattleToken3D } from "../enhanced/EnhancedBattleToken3D";
 import { MovementIndicator } from "../enhanced/MovementIndicator";
 import { useBattle3DControls } from "@/hooks/useBattle3DControls";
 import { useBattle3DControlStore } from "@/stores/battle3DControlStore";
-import { SyncedFogOverlay3D } from "../SyncedFogOverlay3D";
-import { useFogGridStore } from "@/stores/fogGridStore";
 import { Button } from "@/components/ui/button";
-import { Upload, X, Eye, EyeOff, Paintbrush2, Eraser, RotateCcw, Square } from "lucide-react";
-import { useUnifiedFogStore } from "@/stores/unifiedFogStore";
-import { Fog3DInteractor } from "../Fog3DInteractor";
-import { FogCursor3D } from "../FogCursor3D";
-import { FogOfWar3D } from "../enhanced/FogOfWar3D";
+import { Upload, X } from "lucide-react";
+import { useFogLayer } from "@/components/battle/hooks/useFogLayer";
+import { useThree } from "@react-three/fiber";
 
 interface BattleMap3DProps {
   sessionId?: string;
   mapId?: string;
 }
+
+// Компонент для интеграции volumetric fog в 3D сцену
+const VolumetricFog = () => {
+  const { scene } = useThree();
+  
+  // Подключаем новую volumetric fog систему
+  useFogLayer(scene, 'main-map', 5);
+  
+  return null;
+};
 
 export default function BattleMap3D({ 
   sessionId = 'default-session', 
@@ -38,77 +44,15 @@ export default function BattleMap3D({
     setMapImageUrl,
     clearMap
   } = useEnhancedBattleStore();
+  
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const { shouldHandleCameraControls } = useBattle3DControlStore();
-  const setMapSize = useFogGridStore(s => s.setMapSize);
-  const setSources = useFogGridStore(s => s.setSources);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   // Проверяем, перетаскивается ли активный токен
   const isActiveTokenDragging = enhancedTokens.some(token => 
     token.id === enhancedActiveId && showMovementGrid
   );
-  
-  // Fog controls from unified store + grid actions from fog grid store
-  const { 
-    enabled: fogEnabled, 
-    activeMode, 
-    brushSize,
-    setEnabled: setFogEnabled,
-    setActiveMode,
-    setBrushSize
-  } = useUnifiedFogStore();
-  
-  const {
-    revealRect: gridRevealAll,
-    hideRect: gridHideAll
-  } = useFogGridStore();
-  
-  const [isDM] = useState(true); // В реальном приложении это будет из контекста пользователя
-
-  // Quick actions that work with the grid
-  const revealAll = () => {
-    console.log('🌫️ Revealing all areas');
-    gridRevealAll(0, 0, 1200, 800); // Reveal entire map
-  };
-  
-  const hideAll = () => {
-    console.log('🌫️ Hiding all areas');
-    gridHideAll(0, 0, 1200, 800); // Hide entire map
-  };
-
-  // Initialize fog grid size for 3D map
-  useEffect(() => {
-    console.log('🌫️ Initializing fog grid for 3D map');
-    setMapSize({ width: 1200, height: 800 }, 40);
-    setFogEnabled(true); // Enable fog by default
-    setActiveMode('map'); // Set map mode by default (not fog editing mode)
-    
-    // Initially hide everything for testing
-    setTimeout(() => {
-      console.log('🌫️ Hiding all fog initially');
-      gridHideAll(0, 0, 1200, 800);
-    }, 100);
-  }, [setMapSize, setFogEnabled, setActiveMode, gridHideAll]);
-
-  // Create vision sources from tokens
-  useEffect(() => {
-    if (tokens.length > 0) {
-      const sources = tokens.map(token => ({
-        x: ((token.position[0] || 0) / 24) * 1200 + 600, // Convert 3D world coords to 2D pixel coords, center at 600px
-        y: ((token.position[2] || 0) / 16) * 800 + 400,  // z in 3D becomes y in 2D, center at 400px 
-        radius: 150, // Vision radius in pixels
-        angle: 0,
-        fov: Math.PI * 2 // 360 degree vision
-      }));
-      
-      console.log('🌫️ Setting vision sources from tokens:', sources);
-      setSources(sources);
-    } else {
-      console.log('🌫️ No tokens found, clearing vision sources');
-      setSources([]);
-    }
-  }, [tokens, setSources]);
 
   // Инициализируем систему управления
   useBattle3DControls({ 
@@ -198,88 +142,10 @@ export default function BattleMap3D({
           </div>
         </div>
 
-        {/* Fog Controls - только для DM */}
-        {isDM && (
-          <div className="space-y-2 border-t border-gray-600 pt-3">
-            <h3 className="text-sm font-medium text-white">Туман войны</h3>
-            
-            {/* Fog On/Off */}
-            <Button
-              onClick={() => setFogEnabled(!fogEnabled)}
-              size="sm"
-              variant={fogEnabled ? "default" : "secondary"}
-              className="flex items-center gap-2 text-xs w-full"
-            >
-              {fogEnabled ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
-              {fogEnabled ? 'Реалистичный туман ВКЛ' : 'Туман ВЫКЛ'}
-            </Button>
-
-            {fogEnabled && (
-              <>
-                {/* Mode Toggle */}
-                <Button
-                  onClick={() => setActiveMode(activeMode === 'map' ? 'fog' : 'map')}
-                  size="sm"
-                  variant={activeMode === 'fog' ? "default" : "secondary"}
-                  className="flex items-center gap-2 text-xs w-full"
-                >
-                  {activeMode === 'fog' ? <Paintbrush2 className="w-3 h-3" /> : <Square className="w-3 h-3" />}
-                  {activeMode === 'fog' ? 'Редактор тумана' : 'Просмотр карты'}
-                </Button>
-
-                {/* Brush Size */}
-                {activeMode === 'fog' && (
-                  <div className="space-y-1">
-                    <label className="text-xs text-gray-300">Кисть: {brushSize}px</label>
-                    <input
-                      type="range"
-                      min="50"
-                      max="300"
-                      step="25"
-                      value={brushSize}
-                      onChange={(e) => setBrushSize(Number(e.target.value))}
-                      className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer"
-                    />
-                  </div>
-                )}
-
-                {/* Quick Actions */}
-                <div className="flex gap-1">
-                  <Button
-                    onClick={() => revealAll()}
-                    size="sm"
-                    variant="outline"
-                    className="flex-1 text-xs"
-                  >
-                    Показать все
-                  </Button>
-                  <Button
-                    onClick={() => hideAll()}
-                    size="sm"
-                    variant="outline"
-                    className="flex-1 text-xs"
-                  >
-                    Скрыть все
-                  </Button>
-                </div>
-              </>
-            )}
-          </div>
-        )}
-
         {/* Status */}
         <div className="text-xs text-gray-400 border-t border-gray-600 pt-2">
-          <div className={activeMode === 'fog' ? 'text-yellow-400 font-medium' : ''}>
-            Режим: {activeMode === 'fog' ? 'Редактор тумана' : 'Просмотр карты'}
-          </div>
           <div>Карта: {mapImageUrl ? 'загружена' : 'нет'}</div>
-          <div>Туман: {fogEnabled ? 'включен' : 'выключен'}</div>
-          <div>Камера: {activeMode === 'fog' ? 'заблокирована' : 'свободна'}</div>
-          {activeMode === 'fog' && (
-            <div className="text-yellow-400 text-xs mt-1">
-              ЛКМ - открыть | Shift+ЛКМ - скрыть
-            </div>
-          )}
+          <div>Туман: volumetric (новая система)</div>
         </div>
       </div>
 
@@ -332,37 +198,17 @@ export default function BattleMap3D({
           />
         )}
 
-        {/* Realistic Volumetric Fog of War */}
-        <FogOfWar3D mapSize={{ width: 24, height: 16 }} />
+        {/* Новая Volumetric Fog система */}
+        <VolumetricFog />
 
-        {/* Synced Fog of War (3D overlay) - только если включен */}
-        {fogEnabled && (
-          <SyncedFogOverlay3D 
-            mapSize={{ width: 1200, height: 800 }} 
-            planeSize={{ width: 24, height: 16 }} 
-          />
-        )}
-
-        {/* Interactive fog controls for DM */}
-        {isDM && activeMode === 'fog' && (
-          <>
-            <Fog3DInteractor />
-            <FogCursor3D />
-          </>
-        )}
-
-        {/* Контроллы камеры - отключаем при рисовании тумана или перетаскивании токена */}
+        {/* Контроллы камеры - отключаем при перетаскивании токена */}
         <OrbitControls 
           enableDamping 
           dampingFactor={0.1}
           maxPolarAngle={Math.PI / 2.2}
           minDistance={8}
           maxDistance={40}
-          enabled={
-            shouldHandleCameraControls() && 
-            activeMode !== 'fog' && 
-            !isActiveTokenDragging
-          }
+          enabled={shouldHandleCameraControls() && !isActiveTokenDragging}
         />
       </Canvas>
     </div>
