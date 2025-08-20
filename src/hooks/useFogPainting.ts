@@ -23,20 +23,30 @@ export function useFogPainting({
   const handlePointerDown = useCallback((event: PointerEvent) => {
     event.preventDefault();
     isDrawingRef.current = true;
-    paintAtPointer();
+    paintAtPointer(event);
   }, []);
 
   const handlePointerMove = useCallback((event: PointerEvent) => {
     if (!isDrawingRef.current) return;
     event.preventDefault();
-    paintAtPointer();
+    paintAtPointer(event);
   }, []);
 
   const handlePointerUp = useCallback(() => {
     isDrawingRef.current = false;
   }, []);
 
-  const paintAtPointer = useCallback(() => {
+  const paintAtPointer = useCallback((event?: PointerEvent) => {
+    // Определяем режим рисования на основе модификаторов клавиш
+    let currentMode = mode;
+    if (event) {
+      if (event.ctrlKey) {
+        currentMode = 'hide'; // Ctrl = скрывать (добавлять туман)
+      } else if (event.altKey) {
+        currentMode = 'reveal'; // Alt = показывать (убирать туман)
+      }
+    }
+
     // Обновляем позицию указателя
     raycaster.setFromCamera(pointer, camera);
     
@@ -47,15 +57,23 @@ export function useFogPainting({
     
     if (intersectPoint) {
       // Конвертируем мировые координаты в координаты сетки
-      const gridX = Math.floor(intersectPoint.x / tileSize);
-      const gridZ = Math.floor(intersectPoint.z / tileSize);
+      const gridX = Math.floor((intersectPoint.x + 12) / tileSize); // смещение для центрирования
+      const gridZ = Math.floor((intersectPoint.z + 8) / tileSize);
       
-      console.log(`Painting at grid coordinates: (${gridX}, ${gridZ}) in ${mode} mode`);
+      // Проверяем границы сетки
+      const { size } = useFogStore.getState();
+      if (gridX < 0 || gridX >= size.w || gridZ < 0 || gridZ >= size.h) {
+        return; // Вне границ сетки
+      }
       
-      if (mode === 'reveal') {
+      const modeText = currentMode === 'reveal' ? 'открытие' : 'скрытие';
+      const keyText = event?.ctrlKey ? ' (Ctrl)' : event?.altKey ? ' (Alt)' : '';
+      console.log(`Рисование в режиме ${modeText}${keyText} на координатах: (${gridX}, ${gridZ})`);
+      
+      if (currentMode === 'reveal') {
         useFogStore.getState().reveal(mapId, gridX, gridZ, brushSize);
       } else {
-        // Скрываем область
+        // Скрываем область (добавляем туман)
         const { maps, size } = useFogStore.getState();
         const map = maps[mapId];
         if (!map) return;
@@ -69,7 +87,7 @@ export function useFogPainting({
               const px = gridX + dx;
               const py = gridZ + dy;
               if (px >= 0 && px < width && py >= 0 && py < size.h) {
-                newMap[py * width + px] = 0; // 0 = туман
+                newMap[py * width + px] = 0; // 0 = туман (скрыто)
               }
             }
           }

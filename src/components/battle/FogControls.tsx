@@ -77,6 +77,16 @@ export const FogControls: React.FC<FogControlsProps> = ({
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
+        {/* Инструкция по управлению */}
+        <div className="space-y-2 p-2 bg-muted/50 rounded-lg">
+          <div className="text-xs font-medium text-muted-foreground">Горячие клавиши:</div>
+          <div className="text-xs space-y-1 text-muted-foreground">
+            <div><kbd className="px-1 bg-background rounded">Ctrl + клик</kbd> = Скрыть область</div>
+            <div><kbd className="px-1 bg-background rounded">Alt + клик</kbd> = Показать область</div>
+            <div><kbd className="px-1 bg-background rounded">Перетаскивание</kbd> = Рисовать</div>
+          </div>
+        </div>
+
         {/* Режим рисования */}
         <div className="space-y-2">
           <div className="text-xs font-medium text-muted-foreground">Управление видимостью (ДМ)</div>
