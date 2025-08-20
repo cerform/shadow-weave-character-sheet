@@ -9,12 +9,11 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
 import { DiceRoller3D } from '@/components/dice/DiceRoller3D';
 import { useEnhancedBattleStore, EnhancedToken } from '@/stores/enhancedBattleStore';
-import { Target, Sword, Crosshair, Zap, Shield } from 'lucide-react';
+import { Target, Sword, Crosshair, Zap } from 'lucide-react';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
 
@@ -27,7 +26,7 @@ interface AttackType {
   name: string;
   stat: 'strength' | 'dexterity' | 'intelligence' | 'wisdom' | 'charisma' | 'constitution';
   damage: string;
-  type: 'physical' | 'magical' | 'critical';
+  type: 'physical' | 'magical';
   range: number;
   icon: any;
 }
@@ -59,7 +58,7 @@ const attackTypes: AttackType[] = [
   },
 ];
 
-// D&D 5e stats (можно вынести в отдельный файл)
+// D&D 5e stats
 const dndStats = {
   strength: 16,
   dexterity: 14,
@@ -71,19 +70,24 @@ const dndStats = {
 
 const getModifier = (stat: number) => Math.floor((stat - 10) / 2);
 
+type AttackPhase = 'setup' | 'rolling' | 'hit-result' | 'damage-rolling' | 'damage-result' | 'complete';
+
 export const AttackDialog: React.FC<AttackDialogProps> = ({ children, attacker }) => {
   const [open, setOpen] = useState(false);
+  const [phase, setPhase] = useState<AttackPhase>('setup');
   const [selectedAttackType, setSelectedAttackType] = useState<string>('');
   const [selectedTarget, setSelectedTarget] = useState<string>('');
-  const [attackPhase, setAttackPhase] = useState<'select' | 'roll' | 'rollResult' | 'damage' | 'damageResult'>('select');
-  const [attackRollResult, setAttackRollResult] = useState<number | null>(null);
   const [diceKey, setDiceKey] = useState(0);
+  const [hitRoll, setHitRoll] = useState<number>(0);
+  const [hitTotal, setHitTotal] = useState<number>(0);
+  const [damageRoll, setDamageRoll] = useState<number>(0);
+  const [damageTotal, setDamageTotal] = useState<number>(0);
+  const [isHit, setIsHit] = useState<boolean>(false);
   
   const { tokens, addCombatEvent, updateToken } = useEnhancedBattleStore();
   const { theme } = useTheme();
   const currentTheme = themes[theme as keyof typeof themes] || themes.default;
 
-  // Фильтруем цели (исключаем атакующего)
   const availableTargets = tokens.filter(token => 
     token.id !== attacker.id && token.isVisible
   );
@@ -94,7 +98,19 @@ export const AttackDialog: React.FC<AttackDialogProps> = ({ children, attacker }
     return Math.sqrt(dx * dx + dz * dz);
   };
 
-  const handleAttackTypeSelect = () => {
+  const resetDialog = () => {
+    setPhase('setup');
+    setSelectedAttackType('');
+    setSelectedTarget('');
+    setHitRoll(0);
+    setHitTotal(0);
+    setDamageRoll(0);
+    setDamageTotal(0);
+    setIsHit(false);
+    setDiceKey(0);
+  };
+
+  const startAttackRoll = () => {
     if (!selectedAttackType || !selectedTarget) return;
     
     const attackType = attackTypes.find(a => a.name === selectedAttackType);
@@ -115,77 +131,72 @@ export const AttackDialog: React.FC<AttackDialogProps> = ({ children, attacker }
       return;
     }
 
-    setAttackPhase('roll');
-    // Небольшая задержка для лучшего UX
-    setTimeout(() => {
-      setDiceKey(prev => prev + 1);
-    }, 100);
+    setPhase('rolling');
+    setDiceKey(prev => prev + 1);
   };
 
-  const handleAttackRoll = (result: number) => {
-    if (!selectedTarget || !selectedAttackType) return;
-    
-    const target = tokens.find(t => t.id === selectedTarget);
+  const handleHitRoll = (roll: number) => {
     const attackType = attackTypes.find(a => a.name === selectedAttackType);
+    const target = tokens.find(t => t.id === selectedTarget);
     
-    if (!target || !attackType) return;
+    if (!attackType || !target) return;
 
     const stat = dndStats[attackType.stat];
     const modifier = getModifier(stat);
     const proficiencyBonus = 3;
-    const totalResult = result + modifier + proficiencyBonus;
+    const total = roll + modifier + proficiencyBonus;
+    const hit = total >= target.ac;
     
-    setAttackRollResult(totalResult);
-    
-    const isHit = totalResult >= target.ac;
-    
-    // Логируем результат броска на попадание
+    setHitRoll(roll);
+    setHitTotal(total);
+    setIsHit(hit);
+    setPhase('hit-result');
+
+    // Логируем результат
     addCombatEvent({
       actor: attacker.name,
       action: 'Бросок атаки',
       target: target.name,
-      description: `${attackType.name}: d20(${result}) + ${modifier + proficiencyBonus} = ${totalResult} vs AC ${target.ac} - ${isHit ? 'ПОПАДАНИЕ!' : 'ПРОМАХ'}`,
+      description: `${attackType.name}: d20(${roll}) + ${modifier + proficiencyBonus} = ${total} vs AC ${target.ac} - ${hit ? 'ПОПАДАНИЕ!' : 'ПРОМАХ'}`,
       diceRoll: {
         dice: `1d20+${modifier + proficiencyBonus}`,
-        result: totalResult,
-        breakdown: `${result}+${modifier + proficiencyBonus}`
+        result: total,
+        breakdown: `${roll}+${modifier + proficiencyBonus}`
       },
       playerName: 'ДМ'
     });
 
-    if (isHit) {
-      // Показываем результат броска
-      setAttackPhase('rollResult');
-      // Через 3 секунды переходим к броску урона
-      setTimeout(() => {
-        setAttackPhase('damage');
+    // Автоматический переход к следующей фазе
+    setTimeout(() => {
+      if (hit) {
+        setPhase('damage-rolling');
         setDiceKey(prev => prev + 1);
-      }, 3000);
-    } else {
-      // Показываем результат промаха
-      setAttackPhase('rollResult');
-      // Промах - закрываем диалог через задержку
-      setTimeout(() => {
-        setOpen(false);
-        resetDialog();
-      }, 3000);
-    }
+      } else {
+        setPhase('complete');
+        setTimeout(() => {
+          setOpen(false);
+          resetDialog();
+        }, 2000);
+      }
+    }, 2500);
   };
 
-  const handleDamageRoll = (result: number) => {
-    if (!selectedTarget || !selectedAttackType) return;
-    
-    const target = tokens.find(t => t.id === selectedTarget);
+  const handleDamageRoll = (roll: number) => {
     const attackType = attackTypes.find(a => a.name === selectedAttackType);
+    const target = tokens.find(t => t.id === selectedTarget);
     
-    if (!target || !attackType) return;
+    if (!attackType || !target) return;
 
     const stat = dndStats[attackType.stat];
     const modifier = getModifier(stat);
-    const totalDamage = result + modifier;
+    const total = roll + modifier;
     
+    setDamageRoll(roll);
+    setDamageTotal(total);
+    setPhase('damage-result');
+
     // Применяем урон
-    const newHp = Math.max(0, target.hp - totalDamage);
+    const newHp = Math.max(0, target.hp - total);
     updateToken(target.id, { hp: newHp });
     
     // Проверяем на потерю сознания
@@ -200,35 +211,42 @@ export const AttackDialog: React.FC<AttackDialogProps> = ({ children, attacker }
       actor: attacker.name,
       action: 'Урон',
       target: target.name,
-      damage: totalDamage,
-      description: `${attackType.name}: ${totalDamage} урона (${target.hp} → ${newHp})${newHp === 0 ? ' - ЦЕЛЬ ПОВЕРЖЕНА!' : ''}`,
+      damage: total,
+      description: `${attackType.name}: ${attackType.damage}(${roll}) + ${modifier} = ${total} урона (${target.hp} → ${newHp})${newHp === 0 ? ' - ЦЕЛЬ ПОВЕРЖЕНА!' : ''}`,
       diceRoll: {
         dice: `${attackType.damage}+${modifier}`,
-        result: totalDamage,
-        breakdown: `${result}+${modifier}`
+        result: total,
+        breakdown: `${roll}+${modifier}`
       },
       playerName: 'ДМ'
     });
 
-    // Показываем результат урона
-    setAttackPhase('damageResult');
-
-    // Закрываем диалог через небольшую задержку
+    // Закрываем диалог через задержку
     setTimeout(() => {
       setOpen(false);
       resetDialog();
     }, 3000);
   };
 
-  const resetDialog = () => {
-    setSelectedAttackType('');
-    setSelectedTarget('');
-    setAttackPhase('select');
-    setAttackRollResult(null);
+  const getDiceTypeFromDamage = (damageString: string): 'd4' | 'd6' | 'd8' | 'd10' | 'd12' | 'd20' | 'd100' => {
+    const match = damageString.match(/d(\d+)/);
+    if (!match) return 'd8';
+    
+    const sides = match[1];
+    switch (sides) {
+      case '4': return 'd4';
+      case '6': return 'd6';
+      case '8': return 'd8';
+      case '10': return 'd10';
+      case '12': return 'd12';
+      case '20': return 'd20';
+      case '100': return 'd100';
+      default: return 'd8';
+    }
   };
 
-  const renderSelectPhase = () => (
-    <div className="space-y-6">
+  const renderSetupPhase = () => (
+    <div className="space-y-4">
       <div className="space-y-2">
         <label className="text-sm font-medium">Тип атаки</label>
         <Select value={selectedAttackType} onValueChange={setSelectedAttackType}>
@@ -266,40 +284,22 @@ export const AttackDialog: React.FC<AttackDialogProps> = ({ children, attacker }
                 <div className="flex items-center gap-2">
                   <Target className="w-4 h-4" />
                   <span>{token.name}</span>
-                  <Badge variant="secondary">
-                    AC {token.ac}
-                  </Badge>
-                  <Badge variant="outline">
-                    HP {token.hp}/{token.maxHp}
-                  </Badge>
+                  <Badge variant="secondary">AC {token.ac}</Badge>
+                  <Badge variant="outline">HP {token.hp}/{token.maxHp}</Badge>
                 </div>
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
       </div>
-
-      {selectedAttackType && selectedTarget && (
-        <Card>
-          <CardContent className="pt-4">
-            <div className="text-center text-sm text-muted-foreground">
-              Выберите тип атаки или заклинание
-            </div>
-          </CardContent>
-        </Card>
-      )}
     </div>
   );
 
-  const renderRollPhase = () => {
+  const renderRollingPhase = () => {
     const attackType = attackTypes.find(a => a.name === selectedAttackType);
     const target = tokens.find(t => t.id === selectedTarget);
     
     if (!attackType || !target) return null;
-
-    const stat = dndStats[attackType.stat];
-    const modifier = getModifier(stat);
-    const proficiencyBonus = 3;
 
     return (
       <div className="space-y-4">
@@ -308,46 +308,30 @@ export const AttackDialog: React.FC<AttackDialogProps> = ({ children, attacker }
           <p className="text-sm text-muted-foreground">
             {attackType.name} против {target.name} (AC {target.ac})
           </p>
-          <div className="bg-blue-900/30 border border-blue-400/30 rounded-lg p-2 mt-2">
-            <p className="text-xs text-blue-300 font-medium">
-              1d20 + {modifier + proficiencyBonus} (модификатор + навык)
-            </p>
-          </div>
         </div>
         
-        <div className="h-[300px] w-full bg-gradient-to-b from-blue-900/30 to-blue-800/20 rounded-lg border border-blue-400/30 overflow-hidden relative">
-          <div className="absolute inset-0 bg-black/10" />
+        <div className="h-[280px] w-full bg-gradient-to-b from-blue-900/20 to-blue-800/10 rounded-lg border border-blue-400/30 overflow-hidden relative">
           <div className="absolute top-2 left-2 z-10 bg-black/70 rounded px-2 py-1">
-            <span className="text-xs text-white">Бросок d20</span>
-          </div>
-          <div className="absolute top-2 right-2 z-10 bg-black/70 rounded px-2 py-1">
-            <span className="text-xs text-white">Кликните для броска</span>
+            <span className="text-xs text-white font-medium">d20</span>
           </div>
           <DiceRoller3D 
-            key={`attack-${diceKey}`}
+            key={`hit-${diceKey}`}
             initialDice="d20"
             hideControls={false}
-            onRollComplete={handleAttackRoll}
+            onRollComplete={handleHitRoll}
             themeColor={currentTheme.accent}
             fixedPosition={true}
-            modifier={0}
-            diceCount={1}
           />
         </div>
       </div>
     );
   };
 
-  const renderRollResultPhase = () => {
+  const renderHitResultPhase = () => {
     const attackType = attackTypes.find(a => a.name === selectedAttackType);
     const target = tokens.find(t => t.id === selectedTarget);
     
-    if (!attackType || !target || attackRollResult === null) return null;
-
-    const isHit = attackRollResult >= target.ac;
-    const stat = dndStats[attackType.stat];
-    const modifier = getModifier(stat);
-    const proficiencyBonus = 3;
+    if (!attackType || !target) return null;
 
     return (
       <div className="space-y-4">
@@ -355,21 +339,21 @@ export const AttackDialog: React.FC<AttackDialogProps> = ({ children, attacker }
           <h3 className={`text-xl font-bold ${isHit ? 'text-green-400' : 'text-red-400'}`}>
             {isHit ? 'ПОПАДАНИЕ!' : 'ПРОМАХ!'}
           </h3>
-          <div className={`border rounded-lg p-4 mt-3 ${
-            isHit 
-              ? 'bg-green-900/30 border-green-400/30' 
-              : 'bg-red-900/30 border-red-400/30'
-          }`}>
-            <div className="text-lg font-semibold text-white">
-              Результат броска: {attackRollResult}
-            </div>
-            <div className="text-sm text-muted-foreground mt-1">
-              d20 + {modifier + proficiencyBonus} vs AC {target.ac}
-            </div>
-            <div className="text-xs text-muted-foreground">
-              {attackType.name} против {target.name}
-            </div>
-          </div>
+          
+          <Card className={`mt-3 ${isHit ? 'border-green-400/30 bg-green-900/20' : 'border-red-400/30 bg-red-900/20'}`}>
+            <CardContent className="pt-4">
+              <div className="text-lg font-semibold">
+                Результат: {hitTotal}
+              </div>
+              <div className="text-sm text-muted-foreground">
+                d20({hitRoll}) + модификаторы = {hitTotal}
+              </div>
+              <div className="text-sm text-muted-foreground">
+                vs AC {target.ac} • {isHit ? 'Попал' : 'Промазал'}
+              </div>
+            </CardContent>
+          </Card>
+          
           {isHit && (
             <p className="text-sm text-green-300 mt-3">
               Переходим к броску урона...
@@ -380,67 +364,33 @@ export const AttackDialog: React.FC<AttackDialogProps> = ({ children, attacker }
     );
   };
 
-  const renderDamagePhase = () => {
+  const renderDamageRollingPhase = () => {
     const attackType = attackTypes.find(a => a.name === selectedAttackType);
-    const target = tokens.find(t => t.id === selectedTarget);
     
-    if (!attackType || !target) return null;
+    if (!attackType) return null;
 
-    const stat = dndStats[attackType.stat];
-    const modifier = getModifier(stat);
-
-    // Парсим строку урона для определения типа кубика
-    const diceMatch = attackType.damage.match(/(\d+)d(\d+)/);
-    let diceType: 'd4' | 'd6' | 'd8' | 'd10' | 'd12' | 'd20' | 'd100' = 'd8';
-    
-    if (diceMatch) {
-      const sides = diceMatch[2];
-      switch (sides) {
-        case '4': diceType = 'd4'; break;
-        case '6': diceType = 'd6'; break;
-        case '8': diceType = 'd8'; break;
-        case '10': diceType = 'd10'; break;
-        case '12': diceType = 'd12'; break;
-        case '20': diceType = 'd20'; break;
-        case '100': diceType = 'd100'; break;
-        default: diceType = 'd8';
-      }
-    }
+    const diceType = getDiceTypeFromDamage(attackType.damage);
 
     return (
       <div className="space-y-4">
         <div className="text-center">
-          <h3 className="text-lg font-semibold text-green-400">ПОПАДАНИЕ!</h3>
-          <div className="bg-green-900/30 border border-green-400/30 rounded-lg p-3 mt-2">
-            <div className="text-sm font-medium text-green-300">
-              Результат атаки: {attackRollResult}
-            </div>
-            <div className="text-xs text-muted-foreground">
-              Против AC {target.ac} • {attackRollResult >= target.ac ? 'Успех' : 'Неудача'}
-            </div>
-          </div>
-          <p className="text-sm text-muted-foreground mt-3">
-            Бросок урона: {attackType.damage} + {modifier}
+          <h3 className="text-lg font-semibold text-orange-400">Бросок урона</h3>
+          <p className="text-sm text-muted-foreground">
+            {attackType.damage} + модификатор
           </p>
         </div>
         
-        <div className="h-[300px] w-full bg-gradient-to-b from-red-900/30 to-red-800/20 rounded-lg border border-red-400/30 overflow-hidden relative">
-          <div className="absolute inset-0 bg-black/10" />
+        <div className="h-[280px] w-full bg-gradient-to-b from-orange-900/20 to-red-800/10 rounded-lg border border-orange-400/30 overflow-hidden relative">
           <div className="absolute top-2 left-2 z-10 bg-black/70 rounded px-2 py-1">
-            <span className="text-xs text-white">Бросок {diceType}</span>
-          </div>
-          <div className="absolute top-2 right-2 z-10 bg-black/70 rounded px-2 py-1">
-            <span className="text-xs text-white">Кликните для броска</span>
+            <span className="text-xs text-white font-medium">{diceType}</span>
           </div>
           <DiceRoller3D 
             key={`damage-${diceKey}`}
             initialDice={diceType}
             hideControls={false}
             onRollComplete={handleDamageRoll}
-            themeColor={currentTheme.accent}
+            themeColor="#f97316"
             fixedPosition={true}
-            modifier={0}
-            diceCount={1}
           />
         </div>
       </div>
@@ -448,25 +398,32 @@ export const AttackDialog: React.FC<AttackDialogProps> = ({ children, attacker }
   };
 
   const renderDamageResultPhase = () => {
+    const attackType = attackTypes.find(a => a.name === selectedAttackType);
     const target = tokens.find(t => t.id === selectedTarget);
     
-    if (!target) return null;
+    if (!attackType || !target) return null;
 
     return (
       <div className="space-y-4">
         <div className="text-center">
           <h3 className="text-xl font-bold text-orange-400">УРОН НАНЕСЕН!</h3>
-          <div className="bg-orange-900/30 border border-orange-400/30 rounded-lg p-4 mt-3">
-            <div className="text-lg font-semibold text-white">
-              Цель получила урон
-            </div>
-            <div className="text-sm text-muted-foreground">
-              {target.name}: {target.hp}/{target.maxHp} HP
-              {target.hp === 0 && (
-                <span className="text-red-400 font-bold ml-2">ПОВЕРЖЕН!</span>
-              )}
-            </div>
-          </div>
+          
+          <Card className="mt-3 border-orange-400/30 bg-orange-900/20">
+            <CardContent className="pt-4">
+              <div className="text-lg font-semibold">
+                Урон: {damageTotal}
+              </div>
+              <div className="text-sm text-muted-foreground">
+                {attackType.damage}({damageRoll}) + модификатор = {damageTotal}
+              </div>
+              <div className="text-sm text-muted-foreground mt-2">
+                {target.name}: {target.hp}/{target.maxHp} HP
+                {target.hp === 0 && (
+                  <span className="text-red-400 font-bold ml-2">ПОВЕРЖЕН!</span>
+                )}
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     );
@@ -488,20 +445,20 @@ export const AttackDialog: React.FC<AttackDialogProps> = ({ children, attacker }
           </DialogTitle>
         </DialogHeader>
 
-        {attackPhase === 'select' && renderSelectPhase()}
-        {attackPhase === 'roll' && renderRollPhase()}
-        {attackPhase === 'rollResult' && renderRollResultPhase()}
-        {attackPhase === 'damage' && renderDamagePhase()}
-        {attackPhase === 'damageResult' && renderDamageResultPhase()}
+        {phase === 'setup' && renderSetupPhase()}
+        {phase === 'rolling' && renderRollingPhase()}
+        {phase === 'hit-result' && renderHitResultPhase()}
+        {phase === 'damage-rolling' && renderDamageRollingPhase()}
+        {phase === 'damage-result' && renderDamageResultPhase()}
 
         <DialogFooter>
-          {attackPhase === 'select' && (
+          {phase === 'setup' && (
             <>
               <Button variant="outline" onClick={() => setOpen(false)}>
                 Отмена
               </Button>
               <Button 
-                onClick={handleAttackTypeSelect}
+                onClick={startAttackRoll}
                 disabled={!selectedAttackType || !selectedTarget}
                 style={{ backgroundColor: currentTheme.accent }}
               >
@@ -509,12 +466,10 @@ export const AttackDialog: React.FC<AttackDialogProps> = ({ children, attacker }
               </Button>
             </>
           )}
-          {(attackPhase === 'roll' || attackPhase === 'rollResult' || attackPhase === 'damage' || attackPhase === 'damageResult') && (
-            <div className="w-full text-center">
-              <Button variant="outline" onClick={() => setOpen(false)}>
-                Закрыть
-              </Button>
-            </div>
+          {phase !== 'setup' && (
+            <Button variant="outline" onClick={() => setOpen(false)}>
+              Закрыть
+            </Button>
           )}
         </DialogFooter>
       </DialogContent>
