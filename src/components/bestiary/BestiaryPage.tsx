@@ -191,7 +191,7 @@ export const BestiaryPage: React.FC<BestiaryPageProps> = ({
           <Select 
             value={filter.challengeRating ? `${filter.challengeRating.min}-${filter.challengeRating.max}` : ''} 
             onValueChange={(value) => {
-              if (value) {
+              if (value && value !== 'all') {
                 const [min, max] = value.split('-').map(Number);
                 setFilter(prev => ({ ...prev, challengeRating: { min, max } }));
               } else {
@@ -203,7 +203,7 @@ export const BestiaryPage: React.FC<BestiaryPageProps> = ({
               <SelectValue placeholder="Уровень опасности" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Любой CR</SelectItem>
+              <SelectItem value="all">Любой CR</SelectItem>
               <SelectItem value="0-0">CR 0</SelectItem>
               <SelectItem value="0.125-0.5">CR 1/8 - 1/2</SelectItem>
               <SelectItem value="1-4">CR 1-4</SelectItem>
@@ -217,7 +217,7 @@ export const BestiaryPage: React.FC<BestiaryPageProps> = ({
             onValueChange={(value) => {
               setFilter(prev => ({ 
                 ...prev, 
-                type: value ? [value as any] : undefined 
+                type: (value && value !== 'all') ? [value as any] : undefined 
               }));
             }}
           >
@@ -225,7 +225,7 @@ export const BestiaryPage: React.FC<BestiaryPageProps> = ({
               <SelectValue placeholder="Тип существа" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Любой тип</SelectItem>
+              <SelectItem value="all">Любой тип</SelectItem>
               <SelectItem value="Зверь">Зверь</SelectItem>
               <SelectItem value="Гуманоид">Гуманоид</SelectItem>
               <SelectItem value="Великан">Великан</SelectItem>
