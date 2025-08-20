@@ -118,7 +118,7 @@ export const AttackDialog: React.FC<AttackDialogProps> = ({ children, attacker }
     
     if (!attackType || !target) return;
 
-    // Проверяем дистанцию
+    // Проверяем дистанцію
     const distance = calculateDistance(attacker.position, target.position);
     if (distance > attackType.range) {
       addCombatEvent({
@@ -132,10 +132,7 @@ export const AttackDialog: React.FC<AttackDialogProps> = ({ children, attacker }
     }
 
     setPhase('rolling');
-    // Сбрасываем ключ кубика для принудительного пересоздания
-    setTimeout(() => {
-      setDiceKey(1);
-    }, 100);
+    setDiceKey(Date.now()); // Уникальный ключ для гарантированного пересоздания
   };
 
   const handleHitRoll = (roll: number) => {
@@ -173,9 +170,7 @@ export const AttackDialog: React.FC<AttackDialogProps> = ({ children, attacker }
     setTimeout(() => {
       if (hit) {
         setPhase('damage-rolling');
-        setTimeout(() => {
-          setDiceKey(1);
-        }, 100);
+        setDiceKey(Date.now()); // Новый уникальный ключ для броска урона
       } else {
         setPhase('complete');
         setTimeout(() => {
@@ -319,15 +314,6 @@ export const AttackDialog: React.FC<AttackDialogProps> = ({ children, attacker }
           <div className="absolute top-2 left-2 z-10 bg-black/70 rounded px-2 py-1">
             <span className="text-xs text-white font-medium">d20 - Бросок на попадание</span>
           </div>
-          <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 z-10">
-            <Button 
-              onClick={() => setDiceKey(prev => prev + 1)}
-              className="bg-blue-600 hover:bg-blue-700 text-white"
-              size="sm"
-            >
-              🎲 Бросить d20
-            </Button>
-          </div>
           <DiceRoller3D 
             key={`hit-${diceKey}`}
             initialDice="d20"
@@ -335,7 +321,7 @@ export const AttackDialog: React.FC<AttackDialogProps> = ({ children, attacker }
             onRollComplete={handleHitRoll}
             themeColor={currentTheme.accent}
             fixedPosition={true}
-            forceReroll={diceKey > 0}
+            forceReroll={true}
           />
         </div>
       </div>
@@ -399,15 +385,6 @@ export const AttackDialog: React.FC<AttackDialogProps> = ({ children, attacker }
           <div className="absolute top-2 left-2 z-10 bg-black/70 rounded px-2 py-1">
             <span className="text-xs text-white font-medium">{diceType} - Бросок урона</span>
           </div>
-          <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 z-10">
-            <Button 
-              onClick={() => setDiceKey(prev => prev + 1)}
-              className="bg-orange-600 hover:bg-orange-700 text-white"
-              size="sm"
-            >
-              🎲 Бросить {diceType}
-            </Button>
-          </div>
           <DiceRoller3D 
             key={`damage-${diceKey}`}
             initialDice={diceType}
@@ -415,7 +392,7 @@ export const AttackDialog: React.FC<AttackDialogProps> = ({ children, attacker }
             onRollComplete={handleDamageRoll}
             themeColor="#f97316"
             fixedPosition={true}
-            forceReroll={diceKey > 0}
+            forceReroll={true}
           />
         </div>
       </div>
