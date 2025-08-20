@@ -64,10 +64,8 @@ const ModernFog = ({ paintMode, brushSize }: { paintMode: 'reveal' | 'hide'; bru
 
 export default function BattleMap3D({ 
   sessionId = 'default-session', 
-  mapId = 'default-map',
-  paintMode = 'reveal',
-  brushSize = 0
-}: BattleMap3DProps = {}) {
+  mapId = 'default-map'
+}: Partial<BattleMap3DProps> = {}) {
   const tokens = useBattleUIStore((s) => s.tokens);
   const { 
     tokens: enhancedTokens, 
@@ -84,8 +82,8 @@ export default function BattleMap3D({
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   // Состояние для современного UI
-  const [uiPaintMode, setUiPaintMode] = useState<'reveal' | 'hide'>(paintMode);
-  const [uiBrushSize, setUiBrushSize] = useState(brushSize);
+  const [uiPaintMode, setUiPaintMode] = useState<'reveal' | 'hide'>('reveal');
+  const [uiBrushSize, setUiBrushSize] = useState(0);
   
   // Проверяем, перетаскивается ли активный токен
   const isActiveTokenDragging = enhancedTokens.some(token => 

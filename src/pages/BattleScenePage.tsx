@@ -1,17 +1,11 @@
 import { BattleMap3D } from "@/components/battle/ui";
-import CompleteBattleActionPanel from "@/components/battle/ui/CompleteBattleActionPanel";
-import BattleToolbar from "@/components/battle/ui/BattleToolbar";
-import BattleHUD from "@/components/battle/ui/BattleHUD";
 import { DiceRollModal } from "@/components/dice/DiceRollModal";
-import { FogControls } from "@/components/battle/FogControls";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Dice6 } from "lucide-react";
 
 export default function BattleScenePage() {
   const [diceModalOpen, setDiceModalOpen] = useState(false);
-  const [paintMode, setPaintMode] = useState<'reveal' | 'hide'>('reveal');
-  const [brushSize, setBrushSize] = useState(3);
 
   const handleDiceRoll = (formula: string, reason?: string, playerName?: string) => {
     console.log('Dice roll:', { formula, reason, playerName });
@@ -37,25 +31,9 @@ export default function BattleScenePage() {
         </div>
       </div>
 
-      {/* 3D Карта */}
+      {/* 3D Карта с современным UI */}
       <div className="w-full h-full pt-12">
-        <BattleMap3D 
-          paintMode={paintMode}
-          brushSize={brushSize}
-        />
-        
-        {/* Элементы управления туманом войны */}
-        <FogControls 
-          paintMode={paintMode}
-          setPaintMode={setPaintMode}
-          brushSize={brushSize}
-          setBrushSize={setBrushSize}
-        />
-        
-        {/* UI элементы */}
-        <BattleToolbar />
-        <BattleHUD />
-        <CompleteBattleActionPanel />
+        <BattleMap3D />
       </div>
 
       {/* Модальные окна */}
