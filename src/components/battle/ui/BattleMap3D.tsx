@@ -33,13 +33,15 @@ export default function BattleMap3D({
     tokens: enhancedTokens, 
     selectedTokenId, 
     activeId: enhancedActiveId,
-    showMovementGrid
+    showMovementGrid,
+    mapImageUrl,
+    setMapImageUrl,
+    clearMap
   } = useEnhancedBattleStore();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const { shouldHandleCameraControls } = useBattle3DControlStore();
   const setMapSize = useFogGridStore(s => s.setMapSize);
   const setSources = useFogGridStore(s => s.setSources);
-  const [mapImageUrl, setMapImageUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   // Проверяем, перетаскивается ли активный токен
@@ -127,13 +129,6 @@ export default function BattleMap3D({
       setMapImageUrl(url);
       console.log('🗺️ Map image loaded:', url);
     }
-  };
-
-  const clearMap = () => {
-    if (mapImageUrl) {
-      URL.revokeObjectURL(mapImageUrl);
-    }
-    setMapImageUrl(null);
   };
 
   // Map Texture Components

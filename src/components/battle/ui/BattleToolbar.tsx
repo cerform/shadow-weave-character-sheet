@@ -44,19 +44,17 @@ export default function BattleToolbar() {
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file && file.type.startsWith('image/')) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        // Здесь можно добавить логику загрузки карты
-        console.log('Загружена карта:', file.name);
-        // Можно добавить в store для сохранения состояния карты
-      };
-      reader.readAsDataURL(file);
+      const url = URL.createObjectURL(file);
+      // Используем store для установки карты
+      useEnhancedBattleStore.getState().setMapImageUrl(url);
+      console.log('📁 Карта загружена через toolbar:', file.name);
     }
   };
 
   const handleClearMap = () => {
-    // Логика очистки карты
-    console.log('Карта очищена');
+    // Используем store для очистки карты
+    useEnhancedBattleStore.getState().clearMap();
+    console.log('🗑️ Карта очищена через toolbar');
   };
 
   const toggleCameraMode = () => {

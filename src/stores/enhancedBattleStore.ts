@@ -25,6 +25,7 @@ export interface CombatEvent {
   action: string;
   target?: string;
   damage?: number;
+  healing?: number; // Добавляем healing для совместимости с AttackDialog
   description: string;
   diceRoll?: {
     dice: string; // e.g., "1d20+5"
@@ -60,6 +61,9 @@ interface EnhancedBattleState {
     tokenId: string | null;
   };
   
+  // Map state
+  mapImageUrl: string | null;
+  
   // Combat log
   combatLog: CombatEvent[];
   
@@ -94,6 +98,10 @@ interface EnhancedBattleState {
   // Combat log
   addCombatEvent: (event: Omit<CombatEvent, 'id' | 'timestamp'>) => void;
   clearCombatLog: () => void;
+  
+  // Map actions
+  setMapImageUrl: (url: string | null) => void;
+  clearMap: () => void;
   
   // Token management helpers
   clearAllTokens: () => void;
@@ -147,6 +155,8 @@ export const useEnhancedBattleStore = create<EnhancedBattleState>((set, get) => 
     y: 0,
     tokenId: null,
   },
+  
+  mapImageUrl: null,
   
   combatLog: [
     {
@@ -333,5 +343,23 @@ export const useEnhancedBattleStore = create<EnhancedBattleState>((set, get) => 
       activeId: null,
       contextMenu: { visible: false, x: 0, y: 0, tokenId: null }
     });
+  },
+  
+  // Map actions
+  setMapImageUrl: (url: string | null) => {
+    const state = get();
+    // Освобождаем предыдущий URL если он был создан через createObjectURL
+    if (state.mapImageUrl && state.mapImageUrl.startsWith('blob:')) {
+      URL.revokeObjectURL(state.mapImageUrl);
+    }
+    set({ mapImageUrl: url });
+  },
+  
+  clearMap: () => {
+    const state = get();
+    if (state.mapImageUrl && state.mapImageUrl.startsWith('blob:')) {
+      URL.revokeObjectURL(state.mapImageUrl);
+    }
+    set({ mapImageUrl: null });
   },
 }));
