@@ -2,6 +2,7 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { useThree } from '@react-three/fiber';
 import * as THREE from 'three';
+import { useBattle3DControlStore } from '@/stores/battle3DControlStore';
 
 interface WorkingFogSystemProps {
   paintMode: 'reveal' | 'hide';
@@ -10,7 +11,12 @@ interface WorkingFogSystemProps {
 
 export const WorkingFogSystem: React.FC<WorkingFogSystemProps> = ({ paintMode, brushSize }) => {
   const { scene, camera, gl } = useThree();
-  const [isDrawing, setIsDrawing] = useState(false);
+  const { 
+    isMouseDown, 
+    isDragging, 
+    keysPressed, 
+    shouldHandleFogInteraction 
+  } = useBattle3DControlStore();
   const fogTextureRef = useRef<THREE.DataTexture | null>(null);
   const fogMaterialRef = useRef<THREE.MeshBasicMaterial | null>(null);
   const fogPlaneRef = useRef<THREE.Mesh | null>(null);
@@ -77,7 +83,7 @@ export const WorkingFogSystem: React.FC<WorkingFogSystemProps> = ({ paintMode, b
     };
   }, [scene]);
 
-  // Функция рисования на текстуре
+  // Функция рисования на текстуре с учетом модификаторов
   const paintFog = useCallback((worldX: number, worldZ: number) => {
     if (!fogTextureRef.current) return;
     
@@ -91,6 +97,14 @@ export const WorkingFogSystem: React.FC<WorkingFogSystemProps> = ({ paintMode, b
     // Размер кисти в пикселях текстуры
     const brushRadius = Math.max(1, brushSize * 10);
     
+    // Определяем режим рисования на основе модификаторов
+    let actualPaintMode = paintMode;
+    if (keysPressed.shift) {
+      actualPaintMode = 'hide'; // Shift = добавить туман
+    } else if (keysPressed.ctrl) {
+      actualPaintMode = 'reveal'; // Ctrl = убрать туман
+    }
+    
     let changed = false;
     
     for (let dy = -brushRadius; dy <= brushRadius; dy++) {
@@ -103,7 +117,7 @@ export const WorkingFogSystem: React.FC<WorkingFogSystemProps> = ({ paintMode, b
           if (x >= 0 && x < TEXTURE_SIZE && y >= 0 && y < TEXTURE_SIZE) {
             const index = (y * TEXTURE_SIZE + x) * 4;
             
-            if (paintMode === 'reveal') {
+            if (actualPaintMode === 'reveal') {
               // Убираем туман (делаем прозрачным)
               if (data[index + 3] > 0) {
                 data[index + 3] = 0;
@@ -123,83 +137,75 @@ export const WorkingFogSystem: React.FC<WorkingFogSystemProps> = ({ paintMode, b
     
     if (changed) {
       texture.needsUpdate = true;
-      console.log(`🖌️ Painted fog at world coords (${worldX.toFixed(1)}, ${worldZ.toFixed(1)}), texture coords (${texX}, ${texY}), mode: ${paintMode}`);
+      console.log(`🖌️ Painted fog at world coords (${worldX.toFixed(1)}, ${worldZ.toFixed(1)}), texture coords (${texX}, ${texY}), mode: ${actualPaintMode}, modifiers: ${JSON.stringify(keysPressed)}`);
     }
-  }, [paintMode, brushSize]);
+  }, [paintMode, brushSize, keysPressed]);
 
-  // Обработчики мыши
-  const handlePointerDown = useCallback((event: PointerEvent) => {
-    if (event.button !== 0) return; // Только левая кнопка
-    
-    console.log('🖱️ Fog pointer down');
-    setIsDrawing(true);
-    
-    // Получаем позицию клика в 3D пространстве
-    const rect = gl.domElement.getBoundingClientRect();
-    const mouse = new THREE.Vector2(
-      ((event.clientX - rect.left) / rect.width) * 2 - 1,
-      -((event.clientY - rect.top) / rect.height) * 2 + 1
-    );
-    
-    // Создаем рейкастер для пересечения с картой
-    const raycaster = new THREE.Raycaster();
-    raycaster.setFromCamera(mouse, camera);
-    
-    // Ищем пересечение с плоскостью карты (y = 0)
-    const plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
-    const intersectionPoint = raycaster.ray.intersectPlane(plane, new THREE.Vector3());
-    
-    if (intersectionPoint) {
-      paintFog(intersectionPoint.x, intersectionPoint.z);
+  // Обработка рисования тумана на основе состояния мыши из контроллера
+  const previousMouseStateRef = useRef({ isMouseDown: false, isDragging: false });
+  
+  useEffect(() => {
+    // Только если мышь нажата и условия для взаимодействия с туманом выполнены
+    if (isMouseDown && shouldHandleFogInteraction()) {
+      const canvas = gl.domElement;
+      
+      // Получаем текущую позицию мыши
+      const getMouseWorldPosition = () => {
+        // Получаем последнюю позицию мыши из DOM элемента канваса
+        const lastMouseX = (canvas as any)._lastMouseX || 0;
+        const lastMouseY = (canvas as any)._lastMouseY || 0;
+        
+        const mouse = new THREE.Vector2(lastMouseX, lastMouseY);
+        
+        // Создаем рейкастер для пересечения с картой
+        const raycaster = new THREE.Raycaster();
+        raycaster.setFromCamera(mouse, camera);
+        
+        // Ищем пересечение с плоскостью карты (y = 0)
+        const plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+        const intersectionPoint = raycaster.ray.intersectPlane(plane, new THREE.Vector3());
+        
+        return intersectionPoint;
+      };
+      
+      // Рисуем туман при первом нажатии или при перетаскивании
+      if (!previousMouseStateRef.current.isMouseDown || isDragging) {
+        const worldPos = getMouseWorldPosition();
+        if (worldPos) {
+          console.log('🖌️ Painting fog at:', worldPos.x, worldPos.z, 'Keys:', keysPressed);
+          paintFog(worldPos.x, worldPos.z);
+        }
+      }
     }
-  }, [gl, camera, paintFog]);
+    
+    // Обновляем предыдущее состояние
+    previousMouseStateRef.current = { isMouseDown, isDragging };
+  }, [isMouseDown, isDragging, shouldHandleFogInteraction, gl, camera, paintFog, keysPressed]);
 
-  const handlePointerMove = useCallback((event: PointerEvent) => {
-    if (!isDrawing) return;
-    
-    // Получаем позицию клика в 3D пространстве
-    const rect = gl.domElement.getBoundingClientRect();
-    const mouse = new THREE.Vector2(
-      ((event.clientX - rect.left) / rect.width) * 2 - 1,
-      -((event.clientY - rect.top) / rect.height) * 2 + 1
-    );
-    
-    // Создаем рейкастер для пересечения с картой
-    const raycaster = new THREE.Raycaster();
-    raycaster.setFromCamera(mouse, camera);
-    
-    // Ищем пересечение с плоскостью карты (y = 0)
-    const plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
-    const intersectionPoint = raycaster.ray.intersectPlane(plane, new THREE.Vector3());
-    
-    if (intersectionPoint) {
-      paintFog(intersectionPoint.x, intersectionPoint.z);
-    }
-  }, [isDrawing, gl, camera, paintFog]);
-
-  const handlePointerUp = useCallback(() => {
-    if (isDrawing) {
-      console.log('🖱️ Fog pointer up');
-      setIsDrawing(false);
-    }
-  }, [isDrawing]);
-
-  // Подключаем обработчики событий
+  // Добавляем отслеживание позиции мыши
   useEffect(() => {
     const canvas = gl.domElement;
     
-    canvas.addEventListener('pointerdown', handlePointerDown);
-    canvas.addEventListener('pointermove', handlePointerMove);
-    canvas.addEventListener('pointerup', handlePointerUp);
-    canvas.addEventListener('pointerleave', handlePointerUp);
+    const trackMousePosition = (e: MouseEvent) => {
+      const rect = canvas.getBoundingClientRect();
+      const mouseX = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+      const mouseY = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+      
+      // Сохраняем позицию мыши в DOM элементе для использования в рисовании
+      (canvas as any)._lastMouseX = mouseX;
+      (canvas as any)._lastMouseY = mouseY;
+    };
+    
+    canvas.addEventListener('mousemove', trackMousePosition);
+    canvas.addEventListener('pointerdown', trackMousePosition);
+    canvas.addEventListener('pointermove', trackMousePosition);
     
     return () => {
-      canvas.removeEventListener('pointerdown', handlePointerDown);
-      canvas.removeEventListener('pointermove', handlePointerMove);
-      canvas.removeEventListener('pointerup', handlePointerUp);
-      canvas.removeEventListener('pointerleave', handlePointerUp);
+      canvas.removeEventListener('mousemove', trackMousePosition);
+      canvas.removeEventListener('pointerdown', trackMousePosition);
+      canvas.removeEventListener('pointermove', trackMousePosition);
     };
-  }, [gl, handlePointerDown, handlePointerMove, handlePointerUp]);
+  }, [gl]);
 
   // Функции для полной очистки/сокрытия
   const revealAll = useCallback(() => {

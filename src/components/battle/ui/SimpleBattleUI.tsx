@@ -208,6 +208,14 @@ export const SimpleBattleUI: React.FC<SimpleBattleUIProps> = ({
                   Скрыть всё
                 </Button>
               </div>
+              
+              {/* Инструкции по использованию */}
+              <div className="text-xs text-muted-foreground bg-muted/20 p-2 rounded">
+                <div className="font-medium mb-1">Управление туманом:</div>
+                <div>• <span className="font-mono">Shift + клик</span> - Добавить туман</div>
+                <div>• <span className="font-mono">Ctrl + клик</span> - Убрать туман</div>
+                <div>• Перетаскивание для рисования</div>
+              </div>
             </div>
 
             <Separator />
