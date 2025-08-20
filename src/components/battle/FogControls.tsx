@@ -79,7 +79,7 @@ export const FogControls: React.FC<FogControlsProps> = ({
       <CardContent className="space-y-3">
         {/* Режим рисования */}
         <div className="space-y-2">
-          <div className="text-xs font-medium text-muted-foreground">Режим рисования</div>
+          <div className="text-xs font-medium text-muted-foreground">Управление видимостью (ДМ)</div>
           <div className="grid grid-cols-2 gap-2">
             <Button
               size="sm"
@@ -88,7 +88,7 @@ export const FogControls: React.FC<FogControlsProps> = ({
               className="text-xs"
             >
               <Eye className="w-3 h-3 mr-1" />
-              Открыть
+              Показать
             </Button>
             <Button
               size="sm"
@@ -119,7 +119,7 @@ export const FogControls: React.FC<FogControlsProps> = ({
 
         {/* Быстрые области */}
         <div className="space-y-2 pt-2 border-t">
-          <div className="text-xs font-medium text-muted-foreground">Быстрое открытие</div>
+          <div className="text-xs font-medium text-muted-foreground">Быстрое открытие областей</div>
           <div className="grid grid-cols-2 gap-2">
             <Button
               size="sm"
@@ -183,7 +183,7 @@ export const FogControls: React.FC<FogControlsProps> = ({
             className="w-full text-xs"
           >
             <Sun className="w-3 h-3 mr-1" />
-            Убрать весь туман
+            Открыть всю карту
           </Button>
           <Button
             size="sm"
@@ -195,7 +195,7 @@ export const FogControls: React.FC<FogControlsProps> = ({
             className="w-full text-xs"
           >
             <EyeOff className="w-3 h-3 mr-1" />
-            Сбросить туман
+            Скрыть всю карту
           </Button>
         </div>
       </CardContent>

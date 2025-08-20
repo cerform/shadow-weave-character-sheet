@@ -161,8 +161,8 @@ export class FogRenderer {
         g.add(cloudGroup);
         this.cells.push({
           mesh: cloudGroup,
-          target: v === 0 ? 1 : 0, // если 0 (не разведано) → туман = 1
-          opacity: v === 0 ? 0.8 : 0.0, // видимая непрозрачность тумана
+          target: v === 0 ? 1 : 0, // если 0 (закрыто) → показываем туман = 1
+          opacity: v === 0 ? 0.8 : 0.0, // туман виден на закрытых областях
           rotSpeed,
           scalePhase,
           scaleSpeed,
@@ -187,7 +187,7 @@ export class FogRenderer {
     
     const total = this.gridW * this.gridH;
     for (let i = 0; i < total && i < this.cells.length; i++) {
-      // 1 = открыто → target 0 (туман исчезает); 0 = туман → target 1 (туман виден)
+      // 0 = закрыто (туман) → target 1; 1 = открыто → target 0 (без тумана)
       this.cells[i].target = fog[i] === 0 ? 1 : 0;
     }
   }

@@ -40,14 +40,14 @@ const VolumetricFog = ({ paintMode, brushSize }: { paintMode: 'reveal' | 'hide';
     console.log('Initializing fog map...');
     const w = 30, h = 30;
     const fogMap = new Uint8Array(w * h);
-    fogMap.fill(0); // 0 = туман везде
+    fogMap.fill(0); // 0 = закрыто (туман везде)
     
     useFogStore.getState().setMap('main-map', fogMap, w, h);
-    console.log('Fog map initialized with size:', w, 'x', h);
+    console.log('Fog map initialized with size:', w, 'x', h, '- все области закрыты туманом');
     
-    // Открываем стартовую область
+    // Открываем стартовую область для игроков
     useFogStore.getState().reveal('main-map', 15, 15, 3);
-    console.log('Initial area revealed at (15, 15) with radius 3');
+    console.log('Initial area revealed at (15, 15) with radius 3 - ДМ открыл стартовую зону');
   }, []);
 
   // Подключаем обработчики событий к канвасу
