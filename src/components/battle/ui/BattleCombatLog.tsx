@@ -65,7 +65,7 @@ export default function BattleCombatLog() {
         </div>
       </CardHeader>
       
-      <CardContent className="h-full pb-4">
+      <CardContent className="h-full pb-4 bg-card/70 backdrop-blur-md rounded-lg">{/* Expanded background */}
         <ScrollArea className="h-full pr-4">
           {combatLog.length === 0 ? (
             <div className="text-muted-foreground text-center py-8">
