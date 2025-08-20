@@ -179,13 +179,21 @@ export const ModernBattleUI: React.FC<ModernBattleUIProps> = ({
         <div className="absolute left-4 top-1/2 transform -translate-y-1/2 pointer-events-auto z-40">
           <Card className="bg-background/95 backdrop-blur border shadow-lg">
             <CardContent className="p-1">
-              <div className="flex flex-col gap-1">
+              <div className="flex flex-col gap-1 pointer-events-auto">
                 {/* Карта */}
                 <Popover>
                   <PopoverTrigger asChild>
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <Button variant="ghost" size="sm" className="w-10 h-10 p-0">
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="w-10 h-10 p-0 pointer-events-auto"
+                          onClick={(e) => {
+                            console.log('🗺️ Map button clicked directly!');
+                            e.stopPropagation();
+                          }}
+                        >
                           <Map className="w-4 h-4" />
                         </Button>
                       </TooltipTrigger>
@@ -194,7 +202,7 @@ export const ModernBattleUI: React.FC<ModernBattleUIProps> = ({
                       </TooltipContent>
                     </Tooltip>
                   </PopoverTrigger>
-                  <PopoverContent side="right" className="w-56 p-3">
+                  <PopoverContent side="right" className="w-56 p-3 pointer-events-auto">
                     <div className="space-y-3">
                       <h4 className="font-medium flex items-center gap-2">
                         <Map className="w-4 h-4" />
@@ -208,7 +216,7 @@ export const ModernBattleUI: React.FC<ModernBattleUIProps> = ({
                             description: "Диалог загрузки карты открыт",
                           });
                           onUploadMap();
-                        }} variant="outline" size="sm">
+                        }} variant="outline" size="sm" className="pointer-events-auto">
                           <Upload className="w-3 h-3 mr-1" />
                           Загрузить
                         </Button>
@@ -219,7 +227,7 @@ export const ModernBattleUI: React.FC<ModernBattleUIProps> = ({
                             description: "Карта была успешно очищена",
                           });
                           onClearMap();
-                        }} variant="outline" size="sm">
+                        }} variant="outline" size="sm" className="pointer-events-auto">
                           <RotateCcw className="w-3 h-3 mr-1" />
                           Очистить
                         </Button>
@@ -233,7 +241,15 @@ export const ModernBattleUI: React.FC<ModernBattleUIProps> = ({
                   <PopoverTrigger asChild>
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <Button variant="ghost" size="sm" className="w-10 h-10 p-0">
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="w-10 h-10 p-0 pointer-events-auto"
+                          onClick={(e) => {
+                            console.log('👁️ Fog button clicked directly!');
+                            e.stopPropagation();
+                          }}
+                        >
                           <Eye className="w-4 h-4" />
                         </Button>
                       </TooltipTrigger>
@@ -242,7 +258,7 @@ export const ModernBattleUI: React.FC<ModernBattleUIProps> = ({
                       </TooltipContent>
                     </Tooltip>
                   </PopoverTrigger>
-                  <PopoverContent side="right" className="w-64 p-3">
+                  <PopoverContent side="right" className="w-64 p-3 pointer-events-auto">
                     <div className="space-y-4">
                       <h4 className="font-medium flex items-center gap-2">
                         <Eye className="w-4 h-4" />
@@ -252,18 +268,19 @@ export const ModernBattleUI: React.FC<ModernBattleUIProps> = ({
                       <div className="grid grid-cols-2 gap-2">
                         <Tooltip>
                           <TooltipTrigger asChild>
-                             <Button
-                               variant={paintMode === 'reveal' ? 'default' : 'outline'}
-                               size="sm"
-                               onClick={() => {
-                                 console.log('🔍 Paint mode set to reveal');
-                                 toast({
-                                   title: "Режим изменен",
-                                   description: "Режим: Показать области",
-                                 });
-                                 setPaintMode('reveal');
-                               }}
-                             >
+                              <Button
+                                variant={paintMode === 'reveal' ? 'default' : 'outline'}
+                                size="sm"
+                                className="pointer-events-auto"
+                                onClick={() => {
+                                  console.log('🔍 Paint mode set to reveal');
+                                  toast({
+                                    title: "Режим изменен",
+                                    description: "Режим: Показать области",
+                                  });
+                                  setPaintMode('reveal');
+                                }}
+                              >
                                <Eye className="w-3 h-3 mr-1" />
                                Показать
                              </Button>
@@ -275,18 +292,19 @@ export const ModernBattleUI: React.FC<ModernBattleUIProps> = ({
                          
                          <Tooltip>
                            <TooltipTrigger asChild>
-                             <Button
-                               variant={paintMode === 'hide' ? 'default' : 'outline'}
-                               size="sm"
-                                onClick={() => {
-                                  console.log('🌫️ Paint mode set to hide');
-                                  toast({
-                                    title: "Режим изменен",
-                                    description: "Режим: Скрыть области",
-                                  });
-                                  setPaintMode('hide');
-                                }}
-                            >
+                              <Button
+                                variant={paintMode === 'hide' ? 'default' : 'outline'}
+                                size="sm"
+                                className="pointer-events-auto"
+                                 onClick={() => {
+                                   console.log('🌫️ Paint mode set to hide');
+                                   toast({
+                                     title: "Режим изменен",
+                                     description: "Режим: Скрыть области",
+                                   });
+                                   setPaintMode('hide');
+                                 }}
+                             >
                               <EyeOff className="w-3 h-3 mr-1" />
                               Скрыть
                             </Button>
