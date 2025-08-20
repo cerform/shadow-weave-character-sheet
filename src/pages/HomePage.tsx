@@ -2,7 +2,7 @@ import React from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { BookOpen, Users, Scroll, Dice6, Shield, UserPlus, Sparkles, Swords, Map, Settings, Crown } from 'lucide-react';
+import { BookOpen, Users, Scroll, Dice6, Shield, UserPlus, Sparkles, Swords, Map, Settings, Crown, LogOut, User } from 'lucide-react';
 import ProfilePreview from '@/components/home/ProfilePreview';
 import CharactersList from '@/components/home/CharactersList';
 import { useAuth, useProtectedRoute } from '@/hooks/use-auth';
@@ -12,7 +12,7 @@ import fantasyBg3 from '@/assets/fantasy-bg-3.jpg';
 
 const HomePage = () => {
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user, logout } = useAuth();
   const { isAdmin, isDM, loading: rolesLoading } = useProtectedRoute();
   
   const navigateToAuth = () => {
@@ -223,7 +223,7 @@ const HomePage = () => {
             </div>
           </div>
 
-          {/* Призыв к действию */}
+          {/* Призыв к действию для неавторизованных */}
           {!isAuthenticated && (
             <div className="text-center bg-gradient-to-r from-primary/10 to-accent/10 rounded-2xl p-8 border border-primary/20">
               <h3 className="text-2xl font-bold mb-4">Готовы начать приключение?</h3>
@@ -238,6 +238,41 @@ const HomePage = () => {
                 <UserPlus className="mr-2 h-5 w-5" />
                 Создать аккаунт
               </Button>
+            </div>
+          )}
+
+          {/* Панель пользователя для авторизованных */}
+          {isAuthenticated && user && (
+            <div className="text-center bg-gradient-to-r from-primary/10 to-accent/10 rounded-2xl p-8 border border-primary/20">
+              <div className="flex items-center justify-center mb-4">
+                <User className="mr-3 h-8 w-8 text-primary" />
+                <div>
+                  <h3 className="text-2xl font-bold">Добро пожаловать, {user.displayName || user.email?.split('@')[0]}!</h3>
+                  <p className="text-sm text-muted-foreground">{user.email}</p>
+                </div>
+              </div>
+              <p className="text-muted-foreground mb-6">
+                Продолжайте свои приключения в мире D&D
+              </p>
+              <div className="flex gap-4 justify-center">
+                <Button 
+                  size="lg"
+                  onClick={() => navigate('/characters')}
+                  className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90"
+                >
+                  <Users className="mr-2 h-5 w-5" />
+                  Мои персонажи
+                </Button>
+                <Button 
+                  size="lg"
+                  variant="outline"
+                  onClick={logout}
+                  className="border-primary/20 hover:bg-primary/10"
+                >
+                  <LogOut className="mr-2 h-5 w-5" />
+                  Выйти из аккаунта
+                </Button>
+              </div>
             </div>
           )}
         </div>
