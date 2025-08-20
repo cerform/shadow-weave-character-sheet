@@ -10,6 +10,8 @@ import { Dice6 } from "lucide-react";
 
 export default function BattleScenePage() {
   const [diceModalOpen, setDiceModalOpen] = useState(false);
+  const [paintMode, setPaintMode] = useState<'reveal' | 'hide'>('reveal');
+  const [brushSize, setBrushSize] = useState(3);
 
   const handleDiceRoll = (formula: string, reason?: string, playerName?: string) => {
     console.log('Dice roll:', { formula, reason, playerName });
@@ -37,10 +39,18 @@ export default function BattleScenePage() {
 
       {/* 3D Карта */}
       <div className="w-full h-full pt-12">
-        <BattleMap3D />
+        <BattleMap3D 
+          paintMode={paintMode}
+          brushSize={brushSize}
+        />
         
         {/* Элементы управления туманом войны */}
-        <FogControls />
+        <FogControls 
+          paintMode={paintMode}
+          setPaintMode={setPaintMode}
+          brushSize={brushSize}
+          setBrushSize={setBrushSize}
+        />
         
         {/* UI элементы */}
         <BattleToolbar />

@@ -3,13 +3,50 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useFogStore } from '@/stores/fogStore';
-import { Eye, EyeOff, Sun, Cloud } from 'lucide-react';
+import { Eye, EyeOff, Sun, Cloud, Brush, Eraser } from 'lucide-react';
+import { Slider } from '@/components/ui/slider';
 
-export const FogControls: React.FC = () => {
+interface FogControlsProps {
+  paintMode: 'reveal' | 'hide';
+  setPaintMode: (mode: 'reveal' | 'hide') => void;
+  brushSize: number;
+  setBrushSize: (size: number) => void;
+}
+
+export const FogControls: React.FC<FogControlsProps> = ({ 
+  paintMode, 
+  setPaintMode, 
+  brushSize, 
+  setBrushSize 
+}) => {
   const { reveal } = useFogStore();
 
   const handleRevealArea = (x: number, y: number, radius: number) => {
     reveal('main-map', x, y, radius);
+  };
+
+  const handleHideArea = (x: number, y: number, radius: number) => {
+    const { maps, size } = useFogStore.getState();
+    const map = maps['main-map'];
+    if (!map) return;
+    
+    const newMap = new Uint8Array(map);
+    const width = size.w;
+    
+    // Скрываем область (устанавливаем в 0 = туман)
+    for (let dy = -radius; dy <= radius; dy++) {
+      for (let dx = -radius; dx <= radius; dx++) {
+        if (dx * dx + dy * dy <= radius * radius) {
+          const px = x + dx;
+          const py = y + dy;
+          if (px >= 0 && px < width && py >= 0 && py < size.h) {
+            newMap[py * width + px] = 0; // 0 = туман
+          }
+        }
+      }
+    }
+    
+    useFogStore.getState().setMap('main-map', newMap, size.w, size.h);
   };
 
   const handleClearAllFog = () => {
@@ -39,56 +76,100 @@ export const FogControls: React.FC = () => {
           Туман войны
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-2">
-        <div className="grid grid-cols-2 gap-2">
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => {
-              console.log('Revealing North area: (10, 10, 5)');
-              handleRevealArea(10, 10, 5);
-            }}
-            className="text-xs"
-          >
-            <Eye className="w-3 h-3 mr-1" />
-            Север
-          </Button>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => {
-              console.log('Revealing South area: (20, 10, 5)');
-              handleRevealArea(20, 10, 5);
-            }}
-            className="text-xs"
-          >
-            <Eye className="w-3 h-3 mr-1" />
-            Юг
-          </Button>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => {
-              console.log('Revealing West area: (15, 5, 5)');
-              handleRevealArea(15, 5, 5);
-            }}
-            className="text-xs"
-          >
-            <Eye className="w-3 h-3 mr-1" />
-            Запад
-          </Button>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => {
-              console.log('Revealing East area: (15, 25, 5)');
-              handleRevealArea(15, 25, 5);
-            }}
-            className="text-xs"
-          >
-            <Eye className="w-3 h-3 mr-1" />
-            Восток
-          </Button>
+      <CardContent className="space-y-3">
+        {/* Режим рисования */}
+        <div className="space-y-2">
+          <div className="text-xs font-medium text-muted-foreground">Режим рисования</div>
+          <div className="grid grid-cols-2 gap-2">
+            <Button
+              size="sm"
+              variant={paintMode === 'reveal' ? 'default' : 'outline'}
+              onClick={() => setPaintMode('reveal')}
+              className="text-xs"
+            >
+              <Eye className="w-3 h-3 mr-1" />
+              Открыть
+            </Button>
+            <Button
+              size="sm"
+              variant={paintMode === 'hide' ? 'default' : 'outline'}
+              onClick={() => setPaintMode('hide')}
+              className="text-xs"
+            >
+              <EyeOff className="w-3 h-3 mr-1" />
+              Скрыть
+            </Button>
+          </div>
+        </div>
+
+        {/* Размер кисти */}
+        <div className="space-y-2">
+          <div className="text-xs font-medium text-muted-foreground">
+            Размер кисти: {brushSize}
+          </div>
+          <Slider
+            value={[brushSize]}
+            onValueChange={(value) => setBrushSize(value[0])}
+            min={1}
+            max={8}
+            step={1}
+            className="w-full"
+          />
+        </div>
+
+        {/* Быстрые области */}
+        <div className="space-y-2 pt-2 border-t">
+          <div className="text-xs font-medium text-muted-foreground">Быстрое открытие</div>
+          <div className="grid grid-cols-2 gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => {
+                console.log('Revealing North area: (10, 10, 5)');
+                handleRevealArea(10, 10, 5);
+              }}
+              className="text-xs"
+            >
+              <Eye className="w-3 h-3 mr-1" />
+              Север
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => {
+                console.log('Revealing South area: (20, 10, 5)');
+                handleRevealArea(20, 10, 5);
+              }}
+              className="text-xs"
+            >
+              <Eye className="w-3 h-3 mr-1" />
+              Юг
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => {
+                console.log('Revealing West area: (15, 5, 5)');
+                handleRevealArea(15, 5, 5);
+              }}
+              className="text-xs"
+            >
+              <Eye className="w-3 h-3 mr-1" />
+              Запад
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => {
+                console.log('Revealing East area: (15, 25, 5)');
+                handleRevealArea(15, 25, 5);
+              }}
+              className="text-xs"
+            >
+              <Eye className="w-3 h-3 mr-1" />
+              Восток
+            </Button>
+          </div>
         </div>
         
         <div className="space-y-2 pt-2 border-t">

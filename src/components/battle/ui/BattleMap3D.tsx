@@ -13,15 +13,24 @@ import { Button } from "@/components/ui/button";
 import { Upload, X } from "lucide-react";
 import { useFogLayer } from "@/components/battle/hooks/useFogLayer";
 import { useFogStore } from "@/stores/fogStore";
+import { useFogPainting } from "@/hooks/useFogPainting";
 
 interface BattleMap3DProps {
   sessionId?: string;
   mapId?: string;
+  paintMode?: 'reveal' | 'hide';
+  brushSize?: number;
 }
 
 // Компонент для интеграции volumetric fog в 3D сцену
-const VolumetricFog = () => {
-  const { scene } = useThree();
+const VolumetricFog = ({ paintMode, brushSize }: { paintMode: 'reveal' | 'hide'; brushSize: number }) => {
+  const { scene, gl } = useThree();
+  const { handlePointerDown, handlePointerMove, handlePointerUp } = useFogPainting({
+    mode: paintMode,
+    brushSize,
+    mapId: 'main-map',
+    tileSize: 5
+  });
   
   // Подключаем новую volumetric fog систему
   useFogLayer(scene, 'main-map', 5);
@@ -40,13 +49,32 @@ const VolumetricFog = () => {
     useFogStore.getState().reveal('main-map', 15, 15, 3);
     console.log('Initial area revealed at (15, 15) with radius 3');
   }, []);
+
+  // Подключаем обработчики событий к канвасу
+  useEffect(() => {
+    const canvas = gl.domElement;
+    
+    canvas.addEventListener('pointerdown', handlePointerDown);
+    canvas.addEventListener('pointermove', handlePointerMove);
+    canvas.addEventListener('pointerup', handlePointerUp);
+    canvas.addEventListener('pointerleave', handlePointerUp);
+    
+    return () => {
+      canvas.removeEventListener('pointerdown', handlePointerDown);
+      canvas.removeEventListener('pointermove', handlePointerMove);
+      canvas.removeEventListener('pointerup', handlePointerUp);
+      canvas.removeEventListener('pointerleave', handlePointerUp);
+    };
+  }, [handlePointerDown, handlePointerMove, handlePointerUp]);
   
   return null;
 };
 
 export default function BattleMap3D({ 
   sessionId = 'default-session', 
-  mapId = 'default-map' 
+  mapId = 'default-map',
+  paintMode = 'reveal',
+  brushSize = 3
 }: BattleMap3DProps = {}) {
   const tokens = useBattleUIStore((s) => s.tokens);
   const { 
@@ -212,8 +240,8 @@ export default function BattleMap3D({
           />
         )}
 
-        {/* Новая Volumetric Fog система */}
-        <VolumetricFog />
+        {/* Новая Volumetric Fog система с рисованием */}
+        <VolumetricFog paintMode={paintMode} brushSize={brushSize} />
 
         {/* Контроллы камеры - отключаем при перетаскивании токена */}
         <OrbitControls 
