@@ -25,7 +25,7 @@ import {
   X
 } from 'lucide-react';
 import { useEnhancedBattleStore } from '@/stores/enhancedBattleStore';
-import { useFogStore } from '@/stores/fogStore';
+import { useEnhancedFogStore } from '@/stores/enhancedFogStore';
 
 interface ModernBattleUIProps {
   paintMode: 'reveal' | 'hide';
@@ -50,17 +50,62 @@ export const ModernBattleUI: React.FC<ModernBattleUIProps> = ({
   const activeToken = tokens.find(t => t.id === activeId);
 
   const handleRevealAll = () => {
-    const { size } = useFogStore.getState();
-    const clearMap = new Uint8Array(size.w * size.h);
-    clearMap.fill(1); // 1 = открыто
-    useFogStore.getState().setMap('main-map', clearMap, size.w, size.h);
+    console.log('🔍 Revealing all fog');
+    const store = useEnhancedFogStore.getState();
+    const dimensions = store.dimensions.get('main-map');
+    if (dimensions) {
+      // Clear and reinitialize with full visibility
+      store.clearMap('main-map');
+      store.initializeMap('main-map', dimensions.width, dimensions.height, true);
+    } else {
+      // Initialize with default size if not exists
+      store.initializeMap('main-map', 24, 16, true);
+    }
   };
 
   const handleHideAll = () => {
-    const { size } = useFogStore.getState();
-    const fogMap = new Uint8Array(size.w * size.h);
-    fogMap.fill(0); // 0 = туман
-    useFogStore.getState().setMap('main-map', fogMap, size.w, size.h);
+    console.log('🌫️ Hiding all with fog');
+    const store = useEnhancedFogStore.getState();
+    const dimensions = store.dimensions.get('main-map');
+    if (dimensions) {
+      // Clear and reinitialize with no visibility
+      store.clearMap('main-map');
+      store.initializeMap('main-map', dimensions.width, dimensions.height, false);
+    } else {
+      // Initialize with default size if not exists
+      store.initializeMap('main-map', 24, 16, false);
+    }
+  };
+
+  const handleAttack = () => {
+    console.log('⚔️ Attack action triggered');
+    if (activeToken) {
+      console.log(`${activeToken.name} attacks!`);
+    }
+  };
+
+  const handleDefense = () => {
+    console.log('🛡️ Defense action triggered');
+    if (activeToken) {
+      console.log(`${activeToken.name} defends!`);
+    }
+  };
+
+  const handleDiceRoll = () => {
+    console.log('🎲 Dice roll triggered');
+    // TODO: Open dice modal
+  };
+
+  const handleMagic = () => {
+    console.log('✨ Magic action triggered');
+    if (activeToken) {
+      console.log(`${activeToken.name} casts magic!`);
+    }
+  };
+
+  const handleSettings = () => {
+    console.log('⚙️ Settings clicked');
+    // TODO: Open settings panel
   };
 
   return (
@@ -317,53 +362,53 @@ export const ModernBattleUI: React.FC<ModernBattleUIProps> = ({
                         Бой
                       </h4>
                       <div className="grid grid-cols-2 gap-2">
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button variant="destructive" size="sm">
-                              <Sword className="w-3 h-3 mr-1" />
-                              Атака
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>Совершить атаку</p>
-                          </TooltipContent>
-                        </Tooltip>
-                        
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button variant="outline" size="sm">
-                              <Shield className="w-3 h-3 mr-1" />
-                              Защита
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>Встать в защитную стойку</p>
-                          </TooltipContent>
-                        </Tooltip>
-                        
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button variant="outline" size="sm">
-                              <Dice6 className="w-3 h-3 mr-1" />
-                              Бросок
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>Сделать проверку навыка</p>
-                          </TooltipContent>
-                        </Tooltip>
-                        
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button variant="outline" size="sm">
-                              <Zap className="w-3 h-3 mr-1" />
-                              Магия
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>Использовать заклинание</p>
-                          </TooltipContent>
-                        </Tooltip>
+                         <Tooltip>
+                           <TooltipTrigger asChild>
+                             <Button onClick={handleAttack} variant="destructive" size="sm">
+                               <Sword className="w-3 h-3 mr-1" />
+                               Атака
+                             </Button>
+                           </TooltipTrigger>
+                           <TooltipContent>
+                             <p>Совершить атаку</p>
+                           </TooltipContent>
+                         </Tooltip>
+                         
+                         <Tooltip>
+                           <TooltipTrigger asChild>
+                             <Button onClick={handleDefense} variant="outline" size="sm">
+                               <Shield className="w-3 h-3 mr-1" />
+                               Защита
+                             </Button>
+                           </TooltipTrigger>
+                           <TooltipContent>
+                             <p>Встать в защитную стойку</p>
+                           </TooltipContent>
+                         </Tooltip>
+                         
+                         <Tooltip>
+                           <TooltipTrigger asChild>
+                             <Button onClick={handleDiceRoll} variant="outline" size="sm">
+                               <Dice6 className="w-3 h-3 mr-1" />
+                               Бросок
+                             </Button>
+                           </TooltipTrigger>
+                           <TooltipContent>
+                             <p>Сделать проверку навыка</p>
+                           </TooltipContent>
+                         </Tooltip>
+                         
+                         <Tooltip>
+                           <TooltipTrigger asChild>
+                             <Button onClick={handleMagic} variant="outline" size="sm">
+                               <Zap className="w-3 h-3 mr-1" />
+                               Магия
+                             </Button>
+                           </TooltipTrigger>
+                           <TooltipContent>
+                             <p>Использовать заклинание</p>
+                           </TooltipContent>
+                         </Tooltip>
                       </div>
                     </div>
                   </PopoverContent>
@@ -374,7 +419,7 @@ export const ModernBattleUI: React.FC<ModernBattleUIProps> = ({
                 {/* Настройки */}
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Button variant="ghost" size="sm" className="w-10 h-10 p-0">
+                    <Button onClick={handleSettings} variant="ghost" size="sm" className="w-10 h-10 p-0">
                       <Settings className="w-4 h-4" />
                     </Button>
                   </TooltipTrigger>
