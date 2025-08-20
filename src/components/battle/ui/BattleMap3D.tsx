@@ -169,6 +169,73 @@ export default function BattleMap3D({
         onCreated={({ gl }) => {
           // Устанавливаем ссылку на канвас для системы управления
           canvasRef.current = gl.domElement;
+          
+          // Отладка событий мыши на канвасе
+          const canvas = gl.domElement;
+          
+          console.log('🖥️ Canvas created, adding mouse debug listeners');
+          
+          const debugMouseDown = (e: MouseEvent) => {
+            console.log('🖱️ Canvas mousedown:', {
+              button: e.button,
+              clientX: e.clientX,
+              clientY: e.clientY,
+              target: (e.target as HTMLElement)?.tagName,
+              timestamp: Date.now()
+            });
+          };
+          
+          const debugMouseMove = (e: MouseEvent) => {
+            console.log('🖱️ Canvas mousemove:', {
+              clientX: e.clientX,
+              clientY: e.clientY,
+              buttons: e.buttons,
+              timestamp: Date.now()
+            });
+          };
+          
+          const debugMouseUp = (e: MouseEvent) => {
+            console.log('🖱️ Canvas mouseup:', {
+              button: e.button,
+              clientX: e.clientX,
+              clientY: e.clientY,
+              timestamp: Date.now()
+            });
+          };
+          
+          const debugClick = (e: MouseEvent) => {
+            console.log('🖱️ Canvas click:', {
+              button: e.button,
+              clientX: e.clientX,
+              clientY: e.clientY,
+              timestamp: Date.now()
+            });
+          };
+          
+          const debugPointerDown = (e: PointerEvent) => {
+            console.log('👆 Canvas pointerdown:', {
+              pointerId: e.pointerId,
+              pointerType: e.pointerType,
+              clientX: e.clientX,
+              clientY: e.clientY,
+              timestamp: Date.now()
+            });
+          };
+          
+          canvas.addEventListener('mousedown', debugMouseDown);
+          canvas.addEventListener('mousemove', debugMouseMove);
+          canvas.addEventListener('mouseup', debugMouseUp);
+          canvas.addEventListener('click', debugClick);
+          canvas.addEventListener('pointerdown', debugPointerDown);
+          
+          // Очистка обработчиков при размонтировании
+          return () => {
+            canvas.removeEventListener('mousedown', debugMouseDown);
+            canvas.removeEventListener('mousemove', debugMouseMove);
+            canvas.removeEventListener('mouseup', debugMouseUp);
+            canvas.removeEventListener('click', debugClick);
+            canvas.removeEventListener('pointerdown', debugPointerDown);
+          };
         }}
       >
         {/* Освещение */}
