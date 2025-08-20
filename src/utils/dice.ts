@@ -1,34 +1,20 @@
 // src/utils/dice.ts
-export function roll(formula: string, mode: 'normal' | 'advantage' | 'disadvantage' = 'normal') {
-  // Simple dice rolling implementation
-  const match = formula.match(/(\d*)d(\d+)(?:\+(\d+))?/);
-  if (!match) return { total: 0, breakdown: '' };
+export type RollMode = 'normal'|'advantage'|'disadvantage';
+const RE=/^(\d+)?d(\d+)([+-]\d+)?$/i;
+
+export function roll(formula: string, mode: RollMode = 'normal'){
+  const m=formula.replace(/\s+/g,'').match(RE); 
+  if(!m) return { total: NaN, breakdown: '' };
   
-  const count = parseInt(match[1] || '1');
-  const sides = parseInt(match[2]);
-  const modifier = parseInt(match[3] || '0');
+  const c=parseInt(m[1]||'1',10), s=parseInt(m[2],10), mod=parseInt(m[3]||'0',10);
+  const once=()=>Array.from({length:c},()=>1+Math.floor(Math.random()*s)).reduce((a,b)=>a+b,0)+mod;
   
-  let rolls: number[] = [];
-  
-  if (formula === 'd20' && mode !== 'normal') {
-    // For advantage/disadvantage on d20
-    const roll1 = Math.floor(Math.random() * sides) + 1;
-    const roll2 = Math.floor(Math.random() * sides) + 1;
-    
-    if (mode === 'advantage') {
-      rolls = [Math.max(roll1, roll2)];
-    } else {
-      rolls = [Math.min(roll1, roll2)];
-    }
-  } else {
-    // Normal rolling
-    for (let i = 0; i < count; i++) {
-      rolls.push(Math.floor(Math.random() * sides) + 1);
-    }
+  if(mode!=='normal'){ 
+    const a=once(), b=once(); 
+    const total = mode==='advantage'?Math.max(a,b):Math.min(a,b);
+    return { total, breakdown: `${total}` }; 
   }
   
-  const total = rolls.reduce((sum, roll) => sum + roll, 0) + modifier;
-  const breakdown = `${rolls.join('+')}${modifier > 0 ? `+${modifier}` : ''}`;
-  
-  return { total, breakdown };
+  const total = once();
+  return { total, breakdown: `${total}` };
 }
