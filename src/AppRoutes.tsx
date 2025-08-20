@@ -30,7 +30,7 @@ import DMMapEditorPage from '@/pages/DMMapEditorPage';
 import PlayerMapPage from '@/pages/PlayerMapPage';
 import BattleScenePage from '@/pages/BattleScenePage';
 import IntegratedBattlePage from '@/pages/IntegratedBattlePage';
-import BestiaryPage from '@/components/bestiary/BestiaryPage';
+import { BestiaryPage } from '@/components/bestiary/BestiaryPage';
 import DnD5ePage from '@/pages/DnD5ePage';
 
 
