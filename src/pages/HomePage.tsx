@@ -59,10 +59,25 @@ const HomePage = () => {
     },
     {
       icon: Map,
-      title: "Боевая карта",
-      description: "Интерактивная карта для проведения тактических боёв",
+      title: "Боевая карта 3D",
+      description: "Интерактивная 3D карта для проведения тактических боёв",
       href: "/battle-map-3d",
       gradient: "from-green-500/20 to-emerald-500/20"
+    },
+    {
+      icon: Swords,
+      title: "Интегрированная боевая система",
+      description: "Полная боевая система D&D 5e с 3D картой и правилами",
+      href: "/integrated-battle",
+      gradient: "from-indigo-500/20 to-purple-500/20",
+      featured: true
+    },
+    {
+      icon: Dice6,
+      title: "Боевая система D&D 5e",
+      description: "Система боя по правилам D&D 5e с инициативой и заклинаниями",
+      href: "/dnd5e-combat",
+      gradient: "from-teal-500/20 to-cyan-500/20"
     }
   ];
 

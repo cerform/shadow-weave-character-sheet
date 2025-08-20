@@ -29,6 +29,7 @@ import AdminAssetsPage from '@/pages/AdminAssetsPage';
 import DMMapEditorPage from '@/pages/DMMapEditorPage';
 import PlayerMapPage from '@/pages/PlayerMapPage';
 import BattleScenePage from '@/pages/BattleScenePage';
+import IntegratedBattlePage from '@/pages/IntegratedBattlePage';
 import DnD5ePage from '@/pages/DnD5ePage';
 
 
@@ -143,6 +144,10 @@ const AppRoutes: React.FC = () => {
       <Route path="/dnd-spells" element={<DndSpellsPage />} />
       <Route path="/dnd5e-combat" element={<DnD5ePage />} />
       
+      {/* Боевые системы */}
+      <Route path="/battle-map-3d" element={<BattleScenePage />} />
+      <Route path="/integrated-battle" element={<IntegratedBattlePage />} />
+      
       {/* Персонажи */}
       <Route path="/character-creation" element={<CharacterCreationPage />} />
       <Route path="/characters" element={<CharactersListPage />} />
@@ -183,6 +188,10 @@ const AppRoutes: React.FC = () => {
 
       {/* 3D Battle Map */}
       <Route path="/battle-map-3d" element={<BattleScenePage />} />
+      <Route path="/integrated-battle" element={<IntegratedBattlePage />} />
+      
+      {/* Боевая система D&D 5e только (без 3D карты) */}
+      <Route path="/dnd5e-combat" element={<DnD5ePage />} />
       
       {/* Админские маршруты */}
       <Route path="/admin" element={
