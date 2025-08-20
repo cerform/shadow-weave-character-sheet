@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { Token, Initiative, BattleState } from '../stores/battleStore';
+import { EventBus } from '../combat-core/EventBus';
 
 export interface CombatAction {
   id: string;
@@ -39,6 +40,10 @@ interface CombatStore {
   initiative: Initiative[];
   combatLog: CombatLog[];
   conditions: Map<string, Condition[]>; // tokenId -> conditions
+  tokens: Token[];
+  activeIdx: number;
+  bus: EventBus;
+  cfg: { tileSize: number };
   
   // Actions
   startCombat: (tokens: Token[]) => void;
@@ -53,6 +58,7 @@ interface CombatStore {
   getCurrentToken: () => Initiative | null;
   getTokenConditions: (tokenId: string) => Condition[];
   clearLog: () => void;
+  updateToken: (tokenId: number, updates: Partial<Token>) => void;
 }
 
 export const useCombatStore = create<CombatStore>((set, get) => ({
@@ -62,6 +68,10 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
   initiative: [],
   combatLog: [],
   conditions: new Map(),
+  tokens: [],
+  activeIdx: 0,
+  bus: new EventBus(),
+  cfg: { tileSize: 5 },
 
   startCombat: (tokens: Token[]) => {
     const initiative = tokens.map((token, index) => ({
@@ -277,5 +287,13 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
 
   clearLog: () => {
     set({ combatLog: [] });
+  },
+
+  updateToken: (tokenId: number, updates: Partial<Token>) => {
+    const { tokens } = get();
+    const updatedTokens = tokens.map(token => 
+      token.id === tokenId ? { ...token, ...updates } : token
+    );
+    set({ tokens: updatedTokens });
   }
 }));
