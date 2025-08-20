@@ -115,12 +115,12 @@ export const FogControls: React.FC<FogControlsProps> = ({
         {/* Размер кисти */}
         <div className="space-y-2">
           <div className="text-xs font-medium text-muted-foreground">
-            Размер кисти: {brushSize}
+            Размер кисти: {brushSize === 0 ? '1 клетка' : `${brushSize * 2 + 1}x${brushSize * 2 + 1} клеток`}
           </div>
           <Slider
             value={[brushSize]}
             onValueChange={(value) => setBrushSize(value[0])}
-            min={1}
+            min={0}
             max={8}
             step={1}
             className="w-full"

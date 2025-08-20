@@ -75,7 +75,7 @@ export default function BattleMap3D({
   sessionId = 'default-session', 
   mapId = 'default-map',
   paintMode = 'reveal',
-  brushSize = 3
+  brushSize = 0 // Минимальная кисть = одна клетка
 }: BattleMap3DProps = {}) {
   const tokens = useBattleUIStore((s) => s.tokens);
   const { 
