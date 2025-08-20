@@ -14,6 +14,7 @@ import { Upload, X } from "lucide-react";
 import { useFogLayer } from "@/components/battle/hooks/useFogLayer";
 import { useFogStore } from "@/stores/fogStore";
 import { useFogPainting } from "@/hooks/useFogPainting";
+import { ModernBattleUI } from './ModernBattleUI';
 
 interface BattleMap3DProps {
   sessionId?: string;
@@ -22,33 +23,37 @@ interface BattleMap3DProps {
   brushSize?: number;
 }
 
-// Компонент для интеграции объемного тумана в 3D сцену
-const VolumetricFog = ({ paintMode, brushSize }: { paintMode: 'reveal' | 'hide'; brushSize: number }) => {
+// Оптимизированный компонент тумана - не создаем сферы там где не нужно
+const OptimizedFog = ({ paintMode, brushSize }: { paintMode: 'reveal' | 'hide'; brushSize: number }) => {
   const { scene, gl } = useThree();
   const { handlePointerDown, handlePointerMove, handlePointerUp } = useFogPainting({
     mode: paintMode,
     brushSize,
     mapId: 'main-map',
-    tileSize: 1 // Каждая клетка сетки равна 1 единице (24/24=1)
+    tileSize: 1
   });
   
-  // Подключаем старую систему тумана пока новая не готова
+  // Используем умную систему тумана - только на границах
   useFogLayer(scene, 'main-map', 1);
   
-  // Инициализируем туман при первом запуске
+  // Инициализируем только стартовые области с туманом
   useEffect(() => {
-    console.log('Initializing fog map...');
-    // Размер должен совпадать с размером gridHelper [24, 24]
-    const w = 24, h = 24; // Точно соответствует размеру сетки
+    console.log('Initializing optimized fog map...');
+    const w = 24, h = 24;
     const fogMap = new Uint8Array(w * h);
-    fogMap.fill(0); // 0 = закрыто (туман везде)
+    
+    // Открываем центральную область, остальное в тумане
+    fogMap.fill(0); // все закрыто
+    
+    // Открываем только стартовую зону
+    for (let y = 10; y < 14; y++) {
+      for (let x = 10; x < 14; x++) {
+        fogMap[y * w + x] = 1; // открыто
+      }
+    }
     
     useFogStore.getState().setMap('main-map', fogMap, w, h);
-    console.log('Fog map initialized with size:', w, 'x', h, '- все области закрыты туманом');
-    
-    // Открываем стартовую область для игроков (центр карты)
-    useFogStore.getState().reveal('main-map', 12, 12, 3);
-    console.log('Initial area revealed at (12, 12) with radius 3 - ДМ открыл стартовую зону');
+    console.log('Optimized fog initialized - only necessary areas');
   }, []);
 
   // Подключаем обработчики событий к канвасу
@@ -75,7 +80,7 @@ export default function BattleMap3D({
   sessionId = 'default-session', 
   mapId = 'default-map',
   paintMode = 'reveal',
-  brushSize = 0 // Минимальная кисть = одна клетка
+  brushSize = 0
 }: BattleMap3DProps = {}) {
   const tokens = useBattleUIStore((s) => s.tokens);
   const { 
@@ -91,6 +96,10 @@ export default function BattleMap3D({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const { shouldHandleCameraControls } = useBattle3DControlStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  // Состояние для современного UI
+  const [uiPaintMode, setUiPaintMode] = useState<'reveal' | 'hide'>(paintMode);
+  const [uiBrushSize, setUiBrushSize] = useState(brushSize);
   
   // Проверяем, перетаскивается ли активный токен
   const isActiveTokenDragging = enhancedTokens.some(token => 
@@ -147,50 +156,24 @@ export default function BattleMap3D({
 
   return (
     <div className="w-full h-full relative bg-background rounded-xl overflow-hidden border border-border">
-      {/* Controls Panel */}
-      <div className="absolute top-4 left-4 z-50 bg-black/80 p-3 rounded-xl backdrop-blur space-y-3">
-        {/* Map Upload Controls */}
-        <div className="space-y-2">
-          <h3 className="text-sm font-medium text-white">Карта</h3>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            onChange={handleFileSelect}
-            className="hidden"
-          />
-          
-          <div className="flex flex-col gap-2">
-            <Button
-              onClick={() => fileInputRef.current?.click()}
-              size="sm"
-              variant="secondary"
-              className="flex items-center gap-2 text-xs"
-            >
-              <Upload className="w-3 h-3" />
-              {mapImageUrl ? 'Сменить' : 'Загрузить'}
-            </Button>
-            
-            {mapImageUrl && (
-              <Button
-                onClick={clearMap}
-                size="sm"
-                variant="destructive"
-                className="flex items-center gap-2 text-xs"
-              >
-                <X className="w-3 h-3" />
-                Убрать
-              </Button>
-            )}
-          </div>
-        </div>
+      {/* Современный UI */}
+      <ModernBattleUI
+        paintMode={uiPaintMode}
+        setPaintMode={setUiPaintMode}
+        brushSize={uiBrushSize}
+        setBrushSize={setUiBrushSize}
+        onUploadMap={() => fileInputRef.current?.click()}
+        onClearMap={clearMap}
+      />
 
-        {/* Status */}
-        <div className="text-xs text-gray-400 border-t border-gray-600 pt-2">
-          <div>Карта: {mapImageUrl ? 'загружена' : 'нет'}</div>
-          <div>Туман: volumetric (новая система)</div>
-        </div>
-      </div>
+      {/* Скрытый инпут для загрузки карты */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        onChange={handleFileSelect}
+        className="hidden"
+      />
 
       <Canvas
         ref={canvasRef}
@@ -241,8 +224,8 @@ export default function BattleMap3D({
           />
         )}
 
-        {/* Новая Volumetric Fog система с рисованием */}
-        <VolumetricFog paintMode={paintMode} brushSize={brushSize} />
+        {/* Оптимизированная система тумана */}
+        <OptimizedFog paintMode={uiPaintMode} brushSize={uiBrushSize} />
 
         {/* Контроллы камеры - отключаем при перетаскивании токена */}
         <OrbitControls 
