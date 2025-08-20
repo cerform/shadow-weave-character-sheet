@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Sword, Zap, Move, Heart, Shield, Eye, Trash2 } from 'lucide-react';
 import { useEnhancedBattleStore } from '@/stores/enhancedBattleStore';
+import { AttackDialog } from '../ui/AttackDialog';
 
 interface ContextAction {
   label: string;
@@ -51,20 +52,6 @@ export const TokenContextMenu: React.FC = () => {
   if (!contextMenu.visible || !token) return null;
 
   const actions: ContextAction[] = [
-    {
-      label: 'Атаковать',
-      icon: <Sword className="w-4 h-4" />,
-      onClick: () => {
-        addCombatEvent({
-          actor: 'DM',
-          action: 'атака',
-          target: token.name,
-          description: `Атака по ${token.name}`,
-        });
-        hideContextMenu();
-      },
-      color: 'text-red-400 hover:bg-red-900/20',
-    },
     {
       label: 'Заклинание',
       icon: <Zap className="w-4 h-4" />,
@@ -163,6 +150,20 @@ export const TokenContextMenu: React.FC = () => {
       </div>
       
       <div className="py-1">
+        {/* Атака с кубиком d20 */}
+        <AttackDialog attacker={token}>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="w-full justify-start h-8 px-3 text-left font-normal text-red-400 hover:bg-red-900/20"
+            onClick={() => {}}
+          >
+            <Sword className="w-4 h-4" />
+            <span className="ml-2">Атаковать</span>
+          </Button>
+        </AttackDialog>
+        
+        {/* Остальные действия */}
         {actions.map((action, index) => (
           <Button
             key={index}
