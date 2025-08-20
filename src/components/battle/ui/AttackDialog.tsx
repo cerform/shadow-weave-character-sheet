@@ -116,7 +116,10 @@ export const AttackDialog: React.FC<AttackDialogProps> = ({ children, attacker }
     }
 
     setAttackPhase('roll');
-    setDiceKey(prev => prev + 1);
+    // Небольшая задержка для лучшего UX
+    setTimeout(() => {
+      setDiceKey(prev => prev + 1);
+    }, 100);
   };
 
   const handleAttackRoll = (result: number) => {
@@ -317,13 +320,18 @@ export const AttackDialog: React.FC<AttackDialogProps> = ({ children, attacker }
           <div className="absolute top-2 left-2 z-10 bg-black/70 rounded px-2 py-1">
             <span className="text-xs text-white">Бросок d20</span>
           </div>
+          <div className="absolute top-2 right-2 z-10 bg-black/70 rounded px-2 py-1">
+            <span className="text-xs text-white">Кликните для броска</span>
+          </div>
           <DiceRoller3D 
-            key={diceKey}
+            key={`attack-${diceKey}`}
             initialDice="d20"
-            hideControls={true}
+            hideControls={false}
             onRollComplete={handleAttackRoll}
             themeColor={currentTheme.accent}
             fixedPosition={true}
+            modifier={0}
+            diceCount={1}
           />
         </div>
       </div>
@@ -421,13 +429,18 @@ export const AttackDialog: React.FC<AttackDialogProps> = ({ children, attacker }
           <div className="absolute top-2 left-2 z-10 bg-black/70 rounded px-2 py-1">
             <span className="text-xs text-white">Бросок {diceType}</span>
           </div>
+          <div className="absolute top-2 right-2 z-10 bg-black/70 rounded px-2 py-1">
+            <span className="text-xs text-white">Кликните для броска</span>
+          </div>
           <DiceRoller3D 
-            key={diceKey}
+            key={`damage-${diceKey}`}
             initialDice={diceType}
-            hideControls={true}
+            hideControls={false}
             onRollComplete={handleDamageRoll}
             themeColor={currentTheme.accent}
             fixedPosition={true}
+            modifier={0}
+            diceCount={1}
           />
         </div>
       </div>
