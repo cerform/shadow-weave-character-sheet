@@ -91,10 +91,20 @@ export class FogRenderer {
     g.name = 'fog-layer';
     this.group = g;
 
-    // создаём 3D облака только там, где туман есть (v===0)
+    // Вычисляем границы сетки
+    const mapWidth = this.gridW * this.tileSize;
+    const mapHeight = this.gridH * this.tileSize;
+    const offsetX = -mapWidth / 2; // центрируем карту
+    const offsetZ = -mapHeight / 2;
+
+    // создаём 3D облака только там, где туман есть (v===0) и только в пределах сетки
     for (let y = 0; y < this.gridH; y++) {
       for (let x = 0; x < this.gridW; x++) {
         const v = fog[y * this.gridW + x]; // 1 = разведано, 0 = туман
+        
+        // Позиция в мире
+        const worldX = offsetX + x * this.tileSize;
+        const worldZ = offsetZ + y * this.tileSize;
         
         // Создаем группу из нескольких сфер для более объемного вида
         const cloudGroup = new THREE.Group();
@@ -112,35 +122,39 @@ export class FogRenderer {
             6
           );
           const extraMesh = new THREE.Mesh(extraGeometry, this.cloudMaterial.clone());
+          // Ограничиваем смещение дополнительных сфер, чтобы не выходить за границы клетки
+          const maxOffset = this.tileSize * 0.4;
           extraMesh.position.set(
-            (Math.random() - 0.5) * this.tileSize * 1.0,
-            (Math.random() - 0.5) * this.tileSize * 0.4,
-            (Math.random() - 0.5) * this.tileSize * 1.0
+            (Math.random() - 0.5) * maxOffset,
+            (Math.random() - 0.5) * this.tileSize * 0.3,
+            (Math.random() - 0.5) * maxOffset
           );
           extraMesh.scale.setScalar(0.7 + Math.random() * 0.6); // случайные размеры
           cloudGroup.add(extraMesh);
         }
 
-        // Позиционируем облако над картой
+        // Позиционируем облако строго над клеткой сетки
         const baseHeight = this.tileSize * 1.2; // поднимаем выше над картой
         cloudGroup.position.set(
-          x * this.tileSize, 
-          baseHeight + Math.random() * this.tileSize * 0.4, // больше вариации по высоте
-          y * this.tileSize
+          worldX, 
+          baseHeight + Math.random() * this.tileSize * 0.3, // небольшая вариация по высоте
+          worldZ
         );
         
-        // Случайный поворот
+        // Ограничиваем поворот, чтобы облако не сильно выходило за границы клетки
         cloudGroup.rotation.y = Math.random() * Math.PI * 2;
+        cloudGroup.rotation.x = (Math.random() - 0.5) * 0.2; // небольшой наклон
+        cloudGroup.rotation.z = (Math.random() - 0.5) * 0.2;
 
-        // случайные параметры «живости»
+        // случайные параметры «живости» (более медленные для стабильности)
         const rotSpeed = {
-          x: (Math.random() * 0.1 + 0.02) * (Math.random() > 0.5 ? 1 : -1),
-          y: (Math.random() * 0.15 + 0.03) * (Math.random() > 0.5 ? 1 : -1),
-          z: (Math.random() * 0.08 + 0.01) * (Math.random() > 0.5 ? 1 : -1)
+          x: (Math.random() * 0.05 + 0.01) * (Math.random() > 0.5 ? 1 : -1),
+          y: (Math.random() * 0.08 + 0.02) * (Math.random() > 0.5 ? 1 : -1),
+          z: (Math.random() * 0.04 + 0.005) * (Math.random() > 0.5 ? 1 : -1)
         };
-        const scaleSpeed = Math.random() * 0.3 + 0.1;
+        const scaleSpeed = Math.random() * 0.2 + 0.05;
         const scalePhase = Math.random() * Math.PI * 2;
-        const originalScale = 0.8 + Math.random() * 0.4; // случайный размер
+        const originalScale = 0.9 + Math.random() * 0.2; // более стабильный размер
 
         cloudGroup.scale.setScalar(originalScale);
 
@@ -184,7 +198,7 @@ export class FogRenderer {
     // плавное приближение opacity к целевому состоянию
     const fadeSpeed = 2.0; // скорость растворения/появления
     const minOpacity = 0.0;
-    const maxOpacity = 0.85;
+    const maxOpacity = 0.8;
 
     for (let i = 0; i < this.cells.length; i++) {
       const c = this.cells[i];
@@ -201,12 +215,12 @@ export class FogRenderer {
         }
       });
 
-      // «живой» туман — лёгкая ротация и дыхание масштаба
+      // «живой» туман — лёгкая ротация и дыхание масштаба (уменьшенные значения)
       c.mesh.rotation.x += c.rotSpeed.x * delta;
       c.mesh.rotation.y += c.rotSpeed.y * delta;
       c.mesh.rotation.z += c.rotSpeed.z * delta;
       
-      const breathingScale = 1 + Math.sin(c.scalePhase + performance.now() * 0.001 * c.scaleSpeed) * 0.08;
+      const breathingScale = 1 + Math.sin(c.scalePhase + performance.now() * 0.001 * c.scaleSpeed) * 0.05;
       c.mesh.scale.setScalar(c.originalScale * breathingScale);
     }
   }
