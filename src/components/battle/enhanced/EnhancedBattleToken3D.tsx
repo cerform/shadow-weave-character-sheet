@@ -1,17 +1,72 @@
-import { Html } from "@react-three/drei";
+import { Html, useGLTF } from "@react-three/drei";
 import { ThreeEvent, useFrame } from "@react-three/fiber";
-import { useRef, useState } from "react";
+import { useRef, useState, useMemo } from "react";
 import { useEnhancedBattleStore, type EnhancedToken } from "@/stores/enhancedBattleStore";
 import { canMoveToPosition, snapToGrid, gridToWorld, type GridPosition } from "@/utils/movementUtils";
 import { MovementIndicator } from "./MovementIndicator";
 import * as THREE from "three";
 
+// 3D модели для разных типов персонажей
+const MODEL_PATHS = {
+  fighter: "/models/fighter.glb",
+  wizard: "/models/wizard.glb",
+  rogue: "/models/rogue.glb",
+  cleric: "/models/cleric.glb",
+  goblin: "/models/goblin.glb",
+  skeleton: "/models/skeleton.glb",
+  orc: "/models/orc.glb",
+  dragon: "/models/dragon.glb",
+  default: "/models/character.glb"
+} as const;
+
 interface EnhancedBattleToken3DProps {
   token: EnhancedToken;
 }
 
+// Компонент 3D модели персонажа
+const Character3DModel = ({ modelType, position, isActive, isSelected, isEnemy, scale = 1 }: {
+  modelType: keyof typeof MODEL_PATHS;
+  position: [number, number, number];
+  isActive: boolean;
+  isSelected: boolean;
+  isEnemy: boolean;
+  scale?: number;
+}) => {
+  const modelPath = MODEL_PATHS[modelType] || MODEL_PATHS.default;
+  
+  try {
+    const { scene } = useGLTF(modelPath);
+    const clonedScene = useMemo(() => scene.clone(), [scene]);
+    
+    return (
+      <primitive 
+        object={clonedScene} 
+        position={[0, 0, 0]}
+        scale={[scale, scale, scale]}
+        castShadow
+        receiveShadow
+      />
+    );
+  } catch (error) {
+    // Fallback к базовой геометрии если модель не загрузилась
+    const tokenColor = isEnemy ? "#ef4444" : "#22c55e";
+    const emissiveColor = isSelected ? "#fbbf24" : (isActive ? "#3b82f6" : "#000000");
+    
+    return (
+      <mesh castShadow>
+        <cylinderGeometry args={[0.4, 0.4, 1.2]} />
+        <meshStandardMaterial 
+          color={tokenColor}
+          emissive={emissiveColor}
+          emissiveIntensity={isSelected ? 0.3 : (isActive ? 0.2 : 0)}
+        />
+      </mesh>
+    );
+  }
+};
+
 export const EnhancedBattleToken3D: React.FC<EnhancedBattleToken3DProps> = ({ token }) => {
-  const meshRef = useRef<THREE.Mesh>(null);
+  const meshRef = useRef<THREE.Group>(null);
   const ringRef = useRef<THREE.Mesh>(null);
   const [dragging, setDragging] = useState(false);
   const [hovered, setHovered] = useState(false);
@@ -22,12 +77,31 @@ export const EnhancedBattleToken3D: React.FC<EnhancedBattleToken3DProps> = ({ to
     selectedTokenId,
     updateToken, 
     selectToken,
-    addCombatEvent 
+    addCombatEvent,
+    showMovementGrid,
+    setShowMovementGrid
   } = useEnhancedBattleStore();
   
   const isActive = activeId === token.id;
   const isSelected = selectedTokenId === token.id;
   const speed = token.speed || 6;
+  
+  // Определяем тип модели на основе имени или класса токена
+  const getModelType = (token: EnhancedToken): keyof typeof MODEL_PATHS => {
+    const name = token.name.toLowerCase();
+    const tokenClass = token.class?.toLowerCase() || '';
+    
+    if (name.includes('goblin') || tokenClass.includes('goblin')) return 'goblin';
+    if (name.includes('skeleton') || tokenClass.includes('skeleton')) return 'skeleton';
+    if (name.includes('orc') || tokenClass.includes('orc')) return 'orc';
+    if (name.includes('dragon') || tokenClass.includes('dragon')) return 'dragon';
+    if (tokenClass.includes('fighter') || tokenClass.includes('warrior')) return 'fighter';
+    if (tokenClass.includes('wizard') || tokenClass.includes('mage')) return 'wizard';
+    if (tokenClass.includes('rogue') || tokenClass.includes('thief')) return 'rogue';
+    if (tokenClass.includes('cleric') || tokenClass.includes('priest')) return 'cleric';
+    
+    return 'default';
+  };
   
   // Анимация активного кольца
   useFrame((state) => {
@@ -52,18 +126,18 @@ export const EnhancedBattleToken3D: React.FC<EnhancedBattleToken3DProps> = ({ to
     // Выбираем токен
     selectToken(token.id);
     
-    // Начинаем перетаскивание только если это активный токен
-    if (isActive && !token.hasMovedThisTurn) {
+    // Начинаем перетаскивание для любого токена (не только активного)
+    if (!token.hasMovedThisTurn) {
       setDragging(true);
       (event.target as any).setPointerCapture(event.pointerId);
       
       // Показываем сетку перемещения
-      useEnhancedBattleStore.getState().setShowMovementGrid(true);
+      setShowMovementGrid(true);
     }
   };
 
   const handlePointerMove = (event: ThreeEvent<PointerEvent>) => {
-    if (!dragging || !isActive) return;
+    if (!dragging) return;
     
     event.stopPropagation();
     
@@ -113,7 +187,7 @@ export const EnhancedBattleToken3D: React.FC<EnhancedBattleToken3DProps> = ({ to
       (event.target as any).releasePointerCapture(event.pointerId);
       
       // Скрываем сетку перемещения
-      useEnhancedBattleStore.getState().setShowMovementGrid(false);
+      setShowMovementGrid(false);
       
       // Отмечаем, что токен переместился в этом ходу
       updateToken(token.id, { hasMovedThisTurn: true });
@@ -128,7 +202,7 @@ export const EnhancedBattleToken3D: React.FC<EnhancedBattleToken3DProps> = ({ to
   };
 
   const handleCellClick = (cell: GridPosition) => {
-    if (!isActive || token.hasMovedThisTurn) return;
+    if (token.hasMovedThisTurn) return;
     
     const worldPosition = gridToWorld(cell);
     
@@ -159,22 +233,17 @@ export const EnhancedBattleToken3D: React.FC<EnhancedBattleToken3DProps> = ({ to
     }
   };
 
-  // Цвет токена
-  const tokenColor = token.isEnemy ? "#ef4444" : "#22c55e";
-  const emissiveColor = isSelected ? "#fbbf24" : (isActive ? "#3b82f6" : "#000000");
-  
   return (
-    <group position={token.position}>
-      {/* Индикатор доступных ходов */}
+    <group position={token.position} ref={meshRef}>
+      {/* Индикатор доступных ходов - показываем для выбранного токена */}
       <MovementIndicator 
         tokenId={token.id}
-        visible={isActive && !token.hasMovedThisTurn}
+        visible={isSelected && !token.hasMovedThisTurn && showMovementGrid}
         onCellClick={handleCellClick}
       />
       
-      {/* Основной токен */}
-      <mesh
-        ref={meshRef}
+      {/* 3D модель персонажа */}
+      <group
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
@@ -187,98 +256,62 @@ export const EnhancedBattleToken3D: React.FC<EnhancedBattleToken3DProps> = ({ to
           setHovered(false);
         }}
       >
-        <cylinderGeometry args={[0.4, 0.4, 0.1]} />
-        <meshStandardMaterial 
-          color={tokenColor}
-          emissive={emissiveColor}
-          emissiveIntensity={isSelected ? 0.3 : (isActive ? 0.2 : 0)}
+        <Character3DModel
+          modelType={getModelType(token)}
+          position={token.position}
+          isActive={isActive}
+          isSelected={isSelected}
+          isEnemy={token.isEnemy}
+          scale={0.8}
         />
-      </mesh>
+      </group>
 
       {/* Кольцо активного токена */}
       {isActive && (
         <mesh ref={ringRef} position={[0, 0.06, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-          <ringGeometry args={[0.5, 0.6, 16]} />
+          <ringGeometry args={[0.5, 0.7, 8]} />
           <meshBasicMaterial 
             color="#3b82f6" 
             transparent 
-            opacity={0.8}
-            side={THREE.DoubleSide}
+            opacity={0.6}
           />
         </mesh>
       )}
 
-      {/* Тень */}
-      <mesh position={[0, -0.01, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <circleGeometry args={[0.4]} />
-        <meshBasicMaterial 
-          color="#000000" 
-          transparent 
-          opacity={0.2}
-        />
-      </mesh>
+      {/* Кольцо выбранного токена */}
+      {isSelected && !isActive && (
+        <mesh position={[0, 0.02, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+          <ringGeometry args={[0.45, 0.65, 8]} />
+          <meshBasicMaterial 
+            color="#fbbf24" 
+            transparent 
+            opacity={0.4}
+          />
+        </mesh>
+      )}
 
-      {/* UI информация */}
-      <Html position={[0, 1, 0]} center>
-        <div className="pointer-events-none">
-          {/* Имя токена */}
-          <div className="bg-background/80 backdrop-blur-sm rounded px-2 py-1 mb-1 text-center">
-            <span className="text-xs font-medium">{token.name}</span>
-            {isActive && (
-              <span className="ml-2 text-xs text-primary font-bold">Ход</span>
-            )}
+      {/* UI информация над токеном */}
+      <Html position={[0, 2, 0]} center>
+        <div className="bg-black/80 text-white text-xs p-1 rounded whitespace-nowrap pointer-events-none">
+          <div className="font-medium">{token.name}</div>
+          <div className="text-xs">
+            {token.hp}/{token.maxHp} HP | AC {token.ac}
           </div>
-          
-          {/* HP полоса */}
-          <div className="bg-background/80 backdrop-blur-sm rounded px-2 py-1 mb-1">
-            <div className="flex items-center gap-1 text-xs">
-              <span>HP:</span>
-              <div className="w-16 h-2 bg-muted rounded overflow-hidden">
-                <div 
-                  className="h-full bg-destructive transition-all"
-                  style={{
-                    width: `${(token.hp / token.maxHp) * 100}%`,
-                    backgroundColor: token.hp > token.maxHp * 0.5 ? '#22c55e' : 
-                                   token.hp > token.maxHp * 0.25 ? '#f59e0b' : '#ef4444'
-                  }}
-                />
-              </div>
-              <span>{token.hp}/{token.maxHp}</span>
-            </div>
-          </div>
-
-          {/* AC и скорость */}
-          <div className="bg-background/80 backdrop-blur-sm rounded px-2 py-1 mb-1">
-            <div className="flex items-center gap-2 text-xs">
-              <span>AC: {token.ac}</span>
-              <span>Скорость: {speed}</span>
-            </div>
-          </div>
-
-          {/* Состояния */}
           {token.conditions.length > 0 && (
-            <div className="bg-background/80 backdrop-blur-sm rounded px-2 py-1">
-              <div className="flex flex-wrap gap-1">
-                {token.conditions.map((condition, index) => (
-                  <span 
-                    key={index}
-                    className="bg-orange-500 text-white text-xs px-1 rounded"
-                  >
-                    {condition}
-                  </span>
-                ))}
-              </div>
+            <div className="text-xs text-yellow-400">
+              {token.conditions.join(', ')}
             </div>
           )}
-
-          {/* Индикатор движения */}
-          {isActive && token.hasMovedThisTurn && (
-            <div className="bg-blue-500/80 backdrop-blur-sm rounded px-2 py-1 mt-1">
-              <span className="text-xs text-white">Переместился</span>
-            </div>
+          {token.hasMovedThisTurn && (
+            <div className="text-xs text-blue-400">Переместился</div>
           )}
         </div>
       </Html>
     </group>
   );
 };
+
+// Preload 3D models
+Object.values(MODEL_PATHS).forEach((path) => {
+  useGLTF.preload(path);
+});

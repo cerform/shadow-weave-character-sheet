@@ -15,6 +15,7 @@ export interface EnhancedToken {
   modelUrl?: string; // URL для 3D модели
   speed?: number; // Скорость перемещения в клетках за ход (по умолчанию 6)
   hasMovedThisTurn?: boolean; // Переместился ли в этом ходу
+  class?: string; // Класс персонажа для выбора модели
 }
 
 export interface CombatEvent {
