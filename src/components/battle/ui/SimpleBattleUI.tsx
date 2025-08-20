@@ -51,13 +51,10 @@ export const SimpleBattleUI: React.FC<SimpleBattleUIProps> = ({
       title: "Туман убран",
       description: "Весь туман убран с карты",
     });
-    const store = useEnhancedFogStore.getState();
-    const dimensions = store.dimensions.get('main-map');
-    if (dimensions) {
-      store.clearMap('main-map');
-      store.initializeMap('main-map', dimensions.width, dimensions.height, true);
-    } else {
-      store.initializeMap('main-map', 24, 16, true);
+    
+    // Используем глобальную функцию для управления туманом
+    if ((window as any).fogControls?.revealAll) {
+      (window as any).fogControls.revealAll();
     }
   };
 
@@ -67,13 +64,10 @@ export const SimpleBattleUI: React.FC<SimpleBattleUIProps> = ({
       title: "Туман добавлен",
       description: "Вся карта покрыта туманом",
     });
-    const store = useEnhancedFogStore.getState();
-    const dimensions = store.dimensions.get('main-map');
-    if (dimensions) {
-      store.clearMap('main-map');
-      store.initializeMap('main-map', dimensions.width, dimensions.height, false);
-    } else {
-      store.initializeMap('main-map', 24, 16, false);
+    
+    // Используем глобальную функцию для управления туманом
+    if ((window as any).fogControls?.hideAll) {
+      (window as any).fogControls.hideAll();
     }
   };
 

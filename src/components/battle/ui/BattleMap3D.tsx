@@ -11,9 +11,7 @@ import { useBattle3DControls } from "@/hooks/useBattle3DControls";
 import { useBattle3DControlStore } from "@/stores/battle3DControlStore";
 import { Button } from "@/components/ui/button";
 import { Upload, X } from "lucide-react";
-import { useModernFogLayer } from "@/components/battle/hooks/useModernFogLayer";
-import { useEnhancedFogStore } from "@/stores/enhancedFogStore";
-import { useModernFogPainting } from "@/hooks/useModernFogPainting";
+import { WorkingFogSystem } from './WorkingFogSystem';
 import { SimpleBattleUI } from './SimpleBattleUI';
 
 interface BattleMap3DProps {
@@ -23,44 +21,7 @@ interface BattleMap3DProps {
   brushSize?: number;
 }
 
-// Современная система тумана с улучшенной производительностью
-const ModernFog = ({ paintMode, brushSize }: { paintMode: 'reveal' | 'hide'; brushSize: number }) => {
-  const { scene, gl } = useThree();
-  
-  // Используем новую современную систему тумана
-  const { renderer, isInitialized } = useModernFogLayer(scene, 'main-map', 1, true);
-  
-  // Современная система рисования с оптимизацией
-  const { handlers } = useModernFogPainting({
-    mode: paintMode,
-    brushSize,
-    mapId: 'main-map',
-    tileSize: 1,
-    onPaintStart: () => console.log('Fog painting started'),
-    onPaintEnd: () => console.log('Fog painting ended')
-  });
-
-  // Подключаем обработчики событий к канвасу
-  useEffect(() => {
-    const canvas = gl.domElement;
-    
-    canvas.addEventListener('pointerdown', handlers.handlePointerDown);
-    canvas.addEventListener('pointermove', handlers.handlePointerMove);
-    canvas.addEventListener('pointerup', handlers.handlePointerUp);
-    canvas.addEventListener('pointerleave', handlers.handlePointerUp);
-    window.addEventListener('keydown', handlers.handleKeyDown);
-    
-    return () => {
-      canvas.removeEventListener('pointerdown', handlers.handlePointerDown);
-      canvas.removeEventListener('pointermove', handlers.handlePointerMove);
-      canvas.removeEventListener('pointerup', handlers.handlePointerUp);
-      canvas.removeEventListener('pointerleave', handlers.handlePointerUp);
-      window.removeEventListener('keydown', handlers.handleKeyDown);
-    };
-  }, [handlers]);
-  
-  return null;
-};
+// Удаляем старый неработающий компонент ModernFog
 
 export default function BattleMap3D({ 
   sessionId = 'default-session', 
@@ -103,25 +64,41 @@ export default function BattleMap3D({
 
   // Handle map image upload
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    console.log('📁 handleFileSelect called');
+    console.log('📁 handleFileSelect called with event:', event.target.files?.length);
     const file = event.target.files?.[0];
-    if (file && file.type.startsWith('image/')) {
-      const url = URL.createObjectURL(file);
-      setMapImageUrl(url);
-      console.log('🗺️ Map image loaded:', url);
+    if (file) {
+      console.log('📁 File selected:', file.name, file.type, file.size);
+      if (file.type.startsWith('image/')) {
+        const url = URL.createObjectURL(file);
+        console.log('🗺️ Creating object URL:', url);
+        setMapImageUrl(url);
+        console.log('🗺️ Map image loaded successfully');
+      } else {
+        console.log('❌ Invalid file type:', file.type);
+      }
     } else {
-      console.log('❌ Invalid file selected');
+      console.log('❌ No file selected');
     }
+    // Очищаем input чтобы можно было загрузить тот же файл снова
+    event.target.value = '';
   };
 
   const handleUploadMap = () => {
     console.log('📁 handleUploadMap called - triggering file input click');
-    fileInputRef.current?.click();
+    console.log('📁 fileInputRef.current:', fileInputRef.current);
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+      console.log('📁 File input clicked');
+    } else {
+      console.log('❌ File input ref is null');
+    }
   };
 
   const handleClearMap = () => {
     console.log('🗑️ handleClearMap called');
+    console.log('🗑️ Current mapImageUrl:', mapImageUrl);
     clearMap();
+    console.log('🗑️ Map cleared');
   };
 
   // Map Texture Components
@@ -290,8 +267,8 @@ export default function BattleMap3D({
           />
         )}
 
-        {/* Современная система тумана */}
-        <ModernFog paintMode={uiPaintMode} brushSize={uiBrushSize} />
+        {/* Рабочая система тумана */}
+        <WorkingFogSystem paintMode={uiPaintMode} brushSize={uiBrushSize} />
 
         {/* Контроллы камеры - отключаем при перетаскивании токена */}
         <OrbitControls 
