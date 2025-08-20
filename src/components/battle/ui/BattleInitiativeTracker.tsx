@@ -23,7 +23,7 @@ export default function BattleInitiativeTracker() {
   };
 
   return (
-    <Card className="fixed top-4 right-4 w-80 bg-card/90 backdrop-blur-sm border-border shadow-xl">
+    <Card className="fixed top-4 right-4 w-80 bg-card/90 backdrop-blur-sm border-border shadow-xl z-20">{/* Reduced z-index */}
       <CardHeader className="pb-3">
         <CardTitle className="text-primary flex items-center justify-between">
           <span>Инициатива</span>

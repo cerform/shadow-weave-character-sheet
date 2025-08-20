@@ -547,7 +547,7 @@ export default function CompleteBattleActionPanel() {
   };
 
   return (
-    <Card className="fixed bottom-4 left-4 w-80 bg-card/95 backdrop-blur-sm border-border shadow-xl">
+    <Card className="fixed bottom-4 left-4 w-96 bg-card/95 backdrop-blur-sm border-border shadow-xl z-30">
       <CardHeader className="pb-3">
         <CardTitle className="text-center text-primary">
           {activeToken ? `Ход: ${activeToken.name}` : 'Боевые действия'}
@@ -582,7 +582,7 @@ export default function CompleteBattleActionPanel() {
         )}
       </CardHeader>
       
-      <CardContent className="space-y-4 max-h-96 overflow-y-auto">
+      <CardContent className="space-y-4">{/* Removed max-h and overflow to show all actions */}
         {/* Ability Checks */}
         <div>
           <h4 className="text-sm font-medium mb-2">Проверки характеристик</h4>
