@@ -14,7 +14,7 @@ import { Upload, X } from "lucide-react";
 import { useModernFogLayer } from "@/components/battle/hooks/useModernFogLayer";
 import { useEnhancedFogStore } from "@/stores/enhancedFogStore";
 import { useModernFogPainting } from "@/hooks/useModernFogPainting";
-import { ModernBattleUI } from './ModernBattleUI';
+import { SimpleBattleUI } from './SimpleBattleUI';
 
 interface BattleMap3DProps {
   sessionId?: string;
@@ -154,7 +154,7 @@ export default function BattleMap3D({
   return (
     <div className="w-full h-full relative bg-background rounded-xl overflow-hidden border border-border">
       {/* Современный UI */}
-      <ModernBattleUI
+      <SimpleBattleUI
         paintMode={uiPaintMode}
         setPaintMode={setUiPaintMode}
         brushSize={uiBrushSize}
