@@ -102,72 +102,75 @@ export class FogRenderer {
       for (let x = 0; x < this.gridW; x++) {
         const v = fog[y * this.gridW + x]; // 1 = разведано, 0 = туман
         
-        // Позиция в мире
-        const worldX = offsetX + x * this.tileSize;
-        const worldZ = offsetZ + y * this.tileSize;
-        
-        // Создаем группу из нескольких сфер для более объемного вида
-        const cloudGroup = new THREE.Group();
-        
-        // Основная сфера
-        const mainGeometry = new THREE.SphereGeometry(this.tileSize * 0.7, 12, 8);
-        const mainMesh = new THREE.Mesh(mainGeometry, this.cloudMaterial.clone());
-        cloudGroup.add(mainMesh);
-        
-        // Дополнительные сферы для объема (делаем облако более пушистым)
-        for (let i = 0; i < 4; i++) {
-          const extraGeometry = new THREE.SphereGeometry(
-            this.tileSize * (0.4 + Math.random() * 0.3), 
-            8, 
-            6
+        // Создаем облако только для закрытых областей (v === 0)
+        if (v === 0) {
+          // Позиция в мире - строго над клеткой сетки
+          const worldX = offsetX + x * this.tileSize + this.tileSize / 2; // центр клетки
+          const worldZ = offsetZ + y * this.tileSize + this.tileSize / 2; // центр клетки
+          
+          // Создаем группу из нескольких сфер для более объемного вида
+          const cloudGroup = new THREE.Group();
+          
+          // Основная сфера - немного меньше размера клетки
+          const mainGeometry = new THREE.SphereGeometry(this.tileSize * 0.45, 12, 8);
+          const mainMesh = new THREE.Mesh(mainGeometry, this.cloudMaterial.clone());
+          cloudGroup.add(mainMesh);
+          
+          // Дополнительные сферы для объема (ограничиваем размер клеткой)
+          for (let i = 0; i < 3; i++) {
+            const extraGeometry = new THREE.SphereGeometry(
+              this.tileSize * (0.25 + Math.random() * 0.15), 
+              8, 
+              6
+            );
+            const extraMesh = new THREE.Mesh(extraGeometry, this.cloudMaterial.clone());
+            // Строго ограничиваем смещение размером клетки
+            const maxOffset = this.tileSize * 0.3;
+            extraMesh.position.set(
+              (Math.random() - 0.5) * maxOffset,
+              (Math.random() - 0.5) * this.tileSize * 0.2,
+              (Math.random() - 0.5) * maxOffset
+            );
+            extraMesh.scale.setScalar(0.6 + Math.random() * 0.4);
+            cloudGroup.add(extraMesh);
+          }
+
+          // Позиционируем облако строго над центром клетки
+          const baseHeight = this.tileSize * 1.0; // поднимаем над картой
+          cloudGroup.position.set(
+            worldX, 
+            baseHeight + Math.random() * this.tileSize * 0.2, // небольшая вариация по высоте
+            worldZ
           );
-          const extraMesh = new THREE.Mesh(extraGeometry, this.cloudMaterial.clone());
-          // Ограничиваем смещение дополнительных сфер, чтобы не выходить за границы клетки
-          const maxOffset = this.tileSize * 0.4;
-          extraMesh.position.set(
-            (Math.random() - 0.5) * maxOffset,
-            (Math.random() - 0.5) * this.tileSize * 0.3,
-            (Math.random() - 0.5) * maxOffset
-          );
-          extraMesh.scale.setScalar(0.7 + Math.random() * 0.6); // случайные размеры
-          cloudGroup.add(extraMesh);
+          
+          // Ограничиваем поворот
+          cloudGroup.rotation.y = Math.random() * Math.PI * 2;
+          cloudGroup.rotation.x = (Math.random() - 0.5) * 0.1;
+          cloudGroup.rotation.z = (Math.random() - 0.5) * 0.1;
+
+          // случайные параметры анимации
+          const rotSpeed = {
+            x: (Math.random() * 0.03 + 0.005) * (Math.random() > 0.5 ? 1 : -1),
+            y: (Math.random() * 0.05 + 0.01) * (Math.random() > 0.5 ? 1 : -1),
+            z: (Math.random() * 0.02 + 0.003) * (Math.random() > 0.5 ? 1 : -1)
+          };
+          const scaleSpeed = Math.random() * 0.15 + 0.03;
+          const scalePhase = Math.random() * Math.PI * 2;
+          const originalScale = 0.8 + Math.random() * 0.15;
+
+          cloudGroup.scale.setScalar(originalScale);
+
+          g.add(cloudGroup);
+          this.cells.push({
+            mesh: cloudGroup,
+            target: 1, // туман виден
+            opacity: 0.8, // начальная непрозрачность
+            rotSpeed,
+            scalePhase,
+            scaleSpeed,
+            originalScale
+          });
         }
-
-        // Позиционируем облако строго над клеткой сетки
-        const baseHeight = this.tileSize * 1.2; // поднимаем выше над картой
-        cloudGroup.position.set(
-          worldX, 
-          baseHeight + Math.random() * this.tileSize * 0.3, // небольшая вариация по высоте
-          worldZ
-        );
-        
-        // Ограничиваем поворот, чтобы облако не сильно выходило за границы клетки
-        cloudGroup.rotation.y = Math.random() * Math.PI * 2;
-        cloudGroup.rotation.x = (Math.random() - 0.5) * 0.2; // небольшой наклон
-        cloudGroup.rotation.z = (Math.random() - 0.5) * 0.2;
-
-        // случайные параметры «живости» (более медленные для стабильности)
-        const rotSpeed = {
-          x: (Math.random() * 0.05 + 0.01) * (Math.random() > 0.5 ? 1 : -1),
-          y: (Math.random() * 0.08 + 0.02) * (Math.random() > 0.5 ? 1 : -1),
-          z: (Math.random() * 0.04 + 0.005) * (Math.random() > 0.5 ? 1 : -1)
-        };
-        const scaleSpeed = Math.random() * 0.2 + 0.05;
-        const scalePhase = Math.random() * Math.PI * 2;
-        const originalScale = 0.9 + Math.random() * 0.2; // более стабильный размер
-
-        cloudGroup.scale.setScalar(originalScale);
-
-        g.add(cloudGroup);
-        this.cells.push({
-          mesh: cloudGroup,
-          target: v === 0 ? 1 : 0, // если 0 (закрыто) → показываем туман = 1
-          opacity: v === 0 ? 0.8 : 0.0, // туман виден на закрытых областях
-          rotSpeed,
-          scalePhase,
-          scaleSpeed,
-          originalScale
-        });
       }
     }
     this.scene.add(g);
@@ -185,11 +188,9 @@ export class FogRenderer {
       return;
     }
     
-    const total = this.gridW * this.gridH;
-    for (let i = 0; i < total && i < this.cells.length; i++) {
-      // 0 = закрыто (туман) → target 1; 1 = открыто → target 0 (без тумана)
-      this.cells[i].target = fog[i] === 0 ? 1 : 0;
-    }
+    // Поскольку теперь мы создаем облака только для закрытых областей,
+    // нужно полностью перестроить слой при любом изменении состояния
+    this.rebuildLayer();
   }
 
   /** вызывать каждый кадр: delta — в секундах */
