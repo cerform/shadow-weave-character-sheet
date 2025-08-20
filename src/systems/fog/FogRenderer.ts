@@ -111,15 +111,15 @@ export class FogRenderer {
           // Создаем группу из нескольких сфер для более объемного вида
           const cloudGroup = new THREE.Group();
           
-          // Основная сфера - немного меньше размера клетки
-          const mainGeometry = new THREE.SphereGeometry(this.tileSize * 0.45, 12, 8);
+          // Основная сфера - размер под клетку размером 1 единица
+          const mainGeometry = new THREE.SphereGeometry(this.tileSize * 0.4, 12, 8);
           const mainMesh = new THREE.Mesh(mainGeometry, this.cloudMaterial.clone());
           cloudGroup.add(mainMesh);
           
           // Дополнительные сферы для объема (ограничиваем размер клеткой)
           for (let i = 0; i < 3; i++) {
             const extraGeometry = new THREE.SphereGeometry(
-              this.tileSize * (0.25 + Math.random() * 0.15), 
+              this.tileSize * (0.2 + Math.random() * 0.15), 
               8, 
               6
             );
@@ -136,10 +136,10 @@ export class FogRenderer {
           }
 
           // Позиционируем облако строго над центром клетки
-          const baseHeight = this.tileSize * 1.0; // поднимаем над картой
+          const baseHeight = this.tileSize * 0.8; // поднимаем над картой
           cloudGroup.position.set(
             worldX, 
-            baseHeight + Math.random() * this.tileSize * 0.2, // небольшая вариация по высоте
+            baseHeight + Math.random() * this.tileSize * 0.3, // небольшая вариация по высоте
             worldZ
           );
           

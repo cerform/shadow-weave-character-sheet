@@ -29,17 +29,17 @@ const VolumetricFog = ({ paintMode, brushSize }: { paintMode: 'reveal' | 'hide';
     mode: paintMode,
     brushSize,
     mapId: 'main-map',
-    tileSize: 5
+    tileSize: 1 // Каждая клетка сетки равна 1 единице (24/24=1)
   });
   
-  // Подключаем новую volumetric fog систему
-  useFogLayer(scene, 'main-map', 5);
+  // Подключаем новую volumetric fog систему с правильным размером клетки
+  useFogLayer(scene, 'main-map', 1);
   
   // Инициализируем туман при первом запуске
   useEffect(() => {
     console.log('Initializing fog map...');
-    // Уменьшаем размер карты до реального размера видимой сетки
-    const w = 15, h = 10; // Реальный размер сетки карты
+    // Размер должен совпадать с размером gridHelper [24, 24]
+    const w = 24, h = 24; // Точно соответствует размеру сетки
     const fogMap = new Uint8Array(w * h);
     fogMap.fill(0); // 0 = закрыто (туман везде)
     
@@ -47,8 +47,8 @@ const VolumetricFog = ({ paintMode, brushSize }: { paintMode: 'reveal' | 'hide';
     console.log('Fog map initialized with size:', w, 'x', h, '- все области закрыты туманом');
     
     // Открываем стартовую область для игроков (центр карты)
-    useFogStore.getState().reveal('main-map', 7, 5, 2);
-    console.log('Initial area revealed at (7, 5) with radius 2 - ДМ открыл стартовую зону');
+    useFogStore.getState().reveal('main-map', 12, 12, 3);
+    console.log('Initial area revealed at (12, 12) with radius 3 - ДМ открыл стартовую зону');
   }, []);
 
   // Подключаем обработчики событий к канвасу

@@ -57,8 +57,9 @@ export function useFogPainting({
     
     if (intersectPoint) {
       // Конвертируем мировые координаты в координаты сетки
-      const gridX = Math.floor((intersectPoint.x + 12) / tileSize); // смещение для центрирования
-      const gridZ = Math.floor((intersectPoint.z + 8) / tileSize);
+      // GridHelper с размером 24 создает сетку от -12 до +12
+      const gridX = Math.floor(intersectPoint.x + 12); // преобразуем [-12,12] в [0,24]
+      const gridZ = Math.floor(intersectPoint.z + 12);
       
       // Проверяем границы сетки
       const { size } = useFogStore.getState();
