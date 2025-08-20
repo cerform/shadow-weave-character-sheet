@@ -63,6 +63,7 @@ export interface Monster {
   
   // Сопротивления и иммунитеты
   damageResistances?: string[];
+  damageVulnerabilities?: string[];
   damageImmunities?: string[];
   conditionImmunities?: string[];
   
@@ -71,6 +72,14 @@ export interface Monster {
   
   // Языки
   languages: string[];
+  
+  // Заклинания
+  spellcasting?: {
+    level: number;
+    ability: string;
+    saveDC: number;
+    spells: Record<number, string[]>;
+  };
   
   // Уровень опасности
   challengeRating: ChallengeRating;

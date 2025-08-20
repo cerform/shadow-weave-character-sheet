@@ -422,6 +422,529 @@ export const MONSTERS_DATABASE: Monster[] = [
     source: 'Monster Manual',
     environment: ['Болота', 'Горы', 'Подземелье'],
     tokenSize: 2
+  },
+
+  // CR 1/4 - Дополнительные монстры
+  {
+    id: 'goblin',
+    name: 'Гоблин',
+    nameEn: 'goblin',
+    size: 'Маленький',
+    type: 'Гуманоид',
+    alignment: 'нейтрально-злой',
+    armorClass: 15,
+    hitPoints: 7,
+    hitDice: '2d6',
+    speed: { walk: 30 },
+    abilities: {
+      strength: 8,
+      dexterity: 14,
+      constitution: 10,
+      intelligence: 10,
+      wisdom: 8,
+      charisma: 8
+    },
+    skills: { stealth: 6 },
+    senses: { 
+      darkvision: 60,
+      passivePerception: 9 
+    },
+    languages: ['Общий', 'Гоблинский'],
+    challengeRating: '1/4',
+    experiencePoints: 50,
+    proficiencyBonus: 2,
+    traits: [
+      {
+        name: 'Проворство',
+        description: 'Гоблин может совершить действие Рывок или Отход бонусным действием в каждый свой ход.'
+      }
+    ],
+    actions: [
+      {
+        name: 'Ятаган',
+        description: 'Рукопашная атака оружием: +4 к попаданию, досягаемость 5 фт., одна цель. Попадание: 5 (1d6+2) рубящего урона.',
+        attackBonus: 4,
+        damage: '1d6+2',
+        damageType: 'рубящий'
+      },
+      {
+        name: 'Короткий лук',
+        description: 'Дальнобойная атака оружием: +4 к попаданию, дистанция 80/320 фт., одна цель. Попадание: 5 (1d6+2) колющего урона.',
+        attackBonus: 4,
+        damage: '1d6+2',
+        damageType: 'колющий'
+      }
+    ],
+    source: 'Monster Manual',
+    environment: ['Леса', 'Холмы', 'Подземелье'],
+    tokenSize: 1
+  },
+
+  {
+    id: 'skeleton',
+    name: 'Скелет',
+    nameEn: 'skeleton',
+    size: 'Средний',
+    type: 'Нежить',
+    alignment: 'законно-злой',
+    armorClass: 13,
+    hitPoints: 13,
+    hitDice: '2d8+2',
+    speed: { walk: 30 },
+    abilities: {
+      strength: 10,
+      dexterity: 14,
+      constitution: 15,
+      intelligence: 6,
+      wisdom: 8,
+      charisma: 5
+    },
+    damageVulnerabilities: ['дробящий'],
+    damageImmunities: ['яд'],
+    conditionImmunities: ['истощение', 'отравление'],
+    senses: { 
+      darkvision: 60,
+      passivePerception: 9 
+    },
+    languages: ['понимает все языки, которые знал при жизни, но не может говорить'],
+    challengeRating: '1/4',
+    experiencePoints: 50,
+    proficiencyBonus: 2,
+    actions: [
+      {
+        name: 'Короткий меч',
+        description: 'Рукопашная атака оружием: +4 к попаданию, досягаемость 5 фт., одна цель. Попадание: 5 (1d6+2) колющего урона.',
+        attackBonus: 4,
+        damage: '1d6+2',
+        damageType: 'колющий'
+      },
+      {
+        name: 'Короткий лук',
+        description: 'Дальнобойная атака оружием: +4 к попаданию, дистанция 80/320 фт., одна цель. Попадание: 5 (1d6+2) колющего урона.',
+        attackBonus: 4,
+        damage: '1d6+2',
+        damageType: 'колющий'
+      }
+    ],
+    source: 'Monster Manual',
+    environment: ['Подземелье', 'Болота'],
+    tokenSize: 1
+  },
+
+  // CR 1/2 - Дополнительные монстры
+  {
+    id: 'beauty',
+    name: 'Краса',
+    nameEn: 'dryad',
+    size: 'Средний',
+    type: 'Фея',
+    alignment: 'нейтральный',
+    armorClass: 11,
+    hitPoints: 22,
+    hitDice: '5d8',
+    speed: { walk: 30 },
+    abilities: {
+      strength: 10,
+      dexterity: 12,
+      constitution: 11,
+      intelligence: 14,
+      wisdom: 15,
+      charisma: 18
+    },
+    skills: { 
+      perception: 4, 
+      stealth: 5 
+    },
+    senses: { 
+      darkvision: 60,
+      passivePerception: 14 
+    },
+    languages: ['Эльфийский', 'Сильван'],
+    challengeRating: '1/2',
+    experiencePoints: 100,
+    proficiencyBonus: 2,
+    spellcasting: {
+      level: 4,
+      ability: 'Харизма',
+      saveDC: 14,
+      spells: {
+        0: ['Друидизм'],
+        1: ['Запутывание', 'Добрые ягоды'],
+        2: ['Лунный луч', 'Шипы']
+      }
+    },
+    traits: [
+      {
+        name: 'Слияние с деревом',
+        description: 'Дриада может магически войти в дерево и выйти из другого дерева того же вида в пределах 60 футов.'
+      }
+    ],
+    actions: [
+      {
+        name: 'Дубинка',
+        description: 'Рукопашная атака оружием: +2 к попаданию, досягаемость 5 фт., одна цель. Попадание: 2 (1d4) дробящего урона плюс 2 (1d4) яда.',
+        attackBonus: 2,
+        damage: '1d4',
+        damageType: 'дробящий'
+      },
+      {
+        name: 'Очарование',
+        description: 'Дриада нацеливается на одного гуманоида или зверя в пределах 30 футов. Цель должна преуспеть в спасброске Мудрости Сл 14 или быть очарованной на 1 день.'
+      }
+    ],
+    source: 'Monster Manual',
+    environment: ['Леса'],
+    tokenSize: 1
+  },
+
+  {
+    id: 'black-bear',
+    name: 'Чёрный медведь',
+    nameEn: 'black bear',
+    size: 'Средний',
+    type: 'Зверь',
+    alignment: 'без мировоззрения',
+    armorClass: 11,
+    hitPoints: 19,
+    hitDice: '3d8+3',
+    speed: { walk: 40, climb: 30 },
+    abilities: {
+      strength: 15,
+      dexterity: 10,
+      constitution: 13,
+      intelligence: 2,
+      wisdom: 12,
+      charisma: 7
+    },
+    skills: { perception: 3 },
+    senses: { 
+      passivePerception: 13 
+    },
+    languages: [],
+    challengeRating: '1/2',
+    experiencePoints: 100,
+    proficiencyBonus: 2,
+    traits: [
+      {
+        name: 'Острое обоняние',
+        description: 'Медведь совершает с преимуществом проверки Мудрости (Восприятие), полагающиеся на обоняние.'
+      }
+    ],
+    actions: [
+      {
+        name: 'Мультиатака',
+        description: 'Медведь совершает две атаки: одну укусом и одну когтями.'
+      },
+      {
+        name: 'Укус',
+        description: 'Рукопашная атака оружием: +4 к попаданию, досягаемость 5 фт., одна цель. Попадание: 5 (1d6+2) колющего урона.',
+        attackBonus: 4,
+        damage: '1d6+2',
+        damageType: 'колющий'
+      },
+      {
+        name: 'Когти',
+        description: 'Рукопашная атака оружием: +4 к попаданию, досягаемость 5 фт., одна цель. Попадание: 7 (2d4+2) рубящего урона.',
+        attackBonus: 4,
+        damage: '2d4+2',
+        damageType: 'рубящий'
+      }
+    ],
+    source: 'Monster Manual',
+    environment: ['Леса', 'Холмы'],
+    tokenSize: 1
+  },
+
+  // CR 1 - Дополнительные монстры
+  {
+    id: 'dire-wolf',
+    name: 'Лютый волк',
+    nameEn: 'dire wolf',
+    size: 'Большой',
+    type: 'Зверь',
+    alignment: 'без мировоззрения',
+    armorClass: 14,
+    hitPoints: 37,
+    hitDice: '5d10+10',
+    speed: { walk: 50 },
+    abilities: {
+      strength: 17,
+      dexterity: 15,
+      constitution: 15,
+      intelligence: 3,
+      wisdom: 12,
+      charisma: 7
+    },
+    skills: { 
+      perception: 3, 
+      stealth: 4 
+    },
+    senses: { 
+      passivePerception: 13 
+    },
+    languages: [],
+    challengeRating: '1',
+    experiencePoints: 200,
+    proficiencyBonus: 2,
+    traits: [
+      {
+        name: 'Острый слух и обоняние',
+        description: 'Волк совершает с преимуществом проверки Мудрости (Восприятие), полагающиеся на слух или обоняние.'
+      },
+      {
+        name: 'Тактика стаи',
+        description: 'Волк совершает с преимуществом броски атаки по существу, если в пределах 5 футов от этого существа находится как минимум один дееспособный союзник волка.'
+      }
+    ],
+    actions: [
+      {
+        name: 'Укус',
+        description: 'Рукопашная атака оружием: +5 к попаданию, досягаемость 5 фт., одна цель. Попадание: 10 (2d6+3) колющего урона. Если цель — существо, она должна преуспеть в спасброске Силы Сл 13, иначе будет сбита с ног.',
+        attackBonus: 5,
+        damage: '2d6+3',
+        damageType: 'колющий'
+      }
+    ],
+    source: 'Monster Manual',
+    environment: ['Леса', 'Холмы'],
+    tokenSize: 2
+  },
+
+  {
+    id: 'brown-bear',
+    name: 'Бурый медведь',
+    nameEn: 'brown bear',
+    size: 'Большой',
+    type: 'Зверь',  
+    alignment: 'без мировоззрения',
+    armorClass: 11,
+    hitPoints: 34,
+    hitDice: '4d10+8',
+    speed: { walk: 40, climb: 30 },
+    abilities: {
+      strength: 19,
+      dexterity: 10,
+      constitution: 16,
+      intelligence: 2,
+      wisdom: 13,
+      charisma: 7
+    },
+    skills: { perception: 3 },
+    senses: { 
+      passivePerception: 13 
+    },
+    languages: [],
+    challengeRating: '1',
+    experiencePoints: 200,
+    proficiencyBonus: 2,
+    traits: [
+      {
+        name: 'Острое обоняние',
+        description: 'Медведь совершает с преимуществом проверки Мудрости (Восприятие), полагающиеся на обоняние.'
+      }
+    ],
+    actions: [
+      {
+        name: 'Мультиатака',
+        description: 'Медведь совершает две атаки: одну укусом и одну когтями.'
+      },
+      {
+        name: 'Укус',
+        description: 'Рукопашная атака оружием: +6 к попаданию, досягаемость 5 фт., одна цель. Попадание: 8 (1d8+4) колющего урона.',
+        attackBonus: 6,
+        damage: '1d8+4',
+        damageType: 'колющий'
+      },
+      {
+        name: 'Когти',
+        description: 'Рукопашная атака оружием: +6 к попаданию, досягаемость 5 фт., одна цель. Попадание: 11 (2d6+4) рубящего урона.',
+        attackBonus: 6,
+        damage: '2d6+4',
+        damageType: 'рубящий'
+      }
+    ],
+    source: 'Monster Manual',
+    environment: ['Леса', 'Холмы'],
+    tokenSize: 2
+  },
+
+  // CR 2 - Дополнительные монстры
+  {
+    id: 'zombie',
+    name: 'Зомби',
+    nameEn: 'zombie',
+    size: 'Средний',
+    type: 'Нежить',
+    alignment: 'нейтрально-злой',
+    armorClass: 8,
+    hitPoints: 22,
+    hitDice: '3d8+6',
+    speed: { walk: 20 },
+    abilities: {
+      strength: 13,
+      dexterity: 6,
+      constitution: 16,
+      intelligence: 3,
+      wisdom: 6,
+      charisma: 5
+    },
+    savingThrows: { wisdom: 0 },
+    damageImmunities: ['яд'],
+    conditionImmunities: ['отравление'],
+    senses: { 
+      darkvision: 60,
+      passivePerception: 8 
+    },
+    languages: ['понимает языки, которые знал при жизни, но не может говорить'],
+    challengeRating: '1/4',
+    experiencePoints: 50,
+    proficiencyBonus: 2,
+    traits: [
+      {
+        name: 'Нежить. Стойкость',
+        description: 'Если урон снижает здоровье зомби до 0, он должен совершить спасбросок Телосложения, Сл которого равна 5 + полученный урон. При успехе зомби вместо этого снижает количество хитов до 1.'
+      }
+    ],
+    actions: [
+      {
+        name: 'Удар',
+        description: 'Рукопашная атака оружием: +3 к попаданию, досягаемость 5 фт., одна цель. Попадание: 4 (1d6+1) дробящего урона.',
+        attackBonus: 3,
+        damage: '1d6+1',
+        damageType: 'дробящий'
+      }
+    ],
+    source: 'Monster Manual',
+    environment: ['Подземелье', 'Болота'],
+    tokenSize: 1
+  },
+
+  {
+    id: 'lion',
+    name: 'Лев',
+    nameEn: 'lion',
+    size: 'Большой',
+    type: 'Зверь',
+    alignment: 'без мировоззрения',
+    armorClass: 12,
+    hitPoints: 26,
+    hitDice: '4d10+4',
+    speed: { walk: 50 },
+    abilities: {
+      strength: 17,
+      dexterity: 15,
+      constitution: 13,
+      intelligence: 3,
+      wisdom: 12,
+      charisma: 8
+    },
+    skills: { 
+      perception: 3, 
+      stealth: 6 
+    },
+    senses: { 
+      passivePerception: 13 
+    },
+    languages: [],
+    challengeRating: '1',
+    experiencePoints: 200,
+    proficiencyBonus: 2,
+    traits: [
+      {
+        name: 'Острое обоняние',
+        description: 'Лев совершает с преимуществом проверки Мудрости (Восприятие), полагающиеся на обоняние.'
+      },
+      {
+        name: 'Тактика стаи',
+        description: 'Лев совершает с преимуществом броски атаки по существу, если в пределах 5 футов от этого существа находится как минимум один дееспособный союзник льва.'
+      },
+      {
+        name: 'Прыжок с разбега',
+        description: 'Если лев перемещается как минимум на 20 футов по прямой к существу, а затем попадает по нему атакой когтями в том же ходу, цель должна преуспеть в спасброске Силы Сл 13, иначе будет сбита с ног.'
+      }
+    ],
+    actions: [
+      {
+        name: 'Укус',
+        description: 'Рукопашная атака оружием: +5 к попаданию, досягаемость 5 фт., одна цель. Попадание: 7 (1d8+3) колющего урона.',
+        attackBonus: 5,
+        damage: '1d8+3',
+        damageType: 'колющий'
+      },
+      {
+        name: 'Когти',
+        description: 'Рукопашная атака оружием: +5 к попаданию, досягаемость 5 фт., одна цель. Попадание: 6 (1d6+3) рубящего урона.',
+        attackBonus: 5,
+        damage: '1d6+3',
+        damageType: 'рубящий'
+      }
+    ],
+    source: 'Monster Manual',
+    environment: ['Луга', 'Холмы'],
+    tokenSize: 2
+  },
+
+  // CR 3 - Новые монстры
+  {
+    id: 'bugbear',
+    name: 'Медвежатник',
+    nameEn: 'bugbear',
+    size: 'Средний',
+    type: 'Гуманоид',
+    alignment: 'хаотично-злой',
+    armorClass: 16,
+    hitPoints: 27,
+    hitDice: '5d8+5',
+    speed: { walk: 30 },
+    abilities: {
+      strength: 15,
+      dexterity: 14,
+      constitution: 13,
+      intelligence: 8,
+      wisdom: 11,
+      charisma: 9
+    },
+    skills: { 
+      stealth: 6, 
+      survival: 2 
+    },
+    senses: { 
+      darkvision: 60,
+      passivePerception: 10 
+    },
+    languages: ['Общий', 'Гоблинский'],
+    challengeRating: '1',
+    experiencePoints: 200,
+    proficiencyBonus: 2,
+    traits: [
+      {
+        name: 'Грубая сила',
+        description: 'Рукопашная атака оружием наносит дополнительные 4 (1d8) урона, когда медвежатник попадает по удивлённой цели.'
+      },
+      {
+        name: 'Скрытность',
+        description: 'Медвежатник может попытаться спрятаться, когда лишь слегка заслонён существом, которое как минимум на один размер больше его.'
+      }
+    ],
+    actions: [
+      {
+        name: 'Моргенштерн',
+        description: 'Рукопашная атака оружием: +4 к попаданию, досягаемость 5 фт., одна цель. Попадание: 11 (2d8+2) колющего урона.',
+        attackBonus: 4,
+        damage: '2d8+2',
+        damageType: 'колющий'
+      },
+      {
+        name: 'Дротик',
+        description: 'Дальнобойная атака оружием: +4 к попаданию, дистанция 20/60 фт., одна цель. Попадание: 4 (1d4+2) колющего урона.',
+        attackBonus: 4,
+        damage: '1d4+2',
+        damageType: 'колющий'
+      }
+    ],
+    source: 'Monster Manual',
+    environment: ['Леса', 'Холмы', 'Подземелье'],
+    tokenSize: 1
   }
 ];
 
