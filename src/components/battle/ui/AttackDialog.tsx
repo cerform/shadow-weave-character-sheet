@@ -132,7 +132,10 @@ export const AttackDialog: React.FC<AttackDialogProps> = ({ children, attacker }
     }
 
     setPhase('rolling');
-    setDiceKey(prev => prev + 1);
+    // Сбрасываем ключ кубика для принудительного пересоздания
+    setTimeout(() => {
+      setDiceKey(1);
+    }, 100);
   };
 
   const handleHitRoll = (roll: number) => {
@@ -170,7 +173,9 @@ export const AttackDialog: React.FC<AttackDialogProps> = ({ children, attacker }
     setTimeout(() => {
       if (hit) {
         setPhase('damage-rolling');
-        setDiceKey(prev => prev + 1);
+        setTimeout(() => {
+          setDiceKey(1);
+        }, 100);
       } else {
         setPhase('complete');
         setTimeout(() => {
@@ -312,15 +317,25 @@ export const AttackDialog: React.FC<AttackDialogProps> = ({ children, attacker }
         
         <div className="h-[280px] w-full bg-gradient-to-b from-blue-900/20 to-blue-800/10 rounded-lg border border-blue-400/30 overflow-hidden relative">
           <div className="absolute top-2 left-2 z-10 bg-black/70 rounded px-2 py-1">
-            <span className="text-xs text-white font-medium">d20</span>
+            <span className="text-xs text-white font-medium">d20 - Бросок на попадание</span>
+          </div>
+          <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 z-10">
+            <Button 
+              onClick={() => setDiceKey(prev => prev + 1)}
+              className="bg-blue-600 hover:bg-blue-700 text-white"
+              size="sm"
+            >
+              🎲 Бросить d20
+            </Button>
           </div>
           <DiceRoller3D 
             key={`hit-${diceKey}`}
             initialDice="d20"
-            hideControls={false}
+            hideControls={true}
             onRollComplete={handleHitRoll}
             themeColor={currentTheme.accent}
             fixedPosition={true}
+            forceReroll={diceKey > 0}
           />
         </div>
       </div>
@@ -382,15 +397,25 @@ export const AttackDialog: React.FC<AttackDialogProps> = ({ children, attacker }
         
         <div className="h-[280px] w-full bg-gradient-to-b from-orange-900/20 to-red-800/10 rounded-lg border border-orange-400/30 overflow-hidden relative">
           <div className="absolute top-2 left-2 z-10 bg-black/70 rounded px-2 py-1">
-            <span className="text-xs text-white font-medium">{diceType}</span>
+            <span className="text-xs text-white font-medium">{diceType} - Бросок урона</span>
+          </div>
+          <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 z-10">
+            <Button 
+              onClick={() => setDiceKey(prev => prev + 1)}
+              className="bg-orange-600 hover:bg-orange-700 text-white"
+              size="sm"
+            >
+              🎲 Бросить {diceType}
+            </Button>
           </div>
           <DiceRoller3D 
             key={`damage-${diceKey}`}
             initialDice={diceType}
-            hideControls={false}
+            hideControls={true}
             onRollComplete={handleDamageRoll}
             themeColor="#f97316"
             fixedPosition={true}
+            forceReroll={diceKey > 0}
           />
         </div>
       </div>
