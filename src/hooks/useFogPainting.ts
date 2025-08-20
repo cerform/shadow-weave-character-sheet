@@ -56,20 +56,21 @@ export function useFogPainting({
     raycaster.ray.intersectPlane(plane, intersectPoint);
     
     if (intersectPoint) {
-      // Конвертируем мировые координаты в координаты сетки
-      // GridHelper с размером 24 создает сетку от -12 до +12
-      const gridX = Math.floor(intersectPoint.x + 12); // преобразуем [-12,12] в [0,24]
-      const gridZ = Math.floor(intersectPoint.z + 12);
+      // GridHelper создает сетку 24x24 от -12 до +12
+      // Нужно правильно преобразовать мировые координаты в индексы сетки
+      const gridX = Math.floor(intersectPoint.x + 12); // [-12,12] -> [0,24]
+      const gridZ = Math.floor(intersectPoint.z + 12); // [-12,12] -> [0,24]
       
-      // Проверяем границы сетки
+      // Проверяем границы сетки (0-23 включительно)
       const { size } = useFogStore.getState();
       if (gridX < 0 || gridX >= size.w || gridZ < 0 || gridZ >= size.h) {
+        console.log(`Координаты вне границ: (${gridX}, ${gridZ}), размер сетки: ${size.w}x${size.h}`);
         return; // Вне границ сетки
       }
       
       const modeText = currentMode === 'reveal' ? 'открытие' : 'скрытие';
       const keyText = event?.ctrlKey ? ' (Ctrl)' : event?.altKey ? ' (Alt)' : '';
-      console.log(`Рисование в режиме ${modeText}${keyText} на координатах: (${gridX}, ${gridZ})`);
+      console.log(`Рисование в режиме ${modeText}${keyText} на координатах: (${gridX}, ${gridZ}), мировые: (${intersectPoint.x.toFixed(2)}, ${intersectPoint.z.toFixed(2)})`);
       
       if (currentMode === 'reveal') {
         useFogStore.getState().reveal(mapId, gridX, gridZ, brushSize);
