@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Upload, X } from "lucide-react";
 import { useFogLayer } from "@/components/battle/hooks/useFogLayer";
 import { useThree } from "@react-three/fiber";
+import { useFogStore } from "@/stores/fogStore";
 
 interface BattleMap3DProps {
   sessionId?: string;
@@ -26,6 +27,14 @@ const VolumetricFog = () => {
   
   // Подключаем новую volumetric fog систему
   useFogLayer(scene, 'main-map', 5);
+  
+  // Инициализируем туман при первом запуске
+  useEffect(() => {
+    const w = 30, h = 30;
+    useFogStore.getState().setMap('main-map', new Uint8Array(w * h), w, h); // всё в тумане
+    // Открываем стартовую область
+    useFogStore.getState().reveal('main-map', 15, 15, 3);
+  }, []);
   
   return null;
 };
