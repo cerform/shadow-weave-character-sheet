@@ -30,6 +30,7 @@ import DMMapEditorPage from '@/pages/DMMapEditorPage';
 import PlayerMapPage from '@/pages/PlayerMapPage';
 import BattleScenePage from '@/pages/BattleScenePage';
 import IntegratedBattlePage from '@/pages/IntegratedBattlePage';
+import BestiaryPage from '@/components/bestiary/BestiaryPage';
 import DnD5ePage from '@/pages/DnD5ePage';
 
 
@@ -143,6 +144,13 @@ const AppRoutes: React.FC = () => {
       <Route path="/handbook" element={<HandbookPage />} />
       <Route path="/dnd-spells" element={<DndSpellsPage />} />
       <Route path="/dnd5e-combat" element={<DnD5ePage />} />
+      
+      {/* Бестиарий - только для ДМ */}
+      <Route path="/bestiary" element={
+        <ProtectedDMRoute>
+          <BestiaryPage isDM={true} />
+        </ProtectedDMRoute>
+      } />
       
       {/* Боевые системы */}
       <Route path="/battle-map-3d" element={<BattleScenePage />} />

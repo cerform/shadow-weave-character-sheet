@@ -74,10 +74,10 @@ const HomePage = () => {
     },
     {
       icon: Dice6,
-      title: "Боевая система D&D 5e",
-      description: "Система боя по правилам D&D 5e с инициативой и заклинаниями",
-      href: "/dnd5e-combat",
-      gradient: "from-teal-500/20 to-cyan-500/20"
+      title: "Бестиарий D&D 5e",
+      description: "База монстров с 3D токенами и полными характеристиками",
+      href: "/bestiary",
+      gradient: "from-rose-500/20 to-pink-500/20"
     }
   ];
 
