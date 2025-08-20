@@ -188,9 +188,9 @@ export const WorkingFogSystem: React.FC<WorkingFogSystemProps> = ({ paintMode, b
     
     const trackMousePosition = (e: MouseEvent) => {
       const rect = canvas.getBoundingClientRect();
-      // Исправляем инверсию - убираем минус для Y координаты
+      // Правильные координаты без двойной инверсии
       const mouseX = ((e.clientX - rect.left) / rect.width) * 2 - 1;
-      const mouseY = -(((e.clientY - rect.top) / rect.height) * 2 - 1);
+      const mouseY = (((e.clientY - rect.top) / rect.height) * 2 - 1);
       
       // Сохраняем позицию мыши в DOM элементе для использования в рисовании
       (canvas as any)._lastMouseX = mouseX;
