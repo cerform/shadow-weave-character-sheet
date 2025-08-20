@@ -11,7 +11,7 @@ import { useBattle3DControls } from "@/hooks/useBattle3DControls";
 import { useBattle3DControlStore } from "@/stores/battle3DControlStore";
 import { Button } from "@/components/ui/button";
 import { Upload, X } from "lucide-react";
-import { useFogPlane } from "@/components/battle/hooks/useFogPlane";
+import { useFogLayer } from "@/components/battle/hooks/useFogLayer";
 import { useFogStore } from "@/stores/fogStore";
 import { useFogPainting } from "@/hooks/useFogPainting";
 
@@ -32,8 +32,8 @@ const VolumetricFog = ({ paintMode, brushSize }: { paintMode: 'reveal' | 'hide';
     tileSize: 1 // Каждая клетка сетки равна 1 единице (24/24=1)
   });
   
-  // Временно отключаем новую систему тумана до исправления ошибок
-  // useFogPlane('main-map', 1);
+  // Подключаем старую систему тумана пока новая не готова
+  useFogLayer(scene, 'main-map', 1);
   
   // Инициализируем туман при первом запуске
   useEffect(() => {
