@@ -24,10 +24,11 @@ export class ModernFogRenderer {
   private geometry: THREE.PlaneGeometry;
   private cloudTexture: THREE.Texture | null = null;
 
-  // Advanced fog shader
+  // Advanced fog shader with improved visibility
   private vertexShader = `
     varying vec2 vUv;
     varying vec3 vPosition;
+    varying vec3 vWorldPosition;
     varying float vNoise;
     
     uniform float uTime;
@@ -41,11 +42,12 @@ export class ModernFogRenderer {
     void main() {
       vUv = uv;
       vPosition = position;
+      vWorldPosition = (modelMatrix * vec4(position, 1.0)).xyz;
       
-      // Add noise-based vertex displacement
+      // Add subtle noise-based vertex displacement
       vec3 pos = position;
       float n = noise(position * uNoiseScale + uTime * 0.2);
-      pos.z += n * 0.3;
+      pos.y += n * 0.1; // Reduced displacement for better stability
       
       vNoise = n;
       
@@ -56,6 +58,7 @@ export class ModernFogRenderer {
   private fragmentShader = `
     varying vec2 vUv;
     varying vec3 vPosition;
+    varying vec3 vWorldPosition;
     varying float vNoise;
     
     uniform float uTime;
@@ -67,31 +70,37 @@ export class ModernFogRenderer {
     uniform float uEdgeSoftness;
     
     void main() {
-      // Distance from center for edge softening
+      // Distance from center for edge softening - improved formula
       float distFromCenter = length(vUv - vec2(0.5));
-      float edgeAlpha = 1.0 - smoothstep(0.3, 0.5, distFromCenter);
+      float edgeAlpha = 1.0 - smoothstep(0.2, 0.6, distFromCenter);
       
-      // Animated cloud texture sampling
-      vec2 cloudUv1 = vUv * 2.0 + vec2(uTime * 0.01, uTime * 0.005);
-      vec2 cloudUv2 = vUv * 1.5 + vec2(-uTime * 0.008, uTime * 0.012);
+      // Animated cloud texture sampling with better tiling
+      vec2 cloudUv1 = vUv * 3.0 + vec2(uTime * 0.008, uTime * 0.004);
+      vec2 cloudUv2 = vUv * 2.0 + vec2(-uTime * 0.006, uTime * 0.009);
       
       vec4 cloud1 = texture2D(uCloudTexture, cloudUv1);
       vec4 cloud2 = texture2D(uCloudTexture, cloudUv2);
       
-      // Combine cloud layers
-      float cloudDensity = (cloud1.r + cloud2.r * 0.5) * uDensity;
+      // Combine cloud layers with better blending
+      float cloudDensity = (cloud1.r * 0.8 + cloud2.r * 0.6) * uDensity;
       
-      // Add noise variation
-      cloudDensity += vNoise * 0.3;
+      // Add noise variation for organic look
+      cloudDensity += vNoise * 0.2;
       
-      // Animated alpha with breathing effect
-      float breathe = sin(uTime * 0.8 + vPosition.x * 0.5 + vPosition.y * 0.3) * 0.1 + 0.9;
+      // Animated alpha with improved breathing effect
+      float breathe = sin(uTime * 0.6 + vWorldPosition.x * 0.3 + vWorldPosition.z * 0.4) * 0.15 + 0.85;
       
-      float finalAlpha = cloudDensity * edgeAlpha * uOpacity * breathe;
+      // Enhanced alpha calculation with minimum visibility
+      float finalAlpha = max(cloudDensity * edgeAlpha * uOpacity * breathe, uOpacity * 0.1);
       finalAlpha = clamp(finalAlpha, 0.0, 1.0);
       
       // Dynamic fog color with subtle variations
-      vec3 fogColor = uFogColor + vec3(vNoise * 0.1);
+      vec3 fogColor = uFogColor + vec3(vNoise * 0.08);
+      
+      // Ensure fog is always somewhat visible
+      if (finalAlpha < 0.05) {
+        finalAlpha = uOpacity * 0.3;
+      }
       
       gl_FragColor = vec4(fogColor, finalAlpha);
     }
@@ -124,7 +133,10 @@ export class ModernFogRenderer {
       transparent: true,
       blending: THREE.NormalBlending,
       depthWrite: false,
-      side: THREE.DoubleSide
+      depthTest: true,
+      side: THREE.DoubleSide,
+      alphaTest: 0.01,
+      fog: false
     });
   }
 
@@ -217,12 +229,13 @@ export class ModernFogRenderer {
     // Position mesh at grid coordinates
     mesh.position.set(
       (x - 12) * this.tileSize,
-      0.05 + Math.random() * 0.1, // Slight height variation
+      0.1, // Fixed height above ground
       (y - 12) * this.tileSize
     );
     
-    mesh.rotation.x = -Math.PI / 2; // Lay flat
-    mesh.rotation.z = Math.random() * Math.PI * 2; // Random rotation
+    // Create billboard effect - always face camera
+    mesh.lookAt(0, 10, 0); // Face upward initially
+    mesh.rotateX(-Math.PI / 2); // Lay flat but visible from all angles
     
     // Initialize user data for animation
     mesh.userData = {
@@ -259,8 +272,11 @@ export class ModernFogRenderer {
       const breatheScale = 0.95 + Math.sin(elapsedTime * 0.8 + userData.scalePhase) * 0.05;
       mesh.scale.setScalar(breatheScale);
       
-      // Gentle rotation
-      mesh.rotation.z += userData.rotationSpeed * deltaTime;
+      // Gentle rotation around Y axis for better visibility
+      mesh.rotation.y += userData.rotationSpeed * deltaTime * 0.1;
+      
+      // Ensure mesh is always visible at proper height
+      mesh.position.y = 0.1 + Math.sin(elapsedTime + userData.scalePhase) * 0.02;
       
       // Hide fully transparent meshes
       mesh.visible = userData.currentOpacity > 0.01;
