@@ -307,6 +307,9 @@ export const AttackDialog: React.FC<AttackDialogProps> = ({ children, attacker }
         
         <div className="h-[300px] w-full bg-gradient-to-b from-blue-900/30 to-blue-800/20 rounded-lg border border-blue-400/30 overflow-hidden relative">
           <div className="absolute inset-0 bg-black/10" />
+          <div className="absolute top-2 left-2 z-10 bg-black/70 rounded px-2 py-1">
+            <span className="text-xs text-white">Бросок d20</span>
+          </div>
           <DiceRoller3D 
             key={diceKey}
             initialDice="d20"
@@ -366,6 +369,9 @@ export const AttackDialog: React.FC<AttackDialogProps> = ({ children, attacker }
         
         <div className="h-[300px] w-full bg-gradient-to-b from-red-900/30 to-red-800/20 rounded-lg border border-red-400/30 overflow-hidden relative">
           <div className="absolute inset-0 bg-black/10" />
+          <div className="absolute top-2 left-2 z-10 bg-black/70 rounded px-2 py-1">
+            <span className="text-xs text-white">Бросок {diceType}</span>
+          </div>
           <DiceRoller3D 
             key={diceKey}
             initialDice={diceType}
@@ -410,14 +416,16 @@ export const AttackDialog: React.FC<AttackDialogProps> = ({ children, attacker }
                 disabled={!selectedAttackType || !selectedTarget}
                 style={{ backgroundColor: currentTheme.accent }}
               >
-                Атаковать
+                Бросок на попадание
               </Button>
             </>
           )}
           {(attackPhase === 'roll' || attackPhase === 'damage') && (
-            <Button variant="outline" onClick={() => setOpen(false)}>
-              Отмена
-            </Button>
+            <div className="w-full text-center">
+              <Button variant="outline" onClick={() => setOpen(false)}>
+                Закрыть
+              </Button>
+            </div>
           )}
         </DialogFooter>
       </DialogContent>
