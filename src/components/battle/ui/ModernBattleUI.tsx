@@ -59,10 +59,10 @@ export const ModernBattleUI: React.FC<ModernBattleUIProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 pointer-events-none z-10">
+    <div className="fixed inset-0 pointer-events-none z-50">
       {/* Верхняя панель */}
-      <div className="absolute top-4 left-1/2 transform -translate-x-1/2 pointer-events-auto">
-        <Card className="bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-2">
+      <div className="absolute top-4 left-1/2 transform -translate-x-1/2 pointer-events-auto z-50">
+        <Card className="bg-background border-2 shadow-lg">
           <CardContent className="p-3">
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2">
@@ -97,10 +97,10 @@ export const ModernBattleUI: React.FC<ModernBattleUIProps> = ({
       </div>
 
       {/* Левая боковая панель */}
-      <div className="absolute left-4 top-1/2 transform -translate-y-1/2 pointer-events-auto">
+      <div className="absolute left-4 top-1/2 transform -translate-y-1/2 pointer-events-auto z-40">
         <div className="flex flex-col gap-2">
           {/* Навигационные кнопки */}
-          <Card className="bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+          <Card className="bg-background border shadow-lg">
             <CardContent className="p-2">
               <div className="flex flex-col gap-1">
                 <Button
@@ -141,7 +141,7 @@ export const ModernBattleUI: React.FC<ModernBattleUIProps> = ({
 
           {/* Панели управления */}
           {activePanel && (
-            <Card className="bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 w-72">
+            <Card className="bg-background border shadow-lg w-64 max-h-[60vh] overflow-y-auto">
               <CardContent className="p-4">
                 {activePanel === 'map' && (
                   <div className="space-y-4">
@@ -223,7 +223,7 @@ export const ModernBattleUI: React.FC<ModernBattleUIProps> = ({
                       <Users className="w-4 h-4" />
                       Токены ({tokens.length})
                     </h3>
-                    <div className="space-y-2 max-h-64 overflow-y-auto">
+                    <div className="space-y-2 max-h-48 overflow-y-auto">
                       {tokens.map((token) => (
                         <div
                           key={token.id}
@@ -286,14 +286,14 @@ export const ModernBattleUI: React.FC<ModernBattleUIProps> = ({
       </div>
 
       {/* Горячие клавиши (подсказка) */}
-      <div className="absolute bottom-4 right-4 pointer-events-auto">
-        <Card className="bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="absolute bottom-4 right-4 pointer-events-auto z-30">
+        <Card className="bg-background border shadow-lg">
           <CardContent className="p-3">
             <div className="space-y-1 text-xs text-muted-foreground">
-              <div><kbd className="px-1 bg-background rounded">Ctrl + клик</kbd> Скрыть</div>
-              <div><kbd className="px-1 bg-background rounded">Alt + клик</kbd> Показать</div>
-              <div><kbd className="px-1 bg-background rounded">F</kbd> Переключить под курсором</div>
-              <div><kbd className="px-1 bg-background rounded">Перетаскивание</kbd> Рисовать</div>
+              <div><kbd className="px-1 bg-muted rounded text-xs">Ctrl + клик</kbd> Скрыть</div>
+              <div><kbd className="px-1 bg-muted rounded text-xs">Alt + клик</kbd> Показать</div>
+              <div><kbd className="px-1 bg-muted rounded text-xs">F</kbd> Переключить под курсором</div>
+              <div><kbd className="px-1 bg-muted rounded text-xs">Перетаскивание</kbd> Рисовать</div>
             </div>
           </CardContent>
         </Card>

@@ -160,8 +160,10 @@ export default function BattleMap3D({
         onChange={handleFileSelect}
         className="hidden"
       />
-
-      <Canvas
+      
+      {/* 3D Canvas */}
+      <div className="absolute inset-0 z-0">
+        <Canvas
         ref={canvasRef}
         shadows 
         camera={{ position: [0, 20, 20], fov: 45 }}
@@ -222,7 +224,8 @@ export default function BattleMap3D({
           maxDistance={40}
           enabled={shouldHandleCameraControls() && !isActiveTokenDragging}
         />
-      </Canvas>
+        </Canvas>
+      </div>
     </div>
   );
 }
