@@ -89,7 +89,7 @@ export default function CompleteBattleActionPanel() {
   const [dcValue, setDcValue] = useState("15");
   const [attackRollResult, setAttackRollResult] = useState<{result: number, target: string, attack: string} | null>(null);
   
-  const { fogEnabled, toggleFog, addCombatEvent, activeId, tokens } = useBattleUIStore();
+  const { addCombatEvent, activeId, tokens } = useBattleUIStore();
   const { 
     showMovementGrid, 
     setShowMovementGrid, 
@@ -1044,25 +1044,6 @@ export default function CompleteBattleActionPanel() {
             Ходьба
           </Button>
         </div>
-
-        {/* Fog Control */}
-        <Button
-          variant="ghost"
-          onClick={() => toggleFog()}
-          className="w-full"
-        >
-          {fogEnabled ? (
-            <>
-              <EyeOff className="w-4 h-4 mr-2" />
-              Скрыть туман
-            </>
-          ) : (
-            <>
-              <Eye className="w-4 h-4 mr-2" />
-              Показать туман
-            </>
-          )}
-        </Button>
       </CardContent>
     </Card>
   );

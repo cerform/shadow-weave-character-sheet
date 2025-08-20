@@ -1,9 +1,7 @@
-import { 
-  BattleMap3D, 
-  BattleInitiativeTracker, 
-  BattleCombatLog
-} from "@/components/battle/ui";
+import { BattleMap3D } from "@/components/battle/ui";
 import CompleteBattleActionPanel from "@/components/battle/ui/CompleteBattleActionPanel";
+import BattleToolbar from "@/components/battle/ui/BattleToolbar";
+import BattleHUD from "@/components/battle/ui/BattleHUD";
 
 export default function BattleScenePage() {
   return (
@@ -23,10 +21,14 @@ export default function BattleScenePage() {
         <BattleMap3D />
       </div>
 
-      {/* UI оверлеи */}
-      <BattleInitiativeTracker />
-      <BattleCombatLog />
+      {/* Горизонтальная панель инструментов */}
+      <BattleToolbar />
+
+      {/* Левая панель действий */}
       <CompleteBattleActionPanel />
+
+      {/* Правая панель HUD */}
+      <BattleHUD />
     </div>
   );
 }
