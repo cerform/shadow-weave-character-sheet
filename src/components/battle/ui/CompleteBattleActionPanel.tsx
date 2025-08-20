@@ -87,6 +87,7 @@ export default function CompleteBattleActionPanel() {
   const [selectedSavingThrow, setSelectedSavingThrow] = useState("");
   const [customDamage, setCustomDamage] = useState("");
   const [dcValue, setDcValue] = useState("15");
+  const [attackRollResult, setAttackRollResult] = useState<{result: number, target: string, attack: string} | null>(null);
   
   const { fogEnabled, toggleFog, addCombatEvent, activeId, tokens } = useBattleUIStore();
   const { 
@@ -188,7 +189,7 @@ export default function CompleteBattleActionPanel() {
     setSelectedTarget("");
   };
 
-  const handleAttack = () => {
+  const handleAttackRoll = () => {
     if (!activeToken || !selectedAttack || !selectedTarget) return;
     
     const attack = attackTypes.find(a => a.name === selectedAttack);
@@ -220,52 +221,77 @@ export default function CompleteBattleActionPanel() {
     const attackRoll = rollDice(20, 1, modifier + proficiencyBonus);
     const hitTarget = attackRoll.total >= target.ac;
     
-    if (hitTarget) {
-      // Damage roll
-      const { count, sides, modifier: damageModifier } = parseDiceString(attack.damage);
-      const damageRoll = rollDice(sides, count, modifier + damageModifier);
-      
-      // Apply damage
-      const newHp = Math.max(0, target.hp - damageRoll.total);
-      updateToken(target.id, { hp: newHp });
-      
-      // Check if target is unconscious
-      if (newHp === 0) {
-        updateToken(target.id, { 
-          conditions: [...target.conditions, "Без сознания"]
-        });
-      }
+    // Log attack roll result
+    addEnhancedCombatEvent({
+      actor: activeToken.name,
+      action: 'Бросок атаки',
+      target: target.name,
+      description: `${attack.name}: бросок на попадание ${attackRoll.total} vs AC ${target.ac} - ${hitTarget ? 'ПОПАДАНИЕ!' : 'ПРОМАХ'}`,
+      diceRoll: {
+        dice: `1d20+${modifier + proficiencyBonus}`,
+        result: attackRoll.total,
+        breakdown: `${attackRoll.rolls[0]}+${modifier + proficiencyBonus}`
+      },
+      playerName: activeToken.name
+    });
 
-      addEnhancedCombatEvent({
-        actor: activeToken.name,
-        action: 'Атака',
-        target: target.name,
-        damage: damageRoll.total,
-        description: `${attack.name}: попадание ${attackRoll.total} vs AC ${target.ac}, урон ${damageRoll.total}${newHp === 0 ? ' - ЦЕЛЬ ПОВЕРЖЕНА!' : ''}`,
-        diceRoll: {
-          dice: `1d20+${modifier + proficiencyBonus}`,
-          result: attackRoll.total,
-          breakdown: `${attackRoll.rolls[0]}+${modifier + proficiencyBonus}`
-        },
-        playerName: activeToken.name
+    if (hitTarget) {
+      // Store attack roll result for damage selection
+      setAttackRollResult({
+        result: attackRoll.total,
+        target: selectedTarget,
+        attack: selectedAttack
       });
     } else {
-      addEnhancedCombatEvent({
-        actor: activeToken.name,
-        action: 'Атака',
-        target: target.name,
-        description: `${attack.name}: промах ${attackRoll.total} vs AC ${target.ac}`,
-        diceRoll: {
-          dice: `1d20+${modifier + proficiencyBonus}`,
-          result: attackRoll.total,
-          breakdown: `${attackRoll.rolls[0]}+${modifier + proficiencyBonus}`
-        },
-        playerName: activeToken.name
+      // Miss - clear selections
+      setSelectedAttack("");
+      setSelectedTarget("");
+    }
+  };
+
+  const handleDamageRoll = () => {
+    if (!activeToken || !attackRollResult) return;
+    
+    const attack = attackTypes.find(a => a.name === attackRollResult.attack);
+    const target = enhancedTokens.find(t => t.id === attackRollResult.target);
+    if (!attack || !target) return;
+
+    const stat = dndStats[attack.stat as keyof typeof dndStats];
+    const modifier = getModifier(stat);
+    
+    // Damage roll
+    const { count, sides, modifier: damageModifier } = parseDiceString(attack.damage);
+    const damageRoll = rollDice(sides, count, modifier + damageModifier);
+    
+    // Apply damage
+    const newHp = Math.max(0, target.hp - damageRoll.total);
+    updateToken(target.id, { hp: newHp });
+    
+    // Check if target is unconscious
+    if (newHp === 0) {
+      updateToken(target.id, { 
+        conditions: [...target.conditions, "Без сознания"]
       });
     }
 
+    addEnhancedCombatEvent({
+      actor: activeToken.name,
+      action: 'Урон',
+      target: target.name,
+      damage: damageRoll.total,
+      description: `${attack.name}: урон ${damageRoll.total} (${target.hp} → ${newHp})${newHp === 0 ? ' - ЦЕЛЬ ПОВЕРЖЕНА!' : ''}`,
+      diceRoll: {
+        dice: attack.damage,
+        result: damageRoll.total,
+        breakdown: `${damageRoll.rolls.join('+')}+${modifier + damageModifier}`
+      },
+      playerName: activeToken.name
+    });
+
+    // Clear all attack state
     setSelectedAttack("");
     setSelectedTarget("");
+    setAttackRollResult(null);
   };
 
   const handleCastSpell = () => {
@@ -628,13 +654,43 @@ export default function CompleteBattleActionPanel() {
                   </Select>
                 </div>
                 
-                <Button 
-                  onClick={handleAttack} 
-                  disabled={!selectedAttack || !selectedTarget}
-                  className="w-full"
-                >
-                  Выполнить атаку
-                </Button>
+                {!attackRollResult ? (
+                  <Button 
+                    onClick={handleAttackRoll} 
+                    disabled={!selectedAttack || !selectedTarget}
+                    className="w-full"
+                  >
+                    <Crosshair className="w-4 h-4 mr-2" />
+                    Бросок на попадание
+                  </Button>
+                ) : (
+                  <div className="space-y-2">
+                    <div className="text-sm text-center text-green-600 font-medium">
+                      ПОПАДАНИЕ! Выберите тип атаки или заклинание:
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <Button 
+                        onClick={handleDamageRoll}
+                        variant="destructive"
+                        size="sm"
+                      >
+                        <Sword className="w-3 h-3 mr-1" />
+                        Урон
+                      </Button>
+                      <Button 
+                        onClick={() => {
+                          setAttackRollResult(null);
+                          setSelectedAttack("");
+                          setSelectedTarget("");
+                        }}
+                        variant="outline"
+                        size="sm"
+                      >
+                        Отмена
+                      </Button>
+                    </div>
+                  </div>
+                )}
               </div>
             </DialogContent>
           </Dialog>
