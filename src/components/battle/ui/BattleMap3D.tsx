@@ -28,10 +28,17 @@ const VolumetricFog = () => {
   
   // Инициализируем туман при первом запуске
   useEffect(() => {
+    console.log('Initializing fog map...');
     const w = 30, h = 30;
-    useFogStore.getState().setMap('main-map', new Uint8Array(w * h), w, h); // всё в тумане
+    const fogMap = new Uint8Array(w * h);
+    fogMap.fill(0); // 0 = туман везде
+    
+    useFogStore.getState().setMap('main-map', fogMap, w, h);
+    console.log('Fog map initialized with size:', w, 'x', h);
+    
     // Открываем стартовую область
     useFogStore.getState().reveal('main-map', 15, 15, 3);
+    console.log('Initial area revealed at (15, 15) with radius 3');
   }, []);
   
   return null;

@@ -13,13 +13,19 @@ export function useFogLayer(scene: THREE.Scene, mapId = 'main-map', tileSize = 5
     fogRef.current = fr;
 
     (async () => {
-      await fr.init('/assets/fog/cloud.png');
-      fr.syncTargetsFromStore();
+      try {
+        await fr.init('/assets/fog/cloud.png');
+        console.log('Fog renderer initialized successfully');
+        fr.syncTargetsFromStore();
+      } catch (error) {
+        console.error('Failed to initialize fog renderer:', error);
+      }
     })();
 
     // подписка на обновление битмапы
     const unsub = useFogStore.subscribe(
       (state) => {
+        console.log('Fog store updated, syncing targets');
         // целевые значения и плавное исчезновение
         fr.syncTargetsFromStore();
       }

@@ -104,7 +104,7 @@ export class FogRenderer {
         this.cells.push({
           sprite,
           target: v === 0 ? 1 : 0, // если 0 (не разведано) → туман = 1
-          opacity: v === 0 ? 0.6 : 0.0,
+          opacity: v === 0 ? 0.6 : 0.0, // видимая непрозрачность тумана
           rotSpeed,
           scalePhase,
           scaleSpeed
@@ -118,15 +118,17 @@ export class FogRenderer {
   syncTargetsFromStore() {
     const fog = useFogStore.getState().maps[this.mapId];
     if (!fog || !this.group) return;
+    
     // Если размер изменился — перестроим слой
     const size = useFogStore.getState().size;
     if (size.w !== this.gridW || size.h !== this.gridH) {
       this.rebuildLayer();
       return;
     }
+    
     const total = this.gridW * this.gridH;
     for (let i = 0; i < total && i < this.cells.length; i++) {
-      // 1 = открыто → target 0; 0 = туман → target 1
+      // 1 = открыто → target 0 (туман исчезает); 0 = туман → target 1 (туман виден)
       this.cells[i].target = fog[i] === 0 ? 1 : 0;
     }
   }

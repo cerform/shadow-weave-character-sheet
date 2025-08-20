@@ -32,7 +32,7 @@ export const FogControls: React.FC = () => {
   };
 
   return (
-    <Card className="absolute top-4 right-4 w-64 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <Card className="absolute top-20 right-4 w-64 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 z-40">
       <CardHeader className="pb-3">
         <CardTitle className="text-sm flex items-center gap-2">
           <Cloud className="w-4 h-4" />
@@ -44,7 +44,10 @@ export const FogControls: React.FC = () => {
           <Button
             size="sm"
             variant="outline"
-            onClick={() => handleRevealArea(10, 10, 5)}
+            onClick={() => {
+              console.log('Revealing North area: (10, 10, 5)');
+              handleRevealArea(10, 10, 5);
+            }}
             className="text-xs"
           >
             <Eye className="w-3 h-3 mr-1" />
@@ -53,7 +56,10 @@ export const FogControls: React.FC = () => {
           <Button
             size="sm"
             variant="outline"
-            onClick={() => handleRevealArea(20, 10, 5)}
+            onClick={() => {
+              console.log('Revealing South area: (20, 10, 5)');
+              handleRevealArea(20, 10, 5);
+            }}
             className="text-xs"
           >
             <Eye className="w-3 h-3 mr-1" />
@@ -62,7 +68,10 @@ export const FogControls: React.FC = () => {
           <Button
             size="sm"
             variant="outline"
-            onClick={() => handleRevealArea(15, 5, 5)}
+            onClick={() => {
+              console.log('Revealing West area: (15, 5, 5)');
+              handleRevealArea(15, 5, 5);
+            }}
             className="text-xs"
           >
             <Eye className="w-3 h-3 mr-1" />
@@ -71,7 +80,10 @@ export const FogControls: React.FC = () => {
           <Button
             size="sm"
             variant="outline"
-            onClick={() => handleRevealArea(15, 25, 5)}
+            onClick={() => {
+              console.log('Revealing East area: (15, 25, 5)');
+              handleRevealArea(15, 25, 5);
+            }}
             className="text-xs"
           >
             <Eye className="w-3 h-3 mr-1" />
@@ -83,7 +95,10 @@ export const FogControls: React.FC = () => {
           <Button
             size="sm"
             variant="secondary"
-            onClick={handleClearAllFog}
+            onClick={() => {
+              console.log('Clearing all fog');
+              handleClearAllFog();
+            }}
             className="w-full text-xs"
           >
             <Sun className="w-3 h-3 mr-1" />
@@ -92,7 +107,10 @@ export const FogControls: React.FC = () => {
           <Button
             size="sm"
             variant="secondary"
-            onClick={handleResetFog}
+            onClick={() => {
+              console.log('Resetting fog');
+              handleResetFog();
+            }}
             className="w-full text-xs"
           >
             <EyeOff className="w-3 h-3 mr-1" />
