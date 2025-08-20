@@ -29,6 +29,7 @@ import AdminAssetsPage from '@/pages/AdminAssetsPage';
 import DMMapEditorPage from '@/pages/DMMapEditorPage';
 import PlayerMapPage from '@/pages/PlayerMapPage';
 import BattleScenePage from '@/pages/BattleScenePage';
+import DnD5ePage from '@/pages/DnD5ePage';
 
 
 // Ленивая загрузка страниц, зависящих от WebSocket
@@ -140,6 +141,7 @@ const AppRoutes: React.FC = () => {
       <Route path="/spellbook" element={<SpellbookPage />} />
       <Route path="/handbook" element={<HandbookPage />} />
       <Route path="/dnd-spells" element={<DndSpellsPage />} />
+      <Route path="/dnd5e-combat" element={<DnD5ePage />} />
       
       {/* Персонажи */}
       <Route path="/character-creation" element={<CharacterCreationPage />} />
