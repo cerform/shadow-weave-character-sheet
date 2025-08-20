@@ -141,7 +141,7 @@ export const AttackDialog: React.FC<AttackDialogProps> = ({ children, attacker }
       actor: attacker.name,
       action: 'Бросок атаки',
       target: target.name,
-      description: `${attackType.name}: ${totalResult} vs AC ${target.ac} - ${isHit ? 'ПОПАДАНИЕ!' : 'ПРОМАХ'}`,
+      description: `${attackType.name}: d20(${result}) + ${modifier + proficiencyBonus} = ${totalResult} vs AC ${target.ac} - ${isHit ? 'ПОПАДАНИЕ!' : 'ПРОМАХ'}`,
       diceRoll: {
         dice: `1d20+${modifier + proficiencyBonus}`,
         result: totalResult,
@@ -151,14 +151,17 @@ export const AttackDialog: React.FC<AttackDialogProps> = ({ children, attacker }
     });
 
     if (isHit) {
-      setAttackPhase('damage');
-      setDiceKey(prev => prev + 1);
+      // Не переходим сразу к урону, показываем результат броска на несколько секунд
+      setTimeout(() => {
+        setAttackPhase('damage');
+        setDiceKey(prev => prev + 1);
+      }, 2500);
     } else {
-      // Промах - закрываем диалог
+      // Промах - закрываем диалог через задержку
       setTimeout(() => {
         setOpen(false);
         resetDialog();
-      }, 2000);
+      }, 3000);
     }
   };
 
@@ -295,9 +298,11 @@ export const AttackDialog: React.FC<AttackDialogProps> = ({ children, attacker }
           <p className="text-sm text-muted-foreground">
             {attackType.name} против {target.name} (AC {target.ac})
           </p>
-          <p className="text-xs text-muted-foreground mt-1">
-            1d20 + {modifier + proficiencyBonus} (модификатор + навык)
-          </p>
+          <div className="bg-blue-900/30 border border-blue-400/30 rounded-lg p-2 mt-2">
+            <p className="text-xs text-blue-300 font-medium">
+              1d20 + {modifier + proficiencyBonus} (модификатор + навык)
+            </p>
+          </div>
         </div>
         
         <div className="h-[300px] w-full bg-gradient-to-b from-blue-900/30 to-blue-800/20 rounded-lg border border-blue-400/30 overflow-hidden relative">
@@ -346,11 +351,16 @@ export const AttackDialog: React.FC<AttackDialogProps> = ({ children, attacker }
       <div className="space-y-4">
         <div className="text-center">
           <h3 className="text-lg font-semibold text-green-400">ПОПАДАНИЕ!</h3>
-          <p className="text-sm text-muted-foreground">
+          <div className="bg-green-900/30 border border-green-400/30 rounded-lg p-3 mt-2">
+            <div className="text-sm font-medium text-green-300">
+              Результат атаки: {attackRollResult}
+            </div>
+            <div className="text-xs text-muted-foreground">
+              Против AC {target.ac} • {attackRollResult >= target.ac ? 'Успех' : 'Неудача'}
+            </div>
+          </div>
+          <p className="text-sm text-muted-foreground mt-3">
             Бросок урона: {attackType.damage} + {modifier}
-          </p>
-          <p className="text-xs text-muted-foreground mt-1">
-            Атака: {attackRollResult} vs AC {target.ac}
           </p>
         </div>
         
