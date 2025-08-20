@@ -67,8 +67,16 @@ export const useBattle3DControls = ({ canvasElement, isDM = false }: UseBattle3D
         console.log('⌨️ Key 2 pressed - setting token mode');
         setMode('token');
         break;
+      case '3':
+        console.log('⌨️ Key 3 pressed - setting fog mode');
+        setMode('fog');
+        break;
       case '4':
-        console.log('⌨️ Key 4 pressed - setting asset mode');
+        console.log('⌨️ Key 4 pressed - setting camera mode');
+        setMode('camera');
+        break; 
+      case '5':
+        console.log('⌨️ Key 5 pressed - setting asset mode');
         setMode('asset');
         break;
     }

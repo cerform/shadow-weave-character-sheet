@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { useEnhancedBattleStore } from '@/stores/enhancedBattleStore';
 import { useEnhancedFogStore } from '@/stores/enhancedFogStore';
+import { useBattle3DControlStore } from '@/stores/battle3DControlStore';
 
 interface SimpleBattleUIProps {
   paintMode: 'reveal' | 'hide';
@@ -41,6 +42,7 @@ export const SimpleBattleUI: React.FC<SimpleBattleUIProps> = ({
   onClearMap
 }) => {
   const { tokens, activeId, currentRound } = useEnhancedBattleStore();
+  const { currentMode, setMode } = useBattle3DControlStore();
   const { toast } = useToast();
   
   const activeToken = tokens.find(t => t.id === activeId);
@@ -143,6 +145,45 @@ export const SimpleBattleUI: React.FC<SimpleBattleUIProps> = ({
 
             <Separator />
 
+            {/* Секция управления */}
+            <div className="space-y-2">
+              <div className="text-xs font-medium text-muted-foreground">Режимы</div>
+              <div className="grid grid-cols-2 gap-1">
+                <Button
+                  variant={currentMode === 'navigation' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => {
+                    console.log('🧭 Setting navigation mode');
+                    toast({
+                      title: "Режим изменен",
+                      description: "Режим: Навигация (клавиша 1)",
+                    });
+                    setMode('navigation');
+                  }}
+                >
+                  <Map className="w-3 h-3 mr-1" />
+                  Карта
+                </Button>
+                <Button
+                  variant={currentMode === 'camera' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => {
+                    console.log('📹 Setting camera mode');
+                    toast({
+                      title: "Режим изменен",
+                      description: "Режим: Управление камерой (клавиша 4)",
+                    });
+                    setMode('camera');
+                  }}
+                >
+                  <Settings className="w-3 h-3 mr-1" />
+                  Камера
+                </Button>
+              </div>
+            </div>
+
+            <Separator />
+
             {/* Секция тумана */}
             <div className="space-y-2">
               <div className="text-xs font-medium text-muted-foreground">Туман войны</div>
@@ -211,10 +252,12 @@ export const SimpleBattleUI: React.FC<SimpleBattleUIProps> = ({
               
               {/* Инструкции по использованию */}
               <div className="text-xs text-muted-foreground bg-muted/20 p-2 rounded">
-                <div className="font-medium mb-1">Управление туманом:</div>
+                <div className="font-medium mb-1">Управление:</div>
+                <div>• <span className="font-mono">1</span> - Режим навигации</div>
+                <div>• <span className="font-mono">3</span> - Режим тумана</div>
+                <div>• <span className="font-mono">4</span> - Управление камерой</div>
                 <div>• <span className="font-mono">Shift + клик</span> - Добавить туман</div>
                 <div>• <span className="font-mono">Ctrl + клик</span> - Убрать туман</div>
-                <div>• Перетаскивание для рисования</div>
               </div>
             </div>
 

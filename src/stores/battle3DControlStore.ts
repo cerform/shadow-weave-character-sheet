@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-type ControlMode = 'navigation' | 'token' | 'fog' | 'asset';
+type ControlMode = 'navigation' | 'token' | 'fog' | 'asset' | 'camera';
 
 interface Battle3DControlState {
   // Режимы управления
@@ -160,9 +160,7 @@ export const useBattle3DControlStore = create<Battle3DControlState>((set, get) =
     return (
       state.canInteract && 
       !state.blockInteractions && 
-      (state.currentMode === 'navigation' || 
-       (state.keysPressed.space && !state.keysPressed.shift && !state.keysPressed.alt) ||
-       (!state.keysPressed.shift && !state.keysPressed.alt && !state.keysPressed.ctrl))
+      state.currentMode === 'camera'
     );
   },
   

@@ -154,7 +154,7 @@ export default function BattleMap3D({
         <Canvas
         ref={canvasRef}
         shadows 
-        camera={{ position: [0, 20, 20], fov: 45 }}
+        camera={{ position: [0, 25, 0], fov: 45, up: [0, 0, -1] }}
         gl={{ antialias: true }}
         onCreated={({ gl }) => {
           // Устанавливаем ссылку на канвас для системы управления
@@ -270,7 +270,7 @@ export default function BattleMap3D({
         {/* Рабочая система тумана */}
         <WorkingFogSystem paintMode={uiPaintMode} brushSize={uiBrushSize} />
 
-        {/* Контроллы камеры - отключаем при перетаскивании токена */}
+        {/* Контроллы камеры - работают только в режиме камеры */}
         <OrbitControls 
           enableDamping 
           dampingFactor={0.1}
@@ -278,6 +278,9 @@ export default function BattleMap3D({
           minDistance={8}
           maxDistance={40}
           enabled={shouldHandleCameraControls() && !isActiveTokenDragging}
+          enableRotate={shouldHandleCameraControls()}
+          enableZoom={shouldHandleCameraControls()}
+          enablePan={shouldHandleCameraControls()}
         />
         </Canvas>
       </div>

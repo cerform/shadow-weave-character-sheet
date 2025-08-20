@@ -182,14 +182,15 @@ export const WorkingFogSystem: React.FC<WorkingFogSystemProps> = ({ paintMode, b
     previousMouseStateRef.current = { isMouseDown, isDragging };
   }, [isMouseDown, isDragging, shouldHandleFogInteraction, gl, camera, paintFog, keysPressed]);
 
-  // Добавляем отслеживание позиции мыши
+  // Добавляем отслеживание позиции мыши с правильными координатами
   useEffect(() => {
     const canvas = gl.domElement;
     
     const trackMousePosition = (e: MouseEvent) => {
       const rect = canvas.getBoundingClientRect();
+      // Исправляем инверсию - убираем минус для Y координаты
       const mouseX = ((e.clientX - rect.left) / rect.width) * 2 - 1;
-      const mouseY = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+      const mouseY = -(((e.clientY - rect.top) / rect.height) * 2 - 1);
       
       // Сохраняем позицию мыши в DOM элементе для использования в рисовании
       (canvas as any)._lastMouseX = mouseX;
