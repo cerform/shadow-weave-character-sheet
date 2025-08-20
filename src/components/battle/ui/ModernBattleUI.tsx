@@ -7,7 +7,7 @@ import { Separator } from '@/components/ui/separator';
 import { Slider } from '@/components/ui/slider';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { toast } from 'sonner';
+import { useToast } from "@/hooks/use-toast";
 import { 
   Eye, 
   EyeOff, 
@@ -47,12 +47,16 @@ export const ModernBattleUI: React.FC<ModernBattleUIProps> = ({
 }) => {
   const [activePanel, setActivePanel] = useState<'map' | 'fog' | 'tokens' | 'combat' | null>('map');
   const { tokens, activeId, currentRound } = useEnhancedBattleStore();
+  const { toast } = useToast();
   
   const activeToken = tokens.find(t => t.id === activeId);
 
   const handleRevealAll = () => {
     console.log('🔍 Revealing all fog');
-    toast.success('Весь туман убран с карты');
+    toast({
+      title: "Туман убран",
+      description: "Весь туман убран с карты",
+    });
     const store = useEnhancedFogStore.getState();
     const dimensions = store.dimensions.get('main-map');
     if (dimensions) {
@@ -67,7 +71,10 @@ export const ModernBattleUI: React.FC<ModernBattleUIProps> = ({
 
   const handleHideAll = () => {
     console.log('🌫️ Hiding all with fog');
-    toast.success('Вся карта покрыта туманом');
+    toast({
+      title: "Туман добавлен",
+      description: "Вся карта покрыта туманом",
+    });
     const store = useEnhancedFogStore.getState();
     const dimensions = store.dimensions.get('main-map');
     if (dimensions) {
@@ -82,7 +89,10 @@ export const ModernBattleUI: React.FC<ModernBattleUIProps> = ({
 
   const handleAttack = () => {
     console.log('⚔️ Attack action triggered');
-    toast.info('Атака выполнена!');
+    toast({
+      title: "Атака!",
+      description: "Атака выполнена!",
+    });
     if (activeToken) {
       console.log(`${activeToken.name} attacks!`);
     }
@@ -90,7 +100,10 @@ export const ModernBattleUI: React.FC<ModernBattleUIProps> = ({
 
   const handleDefense = () => {
     console.log('🛡️ Defense action triggered');
-    toast.info('Защитная стойка принята!');
+    toast({
+      title: "Защита!",
+      description: "Защитная стойка принята!",
+    });
     if (activeToken) {
       console.log(`${activeToken.name} defends!`);
     }
@@ -98,13 +111,19 @@ export const ModernBattleUI: React.FC<ModernBattleUIProps> = ({
 
   const handleDiceRoll = () => {
     console.log('🎲 Dice roll triggered');
-    toast.info('Бросок кубика выполнен!');
+    toast({
+      title: "Кубик брошен!",
+      description: "Бросок кубика выполнен!",
+    });
     // TODO: Open dice modal
   };
 
   const handleMagic = () => {
     console.log('✨ Magic action triggered');
-    toast.info('Заклинание использовано!');
+    toast({
+      title: "Магия!",
+      description: "Заклинание использовано!",
+    });
     if (activeToken) {
       console.log(`${activeToken.name} casts magic!`);
     }
@@ -112,7 +131,10 @@ export const ModernBattleUI: React.FC<ModernBattleUIProps> = ({
 
   const handleSettings = () => {
     console.log('⚙️ Settings clicked');
-    toast.info('Настройки открыты');
+    toast({
+      title: "Настройки",
+      description: "Настройки открыты",
+    });
     // TODO: Open settings panel
   };
 
@@ -181,7 +203,10 @@ export const ModernBattleUI: React.FC<ModernBattleUIProps> = ({
                       <div className="grid grid-cols-2 gap-2">
                         <Button onClick={() => {
                           console.log('📁 Upload map clicked');
-                          toast.success('Диалог загрузки карты открыт');
+                          toast({
+                            title: "Загрузка карты",
+                            description: "Диалог загрузки карты открыт",
+                          });
                           onUploadMap();
                         }} variant="outline" size="sm">
                           <Upload className="w-3 h-3 mr-1" />
@@ -189,7 +214,10 @@ export const ModernBattleUI: React.FC<ModernBattleUIProps> = ({
                         </Button>
                         <Button onClick={() => {
                           console.log('🗑️ Clear map clicked');
-                          toast.success('Карта очищена');
+                          toast({
+                            title: "Карта очищена",
+                            description: "Карта была успешно очищена",
+                          });
                           onClearMap();
                         }} variant="outline" size="sm">
                           <RotateCcw className="w-3 h-3 mr-1" />
@@ -229,7 +257,10 @@ export const ModernBattleUI: React.FC<ModernBattleUIProps> = ({
                                size="sm"
                                onClick={() => {
                                  console.log('🔍 Paint mode set to reveal');
-                                 toast.success('Режим: Показать области');
+                                 toast({
+                                   title: "Режим изменен",
+                                   description: "Режим: Показать области",
+                                 });
                                  setPaintMode('reveal');
                                }}
                              >
@@ -247,11 +278,14 @@ export const ModernBattleUI: React.FC<ModernBattleUIProps> = ({
                              <Button
                                variant={paintMode === 'hide' ? 'default' : 'outline'}
                                size="sm"
-                               onClick={() => {
-                                 console.log('🌫️ Paint mode set to hide');
-                                 toast.success('Режим: Скрыть области');
-                                 setPaintMode('hide');
-                               }}
+                                onClick={() => {
+                                  console.log('🌫️ Paint mode set to hide');
+                                  toast({
+                                    title: "Режим изменен",
+                                    description: "Режим: Скрыть области",
+                                  });
+                                  setPaintMode('hide');
+                                }}
                             >
                               <EyeOff className="w-3 h-3 mr-1" />
                               Скрыть
@@ -269,11 +303,14 @@ export const ModernBattleUI: React.FC<ModernBattleUIProps> = ({
                         </label>
                          <Slider
                            value={[brushSize]}
-                           onValueChange={(value) => {
-                             console.log('🖌️ Brush size changed to:', value[0]);
-                             toast.info(`Размер кисти: ${value[0] === 0 ? '1 клетка' : `${value[0] * 2 + 1} клеток`}`);
-                             setBrushSize(value[0]);
-                           }}
+                            onValueChange={(value) => {
+                              console.log('🖌️ Brush size changed to:', value[0]);
+                              toast({
+                                title: "Кисть изменена",
+                                description: `Размер кисти: ${value[0] === 0 ? '1 клетка' : `${value[0] * 2 + 1} клеток`}`,
+                              });
+                              setBrushSize(value[0]);
+                            }}
                           min={0}
                           max={5}
                           step={1}
