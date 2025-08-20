@@ -332,34 +332,34 @@ export const ModernBattleUI: React.FC<ModernBattleUIProps> = ({
                           min={0}
                           max={5}
                           step={1}
-                          className="w-full"
+                          className="w-full pointer-events-auto"
                         />
                       </div>
 
                       <Separator />
 
                       <div className="grid grid-cols-2 gap-2">
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button onClick={handleRevealAll} variant="secondary" size="sm">
-                              Открыть всё
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>Убрать весь туман с карты</p>
-                          </TooltipContent>
-                        </Tooltip>
-                        
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button onClick={handleHideAll} variant="secondary" size="sm">
-                              Скрыть всё
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>Покрыть всю карту туманом</p>
-                          </TooltipContent>
-                        </Tooltip>
+                         <Tooltip>
+                           <TooltipTrigger asChild>
+                             <Button onClick={handleRevealAll} variant="secondary" size="sm" className="pointer-events-auto">
+                               Открыть всё
+                             </Button>
+                           </TooltipTrigger>
+                           <TooltipContent>
+                             <p>Убрать весь туман с карты</p>
+                           </TooltipContent>
+                         </Tooltip>
+                         
+                         <Tooltip>
+                           <TooltipTrigger asChild>
+                             <Button onClick={handleHideAll} variant="secondary" size="sm" className="pointer-events-auto">
+                               Скрыть всё
+                             </Button>
+                           </TooltipTrigger>
+                           <TooltipContent>
+                             <p>Покрыть всю карту туманом</p>
+                           </TooltipContent>
+                         </Tooltip>
                       </div>
                     </div>
                   </PopoverContent>

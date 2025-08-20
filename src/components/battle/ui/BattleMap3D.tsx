@@ -103,12 +103,25 @@ export default function BattleMap3D({
 
   // Handle map image upload
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    console.log('📁 handleFileSelect called');
     const file = event.target.files?.[0];
     if (file && file.type.startsWith('image/')) {
       const url = URL.createObjectURL(file);
       setMapImageUrl(url);
       console.log('🗺️ Map image loaded:', url);
+    } else {
+      console.log('❌ Invalid file selected');
     }
+  };
+
+  const handleUploadMap = () => {
+    console.log('📁 handleUploadMap called - triggering file input click');
+    fileInputRef.current?.click();
+  };
+
+  const handleClearMap = () => {
+    console.log('🗑️ handleClearMap called');
+    clearMap();
   };
 
   // Map Texture Components
@@ -146,8 +159,8 @@ export default function BattleMap3D({
         setPaintMode={setUiPaintMode}
         brushSize={uiBrushSize}
         setBrushSize={setUiBrushSize}
-        onUploadMap={() => fileInputRef.current?.click()}
-        onClearMap={clearMap}
+        onUploadMap={handleUploadMap}
+        onClearMap={handleClearMap}
       />
 
       {/* Скрытый инпут для загрузки карты */}
