@@ -11,9 +11,9 @@ import { useBattle3DControls } from "@/hooks/useBattle3DControls";
 import { useBattle3DControlStore } from "@/stores/battle3DControlStore";
 import { Button } from "@/components/ui/button";
 import { Upload, X } from "lucide-react";
-import { useFogLayer } from "@/components/battle/hooks/useFogLayer";
-import { useFogStore } from "@/stores/fogStore";
-import { useFogPainting } from "@/hooks/useFogPainting";
+import { useModernFogLayer } from "@/components/battle/hooks/useModernFogLayer";
+import { useEnhancedFogStore } from "@/stores/enhancedFogStore";
+import { useModernFogPainting } from "@/hooks/useModernFogPainting";
 import { ModernBattleUI } from './ModernBattleUI';
 
 interface BattleMap3DProps {
@@ -23,55 +23,41 @@ interface BattleMap3DProps {
   brushSize?: number;
 }
 
-// Оптимизированный компонент тумана - не создаем сферы там где не нужно
-const OptimizedFog = ({ paintMode, brushSize }: { paintMode: 'reveal' | 'hide'; brushSize: number }) => {
+// Современная система тумана с улучшенной производительностью
+const ModernFog = ({ paintMode, brushSize }: { paintMode: 'reveal' | 'hide'; brushSize: number }) => {
   const { scene, gl } = useThree();
-  const { handlePointerDown, handlePointerMove, handlePointerUp } = useFogPainting({
+  
+  // Используем новую современную систему тумана
+  const { renderer, isInitialized } = useModernFogLayer(scene, 'main-map', 1, true);
+  
+  // Современная система рисования с оптимизацией
+  const { handlers } = useModernFogPainting({
     mode: paintMode,
     brushSize,
     mapId: 'main-map',
-    tileSize: 1
+    tileSize: 1,
+    onPaintStart: () => console.log('Fog painting started'),
+    onPaintEnd: () => console.log('Fog painting ended')
   });
-  
-  // Используем умную систему тумана - только на границах
-  useFogLayer(scene, 'main-map', 1);
-  
-  // Инициализируем только стартовые области с туманом
-  useEffect(() => {
-    console.log('Initializing optimized fog map...');
-    const w = 24, h = 24;
-    const fogMap = new Uint8Array(w * h);
-    
-    // Открываем центральную область, остальное в тумане
-    fogMap.fill(0); // все закрыто
-    
-    // Открываем только стартовую зону
-    for (let y = 10; y < 14; y++) {
-      for (let x = 10; x < 14; x++) {
-        fogMap[y * w + x] = 1; // открыто
-      }
-    }
-    
-    useFogStore.getState().setMap('main-map', fogMap, w, h);
-    console.log('Optimized fog initialized - only necessary areas');
-  }, []);
 
   // Подключаем обработчики событий к канвасу
   useEffect(() => {
     const canvas = gl.domElement;
     
-    canvas.addEventListener('pointerdown', handlePointerDown);
-    canvas.addEventListener('pointermove', handlePointerMove);
-    canvas.addEventListener('pointerup', handlePointerUp);
-    canvas.addEventListener('pointerleave', handlePointerUp);
+    canvas.addEventListener('pointerdown', handlers.handlePointerDown);
+    canvas.addEventListener('pointermove', handlers.handlePointerMove);
+    canvas.addEventListener('pointerup', handlers.handlePointerUp);
+    canvas.addEventListener('pointerleave', handlers.handlePointerUp);
+    window.addEventListener('keydown', handlers.handleKeyDown);
     
     return () => {
-      canvas.removeEventListener('pointerdown', handlePointerDown);
-      canvas.removeEventListener('pointermove', handlePointerMove);
-      canvas.removeEventListener('pointerup', handlePointerUp);
-      canvas.removeEventListener('pointerleave', handlePointerUp);
+      canvas.removeEventListener('pointerdown', handlers.handlePointerDown);
+      canvas.removeEventListener('pointermove', handlers.handlePointerMove);
+      canvas.removeEventListener('pointerup', handlers.handlePointerUp);
+      canvas.removeEventListener('pointerleave', handlers.handlePointerUp);
+      window.removeEventListener('keydown', handlers.handleKeyDown);
     };
-  }, [handlePointerDown, handlePointerMove, handlePointerUp]);
+  }, [handlers]);
   
   return null;
 };
@@ -224,8 +210,8 @@ export default function BattleMap3D({
           />
         )}
 
-        {/* Оптимизированная система тумана */}
-        <OptimizedFog paintMode={uiPaintMode} brushSize={uiBrushSize} />
+        {/* Современная система тумана */}
+        <ModernFog paintMode={uiPaintMode} brushSize={uiBrushSize} />
 
         {/* Контроллы камеры - отключаем при перетаскивании токена */}
         <OrbitControls 

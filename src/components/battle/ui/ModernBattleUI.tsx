@@ -292,6 +292,7 @@ export const ModernBattleUI: React.FC<ModernBattleUIProps> = ({
             <div className="space-y-1 text-xs text-muted-foreground">
               <div><kbd className="px-1 bg-background rounded">Ctrl + клик</kbd> Скрыть</div>
               <div><kbd className="px-1 bg-background rounded">Alt + клик</kbd> Показать</div>
+              <div><kbd className="px-1 bg-background rounded">F</kbd> Переключить под курсором</div>
               <div><kbd className="px-1 bg-background rounded">Перетаскивание</kbd> Рисовать</div>
             </div>
           </CardContent>
