@@ -530,21 +530,21 @@ export default function BattleMapUI() {
           {/* 2D Map Canvas with fog overlay */}
           <div 
             ref={mapRef}
-            className="absolute inset-0 z-5 flex items-center justify-center"
+            className="absolute inset-0 z-5 flex items-center justify-center pointer-events-none"
             onClick={onMapClick}
           >
-            <div className="relative" style={{ width: MAP_W, height: MAP_H }}>
+            <div className="relative pointer-events-none" style={{ width: MAP_W, height: MAP_H }}>
               {/* Map background if loaded */}
               {mapBackground && (
                 <img 
                   src={mapBackground} 
                   alt="Battle Map" 
-                  className="absolute inset-0 w-full h-full object-contain"
+                  className="absolute inset-0 w-full h-full object-contain pointer-events-none opacity-30"
                 />
               )}
 
               {/* Grid overlay */}
-              <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ zIndex: 1 }}>
+              <svg className="absolute inset-0 w-full h-full pointer-events-none opacity-50" style={{ zIndex: 1 }}>
                 {Array.from({ length: Math.ceil(MAP_W / GRID) + 1 }).map((_, i) => (
                   <line
                     key={`v${i}`}
@@ -579,7 +579,7 @@ export default function BattleMapUI() {
                 return (
                   <div
                     key={entity.id}
-                    className={`absolute w-16 h-16 rounded-full border-4 ${
+                    className={`absolute w-16 h-16 rounded-full border-4 pointer-events-auto ${
                       entity.isPlayer 
                         ? isActive ? "border-blue-400 bg-blue-500" : "border-green-400 bg-green-500"
                         : isActive ? "border-orange-400 bg-red-500" : "border-red-400 bg-red-600"
@@ -596,6 +596,7 @@ export default function BattleMapUI() {
                     }}
                     onMouseDown={(e) => {
                       if (!isDM) return;
+                      e.stopPropagation();
                       setDragId(entity.id);
                       const rect = mapRef.current?.getBoundingClientRect();
                       if (rect) {
@@ -625,9 +626,19 @@ export default function BattleMapUI() {
               })}
 
               {/* Fog of War */}
-              {fogEnabled && (
-                <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 15 }}>
-                  <svg className="w-full h-full">
+              {fogEnabled && dmTool === "fog-reveal" && (
+                <div 
+                  className="absolute inset-0 pointer-events-auto cursor-crosshair" 
+                  style={{ zIndex: 15 }}
+                  onClick={(e) => {
+                    if (!isDM) return;
+                    const rect = e.currentTarget.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+                    setReveal((prev) => [...prev, { x, y, r: fogRadius }]);
+                  }}
+                >
+                  <svg className="w-full h-full pointer-events-none">
                     <defs>
                       <mask id="fogMask">
                         <rect width="100%" height="100%" fill="black" />
@@ -642,6 +653,29 @@ export default function BattleMapUI() {
                       fill="black"
                       opacity={fogOpacity}
                       mask="url(#fogMask)"
+                    />
+                  </svg>
+                </div>
+              )}
+              
+              {/* Static fog display */}
+              {fogEnabled && dmTool !== "fog-reveal" && (
+                <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 15 }}>
+                  <svg className="w-full h-full">
+                    <defs>
+                      <mask id="staticFogMask">
+                        <rect width="100%" height="100%" fill="black" />
+                        {[...reveal, ...autoHoles].map((hole, i) => (
+                          <circle key={i} cx={hole.x} cy={hole.y} r={hole.r} fill="white" />
+                        ))}
+                      </mask>
+                    </defs>
+                    <rect
+                      width="100%"
+                      height="100%"
+                      fill="black"
+                      opacity={fogOpacity}
+                      mask="url(#staticFogMask)"
                     />
                   </svg>
                 </div>
