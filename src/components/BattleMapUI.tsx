@@ -33,8 +33,6 @@ type Token = {
   modelScale?: number;
 };
 
-type FogCircle = { x: number; y: number; r: number };
-
 type LogEntry = { id: string; ts: string; text: string };
 
 // ==================== Константы ====================
@@ -362,8 +360,8 @@ export default function BattleMapUI() {
   const roll = (sides: number) => { const value = 1 + Math.floor(Math.random()*sides); setLog((l)=>[{ id: uid("log"), ts: now(), text: `🎲 d${sides} → ${value}` }, ...l]); };
   const nextTurn = () => setTurnIndex((i) => (initOrder.length ? (i + 1) % initOrder.length : 0));
 
-  // Инструменты Мастера
-  type DMTool = "select" | "fog-reveal" | "fog-hide" | "add-npc" | "measure";
+  // Инструменты Мастера (убраны старые инструменты тумана)
+  type DMTool = "select" | "add-npc" | "measure";
   const [dmTool, setDmTool] = useState<DMTool>("select");
 
   // Фильтрация и группировка монстров
@@ -608,11 +606,9 @@ export default function BattleMapUI() {
           <div className="p-3 space-y-4">
             <Title>Инструменты ДМ</Title>
             <div className="grid grid-cols-2 gap-2">
-              {(["select","fog-reveal","fog-hide","add-npc","measure"] as const).map((tool)=>(
+              {(["select","add-npc","measure"] as const).map((tool)=>(
                 <button key={tool} onClick={()=>setDmTool(tool)} className={`px-2 py-2 rounded-md border text-sm ${dmTool===tool?"border-emerald-400 text-emerald-400":"border-neutral-700 text-neutral-300"}`}>
                   {tool === "select" && "Выбор"}
-                  {tool === "fog-reveal" && "Открыть туман"}
-                  {tool === "fog-hide" && "Скрыть туман"}
                   {tool === "add-npc" && "Добавить NPC"}
                   {tool === "measure" && "Измерить"}
                 </button>
