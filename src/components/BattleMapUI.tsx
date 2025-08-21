@@ -516,15 +516,264 @@ export default function BattleMapUI() {
           </div>
         </div>
 
-        {/* Center: Map & Action Bar */}
-        <div className="flex-1 relative bg-neutral-900">
-          <div className="absolute inset-0">
+        {/* Center: Battle View with Map and Fog */}
+        <div className="flex-1 relative bg-neutral-900 overflow-hidden">
+          {/* 3D Scene Background */}
+          <div className="absolute inset-0 z-0">
             <Battle3DScene 
               sessionId={sessionId} 
               className="w-full h-full"
               mapBackground={mapBackground}
             />
           </div>
+
+          {/* 2D Map Canvas with fog overlay */}
+          <div 
+            ref={mapRef}
+            className="absolute inset-0 z-5 flex items-center justify-center"
+            onClick={onMapClick}
+          >
+            <div className="relative" style={{ width: MAP_W, height: MAP_H }}>
+              {/* Map background if loaded */}
+              {mapBackground && (
+                <img 
+                  src={mapBackground} 
+                  alt="Battle Map" 
+                  className="absolute inset-0 w-full h-full object-contain"
+                />
+              )}
+
+              {/* Grid overlay */}
+              <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ zIndex: 1 }}>
+                {Array.from({ length: Math.ceil(MAP_W / GRID) + 1 }).map((_, i) => (
+                  <line
+                    key={`v${i}`}
+                    x1={i * GRID}
+                    y1={0}
+                    x2={i * GRID}
+                    y2={MAP_H}
+                    stroke="rgba(156, 163, 175, 0.3)"
+                    strokeWidth="1"
+                  />
+                ))}
+                {Array.from({ length: Math.ceil(MAP_H / GRID) + 1 }).map((_, i) => (
+                  <line
+                    key={`h${i}`}
+                    x1={0}
+                    y1={i * GRID}
+                    x2={MAP_W}
+                    y2={i * GRID}
+                    stroke="rgba(156, 163, 175, 0.3)"
+                    strokeWidth="1"
+                  />
+                ))}
+              </svg>
+
+              {/* Entity tokens */}
+              {entities.map((entity) => {
+                const x = entity.position.x * GRID;
+                const y = entity.position.y * GRID;
+                const isActive = entity.id === combatState.activeEntityId;
+                const isSelected = selectedId === entity.id;
+                
+                return (
+                  <div
+                    key={entity.id}
+                    className={`absolute w-16 h-16 rounded-full border-4 ${
+                      entity.isPlayer 
+                        ? isActive ? "border-blue-400 bg-blue-500" : "border-green-400 bg-green-500"
+                        : isActive ? "border-orange-400 bg-red-500" : "border-red-400 bg-red-600"
+                    } ${isSelected ? "ring-4 ring-yellow-400" : ""} cursor-pointer transition-all duration-200 hover:scale-110`}
+                    style={{
+                      left: x,
+                      top: y,
+                      transform: "translate(-50%, -50%)",
+                      zIndex: 10
+                    }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedId(entity.id);
+                    }}
+                    onMouseDown={(e) => {
+                      if (!isDM) return;
+                      setDragId(entity.id);
+                      const rect = mapRef.current?.getBoundingClientRect();
+                      if (rect) {
+                        dragOffset.current = {
+                          x: e.clientX - rect.left - x,
+                          y: e.clientY - rect.top - y,
+                        };
+                      }
+                    }}
+                  >
+                    <div className="w-full h-full flex items-center justify-center text-white font-bold text-xs">
+                      {entity.name.slice(0, 2).toUpperCase()}
+                    </div>
+                    
+                    {/* HP indicator */}
+                    <div className="absolute -bottom-1 left-0 right-0 h-1 bg-gray-700 rounded-full overflow-hidden">
+                      <div 
+                        className={`h-full transition-all duration-300 ${
+                          entity.hp.current / entity.hp.max > 0.5 ? "bg-green-500" :
+                          entity.hp.current / entity.hp.max > 0.25 ? "bg-yellow-500" : "bg-red-500"
+                        }`}
+                        style={{ width: `${(entity.hp.current / entity.hp.max) * 100}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                );
+              })}
+
+              {/* Fog of War */}
+              {fogEnabled && (
+                <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 15 }}>
+                  <svg className="w-full h-full">
+                    <defs>
+                      <mask id="fogMask">
+                        <rect width="100%" height="100%" fill="black" />
+                        {[...reveal, ...autoHoles].map((hole, i) => (
+                          <circle key={i} cx={hole.x} cy={hole.y} r={hole.r} fill="white" />
+                        ))}
+                      </mask>
+                    </defs>
+                    <rect
+                      width="100%"
+                      height="100%"
+                      fill="black"
+                      opacity={fogOpacity}
+                      mask="url(#fogMask)"
+                    />
+                  </svg>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Mini Map */}
+          <div className="absolute bottom-4 right-4 z-20 w-48 h-32 bg-neutral-900/90 backdrop-blur rounded-lg border border-neutral-700 overflow-hidden">
+            <div className="w-full h-full relative">
+              <div className="absolute top-1 left-1 text-xs text-yellow-400 font-semibold">Мини-карта</div>
+              
+              {/* Mini map content */}
+              <div className="absolute inset-2 top-4 bg-neutral-800 rounded overflow-hidden">
+                {mapBackground && (
+                  <img 
+                    src={mapBackground} 
+                    alt="Mini Map" 
+                    className="w-full h-full object-cover opacity-50"
+                  />
+                )}
+                
+                {/* Mini grid */}
+                <div className="absolute inset-0">
+                  <svg className="w-full h-full">
+                    {Array.from({ length: 11 }).map((_, i) => (
+                      <line
+                        key={`mv${i}`}
+                        x1={`${i * 10}%`}
+                        y1="0%"
+                        x2={`${i * 10}%`}
+                        y2="100%"
+                        stroke="rgba(156, 163, 175, 0.2)"
+                        strokeWidth="1"
+                      />
+                    ))}
+                    {Array.from({ length: 8 }).map((_, i) => (
+                      <line
+                        key={`mh${i}`}
+                        x1="0%"
+                        y1={`${i * 12.5}%`}
+                        x2="100%"
+                        y2={`${i * 12.5}%`}
+                        stroke="rgba(156, 163, 175, 0.2)"
+                        strokeWidth="1"
+                      />
+                    ))}
+                  </svg>
+                </div>
+                
+                {/* Mini entities */}
+                {entities.map((entity) => {
+                  const miniX = (entity.position.x / (MAP_W / GRID)) * 100;
+                  const miniY = (entity.position.y / (MAP_H / GRID)) * 100;
+                  
+                  return (
+                    <div
+                      key={`mini-${entity.id}`}
+                      className={`absolute w-2 h-2 rounded-full ${
+                        entity.isPlayer ? "bg-green-400" : "bg-red-400"
+                      } ${entity.id === combatState.activeEntityId ? "ring-1 ring-white" : ""}`}
+                      style={{
+                        left: `${miniX}%`,
+                        top: `${miniY}%`,
+                        transform: "translate(-50%, -50%)",
+                      }}
+                    />
+                  );
+                })}
+                
+                {/* Mini fog circles */}
+                {fogEnabled && (
+                  <svg className="absolute inset-0 w-full h-full">
+                    <defs>
+                      <mask id="miniFogMask">
+                        <rect width="100%" height="100%" fill="black" />
+                        {[...reveal, ...autoHoles].map((hole, i) => {
+                          const miniX = (hole.x / MAP_W) * 100;
+                          const miniY = (hole.y / MAP_H) * 100;
+                          const miniR = (hole.r / Math.max(MAP_W, MAP_H)) * 50;
+                          return (
+                            <circle 
+                              key={i} 
+                              cx={`${miniX}%`} 
+                              cy={`${miniY}%`} 
+                              r={`${miniR}%`} 
+                              fill="white" 
+                            />
+                          );
+                        })}
+                      </mask>
+                    </defs>
+                    <rect
+                      width="100%"
+                      height="100%"
+                      fill="black"
+                      opacity={fogOpacity * 0.7}
+                      mask="url(#miniFogMask)"
+                    />
+                  </svg>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Map Management */}
+          {isDM && (
+            <div className="absolute top-4 right-4 z-10 flex flex-col gap-2">
+              <div className="bg-neutral-900/90 backdrop-blur rounded-lg border border-neutral-700 p-3">
+                <Title>Управление картой</Title>
+                <div className="flex flex-col gap-2 mt-2">
+                  <label className="flex items-center gap-2 text-sm cursor-pointer">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleMapUpload}
+                      className="hidden"
+                    />
+                    <span className="px-3 py-1 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white text-xs">
+                      📂 Загрузить карту
+                    </span>
+                  </label>
+                  <button
+                    onClick={clearMap}
+                    className="px-3 py-1 rounded-md bg-neutral-600 hover:bg-neutral-700 text-white text-xs"
+                  >
+                    🗑️ Очистить
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Bottom: Action Bar */}
           <div className="absolute bottom-0 left-0 right-0 p-3 z-10">
