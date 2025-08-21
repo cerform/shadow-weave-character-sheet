@@ -9,17 +9,22 @@ import { FogInteractionSystem } from '../fog/FogInteractionSystem';
 import { CameraControlSystem } from '../camera/CameraControlSystem';
 import { BattleSystemAdapter } from '@/adapters/battleSystemAdapter';
 import { interactionManager, InteractionMode } from '@/systems/interaction/InteractionModeManager';
+import { useBattleEntitySync } from '@/hooks/useBattleEntitySync';
 
 interface BattleEcosystemProps {
   showFog?: boolean;
   showMovement?: boolean;
   enableCameraControls?: boolean;
+  sessionId?: string;
+  onSceneReady?: (scene: THREE.Scene) => void;
 }
 
 export const BattleEcosystem: React.FC<BattleEcosystemProps> = ({
   showFog = true,
   showMovement = true,
   enableCameraControls = true,
+  sessionId = 'demo-session',
+  onSceneReady,
 }) => {
   const {
     tokens,
@@ -36,6 +41,10 @@ export const BattleEcosystem: React.FC<BattleEcosystemProps> = ({
 
   // Состояние для принудительного обновления после восстановления контекста
   const [canvasKey, setCanvasKey] = useState(0);
+  const [scene, setScene] = useState<THREE.Scene | null>(null);
+
+  // Синхронизация боевых сущностей
+  useBattleEntitySync(sessionId, scene);
 
   // Синхронизация токенов с персонажами D&D 5e
   useEffect(() => {
@@ -106,7 +115,11 @@ export const BattleEcosystem: React.FC<BattleEcosystemProps> = ({
         failIfMajorPerformanceCaveat: false,
         powerPreference: "high-performance"
       }}
-      onCreated={({ gl, camera }) => {
+      onCreated={({ gl, camera, scene: threeScene }) => {
+        // Сохраняем ссылку на сцену
+        setScene(threeScene);
+        onSceneReady?.(threeScene);
+        
         // Обработка потери и восстановления WebGL контекста
         const canvas = gl.domElement;
         
@@ -143,6 +156,9 @@ export const BattleEcosystem: React.FC<BattleEcosystemProps> = ({
         interactionManager.setMode(InteractionMode.TOKENS);
         interactionManager.setActive(true);
         console.log('🎮 Battle ecosystem initialized with active TOKENS mode');
+        
+        // Уведомляем о готовности сцены
+        console.log('🌍 Scene is ready for battle entities');
       }}
     >
       {/* Освещение */}

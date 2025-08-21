@@ -109,6 +109,81 @@ export type Database = {
           },
         ]
       }
+      battle_entities: {
+        Row: {
+          ac: number
+          created_at: string
+          created_by: string
+          creature_type: string
+          hp_current: number
+          hp_max: number
+          id: string
+          is_player_character: boolean | null
+          level_or_cr: string
+          model_url: string
+          name: string
+          pos_x: number
+          pos_y: number
+          pos_z: number
+          rot_y: number
+          scale: number
+          session_id: string
+          size: string
+          slug: string
+          speed: number
+          statuses: string[] | null
+          updated_at: string
+        }
+        Insert: {
+          ac: number
+          created_at?: string
+          created_by: string
+          creature_type: string
+          hp_current: number
+          hp_max: number
+          id?: string
+          is_player_character?: boolean | null
+          level_or_cr: string
+          model_url: string
+          name: string
+          pos_x?: number
+          pos_y?: number
+          pos_z?: number
+          rot_y?: number
+          scale?: number
+          session_id: string
+          size: string
+          slug: string
+          speed: number
+          statuses?: string[] | null
+          updated_at?: string
+        }
+        Update: {
+          ac?: number
+          created_at?: string
+          created_by?: string
+          creature_type?: string
+          hp_current?: number
+          hp_max?: number
+          id?: string
+          is_player_character?: boolean | null
+          level_or_cr?: string
+          model_url?: string
+          name?: string
+          pos_x?: number
+          pos_y?: number
+          pos_z?: number
+          rot_y?: number
+          scale?: number
+          session_id?: string
+          size?: string
+          slug?: string
+          speed?: number
+          statuses?: string[] | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       battle_maps: {
         Row: {
           background_color: string | null
@@ -242,6 +317,117 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      bestiary: {
+        Row: {
+          ac: number
+          actions: string[] | null
+          cha_score: number | null
+          con_score: number | null
+          condition_immunities: string[] | null
+          cr_or_level: string
+          created_at: string
+          creature_type: string
+          damage_immunities: string[] | null
+          damage_resistances: string[] | null
+          damage_vulnerabilities: string[] | null
+          dex_score: number | null
+          hp_average: number
+          hp_formula: string | null
+          id: string
+          int_score: number | null
+          languages: string | null
+          legendary_actions: string[] | null
+          name: string
+          reactions: string[] | null
+          saving_throws: Json | null
+          senses: string | null
+          size: string
+          skills: Json | null
+          slug: string
+          speed_burrow: number | null
+          speed_climb: number | null
+          speed_fly: number | null
+          speed_swim: number | null
+          speed_walk: number | null
+          str_score: number | null
+          traits: string[] | null
+          updated_at: string
+          wis_score: number | null
+        }
+        Insert: {
+          ac: number
+          actions?: string[] | null
+          cha_score?: number | null
+          con_score?: number | null
+          condition_immunities?: string[] | null
+          cr_or_level: string
+          created_at?: string
+          creature_type: string
+          damage_immunities?: string[] | null
+          damage_resistances?: string[] | null
+          damage_vulnerabilities?: string[] | null
+          dex_score?: number | null
+          hp_average: number
+          hp_formula?: string | null
+          id?: string
+          int_score?: number | null
+          languages?: string | null
+          legendary_actions?: string[] | null
+          name: string
+          reactions?: string[] | null
+          saving_throws?: Json | null
+          senses?: string | null
+          size: string
+          skills?: Json | null
+          slug: string
+          speed_burrow?: number | null
+          speed_climb?: number | null
+          speed_fly?: number | null
+          speed_swim?: number | null
+          speed_walk?: number | null
+          str_score?: number | null
+          traits?: string[] | null
+          updated_at?: string
+          wis_score?: number | null
+        }
+        Update: {
+          ac?: number
+          actions?: string[] | null
+          cha_score?: number | null
+          con_score?: number | null
+          condition_immunities?: string[] | null
+          cr_or_level?: string
+          created_at?: string
+          creature_type?: string
+          damage_immunities?: string[] | null
+          damage_resistances?: string[] | null
+          damage_vulnerabilities?: string[] | null
+          dex_score?: number | null
+          hp_average?: number
+          hp_formula?: string | null
+          id?: string
+          int_score?: number | null
+          languages?: string | null
+          legendary_actions?: string[] | null
+          name?: string
+          reactions?: string[] | null
+          saving_throws?: Json | null
+          senses?: string | null
+          size?: string
+          skills?: Json | null
+          slug?: string
+          speed_burrow?: number | null
+          speed_climb?: number | null
+          speed_fly?: number | null
+          speed_swim?: number | null
+          speed_walk?: number | null
+          str_score?: number | null
+          traits?: string[] | null
+          updated_at?: string
+          wis_score?: number | null
+        }
+        Relationships: []
       }
       characters: {
         Row: {
@@ -590,6 +776,48 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      model_registry: {
+        Row: {
+          animations: Json | null
+          author: string | null
+          created_at: string
+          id: string
+          license: string | null
+          model_url: string
+          preview_url: string | null
+          scale: number | null
+          slug: string
+          updated_at: string
+          y_offset: number | null
+        }
+        Insert: {
+          animations?: Json | null
+          author?: string | null
+          created_at?: string
+          id?: string
+          license?: string | null
+          model_url: string
+          preview_url?: string | null
+          scale?: number | null
+          slug: string
+          updated_at?: string
+          y_offset?: number | null
+        }
+        Update: {
+          animations?: Json | null
+          author?: string | null
+          created_at?: string
+          id?: string
+          license?: string | null
+          model_url?: string
+          preview_url?: string | null
+          scale?: number | null
+          slug?: string
+          updated_at?: string
+          y_offset?: number | null
+        }
+        Relationships: []
       }
       profiles: {
         Row: {

@@ -1,5 +1,6 @@
 // Интерфейс для Мастера Подземелий
 import React, { useState } from 'react';
+import * as THREE from 'three';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -11,6 +12,7 @@ import { BestiaryPage } from '@/components/bestiary/BestiaryPage';
 import { SimpleBattleUI } from '../ui/SimpleBattleUI';
 import { DiceRollModal } from '@/components/dice/DiceRollModal';
 import { DnD5eCombatSystem } from '@/systems/dnd5e/combat';
+import { MonsterSpawner } from '@/components/dm/MonsterSpawner';
 import type { CombatState } from '@/types/dnd5e';
 import { 
   Map, 
@@ -50,11 +52,12 @@ export const DMView: React.FC = () => {
     updateSettings,
   } = useUnifiedBattleStore();
 
-  const [activeTab, setActiveTab] = useState<'map' | 'combat' | 'bestiary' | 'settings'>('map');
+  const [activeTab, setActiveTab] = useState<'map' | 'combat' | 'bestiary' | 'spawner' | 'settings'>('map');
   const [diceModalOpen, setDiceModalOpen] = useState(false);
   const [combatSystem] = useState(() => new DnD5eCombatSystem());
   const [showFogBrush, setShowFogBrush] = useState(false);
   const [localShowMovementGrid, setLocalShowMovementGrid] = useState(showMovementGrid);
+  const [battleScene, setBattleScene] = useState<THREE.Scene | null>(null);
   
   // Обработчики файлов для карты
   const [fileInputRef, setFileInputRef] = useState<HTMLInputElement | null>(null);
@@ -214,6 +217,8 @@ export const DMView: React.FC = () => {
                   showFog={isDM}
                   showMovement={localShowMovementGrid}
                   enableCameraControls={true}
+                  sessionId="demo-session"
+                  onSceneReady={(scene) => setBattleScene(scene)}
                 />
               </div>
             </TabsContent>
@@ -228,6 +233,19 @@ export const DMView: React.FC = () => {
                   setBrushSize={setBrushSize}
                   onUploadMap={handleUploadMap}
                   onClearMap={handleClearMap}
+                />
+              </div>
+            </TabsContent>
+
+            <TabsContent value="spawner" className="w-full h-full m-0">
+              <div className="p-4">
+                <MonsterSpawner
+                  sessionId="demo-session"
+                  scene={battleScene}
+                  onMonsterSpawned={(entityId, object3D) => {
+                    console.log('Monster spawned:', entityId, object3D);
+                    // Можно добавить дополнительную логику
+                  }}
                 />
               </div>
             </TabsContent>
@@ -264,6 +282,10 @@ export const DMView: React.FC = () => {
               <TabsTrigger value="combat" className="w-full justify-start">
                 <Swords className="w-4 h-4 mr-2" />
                 Боевая система
+              </TabsTrigger>
+              <TabsTrigger value="spawner" className="w-full justify-start">
+                <Crown className="w-4 h-4 mr-2" />
+                Спавнер монстров
               </TabsTrigger>
               <TabsTrigger value="bestiary" className="w-full justify-start">
                 <Book className="w-4 h-4 mr-2" />
