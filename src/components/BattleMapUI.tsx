@@ -9,6 +9,7 @@ import { CombatEntity } from '@/engine/combat/types';
 import { supabase } from '@/integrations/supabase/client';
 import { Size } from '@/types/Monster';
 import { useAuth } from '@/hooks/use-auth';
+import { ImportMonstersButton } from './ImportMonstersButton';
 
 type SRDCreature = {
   id: string;
@@ -48,7 +49,7 @@ function now(): string {
 
 export default function BattleMapUI() {
   const { user } = useAuth();
-  const sessionId = 'demo-session'; // TODO: get from props/context
+  const sessionId = '11111111-1111-1111-1111-111111111111'; // Используем тестовую сессию
   
   // —— Real combat state from hooks ——
   const { isDM } = useUnifiedBattleStore();
@@ -411,8 +412,14 @@ export default function BattleMapUI() {
 
             <div className="space-y-2">
               <Title>Спавн монстров</Title>
+              <ImportMonstersButton />
               {isLoadingMonsters ? (
                 <div className="text-xs opacity-70">Загрузка монстров...</div>
+              ) : availableMonsters.length === 0 ? (
+                <div className="text-xs opacity-70 text-center py-4">
+                  Нет монстров в базе.<br />
+                  Используйте кнопку выше для загрузки.
+                </div>
               ) : (
                 <div className="max-h-48 overflow-y-auto space-y-1">
                   {availableMonsters.slice(0, 10).map((monster) => (
