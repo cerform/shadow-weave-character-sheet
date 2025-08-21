@@ -37,9 +37,8 @@ const GRID = 64;
 const MAP_W = 1600;
 const MAP_H = 900;
 
-// Внешний реестр моделей (опционально). Формат файла:
-// [ { "match": "^Aboleth$", "url": "https://.../aboleth.glb", "scale": 1 } ]
-const MODEL_REGISTRY_URL = "/data/model-registry.json";
+// Внешний реестр моделей D&D персонажей
+const MODEL_REGISTRY_URL = "/data/dnd-model-registry.json";
 
 // ==================== Утилиты ====================
 

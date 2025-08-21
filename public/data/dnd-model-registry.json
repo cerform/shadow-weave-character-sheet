@@ -1,0 +1,182 @@
+[
+  {
+    "match": "^aboleth$",
+    "url": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/WaterBottle/glTF-Binary/WaterBottle.glb",
+    "scale": 6,
+    "description": "Водная аберрация"
+  },
+  {
+    "match": "^dwarven?\\s*(defender|guardian|warrior)$",
+    "url": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/CesiumMan/glTF/CesiumMan.gltf",
+    "scale": 1.2,
+    "description": "Дварф-защитник в доспехах"
+  },
+  {
+    "match": "monk|монах",
+    "url": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/RobotExpressive/glTF-Binary/RobotExpressive.glb",
+    "scale": 1,
+    "description": "Монах в простых одеждах"
+  },
+  {
+    "match": "knight|рыцарь|paladin|паладин",
+    "url": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/DamagedHelmet/glTF-Binary/DamagedHelmet.glb",
+    "scale": 15,
+    "description": "Рыцарь в тяжелых доспехах"
+  },
+  {
+    "match": "tiefling|тифлинг|devil|демон",
+    "url": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/BarramundiFish/glTF/BarramundiFish.gltf",
+    "scale": 12,
+    "description": "Тифлинг с рогами"
+  },
+  {
+    "match": "goblin|гоблин",
+    "url": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/Fox/glTF/Fox.gltf",
+    "scale": 0.8,
+    "description": "Маленький зеленый гоблин"
+  },
+  {
+    "match": "orc|орк",
+    "url": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/BarramundiFish/glTF/BarramundiFish.gltf",
+    "scale": 2.5,
+    "description": "Большой орк-воин"
+  },
+  {
+    "match": "troll|тролль",
+    "url": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/BrainStem/glTF/BrainStem.gltf",
+    "scale": 8,
+    "description": "Массивный тролль"
+  },
+  {
+    "match": "(adult|ancient|young)?\\s*.*dragon",
+    "url": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/DamagedHelmet/glTF-Binary/DamagedHelmet.glb",
+    "scale": 25,
+    "description": "Величественный дракон"
+  },
+  {
+    "match": "skeleton|скелет|undead|нежить",
+    "url": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/RobotExpressive/glTF-Binary/RobotExpressive.glb",
+    "scale": 1.1,
+    "description": "Костяной скелет"
+  },
+  {
+    "match": "wizard|волшебник|mage|маг",
+    "url": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/CesiumMan/glTF/CesiumMan.gltf",
+    "scale": 1,
+    "description": "Волшебник в мантии"
+  },
+  {
+    "match": "archer|лучник|ranger|рейнджер",
+    "url": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/CesiumMan/glTF/CesiumMan.gltf",
+    "scale": 1,
+    "description": "Лучник с луком"
+  },
+  {
+    "match": "rogue|разбойник|assassin|убийца",
+    "url": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/CesiumMan/glTF/CesiumMan.gltf",
+    "scale": 0.9,
+    "description": "Скрытный разбойник"
+  },
+  {
+    "match": "barbarian|варвар",
+    "url": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/CesiumMan/glTF/CesiumMan.gltf",
+    "scale": 1.3,
+    "description": "Дикий варвар"
+  },
+  {
+    "match": "bard|бард",
+    "url": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/CesiumMan/glTF/CesiumMan.gltf",
+    "scale": 1,
+    "description": "Музыкант-бард"
+  },
+  {
+    "match": "cleric|жрец|priest|священник",
+    "url": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/CesiumMan/glTF/CesiumMan.gltf",
+    "scale": 1,
+    "description": "Священнослужитель"
+  },
+  {
+    "match": "druid|друид",
+    "url": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/CesiumMan/glTF/CesiumMan.gltf",
+    "scale": 1,
+    "description": "Природный друид"
+  },
+  {
+    "match": "fighter|воин|warrior",
+    "url": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/CesiumMan/glTF/CesiumMan.gltf",
+    "scale": 1.1,
+    "description": "Опытный воин"
+  },
+  {
+    "match": "sorcerer|колдун|warlock|чернокнижник",
+    "url": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/CesiumMan/glTF/CesiumMan.gltf",
+    "scale": 1,
+    "description": "Темный колдун"
+  },
+  {
+    "match": "elf|эльф",
+    "url": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/CesiumMan/glTF/CesiumMan.gltf",
+    "scale": 1,
+    "description": "Грациозный эльф"
+  },
+  {
+    "match": "halfling|полурослик|hobbit|хоббит",
+    "url": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/Fox/glTF/Fox.gltf",
+    "scale": 0.6,
+    "description": "Маленький полурослик"
+  },
+  {
+    "match": "gnome|гном",
+    "url": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/Fox/glTF/Fox.gltf",
+    "scale": 0.7,
+    "description": "Крошечный гном"
+  },
+  {
+    "match": "half.?orc|полуорк",
+    "url": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/CesiumMan/glTF/CesiumMan.gltf",
+    "scale": 1.2,
+    "description": "Полуорк-гибрид"
+  },
+  {
+    "match": "dragonborn|драконорожденный",
+    "url": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/BarramundiFish/glTF/BarramundiFish.gltf",
+    "scale": 1.5,
+    "description": "Драконорожденный воин"
+  },
+  {
+    "match": "giant|великан",
+    "url": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/BrainStem/glTF/BrainStem.gltf",
+    "scale": 15,
+    "description": "Огромный великан"
+  },
+  {
+    "match": "elemental|элементаль",
+    "url": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/Box/glTF/Box.gltf",
+    "scale": 8,
+    "description": "Стихийный элементаль"
+  },
+  {
+    "match": "golem|голем|construct|конструкт",
+    "url": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/DamagedHelmet/glTF-Binary/DamagedHelmet.glb",
+    "scale": 12,
+    "description": "Механический конструкт"
+  },
+  {
+    "match": "ooze|слизь|gelatinous|желатиновый",
+    "url": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/WaterBottle/glTF-Binary/WaterBottle.glb",
+    "scale": 6,
+    "description": "Слизистая масса"
+  },
+  {
+    "match": "beholder|наблюдатель",
+    "url": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/WaterBottle/glTF-Binary/WaterBottle.glb",
+    "scale": 8,
+    "description": "Многоглазый наблюдатель"
+  },
+  {
+    "match": "mind.?flayer|иллитид",
+    "url": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/BarramundiFish/glTF/BarramundiFish.gltf",
+    "scale": 1.2,
+    "description": "Псионический иллитид"
+  }
+]
