@@ -12,6 +12,7 @@ export const CameraControlSystem: React.FC = () => {
   // Подробное отслеживание всех событий мыши на canvas
   useEffect(() => {
     const canvas = gl.domElement;
+    console.log('🖱️ Attaching event listeners to canvas:', canvas, 'ClassList:', canvas.className);
     
     const handleMouseDown = (e: MouseEvent) => {
       const buttonNames = ['Left', 'Middle', 'Right', 'Back', 'Forward'];
@@ -125,25 +126,25 @@ export const CameraControlSystem: React.FC = () => {
       }
     };
 
-    // Добавляем все слушатели
-    canvas.addEventListener('mousedown', handleMouseDown, { capture: true });
-    canvas.addEventListener('mouseup', handleMouseUp, { capture: true });
-    canvas.addEventListener('mousemove', handleMouseMove, { capture: true });
-    canvas.addEventListener('wheel', handleWheel, { capture: true });
-    canvas.addEventListener('contextmenu', handleContextMenu, { capture: true });
-    canvas.addEventListener('pointerdown', handlePointerDown, { capture: true });
-    canvas.addEventListener('pointermove', handlePointerMove, { capture: true });
+    // Добавляем все слушатели БЕЗ capture для правильной обработки
+    canvas.addEventListener('mousedown', handleMouseDown, { passive: false });
+    canvas.addEventListener('mouseup', handleMouseUp, { passive: false });
+    canvas.addEventListener('mousemove', handleMouseMove, { passive: false });
+    canvas.addEventListener('wheel', handleWheel, { passive: false });
+    canvas.addEventListener('contextmenu', handleContextMenu, { passive: false });
+    canvas.addEventListener('pointerdown', handlePointerDown, { passive: false });
+    canvas.addEventListener('pointermove', handlePointerMove, { passive: false });
 
     console.log('🖱️ Mouse event listeners attached to canvas:', canvas);
 
     return () => {
-      canvas.removeEventListener('mousedown', handleMouseDown, { capture: true });
-      canvas.removeEventListener('mouseup', handleMouseUp, { capture: true });
-      canvas.removeEventListener('mousemove', handleMouseMove, { capture: true });
-      canvas.removeEventListener('wheel', handleWheel, { capture: true });
-      canvas.removeEventListener('contextmenu', handleContextMenu, { capture: true });
-      canvas.removeEventListener('pointerdown', handlePointerDown, { capture: true });
-      canvas.removeEventListener('pointermove', handlePointerMove, { capture: true });
+      canvas.removeEventListener('mousedown', handleMouseDown);
+      canvas.removeEventListener('mouseup', handleMouseUp);
+      canvas.removeEventListener('mousemove', handleMouseMove);
+      canvas.removeEventListener('wheel', handleWheel);
+      canvas.removeEventListener('contextmenu', handleContextMenu);
+      canvas.removeEventListener('pointerdown', handlePointerDown);
+      canvas.removeEventListener('pointermove', handlePointerMove);
       console.log('🖱️ Mouse event listeners removed');
     };
   }, [gl.domElement]);
