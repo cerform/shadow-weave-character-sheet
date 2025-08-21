@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
 import { TTGClubService } from '@/services/ttgClubService';
+import { MonsterImportService } from '@/services/monsterImportService';
 import type { Monster } from '@/types/monsters';
 import { Download, Search, Globe, AlertCircle, CheckCircle, Loader2, List } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
@@ -215,7 +216,7 @@ export const TTGClubImporter: React.FC<TTGClubImporterProps> = ({
     setImportedMonsters([]);
     
     try {
-      const monsters = await TTGClubService.importMonstersFromList(monsterList, (loaded, total) => {
+      const monsters = await MonsterImportService.importMonstersFromList(monsterList, (loaded, total) => {
         setProgress((loaded / total) * 100);
       });
       
@@ -434,7 +435,7 @@ export const TTGClubImporter: React.FC<TTGClubImporterProps> = ({
                 ) : (
                   <>
                     <List className="w-4 h-4 mr-2" />
-                    Импортировать из списка ({TTGClubService.extractMonsterNamesFromList(monsterList).length} монстров)
+                    Импортировать из списка ({MonsterImportService.extractMonsterNamesFromList(monsterList).length} монстров)
                   </>
                 )}
               </Button>
@@ -510,8 +511,11 @@ export const TTGClubImporter: React.FC<TTGClubImporterProps> = ({
             <div className="text-sm text-amber-700 dark:text-amber-300">
               <p className="font-medium">Примечание:</p>
               <p>
-                Данные импортируются с сайта TTG.Club. Процесс может занять некоторое время.
-                Импортированные монстры будут добавлены в ваш локальный бестиарий.
+                {importMode === 'list' ? (
+                  'Импорт из списка использует локальную базу данных монстров. Монстры будут найдены по названиям и добавлены в ваш бестиарий.'
+                ) : (
+                  'Данные импортируются с сайта TTG.Club. Процесс может занять некоторое время. Импортированные монстры будут добавлены в ваш локальный бестиарий.'
+                )}
               </p>
             </div>
           </div>
