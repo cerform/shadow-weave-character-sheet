@@ -132,8 +132,8 @@ function TokenVisual({ token, use3D, modelReady, onModelError }: { token: Token;
 export default function BattleMapUI() {
   // Подключение к реальному бестиарию
   const { getAllMonsters, loadSupabaseMonsters, isLoadingSupabase } = useMonstersStore();
-  const { isDM, mapEditMode, setMapEditMode, tokens: unifiedTokens, updateToken } = useUnifiedBattleStore();
-  const { updatePlayerVision, getCellAtPosition, spawnPoints } = useFogOfWarStore();
+  const { isDM, mapEditMode, setMapEditMode, tokens: unifiedTokens, updateToken, fogEnabled, setFogEnabled } = useUnifiedBattleStore();
+  const { updatePlayerVision, getCellAtPosition, spawnPoints, initializeFog } = useFogOfWarStore();
   
   // Режим и панели
   const [leftOpen, setLeftOpen] = useState(true);
@@ -352,8 +352,14 @@ export default function BattleMapUI() {
     return () => { window.removeEventListener("mousemove", onMove); window.removeEventListener("mouseup", onUp); };
   }, [dragId, mapScale, mapOffset, updatePlayerVision]);
 
-  // Туман войны - новая система
-  const [fogEnabled, setFogEnabled] = useState(true);
+  // Инициализация тумана войны при загрузке карты
+  useEffect(() => {
+    if (mapImage) {
+      // Инициализируем туман войны с размерами карты
+      initializeFog(MAP_W, MAP_H, 32);
+      console.log('🌫️ Туман войны инициализирован для карты', MAP_W, 'x', MAP_H);
+    }
+  }, [mapImage, initializeFog]);
 
   // Журнал и кубы
   const [log, setLog] = useState<LogEntry[]>([{ id: uid("log"), ts: now(), text: "Бой начался. Бросьте инициативу!" }]);
