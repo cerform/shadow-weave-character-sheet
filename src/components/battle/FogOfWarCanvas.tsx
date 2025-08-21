@@ -63,9 +63,22 @@ export const FogOfWarCanvas: React.FC<FogOfWarCanvasProps> = ({
   const GRID_SIZE = 32; // размер одной клетки в пикселях
   const SPAWN_SIZE = GRID_SIZE; // точка спавна = 1 квадратик
   
+  // Инициализация тумана при монтировании компонента
+  useEffect(() => {
+    console.log('🌫️ FogOfWarCanvas mounted, isInitialized:', isInitialized);
+    console.log('🌫️ fogGrid:', fogGrid.length, 'gridWidth:', gridWidth, 'gridHeight:', gridHeight);
+    
+    if (!isInitialized) {
+      console.log('🌫️ Инициализируем туман войны, mapWidth:', mapWidth, 'mapHeight:', mapHeight);
+      initializeFog(mapWidth, mapHeight, 32);
+    }
+  }, []);
+
   // Инициализация тумана при первой загрузке
   useEffect(() => {
-    if (!isInitialized) {
+    console.log('🌫️ FogOfWarCanvas effect - isInitialized:', isInitialized, 'fogGrid length:', fogGrid.length);
+    if (!isInitialized && mapWidth > 0 && mapHeight > 0) {
+      console.log('🌫️ Инициализируем туман войны с размерами:', mapWidth, 'x', mapHeight);
       initializeFog(mapWidth, mapHeight, 32);
     }
   }, [isInitialized, mapWidth, mapHeight, initializeFog]);
@@ -73,7 +86,13 @@ export const FogOfWarCanvas: React.FC<FogOfWarCanvasProps> = ({
   // Отрисовка тумана
   const drawFog = useCallback(() => {
     const canvas = canvasRef.current;
-    if (!canvas || !fogGrid.length) return;
+    if (!canvas || !fogGrid.length) {
+      console.log('🌫️ drawFog: canvas или fogGrid отсутствуют, canvas:', !!canvas, 'fogGrid length:', fogGrid.length);
+      return;
+    }
+    
+    console.log('🌫️ Отрисовываем туман, grid:', gridWidth, 'x', gridHeight, 'cells with fog:', 
+      fogGrid.flat().filter(cell => cell === 0).length, 'revealed:', fogGrid.flat().filter(cell => cell === 1).length);
     
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
@@ -85,9 +104,10 @@ export const FogOfWarCanvas: React.FC<FogOfWarCanvasProps> = ({
     // Очищаем канвас
     ctx.clearRect(0, 0, mapWidth, mapHeight);
     
-    // Рисуем туман
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
+    // Рисуем туман (темные области для неизведанных клеток)
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.9)'; // Более темный туман для лучшей видимости
     
+    let foggyCells = 0;
     for (let y = 0; y < gridHeight; y++) {
       for (let x = 0; x < gridWidth; x++) {
         if (fogGrid[y][x] === 0) { // Закрыто туманом
@@ -95,9 +115,12 @@ export const FogOfWarCanvas: React.FC<FogOfWarCanvasProps> = ({
           const worldY = y * cellSize;
           
           ctx.fillRect(worldX, worldY, cellSize, cellSize);
+          foggyCells++;
         }
       }
     }
+    
+    console.log('🌫️ Нарисовано', foggyCells, 'туманных клеток');
     
     // Рисуем точки спавна для ДМ
     if (isDM) {
