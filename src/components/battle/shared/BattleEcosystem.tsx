@@ -80,9 +80,9 @@ export const BattleEcosystem: React.FC<BattleEcosystemProps> = ({
     <mesh receiveShadow rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.1, 0]}>
       <planeGeometry args={[24, 16]} />
       <meshStandardMaterial 
-        color="#4a5568" 
+        color="#2d3748" 
         transparent 
-        opacity={0.9}
+        opacity={1.0}
       />
     </mesh>
   );
@@ -117,13 +117,16 @@ export const BattleEcosystem: React.FC<BattleEcosystemProps> = ({
         
         canvas.addEventListener('webglcontextrestored', () => {
           console.log('✅ WebGL контекст восстановлен, перезапускаем Canvas');
-          // Принудительно перезапускаем весь Canvas
+          // Принудительно перезапускаем весь Canvas через небольшую задержку
           setTimeout(() => {
             setCanvasKey(prev => prev + 1);
-            // Восстанавливаем режим взаимодействия
-            interactionManager.setMode(InteractionMode.TOKENS);
-            interactionManager.setActive(true);
-            console.log('🔄 All interaction systems restored after context recovery');
+            
+            // Восстанавливаем все системы
+            setTimeout(() => {
+              interactionManager.setMode(InteractionMode.TOKENS);
+              interactionManager.setActive(true);
+              console.log('🔄 All interaction systems restored after context recovery');
+            }, 200);
           }, 100);
         });
         
@@ -131,6 +134,10 @@ export const BattleEcosystem: React.FC<BattleEcosystemProps> = ({
         camera.position.set(0, 20, 0);
         camera.lookAt(0, 0, 0);
         camera.updateProjectionMatrix();
+        
+        // Принудительно обновляем renderer
+        gl.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        gl.setSize(window.innerWidth, window.innerHeight);
         
         // Инициализируем режим взаимодействия
         interactionManager.setMode(InteractionMode.TOKENS);
@@ -162,8 +169,17 @@ export const BattleEcosystem: React.FC<BattleEcosystemProps> = ({
       )}
 
       {/* Сетка поля */}
-      {settings.showGridNumbers && (
-        <gridHelper args={[24, 24, "hsl(var(--primary))", "hsl(var(--muted))"]} />
+      <gridHelper 
+        args={[24, 24, "#22c55e", "#64748b"]} 
+        position={[0, 0, 0]}
+      />
+      
+      {/* Дополнительная сетка с номерами для ДМ */}
+      {settings.showGridNumbers && isDM && (
+        <gridHelper 
+          args={[24, 24, "#3b82f6", "#475569"]} 
+          position={[0, 0.01, 0]}
+        />
       )}
 
       {/* Токены */}
