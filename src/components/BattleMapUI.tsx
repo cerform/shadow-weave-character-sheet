@@ -451,13 +451,13 @@ export default function BattleMapUI() {
         </div>
 
         {/* Center: Map & Action Bar */}
-        <div className="relative bg-neutral-900">
-          <div className="flex-1 flex items-center justify-center bg-neutral-900">
+        <div className="flex-1 relative bg-neutral-900">
+          <div className="absolute inset-0">
             <Battle3DScene sessionId={sessionId} className="w-full h-full" />
           </div>
 
           {/* Bottom: Action Bar */}
-          <div className="absolute bottom-0 left-0 right-0 p-3">
+          <div className="absolute bottom-0 left-0 right-0 p-3 z-10">
             <div className="mx-auto max-w-5xl rounded-2xl border border-neutral-800 bg-neutral-900/80 backdrop-blur px-3 py-2 shadow-2xl">
               <div className="flex items-center gap-2 justify-center flex-wrap">
                 <button className="px-3 py-2 rounded-md border border-neutral-700 hover:border-emerald-400 hover:text-emerald-400">Движение</button>
