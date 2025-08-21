@@ -1,17 +1,15 @@
 import React, { Suspense, useMemo, useRef, useEffect, useState } from "react";
 import { Canvas, useLoader, useThree } from "@react-three/fiber";
-import { OrbitControls, Text } from "@react-three/drei";
 import * as THREE from "three";
 import { useBattleUIStore } from "@/stores/battleUIStore";
 import BattleToken3D from "./BattleToken3D";
 import { useEnhancedBattleStore } from "@/stores/enhancedBattleStore";
 import { EnhancedBattleToken3D } from "../enhanced/EnhancedBattleToken3D";
 import { MovementIndicator } from "../enhanced/MovementIndicator";
-import { useBattle3DControls } from "@/hooks/useBattle3DControls";
-import { useBattle3DControlStore } from "@/stores/battle3DControlStore";
 import { Button } from "@/components/ui/button";
 import { Upload, X } from "lucide-react";
-import { WorkingFogSystem } from './WorkingFogSystem';
+import { FogInteractionSystem } from '../fog/FogInteractionSystem';
+import { CameraControlSystem } from '../camera/CameraControlSystem';
 import { SimpleBattleUI } from './SimpleBattleUI';
 
 interface BattleMap3DProps {
@@ -20,8 +18,6 @@ interface BattleMap3DProps {
   paintMode?: 'reveal' | 'hide';
   brushSize?: number;
 }
-
-// Удаляем старый неработающий компонент ModernFog
 
 export default function BattleMap3D({ 
   sessionId = 'default-session', 
@@ -39,7 +35,6 @@ export default function BattleMap3D({
   } = useEnhancedBattleStore();
   
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const { shouldHandleCameraControls } = useBattle3DControlStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   // Состояние для современного UI
@@ -50,12 +45,6 @@ export default function BattleMap3D({
   const isActiveTokenDragging = enhancedTokens.some(token => 
     token.id === enhancedActiveId && showMovementGrid
   );
-
-  // Инициализируем систему управления
-  useBattle3DControls({ 
-    canvasElement: canvasRef.current || undefined, 
-    isDM: true 
-  });
 
   const lighting = useMemo(() => ({
     ambient: { intensity: 0.6 },
@@ -152,136 +141,67 @@ export default function BattleMap3D({
       {/* 3D Canvas */}
       <div className="absolute inset-0 z-0">
         <Canvas
-        ref={canvasRef}
-        shadows 
-        camera={{ position: [0, 25, 0], fov: 45, up: [0, 0, -1] }}
-        gl={{ antialias: true }}
-        onCreated={({ gl }) => {
-          // Устанавливаем ссылку на канвас для системы управления
-          canvasRef.current = gl.domElement;
-          
-          // Отладка событий мыши на канвасе
-          const canvas = gl.domElement;
-          
-          console.log('🖥️ Canvas created, adding mouse debug listeners');
-          
-          const debugMouseDown = (e: MouseEvent) => {
-            console.log('🖱️ Canvas mousedown:', {
-              button: e.button,
-              clientX: e.clientX,
-              clientY: e.clientY,
-              target: (e.target as HTMLElement)?.tagName,
-              timestamp: Date.now()
-            });
-          };
-          
-          const debugMouseMove = (e: MouseEvent) => {
-            console.log('🖱️ Canvas mousemove:', {
-              clientX: e.clientX,
-              clientY: e.clientY,
-              buttons: e.buttons,
-              timestamp: Date.now()
-            });
-          };
-          
-          const debugMouseUp = (e: MouseEvent) => {
-            console.log('🖱️ Canvas mouseup:', {
-              button: e.button,
-              clientX: e.clientX,
-              clientY: e.clientY,
-              timestamp: Date.now()
-            });
-          };
-          
-          const debugClick = (e: MouseEvent) => {
-            console.log('🖱️ Canvas click:', {
-              button: e.button,
-              clientX: e.clientX,
-              clientY: e.clientY,
-              timestamp: Date.now()
-            });
-          };
-          
-          const debugPointerDown = (e: PointerEvent) => {
-            console.log('👆 Canvas pointerdown:', {
-              pointerId: e.pointerId,
-              pointerType: e.pointerType,
-              clientX: e.clientX,
-              clientY: e.clientY,
-              timestamp: Date.now()
-            });
-          };
-          
-          canvas.addEventListener('mousedown', debugMouseDown);
-          canvas.addEventListener('mousemove', debugMouseMove);
-          canvas.addEventListener('mouseup', debugMouseUp);
-          canvas.addEventListener('click', debugClick);
-          canvas.addEventListener('pointerdown', debugPointerDown);
-          
-          // Очистка обработчиков при размонтировании
-          return () => {
-            canvas.removeEventListener('mousedown', debugMouseDown);
-            canvas.removeEventListener('mousemove', debugMouseMove);
-            canvas.removeEventListener('mouseup', debugMouseUp);
-            canvas.removeEventListener('click', debugClick);
-            canvas.removeEventListener('pointerdown', debugPointerDown);
-          };
-        }}
-      >
-        {/* Освещение */}
-        <ambientLight intensity={lighting.ambient.intensity} />
-        <directionalLight 
-          castShadow 
-          position={[10, 15, 5]} 
-          intensity={lighting.directional.intensity}
-          shadow-mapSize={[2048, 2048]}
-          shadow-camera-far={50}
-          shadow-camera-left={-20}
-          shadow-camera-right={20}
-          shadow-camera-top={20}
-          shadow-camera-bottom={-20}
-        />
-
-        {/* Основание карты с текстурой */}
-        {mapImageUrl ? (
-          <React.Suspense fallback={<MapPlaneDefault />}>
-            <MapPlaneWithTexture imageUrl={mapImageUrl} />
-          </React.Suspense>
-        ) : (
-          <MapPlaneDefault />
-        )}
-
-        {/* Сетка поля */}
-        <gridHelper args={[24, 24, "hsl(var(--primary))", "hsl(var(--muted))"]} />
-
-        {/* Токены с улучшенной механикой движения */}
-        {enhancedTokens.map((token) => (
-          <EnhancedBattleToken3D key={token.id} token={token} />
-        ))}
-
-        {/* Индикатор доступных клеток для движения */}
-        {enhancedActiveId && (
-          <MovementIndicator 
-            tokenId={enhancedActiveId} 
-            visible={showMovementGrid}
+          ref={canvasRef}
+          shadows 
+          camera={{ position: [0, 25, 0], fov: 45, up: [0, 0, -1] }}
+          gl={{ antialias: true }}
+          onCreated={({ gl, camera }) => {
+            // Устанавливаем фиксированную позицию камеры
+            camera.position.set(0, 20, 0);
+            camera.lookAt(0, 0, 0);
+            camera.updateProjectionMatrix();
+            
+            // Устанавливаем ссылку на канвас
+            canvasRef.current = gl.domElement;
+          }}
+        >
+          {/* Освещение */}
+          <ambientLight intensity={lighting.ambient.intensity} />
+          <directionalLight 
+            castShadow 
+            position={[10, 15, 5]} 
+            intensity={lighting.directional.intensity}
+            shadow-mapSize={[2048, 2048]}
+            shadow-camera-far={50}
+            shadow-camera-left={-20}
+            shadow-camera-right={20}
+            shadow-camera-top={20}
+            shadow-camera-bottom={-20}
           />
-        )}
 
-        {/* Рабочая система тумана */}
-        <WorkingFogSystem paintMode={uiPaintMode} brushSize={uiBrushSize} />
+          {/* Основание карты с текстурой */}
+          {mapImageUrl ? (
+            <React.Suspense fallback={<MapPlaneDefault />}>
+              <MapPlaneWithTexture imageUrl={mapImageUrl} />
+            </React.Suspense>
+          ) : (
+            <MapPlaneDefault />
+          )}
 
-        {/* Контроллы камеры - работают только в режиме камеры */}
-        <OrbitControls 
-          enableDamping 
-          dampingFactor={0.1}
-          maxPolarAngle={Math.PI / 2.2}
-          minDistance={8}
-          maxDistance={40}
-          enabled={shouldHandleCameraControls() && !isActiveTokenDragging}
-          enableRotate={shouldHandleCameraControls()}
-          enableZoom={shouldHandleCameraControls()}
-          enablePan={shouldHandleCameraControls()}
-        />
+          {/* Сетка поля */}
+          <gridHelper args={[24, 24, "hsl(var(--primary))", "hsl(var(--muted))"]} />
+
+          {/* Токены с улучшенной механикой движения */}
+          {enhancedTokens.map((token) => (
+            <EnhancedBattleToken3D key={token.id} token={token} />
+          ))}
+
+          {/* Индикатор доступных клеток для движения */}
+          {enhancedActiveId && (
+            <MovementIndicator 
+              tokenId={enhancedActiveId} 
+              visible={showMovementGrid}
+            />
+          )}
+
+          {/* Система управления камерой */}
+          <CameraControlSystem />
+          
+          {/* Система взаимодействия с туманом */}
+          <FogInteractionSystem 
+            paintMode={uiPaintMode}
+            brushSize={uiBrushSize}
+          />
         </Canvas>
       </div>
     </div>
