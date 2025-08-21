@@ -1,5 +1,5 @@
 // Компонент для отрисовки тумана войны
-import React, { useEffect, useRef, useCallback } from 'react';
+import React, { useEffect, useRef, useCallback, useState } from 'react';
 import { useFogOfWarStore } from '@/stores/fogOfWarStore';
 import { useUnifiedBattleStore } from '@/stores/unifiedBattleStore';
 
