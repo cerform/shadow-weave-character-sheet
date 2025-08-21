@@ -6,13 +6,20 @@ import * as THREE from 'three';
 import { interactionManager, InteractionMode } from '@/systems/interaction/InteractionModeManager';
 
 export const CameraControlSystem: React.FC = () => {
+  console.log('🎮 CameraControlSystem: Component initializing...');
   const { camera, gl } = useThree(); 
   const orbitControlsRef = useRef<any>(null);
+  console.log('🎮 CameraControlSystem: useThree hook called, camera:', camera, 'gl:', gl);
 
   // Подробное отслеживание всех событий мыши на canvas
   useEffect(() => {
+    console.log('🎮 CameraControlSystem: useEffect для событий мыши запускается...');
     const canvas = gl.domElement;
-    console.log('🖱️ Attaching event listeners to canvas:', canvas, 'ClassList:', canvas.className);
+    console.log('🖱️ Canvas получен:', canvas);
+    console.log('🖱️ Canvas className:', canvas.className);
+    console.log('🖱️ Canvas parent:', canvas.parentElement);
+    console.log('🖱️ Canvas style:', canvas.style.cssText);
+    console.log('🖱️ Canvas rect:', canvas.getBoundingClientRect());
     
     const handleMouseDown = (e: MouseEvent) => {
       const buttonNames = ['Left', 'Middle', 'Right', 'Back', 'Forward'];
@@ -127,15 +134,22 @@ export const CameraControlSystem: React.FC = () => {
     };
 
     // Добавляем все слушатели БЕЗ capture для правильной обработки
-    canvas.addEventListener('mousedown', handleMouseDown, { passive: false });
-    canvas.addEventListener('mouseup', handleMouseUp, { passive: false });
-    canvas.addEventListener('mousemove', handleMouseMove, { passive: false });
-    canvas.addEventListener('wheel', handleWheel, { passive: false });
-    canvas.addEventListener('contextmenu', handleContextMenu, { passive: false });
-    canvas.addEventListener('pointerdown', handlePointerDown, { passive: false });
-    canvas.addEventListener('pointermove', handlePointerMove, { passive: false });
+    console.log('🖱️ Добавляем event listeners...');
+    canvas.addEventListener('mousedown', handleMouseDown);
+    canvas.addEventListener('mouseup', handleMouseUp);
+    canvas.addEventListener('mousemove', handleMouseMove);
+    canvas.addEventListener('wheel', handleWheel);
+    canvas.addEventListener('contextmenu', handleContextMenu);
+    canvas.addEventListener('pointerdown', handlePointerDown);
+    canvas.addEventListener('pointermove', handlePointerMove);
 
     console.log('🖱️ Mouse event listeners attached to canvas:', canvas);
+    console.log('🖱️ Canvas listeners test - triggering manual event...');
+    
+    // Тестируем, работают ли слушатели
+    setTimeout(() => {
+      console.log('🖱️ Canvas после добавления listeners, проверяем наличие событий');
+    }, 1000);
 
     return () => {
       canvas.removeEventListener('mousedown', handleMouseDown);
