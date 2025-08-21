@@ -248,8 +248,19 @@ export const useFogOfWarStore = create<FogOfWarState>()(
       updatePlayerVision: (playerId: string, worldX: number, worldY: number) => {
         const { revealOnMove, playerVisionRadius } = get();
         
+        console.log('🌫️ updatePlayerVision вызвана:', {
+          playerId,
+          worldX,
+          worldY,
+          revealOnMove,
+          playerVisionRadius
+        });
+        
         if (revealOnMove) {
+          console.log('🌫️ Раскрываем туман в радиусе', playerVisionRadius, 'вокруг позиции', worldX, worldY);
           get().revealArea(worldX, worldY, playerVisionRadius);
+        } else {
+          console.log('🌫️ revealOnMove выключено, туман не обновляется');
         }
       }
     }),
