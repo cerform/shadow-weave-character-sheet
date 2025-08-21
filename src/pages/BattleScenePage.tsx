@@ -1,4 +1,4 @@
-import { BattleMap3D } from "@/components/battle/ui";
+import { BattleMap3D } from "@/features/BattleMap/BattleMap3D";
 import { DiceRollModal } from "@/components/dice/DiceRollModal";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
