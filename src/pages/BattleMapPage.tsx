@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Maximize2, Minimize2 } from 'lucide-react';
+import UnifiedBattlePage from '@/pages/UnifiedBattlePage';
 
 const BattleMapPage: React.FC = () => {
   const { sessionId } = useParams<{ sessionId: string }>();
@@ -27,7 +28,7 @@ const BattleMapPage: React.FC = () => {
 
   const handleBack = () => {
     if (sessionId) {
-      navigate(`/battle/${sessionId}`);
+      navigate(`/dm-session/${sessionId}`);
     } else {
       navigate('/dm');
     }
@@ -69,17 +70,7 @@ const BattleMapPage: React.FC = () => {
 
       {/* Основная область карты */}
       <div className="flex-1 overflow-hidden">
-        <div className="w-full h-full flex items-center justify-center bg-muted/20">
-          <div className="text-center">
-            <h2 className="text-2xl font-semibold mb-2">Боевая карта</h2>
-            <p className="text-muted-foreground mb-4">
-              {sessionId ? `Сессия: ${sessionId}` : 'Тренировочный режим'}
-            </p>
-            <div className="w-96 h-64 bg-muted/50 border-2 border-dashed border-muted-foreground/25 rounded-lg flex items-center justify-center">
-              <p className="text-muted-foreground">Здесь будет интерактивная карта</p>
-            </div>
-          </div>
-        </div>
+        <UnifiedBattlePage />
       </div>
     </div>
   );

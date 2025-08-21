@@ -6,50 +6,8 @@ import * as THREE from 'three';
 import { interactionManager, InteractionMode } from '@/systems/interaction/InteractionModeManager';
 
 export const CameraControlSystem: React.FC = () => {
-  const { camera, gl } = useThree();
+  const { camera } = useThree();
   const orbitControlsRef = useRef<any>(null);
-
-  // Добавим дополнительное отслеживание событий на canvas
-  useEffect(() => {
-    const canvas = gl.domElement;
-    
-    const handleCanvasMouseDown = (e: MouseEvent) => {
-      console.log('🎮 Canvas MouseDown:', {
-        button: e.button,
-        buttons: e.buttons,
-        target: e.target,
-        orbitsEnabled: orbitControlsRef.current?.enabled
-      });
-    };
-
-    const handleCanvasMouseMove = (e: MouseEvent) => {
-      if (e.buttons > 0) {
-        console.log('🎮 Canvas MouseMove with buttons:', {
-          buttons: e.buttons,
-          movementX: e.movementX,
-          movementY: e.movementY,
-          orbitsEnabled: orbitControlsRef.current?.enabled
-        });
-      }
-    };
-
-    const handleCanvasWheel = (e: WheelEvent) => {
-      console.log('🎮 Canvas Wheel:', {
-        deltaY: e.deltaY,
-        orbitsEnabled: orbitControlsRef.current?.enabled
-      });
-    };
-
-    canvas.addEventListener('mousedown', handleCanvasMouseDown);
-    canvas.addEventListener('mousemove', handleCanvasMouseMove);  
-    canvas.addEventListener('wheel', handleCanvasWheel);
-
-    return () => {
-      canvas.removeEventListener('mousedown', handleCanvasMouseDown);
-      canvas.removeEventListener('mousemove', handleCanvasMouseMove);
-      canvas.removeEventListener('wheel', handleCanvasWheel);
-    };
-  }, [gl.domElement]);
 
   // Устанавливаем фиксированную позицию камеры
   useEffect(() => {
@@ -58,38 +16,11 @@ export const CameraControlSystem: React.FC = () => {
     camera.updateProjectionMatrix();
   }, [camera]);
 
-  // Управляем OrbitControls в зависимости от режима
+  // Управляем OrbitControls
   useEffect(() => {
-    // Временно всегда включаем управление камерой для отладки
     if (orbitControlsRef.current) {
       orbitControlsRef.current.enabled = true;
-      console.log('📷 Camera controls force enabled for debugging');
     }
-
-    /* Отключаем InteractionModeManager временно для отладки
-    const unsubscribe = interactionManager.subscribe((state) => {
-      if (orbitControlsRef.current) {
-        const shouldEnable = state.mode === InteractionMode.CAMERA;
-        orbitControlsRef.current.enabled = shouldEnable;
-        
-        if (shouldEnable) {
-          console.log('📷 Camera controls enabled');
-        } else {
-          console.log('📷 Camera controls disabled');
-        }
-      }
-    });
-
-    // Включаем управление камерой сразу при инициализации
-    if (orbitControlsRef.current) {
-      orbitControlsRef.current.enabled = true;
-      console.log('📷 Camera controls initialized and enabled');
-    }
-
-    return () => {
-      unsubscribe();
-    };
-    */
   }, []);
 
   return (
@@ -113,9 +44,6 @@ export const CameraControlSystem: React.FC = () => {
       }}
       enableDamping={true}
       dampingFactor={0.05}
-      onStart={() => console.log('🎮 OrbitControls: interaction started')}
-      onChange={() => console.log('🎮 OrbitControls: camera moved')}
-      onEnd={() => console.log('🎮 OrbitControls: interaction ended')}
     />
   );
 };
