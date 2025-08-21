@@ -1,32 +1,14 @@
-// Suggested path: /src/components/BattleMapUI.tsx
-// Usage: import BattleMapUI from "../components/BattleMapUI"; and render <BattleMapUI /> in your route/page.
-// Notes:
-// - Single-file prototype of a modern VTT battle map UI (DM tools • Map • Combat Log • Action Bar).
-// - No external UI libs required; pure React + Tailwind. (lucide-react optional, not used here.)
-// - Uses your color prefs: yellow titles, green for Active, red for danger/inactive.
-// - Includes: token drag with grid snap, initiative tracker, dice roller, fog-of-war (SVG mask w/ reveal circles),
-//   DM tools panel, action bar, context menu on token click, simple combat log, minimap.
-// - Everything is mocked in-memory; replace hooks with your real state later.
-
+// Интегрированная боевая карта с реальными данными из проекта
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCombatStateMachine } from '@/hooks/combat/useCombatStateMachine';
+import { useBattleEntitySync } from '@/hooks/useBattleEntitySync';
+import { getBestiaryEntry, getAllBestiaryEntries } from '@/services/BestiaryService';
+import { createBattleEntity, updateBattleEntity, deleteBattleEntity } from '@/services/BattleEntityService';
+import { useUnifiedBattleStore } from '@/stores/unifiedBattleStore';
+import { CombatEntity } from '@/engine/combat/types';
+import { BestiaryEntry } from '@/types/Monster';
 
 type Vec2 = { x: number; y: number };
-
-type TokenType = "PC" | "NPC";
-
-type Token = {
-  id: string;
-  name: string;
-  type: TokenType;
-  hp: number;
-  maxHp: number;
-  ac: number;
-  speed: number; // feet
-  color: string; // tailwind bg-* color class
-  position: Vec2; // pixels inside map space
-  initiative: number;
-  conditions: string[];
-};
 
 type FogCircle = { x: number; y: number; r: number };
 
@@ -45,78 +27,36 @@ function now(): string {
   return d.toLocaleTimeString();
 }
 
-const defaultTokens: Token[] = [
-  {
-    id: uid("pc"),
-    name: "Arannis",
-    type: "PC",
-    hp: 27,
-    maxHp: 27,
-    ac: 15,
-    speed: 30,
-    color: "bg-emerald-500",
-    position: { x: GRID * 3, y: GRID * 5 },
-    initiative: 14,
-    conditions: [],
-  },
-  {
-    id: uid("pc"),
-    name: "Lyra",
-    type: "PC",
-    hp: 22,
-    maxHp: 22,
-    ac: 13,
-    speed: 30,
-    color: "bg-sky-500",
-    position: { x: GRID * 4, y: GRID * 5 },
-    initiative: 18,
-    conditions: ["Blessed"],
-  },
-  {
-    id: uid("npc"),
-    name: "Goblin A",
-    type: "NPC",
-    hp: 7,
-    maxHp: 7,
-    ac: 13,
-    speed: 30,
-    color: "bg-rose-500",
-    position: { x: GRID * 10, y: GRID * 5 },
-    initiative: 12,
-    conditions: [],
-  },
-  {
-    id: uid("npc"),
-    name: "Goblin B",
-    type: "NPC",
-    hp: 7,
-    maxHp: 7,
-    ac: 13,
-    speed: 30,
-    color: "bg-rose-600",
-    position: { x: GRID * 11, y: GRID * 6 },
-    initiative: 9,
-    conditions: [],
-  },
-];
-
 export default function BattleMapUI() {
-  // —— Mode & panels ——
-  const [isDM, setIsDM] = useState(true);
+  const sessionId = 'demo-session'; // TODO: get from props/context
+  
+  // —— Real combat state from hooks ——
+  const { isDM } = useUnifiedBattleStore();
+  const {
+    combatState,
+    entities,
+    startCombat,
+    endTurn,
+    useAction,
+    moveEntity,
+    canEndTurn
+  } = useCombatStateMachine(sessionId);
+  
+  // —— UI state ——
   const [leftOpen, setLeftOpen] = useState(true);
   const [rightOpen, setRightOpen] = useState(true);
-
-  // —— Tokens & selection ——
-  const [tokens, setTokens] = useState<Token[]>(defaultTokens);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-
-  // —— Initiative ——
-  const initOrder = useMemo(
-    () => [...tokens].sort((a, b) => b.initiative - a.initiative),
-    [tokens]
-  );
-  const [turnIndex, setTurnIndex] = useState(0);
-  const activeToken = initOrder[turnIndex % initOrder.length];
+  
+  // —— Available monsters from bestiary ——
+  const [availableMonsters, setAvailableMonsters] = useState<BestiaryEntry[]>([]);
+  const [isLoadingMonsters, setIsLoadingMonsters] = useState(false);
+  
+  // —— Initiative order from real combat state ——
+  const initOrder = useMemo(() => {
+    return [...entities].sort((a, b) => (b.initiative || 0) - (a.initiative || 0));
+  }, [entities]);
+  
+  const activeEntity = entities.find(e => e.id === combatState.activeEntityId);
 
   // —— Dragging ——
   const [dragId, setDragId] = useState<string | null>(null);
@@ -152,72 +92,158 @@ export default function BattleMapUI() {
   // —— Map refs ——
   const mapRef = useRef<HTMLDivElement | null>(null);
 
+  // —— Load monsters from bestiary ——
+  useEffect(() => {  
+    const loadMonsters = async () => {
+      setIsLoadingMonsters(true);
+      try {
+        const monsters = await getAllBestiaryEntries();
+        setAvailableMonsters(monsters);
+      } catch (error) {
+        console.error('Failed to load monsters:', error);
+      } finally {
+        setIsLoadingMonsters(false);
+      }
+    };
+    
+    loadMonsters();
+  }, []);
+
   // —— Helpers ——
   const snap = (v: number) => Math.round(v / GRID) * GRID;
 
-  const updateToken = (id: string, patch: Partial<Token>) => {
-    setTokens((prev) => prev.map((t) => (t.id === id ? { ...t, ...patch } : t)));
+  const addMonsterToField = async (monsterSlug: string) => {
+    if (!isDM) return;
+    
+    try {
+      const monster = availableMonsters.find(m => m.slug === monsterSlug);
+      if (!monster) return;
+      
+      const position = {
+        x: snap(MAP_W / 2) / GRID, // Convert to grid coordinates
+        y: snap(MAP_H / 2) / GRID,
+        z: 0
+      };
+      
+      // Create battle entity from bestiary entry
+      const battleEntity = {
+        session_id: sessionId,
+        slug: monster.slug,
+        name: monster.name,
+        model_url: '',
+        pos_x: position.x,
+        pos_y: position.y,
+        pos_z: position.z,
+        rot_y: 0,
+        scale: 1.0,
+        hp_current: monster.hp_average,
+        hp_max: monster.hp_average,
+        ac: monster.ac,
+        speed: monster.speed_walk || 30,
+        size: monster.size,
+        level_or_cr: monster.cr_or_level,
+        creature_type: monster.creature_type,
+        statuses: [],
+        is_player_character: false,
+        created_by: 'system' // This should be the user's ID in real implementation
+      };
+      
+      const entity = await createBattleEntity(battleEntity);
+      setLog((l) => [{ id: uid("log"), ts: now(), text: `DM spawned ${entity.name}` }, ...l]);
+    } catch (error) {
+      console.error('Failed to add monster:', error);
+    }
   };
 
-  const addNPC = () => {
-    const id = uid("npc");
-    const t: Token = {
-      id,
-      name: `Goblin ${id.slice(-3)}`,
-      type: "NPC",
-      hp: 7,
-      maxHp: 7,
-      ac: 13,
-      speed: 30,
-      color: "bg-rose-500",
-      position: { x: snap(MAP_W / 2), y: snap(MAP_H / 2) },
-      initiative: Math.floor(Math.random() * 20) + 1,
-      conditions: [],
-    };
-    setTokens((prev) => [...prev, t]);
-    setLog((l) => [{ id: uid("log"), ts: now(), text: `DM added ${t.name}` }, ...l]);
+  const removeEntity = async (id: string) => {
+    if (!isDM) return;
+    
+    try {
+      await deleteBattleEntity(id);
+      const entity = entities.find(e => e.id === id);
+      if (entity) {
+        setLog((l) => [{ id: uid("log"), ts: now(), text: `Removed ${entity.name}` }, ...l]);
+      }
+      if (selectedId === id) setSelectedId(null);
+    } catch (error) {
+      console.error('Failed to remove entity:', error);
+    }
   };
 
-  const removeToken = (id: string) => {
-    const tok = tokens.find((t) => t.id === id);
-    setTokens((prev) => prev.filter((t) => t.id !== id));
-    if (tok) setLog((l) => [{ id: uid("log"), ts: now(), text: `Removed ${tok.name}` }, ...l]);
-    if (selectedId === id) setSelectedId(null);
+  const damageEntity = async (id: string, dmg: number) => {
+    try {
+      const entity = entities.find(e => e.id === id);
+      if (!entity) return;
+      
+      const newHp = Math.max(0, entity.hp.current - dmg);
+      // TODO: Update через combat state machine вместо прямого обновления БД
+      // await updateBattleEntity(id, { hp_current: newHp });
+      
+      setLog((l) => [{ 
+        id: uid("log"), 
+        ts: now(), 
+        text: `${entity.name} takes ${dmg} dmg (${newHp}/${entity.hp.max})` 
+      }, ...l]);
+    } catch (error) {
+      console.error('Failed to damage entity:', error);
+    }
   };
 
-  const damageToken = (id: string, dmg: number) => {
-    const tok = tokens.find((t) => t.id === id);
-    if (!tok) return;
-    const hp = Math.max(0, tok.hp - dmg);
-    updateToken(id, { hp });
-    setLog((l) => [{ id: uid("log"), ts: now(), text: `${tok.name} takes ${dmg} dmg (${hp}/${tok.maxHp})` }, ...l]);
-  };
-
-  const healToken = (id: string, amt: number) => {
-    const tok = tokens.find((t) => t.id === id);
-    if (!tok) return;
-    const hp = Math.min(tok.maxHp, tok.hp + amt);
-    updateToken(id, { hp });
-    setLog((l) => [{ id: uid("log"), ts: now(), text: `${tok.name} heals ${amt} (${hp}/${tok.maxHp})` }, ...l]);
+  const healEntity = async (id: string, amt: number) => {
+    try {
+      const entity = entities.find(e => e.id === id);
+      if (!entity) return;
+      
+      const newHp = Math.min(entity.hp.max, entity.hp.current + amt);  
+      // TODO: Update через combat state machine вместо прямого обновления БД
+      // await updateBattleEntity(id, { hp_current: newHp });
+      
+      setLog((l) => [{ 
+        id: uid("log"), 
+        ts: now(), 
+        text: `${entity.name} heals ${amt} (${newHp}/${entity.hp.max})` 
+      }, ...l]);
+    } catch (error) {
+      console.error('Failed to heal entity:', error);
+    }
   };
 
   const nextTurn = () => {
-    setTurnIndex((i) => (i + 1) % initOrder.length);
+    if (activeEntity && canEndTurn()) {
+      endTurn(activeEntity.id);
+    }
   };
 
-  // —— Drag logic ——
+  // —— Drag logic for entity positions ——
   useEffect(() => {
-    const onMove = (e: MouseEvent) => {
-      if (!dragId) return;
+    const onMove = async (e: MouseEvent) => {
+      if (!dragId || !isDM) return;
       const map = mapRef.current;
       if (!map) return;
+      
       const rect = map.getBoundingClientRect();
       const x = e.clientX - rect.left - dragOffset.current.x;
       const y = e.clientY - rect.top - dragOffset.current.y;
       const clampedX = Math.max(0, Math.min(MAP_W - GRID, x));
       const clampedY = Math.max(0, Math.min(MAP_H - GRID, y));
-      updateToken(dragId, { position: { x: snap(clampedX), y: snap(clampedY) } });
+      
+      // Convert pixel coordinates to grid coordinates
+      const gridX = snap(clampedX) / GRID;
+      const gridY = snap(clampedY) / GRID;
+      
+      const entity = entities.find(e => e.id === dragId);
+      if (!entity) return;
+      
+      const from = entity.position;
+      const to = { x: gridX, y: gridY, z: 0 };
+      
+      try {
+        await moveEntity(dragId, from, to);
+      } catch (error) {
+        console.error('Failed to move entity:', error);
+      }
     };
+    
     const onUp = () => setDragId(null);
     window.addEventListener("mousemove", onMove);
     window.addEventListener("mouseup", onUp);
@@ -225,7 +251,7 @@ export default function BattleMapUI() {
       window.removeEventListener("mousemove", onMove);
       window.removeEventListener("mouseup", onUp);
     };
-  }, [dragId]);
+  }, [dragId, isDM, moveEntity]);
 
   // —— Map interactions (DM fog drawing) ——
   const onMapClick = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -240,21 +266,25 @@ export default function BattleMapUI() {
   // —— Derived: auto-reveals around PCs ——
   const autoHoles: FogCircle[] = useMemo(() => {
     if (!autoRevealAllies) return [];
-    return tokens
-      .filter((t) => t.type === "PC")
-      .map((t) => ({ x: t.position.x + GRID / 2, y: t.position.y + GRID / 2, r: fogRadius }));
-  }, [tokens, autoRevealAllies, fogRadius]);
+    return entities
+      .filter((e) => e.isPlayer)
+      .map((e) => ({ 
+        x: e.position.x * GRID + GRID / 2, 
+        y: e.position.y * GRID + GRID / 2, 
+        r: fogRadius 
+      }));
+  }, [entities, autoRevealAllies, fogRadius]);
 
   // —— Keyboard shortcuts ——
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key.toLowerCase() === "r") roll(20);
       if (e.key.toLowerCase() === "e") nextTurn();
-      if (e.key.toLowerCase() === "m") setSelectedId(activeToken?.id ?? null);
+      if (e.key.toLowerCase() === "m") setSelectedId(activeEntity?.id ?? null);
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [roll, activeToken]);
+  }, [roll, activeEntity]);
 
   // —— Render helpers ——
   const Title = ({ children }: { children: React.ReactNode }) => (
@@ -282,17 +312,14 @@ export default function BattleMapUI() {
           <div className="hidden sm:flex items-center gap-2 text-xs">
             <StatBadge label="Grid" value={`${GRID}px`} />
             <StatBadge label="Map" value={`${MAP_W}×${MAP_H}`} />
-            {activeToken && <StatBadge label="Active" value={activeToken.name} color="bg-emerald-700" />}
+            <StatBadge label="Round" value={combatState.round} />
+            {activeEntity && <StatBadge label="Active" value={activeEntity.name} color="bg-emerald-700" />}
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <button
-            className={`px-3 py-1 rounded-md border text-xs ${isDM ? "border-emerald-400 text-emerald-400" : "border-neutral-700 text-neutral-300"}`}
-            onClick={() => setIsDM((v) => !v)}
-            title="Toggle DM/Player"
-          >
+          <div className={`px-3 py-1 rounded-md border text-xs ${isDM ? "border-emerald-400 text-emerald-400" : "border-neutral-700 text-neutral-300"}`}>
             {isDM ? "DM Mode" : "Player Mode"}
-          </button>
+          </div>
           <button className="px-3 py-1 rounded-md border border-neutral-700 text-xs" onClick={() => setLeftOpen((v) => !v)}>
             {leftOpen ? "Hide Tools" : "Show Tools"}
           </button>
@@ -348,8 +375,23 @@ export default function BattleMapUI() {
             </div>
 
             <div className="space-y-2">
-              <Title>Spawner</Title>
-              <button className="px-3 py-2 rounded-md border border-neutral-700 text-sm hover:border-emerald-400 hover:text-emerald-400" onClick={addNPC}>Add Goblin</button>
+              <Title>Monster Spawner</Title>
+              {isLoadingMonsters ? (
+                <div className="text-xs opacity-70">Loading monsters...</div>
+              ) : (
+                <div className="max-h-48 overflow-y-auto space-y-1">
+                  {availableMonsters.slice(0, 10).map((monster) => (
+                    <button
+                      key={monster.slug}
+                      className="w-full text-left px-2 py-1.5 rounded-md border border-neutral-700 text-xs hover:border-emerald-400 hover:text-emerald-400"
+                      onClick={() => addMonsterToField(monster.slug)}
+                    >
+                      <div className="font-medium">{monster.name}</div>
+                      <div className="opacity-70">CR {monster.cr_or_level} • AC {monster.ac} • HP {monster.hp_average}</div>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -385,30 +427,42 @@ export default function BattleMapUI() {
                   ))}
                 </svg>
 
-                {/* Tokens */}
-                {tokens.map((t) => (
-                  <div
-                    key={t.id}
-                    style={{ left: t.position.x, top: t.position.y, width: GRID, height: GRID }}
-                    className={`absolute rounded-lg cursor-grab active:cursor-grabbing border ${selectedId === t.id ? "border-yellow-400" : "border-neutral-700"}`}
-                    onMouseDown={(e) => {
-                      if (!mapRef.current) return;
-                      const rect = mapRef.current.getBoundingClientRect();
-                      dragOffset.current = { x: e.clientX - rect.left - t.position.x, y: e.clientY - rect.top - t.position.y };
-                      setDragId(t.id);
-                      setSelectedId(t.id);
-                    }}
-                    onDoubleClick={() => setSelectedId(t.id)}
-                    title={`${t.name} (${t.hp}/${t.maxHp})`}
-                  >
-                    {/* Token body */}
-                    <div className={`w-full h-full ${t.color} bg-opacity-90 flex items-center justify-center text-xs font-semibold text-white select-none`}>{t.name}</div>
-                    {/* HP bar */}
-                    <div className="absolute -bottom-1 left-0 right-0 h-2 bg-neutral-900/70 rounded-b-lg overflow-hidden">
-                      <div className="h-full bg-emerald-500" style={{ width: `${(t.hp / t.maxHp) * 100}%` }} />
+                {/* Battle Entities */}
+                {entities.map((entity) => {
+                  const pixelX = entity.position.x * GRID;
+                  const pixelY = entity.position.y * GRID;
+                  const color = entity.isPlayer ? "bg-emerald-500" : "bg-rose-500";
+                  
+                  return (
+                    <div
+                      key={entity.id}
+                      style={{ left: pixelX, top: pixelY, width: GRID, height: GRID }}
+                      className={`absolute rounded-lg cursor-grab active:cursor-grabbing border ${selectedId === entity.id ? "border-yellow-400" : "border-neutral-700"}`}
+                      onMouseDown={(e) => {
+                        if (!mapRef.current || !isDM) return;
+                        const rect = mapRef.current.getBoundingClientRect();
+                        dragOffset.current = { x: e.clientX - rect.left - pixelX, y: e.clientY - rect.top - pixelY };
+                        setDragId(entity.id);
+                        setSelectedId(entity.id);
+                      }}
+                      onDoubleClick={() => setSelectedId(entity.id)}
+                      title={`${entity.name} (${entity.hp.current}/${entity.hp.max})`}
+                    >
+                      {/* Entity body */}
+                      <div className={`w-full h-full ${color} bg-opacity-90 flex items-center justify-center text-xs font-semibold text-white select-none overflow-hidden`}>
+                        {entity.name.slice(0, 8)}
+                      </div>
+                      {/* HP bar */}
+                      <div className="absolute -bottom-1 left-0 right-0 h-2 bg-neutral-900/70 rounded-b-lg overflow-hidden">
+                        <div className="h-full bg-emerald-500" style={{ width: `${(entity.hp.current / entity.hp.max) * 100}%` }} />
+                      </div>
+                      {/* Active indicator */}
+                      {entity.id === combatState.activeEntityId && (
+                        <div className="absolute -top-1 -left-1 w-2 h-2 bg-yellow-400 rounded-full animate-pulse" />
+                      )}
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
 
                 {/* Fog of war (SVG mask with holes) */}
                 {fogEnabled && (
@@ -429,49 +483,89 @@ export default function BattleMapUI() {
                 <div className="absolute top-3 left-3 w-48 h-28 bg-neutral-900/70 border border-neutral-700 rounded-lg p-1">
                   <div className="text-[10px] text-yellow-400 mb-1">Minimap</div>
                   <div className="relative w-full h-[calc(100%-14px)] bg-neutral-800 rounded">
-                    {tokens.map((t) => (
+                    {entities.map((entity) => (
                       <div
-                        key={`mini_${t.id}`}
-                        className={`absolute w-1.5 h-1.5 ${t.type === "PC" ? "bg-emerald-400" : "bg-rose-400"} rounded-full`}
-                        style={{ left: `${(t.position.x / MAP_W) * 100}%`, top: `${(t.position.y / MAP_H) * 100}%` }}
+                        key={`mini_${entity.id}`}
+                        className={`absolute w-1.5 h-1.5 ${entity.isPlayer ? "bg-emerald-400" : "bg-rose-400"} rounded-full`}
+                        style={{ 
+                          left: `${(entity.position.x * GRID / MAP_W) * 100}%`, 
+                          top: `${(entity.position.y * GRID / MAP_H) * 100}%` 
+                        }}
                       />
                     ))}
                   </div>
                 </div>
 
-                {/* Token context (quick panel) */}
+                {/* Entity context (quick panel) */}
                 {selectedId && (
                   (() => {
-                    const t = tokens.find((x) => x.id === selectedId)!;
-                    const left = Math.min(MAP_W - 260, Math.max(0, t.position.x + GRID + 8));
-                    const top = Math.min(MAP_H - 170, Math.max(0, t.position.y - 8));
+                    const entity = entities.find((e) => e.id === selectedId);
+                    if (!entity) return null;
+                    
+                    const pixelX = entity.position.x * GRID;
+                    const pixelY = entity.position.y * GRID;
+                    const left = Math.min(MAP_W - 260, Math.max(0, pixelX + GRID + 8));
+                    const top = Math.min(MAP_H - 170, Math.max(0, pixelY - 8));
+                    
                     return (
                       <div className="absolute z-10" style={{ left, top }}>
                         <div className="w-64 rounded-xl border border-neutral-700 bg-neutral-900/95 backdrop-blur p-3 space-y-2 shadow-xl">
                           <div className="flex items-center justify-between">
-                            <div className="font-semibold">{t.name}</div>
+                            <div className="font-semibold">{entity.name}</div>
                             <button className="text-neutral-400 hover:text-white" onClick={() => setSelectedId(null)}>✕</button>
                           </div>
                           <div className="flex items-center gap-2">
-                            <StatBadge label="HP" value={`${t.hp}/${t.maxHp}`} color="bg-neutral-800" />
-                            <StatBadge label="AC" value={t.ac} color="bg-neutral-800" />
-                            <StatBadge label="Init" value={t.initiative} color="bg-neutral-800" />
+                            <StatBadge label="HP" value={`${entity.hp.current}/${entity.hp.max}`} color="bg-neutral-800" />
+                            <StatBadge label="AC" value={entity.ac} color="bg-neutral-800" />
+                            <StatBadge label="Speed" value={`${entity.movement.base}ft`} color="bg-neutral-800" />
                           </div>
-                          <div className="flex items-center gap-2 text-sm">
-                            <button className="px-2 py-1 rounded-md border border-neutral-700 hover:border-emerald-400 hover:text-emerald-400" onClick={() => healToken(t.id, Math.ceil(t.maxHp * 0.25))}>Heal 25%</button>
-                            <button className="px-2 py-1 rounded-md border border-neutral-700 hover:border-rose-400 hover:text-rose-400" onClick={() => damageToken(t.id, Math.ceil(t.maxHp * 0.25))}>Damage 25%</button>
-                          </div>
+                          {isDM && (
+                            <div className="flex items-center gap-2 text-sm">
+                              <button 
+                                className="px-2 py-1 rounded-md border border-neutral-700 hover:border-emerald-400 hover:text-emerald-400" 
+                                onClick={() => healEntity(entity.id, Math.ceil(entity.hp.max * 0.25))}
+                              >
+                                Heal 25%
+                              </button>
+                              <button 
+                                className="px-2 py-1 rounded-md border border-neutral-700 hover:border-rose-400 hover:text-rose-400" 
+                                onClick={() => damageEntity(entity.id, Math.ceil(entity.hp.max * 0.25))}
+                              >
+                                Damage 25%
+                              </button>
+                            </div>
+                          )}
                           <div className="flex flex-wrap gap-2">
-                            {(t.conditions.length ? t.conditions : ["No Conditions"]).map((c, i) => (
+                            {(entity.conditions.length ? entity.conditions.map(c => c.key) : ["No Conditions"]).map((c, i) => (
                               <ConditionChip key={i} text={c} />
                             ))}
                           </div>
                           <div className="flex items-center gap-2 text-xs">
-                            <button className="px-2 py-1 rounded-md border border-neutral-700 hover:border-yellow-400 hover:text-yellow-400" onClick={() => setLog((l) => [{ id: uid("log"), ts: now(), text: `${t.name} attacks!` }, ...l])}>Attack</button>
-                            <button className="px-2 py-1 rounded-md border border-neutral-700 hover:border-yellow-400 hover:text-yellow-400" onClick={() => setLog((l) => [{ id: uid("log"), ts: now(), text: `${t.name} casts a spell!` }, ...l])}>Cast</button>
-                            <button className="px-2 py-1 rounded-md border border-neutral-700 hover:border-yellow-400 hover:text-yellow-400" onClick={() => setLog((l) => [{ id: uid("log"), ts: now(), text: `${t.name} uses an item.` }, ...l])}>Use Item</button>
+                            <button 
+                              className="px-2 py-1 rounded-md border border-neutral-700 hover:border-yellow-400 hover:text-yellow-400" 
+                              onClick={() => setLog((l) => [{ id: uid("log"), ts: now(), text: `${entity.name} attacks!` }, ...l])}
+                            >
+                              Attack
+                            </button>
+                            <button 
+                              className="px-2 py-1 rounded-md border border-neutral-700 hover:border-yellow-400 hover:text-yellow-400" 
+                              onClick={() => setLog((l) => [{ id: uid("log"), ts: now(), text: `${entity.name} casts a spell!` }, ...l])}
+                            >
+                              Cast
+                            </button>
+                            <button 
+                              className="px-2 py-1 rounded-md border border-neutral-700 hover:border-yellow-400 hover:text-yellow-400" 
+                              onClick={() => setLog((l) => [{ id: uid("log"), ts: now(), text: `${entity.name} uses an item.` }, ...l])}
+                            >
+                              Use Item
+                            </button>
                             {isDM && (
-                              <button className="ml-auto px-2 py-1 rounded-md border border-neutral-700 hover:border-rose-400 hover:text-rose-400" onClick={() => removeToken(t.id)}>Delete</button>
+                              <button 
+                                className="ml-auto px-2 py-1 rounded-md border border-neutral-700 hover:border-rose-400 hover:text-rose-400" 
+                                onClick={() => removeEntity(entity.id)}
+                              >
+                                Delete
+                              </button>
                             )}
                           </div>
                         </div>
@@ -510,21 +604,32 @@ export default function BattleMapUI() {
           <div className="p-3 space-y-4">
             <Title>Initiative</Title>
             <div className="space-y-2">
-              {initOrder.map((t, idx) => (
-                <div key={t.id} className={`flex items-center justify-between rounded-lg border px-2 py-2 ${idx === (turnIndex % initOrder.length) ? "border-emerald-400 bg-emerald-900/20" : "border-neutral-700 bg-neutral-900/60"}`}>
-                  <div className="flex items-center gap-2">
-                    <div className={`w-2 h-2 rounded-full ${t.type === "PC" ? "bg-emerald-400" : "bg-rose-400"}`} />
-                    <div className="font-medium">{t.name}</div>
+              {initOrder.map((entity, idx) => {
+                const isActive = entity.id === combatState.activeEntityId;
+                return (
+                  <div key={entity.id} className={`flex items-center justify-between rounded-lg border px-2 py-2 ${isActive ? "border-emerald-400 bg-emerald-900/20" : "border-neutral-700 bg-neutral-900/60"}`}>
+                    <div className="flex items-center gap-2">
+                      <div className={`w-2 h-2 rounded-full ${entity.isPlayer ? "bg-emerald-400" : "bg-rose-400"}`} />
+                      <div className="font-medium">{entity.name}</div>
+                    </div>
+                    <div className="flex items-center gap-2 text-xs">
+                      <StatBadge label="Init" value={entity.initiative || 0} />
+                      <StatBadge label="HP" value={`${entity.hp.current}/${entity.hp.max}`} />
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2 text-xs">
-                    <StatBadge label="Init" value={t.initiative} />
-                    <StatBadge label="HP" value={`${t.hp}/${t.maxHp}`} />
-                  </div>
-                </div>
-              ))}
+                );
+              })}
               <div className="flex items-center gap-2">
-                <button className="px-3 py-2 rounded-md border border-neutral-700 hover:border-emerald-400 hover:text-emerald-400" onClick={nextTurn}>Next Turn</button>
-                <div className="text-emerald-400 text-xs">Active: {activeToken?.name ?? "—"}</div>
+                <button 
+                  className="px-3 py-2 rounded-md border border-neutral-700 hover:border-emerald-400 hover:text-emerald-400" 
+                  onClick={nextTurn}
+                  disabled={!isDM || !canEndTurn()}
+                >
+                  {isDM ? 'Next Turn' : 'End Turn'}
+                </button>
+                <div className="text-emerald-400 text-xs">
+                  Active: {activeEntity?.name ?? "—"}
+                </div>
               </div>
             </div>
 
