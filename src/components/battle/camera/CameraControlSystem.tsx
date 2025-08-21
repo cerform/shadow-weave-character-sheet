@@ -6,8 +6,147 @@ import * as THREE from 'three';
 import { interactionManager, InteractionMode } from '@/systems/interaction/InteractionModeManager';
 
 export const CameraControlSystem: React.FC = () => {
-  const { camera } = useThree();
+  const { camera, gl } = useThree(); 
   const orbitControlsRef = useRef<any>(null);
+
+  // Подробное отслеживание всех событий мыши на canvas
+  useEffect(() => {
+    const canvas = gl.domElement;
+    
+    const handleMouseDown = (e: MouseEvent) => {
+      const buttonNames = ['Left', 'Middle', 'Right', 'Back', 'Forward'];
+      console.log('🖱️ MOUSE DOWN:', {
+        button: e.button,
+        buttonName: buttonNames[e.button] || `Unknown(${e.button})`,
+        buttons: e.buttons,
+        clientX: e.clientX,
+        clientY: e.clientY,
+        ctrlKey: e.ctrlKey,
+        shiftKey: e.shiftKey,
+        altKey: e.altKey,
+        target: e.target?.constructor?.name,
+        orbitsEnabled: orbitControlsRef.current?.enabled,
+        timestamp: Date.now()
+      });
+    };
+
+    const handleMouseUp = (e: MouseEvent) => {
+      const buttonNames = ['Left', 'Middle', 'Right', 'Back', 'Forward'];
+      console.log('🖱️ MOUSE UP:', {
+        button: e.button,
+        buttonName: buttonNames[e.button] || `Unknown(${e.button})`,
+        buttons: e.buttons,
+        clientX: e.clientX,
+        clientY: e.clientY,
+        target: e.target?.constructor?.name,
+        orbitsEnabled: orbitControlsRef.current?.enabled,
+        timestamp: Date.now()
+      });
+    };
+
+    const handleMouseMove = (e: MouseEvent) => {
+      if (e.buttons > 0) {
+        const activeButtons = [];
+        if (e.buttons & 1) activeButtons.push('Left');
+        if (e.buttons & 2) activeButtons.push('Right'); 
+        if (e.buttons & 4) activeButtons.push('Middle');
+        if (e.buttons & 8) activeButtons.push('Back');
+        if (e.buttons & 16) activeButtons.push('Forward');
+        
+        console.log('🖱️ MOUSE MOVE (with buttons):', {
+          buttons: e.buttons,
+          activeButtons: activeButtons.join(', '),
+          clientX: e.clientX,
+          clientY: e.clientY,
+          movementX: e.movementX,
+          movementY: e.movementY,
+          orbitsEnabled: orbitControlsRef.current?.enabled,
+          orbitsState: orbitControlsRef.current ? {
+            enablePan: orbitControlsRef.current.enablePan,
+            enableRotate: orbitControlsRef.current.enableRotate,
+            enableZoom: orbitControlsRef.current.enableZoom,
+            mouseButtons: orbitControlsRef.current.mouseButtons
+          } : null
+        });
+      }
+    };
+
+    const handleWheel = (e: WheelEvent) => {
+      console.log('🖱️ WHEEL:', {
+        deltaX: e.deltaX,
+        deltaY: e.deltaY,
+        deltaZ: e.deltaZ,
+        deltaMode: e.deltaMode,
+        clientX: e.clientX,
+        clientY: e.clientY,
+        orbitsEnabled: orbitControlsRef.current?.enabled,
+        timestamp: Date.now()
+      });
+    };
+
+    const handleContextMenu = (e: MouseEvent) => {
+      console.log('🖱️ CONTEXT MENU:', {
+        clientX: e.clientX,
+        clientY: e.clientY,
+        button: e.button,
+        target: e.target?.constructor?.name,
+        prevented: e.defaultPrevented,
+        timestamp: Date.now()
+      });
+    };
+
+    const handlePointerDown = (e: PointerEvent) => {
+      console.log('🖱️ POINTER DOWN:', {
+        pointerId: e.pointerId,
+        pointerType: e.pointerType,
+        button: e.button,
+        buttons: e.buttons,
+        clientX: e.clientX,
+        clientY: e.clientY,
+        pressure: e.pressure,
+        isPrimary: e.isPrimary,
+        timestamp: Date.now()
+      });
+    };
+
+    const handlePointerMove = (e: PointerEvent) => {
+      if (e.buttons > 0) {
+        console.log('🖱️ POINTER MOVE (with buttons):', {
+          pointerId: e.pointerId,
+          pointerType: e.pointerType,
+          buttons: e.buttons,
+          clientX: e.clientX,
+          clientY: e.clientY,
+          movementX: e.movementX,
+          movementY: e.movementY,
+          pressure: e.pressure,
+          timestamp: Date.now()
+        });
+      }
+    };
+
+    // Добавляем все слушатели
+    canvas.addEventListener('mousedown', handleMouseDown, { capture: true });
+    canvas.addEventListener('mouseup', handleMouseUp, { capture: true });
+    canvas.addEventListener('mousemove', handleMouseMove, { capture: true });
+    canvas.addEventListener('wheel', handleWheel, { capture: true });
+    canvas.addEventListener('contextmenu', handleContextMenu, { capture: true });
+    canvas.addEventListener('pointerdown', handlePointerDown, { capture: true });
+    canvas.addEventListener('pointermove', handlePointerMove, { capture: true });
+
+    console.log('🖱️ Mouse event listeners attached to canvas:', canvas);
+
+    return () => {
+      canvas.removeEventListener('mousedown', handleMouseDown, { capture: true });
+      canvas.removeEventListener('mouseup', handleMouseUp, { capture: true });
+      canvas.removeEventListener('mousemove', handleMouseMove, { capture: true });
+      canvas.removeEventListener('wheel', handleWheel, { capture: true });
+      canvas.removeEventListener('contextmenu', handleContextMenu, { capture: true });
+      canvas.removeEventListener('pointerdown', handlePointerDown, { capture: true });
+      canvas.removeEventListener('pointermove', handlePointerMove, { capture: true });
+      console.log('🖱️ Mouse event listeners removed');
+    };
+  }, [gl.domElement]);
 
   // Устанавливаем фиксированную позицию камеры
   useEffect(() => {
@@ -16,10 +155,19 @@ export const CameraControlSystem: React.FC = () => {
     camera.updateProjectionMatrix();
   }, [camera]);
 
-  // Управляем OrbitControls
+  // Управляем OrbitControls с детальным логированием
   useEffect(() => {
     if (orbitControlsRef.current) {
       orbitControlsRef.current.enabled = true;
+      
+      console.log('🎮 OrbitControls configuration:', {
+        enabled: orbitControlsRef.current.enabled,
+        enablePan: orbitControlsRef.current.enablePan,
+        enableRotate: orbitControlsRef.current.enableRotate,
+        enableZoom: orbitControlsRef.current.enableZoom,
+        mouseButtons: orbitControlsRef.current.mouseButtons,
+        touches: orbitControlsRef.current.touches
+      });
     }
   }, []);
 
