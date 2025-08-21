@@ -2,12 +2,13 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useCombatStateMachine } from '@/hooks/combat/useCombatStateMachine';
 import { useBattleEntitySync } from '@/hooks/useBattleEntitySync';
-import { getBestiaryEntry, getAllBestiaryEntries } from '@/services/BestiaryService';
+import { getBestiaryEntry } from '@/services/BestiaryService';
 import { createBattleEntity, updateBattleEntity, deleteBattleEntity } from '@/services/BattleEntityService';
 import { useUnifiedBattleStore } from '@/stores/unifiedBattleStore';
 import { CombatEntity } from '@/engine/combat/types';
 import { supabase } from '@/integrations/supabase/client';
 import { Size } from '@/types/Monster';
+import { useAuth } from '@/hooks/use-auth';
 
 type SRDCreature = {
   id: string;
@@ -46,6 +47,7 @@ function now(): string {
 }
 
 export default function BattleMapUI() {
+  const { user } = useAuth();
   const sessionId = 'demo-session'; // TODO: get from props/context
   
   // —— Real combat state from hooks ——
@@ -168,7 +170,7 @@ export default function BattleMapUI() {
         creature_type: monster.type,
         statuses: [],
         is_player_character: false,
-        created_by: 'demo-user-id' // This should be the user's ID in real implementation
+        created_by: user?.id || 'demo-user-id'
       };
       
       const entity = await createBattleEntity(battleEntity);
