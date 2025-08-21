@@ -28,8 +28,7 @@ import DMSessionPage from '@/pages/DMSessionPage';
 import AdminAssetsPage from '@/pages/AdminAssetsPage';
 import DMMapEditorPage from '@/pages/DMMapEditorPage';
 import PlayerMapPage from '@/pages/PlayerMapPage';
-import BattleScenePage from '@/pages/BattleScenePage';
-import IntegratedBattlePage from '@/pages/IntegratedBattlePage';
+import UnifiedBattlePage from '@/pages/UnifiedBattlePage';
 import { BestiaryPage } from '@/components/bestiary/BestiaryPage';
 import DnD5ePage from '@/pages/DnD5ePage';
 
@@ -152,9 +151,13 @@ const AppRoutes: React.FC = () => {
         </ProtectedDMRoute>
       } />
       
-      {/* Боевые системы */}
-      <Route path="/battle-map-3d" element={<BattleScenePage />} />
-      <Route path="/integrated-battle" element={<IntegratedBattlePage />} />
+      {/* Объединенная боевая система */}
+      <Route path="/unified-battle" element={<UnifiedBattlePage />} />
+      
+      {/* Устаревшие боевые системы (редиректы) */}
+      <Route path="/battle-map-3d" element={<Navigate to="/unified-battle" replace />} />
+      <Route path="/integrated-battle" element={<Navigate to="/unified-battle" replace />} />
+      
       
       {/* Персонажи */}
       <Route path="/character-creation" element={<CharacterCreationPage />} />
@@ -172,11 +175,6 @@ const AppRoutes: React.FC = () => {
           <DMDashboardPageNew />
         </ProtectedDMRoute>
       } />
-      {/* DM маршруты временно отключены - все карты удалены */}
-      
-      {/* Редиректы для старых маршрутов карт */}
-      <Route path="/battle-map-fixed" element={<Navigate to="/dm" replace />} />
-      <Route path="/battle-map-fixed/:id" element={<Navigate to="/dm" replace />} />
       
       <Route path="/dm-session/:sessionId" element={
         <ProtectedDMRoute>
@@ -194,13 +192,6 @@ const AppRoutes: React.FC = () => {
         </ProtectedPlayerRoute>
       } />
 
-      {/* 3D Battle Map */}
-      <Route path="/battle-map-3d" element={<BattleScenePage />} />
-      <Route path="/integrated-battle" element={<IntegratedBattlePage />} />
-      
-      {/* Боевая система D&D 5e только (без 3D карты) */}
-      <Route path="/dnd5e-combat" element={<DnD5ePage />} />
-      
       {/* Админские маршруты */}
       <Route path="/admin" element={
         <ProtectedAdminRoute>
