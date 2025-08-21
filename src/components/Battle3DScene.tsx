@@ -79,9 +79,9 @@ function Scene3D({ sessionId }: { sessionId: string }) {
   const { scene } = useThree();
   const [entities, setEntities] = useState<any[]>([]);
   
-  // Используем хук для синхронизации сущностей с базой данных
+  // Загружаем сущности из базы данных
   useEffect(() => {
-    if (!sessionId || !scene) return;
+    if (!sessionId) return;
 
     const loadEntities = async () => {
       try {
@@ -95,6 +95,7 @@ function Scene3D({ sessionId }: { sessionId: string }) {
           return;
         }
 
+        console.log(`📦 Loaded ${data?.length || 0} battle entities for 3D scene`);
         setEntities(data || []);
       } catch (error) {
         console.error('Failed to load entities:', error);
@@ -103,7 +104,7 @@ function Scene3D({ sessionId }: { sessionId: string }) {
 
     // Подписка на изменения в реальном времени
     const channel = supabase
-      .channel('battle-entities-changes')
+      .channel('battle-entities-3d')
       .on(
         'postgres_changes',
         {
@@ -113,8 +114,8 @@ function Scene3D({ sessionId }: { sessionId: string }) {
           filter: `session_id=eq.${sessionId}`,
         },
         (payload) => {
-          console.log('🔄 Battle entity change:', payload);
-          loadEntities(); // Перезагружаем все сущности при изменении
+          console.log('🔄 3D Scene - Battle entity change:', payload);
+          loadEntities();
         }
       )
       .subscribe();
@@ -124,7 +125,7 @@ function Scene3D({ sessionId }: { sessionId: string }) {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [sessionId, scene]);
+  }, [sessionId]);
 
   return (
     <>
