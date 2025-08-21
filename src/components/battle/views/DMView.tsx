@@ -22,7 +22,8 @@ import {
   Crown,
   Eye,
   Upload,
-  X
+  X,
+  Grid
 } from 'lucide-react';
 
 export const DMView: React.FC = () => {
@@ -43,6 +44,8 @@ export const DMView: React.FC = () => {
     startCombat,
     endCombat,
     addCombatEvent,
+    showMovementGrid,
+    isDM,
     settings,
     updateSettings,
   } = useUnifiedBattleStore();
@@ -50,6 +53,8 @@ export const DMView: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'map' | 'combat' | 'bestiary' | 'settings'>('map');
   const [diceModalOpen, setDiceModalOpen] = useState(false);
   const [combatSystem] = useState(() => new DnD5eCombatSystem());
+  const [showFogBrush, setShowFogBrush] = useState(false);
+  const [localShowMovementGrid, setLocalShowMovementGrid] = useState(showMovementGrid);
   
   // Обработчики файлов для карты
   const [fileInputRef, setFileInputRef] = useState<HTMLInputElement | null>(null);
@@ -167,8 +172,80 @@ export const DMView: React.FC = () => {
       {/* Основной контент */}
       <div className="flex-1 flex">
         <Tabs value={activeTab} onValueChange={(value: any) => setActiveTab(value)} className="w-full flex">
+          {/* Основная область */}
+          <div className="flex-1">
+            <TabsContent value="map" className="w-full h-full m-0 relative">
+              {/* UI карты */}
+              <div className="absolute top-4 left-4 z-10 flex flex-col gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowFogBrush(!showFogBrush)}
+                  className={showFogBrush ? 'bg-primary text-primary-foreground' : ''}
+                >
+                  <Eye className="w-4 h-4 mr-2" />
+                  Туман войны
+                </Button>
+                
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setLocalShowMovementGrid(!localShowMovementGrid)}
+                  className={localShowMovementGrid ? 'bg-primary text-primary-foreground' : ''}
+                >
+                  <Grid className="w-4 h-4 mr-2" />
+                  Сетка движения
+                </Button>
+              </div>
+
+              {/* Основная 3D сцена */}
+              <div className="w-full h-full bg-background">
+                <BattleEcosystem 
+                  showFog={isDM}
+                  showMovement={localShowMovementGrid}
+                  enableCameraControls={true}
+                />
+              </div>
+            </TabsContent>
+
+            <TabsContent value="combat" className="w-full h-full m-0">
+              <div className="p-4">
+                <h3 className="text-lg font-semibold mb-4">Боевая система</h3>
+                <SimpleBattleUI 
+                  paintMode={paintMode}
+                  setPaintMode={setPaintMode}
+                  brushSize={brushSize}
+                  setBrushSize={setBrushSize}
+                  onUploadMap={handleUploadMap}
+                  onClearMap={handleClearMap}
+                />
+              </div>
+            </TabsContent>
+
+            <TabsContent value="bestiary" className="w-full h-full m-0">
+              <BestiaryPage isDM={isDM} />
+            </TabsContent>
+
+            <TabsContent value="settings" className="w-full h-full m-0">
+              <div className="p-4">
+                <h3 className="text-lg font-semibold mb-4">Настройки карты</h3>
+                <div className="space-y-4">
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id="gridNumbers"
+                      checked={settings.showGridNumbers}
+                      onChange={(e) => updateSettings({ showGridNumbers: e.target.checked })}
+                    />
+                    <label htmlFor="gridNumbers">Показывать номера сетки</label>
+                  </div>
+                </div>
+              </div>
+            </TabsContent>
+          </div>
+
           {/* Боковая панель */}
-          <div className="w-64 border-r bg-muted/50">
+          <div className="w-64 border-l bg-muted/50">
             <TabsList className="w-full h-auto flex-col justify-start p-2 bg-transparent">
               <TabsTrigger value="map" className="w-full justify-start">
                 <Map className="w-4 h-4 mr-2" />
@@ -212,106 +289,6 @@ export const DMView: React.FC = () => {
                 </CardContent>
               </Card>
             </div>
-          </div>
-
-          {/* Основная область */}
-          <div className="flex-1">
-            <TabsContent value="map" className="w-full h-full m-0 relative">
-              {/* UI карты */}
-              <SimpleBattleUI
-                paintMode={paintMode}
-                setPaintMode={setPaintMode}
-                brushSize={brushSize}
-                setBrushSize={setBrushSize}
-                onUploadMap={handleUploadMap}
-                onClearMap={handleClearMap}
-              />
-              
-              {/* 3D Экосистема */}
-              <div className="absolute inset-0 z-0">
-                <BattleEcosystem 
-                  showFog={true}
-                  showMovement={true}
-                  enableCameraControls={true}
-                />
-              </div>
-            </TabsContent>
-
-            <TabsContent value="combat" className="w-full h-full m-0 p-4">
-              {characters.length > 0 ? (
-                <CombatUI 
-                  characters={characters}
-                  onStateChange={handleCombatStateChange}
-                />
-              ) : (
-                <div className="flex items-center justify-center h-full">
-                  <div className="text-center">
-                    <Swords className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
-                    <h3 className="text-lg font-semibold mb-2">Нет участников боя</h3>
-                    <p className="text-muted-foreground">
-                      Добавьте токены на карту для начала боя
-                    </p>
-                  </div>
-                </div>
-              )}
-            </TabsContent>
-
-            <TabsContent value="bestiary" className="w-full h-full m-0">
-              <BestiaryPage isDM={true} />
-            </TabsContent>
-
-            <TabsContent value="settings" className="w-full h-full m-0 p-4">
-              <div className="max-w-2xl mx-auto space-y-6">
-                <h3 className="text-lg font-semibold">Настройки ДМ</h3>
-                
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Интерфейс</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <label className="text-sm font-medium">Показывать номера клеток</label>
-                      <Button
-                        variant={settings.showGridNumbers ? 'default' : 'outline'}
-                        size="sm"
-                        onClick={() => updateSettings({ showGridNumbers: !settings.showGridNumbers })}
-                      >
-                        {settings.showGridNumbers ? 'Включено' : 'Выключено'}
-                      </Button>
-                    </div>
-                    
-                    <div className="flex items-center justify-between">
-                      <label className="text-sm font-medium">Автосинхронизация</label>
-                      <Button
-                        variant={settings.autoSync ? 'default' : 'outline'}
-                        size="sm"
-                        onClick={() => updateSettings({ autoSync: !settings.autoSync })}
-                      >
-                        {settings.autoSync ? 'Включено' : 'Выключено'}
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Права игроков</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <label className="text-sm font-medium">Видят HP персонажей</label>
-                      <Button
-                        variant={settings.playerCanSeeHP ? 'default' : 'outline'}
-                        size="sm"
-                        onClick={() => updateSettings({ playerCanSeeHP: !settings.playerCanSeeHP })}
-                      >
-                        {settings.playerCanSeeHP ? 'Разрешено' : 'Запрещено'}
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            </TabsContent>
           </div>
         </Tabs>
       </div>
