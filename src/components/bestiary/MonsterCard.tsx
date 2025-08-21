@@ -1,12 +1,24 @@
 // src/components/bestiary/MonsterCard.tsx
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import ModelViewer from '../assets/ModelViewer';
 import type { Monster } from '@/types/monsters';
 import { getModifier } from '@/systems/dnd5e/abilities';
-import { Heart, Shield, Zap, Eye, Plus } from 'lucide-react';
+import { 
+  Heart, 
+  Shield, 
+  Zap, 
+  Eye, 
+  Plus, 
+  ChevronDown, 
+  ChevronUp, 
+  Box, 
+  Image 
+} from 'lucide-react';
 
 interface MonsterCardProps {
   monster: Monster;
@@ -21,6 +33,8 @@ export const MonsterCard: React.FC<MonsterCardProps> = ({
   onViewDetails, 
   showActions = true 
 }) => {
+  const [isModelExpanded, setIsModelExpanded] = useState(false);
+
   const getSizeColor = (size: string) => {
     switch (size) {
       case 'Крошечный': return 'bg-blue-100 text-blue-800';
@@ -42,12 +56,25 @@ export const MonsterCard: React.FC<MonsterCardProps> = ({
     return 'bg-red-100 text-red-800';
   };
 
+  const hasModel = Boolean(monster.modelUrl);
+  const hasIcon = Boolean(monster.iconUrl);
+
   return (
     <Card className="h-full hover:shadow-lg transition-shadow duration-300">
       <CardHeader className="pb-3">
         <div className="flex justify-between items-start">
           <CardTitle className="text-lg">{monster.name}</CardTitle>
           <div className="flex gap-1">
+            {hasModel && (
+              <div className="w-6 h-6 rounded bg-primary/10 flex items-center justify-center mr-1">
+                <Box className="w-3 h-3 text-primary" />
+              </div>
+            )}
+            {hasIcon && (
+              <div className="w-6 h-6 rounded bg-secondary/10 flex items-center justify-center mr-1">
+                <Image className="w-3 h-3 text-secondary" />
+              </div>
+            )}
             <Badge className={getSizeColor(monster.size)} variant="secondary">
               {monster.size}
             </Badge>
@@ -77,6 +104,31 @@ export const MonsterCard: React.FC<MonsterCardProps> = ({
             <span className="font-medium">{monster.speed.walk || 0} фт.</span>
           </div>
         </div>
+
+        {/* 3D модель */}
+        {hasModel && (
+          <>
+            <Separator />
+            <Collapsible open={isModelExpanded} onOpenChange={setIsModelExpanded}>
+              <CollapsibleTrigger asChild>
+                <Button variant="outline" className="w-full justify-between" size="sm">
+                  <span className="flex items-center gap-2">
+                    <Box className="w-4 h-4" />
+                    3D Модель
+                  </span>
+                  {isModelExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                </Button>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="mt-2">
+                <ModelViewer 
+                  modelUrl={monster.modelUrl!}
+                  modelName={monster.name}
+                  height={180}
+                />
+              </CollapsibleContent>
+            </Collapsible>
+          </>
+        )}
 
         <Separator />
 

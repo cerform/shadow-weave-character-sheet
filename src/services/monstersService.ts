@@ -23,6 +23,8 @@ export interface SupabaseCreature {
   legendary_actions?: any;
   reactions?: any;
   meta?: any;
+  model_url?: string;
+  icon_url?: string;
 }
 
 export class MonstersService {
@@ -150,8 +152,8 @@ export class MonstersService {
       source: creature.meta?.source || 'SRD',
       tags: [],
       tokenSize: MonstersService.getTokenSize(creature.size),
-      modelUrl: undefined,
-      iconUrl: undefined
+      modelUrl: creature.model_url,
+      iconUrl: creature.icon_url
     };
   }
 

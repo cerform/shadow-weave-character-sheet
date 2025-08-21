@@ -788,10 +788,12 @@ export type Database = {
           created_at: string
           hit_dice: string | null
           hit_points: number | null
+          icon_url: string | null
           id: string
           languages: string | null
           legendary_actions: Json | null
           meta: Json | null
+          model_url: string | null
           name: string
           reactions: Json | null
           saves: Json | null
@@ -815,10 +817,12 @@ export type Database = {
           created_at?: string
           hit_dice?: string | null
           hit_points?: number | null
+          icon_url?: string | null
           id?: string
           languages?: string | null
           legendary_actions?: Json | null
           meta?: Json | null
+          model_url?: string | null
           name: string
           reactions?: Json | null
           saves?: Json | null
@@ -842,10 +846,12 @@ export type Database = {
           created_at?: string
           hit_dice?: string | null
           hit_points?: number | null
+          icon_url?: string | null
           id?: string
           languages?: string | null
           legendary_actions?: Json | null
           meta?: Json | null
+          model_url?: string | null
           name?: string
           reactions?: Json | null
           saves?: Json | null
