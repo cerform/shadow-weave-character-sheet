@@ -646,7 +646,7 @@ export default function BattleMapUI() {
                 </svg>
 
                 {/* Токены */}
-                {tokens.map((t) => (
+                {tokens.filter(t => t && t.position).map((t) => (
                   <div key={t.id} style={{ left: t.position.x, top: t.position.y, width: GRID, height: GRID }} className={`absolute rounded-lg border ${selectedId === t.id ? "border-yellow-400" : "border-neutral-700"}`} onMouseDown={(e)=>{ if (!mapRef.current) return; const rect = mapRef.current.getBoundingClientRect(); dragOffset.current = { x: e.clientX - rect.left - t.position.x, y: e.clientY - rect.top - t.position.y }; setDragId(t.id); setSelectedId(t.id); }} title={`${t.name} (${t.hp}/${t.maxHp})`}>
                     <TokenVisual token={t} use3D={use3D} modelReady={modelReady && !brokenModels[t.id]} onModelError={handleModelError} />
                     <div className="absolute -bottom-1 left-0 right-0 h-2 bg-neutral-900/70 rounded-b-lg overflow-hidden"><div className="h-full bg-emerald-500" style={{ width: `${(t.hp / t.maxHp) * 100}%` }} /></div>
@@ -660,7 +660,7 @@ export default function BattleMapUI() {
                       <mask id="fogMask">
                         <rect width="100%" height="100%" fill="white" />
                         {/* Открытые области (черные в маске = прозрачные) */}
-                        {[...reveal, ...(autoRevealAllies?tokens.filter(t=>t.type==="PC").map(t=>({x:t.position.x+GRID/2,y:t.position.y+GRID/2,r:fogRadius})):[])].map((c,i)=>(<circle key={`reveal-${i}`} cx={c.x} cy={c.y} r={c.r} fill="black" />))}
+                        {[...reveal, ...(autoRevealAllies?tokens.filter(t=>t.type==="PC" && t.position).map(t=>({x:t.position.x+GRID/2,y:t.position.y+GRID/2,r:fogRadius})):[])].map((c,i)=>(<circle key={`reveal-${i}`} cx={c.x} cy={c.y} r={c.r} fill="black" />))}
                         {/* Скрытые области (белые в маске = туман поверх) */}
                         {hideAreas.map((c,i)=>(<circle key={`hide-${i}`} cx={c.x} cy={c.y} r={c.r} fill="white" />))}
                       </mask>
@@ -672,7 +672,7 @@ export default function BattleMapUI() {
                 )}
 
                 {/* Панель выбранного токена */}
-                {selectedId && (() => { const t = tokens.find((x)=>x.id===selectedId)!; const left = Math.min(MAP_W - 260, Math.max(0, t.position.x + GRID + 8)); const top = Math.min(MAP_H - 170, Math.max(0, t.position.y - 8)); return (
+                {selectedId && (() => { const t = tokens.find((x)=>x.id===selectedId); if (!t || !t.position) return null; const left = Math.min(MAP_W - 260, Math.max(0, t.position.x + GRID + 8)); const top = Math.min(MAP_H - 170, Math.max(0, t.position.y - 8)); return (
                   <div className="absolute z-10" style={{ left, top }}>
                     <div className="w-64 rounded-xl border border-neutral-700 bg-neutral-900/95 backdrop-blur p-3 space-y-2 shadow-xl">
                       <div className="flex items-center justify-between"><div className="font-semibold">{t.name}</div><button className="text-neutral-400 hover:text-white" onClick={()=>setSelectedId(null)}>✕</button></div>
@@ -680,7 +680,7 @@ export default function BattleMapUI() {
                       <div className="flex items-center gap-2 text-sm">
                         <button className="px-2 py-1 rounded-md border border-neutral-700 hover:border-emerald-400 hover:text-emerald-400" onClick={()=>setTokens(prev=>prev.map(x=>x.id===t.id?{...x, hp: Math.min(x.maxHp, x.hp + Math.ceil(x.maxHp*0.25))}:x))}>Лечить 25%</button>
                         <button className="px-2 py-1 rounded-md border border-neutral-700 hover:border-rose-400 hover:text-rose-400" onClick={()=>setTokens(prev=>prev.map(x=>x.id===t.id?{...x, hp: Math.max(0, x.hp - Math.ceil(x.maxHp*0.25))}:x))}>Урон 25%</button>
-                        <button className="ml-auto px-2 py-1 rounded-md border border-neutral-700 hover:border-rose-400 hover:text-rose-400" onClick={()=>setTokens(prev=>prev.filter(x=>x.id!==t.id))}>Удалить</button>
+                        <button className="ml-auto px-2 py-1 rounded-md border border-neutral-700 hover:border-rose-400 hover:text-rose-400" onClick={()=>{setTokens(prev=>prev.filter(x=>x.id!==t.id)); setSelectedId(null);}}>Удалить</button>
                       </div>
                     </div>
                   </div>
