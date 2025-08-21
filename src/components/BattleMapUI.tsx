@@ -39,8 +39,7 @@ const GRID = 64;
 const MAP_W = 1600;
 const MAP_H = 900;
 
-// Внешний реестр моделей D&D персонажей
-const MODEL_REGISTRY_URL = "/data/dnd-model-registry.json";
+// Убрано: используем только Meshy.ai
 
 // ==================== Утилиты ====================
 
@@ -54,38 +53,7 @@ function isValidModelUrl(url?: string): boolean {
 }
 const norm = (s: string) => s?.normalize("NFKD").toLowerCase().replace(/[^a-zа-я0-9 ]+/gi, "").trim();
 
-// Мини‑реестр моделей по шаблонам (regex). Расширяется через JSON.
-const LOCAL_MODEL_REGISTRY: Array<{ match: RegExp; url: string; scale?: number }> = [
-  { match: /goblin/i,              url: "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/Fox/glTF/Fox.gltf",                                   scale: 0.02 },
-  { match: /dragon/i,              url: "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/DamagedHelmet/glTF-Binary/DamagedHelmet.glb",   scale: 18 },
-  { match: /skeleton|undead/i,     url: "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/RobotExpressive/glTF-Binary/RobotExpressive.glb", scale: 3 },
-  { match: /orc/i,                 url: "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/BarramundiFish/glTF/BarramundiFish.gltf",            scale: 8 },
-  { match: /troll/i,               url: "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/BrainStem/glTF/BrainStem.gltf",                      scale: 15 },
-];
-
-// Родовой маппинг по семействам (примерные модели GLB/GLTF)
-const FAMILY_MODEL_MAP: Array<{ match: RegExp; url: string; scale?: number }> = [
-  { match: new RegExp("(?:adult|ancient|young)?\\s*.*dragon\\b","i"),
-    url: "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/DamagedHelmet/glTF-Binary/DamagedHelmet.glb", scale: 12 },
-  { match: new RegExp("\\b(demon|devil|fiend|balor|pit fiend|erinyes|barbed devil|bearded devil)\\b","i"),
-    url: "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/RobotExpressive/glTF-Binary/RobotExpressive.glb", scale: 10 },
-  { match: new RegExp("\\b(skeleton|zombie|wraith|specter|spectre|ghost|lich|vampire|ghoul|undead)\\b","i"),
-    url: "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/RobotExpressive/glTF-Binary/RobotExpressive.glb", scale: 1 },
-  { match: new RegExp("\\b(hill|stone|frost|fire|cloud|storm)\\s+giant\\b","i"),
-    url: "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/BrainStem/glTF/BrainStem.gltf", scale: 6 },
-  { match: new RegExp("\\b(wolf|bear|boar|lion|tiger|panther|ape|elk|horse)\\b","i"),
-    url: "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/Fox/glTF/Fox.gltf", scale: 0.02 },
-  { match: new RegExp("\\b(ooze|gelatinous cube|black pudding|ochre jelly|slime)\\b","i"),
-    url: "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/WaterBottle/glTF-Binary/WaterBottle.glb", scale: 8 },
-  { match: new RegExp("\\b(beholder|mind flayer|illithid|aboleth|gibbering mouther)\\b","i"),
-    url: "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/WaterBottle/glTF-Binary/WaterBottle.glb", scale: 6 },
-  { match: new RegExp("\\b(golem|construct|animated armor|helmed horror)\\b","i"),
-    url: "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/DamagedHelmet/glTF-Binary/DamagedHelmet.glb", scale: 10 },
-  { match: new RegExp("\\b(goblin|orc|kobold|bandit|cultist|acolyte|guard|thug)\\b","i"),
-    url: "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/Fox/glTF/Fox.gltf", scale: 2 },
-  { match: new RegExp("\\b(fire|air|earth|water)\\s+elemental\\b","i"),
-    url: "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/Box/glTF/Box.gltf", scale: 6 },
-];
+// Убрано: используем только Meshy.ai для 3D моделей
 
 // ==================== TSX типы для <model-viewer> ====================
 
@@ -120,18 +88,7 @@ function useModelViewerLoader(enabled: boolean) {
   return { ready, error, status } as const;
 }
 
-// ==================== Подбор модели по имени ====================
-
-function pickModelFor(
-  name: string,
-  registry: Array<{ match: RegExp; url: string; scale?: number }>,
-  family?: Array<{ match: RegExp; url: string; scale?: number }>
-): { url?: string; scale?: number } {
-  const n = norm(name);
-  for (const r of registry) { if (r.match.test(n)) return { url: r.url, scale: r.scale }; }
-  if (family) { for (const r of family) { if (r.match.test(n)) return { url: r.url, scale: r.scale }; } }
-  return {};
-}
+// Убрано: функция подбора моделей не нужна, используем только Meshy.ai
 
 // ==================== Компонент отображения токена ====================
 
@@ -397,10 +354,6 @@ export default function BattleMapUI() {
   type DMTool = "select" | "fog-reveal" | "fog-hide" | "add-npc" | "measure";
   const [dmTool, setDmTool] = useState<DMTool>("select");
 
-  // Реестр 3D моделей
-  const [modelRegistry, setModelRegistry] = useState<Array<{ match: RegExp; url: string; scale?: number }>>(LOCAL_MODEL_REGISTRY);
-  const [useFamilyMap, setUseFamilyMap] = useState(true);
-
   // Фильтрация и группировка монстров
   const [crFilter, setCrFilter] = useState<{ min: number; max: number }>({ min: 0, max: 30 });
   const [typeFilter, setTypeFilter] = useState<string>('');
@@ -412,21 +365,6 @@ export default function BattleMapUI() {
   useEffect(() => {
     loadSupabaseMonsters();
   }, [loadSupabaseMonsters]);
-
-  // Загрузка внешнего реестра моделей
-  useEffect(() => {
-    (async () => {
-      try {
-        const res = await fetch(MODEL_REGISTRY_URL, { cache: "no-store" });
-        if (!res.ok) return;
-        const json = await res.json();
-        if (Array.isArray(json)) {
-          const rules = json.filter((r: any)=>r && r.match && r.url).map((r: any)=>({ match: new RegExp(r.match, "i"), url: String(r.url), scale: r.scale?Number(r.scale):undefined }));
-          if (rules.length) setModelRegistry([...LOCAL_MODEL_REGISTRY, ...rules]);
-        }
-      } catch {/* ignore */}
-    })();
-  }, []);
 
   // Получаем все монстры из реального бестиария
   const bestiary = getAllMonsters();
@@ -440,20 +378,18 @@ export default function BattleMapUI() {
     setLog((l) => [{ id: uid("log"), ts: now(), text: `🎯 Meshy загрузил 3D модель для ${monsterName}` }, ...l]);
   };
 
-  // Автопривязка 3D моделей к монстрам из бестиария
+  // Автопривязка 3D моделей к монстрам из бестиария (только Meshy.ai)
   const enrichedBestiary = useMemo(() => {
     return bestiary.map((monster) => {
-      // Сначала проверяем загруженные из Meshy модели
+      // Проверяем загруженные из Meshy модели
       if (loadedMeshyModels[monster.name]) {
         return { ...monster, modelUrl: loadedMeshyModels[monster.name], modelScale: 1 };
       }
       
-      // Затем стандартная привязка
-      if (monster.modelUrl && isValidModelUrl(monster.modelUrl)) return monster;
-      const mk = pickModelFor(monster.name, modelRegistry, useFamilyMap ? FAMILY_MODEL_MAP : undefined);
-      return mk.url ? { ...monster, modelUrl: mk.url, modelScale: mk.scale } : monster;
+      // Если нет модели в Meshy, оставляем без 3D модели
+      return monster;
     });
-  }, [bestiary, modelRegistry, useFamilyMap, loadedMeshyModels]);
+  }, [bestiary, loadedMeshyModels]);
 
   // Функция для получения числового значения CR
   const getCRValue = (cr: string): number => {
@@ -706,12 +642,11 @@ export default function BattleMapUI() {
               {/* Настройки 3D */}
               <div className="space-y-2 mb-2">
                 <div className="flex items-center gap-2">
-                  <input id="familyMap" type="checkbox" checked={useFamilyMap} onChange={(e)=>setUseFamilyMap(e.target.checked)} />
-                  <label htmlFor="familyMap" className="text-sm">Родовой 3D-маппинг</label>
-                </div>
-                <div className="flex items-center gap-2">
                   <input id="meshyEnabled" type="checkbox" checked={meshyEnabled} onChange={(e)=>setMeshyEnabled(e.target.checked)} />
-                  <label htmlFor="meshyEnabled" className="text-sm">Meshy.ai автозагрузка</label>
+                  <label htmlFor="meshyEnabled" className="text-sm">Meshy.ai автозагрузка 3D моделей</label>
+                </div>
+                <div className="text-xs text-neutral-400">
+                  Источник: https://www.meshy.ai/tags/dnd
                 </div>
               </div>
 
@@ -859,11 +794,10 @@ export default function BattleMapUI() {
                 <li>model-viewer → {modelReady?"✅ Готов":modelStatus==="error"?"❌ Ошибка":"⏳ Загрузка"}</li>
                 <li>валидность 3D URL → {enrichedBestiary.filter(b=>b.modelUrl).every(b=>isValidModelUrl(b.modelUrl))?"✅ ОК":"⚠️ Есть некорректные"}</li>
                 <li>ожидается спавн → {pendingSpawn ? enrichedBestiary.find(m=>m.id===pendingSpawn)?.name : "—"}</li>
-                <li>реестр моделей → {modelRegistry.length} правил</li>
+                <li>Meshy модели → {Object.keys(loadedMeshyModels).length} загружено</li>
                 <li>монстров с 3D → {enrichedBestiary.filter(m=>isValidModelUrl(m.modelUrl)).length}</li>
               </ul>
               <div className="flex gap-2">
-                <button className="px-2 py-1 rounded-md border border-neutral-700 text-xs" onClick={()=>{ const sample = enrichedBestiary.find(m=>m.name.toLowerCase().includes('dragon')); if (sample) { const mk = pickModelFor(sample.name, modelRegistry, useFamilyMap ? FAMILY_MODEL_MAP : undefined); setLog((l)=>[{ id: uid("log"), ts: now(), text: `Тест автопривязки для "${sample.name}": ${mk.url?"нашёл 3D":"нет 3D"} ${useFamilyMap?"(с родовым)":"(без родового)"}` }, ...l]); } }}>Тест автопривязки</button>
                 <button className="px-2 py-1 rounded-md border border-neutral-700 text-xs" onClick={()=>{ if (filteredBestiary[0]) addMonsterAt(filteredBestiary[0].id, { x: MAP_W/2, y: MAP_H/2 }); }}>Тестовый спавн</button>
               </div>
               
