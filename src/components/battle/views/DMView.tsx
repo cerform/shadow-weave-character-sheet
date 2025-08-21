@@ -196,6 +196,16 @@ export const DMView: React.FC = () => {
                   <Grid className="w-4 h-4 mr-2" />
                   Сетка движения
                 </Button>
+                
+                {/* Индикатор режимов управления */}
+                <div className="bg-background/90 backdrop-blur-sm border rounded-md p-2 text-xs">
+                  <div className="text-muted-foreground mb-1">Режимы (клавиши):</div>
+                  <div className="space-y-1">
+                    <div className="text-green-400">2 - Токены (активно)</div>
+                    <div className="text-muted-foreground">3 - Туман войны</div>
+                    <div className="text-muted-foreground">4 - Камера</div>
+                  </div>
+                </div>
               </div>
 
               {/* Основная 3D сцена */}

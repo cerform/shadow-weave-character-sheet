@@ -16,12 +16,15 @@ export interface InteractionState {
 }
 
 export class InteractionModeManager {
-  private currentMode: InteractionMode = InteractionMode.NAVIGATION;
+  private currentMode: InteractionMode = InteractionMode.TOKENS; // По умолчанию токены
   private isActive = false;
   private listeners: Set<(state: InteractionState) => void> = new Set();
 
   constructor() {
     this.setupKeyboardListeners();
+    // Инициализируем активный режим
+    this.isActive = true;
+    console.log('🎮 InteractionModeManager initialized with TOKENS mode');
   }
 
   private setupKeyboardListeners() {

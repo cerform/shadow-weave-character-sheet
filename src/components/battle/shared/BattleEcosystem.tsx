@@ -1,5 +1,5 @@
 // Объединенная экосистема боевой карты
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Canvas } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useUnifiedBattleStore } from '@/stores/unifiedBattleStore';
@@ -8,6 +8,7 @@ import { MovementIndicator } from '../enhanced/MovementIndicator';
 import { FogInteractionSystem } from '../fog/FogInteractionSystem';
 import { CameraControlSystem } from '../camera/CameraControlSystem';
 import { BattleSystemAdapter } from '@/adapters/battleSystemAdapter';
+import { interactionManager, InteractionMode } from '@/systems/interaction/InteractionModeManager';
 
 interface BattleEcosystemProps {
   showFog?: boolean;
@@ -32,6 +33,9 @@ export const BattleEcosystem: React.FC<BattleEcosystemProps> = ({
     isDM,
     settings,
   } = useUnifiedBattleStore();
+
+  // Состояние для принудительного обновления после восстановления контекста
+  const [canvasKey, setCanvasKey] = useState(0);
 
   // Синхронизация токенов с персонажами D&D 5e
   useEffect(() => {
@@ -87,12 +91,14 @@ export const BattleEcosystem: React.FC<BattleEcosystemProps> = ({
 
   return (
     <Canvas
+      key={canvasKey} // Принудительное обновление при потере контекста
       shadows 
       camera={{ position: [0, 25, 0], fov: 45, up: [0, 0, -1] }}
       gl={{ 
         antialias: true,
         preserveDrawingBuffer: true,
-        failIfMajorPerformanceCaveat: false
+        failIfMajorPerformanceCaveat: false,
+        powerPreference: "high-performance"
       }}
       onCreated={({ gl, camera }) => {
         // Обработка потери и восстановления WebGL контекста
@@ -104,17 +110,26 @@ export const BattleEcosystem: React.FC<BattleEcosystemProps> = ({
         });
         
         canvas.addEventListener('webglcontextrestored', () => {
-          console.log('✅ WebGL контекст восстановлен');
-          // Принудительно обновляем камеру и сцену
-          camera.position.set(0, 20, 0);
-          camera.lookAt(0, 0, 0);
-          camera.updateProjectionMatrix();
+          console.log('✅ WebGL контекст восстановлен, перезапускаем Canvas');
+          // Принудительно перезапускаем весь Canvas
+          setTimeout(() => {
+            setCanvasKey(prev => prev + 1);
+            // Восстанавливаем режим взаимодействия
+            interactionManager.setMode(InteractionMode.TOKENS);
+            interactionManager.setActive(true);
+            console.log('🔄 All interaction systems restored after context recovery');
+          }, 100);
         });
         
         // Настройка камеры
         camera.position.set(0, 20, 0);
         camera.lookAt(0, 0, 0);
         camera.updateProjectionMatrix();
+        
+        // Инициализируем режим взаимодействия
+        interactionManager.setMode(InteractionMode.TOKENS);
+        interactionManager.setActive(true);
+        console.log('🎮 Battle ecosystem initialized with active TOKENS mode');
       }}
     >
       {/* Освещение */}

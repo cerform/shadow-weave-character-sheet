@@ -30,6 +30,12 @@ export const CameraControlSystem: React.FC = () => {
       }
     });
 
+    // Включаем управление камерой сразу при инициализации
+    if (orbitControlsRef.current) {
+      orbitControlsRef.current.enabled = true;
+      console.log('📷 Camera controls initialized and enabled');
+    }
+
     return () => {
       unsubscribe();
     };
@@ -38,7 +44,7 @@ export const CameraControlSystem: React.FC = () => {
   return (
     <OrbitControls
       ref={orbitControlsRef}
-      enabled={false}
+      enabled={true} // Включено по умолчанию
       enablePan={true}
       enableZoom={true}
       enableRotate={true}
