@@ -38,7 +38,7 @@ export class MonstersService {
         return [];
       }
 
-      return data?.map(this.mapSupabaseCreatureToMonster) || [];
+      return data?.map(MonstersService.mapSupabaseCreatureToMonster) || [];
     } catch (error) {
       console.error('Error in getAllCreatures:', error);
       return [];
@@ -58,7 +58,7 @@ export class MonstersService {
         return null;
       }
 
-      return data ? this.mapSupabaseCreatureToMonster(data) : null;
+      return data ? MonstersService.mapSupabaseCreatureToMonster(data) : null;
     } catch (error) {
       console.error('Error in getCreatureBySlug:', error);
       return null;
@@ -79,7 +79,7 @@ export class MonstersService {
         return [];
       }
 
-      return data?.map(this.mapSupabaseCreatureToMonster) || [];
+      return data?.map(MonstersService.mapSupabaseCreatureToMonster) || [];
     } catch (error) {
       console.error('Error in searchCreatures:', error);
       return [];
@@ -96,20 +96,20 @@ export class MonstersService {
       id: creature.id,
       name: creature.name,
       nameEn: creature.slug,
-      size: this.mapSizeToRussian(creature.size),
-      type: this.mapTypeToRussian(creature.type),
-      alignment: creature.alignment,
-      armorClass: creature.armor_class,
-      hitPoints: creature.hit_points,
-      hitDice: creature.hit_dice,
-      speed: this.parseSpeed(creature.speed),
+      size: MonstersService.mapSizeToRussian(creature.size),
+      type: MonstersService.mapTypeToRussian(creature.type),
+      alignment: creature.alignment || 'neutral',
+      armorClass: creature.armor_class || 10,
+      hitPoints: creature.hit_points || 1,  
+      hitDice: creature.hit_dice || '1d8',
+      speed: MonstersService.parseSpeed(creature.speed),
       abilities: {
-        strength: abilities.strength || 10,
-        dexterity: abilities.dexterity || 10,
-        constitution: abilities.constitution || 10,
-        intelligence: abilities.intelligence || 10,
-        wisdom: abilities.wisdom || 10,
-        charisma: abilities.charisma || 10,
+        strength: abilities.str || 10,
+        dexterity: abilities.dex || 10,
+        constitution: abilities.con || 10,
+        intelligence: abilities.int || 10,
+        wisdom: abilities.wis || 10,
+        charisma: abilities.cha || 10,
       },
       savingThrows: creature.saves || {},
       skills: creature.skills || {},
@@ -121,13 +121,13 @@ export class MonstersService {
         blindsight: 0,
         tremorsense: 0,
         truesight: 0,
-        passivePerception: 10 + Math.floor((abilities.wisdom || 10 - 10) / 2),
+        passivePerception: 10 + Math.floor(((abilities.wis || 10) - 10) / 2),
         ...creature.senses
       },
       languages: creature.languages ? creature.languages.split(', ') : [],
-      challengeRating: this.formatChallengeRating(creature.cr),
-      experiencePoints: this.calculateExperiencePoints(creature.cr),
-      proficiencyBonus: this.calculateProficiencyBonus(creature.cr),
+      challengeRating: MonstersService.formatChallengeRating(creature.cr),
+      experiencePoints: MonstersService.calculateExperiencePoints(creature.cr),
+      proficiencyBonus: MonstersService.calculateProficiencyBonus(creature.cr),
       actions: actions.map((action: any) => ({
         name: action.name || '',
         description: action.description || '',
@@ -149,7 +149,7 @@ export class MonstersService {
       environment: [],
       source: creature.meta?.source || 'SRD',
       tags: [],
-      tokenSize: this.getTokenSize(creature.size),
+      tokenSize: MonstersService.getTokenSize(creature.size),
       modelUrl: undefined,
       iconUrl: undefined
     };
@@ -190,7 +190,7 @@ export class MonstersService {
       'huge': 'Огромный',
       'gargantuan': 'Гигантский'
     };
-    return sizeMap[size.toLowerCase()] || 'Средний';
+    return sizeMap[size?.toLowerCase()] || 'Средний';
   }
 
   private static mapTypeToRussian(type: string): MonsterType {
@@ -208,9 +208,10 @@ export class MonstersService {
       'undead': 'Нежить',
       'plant': 'Растение',
       'ooze': 'Слизь',
-      'monstrosity': 'Чудовище'
+      'monstrosity': 'Чудовище',
+      'swarm of tiny beasts': 'Монстр'
     };
-    return typeMap[type.toLowerCase()] || 'Монстр';
+    return typeMap[type?.toLowerCase()] || 'Монстр';
   }
 
   private static calculateProficiencyBonus(cr: number): number {
@@ -266,7 +267,7 @@ export class MonstersService {
   }
 
   private static getTokenSize(size: string): number {
-    switch (size.toLowerCase()) {
+    switch (size?.toLowerCase()) {
       case 'tiny': return 0.5;
       case 'small': return 1;
       case 'medium': return 1;
