@@ -221,6 +221,7 @@ export default function BattleMapUI() {
   const [fogRadius, setFogRadius] = useState(120);
   const [autoRevealAllies, setAutoRevealAllies] = useState(true);
   const [reveal, setReveal] = useState<FogCircle[]>([]);
+  const [hideAreas, setHideAreas] = useState<FogCircle[]>([]);
 
   // Журнал и кубы
   const [log, setLog] = useState<LogEntry[]>([{ id: uid("log"), ts: now(), text: "Бой начался. Бросьте инициативу!" }]);
@@ -296,8 +297,14 @@ export default function BattleMapUI() {
     const rect = e.currentTarget.getBoundingClientRect();
     const x = e.clientX - rect.left; const y = e.clientY - rect.top;
     if (isDM && dmTool === "add-npc" && pendingSpawn) { addMonsterAt(pendingSpawn, { x, y }); setPendingSpawn(null); return; }
-    if (!isDM || dmTool !== "fog-reveal") return;
-    setReveal((prev) => [...prev, { x, y, r: fogRadius }]);
+    if (!isDM) return;
+    if (dmTool === "fog-reveal") {
+      setReveal((prev) => [...prev, { x, y, r: fogRadius }]);
+      setLog((l) => [{ id: uid("log"), ts: now(), text: `ДМ открыл туман в точке (${Math.round(x)}, ${Math.round(y)})` }, ...l]);
+    } else if (dmTool === "fog-hide") {
+      setHideAreas((prev) => [...prev, { x, y, r: fogRadius }]);
+      setLog((l) => [{ id: uid("log"), ts: now(), text: `ДМ скрыл область в точке (${Math.round(x)}, ${Math.round(y)})` }, ...l]);
+    }
   };
 
   // ==================== Рендер ====================
@@ -345,8 +352,17 @@ export default function BattleMapUI() {
               <div className="flex items-center gap-2 text-sm"><span className="opacity-70 w-24">Прозрачность</span><input type="range" min={0.2} max={0.95} step={0.05} value={fogOpacity} onChange={(e)=>setFogOpacity(parseFloat(e.target.value))} className="w-full" /><span className="w-12 text-right">{Math.round(fogOpacity*100)}%</span></div>
               <div className="flex items-center gap-2 text-sm"><span className="opacity-70 w-24">Радиус</span><input type="range" min={60} max={260} step={10} value={fogRadius} onChange={(e)=>setFogRadius(parseInt(e.target.value))} className="w-full" /><span className="w-12 text-right">{fogRadius}</span></div>
               <div className="flex items-center gap-2"><input id="autoAlly" type="checkbox" checked={autoRevealAllies} onChange={(e)=>setAutoRevealAllies(e.target.checked)} /><label htmlFor="autoAlly" className="text-sm">Автосвет вокруг союзников</label></div>
-              <div className="flex gap-2"><button className="px-2 py-1 rounded-md border border-neutral-700 text-sm" onClick={()=>setReveal([])}>Очистить</button><button className="px-2 py-1 rounded-md border border-neutral-700 text-sm" onClick={()=>setReveal(r=>r.slice(0,-1))}>Отменить</button></div>
-              <div className="text-xs opacity-70">Подсказка: «Добавить NPC» + клик по карте — спавн монстра.</div>
+              <div className="flex gap-2">
+                <button className="px-2 py-1 rounded-md border border-neutral-700 text-sm" onClick={()=>{setReveal([]); setHideAreas([]); setLog((l)=>[{ id: uid("log"), ts: now(), text: "ДМ очистил весь туман" }, ...l]);}}>Очистить</button>
+                <button className="px-2 py-1 rounded-md border border-neutral-700 text-sm" onClick={()=>{setReveal(r=>r.slice(0,-1)); setLog((l)=>[{ id: uid("log"), ts: now(), text: "ДМ отменил последнее действие с туманом" }, ...l]);}}>Отменить открытие</button>
+                <button className="px-2 py-1 rounded-md border border-neutral-700 text-sm" onClick={()=>{setHideAreas(h=>h.slice(0,-1)); setLog((l)=>[{ id: uid("log"), ts: now(), text: "ДМ отменил последнее скрытие" }, ...l]);}}>Отменить скрытие</button>
+              </div>
+              <div className="text-xs opacity-70">
+                Подсказки: 
+                <br />• «Добавить NPC» + клик по карте — спавн монстра
+                <br />• «Открыть туман» + клик — открыть область
+                <br />• «Скрыть туман» + клик — скрыть область поверх открытой
+              </div>
             </div>
 
             <div className="space-y-2">
@@ -403,8 +419,18 @@ export default function BattleMapUI() {
                 {/* Туман войны */}
                 {fogEnabled && (
                   <svg className="absolute inset-0 pointer-events-none" width={MAP_W} height={MAP_H}>
-                    <defs><mask id="fogMask"><rect width="100%" height="100%" fill="white" />{[...reveal, ...(autoRevealAllies?tokens.filter(t=>t.type==="PC").map(t=>({x:t.position.x+GRID/2,y:t.position.y+GRID/2,r:fogRadius})):[])].map((c,i)=>(<circle key={i} cx={c.x} cy={c.y} r={c.r} fill="black" />))}</mask></defs>
+                    <defs>
+                      <mask id="fogMask">
+                        <rect width="100%" height="100%" fill="white" />
+                        {/* Открытые области (черные в маске = прозрачные) */}
+                        {[...reveal, ...(autoRevealAllies?tokens.filter(t=>t.type==="PC").map(t=>({x:t.position.x+GRID/2,y:t.position.y+GRID/2,r:fogRadius})):[])].map((c,i)=>(<circle key={`reveal-${i}`} cx={c.x} cy={c.y} r={c.r} fill="black" />))}
+                        {/* Скрытые области (белые в маске = туман поверх) */}
+                        {hideAreas.map((c,i)=>(<circle key={`hide-${i}`} cx={c.x} cy={c.y} r={c.r} fill="white" />))}
+                      </mask>
+                    </defs>
                     <rect width="100%" height="100%" fill={`rgba(0,0,0,${fogOpacity})`} mask="url(#fogMask)" />
+                    {/* Дополнительные скрытые области поверх */}
+                    {hideAreas.map((c,i)=>(<circle key={`hide-overlay-${i}`} cx={c.x} cy={c.y} r={c.r} fill={`rgba(0,0,0,${fogOpacity * 1.2})`} />))}
                   </svg>
                 )}
 
