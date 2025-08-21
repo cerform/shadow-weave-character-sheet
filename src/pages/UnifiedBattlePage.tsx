@@ -1,7 +1,8 @@
-import { DMView } from '../views/DMView';
-import { PlayerView } from '../views/PlayerView'; 
-import { CombatLogger } from '../systems/CombatLogger';
-import { InitiativeSystem } from '../systems/InitiativeSystem';
+import React from 'react';
+import { DMView } from '@/components/battle/views/DMView';
+import { PlayerView } from '@/components/battle/views/PlayerView'; 
+import { CombatLogger } from '@/components/battle/systems/CombatLogger';
+import { InitiativeSystem } from '@/components/battle/systems/InitiativeSystem';
 import { useUnifiedBattleStore } from '@/stores/unifiedBattleStore';
 
 export default function UnifiedBattlePage() {

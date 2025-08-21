@@ -1,20 +1,18 @@
-// Система управления токенами в 3D пространстве
-import React, { useCallback, useEffect } from 'react';
+// Хук для управления токенами в 3D пространстве
+import { useCallback, useEffect } from 'react';
 import { useUnifiedBattleStore } from '@/stores/unifiedBattleStore';
 import { useFogOfWarStore } from '@/stores/fogOfWarStore';
 import { useMonstersStore } from '@/stores/monstersStore';
 import type { EnhancedToken } from '@/stores/enhancedBattleStore';
 import type { Monster } from '@/types/monsters';
 
-interface Enhanced3DTokenManagerProps {
+interface Enhanced3DTokenManagerOptions {
   onSpawnMonster?: (monster: Monster, position: [number, number, number]) => void;
   onTokenClick?: (tokenId: string) => void;
 }
 
-export const Enhanced3DTokenManager: React.FC<Enhanced3DTokenManagerProps> = ({
-  onSpawnMonster,
-  onTokenClick
-}) => {
+export const useEnhanced3DTokenManager = (options: Enhanced3DTokenManagerOptions = {}) => {
+  const { onSpawnMonster, onTokenClick } = options;
   const { 
     tokens, 
     addToken, 
@@ -270,5 +268,5 @@ export const Enhanced3DTokenManager: React.FC<Enhanced3DTokenManagerProps> = ({
     tokens,
     selectedTokenId,
     activeId
-  } as any; // Компонент-утилита, не рендерит ничего
+  };
 };
