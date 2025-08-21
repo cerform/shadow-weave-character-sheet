@@ -10,12 +10,13 @@ import { MonsterCard } from './MonsterCard';
 import { MonsterDetailsDialog } from './MonsterDetailsDialog';
 import { TTGClubImporter } from './TTGClubImporter';
 import Open5eImporter from './Open5eImporter';
+import AssetUploader from '../assets/AssetUploader';
 import { useEnhancedBattleStore } from '@/stores/enhancedBattleStore';
 import { useMonstersStore } from '@/stores/monstersStore';
 import { BattleSystemAdapter } from '@/adapters/battleSystemAdapter';
 import { MONSTERS_DATABASE, getCRNumericValue } from '@/data/monsters';
 import type { Monster, MonsterFilter } from '@/types/monsters';
-import { Search, Filter, Dice6, Users, Crown, Download, Loader2 } from 'lucide-react';
+import { Search, Filter, Dice6, Users, Crown, Download, Loader2, Upload } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
 interface BestiaryPageProps {
@@ -33,6 +34,7 @@ export const BestiaryPage: React.FC<BestiaryPageProps> = ({
   const [activeTab, setActiveTab] = useState('all');
   const [isImporterOpen, setIsImporterOpen] = useState(false);
   const [isOpen5eImporterOpen, setIsOpen5eImporterOpen] = useState(false);
+  const [isAssetUploaderOpen, setIsAssetUploaderOpen] = useState(false);
   
   const { addToken } = useEnhancedBattleStore();
   const { getAllMonsters, addImportedMonsters, loadSupabaseMonsters, isLoadingSupabase } = useMonstersStore();
@@ -199,6 +201,14 @@ export const BestiaryPage: React.FC<BestiaryPageProps> = ({
               >
                 <Download className="w-4 h-4" />
                 Open5e JSON
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={() => setIsAssetUploaderOpen(true)}
+                className="flex items-center gap-2"
+              >
+                <Upload className="w-4 h-4" />
+                3D Ассеты
               </Button>
             </>
           )}
@@ -384,6 +394,23 @@ export const BestiaryPage: React.FC<BestiaryPageProps> = ({
             </div>
             <div className="p-4">
               <Open5eImporter />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Загрузчик 3D ассетов */}
+      {isAssetUploaderOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-background rounded-lg max-w-2xl w-full max-h-[90vh] overflow-auto">
+            <div className="p-4 border-b flex items-center justify-between">
+              <h2 className="text-lg font-semibold">Загрузка 3D Ассетов</h2>
+              <Button variant="ghost" onClick={() => setIsAssetUploaderOpen(false)}>
+                ✕
+              </Button>
+            </div>
+            <div className="p-4">
+              <AssetUploader />
             </div>
           </div>
         </div>
