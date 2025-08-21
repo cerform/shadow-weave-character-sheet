@@ -74,7 +74,7 @@ export default function BattleMapUI() {
 
   // —— Log ——
   const [log, setLog] = useState<LogEntry[]>([
-    { id: uid("log"), ts: now(), text: "Combat started. Roll initiative!" },
+    { id: uid("log"), ts: now(), text: "Бой начался. Кидайте инициативу!" },
   ]);
 
   // —— DM tool state ——
@@ -149,7 +149,7 @@ export default function BattleMapUI() {
       };
       
       const entity = await createBattleEntity(battleEntity);
-      setLog((l) => [{ id: uid("log"), ts: now(), text: `DM spawned ${entity.name}` }, ...l]);
+      setLog((l) => [{ id: uid("log"), ts: now(), text: `ДМ создал ${entity.name}` }, ...l]);
     } catch (error) {
       console.error('Failed to add monster:', error);
     }
@@ -162,7 +162,7 @@ export default function BattleMapUI() {
       await deleteBattleEntity(id);
       const entity = entities.find(e => e.id === id);
       if (entity) {
-        setLog((l) => [{ id: uid("log"), ts: now(), text: `Removed ${entity.name}` }, ...l]);
+        setLog((l) => [{ id: uid("log"), ts: now(), text: `Убран ${entity.name}` }, ...l]);
       }
       if (selectedId === id) setSelectedId(null);
     } catch (error) {
@@ -182,7 +182,7 @@ export default function BattleMapUI() {
       setLog((l) => [{ 
         id: uid("log"), 
         ts: now(), 
-        text: `${entity.name} takes ${dmg} dmg (${newHp}/${entity.hp.max})` 
+        text: `${entity.name} получает ${dmg} урона (${newHp}/${entity.hp.max})` 
       }, ...l]);
     } catch (error) {
       console.error('Failed to damage entity:', error);
@@ -201,7 +201,7 @@ export default function BattleMapUI() {
       setLog((l) => [{ 
         id: uid("log"), 
         ts: now(), 
-        text: `${entity.name} heals ${amt} (${newHp}/${entity.hp.max})` 
+        text: `${entity.name} исцеляется на ${amt} (${newHp}/${entity.hp.max})` 
       }, ...l]);
     } catch (error) {
       console.error('Failed to heal entity:', error);
@@ -308,23 +308,23 @@ export default function BattleMapUI() {
       {/* Top bar */}
       <div className="h-12 px-4 flex items-center justify-between border-b border-neutral-800 bg-neutral-900/70 backdrop-blur">
         <div className="flex items-center gap-3">
-          <div className="text-yellow-400 font-bold">Shadow Weave • Battle</div>
+          <div className="text-yellow-400 font-bold">Shadow Weave • Битва</div>
           <div className="hidden sm:flex items-center gap-2 text-xs">
-            <StatBadge label="Grid" value={`${GRID}px`} />
-            <StatBadge label="Map" value={`${MAP_W}×${MAP_H}`} />
-            <StatBadge label="Round" value={combatState.round} />
-            {activeEntity && <StatBadge label="Active" value={activeEntity.name} color="bg-emerald-700" />}
+            <StatBadge label="Сетка" value={`${GRID}px`} />
+            <StatBadge label="Карта" value={`${MAP_W}×${MAP_H}`} />
+            <StatBadge label="Раунд" value={combatState.round} />
+            {activeEntity && <StatBadge label="Активный" value={activeEntity.name} color="bg-emerald-700" />}
           </div>
         </div>
         <div className="flex items-center gap-2">
           <div className={`px-3 py-1 rounded-md border text-xs ${isDM ? "border-emerald-400 text-emerald-400" : "border-neutral-700 text-neutral-300"}`}>
-            {isDM ? "DM Mode" : "Player Mode"}
+            {isDM ? "Режим ДМ" : "Режим игрока"}
           </div>
           <button className="px-3 py-1 rounded-md border border-neutral-700 text-xs" onClick={() => setLeftOpen((v) => !v)}>
-            {leftOpen ? "Hide Tools" : "Show Tools"}
+            {leftOpen ? "Скрыть инструменты" : "Показать инструменты"}
           </button>
           <button className="px-3 py-1 rounded-md border border-neutral-700 text-xs" onClick={() => setRightOpen((v) => !v)}>
-            {rightOpen ? "Hide Log" : "Show Log"}
+            {rightOpen ? "Скрыть журнал" : "Показать журнал"}
           </button>
         </div>
       </div>
@@ -333,51 +333,61 @@ export default function BattleMapUI() {
         {/* Left: DM Tools */}
         <div className={`border-r border-neutral-800 bg-neutral-900/50 overflow-y-auto ${leftOpen && isDM ? "opacity-100" : "opacity-0 pointer-events-none"}`}>
           <div className="p-3 space-y-4">
-            <Title>DM Tools</Title>
+            <Title>Инструменты ДМ</Title>
 
             <div className="grid grid-cols-2 gap-2">
-              {(["select", "fog-reveal", "fog-hide", "add-npc", "measure"] as DMTool[]).map((tool) => (
-                <button
-                  key={tool}
-                  onClick={() => setDmTool(tool)}
-                  className={`px-2 py-2 rounded-md border text-sm ${dmTool === tool ? "border-emerald-400 text-emerald-400" : "border-neutral-700 text-neutral-300"}`}
-                >
-                  {tool}
-                </button>
-              ))}
+              {(["select", "fog-reveal", "fog-hide", "add-npc", "measure"] as DMTool[]).map((tool) => {
+                const toolNames = {
+                  "select": "Выбор",
+                  "fog-reveal": "Открыть туман",
+                  "fog-hide": "Скрыть туман",
+                  "add-npc": "Добавить NPC",
+                  "measure": "Измерить"
+                };
+                
+                return (
+                  <button
+                    key={tool}
+                    onClick={() => setDmTool(tool)}
+                    className={`px-2 py-2 rounded-md border text-sm ${dmTool === tool ? "border-emerald-400 text-emerald-400" : "border-neutral-700 text-neutral-300"}`}
+                  >
+                    {toolNames[tool]}
+                  </button>
+                );
+              })}
             </div>
 
             <div className="space-y-2">
-              <Title>Fog of War</Title>
+              <Title>Туман войны</Title>
               <div className="flex items-center gap-2">
                 <input id="fog" type="checkbox" checked={fogEnabled} onChange={(e) => setFogEnabled(e.target.checked)} />
-                <label htmlFor="fog" className="text-sm">Enable</label>
+                <label htmlFor="fog" className="text-sm">Включить</label>
               </div>
               <div className="flex items-center gap-2 text-sm">
-                <span className="opacity-70 w-24">Opacity</span>
+                <span className="opacity-70 w-24">Прозрачность</span>
                 <input type="range" min={0.2} max={0.95} step={0.05} value={fogOpacity} onChange={(e) => setFogOpacity(parseFloat(e.target.value))} className="w-full" />
                 <span className="w-12 text-right">{Math.round(fogOpacity * 100)}%</span>
               </div>
               <div className="flex items-center gap-2 text-sm">
-                <span className="opacity-70 w-24">Radius</span>
+                <span className="opacity-70 w-24">Радиус</span>
                 <input type="range" min={60} max={260} step={10} value={fogRadius} onChange={(e) => setFogRadius(parseInt(e.target.value))} className="w-full" />
                 <span className="w-12 text-right">{fogRadius}</span>
               </div>
               <div className="flex items-center gap-2">
                 <input id="autoAlly" type="checkbox" checked={autoRevealAllies} onChange={(e) => setAutoRevealAllies(e.target.checked)} />
-                <label htmlFor="autoAlly" className="text-sm">Auto reveal around allies</label>
+                <label htmlFor="autoAlly" className="text-sm">Автообзор вокруг союзников</label>
               </div>
               <div className="flex gap-2">
-                <button className="px-2 py-1 rounded-md border border-neutral-700 text-sm" onClick={() => setReveal([])}>Clear draws</button>
-                <button className="px-2 py-1 rounded-md border border-neutral-700 text-sm" onClick={() => setReveal((r) => r.slice(0, -1))}>Undo</button>
+                <button className="px-2 py-1 rounded-md border border-neutral-700 text-sm" onClick={() => setReveal([])}>Очистить</button>
+                <button className="px-2 py-1 rounded-md border border-neutral-700 text-sm" onClick={() => setReveal((r) => r.slice(0, -1))}>Отменить</button>
               </div>
-              <div className="text-xs opacity-70">Tip: with "fog-reveal" tool active, click on map to punch a hole.</div>
+              <div className="text-xs opacity-70">Подсказка: выберите инструмент "Открыть туман" и кликайте по карте.</div>
             </div>
 
             <div className="space-y-2">
-              <Title>Monster Spawner</Title>
+              <Title>Спавн монстров</Title>
               {isLoadingMonsters ? (
-                <div className="text-xs opacity-70">Loading monsters...</div>
+                <div className="text-xs opacity-70">Загрузка монстров...</div>
               ) : (
                 <div className="max-h-48 overflow-y-auto space-y-1">
                   {availableMonsters.slice(0, 10).map((monster) => (
@@ -387,7 +397,7 @@ export default function BattleMapUI() {
                       onClick={() => addMonsterToField(monster.slug)}
                     >
                       <div className="font-medium">{monster.name}</div>
-                      <div className="opacity-70">CR {monster.cr_or_level} • AC {monster.ac} • HP {monster.hp_average}</div>
+                      <div className="opacity-70">УО {monster.cr_or_level} • КД {monster.ac} • ХП {monster.hp_average}</div>
                     </button>
                   ))}
                 </div>
@@ -395,8 +405,8 @@ export default function BattleMapUI() {
             </div>
 
             <div className="space-y-2">
-              <Title>Measure (WIP)</Title>
-              <div className="text-xs opacity-70">Select tool "measure" then click & drag on the map (coming soon).</div>
+              <Title>Измерения (в разработке)</Title>
+              <div className="text-xs opacity-70">Выберите инструмент "Измерить", затем кликайте и тяните по карте (скоро).</div>
             </div>
           </div>
         </div>
@@ -481,7 +491,7 @@ export default function BattleMapUI() {
 
                 {/* Minimap */}
                 <div className="absolute top-3 left-3 w-48 h-28 bg-neutral-900/70 border border-neutral-700 rounded-lg p-1">
-                  <div className="text-[10px] text-yellow-400 mb-1">Minimap</div>
+                  <div className="text-[10px] text-yellow-400 mb-1">Мини-карта</div>
                   <div className="relative w-full h-[calc(100%-14px)] bg-neutral-800 rounded">
                     {entities.map((entity) => (
                       <div
@@ -515,9 +525,9 @@ export default function BattleMapUI() {
                             <button className="text-neutral-400 hover:text-white" onClick={() => setSelectedId(null)}>✕</button>
                           </div>
                           <div className="flex items-center gap-2">
-                            <StatBadge label="HP" value={`${entity.hp.current}/${entity.hp.max}`} color="bg-neutral-800" />
-                            <StatBadge label="AC" value={entity.ac} color="bg-neutral-800" />
-                            <StatBadge label="Speed" value={`${entity.movement.base}ft`} color="bg-neutral-800" />
+                            <StatBadge label="ХП" value={`${entity.hp.current}/${entity.hp.max}`} color="bg-neutral-800" />
+                            <StatBadge label="КД" value={entity.ac} color="bg-neutral-800" />
+                            <StatBadge label="Скорость" value={`${entity.movement.base}фт`} color="bg-neutral-800" />
                           </div>
                           {isDM && (
                             <div className="flex items-center gap-2 text-sm">
@@ -525,46 +535,46 @@ export default function BattleMapUI() {
                                 className="px-2 py-1 rounded-md border border-neutral-700 hover:border-emerald-400 hover:text-emerald-400" 
                                 onClick={() => healEntity(entity.id, Math.ceil(entity.hp.max * 0.25))}
                               >
-                                Heal 25%
+                                Лечить 25%
                               </button>
                               <button 
                                 className="px-2 py-1 rounded-md border border-neutral-700 hover:border-rose-400 hover:text-rose-400" 
                                 onClick={() => damageEntity(entity.id, Math.ceil(entity.hp.max * 0.25))}
                               >
-                                Damage 25%
+                                Урон 25%
                               </button>
                             </div>
                           )}
                           <div className="flex flex-wrap gap-2">
-                            {(entity.conditions.length ? entity.conditions.map(c => c.key) : ["No Conditions"]).map((c, i) => (
+                            {(entity.conditions.length ? entity.conditions.map(c => c.key) : ["Нет эффектов"]).map((c, i) => (
                               <ConditionChip key={i} text={c} />
                             ))}
                           </div>
                           <div className="flex items-center gap-2 text-xs">
                             <button 
                               className="px-2 py-1 rounded-md border border-neutral-700 hover:border-yellow-400 hover:text-yellow-400" 
-                              onClick={() => setLog((l) => [{ id: uid("log"), ts: now(), text: `${entity.name} attacks!` }, ...l])}
+                              onClick={() => setLog((l) => [{ id: uid("log"), ts: now(), text: `${entity.name} атакует!` }, ...l])}
                             >
-                              Attack
+                              Атака
                             </button>
                             <button 
                               className="px-2 py-1 rounded-md border border-neutral-700 hover:border-yellow-400 hover:text-yellow-400" 
-                              onClick={() => setLog((l) => [{ id: uid("log"), ts: now(), text: `${entity.name} casts a spell!` }, ...l])}
+                              onClick={() => setLog((l) => [{ id: uid("log"), ts: now(), text: `${entity.name} колдует!` }, ...l])}
                             >
-                              Cast
+                              Заклинание
                             </button>
                             <button 
                               className="px-2 py-1 rounded-md border border-neutral-700 hover:border-yellow-400 hover:text-yellow-400" 
-                              onClick={() => setLog((l) => [{ id: uid("log"), ts: now(), text: `${entity.name} uses an item.` }, ...l])}
+                              onClick={() => setLog((l) => [{ id: uid("log"), ts: now(), text: `${entity.name} использует предмет.` }, ...l])}
                             >
-                              Use Item
+                              Предмет
                             </button>
                             {isDM && (
                               <button 
                                 className="ml-auto px-2 py-1 rounded-md border border-neutral-700 hover:border-rose-400 hover:text-rose-400" 
                                 onClick={() => removeEntity(entity.id)}
                               >
-                                Delete
+                                Удалить
                               </button>
                             )}
                           </div>
@@ -581,17 +591,17 @@ export default function BattleMapUI() {
           <div className="absolute bottom-0 left-0 right-0 p-3">
             <div className="mx-auto max-w-5xl rounded-2xl border border-neutral-800 bg-neutral-900/80 backdrop-blur px-3 py-2 shadow-2xl">
               <div className="flex items-center gap-2 justify-center flex-wrap">
-                <button className="px-3 py-2 rounded-md border border-neutral-700 hover:border-emerald-400 hover:text-emerald-400">Move</button>
-                <button className="px-3 py-2 rounded-md border border-neutral-700 hover:border-yellow-400 hover:text-yellow-400">Attack</button>
-                <button className="px-3 py-2 rounded-md border border-neutral-700 hover:border-yellow-400 hover:text-yellow-400">Cast Spell</button>
-                <button className="px-3 py-2 rounded-md border border-neutral-700 hover:border-yellow-400 hover:text-yellow-400">Use Item</button>
-                <button className="px-3 py-2 rounded-md border border-neutral-700 hover:border-yellow-400 hover:text-yellow-400">Inventory</button>
-                <button className="px-3 py-2 rounded-md border border-neutral-700 hover:border-emerald-400 hover:text-emerald-400" onClick={nextTurn}>End Turn</button>
+                <button className="px-3 py-2 rounded-md border border-neutral-700 hover:border-emerald-400 hover:text-emerald-400">Движение</button>
+                <button className="px-3 py-2 rounded-md border border-neutral-700 hover:border-yellow-400 hover:text-yellow-400">Атака</button>
+                <button className="px-3 py-2 rounded-md border border-neutral-700 hover:border-yellow-400 hover:text-yellow-400">Заклинание</button>
+                <button className="px-3 py-2 rounded-md border border-neutral-700 hover:border-yellow-400 hover:text-yellow-400">Предмет</button>
+                <button className="px-3 py-2 rounded-md border border-neutral-700 hover:border-yellow-400 hover:text-yellow-400">Инвентарь</button>
+                <button className="px-3 py-2 rounded-md border border-neutral-700 hover:border-emerald-400 hover:text-emerald-400" onClick={nextTurn}>Закончить ход</button>
                 {/* Dice */}
                 <div className="ml-2 flex items-center gap-1 text-xs">
-                  <span className="opacity-70">Dice:</span>
+                  <span className="opacity-70">Кости:</span>
                   {[20, 12, 10, 8, 6, 4].map((s) => (
-                    <button key={s} className="px-2 py-1 rounded-md border border-neutral-700 hover:border-neutral-400" onClick={() => roll(s)}>d{s}</button>
+                    <button key={s} className="px-2 py-1 rounded-md border border-neutral-700 hover:border-neutral-400" onClick={() => roll(s)}>к{s}</button>
                   ))}
                 </div>
               </div>
@@ -602,7 +612,7 @@ export default function BattleMapUI() {
         {/* Right: Combat Log + Initiative */}
         <div className={`border-l border-neutral-800 bg-neutral-900/50 overflow-y-auto ${rightOpen ? "opacity-100" : "opacity-0 pointer-events-none"}`}>
           <div className="p-3 space-y-4">
-            <Title>Initiative</Title>
+            <Title>Инициатива</Title>
             <div className="space-y-2">
               {initOrder.map((entity, idx) => {
                 const isActive = entity.id === combatState.activeEntityId;
@@ -613,8 +623,8 @@ export default function BattleMapUI() {
                       <div className="font-medium">{entity.name}</div>
                     </div>
                     <div className="flex items-center gap-2 text-xs">
-                      <StatBadge label="Init" value={entity.initiative || 0} />
-                      <StatBadge label="HP" value={`${entity.hp.current}/${entity.hp.max}`} />
+                      <StatBadge label="Ини" value={entity.initiative || 0} />
+                      <StatBadge label="ХП" value={`${entity.hp.current}/${entity.hp.max}`} />
                     </div>
                   </div>
                 );
@@ -625,15 +635,15 @@ export default function BattleMapUI() {
                   onClick={nextTurn}
                   disabled={!isDM || !canEndTurn()}
                 >
-                  {isDM ? 'Next Turn' : 'End Turn'}
+                  {isDM ? "Следующий ход" : "Закончить ход"}
                 </button>
                 <div className="text-emerald-400 text-xs">
-                  Active: {activeEntity?.name ?? "—"}
+                  Активный: {activeEntity?.name ?? "—"}
                 </div>
               </div>
             </div>
 
-            <Title>Combat Log</Title>
+            <Title>Журнал боя</Title>
             <div className="space-y-2">
               {log.map((e) => (
                 <div key={e.id} className="rounded-lg border border-neutral-700 bg-neutral-900/70 p-2 text-sm">
