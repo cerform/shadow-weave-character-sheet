@@ -11,6 +11,7 @@ import { Upload, X } from "lucide-react";
 import { FogInteractionSystem } from '../fog/FogInteractionSystem';
 import { CameraControlSystem } from '../camera/CameraControlSystem';
 import { SimpleBattleUI } from './SimpleBattleUI';
+import { MouseDebugger } from '../MouseDebugger';
 
 interface BattleMap3DProps {
   sessionId?: string;
@@ -119,6 +120,9 @@ export default function BattleMap3D({
 
   return (
     <div className="w-full h-full relative bg-background rounded-xl overflow-hidden border border-border">
+      {/* Mouse Event Debugger */}
+      <MouseDebugger />
+      
       {/* Современный UI */}
       <SimpleBattleUI
         paintMode={uiPaintMode}

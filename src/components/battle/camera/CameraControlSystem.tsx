@@ -6,8 +6,50 @@ import * as THREE from 'three';
 import { interactionManager, InteractionMode } from '@/systems/interaction/InteractionModeManager';
 
 export const CameraControlSystem: React.FC = () => {
-  const { camera } = useThree();
+  const { camera, gl } = useThree();
   const orbitControlsRef = useRef<any>(null);
+
+  // Добавим дополнительное отслеживание событий на canvas
+  useEffect(() => {
+    const canvas = gl.domElement;
+    
+    const handleCanvasMouseDown = (e: MouseEvent) => {
+      console.log('🎮 Canvas MouseDown:', {
+        button: e.button,
+        buttons: e.buttons,
+        target: e.target,
+        orbitsEnabled: orbitControlsRef.current?.enabled
+      });
+    };
+
+    const handleCanvasMouseMove = (e: MouseEvent) => {
+      if (e.buttons > 0) {
+        console.log('🎮 Canvas MouseMove with buttons:', {
+          buttons: e.buttons,
+          movementX: e.movementX,
+          movementY: e.movementY,
+          orbitsEnabled: orbitControlsRef.current?.enabled
+        });
+      }
+    };
+
+    const handleCanvasWheel = (e: WheelEvent) => {
+      console.log('🎮 Canvas Wheel:', {
+        deltaY: e.deltaY,
+        orbitsEnabled: orbitControlsRef.current?.enabled
+      });
+    };
+
+    canvas.addEventListener('mousedown', handleCanvasMouseDown);
+    canvas.addEventListener('mousemove', handleCanvasMouseMove);  
+    canvas.addEventListener('wheel', handleCanvasWheel);
+
+    return () => {
+      canvas.removeEventListener('mousedown', handleCanvasMouseDown);
+      canvas.removeEventListener('mousemove', handleCanvasMouseMove);
+      canvas.removeEventListener('wheel', handleCanvasWheel);
+    };
+  }, [gl.domElement]);
 
   // Устанавливаем фиксированную позицию камеры
   useEffect(() => {
