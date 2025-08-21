@@ -65,14 +65,6 @@ const HomePage = () => {
       gradient: "from-green-500/20 to-emerald-500/20"
     },
     {
-      icon: Swords,
-      title: "Интегрированная боевая система",
-      description: "Полная боевая система D&D 5e с 3D картой и правилами",
-      href: "/integrated-battle",
-      gradient: "from-indigo-500/20 to-purple-500/20",
-      featured: true
-    },
-    {
       icon: Dice6,
       title: "Бестиарий D&D 5e",
       description: "База монстров с 3D токенами и полными характеристиками",
