@@ -6,14 +6,32 @@ import { getBestiaryEntry, getAllBestiaryEntries } from '@/services/BestiaryServ
 import { createBattleEntity, updateBattleEntity, deleteBattleEntity } from '@/services/BattleEntityService';
 import { useUnifiedBattleStore } from '@/stores/unifiedBattleStore';
 import { CombatEntity } from '@/engine/combat/types';
-import { BestiaryEntry } from '@/types/Monster';
+import { supabase } from '@/integrations/supabase/client';
+import { Size } from '@/types/Monster';
+
+type SRDCreature = {
+  id: string;
+  slug: string;
+  name: string;
+  type: string;
+  size: string;
+  armor_class: number;
+  hit_points: number;
+  speed: any;
+  stats: any;
+  cr: number;
+  alignment?: string;
+  hit_dice?: string;
+  languages?: string;
+  model_url?: string;
+  icon_url?: string;
+};
 
 type Vec2 = { x: number; y: number };
 
 type FogCircle = { x: number; y: number; r: number };
 
 type LogEntry = { id: string; ts: string; text: string };
-
 const GRID = 64; // px per square
 const MAP_W = 1600; // px
 const MAP_H = 900; // px
@@ -48,7 +66,7 @@ export default function BattleMapUI() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   
   // —— Available monsters from bestiary ——
-  const [availableMonsters, setAvailableMonsters] = useState<BestiaryEntry[]>([]);
+  const [availableMonsters, setAvailableMonsters] = useState<SRDCreature[]>([]);
   const [isLoadingMonsters, setIsLoadingMonsters] = useState(false);
   
   // —— Initiative order from real combat state ——
@@ -92,13 +110,18 @@ export default function BattleMapUI() {
   // —— Map refs ——
   const mapRef = useRef<HTMLDivElement | null>(null);
 
-  // —— Load monsters from bestiary ——
+  // —— Load monsters from SRD creatures ——
   useEffect(() => {  
     const loadMonsters = async () => {
       setIsLoadingMonsters(true);
       try {
-        const monsters = await getAllBestiaryEntries();
-        setAvailableMonsters(monsters);
+        const { data, error } = await supabase
+          .from('srd_creatures')
+          .select('*')
+          .order('name');
+          
+        if (error) throw error;
+        setAvailableMonsters(data || []);
       } catch (error) {
         console.error('Failed to load monsters:', error);
       } finally {
@@ -125,27 +148,27 @@ export default function BattleMapUI() {
         z: 0
       };
       
-      // Create battle entity from bestiary entry
+      // Create battle entity from SRD creature
       const battleEntity = {
         session_id: sessionId,
         slug: monster.slug,
         name: monster.name,
-        model_url: '',
+        model_url: monster.model_url || '',
         pos_x: position.x,
         pos_y: position.y,
         pos_z: position.z,
         rot_y: 0,
         scale: 1.0,
-        hp_current: monster.hp_average,
-        hp_max: monster.hp_average,
-        ac: monster.ac,
-        speed: monster.speed_walk || 30,
-        size: monster.size,
-        level_or_cr: monster.cr_or_level,
-        creature_type: monster.creature_type,
+        hp_current: monster.hit_points,
+        hp_max: monster.hit_points,
+        ac: monster.armor_class,
+        speed: (monster.speed?.walk || 30),
+        size: (monster.size as Size) || 'Medium',
+        level_or_cr: `CR ${monster.cr}`,
+        creature_type: monster.type,
         statuses: [],
         is_player_character: false,
-        created_by: 'system' // This should be the user's ID in real implementation
+        created_by: 'demo-user-id' // This should be the user's ID in real implementation
       };
       
       const entity = await createBattleEntity(battleEntity);
@@ -397,7 +420,7 @@ export default function BattleMapUI() {
                       onClick={() => addMonsterToField(monster.slug)}
                     >
                       <div className="font-medium">{monster.name}</div>
-                      <div className="opacity-70">УО {monster.cr_or_level} • КД {monster.ac} • ХП {monster.hp_average}</div>
+                      <div className="opacity-70">УО {monster.cr} • КД {monster.armor_class} • ХП {monster.hit_points}</div>
                     </button>
                   ))}
                 </div>
