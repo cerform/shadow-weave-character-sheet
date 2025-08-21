@@ -15,6 +15,9 @@ site_url = "http://localhost:3000"
 [functions.import-dnd-monsters]
 verify_jwt = false
 
+[functions.meshy-models]
+verify_jwt = false
+
 [db]
 port = 54322
 

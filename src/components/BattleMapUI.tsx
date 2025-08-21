@@ -4,6 +4,8 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useMonstersStore } from '@/stores/monstersStore';
 import { useUnifiedBattleStore } from '@/stores/unifiedBattleStore';
 import type { Monster } from '@/types/monsters';
+import MeshyModelLoader from '@/components/MeshyModelLoader';
+import { meshyService } from '@/services/MeshyService';
 
 // ==================== Типы ====================
 
@@ -260,14 +262,29 @@ export default function BattleMapUI() {
   // Получаем все монстры из реального бестиария
   const bestiary = getAllMonsters();
 
+  // Meshy автозагрузка (объявляем перед использованием в enrichedBestiary)
+  const [meshyEnabled, setMeshyEnabled] = useState(true);
+  const [loadedMeshyModels, setLoadedMeshyModels] = useState<Record<string, string>>({});
+  
+  const handleMeshyModelLoaded = (monsterName: string, modelUrl: string) => {
+    setLoadedMeshyModels(prev => ({ ...prev, [monsterName]: modelUrl }));
+    setLog((l) => [{ id: uid("log"), ts: now(), text: `🎯 Meshy загрузил 3D модель для ${monsterName}` }, ...l]);
+  };
+
   // Автопривязка 3D моделей к монстрам из бестиария
   const enrichedBestiary = useMemo(() => {
     return bestiary.map((monster) => {
+      // Сначала проверяем загруженные из Meshy модели
+      if (loadedMeshyModels[monster.name]) {
+        return { ...monster, modelUrl: loadedMeshyModels[monster.name], modelScale: 1 };
+      }
+      
+      // Затем стандартная привязка
       if (monster.modelUrl && isValidModelUrl(monster.modelUrl)) return monster;
       const mk = pickModelFor(monster.name, modelRegistry, useFamilyMap ? FAMILY_MODEL_MAP : undefined);
       return mk.url ? { ...monster, modelUrl: mk.url, modelScale: mk.scale } : monster;
     });
-  }, [bestiary, modelRegistry, useFamilyMap]);
+  }, [bestiary, modelRegistry, useFamilyMap, loadedMeshyModels]);
 
   // Функция для получения числового значения CR
   const getCRValue = (cr: string): number => {
@@ -459,9 +476,15 @@ export default function BattleMapUI() {
               <Title>Бестиарий D&D 5e ({enrichedBestiary.length} всего, {filteredBestiary.length} показано)</Title>
               
               {/* Настройки 3D */}
-              <div className="flex items-center gap-2 mb-2">
-                <input id="familyMap" type="checkbox" checked={useFamilyMap} onChange={(e)=>setUseFamilyMap(e.target.checked)} />
-                <label htmlFor="familyMap" className="text-sm">Родовой 3D-маппинг</label>
+              <div className="space-y-2 mb-2">
+                <div className="flex items-center gap-2">
+                  <input id="familyMap" type="checkbox" checked={useFamilyMap} onChange={(e)=>setUseFamilyMap(e.target.checked)} />
+                  <label htmlFor="familyMap" className="text-sm">Родовой 3D-маппинг</label>
+                </div>
+                <div className="flex items-center gap-2">
+                  <input id="meshyEnabled" type="checkbox" checked={meshyEnabled} onChange={(e)=>setMeshyEnabled(e.target.checked)} />
+                  <label htmlFor="meshyEnabled" className="text-sm">Meshy.ai автозагрузка</label>
+                </div>
               </div>
 
               {/* Поиск */}
@@ -623,9 +646,24 @@ export default function BattleMapUI() {
                   3D моделей: {enrichedBestiary.filter(m => isValidModelUrl(m.modelUrl)).length}/{enrichedBestiary.length}
                 </div>
                 <div className="text-xs opacity-70">
+                  Meshy моделей: {Object.keys(loadedMeshyModels).length}
+                </div>
+                <div className="text-xs opacity-70">
                   CR диапазон: {Math.min(...filteredBestiary.map(m => getCRValue(m.challengeRating)))} - {Math.max(...filteredBestiary.map(m => getCRValue(m.challengeRating)))}
                 </div>
               </div>
+
+              {/* Meshy загрузчик */}
+              {meshyEnabled && (
+                <div className="mt-4">
+                  <Title>Meshy.ai — Автозагрузка</Title>
+                  <MeshyModelLoader
+                    onModelLoaded={handleMeshyModelLoaded}
+                    monsterNames={filteredBestiary.map(m => m.name)}
+                    autoLoad={false}
+                  />
+                </div>
+              )}
             </div>
           </div>
         </div>
