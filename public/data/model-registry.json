@@ -1,0 +1,32 @@
+[
+  {
+    "match": "^goblin$",
+    "url": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/Fox/glTF/Fox.gltf",
+    "scale": 0.02
+  },
+  {
+    "match": "dragon",
+    "url": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/DamagedHelmet/glTF-Binary/DamagedHelmet.glb",
+    "scale": 18
+  },
+  {
+    "match": "skeleton|undead",
+    "url": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/RobotExpressive/glTF-Binary/RobotExpressive.glb",
+    "scale": 3
+  },
+  {
+    "match": "aboleth",
+    "url": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/WaterBottle/glTF-Binary/WaterBottle.glb",
+    "scale": 5
+  },
+  {
+    "match": "orc",
+    "url": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/BarramundiFish/glTF/BarramundiFish.gltf",
+    "scale": 8
+  },
+  {
+    "match": "troll",
+    "url": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/BrainStem/glTF/BrainStem.gltf",
+    "scale": 15
+  }
+]
