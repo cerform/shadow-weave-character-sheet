@@ -185,6 +185,71 @@ export default function BattleMapUI() {
   const onMapDrop = (e: React.DragEvent) => { e.preventDefault(); const f = e.dataTransfer.files?.[0]; if (f && f.type.startsWith("image/")) setMapImage(URL.createObjectURL(f)); };
   const onMapDragOver = (e: React.DragEvent) => e.preventDefault();
 
+  // Интерактивность карты
+  const [mapScale, setMapScale] = useState(1);
+  const [mapOffset, setMapOffset] = useState({ x: 0, y: 0 });
+  const [isPanning, setIsPanning] = useState(false);
+  const panStart = useRef({ x: 0, y: 0 });
+  const mapContainer = useRef<HTMLDivElement | null>(null);
+
+  // Обработчики интерактивности карты
+  useEffect(() => {
+    const container = mapContainer.current;
+    if (!container) return;
+
+    const handleWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      const rect = container.getBoundingClientRect();
+      const mouseX = e.clientX - rect.left;
+      const mouseY = e.clientY - rect.top;
+      
+      const delta = e.deltaY > 0 ? 0.9 : 1.1;
+      const newScale = Math.min(3, Math.max(0.3, mapScale * delta));
+      
+      if (newScale !== mapScale) {
+        const scaleDiff = newScale / mapScale;
+        setMapOffset(prev => ({
+          x: mouseX - (mouseX - prev.x) * scaleDiff,
+          y: mouseY - (mouseY - prev.y) * scaleDiff
+        }));
+        setMapScale(newScale);
+      }
+    };
+
+    const handleMouseDown = (e: MouseEvent) => {
+      if (e.button === 1 || (e.button === 0 && e.ctrlKey)) { // Средняя кнопка или Ctrl+ЛКМ
+        e.preventDefault();
+        setIsPanning(true);
+        panStart.current = { x: e.clientX - mapOffset.x, y: e.clientY - mapOffset.y };
+      }
+    };
+
+    const handleMouseMove = (e: MouseEvent) => {
+      if (isPanning) {
+        setMapOffset({
+          x: e.clientX - panStart.current.x,
+          y: e.clientY - panStart.current.y
+        });
+      }
+    };
+
+    const handleMouseUp = () => {
+      setIsPanning(false);
+    };
+
+    container.addEventListener('wheel', handleWheel, { passive: false });
+    container.addEventListener('mousedown', handleMouseDown);
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+
+    return () => {
+      container.removeEventListener('wheel', handleWheel);
+      container.removeEventListener('mousedown', handleMouseDown);
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [mapScale, mapOffset, isPanning]);
+
   // Токены/инициатива
   const [tokens, setTokens] = useState<Token[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -669,10 +734,45 @@ export default function BattleMapUI() {
         </div>
 
         {/* Центр: Карта и токены */}
-        <div className="relative bg-neutral-900" onDrop={onMapDrop} onDragOver={onMapDragOver}>
+        <div className="relative bg-neutral-900" onDrop={onMapDrop} onDragOver={onMapDragOver} ref={mapContainer}>
+          {/* Миникарта */}
+          <div className="absolute top-4 right-4 z-20 w-48 h-32 bg-neutral-900/90 backdrop-blur border border-neutral-700 rounded-lg overflow-hidden">
+            <div className="relative w-full h-full">
+              {mapImage && <img src={mapImage} alt="Миникарта" className="w-full h-full object-cover opacity-60" />}
+              <div className="absolute inset-0 bg-gradient-to-br from-neutral-900/40 to-transparent" />
+              
+              {/* Токены на миникарте */}
+              {tokens.filter(t => t && t.position).map((t) => {
+                const miniX = (t.position.x / MAP_W) * 192; // 192px = w-48
+                const miniY = (t.position.y / MAP_H) * 128; // 128px = h-32
+                return (
+                  <div
+                    key={`mini-${t.id}`}
+                    className={`absolute w-2 h-2 rounded-full ${t.type === "PC" ? "bg-emerald-400" : "bg-rose-400"} border border-white/50`}
+                    style={{ left: miniX - 4, top: miniY - 4 }}
+                    title={t.name}
+                  />
+                );
+              })}
+              
+              <div className="absolute bottom-1 left-1 text-xs text-white/70 font-semibold">Миникарта</div>
+              <div className="absolute bottom-1 right-1 text-xs text-white/50">{Math.round(mapScale * 100)}%</div>
+            </div>
+          </div>
+
           <div className="absolute inset-0 overflow-hidden">
             <div className="w-full h-full flex items-center justify-center p-4">
-              <div className="relative rounded-xl shadow-xl bg-neutral-800 overflow-hidden" style={{ width: MAP_W, height: MAP_H }} onClick={onMapClick} ref={mapRef}>
+              <div 
+                className="relative rounded-xl shadow-xl bg-neutral-800 overflow-hidden transition-transform duration-200" 
+                style={{ 
+                  width: MAP_W, 
+                  height: MAP_H,
+                  transform: `scale(${mapScale}) translate(${mapOffset.x / mapScale}px, ${mapOffset.y / mapScale}px)`,
+                  cursor: isPanning ? 'grabbing' : 'grab'
+                }} 
+                onClick={onMapClick} 
+                ref={mapRef}
+              >
                 {/* Фон карты */}
                 {mapImage ? (<img src={mapImage} alt="Карта" className="absolute inset-0 w-full h-full object-cover" />) : (<div className="absolute inset-0 flex items-center justify-center text-neutral-500 text-sm">Перетащите изображение карты или выберите файл сверху</div>)}
 
@@ -726,7 +826,36 @@ export default function BattleMapUI() {
             </div>
           </div>
 
-          {/* Нижняя панель действий */}
+          {/* Элементы управления картой */}
+          <div className="absolute top-4 left-4 z-20 flex flex-col gap-2">
+            <div className="bg-neutral-900/90 backdrop-blur border border-neutral-700 rounded-lg p-2">
+              <div className="text-xs text-white/70 mb-1">Управление</div>
+              <div className="flex flex-col gap-1 text-xs text-white/60">
+                <div>📱 Drag - перемещение</div>
+                <div>🔍 Scroll - масштаб</div>
+                <div>👆 Click - действия</div>
+              </div>
+            </div>
+            
+            {/* Масштаб карты */}
+            <div className="bg-neutral-900/90 backdrop-blur border border-neutral-700 rounded-lg p-2">
+              <div className="text-xs text-white/70 mb-1">Масштаб: {Math.round(mapScale * 100)}%</div>
+              <div className="flex gap-1">
+                <button className="px-2 py-1 text-xs bg-neutral-800 hover:bg-neutral-700 rounded" onClick={() => {
+                  const newScale = Math.min(3, mapScale * 1.2);
+                  setMapScale(newScale);
+                }}>+</button>
+                <button className="px-2 py-1 text-xs bg-neutral-800 hover:bg-neutral-700 rounded" onClick={() => {
+                  const newScale = Math.max(0.3, mapScale * 0.8);
+                  setMapScale(newScale);
+                }}>-</button>
+                <button className="px-2 py-1 text-xs bg-neutral-800 hover:bg-neutral-700 rounded" onClick={() => {
+                  setMapScale(1);
+                  setMapOffset({ x: 0, y: 0 });
+                }}>Сброс</button>
+              </div>
+            </div>
+          </div>
           <div className="absolute bottom-0 left-0 right-0 p-3">
             <div className="mx-auto max-w-5xl rounded-2xl border border-neutral-800 bg-neutral-900/80 backdrop-blur px-3 py-2 shadow-2xl">
               <div className="flex items-center gap-2 justify-center flex-wrap text-sm">
