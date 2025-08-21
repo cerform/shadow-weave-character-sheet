@@ -39,6 +39,12 @@ export const BattleEcosystem: React.FC<BattleEcosystemProps> = ({
 
   // Синхронизация токенов с персонажами D&D 5e
   useEffect(() => {
+    // Автоматическая инициализация боевой сцены при первом запуске
+    if (tokens.length === 0 && characters.length === 0) {
+      const { initializeBattleScene } = useUnifiedBattleStore.getState();
+      initializeBattleScene();
+    }
+    
     if (tokens.length > 0 && characters.length === 0) {
       const newCharacters = BattleSystemAdapter.createDemoCharactersFromTokens(tokens);
       setCharacters(newCharacters);

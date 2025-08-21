@@ -1,7 +1,8 @@
 import { Html, useGLTF } from "@react-three/drei";
 import { ThreeEvent, useFrame } from "@react-three/fiber";
 import { useRef, useState, useMemo } from "react";
-import { useEnhancedBattleStore, type EnhancedToken } from "@/stores/enhancedBattleStore";
+import { useUnifiedBattleStore } from "@/stores/unifiedBattleStore";
+import { type EnhancedToken } from "@/stores/enhancedBattleStore";
 import { canMoveToPosition, snapToGrid, gridToWorld, type GridPosition } from "@/utils/movementUtils";
 import { MovementIndicator } from "./MovementIndicator";
 import * as THREE from "three";
@@ -24,13 +25,14 @@ interface EnhancedBattleToken3DProps {
 }
 
 // Компонент 3D модели персонажа
-const Character3DModel = ({ modelType, position, isActive, isSelected, isEnemy, scale = 1 }: {
+const Character3DModel = ({ modelType, position, isActive, isSelected, isEnemy, scale = 1, token }: {
   modelType: keyof typeof MODEL_PATHS;
   position: [number, number, number];
   isActive: boolean;
   isSelected: boolean;
   isEnemy: boolean;
   scale?: number;
+  token: EnhancedToken;
 }) => {
   const modelPath = MODEL_PATHS[modelType] || MODEL_PATHS.default;
   
@@ -49,7 +51,7 @@ const Character3DModel = ({ modelType, position, isActive, isSelected, isEnemy, 
     );
   } catch (error) {
     // Fallback к базовой геометрии если модель не загрузилась
-    const tokenColor = isEnemy ? "#ef4444" : "#22c55e";
+    const tokenColor = token.color || (isEnemy ? "#ef4444" : "#22c55e");
     const emissiveColor = isSelected ? "#fbbf24" : (isActive ? "#3b82f6" : "#000000");
     
     return (
@@ -79,7 +81,7 @@ export const EnhancedBattleToken3D: React.FC<EnhancedBattleToken3DProps> = ({ to
     addCombatEvent,
     showMovementGrid,
     setShowMovementGrid
-  } = useEnhancedBattleStore();
+  } = useUnifiedBattleStore();
   
   const isActive = activeId === token.id;
   const isSelected = selectedTokenId === token.id;
@@ -195,6 +197,7 @@ export const EnhancedBattleToken3D: React.FC<EnhancedBattleToken3DProps> = ({ to
           isSelected={isSelected}
           isEnemy={token.isEnemy}
           scale={0.8}
+          token={token}
         />
       </group>
 

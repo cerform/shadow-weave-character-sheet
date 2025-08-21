@@ -16,6 +16,7 @@ export interface EnhancedToken {
   speed?: number; // Скорость перемещения в клетках за ход (по умолчанию 6)
   hasMovedThisTurn?: boolean; // Переместился ли в этом ходу
   class?: string; // Класс персонажа для выбора модели
+  color?: string; // Цвет токена для визуального различения
 }
 
 export interface CombatEvent {

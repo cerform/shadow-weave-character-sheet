@@ -83,6 +83,9 @@ interface UnifiedBattleState {
   
   // Очистка
   resetAll: () => void;
+  
+  // Инициализация боевой сцены
+  initializeBattleScene: () => void;
 }
 
 export const useUnifiedBattleStore = create<UnifiedBattleState>()(
@@ -215,6 +218,166 @@ export const useUnifiedBattleStore = create<UnifiedBattleState>()(
         combatStarted: false,
         combatEvents: [],
       }),
+      
+      // Инициализация боевой сцены
+      initializeBattleScene: () => {
+        const demoTokens: EnhancedToken[] = [
+          // Персонажи игроков (синяя команда)
+          {
+            id: 'player-warrior',
+            name: 'Эльдан Воин',
+            hp: 45,
+            maxHp: 45,
+            ac: 18,
+            position: [-6, 0, -4],
+            conditions: [],
+            isEnemy: false,
+            isVisible: true,
+            size: 1,
+            speed: 6,
+            hasMovedThisTurn: false,
+            class: 'Воин 3 уровня',
+            color: '#3b82f6'
+          },
+          {
+            id: 'player-mage',
+            name: 'Мирена Волшебница',
+            hp: 22,
+            maxHp: 22,
+            ac: 14,
+            position: [-8, 0, -2],
+            conditions: [],
+            isEnemy: false,
+            isVisible: true,
+            size: 1,
+            speed: 6,
+            hasMovedThisTurn: false,
+            class: 'Волшебница 3 уровня',
+            color: '#8b5cf6'
+          },
+          {
+            id: 'player-rogue',
+            name: 'Тень Плут',
+            hp: 28,
+            maxHp: 28,
+            ac: 16,
+            position: [-4, 0, -6],
+            conditions: [],
+            isEnemy: false,
+            isVisible: true,
+            size: 1,
+            speed: 6,
+            hasMovedThisTurn: false,
+            class: 'Плут 3 уровня',
+            color: '#10b981'
+          },
+          {
+            id: 'player-cleric',
+            name: 'Селена Клерик',
+            hp: 35,
+            maxHp: 35,
+            ac: 16,
+            position: [-6, 0, -2],
+            conditions: [],
+            isEnemy: false,
+            isVisible: true,
+            size: 1,
+            speed: 5,
+            hasMovedThisTurn: false,
+            class: 'Клерик 3 уровня',
+            color: '#f59e0b'
+          },
+          
+          // Враги (красная команда)
+          {
+            id: 'enemy-orc-leader',
+            name: 'Вожак Орков',
+            hp: 65,
+            maxHp: 65,
+            ac: 17,
+            position: [6, 0, 2],
+            conditions: [],
+            isEnemy: true,
+            isVisible: true,
+            size: 1,
+            speed: 6,
+            hasMovedThisTurn: false,
+            class: 'Орк Вожак',
+            color: '#dc2626'
+          },
+          {
+            id: 'enemy-orc-warrior1',
+            name: 'Орк Воин',
+            hp: 35,
+            maxHp: 35,
+            ac: 15,
+            position: [4, 0, 4],
+            conditions: [],
+            isEnemy: true,
+            isVisible: true,
+            size: 1,
+            speed: 6,
+            hasMovedThisTurn: false,
+            class: 'Орк Воин',
+            color: '#dc2626'
+          },
+          {
+            id: 'enemy-orc-warrior2',
+            name: 'Орк Воин',
+            hp: 35,
+            maxHp: 35,
+            ac: 15,
+            position: [8, 0, 4],
+            conditions: [],
+            isEnemy: true,
+            isVisible: true,
+            size: 1,
+            speed: 6,
+            hasMovedThisTurn: false,
+            class: 'Орк Воин',
+            color: '#dc2626'
+          },
+          {
+            id: 'enemy-goblin-archer',
+            name: 'Гоблин Лучник',
+            hp: 18,
+            maxHp: 18,
+            ac: 14,
+            position: [8, 0, 0],
+            conditions: [],
+            isEnemy: true,
+            isVisible: true,
+            size: 1,
+            speed: 6,
+            hasMovedThisTurn: false,
+            class: 'Гоблин Лучник',
+            color: '#dc2626'
+          },
+          {
+            id: 'enemy-wolf',
+            name: 'Волк',
+            hp: 25,
+            maxHp: 25,
+            ac: 13,
+            position: [2, 0, 6],
+            conditions: [],
+            isEnemy: true,
+            isVisible: true,
+            size: 1,
+            speed: 8,
+            hasMovedThisTurn: false,
+            class: 'Волк',
+            color: '#dc2626'
+          }
+        ];
+        
+        set({ 
+          tokens: demoTokens,
+          showMovementGrid: true,
+          selectedTokenId: null,
+          activeId: null
+        });
+      },
     }),
     {
       name: 'unified-battle-storage',
