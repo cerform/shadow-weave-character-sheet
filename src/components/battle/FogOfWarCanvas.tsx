@@ -32,6 +32,37 @@ export const FogOfWarCanvas: React.FC<FogOfWarCanvasProps> = ({
   const { isDM } = useUnifiedBattleStore();
   const playerViewCanvasRef = useRef<HTMLCanvasElement>(null);
   
+  // Состояние для контекстного меню
+  const [contextMenu, setContextMenu] = useState<{
+    visible: boolean;
+    x: number;
+    y: number;
+    mapX: number;
+    mapY: number;
+    clickedSpawn?: any;
+  }>({
+    visible: false,
+    x: 0,
+    y: 0,
+    mapX: 0,
+    mapY: 0
+  });
+
+  // Состояние для перетаскивания точек спавна
+  const [dragState, setDragState] = useState<{
+    isDragging: boolean;
+    spawnId: string | null;
+    offset: { x: number; y: number };
+  }>({
+    isDragging: false,
+    spawnId: null,
+    offset: { x: 0, y: 0 }
+  });
+
+  // Константы для размеров (5 фит = 1 квадратик = 32 пикселя при стандартном масштабе)
+  const GRID_SIZE = 32; // размер одной клетки в пикселях
+  const SPAWN_SIZE = GRID_SIZE; // точка спавна = 1 квадратик
+  
   // Инициализация тумана при первой загрузке
   useEffect(() => {
     if (!isInitialized) {
@@ -71,40 +102,133 @@ export const FogOfWarCanvas: React.FC<FogOfWarCanvasProps> = ({
     // Рисуем точки спавна для ДМ
     if (isDM) {
       spawnPoints.forEach((spawn, index) => {
-        const x = spawn.x;
-        const y = spawn.y;
+        const isBeingDragged = dragState.isDragging && dragState.spawnId === spawn.id;
+        const size = SPAWN_SIZE;
+        const halfSize = size / 2;
         
-        // Фон точки спавна
-        ctx.fillStyle = spawn.playerId ? 'rgba(34, 197, 94, 0.7)' : 'rgba(59, 130, 246, 0.7)';
-        ctx.fillRect(x - 16, y - 16, 32, 32);
+        // Привязка к сетке (snap to grid)
+        const gridX = Math.round(spawn.x / GRID_SIZE) * GRID_SIZE;
+        const gridY = Math.round(spawn.y / GRID_SIZE) * GRID_SIZE;
+        
+        const x = isBeingDragged ? spawn.x : gridX;
+        const y = isBeingDragged ? spawn.y : gridY;
+        
+        // Фон точки спавна (квадрат 32x32 пикселя = 5 фит)
+        ctx.fillStyle = spawn.playerId 
+          ? (isBeingDragged ? 'rgba(34, 197, 94, 0.9)' : 'rgba(34, 197, 94, 0.7)')
+          : (isBeingDragged ? 'rgba(59, 130, 246, 0.9)' : 'rgba(59, 130, 246, 0.7)');
+        ctx.fillRect(x - halfSize, y - halfSize, size, size);
         
         // Обводка
         ctx.strokeStyle = spawn.playerId ? '#22c55e' : '#3b82f6';
-        ctx.lineWidth = 2;
-        ctx.strokeRect(x - 16, y - 16, 32, 32);
+        ctx.lineWidth = isBeingDragged ? 3 : 2;
+        ctx.strokeRect(x - halfSize, y - halfSize, size, size);
+        
+        // Если перетаскивается, показываем направляющие к сетке
+        if (isBeingDragged) {
+          ctx.setLineDash([4, 4]);
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+          ctx.lineWidth = 1;
+          ctx.strokeRect(gridX - halfSize, gridY - halfSize, size, size);
+          ctx.setLineDash([]);
+        }
         
         // Номер точки
         ctx.fillStyle = 'white';
         ctx.font = 'bold 14px Arial';
         ctx.textAlign = 'center';
         ctx.fillText((index + 1).toString(), x, y + 5);
+        
+        // Показываем размер клетки (5 фит)
+        if (isBeingDragged) {
+          ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+          ctx.fillRect(x - halfSize, y + halfSize + 2, size, 16);
+          ctx.fillStyle = 'white';
+          ctx.font = '10px Arial';
+          ctx.fillText('5 ft', x, y + halfSize + 12);
+        }
       });
     }
-  }, [fogGrid, gridWidth, gridHeight, cellSize, mapWidth, mapHeight, spawnPoints, isDM]);
+  }, [fogGrid, gridWidth, gridHeight, cellSize, mapWidth, mapHeight, spawnPoints, isDM, dragState]);
   
   // Перерисовка при изменениях
   useEffect(() => {
     drawFog();
   }, [drawFog, lastUpdated]);
-  
-  // Состояние для контекстного меню
-  const [contextMenu, setContextMenu] = useState({
-    visible: false,
-    x: 0,
-    y: 0,
-    mapX: 0,
-    mapY: 0
-  });
+
+  // Функция для определения клика по точке спавна
+  const getClickedSpawnPoint = useCallback((x: number, y: number) => {
+    const halfSize = SPAWN_SIZE / 2;
+    return spawnPoints.find(spawn => {
+      const gridX = Math.round(spawn.x / GRID_SIZE) * GRID_SIZE;
+      const gridY = Math.round(spawn.y / GRID_SIZE) * GRID_SIZE;
+      
+      return x >= gridX - halfSize && x <= gridX + halfSize &&
+             y >= gridY - halfSize && y <= gridY + halfSize;
+    });
+  }, [spawnPoints, GRID_SIZE, SPAWN_SIZE]);
+
+  // Обработчик начала перетаскивания
+  const handleMouseDown = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (!isDM || e.button !== 0) return; // Только левая кнопка мыши
+    
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    
+    const rect = canvas.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / mapScale - mapOffset.x / mapScale;
+    const y = (e.clientY - rect.top) / mapScale - mapOffset.y / mapScale;
+    
+    const clickedSpawn = getClickedSpawnPoint(x, y);
+    if (clickedSpawn) {
+      setDragState({
+        isDragging: true,
+        spawnId: clickedSpawn.id,
+        offset: {
+          x: x - clickedSpawn.x,
+          y: y - clickedSpawn.y
+        }
+      });
+      e.preventDefault();
+    }
+  }, [isDM, mapScale, mapOffset, getClickedSpawnPoint]);
+
+  // Обработчик движения мыши (перетаскивание)
+  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (!dragState.isDragging || !dragState.spawnId) return;
+    
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    
+    const rect = canvas.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / mapScale - mapOffset.x / mapScale;
+    const y = (e.clientY - rect.top) / mapScale - mapOffset.y / mapScale;
+    
+    // Обновляем позицию точки спавна
+    const newX = x - dragState.offset.x;
+    const newY = y - dragState.offset.y;
+    
+    useFogOfWarStore.getState().updateSpawnPoint(dragState.spawnId, { x: newX, y: newY });
+  }, [dragState, mapScale, mapOffset]);
+
+  // Обработчик окончания перетаскивания
+  const handleMouseUp = useCallback(() => {
+    if (dragState.isDragging && dragState.spawnId) {
+      // Привязываем к сетке при завершении перетаскивания
+      const spawn = spawnPoints.find(s => s.id === dragState.spawnId);
+      if (spawn) {
+        const gridX = Math.round(spawn.x / GRID_SIZE) * GRID_SIZE;
+        const gridY = Math.round(spawn.y / GRID_SIZE) * GRID_SIZE;
+        useFogOfWarStore.getState().updateSpawnPoint(dragState.spawnId, { x: gridX, y: gridY });
+      }
+    }
+    
+    setDragState({
+      isDragging: false,
+      spawnId: null,
+      offset: { x: 0, y: 0 }
+    });
+  }, [dragState, spawnPoints, GRID_SIZE]);
 
   // Обработчик правого клика для показа контекстного меню
   const handleContextMenu = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
@@ -119,14 +243,18 @@ export const FogOfWarCanvas: React.FC<FogOfWarCanvasProps> = ({
     const mapX = (e.clientX - rect.left) / mapScale - mapOffset.x / mapScale;
     const mapY = (e.clientY - rect.top) / mapScale - mapOffset.y / mapScale;
     
+    // Проверяем, кликнули ли по точке спавна
+    const clickedSpawn = getClickedSpawnPoint(mapX, mapY);
+    
     setContextMenu({
       visible: true,
       x: e.clientX,
       y: e.clientY,
       mapX,
-      mapY
+      mapY,
+      clickedSpawn // Добавляем кликнутую точку спавна в контекст
     });
-  }, [isDM, mapScale, mapOffset]);
+  }, [isDM, mapScale, mapOffset, getClickedSpawnPoint]);
 
   // Закрытие контекстного меню
   const closeContextMenu = useCallback(() => {
@@ -168,6 +296,13 @@ export const FogOfWarCanvas: React.FC<FogOfWarCanvasProps> = ({
     console.log('🎯 Добавление ловушки в позицию:', contextMenu.mapX, contextMenu.mapY);
     // TODO: Открыть настройки ловушки
   }, [contextMenu]);
+
+  // Удаление точки спавна
+  const handleDeleteSpawn = useCallback(() => {
+    if (contextMenu.clickedSpawn?.id) {
+      useFogOfWarStore.getState().removeSpawnPoint(contextMenu.clickedSpawn.id);
+    }
+  }, [contextMenu]);
   
   return (
     <>
@@ -178,9 +313,13 @@ export const FogOfWarCanvas: React.FC<FogOfWarCanvasProps> = ({
           width: mapWidth,
           height: mapHeight,
           zIndex: 20,
-          cursor: isDM ? 'context-menu' : 'default'
+          cursor: dragState.isDragging ? 'grabbing' : (isDM ? 'pointer' : 'default')
         }}
         onContextMenu={handleContextMenu}
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+        onMouseLeave={handleMouseUp} // Завершаем перетаскивание если мышь покинула канвас
       />
       
       {/* Контекстное меню для DM */}
@@ -189,12 +328,14 @@ export const FogOfWarCanvas: React.FC<FogOfWarCanvasProps> = ({
           x={contextMenu.x}
           y={contextMenu.y}
           visible={contextMenu.visible}
+          clickedSpawn={contextMenu.clickedSpawn}
           onClose={closeContextMenu}
           onAddSpawn={handleAddSpawn}
           onAddToken={handleAddToken}
           onAddAsset={handleAddAsset}
           onAddEffect={handleAddEffect}
           onAddTrap={handleAddTrap}
+          onDeleteSpawn={handleDeleteSpawn}
         />
       )}
       

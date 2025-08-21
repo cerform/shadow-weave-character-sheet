@@ -1,32 +1,68 @@
 import React from 'react';
-import { MapPin, Users, Sword, Image, Target, Zap } from 'lucide-react';
+import { MapPin, Users, Sword, Image, Target, Zap, Trash2, Move } from 'lucide-react';
+import { SpawnPoint } from '@/stores/fogOfWarStore';
+
+interface MenuItem {
+  icon: any;
+  label: string;
+  action: () => void;
+  color: string;
+  bgColor: string;
+  disabled?: boolean;
+  tooltip?: string;
+}
 
 interface ContextMenuProps {
   x: number;
   y: number;
   visible: boolean;
+  clickedSpawn?: SpawnPoint;
   onClose: () => void;
   onAddSpawn: () => void;
   onAddToken: () => void;
   onAddAsset: () => void;
   onAddEffect: () => void;
   onAddTrap: () => void;
+  onDeleteSpawn?: () => void;
 }
 
 export const ContextMenu: React.FC<ContextMenuProps> = ({
   x,
   y,
   visible,
+  clickedSpawn,
   onClose,
   onAddSpawn,
   onAddToken,
   onAddAsset,
   onAddEffect,
   onAddTrap,
+  onDeleteSpawn,
 }) => {
   if (!visible) return null;
 
-  const menuItems = [
+  // Меню для точки спавна
+  const spawnMenuItems: MenuItem[] = clickedSpawn ? [
+    {
+      icon: Move,
+      label: 'Переместить точку спавна',
+      action: () => {}, // Перетаскивание уже реализовано
+      color: 'text-blue-400 hover:text-blue-300',
+      bgColor: 'hover:bg-blue-400/10',
+      disabled: true,
+      tooltip: 'Используйте перетаскивание мышью'
+    },
+    {
+      icon: Trash2,
+      label: 'Удалить точку спавна',
+      action: onDeleteSpawn!,
+      color: 'text-red-400 hover:text-red-300',
+      bgColor: 'hover:bg-red-400/10'
+    }
+  ] : [];
+
+  // Меню для пустого места
+  const generalMenuItems: MenuItem[] = [
     {
       icon: MapPin,
       label: 'Добавить точку спавна',
@@ -74,6 +110,8 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
     }
   ];
 
+  const menuItems = clickedSpawn ? spawnMenuItems : generalMenuItems;
+
   return (
     <>
       {/* Overlay для закрытия меню */}
@@ -97,14 +135,23 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
         <div className="py-2">
           {menuItems.map((item, index) => {
             const Icon = item.icon;
+            const isDisabled = 'disabled' in item && item.disabled;
             return (
               <button
                 key={index}
                 onClick={() => {
-                  item.action();
-                  onClose();
+                  if (!isDisabled) {
+                    item.action();
+                    onClose();
+                  }
                 }}
-                className={`w-full px-4 py-2 text-left flex items-center gap-3 transition-colors ${item.color} ${item.bgColor}`}
+                disabled={isDisabled}
+                className={`w-full px-4 py-2 text-left flex items-center gap-3 transition-colors ${
+                  isDisabled 
+                    ? 'text-neutral-500 cursor-not-allowed' 
+                    : `${item.color} ${item.bgColor}`
+                }`}
+                title={'tooltip' in item ? item.tooltip : undefined}
               >
                 <Icon size={16} />
                 <span className="text-sm">{item.label}</span>
@@ -115,7 +162,10 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
         
         <div className="border-t border-neutral-700 px-4 py-2">
           <div className="text-xs text-neutral-500">
-            ПКМ - контекстное меню | Shift+клик - быстрое действие
+            {clickedSpawn 
+              ? 'ЛКМ+перетаскивание - переместить | ПКМ - удалить'
+              : 'ПКМ - контекстное меню | ЛКМ+перетаскивание - точки спавна'
+            }
           </div>
         </div>
       </div>
