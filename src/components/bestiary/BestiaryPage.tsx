@@ -1,5 +1,5 @@
 // src/components/bestiary/BestiaryPage.tsx
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -14,7 +14,7 @@ import { useMonstersStore } from '@/stores/monstersStore';
 import { BattleSystemAdapter } from '@/adapters/battleSystemAdapter';
 import { MONSTERS_DATABASE, getCRNumericValue } from '@/data/monsters';
 import type { Monster, MonsterFilter } from '@/types/monsters';
-import { Search, Filter, Dice6, Users, Crown, Download } from 'lucide-react';
+import { Search, Filter, Dice6, Users, Crown, Download, Loader2 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
 interface BestiaryPageProps {
@@ -33,7 +33,12 @@ export const BestiaryPage: React.FC<BestiaryPageProps> = ({
   const [isImporterOpen, setIsImporterOpen] = useState(false);
   
   const { addToken } = useEnhancedBattleStore();
-  const { getAllMonsters, addImportedMonsters } = useMonstersStore();
+  const { getAllMonsters, addImportedMonsters, loadSupabaseMonsters, isLoadingSupabase } = useMonstersStore();
+
+  // Загружаем монстров из Supabase при инициализации
+  useEffect(() => {
+    loadSupabaseMonsters();
+  }, [loadSupabaseMonsters]);
 
   // Получаем все монстры из хранилища
   const allMonsters = getAllMonsters();
@@ -165,9 +170,11 @@ export const BestiaryPage: React.FC<BestiaryPageProps> = ({
           <Dice6 className="w-6 h-6 text-primary" />
           <div>
             <h1 className="text-2xl font-bold">Бестиарий D&D 5e</h1>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-muted-foreground flex items-center gap-2">
+              {isLoadingSupabase && <Loader2 className="w-4 h-4 animate-spin" />}
               {filteredMonsters.length} из {allMonsters.length} монстров
               {isDM && " • Режим ДМ"}
+              {isLoadingSupabase && " • Загрузка..."}
             </p>
           </div>
         </div>

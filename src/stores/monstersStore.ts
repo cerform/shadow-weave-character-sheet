@@ -3,11 +3,14 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { Monster } from '@/types/monsters';
 import { MONSTERS_DATABASE } from '@/data/monsters';
+import { MonstersService } from '@/services/monstersService';
 
 interface MonstersState {
   importedMonsters: Monster[];
   favoriteMonsters: string[];
   customMonsters: Monster[];
+  supabaseMonsters: Monster[];
+  isLoadingSupabase: boolean;
   addImportedMonsters: (monsters: Monster[]) => void;
   removeImportedMonster: (monsterId: string) => void;
   toggleFavorite: (monsterId: string) => void;
@@ -16,6 +19,7 @@ interface MonstersState {
   removeCustomMonster: (monsterId: string) => void;
   getAllMonsters: () => Monster[];
   clearImportedMonsters: () => void;
+  loadSupabaseMonsters: () => Promise<void>;
 }
 
 export const useMonstersStore = create<MonstersState>()(
@@ -24,6 +28,8 @@ export const useMonstersStore = create<MonstersState>()(
       importedMonsters: [],
       favoriteMonsters: [],
       customMonsters: [],
+      supabaseMonsters: [],
+      isLoadingSupabase: false,
 
       addImportedMonsters: (monsters) => {
         set((state) => {
@@ -76,6 +82,7 @@ export const useMonstersStore = create<MonstersState>()(
         const state = get();
         return [
           ...MONSTERS_DATABASE,
+          ...state.supabaseMonsters,
           ...state.importedMonsters,
           ...state.customMonsters
         ];
@@ -83,6 +90,17 @@ export const useMonstersStore = create<MonstersState>()(
 
       clearImportedMonsters: () => {
         set({ importedMonsters: [] });
+      },
+
+      loadSupabaseMonsters: async () => {
+        set({ isLoadingSupabase: true });
+        try {
+          const monsters = await MonstersService.getAllCreatures();
+          set({ supabaseMonsters: monsters, isLoadingSupabase: false });
+        } catch (error) {
+          console.error('Error loading Supabase monsters:', error);
+          set({ isLoadingSupabase: false });
+        }
       }
     }),
     {
