@@ -217,15 +217,18 @@ export default function BattleMapUI() {
     };
 
     const handleMouseDown = (e: MouseEvent) => {
-      if (e.button === 1 || (e.button === 0 && e.ctrlKey)) { // Средняя кнопка или Ctrl+ЛКМ
+      // Только для правой кнопки мыши или Ctrl+ЛКМ
+      if (e.button === 2 || (e.button === 0 && e.ctrlKey)) {
         e.preventDefault();
         setIsPanning(true);
         panStart.current = { x: e.clientX - mapOffset.x, y: e.clientY - mapOffset.y };
+        container.style.cursor = 'grabbing';
       }
     };
 
     const handleMouseMove = (e: MouseEvent) => {
       if (isPanning) {
+        e.preventDefault();
         setMapOffset({
           x: e.clientX - panStart.current.x,
           y: e.clientY - panStart.current.y
@@ -233,18 +236,90 @@ export default function BattleMapUI() {
       }
     };
 
-    const handleMouseUp = () => {
+    const handleMouseUp = (e: MouseEvent) => {
+      if (isPanning) {
+        setIsPanning(false);
+        container.style.cursor = 'grab';
+      }
+    };
+
+    const handleContextMenu = (e: MouseEvent) => {
+      e.preventDefault(); // Отключаем контекстное меню для правой кнопки
+    };
+
+    // Обработчики touch для мобильных устройств
+    let lastTouchDistance = 0;
+    let touchStartOffset = { x: 0, y: 0 };
+
+    const handleTouchStart = (e: TouchEvent) => {
+      if (e.touches.length === 1) {
+        // Одиночное касание - панорамирование
+        const touch = e.touches[0];
+        touchStartOffset = { x: touch.clientX - mapOffset.x, y: touch.clientY - mapOffset.y };
+        setIsPanning(true);
+      } else if (e.touches.length === 2) {
+        // Двойное касание - масштабирование
+        const touch1 = e.touches[0];
+        const touch2 = e.touches[1];
+        lastTouchDistance = Math.sqrt(
+          Math.pow(touch2.clientX - touch1.clientX, 2) +
+          Math.pow(touch2.clientY - touch1.clientY, 2)
+        );
+      }
+    };
+
+    const handleTouchMove = (e: TouchEvent) => {
+      e.preventDefault();
+      
+      if (e.touches.length === 1 && isPanning) {
+        // Панорамирование
+        const touch = e.touches[0];
+        setMapOffset({
+          x: touch.clientX - touchStartOffset.x,
+          y: touch.clientY - touchStartOffset.y
+        });
+      } else if (e.touches.length === 2) {
+        // Масштабирование
+        const touch1 = e.touches[0];
+        const touch2 = e.touches[1];
+        const currentDistance = Math.sqrt(
+          Math.pow(touch2.clientX - touch1.clientX, 2) +
+          Math.pow(touch2.clientY - touch1.clientY, 2)
+        );
+        
+        if (lastTouchDistance > 0) {
+          const scaleDelta = currentDistance / lastTouchDistance;
+          const newScale = Math.min(3, Math.max(0.3, mapScale * scaleDelta));
+          setMapScale(newScale);
+        }
+        
+        lastTouchDistance = currentDistance;
+      }
+    };
+
+    const handleTouchEnd = () => {
       setIsPanning(false);
+      lastTouchDistance = 0;
     };
 
     container.addEventListener('wheel', handleWheel, { passive: false });
     container.addEventListener('mousedown', handleMouseDown);
+    container.addEventListener('contextmenu', handleContextMenu);
+    container.addEventListener('touchstart', handleTouchStart, { passive: false });
+    container.addEventListener('touchmove', handleTouchMove, { passive: false });
+    container.addEventListener('touchend', handleTouchEnd);
+    
     window.addEventListener('mousemove', handleMouseMove);
     window.addEventListener('mouseup', handleMouseUp);
 
     return () => {
       container.removeEventListener('wheel', handleWheel);
       container.removeEventListener('mousedown', handleMouseDown);
+      container.removeEventListener('contextmenu', handleContextMenu);
+      container.removeEventListener('touchstart', handleTouchStart);
+      container.removeEventListener('touchmove', handleTouchMove);
+      container.removeEventListener('touchend', handleTouchEnd);
+      
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseup', handleMouseUp);
     };
@@ -763,12 +838,13 @@ export default function BattleMapUI() {
           <div className="absolute inset-0 overflow-hidden">
             <div className="w-full h-full flex items-center justify-center p-4">
               <div 
-                className="relative rounded-xl shadow-xl bg-neutral-800 overflow-hidden transition-transform duration-200" 
+                className="relative rounded-xl shadow-xl bg-neutral-800 overflow-hidden transition-transform duration-200 select-none" 
                 style={{ 
                   width: MAP_W, 
                   height: MAP_H,
                   transform: `scale(${mapScale}) translate(${mapOffset.x / mapScale}px, ${mapOffset.y / mapScale}px)`,
-                  cursor: isPanning ? 'grabbing' : 'grab'
+                  cursor: isPanning ? 'grabbing' : 'crosshair',
+                  touchAction: 'none'
                 }} 
                 onClick={onMapClick} 
                 ref={mapRef}
@@ -831,9 +907,10 @@ export default function BattleMapUI() {
             <div className="bg-neutral-900/90 backdrop-blur border border-neutral-700 rounded-lg p-2">
               <div className="text-xs text-white/70 mb-1">Управление</div>
               <div className="flex flex-col gap-1 text-xs text-white/60">
-                <div>📱 Drag - перемещение</div>
-                <div>🔍 Scroll - масштаб</div>
-                <div>👆 Click - действия</div>
+                <div>🖱️ Правая кнопка - перемещение</div>
+                <div>🔍 Колесо - масштаб</div>
+                <div>📱 Touch - жесты</div>
+                <div>👆 ЛКМ - действия</div>
               </div>
             </div>
             
