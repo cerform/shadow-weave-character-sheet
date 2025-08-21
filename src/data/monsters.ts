@@ -1666,6 +1666,410 @@ export const MONSTERS_DATABASE: Monster[] = [
     source: 'Basic',
     environment: ['Любой'],
     tokenSize: 4
+  },
+
+  {
+    id: 'fiendish-spirit',
+    name: 'Дух Исчадия',
+    nameEn: 'Fiendish Spirit',
+    size: 'Большой',
+    type: 'Исчадие',
+    alignment: 'нейтрально-злое',
+    armorClass: 13,
+    hitPoints: 50,
+    hitDice: '6d10+18',
+    speed: { walk: 40, fly: 60 },
+    abilities: {
+      strength: 13,
+      dexterity: 16,
+      constitution: 17,
+      intelligence: 10,
+      wisdom: 10,
+      charisma: 16
+    },
+    damageResistances: ['огонь'],
+    damageImmunities: ['некротический', 'яд'],
+    conditionImmunities: ['отравленное'],
+    senses: { 
+      darkvision: 60,
+      passivePerception: 10 
+    },
+    languages: ['Бездны', 'понимает языки создателя'],
+    challengeRating: '6',
+    experiencePoints: 2300,
+    proficiencyBonus: 3,
+    actions: [
+      {
+        name: 'Мультиатака',
+        description: 'Дух совершает две атаки: одну укусом и одну когтем.'
+      },
+      {
+        name: 'Укус',
+        description: 'Рукопашная атака оружием: +6 к попаданию, досягаемость 5 фт., одна цель. Попадание: 12 (2d8+3) колющего урона.',
+        attackBonus: 6,
+        damage: '2d8+3',
+        damageType: 'колющий'
+      }
+    ],
+    source: 'Basic',
+    environment: ['Нижние планы'],
+    tokenSize: 2
+  },
+
+  {
+    id: 'construct-spirit',
+    name: 'Дух конструкта',
+    nameEn: 'Construct Spirit',
+    size: 'Средний',
+    type: 'Конструкт',
+    alignment: 'нейтральное',
+    armorClass: 15,
+    hitPoints: 40,
+    hitDice: '6d8+12',
+    speed: { walk: 30 },
+    abilities: {
+      strength: 18,
+      dexterity: 10,
+      constitution: 14,
+      intelligence: 14,
+      wisdom: 11,
+      charisma: 5
+    },
+    damageImmunities: ['яд', 'психический'],
+    conditionImmunities: ['очарованное', 'изнурение', 'испуганное', 'паралич', 'отравленное', 'окаменение'],
+    senses: { 
+      darkvision: 60,
+      passivePerception: 10 
+    },
+    languages: ['понимает языки создателя, но не говорит'],
+    challengeRating: '4',
+    experiencePoints: 1100,
+    proficiencyBonus: 2,
+    traits: [
+      {
+        name: 'Неутомимость',
+        description: 'Дух не нуждается в воздухе, еде, питье или сне.'
+      }
+    ],
+    actions: [
+      {
+        name: 'Удар кулаком',
+        description: 'Рукопашная атака оружием: +6 к попаданию, досягаемость 5 фт., одна цель. Попадание: 10 (2d6+3) дробящего урона.',
+        attackBonus: 6,
+        damage: '2d6+3',
+        damageType: 'дробящий'
+      }
+    ],
+    source: 'Basic',
+    environment: ['Мастерские', 'Подземелье'],
+    tokenSize: 1
+  },
+
+  {
+    id: 'celestial-spirit',
+    name: 'Дух Небожителя',
+    nameEn: 'Celestial Spirit',
+    size: 'Большой',
+    type: 'Небожитель',
+    alignment: 'законно-доброе',
+    armorClass: 11,
+    hitPoints: 40,
+    hitDice: '6d10+6',
+    speed: { walk: 30, fly: 60 },
+    abilities: {
+      strength: 16,
+      dexterity: 14,
+      constitution: 12,
+      intelligence: 10,
+      wisdom: 15,
+      charisma: 17
+    },
+    damageResistances: ['лучистый'],
+    conditionImmunities: ['очарованное', 'изнурение', 'испуганное'],
+    senses: { 
+      darkvision: 60,
+      passivePerception: 12 
+    },
+    languages: ['Небесный', 'понимает языки создателя'],
+    challengeRating: '5',
+    experiencePoints: 1800,
+    proficiencyBonus: 3,
+    traits: [
+      {
+        name: 'Целительское сияние',
+        description: 'Дух может лечить союзников в пределах 10 футов.'
+      }
+    ],
+    actions: [
+      {
+        name: 'Сияющий лук',
+        description: 'Дальнобойная атака оружием: +5 к попаданию, дистанция 150/600 фт., одна цель. Попадание: 7 (2d6) лучистого урона.',
+        attackBonus: 5,
+        damage: '2d6',
+        damageType: 'лучистый'
+      }
+    ],
+    source: 'Basic',
+    environment: ['Верхние планы'],
+    tokenSize: 2
+  },
+
+  {
+    id: 'undead-spirit',
+    name: 'Дух Нежити',
+    nameEn: 'Undead Spirit',
+    size: 'Средний',
+    type: 'Нежить',
+    alignment: 'нейтрально-злое',
+    armorClass: 11,
+    hitPoints: 30,
+    hitDice: '6d8+6',
+    speed: { walk: 30, fly: 40 },
+    abilities: {
+      strength: 12,
+      dexterity: 16,
+      constitution: 12,
+      intelligence: 4,
+      wisdom: 10,
+      charisma: 9
+    },
+    damageImmunities: ['некротический', 'яд'],
+    conditionImmunities: ['изнурение', 'отравленное'],
+    senses: { 
+      darkvision: 60,
+      passivePerception: 10 
+    },
+    languages: ['понимает языки, которые знал при жизни'],
+    challengeRating: '3',
+    experiencePoints: 700,
+    proficiencyBonus: 2,
+    traits: [
+      {
+        name: 'Бестелесность',
+        description: 'Дух может проходить через существ и объекты.'
+      }
+    ],
+    actions: [
+      {
+        name: 'Иссушающее касание',
+        description: 'Рукопашная атака оружием: +5 к попаданию, досягаемость 5 фт., одна цель. Попадание: 7 (1d8+3) некротического урона.',
+        attackBonus: 5,
+        damage: '1d8+3',
+        damageType: 'некротический'
+      }
+    ],
+    source: 'Basic',
+    environment: ['Кладбища', 'Подземелье'],
+    tokenSize: 1
+  },
+
+  {
+    id: 'elemental-spirit',
+    name: 'Дух Стихии',
+    nameEn: 'Elemental Spirit',
+    size: 'Средний',
+    type: 'Элементаль',
+    alignment: 'нейтральное',
+    armorClass: 11,
+    hitPoints: 50,
+    hitDice: '8d8+16',
+    speed: { walk: 40, fly: 60 },
+    abilities: {
+      strength: 18,
+      dexterity: 15,
+      constitution: 14,
+      intelligence: 4,
+      wisdom: 10,
+      charisma: 16
+    },
+    damageImmunities: ['яд'],
+    conditionImmunities: ['изнурение', 'паралич', 'окаменение', 'отравленное', 'без сознания'],
+    senses: { 
+      darkvision: 60,
+      passivePerception: 10 
+    },
+    languages: ['Первичный', 'понимает языки создателя'],
+    challengeRating: '5',
+    experiencePoints: 1800,
+    proficiencyBonus: 3,
+    actions: [
+      {
+        name: 'Удар',
+        description: 'Рукопашная атака оружием: +7 к попаданию, досягаемость 5 фт., одна цель. Попадание: 8 (1d8+4) дробящего урона.',
+        attackBonus: 7,
+        damage: '1d8+4',
+        damageType: 'дробящий'
+      }
+    ],
+    source: 'Basic',
+    environment: ['Стихийные планы'],
+    tokenSize: 1
+  },
+
+  {
+    id: 'shadow-spirit',
+    name: 'Дух Тени',
+    nameEn: 'Shadow Spirit',
+    size: 'Средний',
+    type: 'Монстр',
+    alignment: 'нейтрально-злое',
+    armorClass: 11,
+    hitPoints: 35,
+    hitDice: '6d8+12',
+    speed: { walk: 40, fly: 40 },
+    abilities: {
+      strength: 13,
+      dexterity: 16,
+      constitution: 15,
+      intelligence: 4,
+      wisdom: 10,
+      charisma: 16
+    },
+    damageImmunities: ['некротический'],
+    conditionImmunities: ['изнурение', 'испуганное'],
+    senses: { 
+      darkvision: 120,
+      passivePerception: 10 
+    },
+    languages: ['понимает языки создателя, но не говорит'],
+    challengeRating: '4',
+    experiencePoints: 1100,
+    proficiencyBonus: 2,
+    traits: [
+      {
+        name: 'Теневое сокрытие',
+        description: 'Находясь в тусклом свете или темноте, дух может скрыться бонусным действием.'
+      }
+    ],
+    actions: [
+      {
+        name: 'Теневой удар',
+        description: 'Рукопашная атака оружием: +6 к попаданию, досягаемость 5 фт., одна цель. Попадание: 7 (1d8+3) некротического урона.',
+        attackBonus: 6,
+        damage: '1d8+3',
+        damageType: 'некротический'
+      }
+    ],
+    source: 'Basic',
+    environment: ['Теневой план', 'Подземелье'],
+    tokenSize: 1
+  },
+
+  {
+    id: 'fey-spirit',
+    name: 'Дух Феи',
+    nameEn: 'Fey Spirit',
+    size: 'Маленький',
+    type: 'Фея',
+    alignment: 'нейтральное',
+    armorClass: 12,
+    hitPoints: 30,
+    hitDice: '6d6+6',
+    speed: { walk: 40, fly: 60 },
+    abilities: {
+      strength: 13,
+      dexterity: 16,
+      constitution: 12,
+      intelligence: 14,
+      wisdom: 15,
+      charisma: 16
+    },
+    skills: { 
+      perception: 4,
+      stealth: 5
+    },
+    conditionImmunities: ['очарованное'],
+    senses: { 
+      darkvision: 60,
+      passivePerception: 14 
+    },
+    languages: ['Сильван', 'понимает языки создателя'],
+    challengeRating: '3',
+    experiencePoints: 700,
+    proficiencyBonus: 2,
+    traits: [
+      {
+        name: 'Фейская магия',
+        description: 'Дух может использовать простые заклинания иллюзии и очарования.'
+      }
+    ],
+    actions: [
+      {
+        name: 'Природная атака',
+        description: 'Рукопашная атака оружием: +5 к попаданию, досягаемость 5 фт., одна цель. Попадание: 6 (1d6+3) магического урона.',
+        attackBonus: 5,
+        damage: '1d6+3',
+        damageType: 'магический'
+      }
+    ],
+    source: 'Basic',
+    environment: ['Леса', 'Фейвайлд'],
+    tokenSize: 0.5
+  },
+
+  {
+    id: 'spirit-dragon',
+    name: 'Духовный дракон',
+    nameEn: 'Spirit Dragon',
+    size: 'Огромный',
+    type: 'Дракон',
+    alignment: 'нейтральное',
+    armorClass: 17,
+    hitPoints: 138,
+    hitDice: '12d12+60',
+    speed: { walk: 40, fly: 80 },
+    abilities: {
+      strength: 23,
+      dexterity: 14,
+      constitution: 21,
+      intelligence: 16,
+      wisdom: 15,
+      charisma: 19
+    },
+    savingThrows: {
+      dexterity: 7,
+      constitution: 10,
+      wisdom: 7,
+      charisma: 9
+    },
+    skills: { 
+      perception: 12,
+      stealth: 7
+    },
+    damageImmunities: ['некротический'],
+    senses: { 
+      blindsight: 30,
+      darkvision: 120,
+      passivePerception: 22 
+    },
+    languages: ['Драконий', 'Общий'],
+    challengeRating: '10',
+    experiencePoints: 5900,
+    proficiencyBonus: 4,
+    traits: [
+      {
+        name: 'Легендарное сопротивление (2/день)',
+        description: 'Если дракон проваливает спасбросок, он может вместо этого преуспеть в нём.'
+      }
+    ],
+    actions: [
+      {
+        name: 'Мультиатака',
+        description: 'Дракон совершает три атаки: одну укусом и две когтями.'
+      },
+      {
+        name: 'Укус',
+        description: 'Рукопашная атака оружием: +11 к попаданию, досягаемость 10 фт., одна цель. Попадание: 17 (2d10+6) колющего урона плюс 4 (1d8) некротического урона.',
+        attackBonus: 11,
+        damage: '2d10+6',
+        damageType: 'колющий',
+        additionalDamage: '1d8',
+        additionalDamageType: 'некротический'
+      }
+    ],
+    source: 'HB',
+    environment: ['Горы', 'Духовные планы'],
+    tokenSize: 3
   }
 ];
 
