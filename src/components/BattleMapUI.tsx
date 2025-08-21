@@ -173,7 +173,7 @@ function TokenVisual({ token, use3D, modelReady, onModelError }: { token: Token;
 export default function BattleMapUI() {
   // Подключение к реальному бестиарию
   const { getAllMonsters, loadSupabaseMonsters, isLoadingSupabase } = useMonstersStore();
-  const { isDM } = useUnifiedBattleStore();
+  const { isDM, mapEditMode, setMapEditMode } = useUnifiedBattleStore();
   
   // Режим и панели
   const [leftOpen, setLeftOpen] = useState(true);
@@ -217,15 +217,16 @@ export default function BattleMapUI() {
     };
 
     const handleMouseDown = (e: MouseEvent) => {
-      // Только правая кнопка мыши для панорамирования
-      if (e.button === 2) {
+      // В режиме редактирования карты - только правая кнопка для панорамирования
+      // В обычном режиме - правая кнопка для панорамирования
+      if (e.button === 2 && !mapEditMode) {
         e.preventDefault();
         e.stopPropagation();
         setIsPanning(true);
         panStart.current = { x: e.clientX - mapOffset.x, y: e.clientY - mapOffset.y };
         container.style.cursor = 'grabbing';
       }
-      // НЕ перехватываем левую кнопку - оставляем для игровых действий
+      // НЕ перехватываем левую кнопку - оставляем для игровых действий или рисования тумана
     };
 
     const handleMouseMove = (e: MouseEvent) => {
@@ -241,7 +242,7 @@ export default function BattleMapUI() {
     const handleMouseUp = (e: MouseEvent) => {
       if (isPanning && e.button === 2) {
         setIsPanning(false);
-        container.style.cursor = 'crosshair';
+        container.style.cursor = mapEditMode ? 'crosshair' : 'default';
       }
     };
 
@@ -346,7 +347,7 @@ export default function BattleMapUI() {
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseup', handleMouseUp);
     };
-  }, [mapScale, mapOffset, isPanning]);
+  }, [mapScale, mapOffset, isPanning, mapEditMode]);
 
   // Токены/инициатива
   const [tokens, setTokens] = useState<Token[]>([]);
@@ -571,6 +572,18 @@ export default function BattleMapUI() {
     const adjustedX = (x / mapScale) - (mapOffset.x / mapScale);
     const adjustedY = (y / mapScale) - (mapOffset.y / mapScale);
     
+    // Режим редактирования карты
+    if (isDM && mapEditMode) {
+      if (e.button === 0) { // Левая кнопка - рисовать туман (скрывать)
+        setHideAreas((prev) => [...prev, { x: adjustedX, y: adjustedY, r: fogRadius }]);
+        setLog((l) => [{ id: uid("log"), ts: now(), text: `ДМ нарисовал туман в точке (${Math.round(adjustedX)}, ${Math.round(adjustedY)})` }, ...l]);
+        return;
+      }
+      // Правый клик обрабатывается в onContextMenu
+      return;
+    }
+    
+    // Обычный режим
     if (isDM && dmTool === "add-npc" && pendingSpawn) { 
       addMonsterAt(pendingSpawn, { x: adjustedX, y: adjustedY }); 
       setPendingSpawn(null); 
@@ -585,6 +598,23 @@ export default function BattleMapUI() {
     } else if (dmTool === "fog-hide") {
       setHideAreas((prev) => [...prev, { x: adjustedX, y: adjustedY, r: fogRadius }]);
       setLog((l) => [{ id: uid("log"), ts: now(), text: `ДМ скрыл область в точке (${Math.round(adjustedX)}, ${Math.round(adjustedY)})` }, ...l]);
+    }
+  };
+
+  // Правый клик в режиме редактирования карты - открывать туман
+  const onMapContextMenu = (e: React.MouseEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    
+    if (isDM && mapEditMode) {
+      const rect = e.currentTarget.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      
+      const adjustedX = (x / mapScale) - (mapOffset.x / mapScale);
+      const adjustedY = (y / mapScale) - (mapOffset.y / mapScale);
+      
+      setReveal((prev) => [...prev, { x: adjustedX, y: adjustedY, r: fogRadius }]);
+      setLog((l) => [{ id: uid("log"), ts: now(), text: `ДМ открыл туман в точке (${Math.round(adjustedX)}, ${Math.round(adjustedY)})` }, ...l]);
     }
   };
 
@@ -639,6 +669,10 @@ export default function BattleMapUI() {
             <div className="space-y-2">
               <Title>Туман войны</Title>
               <div className="flex items-center gap-2"><input id="fog" type="checkbox" checked={fogEnabled} onChange={(e)=>setFogEnabled(e.target.checked)} /><label htmlFor="fog" className="text-sm">Включить</label></div>
+              <div className="flex items-center gap-2">
+                <input id="mapEdit" type="checkbox" checked={mapEditMode} onChange={(e)=>setMapEditMode(e.target.checked)} />
+                <label htmlFor="mapEdit" className="text-sm">Режим редактирования карты</label>
+              </div>
               <div className="flex items-center gap-2 text-sm"><span className="opacity-70 w-24">Прозрачность</span><input type="range" min={0.2} max={0.95} step={0.05} value={fogOpacity} onChange={(e)=>setFogOpacity(parseFloat(e.target.value))} className="w-full" /><span className="w-12 text-right">{Math.round(fogOpacity*100)}%</span></div>
               <div className="flex items-center gap-2 text-sm"><span className="opacity-70 w-24">Радиус</span><input type="range" min={60} max={260} step={10} value={fogRadius} onChange={(e)=>setFogRadius(parseInt(e.target.value))} className="w-full" /><span className="w-12 text-right">{fogRadius}</span></div>
               <div className="flex items-center gap-2"><input id="autoAlly" type="checkbox" checked={autoRevealAllies} onChange={(e)=>setAutoRevealAllies(e.target.checked)} /><label htmlFor="autoAlly" className="text-sm">Автосвет вокруг союзников</label></div>
@@ -648,10 +682,21 @@ export default function BattleMapUI() {
                 <button className="px-2 py-1 rounded-md border border-neutral-700 text-sm" onClick={()=>{setHideAreas(h=>h.slice(0,-1)); setLog((l)=>[{ id: uid("log"), ts: now(), text: "ДМ отменил последнее скрытие" }, ...l]);}}>Отменить скрытие</button>
               </div>
               <div className="text-xs opacity-70">
-                Подсказки: 
-                <br />• «Добавить NPC» + клик по карте — спавн монстра
-                <br />• «Открыть туман» + клик — открыть область
-                <br />• «Скрыть туман» + клик — скрыть область поверх открытой
+                {mapEditMode ? (
+                  <>
+                    Режим редактирования карты:
+                    <br />• ЛКМ — рисовать туман (скрывать)
+                    <br />• ПКМ — открывать туман (показывать)
+                  </>
+                ) : (
+                  <>
+                    Подсказки: 
+                    <br />• «Добавить NPC» + клик по карте — спавн монстра
+                    <br />• «Открыть туман» + клик — открыть область
+                    <br />• «Скрыть туман» + клик — скрыть область поверх открытой
+                    <br />• ПКМ — панорамирование карты
+                  </>
+                )}
               </div>
             </div>
 
@@ -886,10 +931,11 @@ export default function BattleMapUI() {
                   width: MAP_W, 
                   height: MAP_H,
                   transform: `scale(${mapScale}) translate(${mapOffset.x / mapScale}px, ${mapOffset.y / mapScale}px)`,
-                  cursor: isPanning ? 'grabbing' : 'crosshair',
+                  cursor: isPanning ? 'grabbing' : (mapEditMode ? 'crosshair' : 'default'),
                   touchAction: 'none'
                 }} 
                 onClick={onMapClick} 
+                onContextMenu={onMapContextMenu}
                 ref={mapRef}
               >
                 {/* Фон карты */}

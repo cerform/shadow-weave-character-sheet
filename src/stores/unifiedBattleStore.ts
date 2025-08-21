@@ -22,6 +22,7 @@ interface UnifiedBattleState {
   fogEnabled: boolean;
   paintMode: 'reveal' | 'hide';
   brushSize: number;
+  mapEditMode: boolean;
   
   // Камера
   cameraMode: boolean;
@@ -63,6 +64,7 @@ interface UnifiedBattleState {
   setFogEnabled: (enabled: boolean) => void;
   setPaintMode: (mode: 'reveal' | 'hide') => void;
   setBrushSize: (size: number) => void;
+  setMapEditMode: (enabled: boolean) => void;
   
   // Камера
   setCameraMode: (enabled: boolean) => void;
@@ -106,6 +108,7 @@ export const useUnifiedBattleStore = create<UnifiedBattleState>()(
       fogEnabled: true,
       paintMode: 'reveal',
       brushSize: 2,
+      mapEditMode: false,
       
       // Камера
       cameraMode: false,
@@ -166,6 +169,7 @@ export const useUnifiedBattleStore = create<UnifiedBattleState>()(
       setFogEnabled: (enabled) => set({ fogEnabled: enabled }),
       setPaintMode: (mode) => set({ paintMode: mode }),
       setBrushSize: (size) => set({ brushSize: size }),
+      setMapEditMode: (enabled) => set({ mapEditMode: enabled }),
       
       // Камера
       setCameraMode: (enabled) => set({ cameraMode: enabled }),
