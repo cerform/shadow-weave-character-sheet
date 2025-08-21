@@ -155,10 +155,16 @@ export const useUnifiedBattleStore = create<UnifiedBattleState>()(
               const newPosition = updates.position;
               const [x, y, z] = newPosition;
               
+              // Преобразуем 3D координаты в координаты сетки тумана
+              // 3D мир: центр в (0,0,0), размер 24x24
+              // Сетка тумана: 24x24 клетки, каждая клетка = 1 unit
+              const gridX = Math.floor(x + 12); // Сдвигаем в положительные координаты
+              const gridY = 23 - Math.floor(z + 12); // Инвертируем Z для правильной ориентации
+              
               // Обновляем туман войны для игрока
               const fogStore = useFogOfWarStore.getState();
-              console.log('🌫️ Обновляем туман войны для токена:', token.name, 'позиция:', x, z);
-              fogStore.updatePlayerVision(id, x * 5, z * 5); // конвертируем из grid координат в world координаты
+              console.log('🌫️ Обновляем туман войны для токена:', token.name, '3D pos:', [x, y, z], 'grid pos:', [gridX, gridY]);
+              fogStore.updatePlayerVision(id, gridX, gridY);
             }
             
             return updatedToken;

@@ -244,21 +244,21 @@ export const useFogOfWarStore = create<FogOfWarState>()(
         return { gridX, gridY, revealed };
       },
       
-      // Обновить видимость для игрока
-      updatePlayerVision: (playerId: string, worldX: number, worldY: number) => {
+      // Обновить видимость для игрока  
+      updatePlayerVision: (playerId: string, gridX: number, gridY: number) => {
         const { revealOnMove, playerVisionRadius } = get();
         
         console.log('🌫️ updatePlayerVision вызвана:', {
           playerId,
-          worldX,
-          worldY,
+          gridX,
+          gridY,
           revealOnMove,
           playerVisionRadius
         });
         
         if (revealOnMove) {
-          console.log('🌫️ Раскрываем туман в радиусе', playerVisionRadius, 'вокруг позиции', worldX, worldY);
-          get().revealArea(worldX, worldY, playerVisionRadius);
+          console.log('🌫️ Раскрываем туман в радиусе', playerVisionRadius, 'вокруг позиции', gridX, gridY);
+          get().revealArea(gridX, gridY, playerVisionRadius);
         } else {
           console.log('🌫️ revealOnMove выключено, туман не обновляется');
         }

@@ -333,10 +333,11 @@ export const FogOfWarCanvas: React.FC<FogOfWarCanvasProps> = ({
         ref={canvasRef}
         className="absolute inset-0 pointer-events-auto"
         style={{
-          width: mapWidth,
-          height: mapHeight,
-          zIndex: 20,
-          cursor: dragState.isDragging ? 'grabbing' : (isDM ? 'pointer' : 'default')
+          width: `${mapWidth}px`,
+          height: `${mapHeight}px`,
+          zIndex: 30, // Выше токенов но ниже UI
+          cursor: dragState.isDragging ? 'grabbing' : (isDM ? 'pointer' : 'default'),
+          imageRendering: 'pixelated' // Четкие пиксели
         }}
         onContextMenu={handleContextMenu}
         onMouseDown={handleMouseDown}
@@ -368,9 +369,10 @@ export const FogOfWarCanvas: React.FC<FogOfWarCanvasProps> = ({
           ref={playerViewCanvasRef}
           className="absolute inset-0 pointer-events-none"
           style={{
-            width: mapWidth,
-            height: mapHeight,
-            zIndex: 20
+            width: `${mapWidth}px`,
+            height: `${mapHeight}px`,
+            zIndex: 30,
+            imageRendering: 'pixelated'
           }}
         />
       )}
