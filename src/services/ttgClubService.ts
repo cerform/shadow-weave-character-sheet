@@ -127,4 +127,43 @@ export class TTGClubService {
       console.log(`Загружено ${loaded}/${total} монстров`);
     });
   }
+
+  static extractMonsterNamesFromList(listText: string): string[] {
+    const lines = listText.split('\n').filter(line => line.trim());
+    const monsterNames: string[] = [];
+    
+    for (const line of lines) {
+      // Ищем текст в квадратных скобках [English Name]
+      const match = line.match(/\[([^\]]+)\]/);
+      if (match) {
+        const englishName = match[1];
+        // Преобразуем в URL-совместимый ID
+        const monsterId = englishName
+          .toLowerCase()
+          .replace(/[^a-z0-9\s-]/g, '') // Убираем специальные символы
+          .replace(/\s+/g, '-') // Заменяем пробелы на дефисы
+          .replace(/-+/g, '-') // Убираем множественные дефисы
+          .trim();
+        
+        if (monsterId) {
+          monsterNames.push(monsterId);
+        }
+      }
+    }
+    
+    return monsterNames;
+  }
+
+  static async importMonstersFromList(listText: string, onProgress?: (loaded: number, total: number) => void): Promise<Monster[]> {
+    const monsterIds = this.extractMonsterNamesFromList(listText);
+    
+    if (monsterIds.length === 0) {
+      console.warn('Не найдено монстров в списке для импорта');
+      return [];
+    }
+    
+    console.log(`Импортируем ${monsterIds.length} монстров из списка:`, monsterIds);
+    
+    return await this.fetchMultipleMonsters(monsterIds, onProgress);
+  }
 }

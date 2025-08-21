@@ -6,9 +6,10 @@ import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Textarea } from '@/components/ui/textarea';
 import { TTGClubService } from '@/services/ttgClubService';
 import type { Monster } from '@/types/monsters';
-import { Download, Search, Globe, AlertCircle, CheckCircle, Loader2 } from 'lucide-react';
+import { Download, Search, Globe, AlertCircle, CheckCircle, Loader2, List } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
 interface TTGClubImporterProps {
@@ -27,7 +28,46 @@ export const TTGClubImporter: React.FC<TTGClubImporterProps> = ({
   const [totalToLoad, setTotalToLoad] = useState(0);
   const [importedMonsters, setImportedMonsters] = useState<Monster[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
-  const [importMode, setImportMode] = useState<'search' | 'random'>('random');
+  const [importMode, setImportMode] = useState<'search' | 'random' | 'list'>('list');
+  const [monsterList, setMonsterList] = useState(`Белдора [Beldora]
+Гелрин Фоухаммер [Ghelryn Foehammer]
+Даратра Шендрел [Darathra Shendrel]
+Дарз Хелгар [Darz Helgar]
+Драконий компаньон [Draconic Companion]
+Дрейк Компаньон [Drake Companion]
+Дух [Geist]
+Дух Аберрации [Aberrant Spirit]
+Дух воителя [Warrior Spirit]
+Дух дикого огня [Wildfire Spirit]
+Дух дракона [Draconic Spirit]
+Дух жнеца [Reaper Spirit]
+Дух Зверя [Bestial Spirit]
+Дух Исчадия [Fiendish Spirit]
+Дух конструкта [Construct Spirit]
+Дух Небожителя [Celestial Spirit]
+Дух Нежити [Undead Spirit]
+Дух Стихии [Elemental Spirit]
+Дух Тени [Shadow Spirit]
+Дух Феи [Fey Spirit]
+Духовный дракон [Spirit Dragon]
+Дювесса Шейн [Duvessa Shane]
+Железный паук [Iron Spider]
+Заражённый саженец [Blighted Sapling]
+Защитник колоды [Deck Defender]
+Земной зверь [Beast of the Land]
+Истинный тератект [True Teratekt]
+Истинный тератект-страж [True Teratekt Guardian]
+Компаньон из прошлого [Ancient Companion]
+Королевский истинный тератект [Royal True Teratekt]
+Крошечный слуга [Tiny servant]
+Кукла Халастера [Halaster Puppet]
+Маркхэм Саутвелл [Markham Southwell]
+Мирош Кселбрин [Miros Xelbrin]
+Могучий слуга Леук-о [Mighty Servant of Leuk-o]
+Морской зверь [Beast of the Sea]
+Наемник [Mercenary]
+Наксин Драткала [Naxene Drathkala]
+Нарт Тезрин [Narth Tezrin]`);
 
   const handleRandomImport = async () => {
     setIsLoading(true);
@@ -97,6 +137,45 @@ export const TTGClubImporter: React.FC<TTGClubImporterProps> = ({
     }
   };
 
+  const handleListImport = async () => {
+    if (!monsterList.trim()) {
+      toast({
+        title: "Введите список",
+        description: "Вставьте список монстров для импорта",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsLoading(true);
+    setProgress(0);
+    setImportedMonsters([]);
+    
+    try {
+      const monsters = await TTGClubService.importMonstersFromList(monsterList, (loaded, total) => {
+        setProgress((loaded / total) * 100);
+      });
+      
+      setImportedMonsters(monsters);
+      onMonstersImported(monsters);
+      
+      toast({
+        title: "Импорт завершен",
+        description: `Успешно импортировано ${monsters.length} монстров из списка`,
+      });
+    } catch (error) {
+      console.error('Ошибка импорта:', error);
+      toast({
+        title: "Ошибка импорта",
+        description: "Не удалось импортировать монстров из списка",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+      setProgress(100);
+    }
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -126,6 +205,13 @@ export const TTGClubImporter: React.FC<TTGClubImporterProps> = ({
             >
               Поиск монстров
             </Button>
+            <Button
+              variant={importMode === 'list' ? 'default' : 'outline'}
+              onClick={() => setImportMode('list')}
+              disabled={isLoading}
+            >
+              Импорт списка
+            </Button>
           </div>
 
           {/* Поиск */}
@@ -141,6 +227,90 @@ export const TTGClubImporter: React.FC<TTGClubImporterProps> = ({
               <Button onClick={handleSearchImport} disabled={isLoading || !searchQuery.trim()}>
                 <Search className="w-4 h-4 mr-2" />
                 Найти
+              </Button>
+            </div>
+          )}
+
+          {/* Импорт списка */}
+          {importMode === 'list' && (
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <p className="text-sm text-muted-foreground">
+                  Вставьте список монстров в формате: "Название [English Name]"
+                </p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    const predefinedList = `Белдора [Beldora]
+Гелрин Фоухаммер [Ghelryn Foehammer]
+Даратра Шендрел [Darathra Shendrel]
+Дарз Хелгар [Darz Helgar]
+Драконий компаньон [Draconic Companion]
+Дрейк Компаньон [Drake Companion]
+Дух [Geist]
+Дух Аберрации [Aberrant Spirit]
+Дух воителя [Warrior Spirit]
+Дух дикого огня [Wildfire Spirit]
+Дух дракона [Draconic Spirit]
+Дух жнеца [Reaper Spirit]
+Дух Зверя [Bestial Spirit]
+Дух Исчадия [Fiendish Spirit]
+Дух конструкта [Construct Spirit]
+Дух Небожителя [Celestial Spirit]
+Дух Нежити [Undead Spirit]
+Дух Стихии [Elemental Spirit]
+Дух Тени [Shadow Spirit]
+Дух Феи [Fey Spirit]
+Духовный дракон [Spirit Dragon]
+Дювесса Шейн [Duvessa Shane]
+Железный паук [Iron Spider]
+Заражённый саженец [Blighted Sapling]
+Защитник колоды [Deck Defender]
+Земной зверь [Beast of the Land]
+Истинный тератект [True Teratekt]
+Истинный тератект-страж [True Teratekt Guardian]
+Компаньон из прошлого [Ancient Companion]
+Королевский истинный тератект [Royal True Teratekt]
+Крошечный слуга [Tiny servant]
+Кукла Халастера [Halaster Puppet]
+Маркхэм Саутвелл [Markham Southwell]
+Мирош Кселбрин [Miros Xelbrin]
+Могучий слуга Леук-о [Mighty Servant of Leuk-o]
+Морской зверь [Beast of the Sea]
+Наемник [Mercenary]
+Наксин Драткала [Naxene Drathkala]
+Нарт Тезрин [Narth Tezrin]`;
+                    setMonsterList(predefinedList);
+                  }}
+                  disabled={isLoading}
+                >
+                  Вставить список
+                </Button>
+              </div>
+              <Textarea
+                placeholder={`Пример:
+Белдора [Beldora]
+Гелрин Фоухаммер [Ghelryn Foehammer]
+Даратра Шендрел [Darathra Shendrel]`}
+                value={monsterList}
+                onChange={(e) => setMonsterList(e.target.value)}
+                disabled={isLoading}
+                rows={6}
+                className="min-h-[120px]"
+              />
+              <Button onClick={handleListImport} disabled={isLoading || !monsterList.trim()} className="w-full">
+                {isLoading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Импортируем...
+                  </>
+                ) : (
+                  <>
+                    <List className="w-4 h-4 mr-2" />
+                    Импортировать из списка ({TTGClubService.extractMonsterNamesFromList(monsterList).length} монстров)
+                  </>
+                )}
               </Button>
             </div>
           )}
