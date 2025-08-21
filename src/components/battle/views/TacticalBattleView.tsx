@@ -2,10 +2,10 @@ import React, { useRef, useEffect } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Grid } from '@react-three/drei';
 import { Scene } from 'three';
-import { TopPanel } from '../ui/TopPanel';
-import { LeftPanel } from '../ui/LeftPanel';
-import { RightPanel } from '../ui/RightPanel';
-import { BottomPanel } from '../ui/BottomPanel';
+import { CompactTopPanel } from '../ui/CompactTopPanel';
+import { ActionBar } from '../ui/ActionBar';
+import { DMToolsPanel } from '../ui/DMToolsPanel';
+import { CombatLogPanel } from '../ui/CombatLogPanel';
 import { useCombatStateMachine } from '@/hooks/combat/useCombatStateMachine';
 import { useBattleEntitySync } from '@/hooks/useBattleEntitySync';
 import { useUnifiedBattleStore } from '@/stores/unifiedBattleStore';
@@ -71,37 +71,56 @@ export function TacticalBattleView({ isDM }: TacticalBattleViewProps) {
 
   return (
     <div className="w-full h-full relative bg-background text-foreground">
-      {/* Top Panel - Combat Status */}
-      <TopPanel 
+      {/* Compact Top Panel - Combat Status */}
+      <CompactTopPanel 
         combatState={combatState}
         activeEntity={activeEntity}
-        canEndTurn={canEndTurn()}
-        onEndTurn={() => activeEntity && endTurn(activeEntity.id)}
-        isCurrentPlayer={!currentDM}
+        isDM={currentDM}
+        onPauseCombat={() => console.log('Pause combat')}
+        onResetCombat={() => console.log('Reset combat')}
+        combatActive={combatState.phase !== 'idle'}
       />
 
-      {/* Left Panel - Units List */}
-      <LeftPanel 
+      {/* DM Tools Panel - Left Side */}
+      {currentDM && (
+        <DMToolsPanel
+          entities={entities}
+          sessionId={sessionId}
+          scene={sceneRef.current}
+          onToggleFogOfWar={() => console.log('Toggle fog')}
+          onToggleGrid={() => console.log('Toggle grid')}
+          onUploadMap={() => console.log('Upload map')}
+          onAddLight={() => console.log('Add light')}
+          onClearMap={() => console.log('Clear map')}
+          fogEnabled={true}
+          gridVisible={true}
+        />
+      )}
+
+      {/* Combat Log Panel - Right Side */}
+      <CombatLogPanel
         entities={entities}
-        activeEntityId={combatState.activeEntityId}
+        combatState={combatState}
+        log={[]}
+        isDM={currentDM}
+        onClearLog={() => console.log('Clear log')}
         onFocusEntity={(id) => console.log('Focus entity:', id)}
         onPingEntity={(id) => console.log('Ping entity:', id)}
       />
 
-      {/* Right Panel - Combat Log */}
-      <RightPanel 
-        log={[]}
-        isDM={currentDM}
-      />
-
-      {/* Bottom Panel - Action Bar */}
-      <BottomPanel 
+      {/* Action Bar - Bottom Center */}
+      <ActionBar
         activeEntity={activeEntity}
-        availableActions={[]}
-        onUseAction={(action, targetId) => activeEntity && useAction(activeEntity.id, action, targetId)}
-        onToggleMode={(mode) => console.log('Toggle mode:', mode)}
-        currentMode="select"
         isCurrentPlayer={!currentDM}
+        isDM={currentDM}
+        onMove={() => console.log('Move')}
+        onAttack={() => console.log('Attack')}
+        onCastSpell={() => console.log('Cast spell')}
+        onUseItem={() => console.log('Use item')}
+        onEndTurn={() => activeEntity && endTurn(activeEntity.id)}
+        onDiceRoll={() => console.log('Dice roll')}
+        onDefend={() => console.log('Defend')}
+        onHeal={() => console.log('Heal')}
       />
 
       {/* 3D Scene */}
@@ -151,15 +170,6 @@ export function TacticalBattleView({ isDM }: TacticalBattleViewProps) {
         </Canvas>
       </div>
 
-      {/* DM Tools */}
-      {currentDM && (
-        <div className="absolute top-20 left-4 z-20">
-          <MonsterSpawner 
-            sessionId={sessionId}
-            scene={sceneRef.current} 
-          />
-        </div>
-      )}
     </div>
   );
 }
