@@ -11,6 +11,7 @@ import { MonsterDetailsDialog } from './MonsterDetailsDialog';
 import { TTGClubImporter } from './TTGClubImporter';
 import Open5eImporter from './Open5eImporter';
 import AssetUploader from '../assets/AssetUploader';
+import { ModelSearchDialog } from './ModelSearchDialog';
 import { useUnifiedBattleStore } from '@/stores/unifiedBattleStore';
 import { useMonstersStore } from '@/stores/monstersStore';
 import { BattleSystemAdapter } from '@/adapters/battleSystemAdapter';
@@ -35,6 +36,8 @@ export const BestiaryPage: React.FC<BestiaryPageProps> = ({
   const [isImporterOpen, setIsImporterOpen] = useState(false);
   const [isOpen5eImporterOpen, setIsOpen5eImporterOpen] = useState(false);
   const [isAssetUploaderOpen, setIsAssetUploaderOpen] = useState(false);
+  const [isModelSearchOpen, setIsModelSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   
   const { addToken } = useUnifiedBattleStore();
   const { getAllMonsters, addImportedMonsters, loadSupabaseMonsters, isLoadingSupabase } = useMonstersStore();
@@ -153,6 +156,11 @@ export const BestiaryPage: React.FC<BestiaryPageProps> = ({
     });
   };
 
+  const handleSearch3DModel = (monster: Monster) => {
+    setSearchQuery(`${monster.name} dnd miniature`);
+    setIsModelSearchOpen(true);
+  };
+
   const handleViewDetails = (monster: Monster) => {
     setSelectedMonster(monster);
   };
@@ -209,6 +217,17 @@ export const BestiaryPage: React.FC<BestiaryPageProps> = ({
               >
                 <Upload className="w-4 h-4" />
                 3D Ассеты
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  setSearchQuery('fantasy monster creature');
+                  setIsModelSearchOpen(true);
+                }}
+                className="flex items-center gap-2"
+              >
+                <Search className="w-4 h-4" />
+                Найти модели
               </Button>
             </>
           )}
@@ -317,6 +336,7 @@ export const BestiaryPage: React.FC<BestiaryPageProps> = ({
                     monster={monster}
                     onAddToMap={isDM ? handleAddToMap : undefined}
                     onViewDetails={handleViewDetails}
+                    onSearch3DModel={handleSearch3DModel}
                   />
                 ))}
               </div>
@@ -339,6 +359,7 @@ export const BestiaryPage: React.FC<BestiaryPageProps> = ({
                             monster={monster}
                             onAddToMap={isDM ? handleAddToMap : undefined}
                             onViewDetails={handleViewDetails}
+                            onSearch3DModel={handleSearch3DModel}
                           />
                         ))}
                       </div>
@@ -364,6 +385,7 @@ export const BestiaryPage: React.FC<BestiaryPageProps> = ({
                             monster={monster}
                             onAddToMap={isDM ? handleAddToMap : undefined}
                             onViewDetails={handleViewDetails}
+                            onSearch3DModel={handleSearch3DModel}
                           />
                         ))}
                       </div>
@@ -415,6 +437,19 @@ export const BestiaryPage: React.FC<BestiaryPageProps> = ({
           </div>
         </div>
       )}
+
+      {/* Диалог поиска 3D моделей */}
+      <ModelSearchDialog
+        isOpen={isModelSearchOpen}
+        onClose={() => setIsModelSearchOpen(false)}
+        searchQuery={searchQuery}
+        onModelUploaded={() => {
+          toast({
+            title: "Модель загружена",
+            description: "3D модель успешно загружена в библиотеку ассетов",
+          });
+        }}
+      />
 
       {/* Диалог с подробностями монстра */}
       {selectedMonster && (

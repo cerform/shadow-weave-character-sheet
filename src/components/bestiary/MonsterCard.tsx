@@ -17,13 +17,15 @@ import {
   ChevronDown, 
   ChevronUp, 
   Box, 
-  Image 
+  Image,
+  Search 
 } from 'lucide-react';
 
 interface MonsterCardProps {
   monster: Monster;
   onAddToMap?: (monster: Monster) => void;
   onViewDetails?: (monster: Monster) => void;
+  onSearch3DModel?: (monster: Monster) => void;
   showActions?: boolean;
 }
 
@@ -31,6 +33,7 @@ export const MonsterCard: React.FC<MonsterCardProps> = ({
   monster, 
   onAddToMap, 
   onViewDetails, 
+  onSearch3DModel,
   showActions = true 
 }) => {
   const [isModelExpanded, setIsModelExpanded] = useState(false);
@@ -240,6 +243,17 @@ export const MonsterCard: React.FC<MonsterCardProps> = ({
               >
                 <Eye className="w-3 h-3 mr-1" />
                 Подробно
+              </Button>
+            )}
+            {onSearch3DModel && (
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => onSearch3DModel(monster)}
+                className="px-2"
+                title="Найти 3D модель"
+              >
+                <Search className="w-3 h-3" />
               </Button>
             )}
           </div>

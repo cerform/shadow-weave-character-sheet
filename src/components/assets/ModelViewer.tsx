@@ -165,7 +165,6 @@ const ModelViewer: React.FC<ModelViewerProps> = ({
           >
             <Suspense fallback={null}>
               <Stage 
-                contactShadow={false} 
                 shadows={true} 
                 adjustCamera={1.2}
                 intensity={0.5}
@@ -197,12 +196,6 @@ const ModelViewer: React.FC<ModelViewerProps> = ({
   );
 };
 
-// Предзагрузка модели для оптимизации
-useGLTF.preload = (url: string) => {
-  const loader = new GLTFLoader();
-  return new Promise((resolve, reject) => {
-    loader.load(url, resolve, undefined, reject);
-  });
-};
+// Предзагрузка модели удалена из-за конфликта типов
 
 export default ModelViewer;
