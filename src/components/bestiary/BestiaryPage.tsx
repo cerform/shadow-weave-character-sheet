@@ -11,7 +11,7 @@ import { MonsterDetailsDialog } from './MonsterDetailsDialog';
 import { TTGClubImporter } from './TTGClubImporter';
 import Open5eImporter from './Open5eImporter';
 import AssetUploader from '../assets/AssetUploader';
-import { useEnhancedBattleStore } from '@/stores/enhancedBattleStore';
+import { useUnifiedBattleStore } from '@/stores/unifiedBattleStore';
 import { useMonstersStore } from '@/stores/monstersStore';
 import { BattleSystemAdapter } from '@/adapters/battleSystemAdapter';
 import { MONSTERS_DATABASE, getCRNumericValue } from '@/data/monsters';
@@ -36,7 +36,7 @@ export const BestiaryPage: React.FC<BestiaryPageProps> = ({
   const [isOpen5eImporterOpen, setIsOpen5eImporterOpen] = useState(false);
   const [isAssetUploaderOpen, setIsAssetUploaderOpen] = useState(false);
   
-  const { addToken } = useEnhancedBattleStore();
+  const { addToken } = useUnifiedBattleStore();
   const { getAllMonsters, addImportedMonsters, loadSupabaseMonsters, isLoadingSupabase } = useMonstersStore();
 
   // Загружаем монстров из Supabase при инициализации
@@ -127,9 +127,8 @@ export const BestiaryPage: React.FC<BestiaryPageProps> = ({
       return;
     }
 
-    // Создаём токен из монстра
+    // Создаём токен из монстра для унифицированной боевой системы
     const token = {
-      id: `${monster.id}-${Date.now()}`,
       name: monster.name,
       hp: monster.hitPoints,
       maxHp: monster.hitPoints,
@@ -142,7 +141,8 @@ export const BestiaryPage: React.FC<BestiaryPageProps> = ({
       speed: monster.speed.walk ? Math.floor(monster.speed.walk / 5) : 6,
       hasMovedThisTurn: false,
       class: `CR ${monster.challengeRating}`,
-      modelUrl: monster.modelUrl
+      modelUrl: monster.modelUrl,
+      avatarUrl: monster.iconUrl
     };
 
     addToken(token);
