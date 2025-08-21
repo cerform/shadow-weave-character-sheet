@@ -96,9 +96,12 @@ export const FogOfWarCanvas: React.FC<FogOfWarCanvasProps> = ({
     drawFog();
   }, [drawFog, lastUpdated]);
   
-  // Обработка клика для добавления точек спавна
+  // Обработка клика для добавления точек спавна (только в режиме добавления спавнов)
+  const { mapEditMode } = useUnifiedBattleStore();
+  const [spawnMode, setSpawnMode] = useState(false);
+  
   const handleCanvasClick = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!isDM) return;
+    if (!isDM || !spawnMode) return;
     
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -116,21 +119,38 @@ export const FogOfWarCanvas: React.FC<FogOfWarCanvasProps> = ({
     
     if (!tooClose && spawnPoints.length < 6) {
       useFogOfWarStore.getState().addSpawnPoint(x, y);
+      setSpawnMode(false); // Выключаем режим после добавления
     }
-  }, [isDM, mapScale, mapOffset, spawnPoints]);
+  }, [isDM, mapScale, mapOffset, spawnPoints, spawnMode]);
   
   return (
     <>
       <canvas
         ref={canvasRef}
-        className="absolute inset-0 pointer-events-auto"
+        className={`absolute inset-0 ${spawnMode ? 'pointer-events-auto' : 'pointer-events-none'}`}
         style={{
           width: mapWidth,
           height: mapHeight,
-          zIndex: 20
+          zIndex: spawnMode ? 30 : 20,
+          cursor: spawnMode ? 'crosshair' : 'default'
         }}
         onClick={handleCanvasClick}
       />
+      
+      {/* Кнопка для режима добавления точек спавна */}
+      {isDM && (
+        <button
+          onClick={() => setSpawnMode(!spawnMode)}
+          className={`absolute top-4 left-4 z-40 px-3 py-2 rounded-md border text-sm transition-colors ${
+            spawnMode 
+              ? 'border-emerald-400 text-emerald-400 bg-emerald-400/10' 
+              : 'border-neutral-600 text-neutral-300 hover:border-neutral-500'
+          }`}
+          title={spawnMode ? 'Кликните по карте для добавления точки спавна' : 'Активировать режим добавления точек спавна'}
+        >
+          {spawnMode ? '✓ Добавление точек спавна' : '+ Точки спавна'}
+        </button>
+      )}
       
       {/* Версия для игроков - только области вокруг их токенов */}
       {!isDM && (
