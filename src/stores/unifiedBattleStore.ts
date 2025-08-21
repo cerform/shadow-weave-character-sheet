@@ -145,25 +145,27 @@ export const useUnifiedBattleStore = create<UnifiedBattleState>()(
         }));
       },
       
-      updateToken: (id, updates) => set((state) => {
-        const currentToken = state.tokens.find(token => token.id === id);
-        const updatedTokens = state.tokens.map((token) =>
-          token.id === id ? { ...token, ...updates } : token
-        );
-
-        // Проверяем, изменилась ли позиция токена игрока
-        if (currentToken && updates.position && !currentToken.isEnemy) {
-          const newPosition = updates.position;
-          const [x, y, z] = newPosition;
-          
-          // Обновляем туман войны для игрока
-          const fogStore = useFogOfWarStore.getState();
-          console.log('🌫️ Обновляем туман войны для токена:', currentToken.name, 'позиция:', x, z);
-          fogStore.updatePlayerVision(id, x * 5, z * 5); // конвертируем из grid координат в world координаты
-        }
-
-        return { tokens: updatedTokens };
-      }),
+      updateToken: (id, updates) => set((state) => ({
+        tokens: state.tokens.map((token) => {
+          if (token.id === id) {
+            const updatedToken = { ...token, ...updates };
+            
+            // Проверяем, изменилась ли позиция токена игрока
+            if (updates.position && !token.isEnemy) {
+              const newPosition = updates.position;
+              const [x, y, z] = newPosition;
+              
+              // Обновляем туман войны для игрока
+              const fogStore = useFogOfWarStore.getState();
+              console.log('🌫️ Обновляем туман войны для токена:', token.name, 'позиция:', x, z);
+              fogStore.updatePlayerVision(id, x * 5, z * 5); // конвертируем из grid координат в world координаты
+            }
+            
+            return updatedToken;
+          }
+          return token;
+        }),
+      })),
       
       removeToken: (id) => set((state) => ({
         tokens: state.tokens.filter((token) => token.id !== id),

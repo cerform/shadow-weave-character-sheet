@@ -123,21 +123,31 @@ export const EnhancedBattleToken3D: React.FC<EnhancedBattleToken3DProps> = ({ to
 
   const handleTokenClick = (event: ThreeEvent<PointerEvent>) => {
     event.stopPropagation();
+    console.log('🎯 Token clicked:', token.name, token.id);
     
     // Выбираем токен и показываем сетку перемещения
     selectToken(token.id);
+    console.log('🎯 Token selected, showing movement grid');
     
     // Показываем сетку перемещения если токен еще не двигался
     if (!token.hasMovedThisTurn) {
       setShowMovementGrid(true);
+      console.log('🎯 Movement grid enabled for', token.name);
+    } else {
+      console.log('🎯 Token has already moved this turn');
     }
   };
 
 
   const handleCellClick = (cell: GridPosition) => {
-    if (token.hasMovedThisTurn) return;
+    console.log('🎯 Cell clicked:', cell, 'by token:', token.name);
+    if (token.hasMovedThisTurn) {
+      console.log('🎯 Token has already moved, ignoring');
+      return;
+    }
     
     const worldPosition = gridToWorld(cell);
+    console.log('🎯 World position calculated:', worldPosition);
     
     // Проверяем, можем ли переместиться в эту позицию
     if (canMoveToPosition(
@@ -148,6 +158,7 @@ export const EnhancedBattleToken3D: React.FC<EnhancedBattleToken3DProps> = ({ to
       token.id,
       token.hasMovedThisTurn
     )) {
+      console.log('🎯 Can move to position, updating token...');
       // Обновляем позицию токена
       updateToken(token.id, { 
         position: worldPosition,
@@ -165,7 +176,9 @@ export const EnhancedBattleToken3D: React.FC<EnhancedBattleToken3DProps> = ({ to
         playerName: token.name
       });
       
-      console.log(`Token ${token.name} moved to position:`, worldPosition);
+      console.log(`🎯 Token ${token.name} moved to position:`, worldPosition);
+    } else {
+      console.log('🎯 Cannot move to position - blocked or too far');
     }
   };
 
