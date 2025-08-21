@@ -134,7 +134,7 @@ export default function BattleMapUI() {
 
   useEffect(() => {  
     loadMonsters();
-  }, [loadMonsters]);
+  }, []); // Загружаем при монтировании компонента
 
   // —— Helpers ——
   const snap = (v: number) => Math.round(v / GRID) * GRID;
