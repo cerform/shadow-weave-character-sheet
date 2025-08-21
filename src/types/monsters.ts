@@ -1,8 +1,8 @@
 // src/types/monsters.ts
 import type { AbilityScore, Abilities } from './dnd5e';
 
-export type MonsterSize = 'Крошечный' | 'Маленький' | 'Средний' | 'Большой' | 'Огромный' | 'Гигантский';
-export type MonsterType = 'Аберрация' | 'Зверь' | 'Небожитель' | 'Конструкт' | 'Дракон' | 'Элементаль' | 'Фея' | 'Исчадие' | 'Великан' | 'Гуманоид' | 'Нежить' | 'Растение' | 'Слизь' | 'Чудовище';
+export type MonsterSize = 'Крошечный' | 'Маленький' | 'Средний' | 'Большой' | 'Огромный' | 'Гигантский' | 'Исполинский';
+export type MonsterType = 'Аберрация' | 'Зверь' | 'Небожитель' | 'Конструкт' | 'Дракон' | 'Элементаль' | 'Фея' | 'Исчадие' | 'Великан' | 'Гуманоид' | 'Нежить' | 'Растение' | 'Слизь' | 'Чудовище' | 'Монстр';
 export type ChallengeRating = '0' | '1/8' | '1/4' | '1/2' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' | '10' | '11' | '12' | '13' | '14' | '15' | '16' | '17' | '18' | '19' | '20' | '21' | '22' | '23' | '24' | '25' | '26' | '27' | '28' | '29' | '30';
 
 export interface MonsterAction {
@@ -11,6 +11,8 @@ export interface MonsterAction {
   attackBonus?: number;
   damage?: string;
   damageType?: string;
+  additionalDamage?: string;
+  additionalDamageType?: string;
   savingThrow?: {
     ability: AbilityScore;
     dc: number;
