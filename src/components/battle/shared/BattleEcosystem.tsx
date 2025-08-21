@@ -70,9 +70,9 @@ export const BattleEcosystem: React.FC<BattleEcosystemProps> = ({
     <mesh receiveShadow rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.1, 0]}>
       <planeGeometry args={[24, 16]} />
       <meshStandardMaterial 
-        color="#2a2a3e" 
+        color="#4a5568" 
         transparent 
-        opacity={0.8}
+        opacity={0.9}
       />
     </mesh>
   );
@@ -89,8 +89,29 @@ export const BattleEcosystem: React.FC<BattleEcosystemProps> = ({
     <Canvas
       shadows 
       camera={{ position: [0, 25, 0], fov: 45, up: [0, 0, -1] }}
-      gl={{ antialias: true }}
-      onCreated={({ camera }) => {
+      gl={{ 
+        antialias: true,
+        preserveDrawingBuffer: true,
+        failIfMajorPerformanceCaveat: false
+      }}
+      onCreated={({ gl, camera }) => {
+        // Обработка потери и восстановления WebGL контекста
+        const canvas = gl.domElement;
+        
+        canvas.addEventListener('webglcontextlost', (event) => {
+          console.warn('🚨 WebGL контекст потерян, предотвращаем перезагрузку');
+          event.preventDefault();
+        });
+        
+        canvas.addEventListener('webglcontextrestored', () => {
+          console.log('✅ WebGL контекст восстановлен');
+          // Принудительно обновляем камеру и сцену
+          camera.position.set(0, 20, 0);
+          camera.lookAt(0, 0, 0);
+          camera.updateProjectionMatrix();
+        });
+        
+        // Настройка камеры
         camera.position.set(0, 20, 0);
         camera.lookAt(0, 0, 0);
         camera.updateProjectionMatrix();
