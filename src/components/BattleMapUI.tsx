@@ -62,6 +62,30 @@ const LOCAL_MODEL_REGISTRY: Array<{ match: RegExp; url: string; scale?: number }
   { match: /troll/i,               url: "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/BrainStem/glTF/BrainStem.gltf",                      scale: 15 },
 ];
 
+// Родовой маппинг по семействам (примерные модели GLB/GLTF)
+const FAMILY_MODEL_MAP: Array<{ match: RegExp; url: string; scale?: number }> = [
+  { match: new RegExp("(?:adult|ancient|young)?\\s*.*dragon\\b","i"),
+    url: "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/DamagedHelmet/glTF-Binary/DamagedHelmet.glb", scale: 12 },
+  { match: new RegExp("\\b(demon|devil|fiend|balor|pit fiend|erinyes|barbed devil|bearded devil)\\b","i"),
+    url: "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/RobotExpressive/glTF-Binary/RobotExpressive.glb", scale: 10 },
+  { match: new RegExp("\\b(skeleton|zombie|wraith|specter|spectre|ghost|lich|vampire|ghoul|undead)\\b","i"),
+    url: "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/RobotExpressive/glTF-Binary/RobotExpressive.glb", scale: 1 },
+  { match: new RegExp("\\b(hill|stone|frost|fire|cloud|storm)\\s+giant\\b","i"),
+    url: "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/BrainStem/glTF/BrainStem.gltf", scale: 6 },
+  { match: new RegExp("\\b(wolf|bear|boar|lion|tiger|panther|ape|elk|horse)\\b","i"),
+    url: "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/Fox/glTF/Fox.gltf", scale: 0.02 },
+  { match: new RegExp("\\b(ooze|gelatinous cube|black pudding|ochre jelly|slime)\\b","i"),
+    url: "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/WaterBottle/glTF-Binary/WaterBottle.glb", scale: 8 },
+  { match: new RegExp("\\b(beholder|mind flayer|illithid|aboleth|gibbering mouther)\\b","i"),
+    url: "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/WaterBottle/glTF-Binary/WaterBottle.glb", scale: 6 },
+  { match: new RegExp("\\b(golem|construct|animated armor|helmed horror)\\b","i"),
+    url: "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/DamagedHelmet/glTF-Binary/DamagedHelmet.glb", scale: 10 },
+  { match: new RegExp("\\b(goblin|orc|kobold|bandit|cultist|acolyte|guard|thug)\\b","i"),
+    url: "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/Fox/glTF/Fox.gltf", scale: 2 },
+  { match: new RegExp("\\b(fire|air|earth|water)\\s+elemental\\b","i"),
+    url: "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/Box/glTF/Box.gltf", scale: 6 },
+];
+
 // ==================== TSX типы для <model-viewer> ====================
 
 declare global { namespace JSX { interface IntrinsicElements { "model-viewer": React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement> & { src?: string; style?: React.CSSProperties; "camera-controls"?: boolean|""; "disable-zoom"?: boolean|""; autoplay?: boolean|""; exposure?: string|number; "ar-modes"?: string; "shadow-intensity"?: string|number; "interaction-prompt"?: string; scale?: string; }; } } }
@@ -97,9 +121,14 @@ function useModelViewerLoader(enabled: boolean) {
 
 // ==================== Подбор модели по имени ====================
 
-function pickModelFor(name: string, registry: Array<{ match: RegExp; url: string; scale?: number }>): { url?: string; scale?: number } {
+function pickModelFor(
+  name: string,
+  registry: Array<{ match: RegExp; url: string; scale?: number }>,
+  family?: Array<{ match: RegExp; url: string; scale?: number }>
+): { url?: string; scale?: number } {
   const n = norm(name);
   for (const r of registry) { if (r.match.test(n)) return { url: r.url, scale: r.scale }; }
+  if (family) { for (const r of family) { if (r.match.test(n)) return { url: r.url, scale: r.scale }; } }
   return {};
 }
 
@@ -200,6 +229,7 @@ export default function BattleMapUI() {
 
   // Реестр 3D моделей
   const [modelRegistry, setModelRegistry] = useState<Array<{ match: RegExp; url: string; scale?: number }>>(LOCAL_MODEL_REGISTRY);
+  const [useFamilyMap, setUseFamilyMap] = useState(true);
 
   // Загрузка реального бестиария при инициализации
   useEffect(() => {
@@ -228,10 +258,10 @@ export default function BattleMapUI() {
   const enrichedBestiary = useMemo(() => {
     return bestiary.map((monster) => {
       if (monster.modelUrl && isValidModelUrl(monster.modelUrl)) return monster;
-      const mk = pickModelFor(monster.name, modelRegistry);
+      const mk = pickModelFor(monster.name, modelRegistry, useFamilyMap ? FAMILY_MODEL_MAP : undefined);
       return mk.url ? { ...monster, modelUrl: mk.url, modelScale: mk.scale } : monster;
     });
-  }, [bestiary, modelRegistry]);
+  }, [bestiary, modelRegistry, useFamilyMap]);
 
   // 3D загрузчик
   const [use3D, setUse3D] = useState(true);
@@ -372,6 +402,10 @@ export default function BattleMapUI() {
 
             <div className="space-y-2">
               <Title>Бестиарий D&D 5e ({enrichedBestiary.length})</Title>
+              <div className="flex items-center gap-2 mb-2">
+                <input id="familyMap" type="checkbox" checked={useFamilyMap} onChange={(e)=>setUseFamilyMap(e.target.checked)} />
+                <label htmlFor="familyMap" className="text-sm">Родовой 3D-маппинг</label>
+              </div>
               <div className="text-xs opacity-70">Выберите монстра → инструмент «Добавить NPC» → кликните на карте.</div>
               <div className="grid grid-cols-1 gap-1 max-h-80 overflow-y-auto pr-1">
                 {enrichedBestiary.slice(0, 50).map((monster) => (
@@ -402,7 +436,7 @@ export default function BattleMapUI() {
                 <li>монстров с 3D → {enrichedBestiary.filter(m=>isValidModelUrl(m.modelUrl)).length}</li>
               </ul>
               <div className="flex gap-2">
-                <button className="px-2 py-1 rounded-md border border-neutral-700 text-xs" onClick={()=>{ const sample = enrichedBestiary.find(m=>m.name.toLowerCase().includes('dragon')); if (sample) { const mk = pickModelFor(sample.name, modelRegistry); setLog((l)=>[{ id: uid("log"), ts: now(), text: `Тест автопривязки для "${sample.name}": ${mk.url?"нашёл 3D":"нет 3D"}` }, ...l]); } }}>Тест автопривязки</button>
+                <button className="px-2 py-1 rounded-md border border-neutral-700 text-xs" onClick={()=>{ const sample = enrichedBestiary.find(m=>m.name.toLowerCase().includes('dragon')); if (sample) { const mk = pickModelFor(sample.name, modelRegistry, useFamilyMap ? FAMILY_MODEL_MAP : undefined); setLog((l)=>[{ id: uid("log"), ts: now(), text: `Тест автопривязки для "${sample.name}": ${mk.url?"нашёл 3D":"нет 3D"} ${useFamilyMap?"(с родовым)":"(без родового)"}` }, ...l]); } }}>Тест автопривязки</button>
                 <button className="px-2 py-1 rounded-md border border-neutral-700 text-xs" onClick={()=>{ if (enrichedBestiary[0]) addMonsterAt(enrichedBestiary[0].id, { x: MAP_W/2, y: MAP_H/2 }); }}>Тестовый спавн</button>
               </div>
             </div>
