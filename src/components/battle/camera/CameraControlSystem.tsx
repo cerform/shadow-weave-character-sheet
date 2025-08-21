@@ -36,7 +36,7 @@ export const CameraControlSystem: React.FC = () => {
       mouseButtons={{
         LEFT: THREE.MOUSE.ROTATE,      // ЛКМ - поворот
         MIDDLE: THREE.MOUSE.PAN,       // СКМ - панорамирование 
-        RIGHT: THREE.MOUSE.PAN         // ПКМ - тоже панорамирование (fallback)
+        RIGHT: null                    // ПКМ - отключено (для контекстного меню)
       }}
       touches={{
         ONE: THREE.TOUCH.ROTATE,       // Один палец - поворот
