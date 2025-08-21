@@ -45,7 +45,7 @@ export const CameraControlSystem: React.FC = () => {
       minDistance={5}
       maxDistance={50}
       minPolarAngle={0}
-      maxPolarAngle={Math.PI / 2}
+      maxPolarAngle={Math.PI}
       target={[0, 0, 0]}
     />
   );
