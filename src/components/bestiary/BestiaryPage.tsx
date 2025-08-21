@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { MonsterCard } from './MonsterCard';
 import { MonsterDetailsDialog } from './MonsterDetailsDialog';
 import { TTGClubImporter } from './TTGClubImporter';
+import Open5eImporter from './Open5eImporter';
 import { useEnhancedBattleStore } from '@/stores/enhancedBattleStore';
 import { useMonstersStore } from '@/stores/monstersStore';
 import { BattleSystemAdapter } from '@/adapters/battleSystemAdapter';
@@ -31,6 +32,7 @@ export const BestiaryPage: React.FC<BestiaryPageProps> = ({
   const [filter, setFilter] = useState<MonsterFilter>({});
   const [activeTab, setActiveTab] = useState('all');
   const [isImporterOpen, setIsImporterOpen] = useState(false);
+  const [isOpen5eImporterOpen, setIsOpen5eImporterOpen] = useState(false);
   
   const { addToken } = useEnhancedBattleStore();
   const { getAllMonsters, addImportedMonsters, loadSupabaseMonsters, isLoadingSupabase } = useMonstersStore();
@@ -181,14 +183,24 @@ export const BestiaryPage: React.FC<BestiaryPageProps> = ({
         
         <div className="flex gap-2">
           {isDM && (
-            <Button 
-              variant="outline" 
-              onClick={() => setIsImporterOpen(true)}
-              className="flex items-center gap-2"
-            >
-              <Download className="w-4 h-4" />
-              Импорт из TTG.Club
-            </Button>
+            <>
+              <Button 
+                variant="outline" 
+                onClick={() => setIsImporterOpen(true)}
+                className="flex items-center gap-2"
+              >
+                <Download className="w-4 h-4" />
+                TTG.Club
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={() => setIsOpen5eImporterOpen(true)}
+                className="flex items-center gap-2"
+              >
+                <Download className="w-4 h-4" />
+                Open5e JSON
+              </Button>
+            </>
           )}
           {onClose && (
             <Button variant="outline" onClick={onClose}>
@@ -359,6 +371,23 @@ export const BestiaryPage: React.FC<BestiaryPageProps> = ({
         onClose={() => setIsImporterOpen(false)}
         onMonstersImported={handleMonstersImported}
       />
+
+      {/* Импортер Open5e JSON */}
+      {isOpen5eImporterOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-background rounded-lg max-w-4xl w-full max-h-[90vh] overflow-auto">
+            <div className="p-4 border-b flex items-center justify-between">
+              <h2 className="text-lg font-semibold">Импорт из Open5e JSON</h2>
+              <Button variant="ghost" onClick={() => setIsOpen5eImporterOpen(false)}>
+                ✕
+              </Button>
+            </div>
+            <div className="p-4">
+              <Open5eImporter />
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Диалог с подробностями монстра */}
       {selectedMonster && (
