@@ -50,6 +50,14 @@ export const SidePanel: React.FC<SidePanelProps> = ({
   const battleState = getBattleState();
   const t = ruTranslations.battle;
 
+  // State variables
+  const [activeTab, setActiveTab] = useState<'monsters' | 'tokens' | 'settings'>('monsters');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [fogEnabled, setFogEnabled] = useState(false);
+  const [gridEnabled, setGridEnabled] = useState(true);
+
   // Поиск монстров
   const handleSearch = async () => {
     if (!searchQuery.trim()) return;
