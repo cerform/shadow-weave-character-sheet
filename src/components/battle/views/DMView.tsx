@@ -13,6 +13,7 @@ import { SimpleBattleUI } from '../ui/SimpleBattleUI';
 import { DiceRollModal } from '@/components/dice/DiceRollModal';
 import { DnD5eCombatSystem } from '@/systems/dnd5e/combat';
 import { MonsterSpawner } from '@/components/dm/MonsterSpawner';
+import { DMSidebar } from '../sidebar/DMSidebar';
 import type { CombatState } from '@/types/dnd5e';
 import { 
   Map, 
@@ -176,7 +177,7 @@ export const DMView: React.FC = () => {
       <div className="flex-1 flex">
         <Tabs value={activeTab} onValueChange={(value: any) => setActiveTab(value)} className="w-full flex">
           {/* Основная область */}
-          <div className="flex-1">
+          <div className="flex-1 relative">
             <TabsContent value="map" className="w-full h-full m-0 relative">
               {/* UI карты */}
               <div className="absolute top-4 left-4 z-10 flex flex-col gap-2">
@@ -272,56 +273,8 @@ export const DMView: React.FC = () => {
             </TabsContent>
           </div>
 
-          {/* Боковая панель */}
-          <div className="w-64 border-l bg-muted/50">
-            <TabsList className="w-full h-auto flex-col justify-start p-2 bg-transparent">
-              <TabsTrigger value="map" className="w-full justify-start">
-                <Map className="w-4 h-4 mr-2" />
-                3D Карта
-              </TabsTrigger>
-              <TabsTrigger value="combat" className="w-full justify-start">
-                <Swords className="w-4 h-4 mr-2" />
-                Боевая система
-              </TabsTrigger>
-              <TabsTrigger value="spawner" className="w-full justify-start">
-                <Crown className="w-4 h-4 mr-2" />
-                Спавнер монстров
-              </TabsTrigger>
-              <TabsTrigger value="bestiary" className="w-full justify-start">
-                <Book className="w-4 h-4 mr-2" />
-                Бестиарий
-              </TabsTrigger>
-              <TabsTrigger value="settings" className="w-full justify-start">
-                <Settings className="w-4 h-4 mr-2" />
-                Настройки
-              </TabsTrigger>
-            </TabsList>
-            
-            {/* Быстрая статистика */}
-            <div className="p-4 space-y-4">
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm">Статистика</CardTitle>
-                </CardHeader>
-                <CardContent className="text-xs space-y-2">
-                  <div className="flex justify-between">
-                    <span>Токенов:</span>
-                    <Badge variant="outline">{tokens.length}</Badge>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Персонажей:</span>
-                    <Badge variant="outline">{characters.length}</Badge>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Активный:</span>
-                    <Badge variant={activeId ? 'default' : 'secondary'}>
-                      {activeId ? 'Да' : 'Нет'}
-                    </Badge>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
+          {/* Улучшенная боковая панель */}
+          <DMSidebar />
         </Tabs>
       </div>
 

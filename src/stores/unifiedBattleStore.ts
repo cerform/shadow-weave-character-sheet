@@ -8,8 +8,9 @@ import { useFogOfWarStore } from './fogOfWarStore';
 export type ViewMode = 'dm' | 'player';
 
 interface UnifiedBattleState {
-  // Режим просмотра
-  viewMode: ViewMode;
+  // Общие настройки
+  viewMode: 'dm' | 'player';
+  battleViewMode: '2d' | '3d';
   isDM: boolean;
   
   // 3D карта
@@ -44,8 +45,9 @@ interface UnifiedBattleState {
     playerCanSeeHP: boolean;
   };
   
-  // Действия
-  setViewMode: (mode: ViewMode) => void;
+  // Действия для управления режимами
+  setViewMode: (mode: 'dm' | 'player') => void;
+  setBattleViewMode: (mode: '2d' | '3d') => void;
   setIsDM: (isDM: boolean) => void;
   
   // Токены
@@ -94,8 +96,9 @@ interface UnifiedBattleState {
 export const useUnifiedBattleStore = create<UnifiedBattleState>()(
   persist(
     (set, get) => ({
-      // Начальное состояние
-      viewMode: 'dm',
+      // Начальные значения
+      viewMode: 'dm' as const,
+      battleViewMode: '3d' as const,
       isDM: true,
       
       // 3D карта
@@ -130,8 +133,9 @@ export const useUnifiedBattleStore = create<UnifiedBattleState>()(
         playerCanSeeHP: false,
       },
       
-      // Действия
+      // Действия режимов
       setViewMode: (mode) => set({ viewMode: mode }),
+      setBattleViewMode: (mode) => set({ battleViewMode: mode }),
       setIsDM: (isDM) => set({ isDM }),
       
       // Токены
@@ -408,14 +412,15 @@ export const useUnifiedBattleStore = create<UnifiedBattleState>()(
     }),
     {
       name: 'unified-battle-storage',
-      partialize: (state) => ({
-        viewMode: state.viewMode,
-        isDM: state.isDM,
-        tokens: state.tokens,
-        mapImageUrl: state.mapImageUrl,
-        characters: state.characters,
-        settings: state.settings,
-      }),
+    partialize: (state) => ({
+      viewMode: state.viewMode,
+      battleViewMode: state.battleViewMode,
+      isDM: state.isDM,
+      tokens: state.tokens,
+      mapImageUrl: state.mapImageUrl,
+      characters: state.characters,
+      settings: state.settings,
+    }),
     }
   )
 );
