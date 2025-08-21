@@ -7,22 +7,36 @@ import { supabase } from '@/integrations/supabase/client';
 interface Battle3DSceneProps {
   sessionId: string;
   className?: string;
+  mapBackground?: string | null;
 }
 
-function GridPlane() {
+function GridPlane({ mapBackground }: { mapBackground?: string | null }) {
   return (
-    <Grid
-      cellSize={1}
-      cellThickness={0.5}
-      cellColor="#6f6f6f"
-      sectionSize={5}
-      sectionThickness={1}
-      sectionColor="#9d4edd"
-      fadeDistance={30}
-      fadeStrength={1}
-      followCamera={false}
-      infiniteGrid={true}
-    />
+    <group>
+      {/* Map background plane */}
+      {mapBackground && (
+        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.01, 0]}>
+          <planeGeometry args={[30, 30]} />
+          <meshBasicMaterial>
+            <primitive object={new THREE.TextureLoader().load(mapBackground)} attach="map" />
+          </meshBasicMaterial>
+        </mesh>
+      )}
+      
+      {/* Grid overlay */}
+      <Grid
+        cellSize={1}
+        cellThickness={0.5}
+        cellColor="#6f6f6f"
+        sectionSize={5}
+        sectionThickness={1}
+        sectionColor="#9d4edd"
+        fadeDistance={30}
+        fadeStrength={1}
+        followCamera={false}
+        infiniteGrid={true}
+      />
+    </group>
   );
 }
 
@@ -75,7 +89,7 @@ function BattleEntity({ entity }: { entity: any }) {
   );
 }
 
-function Scene3D({ sessionId }: { sessionId: string }) {
+function Scene3D({ sessionId, mapBackground }: { sessionId: string; mapBackground?: string | null }) {
   const { scene } = useThree();
   const [entities, setEntities] = useState<any[]>([]);
   
@@ -140,7 +154,7 @@ function Scene3D({ sessionId }: { sessionId: string }) {
       />
       
       {/* Сетка боевого поля */}
-      <GridPlane />
+      <GridPlane mapBackground={mapBackground} />
       
       {/* Рендерим всех сущностей */}
       {entities.map((entity) => (
@@ -160,7 +174,7 @@ function Scene3D({ sessionId }: { sessionId: string }) {
   );
 }
 
-export function Battle3DScene({ sessionId, className = '' }: Battle3DSceneProps) {
+export function Battle3DScene({ sessionId, className = '', mapBackground }: Battle3DSceneProps) {
   return (
     <div className={`w-full h-full ${className}`}>
       <Canvas
@@ -168,7 +182,7 @@ export function Battle3DScene({ sessionId, className = '' }: Battle3DSceneProps)
         shadows
         className="bg-gradient-to-b from-slate-900 to-slate-800"
       >
-        <Scene3D sessionId={sessionId} />
+        <Scene3D sessionId={sessionId} mapBackground={mapBackground} />
       </Canvas>
     </div>
   );

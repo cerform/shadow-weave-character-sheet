@@ -69,6 +69,9 @@ export default function BattleMapUI() {
   const [rightOpen, setRightOpen] = useState(true);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   
+  // —— Map background state ——
+  const [mapBackground, setMapBackground] = useState<string | null>(null);
+
   // —— Available monsters from bestiary ——
   const [availableMonsters, setAvailableMonsters] = useState<SRDCreature[]>([]);
   const [isLoadingMonsters, setIsLoadingMonsters] = useState(false);
@@ -136,6 +139,47 @@ export default function BattleMapUI() {
   useEffect(() => {  
     loadMonsters();
   }, []); // Загружаем при монтировании компонента
+
+  // —— Map upload handler ——
+  const handleMapUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    try {
+      // Создаем URL для предпросмотра
+      const imageUrl = URL.createObjectURL(file);
+      setMapBackground(imageUrl);
+
+      // Загружаем в Supabase Storage
+      const fileName = `${sessionId}-${Date.now()}-${file.name}`;
+      const { data, error } = await supabase.storage
+        .from('battle-maps')
+        .upload(fileName, file);
+
+      if (error) {
+        console.error('Failed to upload map:', error);
+        return;
+      }
+
+      // Получаем публичный URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('battle-maps')
+        .getPublicUrl(fileName);
+
+      setMapBackground(publicUrl);
+      setLog((l) => [{ id: uid("log"), ts: now(), text: `ДМ загрузил новую карту: ${file.name}` }, ...l]);
+
+      console.log('🗺️ Map uploaded successfully:', publicUrl);
+    } catch (error) {
+      console.error('Error uploading map:', error);
+      setLog((l) => [{ id: uid("log"), ts: now(), text: `❌ Ошибка загрузки карты: ${error.message}` }, ...l]);
+    }
+  };
+
+  const clearMap = () => {
+    setMapBackground(null);
+    setLog((l) => [{ id: uid("log"), ts: now(), text: "ДМ очистил карту" }, ...l]);
+  };
 
   // —— Helpers ——
   const snap = (v: number) => Math.round(v / GRID) * GRID;
@@ -412,6 +456,28 @@ export default function BattleMapUI() {
               <div className="text-xs opacity-70">Подсказка: выберите инструмент "Открыть туман" и кликайте по карте.</div>
             </div>
 
+            {/* Map Management */}
+            <div className="space-y-2">
+              <Title>Управление картой</Title>
+              <div className="flex gap-2">
+                <label className="px-2 py-1 rounded-md border border-neutral-700 text-xs hover:border-emerald-400 hover:text-emerald-400 cursor-pointer">
+                  Загрузить карту
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleMapUpload}
+                  />
+                </label>
+                <button 
+                  className="px-2 py-1 rounded-md border border-neutral-700 text-xs hover:border-red-400 hover:text-red-400"
+                  onClick={clearMap}
+                >
+                  Очистить
+                </button>
+              </div>
+            </div>
+
             <div className="space-y-2">
               <Title>Спавн монстров</Title>
               <ImportMonstersButton onImportComplete={loadMonsters} />
@@ -453,7 +519,11 @@ export default function BattleMapUI() {
         {/* Center: Map & Action Bar */}
         <div className="flex-1 relative bg-neutral-900">
           <div className="absolute inset-0">
-            <Battle3DScene sessionId={sessionId} className="w-full h-full" />
+            <Battle3DScene 
+              sessionId={sessionId} 
+              className="w-full h-full"
+              mapBackground={mapBackground}
+            />
           </div>
 
           {/* Bottom: Action Bar */}
