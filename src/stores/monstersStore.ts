@@ -93,12 +93,14 @@ export const useMonstersStore = create<MonstersState>()(
       },
 
       loadSupabaseMonsters: async () => {
+        console.log('🔄 MonstersStore: Начинаем загрузку монстров из Supabase...');
         set({ isLoadingSupabase: true });
         try {
           const monsters = await MonstersService.getAllCreatures();
+          console.log('✅ MonstersStore: Загружено', monsters.length, 'монстров из Supabase');
           set({ supabaseMonsters: monsters, isLoadingSupabase: false });
         } catch (error) {
-          console.error('Error loading Supabase monsters:', error);
+          console.error('❌ MonstersStore: Ошибка загрузки монстров:', error);
           set({ isLoadingSupabase: false });
         }
       }

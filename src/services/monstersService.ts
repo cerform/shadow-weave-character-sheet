@@ -30,19 +30,21 @@ export interface SupabaseCreature {
 export class MonstersService {
   static async getAllCreatures(): Promise<Monster[]> {
     try {
+      console.log('🔄 MonstersService: Загружаем всех существ из Supabase...');
       const { data, error } = await supabase
         .from('srd_creatures')
         .select('*')
         .order('name');
 
       if (error) {
-        console.error('Error fetching creatures:', error);
+        console.error('❌ Ошибка загрузки существ:', error);
         return [];
       }
 
+      console.log('✅ MonstersService: Загружено', data?.length || 0, 'существ из Supabase');
       return data?.map(MonstersService.mapSupabaseCreatureToMonster) || [];
     } catch (error) {
-      console.error('Error in getAllCreatures:', error);
+      console.error('💥 Исключение в getAllCreatures:', error);
       return [];
     }
   }

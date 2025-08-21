@@ -49,6 +49,9 @@ export const BestiaryPage: React.FC<BestiaryPageProps> = ({
 
   // Получаем все монстры из хранилища
   const allMonsters = getAllMonsters();
+  
+  // Диагностика - логируем количество монстров из разных источников
+  const { importedMonsters, customMonsters, supabaseMonsters } = useMonstersStore();
 
   // Фильтрация и поиск монстров
   const filteredMonsters = useMemo(() => {
@@ -97,6 +100,16 @@ export const BestiaryPage: React.FC<BestiaryPageProps> = ({
 
     return monsters.sort((a, b) => a.name.localeCompare(b.name));
   }, [searchTerm, filter, allMonsters]);
+  
+  useEffect(() => {
+    console.log('🔍 Диагностика источников монстров:');
+    console.log('📚 Локальная база:', MONSTERS_DATABASE.length);
+    console.log('💾 Supabase:', supabaseMonsters.length);  
+    console.log('📥 Импортированные:', importedMonsters.length);
+    console.log('✏️ Кастомные:', customMonsters.length);
+    console.log('🎯 Всего уникальных:', allMonsters.length);
+    console.log('🎯 Показано после фильтров:', filteredMonsters.length);
+  }, [supabaseMonsters.length, importedMonsters.length, customMonsters.length, allMonsters.length, filteredMonsters.length]);
 
   // Группировка по уровню опасности
   const monstersByCR = useMemo(() => {
