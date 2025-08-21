@@ -217,13 +217,15 @@ export default function BattleMapUI() {
     };
 
     const handleMouseDown = (e: MouseEvent) => {
-      // Только для правой кнопки мыши или Ctrl+ЛКМ
-      if (e.button === 2 || (e.button === 0 && e.ctrlKey)) {
+      // Только правая кнопка мыши для панорамирования
+      if (e.button === 2) {
         e.preventDefault();
+        e.stopPropagation();
         setIsPanning(true);
         panStart.current = { x: e.clientX - mapOffset.x, y: e.clientY - mapOffset.y };
         container.style.cursor = 'grabbing';
       }
+      // НЕ перехватываем левую кнопку - оставляем для игровых действий
     };
 
     const handleMouseMove = (e: MouseEvent) => {
@@ -237,9 +239,9 @@ export default function BattleMapUI() {
     };
 
     const handleMouseUp = (e: MouseEvent) => {
-      if (isPanning) {
+      if (isPanning && e.button === 2) {
         setIsPanning(false);
-        container.style.cursor = 'grab';
+        container.style.cursor = 'crosshair';
       }
     };
 
@@ -250,15 +252,25 @@ export default function BattleMapUI() {
     // Обработчики touch для мобильных устройств
     let lastTouchDistance = 0;
     let touchStartOffset = { x: 0, y: 0 };
+    let touchStartTime = 0;
 
     const handleTouchStart = (e: TouchEvent) => {
+      touchStartTime = Date.now();
+      
       if (e.touches.length === 1) {
-        // Одиночное касание - панорамирование
+        // Одиночное касание - может быть игровое действие или панорамирование
         const touch = e.touches[0];
         touchStartOffset = { x: touch.clientX - mapOffset.x, y: touch.clientY - mapOffset.y };
-        setIsPanning(true);
+        
+        // Ждем немного, чтобы определить намерение
+        setTimeout(() => {
+          if (Date.now() - touchStartTime > 150) { // Долгое нажатие = панорамирование
+            setIsPanning(true);
+          }
+        }, 150);
       } else if (e.touches.length === 2) {
         // Двойное касание - масштабирование
+        e.preventDefault();
         const touch1 = e.touches[0];
         const touch2 = e.touches[1];
         lastTouchDistance = Math.sqrt(
@@ -269,10 +281,9 @@ export default function BattleMapUI() {
     };
 
     const handleTouchMove = (e: TouchEvent) => {
-      e.preventDefault();
-      
       if (e.touches.length === 1 && isPanning) {
         // Панорамирование
+        e.preventDefault();
         const touch = e.touches[0];
         setMapOffset({
           x: touch.clientX - touchStartOffset.x,
@@ -280,6 +291,7 @@ export default function BattleMapUI() {
         });
       } else if (e.touches.length === 2) {
         // Масштабирование
+        e.preventDefault();
         const touch1 = e.touches[0];
         const touch2 = e.touches[1];
         const currentDistance = Math.sqrt(
@@ -297,11 +309,21 @@ export default function BattleMapUI() {
       }
     };
 
-    const handleTouchEnd = () => {
-      setIsPanning(false);
+    const handleTouchEnd = (e: TouchEvent) => {
+      const touchDuration = Date.now() - touchStartTime;
+      
+      if (touchDuration < 150) {
+        // Быстрое касание - игровое действие (НЕ панорамирование)
+        setIsPanning(false);
+      } else {
+        // Долгое касание завершено
+        setIsPanning(false);
+      }
+      
       lastTouchDistance = 0;
     };
 
+    // Добавляем обработчики только к контейнеру карты
     container.addEventListener('wheel', handleWheel, { passive: false });
     container.addEventListener('mousedown', handleMouseDown);
     container.addEventListener('contextmenu', handleContextMenu);
@@ -309,6 +331,7 @@ export default function BattleMapUI() {
     container.addEventListener('touchmove', handleTouchMove, { passive: false });
     container.addEventListener('touchend', handleTouchEnd);
     
+    // Глобальные обработчики только для завершения панорамирования
     window.addEventListener('mousemove', handleMouseMove);
     window.addEventListener('mouseup', handleMouseUp);
 
@@ -332,24 +355,29 @@ export default function BattleMapUI() {
   const initOrder = useMemo(() => [...tokens].sort((a, b) => b.initiative - a.initiative), [tokens]);
   const activeToken = initOrder.length ? initOrder[turnIndex % initOrder.length] : undefined;
 
-  // Перетаскивание
+  // Перетаскивание токенов
   const [dragId, setDragId] = useState<string | null>(null);
   const dragOffset = useRef<Vec2>({ x: 0, y: 0 });
+  
   useEffect(() => {
     const onMove = (e: MouseEvent) => {
       if (!dragId || !mapRef.current) return;
       const rect = mapRef.current.getBoundingClientRect();
-      const x = e.clientX - rect.left - dragOffset.current.x;
-      const y = e.clientY - rect.top - dragOffset.current.y;
-      const clampedX = Math.max(0, Math.min(MAP_W - GRID, x));
-      const clampedY = Math.max(0, Math.min(MAP_H - GRID, y));
+      
+      // Корректируем координаты с учетом масштаба и смещения
+      const x = (e.clientX - rect.left) / mapScale - mapOffset.x / mapScale;
+      const y = (e.clientY - rect.top) / mapScale - mapOffset.y / mapScale;
+      
+      const clampedX = Math.max(0, Math.min(MAP_W - GRID, x - dragOffset.current.x));
+      const clampedY = Math.max(0, Math.min(MAP_H - GRID, y - dragOffset.current.y));
+      
       setTokens((prev) => prev.map((t) => (t.id === dragId ? { ...t, position: { x: snap(clampedX), y: snap(clampedY) } } : t)));
     };
     const onUp = () => setDragId(null);
     window.addEventListener("mousemove", onMove);
     window.addEventListener("mouseup", onUp);
     return () => { window.removeEventListener("mousemove", onMove); window.removeEventListener("mouseup", onUp); };
-  }, [dragId]);
+  }, [dragId, mapScale, mapOffset]);
 
   // Туман войны
   const [fogEnabled, setFogEnabled] = useState(true);
@@ -532,16 +560,31 @@ export default function BattleMapUI() {
 
   // Клик по карте — туман / спавн
   const onMapClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    // Игнорируем клики во время панорамирования
+    if (isPanning) return;
+    
     const rect = e.currentTarget.getBoundingClientRect();
-    const x = e.clientX - rect.left; const y = e.clientY - rect.top;
-    if (isDM && dmTool === "add-npc" && pendingSpawn) { addMonsterAt(pendingSpawn, { x, y }); setPendingSpawn(null); return; }
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    
+    // Корректируем координаты с учетом масштаба и смещения
+    const adjustedX = (x / mapScale) - (mapOffset.x / mapScale);
+    const adjustedY = (y / mapScale) - (mapOffset.y / mapScale);
+    
+    if (isDM && dmTool === "add-npc" && pendingSpawn) { 
+      addMonsterAt(pendingSpawn, { x: adjustedX, y: adjustedY }); 
+      setPendingSpawn(null); 
+      return; 
+    }
+    
     if (!isDM) return;
+    
     if (dmTool === "fog-reveal") {
-      setReveal((prev) => [...prev, { x, y, r: fogRadius }]);
-      setLog((l) => [{ id: uid("log"), ts: now(), text: `ДМ открыл туман в точке (${Math.round(x)}, ${Math.round(y)})` }, ...l]);
+      setReveal((prev) => [...prev, { x: adjustedX, y: adjustedY, r: fogRadius }]);
+      setLog((l) => [{ id: uid("log"), ts: now(), text: `ДМ открыл туман в точке (${Math.round(adjustedX)}, ${Math.round(adjustedY)})` }, ...l]);
     } else if (dmTool === "fog-hide") {
-      setHideAreas((prev) => [...prev, { x, y, r: fogRadius }]);
-      setLog((l) => [{ id: uid("log"), ts: now(), text: `ДМ скрыл область в точке (${Math.round(x)}, ${Math.round(y)})` }, ...l]);
+      setHideAreas((prev) => [...prev, { x: adjustedX, y: adjustedY, r: fogRadius }]);
+      setLog((l) => [{ id: uid("log"), ts: now(), text: `ДМ скрыл область в точке (${Math.round(adjustedX)}, ${Math.round(adjustedY)})` }, ...l]);
     }
   };
 
@@ -860,7 +903,18 @@ export default function BattleMapUI() {
 
                 {/* Токены */}
                 {tokens.filter(t => t && t.position).map((t) => (
-                  <div key={t.id} style={{ left: t.position.x, top: t.position.y, width: GRID, height: GRID }} className={`absolute rounded-lg border ${selectedId === t.id ? "border-yellow-400" : "border-neutral-700"}`} onMouseDown={(e)=>{ if (!mapRef.current) return; const rect = mapRef.current.getBoundingClientRect(); dragOffset.current = { x: e.clientX - rect.left - t.position.x, y: e.clientY - rect.top - t.position.y }; setDragId(t.id); setSelectedId(t.id); }} title={`${t.name} (${t.hp}/${t.maxHp})`}>
+                  <div key={t.id} style={{ left: t.position.x, top: t.position.y, width: GRID, height: GRID }} className={`absolute rounded-lg border ${selectedId === t.id ? "border-yellow-400" : "border-neutral-700"}`} onMouseDown={(e)=>{ 
+                    // Только левая кнопка для токенов
+                    if (e.button !== 0) return;
+                    e.stopPropagation(); // Предотвращаем всплытие к карте
+                    if (!mapRef.current) return; 
+                    const rect = mapRef.current.getBoundingClientRect(); 
+                    const adjustedX = (e.clientX - rect.left) / mapScale - mapOffset.x / mapScale;
+                    const adjustedY = (e.clientY - rect.top) / mapScale - mapOffset.y / mapScale;
+                    dragOffset.current = { x: adjustedX - t.position.x, y: adjustedY - t.position.y }; 
+                    setDragId(t.id); 
+                    setSelectedId(t.id); 
+                  }} title={`${t.name} (${t.hp}/${t.maxHp})`}>
                     <TokenVisual token={t} use3D={use3D} modelReady={modelReady && !brokenModels[t.id]} onModelError={handleModelError} />
                     <div className="absolute -bottom-1 left-0 right-0 h-2 bg-neutral-900/70 rounded-b-lg overflow-hidden"><div className="h-full bg-emerald-500" style={{ width: `${(t.hp / t.maxHp) * 100}%` }} /></div>
                   </div>
