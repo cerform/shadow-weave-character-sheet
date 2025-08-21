@@ -176,13 +176,9 @@ export const BattleMap3D: React.FC<BattleMap3DProps> = ({
     ];
     
     // Привязываем к сетке
-    const snapped = gridSystem.snapToGrid({
-      x: position[0],
-      y: position[1],
-      z: position[2]
-    });
+    const snapped = gridSystem.snapToGrid(position[0], position[2]); // x, z для 2D сетки
     
-    onMapClick([snapped.x, snapped.y, snapped.z]);
+    onMapClick([snapped.x, position[1], snapped.y]); // y остается как высота
   };
 
   if (isLoading) {

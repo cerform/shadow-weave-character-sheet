@@ -152,7 +152,7 @@ export const useBattleController = () => {
       maxHp: token.maxHp,
       ac: token.ac,
       speed: token.speed,
-      position: { x: Math.floor(token.position[0]), z: Math.floor(token.position[2]) },
+      position: { x: Math.floor(token.position[0]), y: Math.floor(token.position[2]) },
       conditions: token.conditions,
       isEnemy: token.isEnemy,
       size: 'Medium', // TODO: из токена
@@ -179,11 +179,7 @@ export const useBattleController = () => {
     const success = state.battleEngine.moveToken(tokenId, newPosition, distance);
     
     if (success) {
-      const gridPos = state.gridSystem.worldToGrid({
-        x: newPosition[0],
-        y: newPosition[1],
-        z: newPosition[2]
-      });
+      const gridPos = state.gridSystem.worldToGrid(newPosition[0], newPosition[2]); // x, z для 2D сетки
       
       state.tokenEngine.moveToken(tokenId, gridPos);
       
@@ -269,11 +265,7 @@ export const useBattleController = () => {
   const revealArea = useCallback((center: [number, number, number], radius: number) => {
     if (!state?.fogOfWar || !state?.gridSystem) return;
 
-    const gridPos = state.gridSystem.worldToGrid({
-      x: center[0],
-      y: center[1], 
-      z: center[2]
-    });
+    const gridPos = state.gridSystem.worldToGrid(center[0], center[2]); // x, z для 2D сетки
     
     state.fogOfWar.revealArea(gridPos, radius);
     console.log('🌫️ Area revealed at:', gridPos);

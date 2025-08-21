@@ -3,7 +3,7 @@
  * Реальная маска видимости через текстуру/Canvas + FOV от токенов
  */
 
-import { GridSystem, GridPosition, WorldPosition } from './Grid';
+import { GridSystem, GridPosition } from './Grid';
 import { VISION_RULES } from '../../battle/engine/Rules';
 
 export enum FogState {
@@ -46,8 +46,8 @@ export class FogOfWarSystem {
     const mapSize = this.grid.getMapSize();
     
     for (let x = 0; x < mapSize.width; x++) {
-      for (let z = 0; z < mapSize.height; z++) {
-        const key = this.grid.getCellKey({ x, z });
+      for (let y = 0; y < mapSize.height; y++) {
+        const key = this.grid.getCellKey({ x, y });
         this.fogMap.set(key, {
           state: FogState.Dark,
           lastSeen: 0,
@@ -292,12 +292,12 @@ export class FogOfWarSystem {
 
     // Отрисовываем каждую клетку
     for (let x = 0; x < mapSize.width; x++) {
-      for (let z = 0; z < mapSize.height; z++) {
-        const state = this.getFogState({ x, z });
+      for (let y = 0; y < mapSize.height; y++) {
+        const state = this.getFogState({ x, y });
         
         if (state !== FogState.Bright) {
           const pixelX = x * cellPixelSize;
-          const pixelY = z * cellPixelSize;
+          const pixelY = y * cellPixelSize;
           
           // Устанавливаем цвет в зависимости от состояния
           if (state === FogState.Dark) {
