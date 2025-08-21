@@ -4,7 +4,11 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Download, Loader2 } from 'lucide-react';
 
-export function ImportMonstersButton() {
+interface ImportMonstersButtonProps {
+  onImportComplete?: () => void;
+}
+
+export function ImportMonstersButton({ onImportComplete }: ImportMonstersButtonProps) {
   const [isImporting, setIsImporting] = useState(false);
 
   const handleImport = async () => {
@@ -20,6 +24,7 @@ export function ImportMonstersButton() {
 
       if (data?.success) {
         toast.success(`Импорт завершен! ${data.message}`);
+        onImportComplete?.();
       } else {
         throw new Error(data?.error || 'Неизвестная ошибка');
       }

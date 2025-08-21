@@ -114,26 +114,27 @@ export default function BattleMapUI() {
   const mapRef = useRef<HTMLDivElement | null>(null);
 
   // —— Load monsters from SRD creatures ——
-  useEffect(() => {  
-    const loadMonsters = async () => {
-      setIsLoadingMonsters(true);
-      try {
-        const { data, error } = await supabase
-          .from('srd_creatures')
-          .select('*')
-          .order('name');
-          
-        if (error) throw error;
-        setAvailableMonsters(data || []);
-      } catch (error) {
-        console.error('Failed to load monsters:', error);
-      } finally {
-        setIsLoadingMonsters(false);
-      }
-    };
-    
-    loadMonsters();
+  const loadMonsters = useCallback(async () => {
+    setIsLoadingMonsters(true);
+    try {
+      const { data, error } = await supabase
+        .from('srd_creatures')
+        .select('*')
+        .order('name');
+        
+      if (error) throw error;
+      setAvailableMonsters(data || []);
+      console.log(`🐉 Загружено ${data?.length || 0} монстров`);
+    } catch (error) {
+      console.error('Failed to load monsters:', error);
+    } finally {
+      setIsLoadingMonsters(false);
+    }
   }, []);
+
+  useEffect(() => {  
+    loadMonsters();
+  }, [loadMonsters]);
 
   // —— Helpers ——
   const snap = (v: number) => Math.round(v / GRID) * GRID;
@@ -412,7 +413,7 @@ export default function BattleMapUI() {
 
             <div className="space-y-2">
               <Title>Спавн монстров</Title>
-              <ImportMonstersButton />
+              <ImportMonstersButton onImportComplete={loadMonsters} />
               {isLoadingMonsters ? (
                 <div className="text-xs opacity-70">Загрузка монстров...</div>
               ) : availableMonsters.length === 0 ? (
@@ -432,6 +433,11 @@ export default function BattleMapUI() {
                       <div className="opacity-70">УО {monster.cr} • КД {monster.armor_class} • ХП {monster.hit_points}</div>
                     </button>
                   ))}
+                  {availableMonsters.length > 10 && (
+                    <div className="text-xs opacity-50 text-center py-2">
+                      и еще {availableMonsters.length - 10} монстров...
+                    </div>
+                  )}
                 </div>
               )}
             </div>
