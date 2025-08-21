@@ -8,11 +8,13 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { MonsterCard } from './MonsterCard';
 import { MonsterDetailsDialog } from './MonsterDetailsDialog';
+import { TTGClubImporter } from './TTGClubImporter';
 import { useEnhancedBattleStore } from '@/stores/enhancedBattleStore';
+import { useMonstersStore } from '@/stores/monstersStore';
 import { BattleSystemAdapter } from '@/adapters/battleSystemAdapter';
 import { MONSTERS_DATABASE, getCRNumericValue } from '@/data/monsters';
 import type { Monster, MonsterFilter } from '@/types/monsters';
-import { Search, Filter, Dice6, Users, Crown } from 'lucide-react';
+import { Search, Filter, Dice6, Users, Crown, Download } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
 interface BestiaryPageProps {
@@ -28,12 +30,17 @@ export const BestiaryPage: React.FC<BestiaryPageProps> = ({
   const [selectedMonster, setSelectedMonster] = useState<Monster | null>(null);
   const [filter, setFilter] = useState<MonsterFilter>({});
   const [activeTab, setActiveTab] = useState('all');
+  const [isImporterOpen, setIsImporterOpen] = useState(false);
   
   const { addToken } = useEnhancedBattleStore();
+  const { getAllMonsters, addImportedMonsters } = useMonstersStore();
+
+  // Получаем все монстры из хранилища
+  const allMonsters = getAllMonsters();
 
   // Фильтрация и поиск монстров
   const filteredMonsters = useMemo(() => {
-    let monsters = MONSTERS_DATABASE;
+    let monsters = allMonsters;
 
     // Поиск по тексту
     if (searchTerm) {
@@ -77,7 +84,7 @@ export const BestiaryPage: React.FC<BestiaryPageProps> = ({
     }
 
     return monsters.sort((a, b) => a.name.localeCompare(b.name));
-  }, [searchTerm, filter]);
+  }, [searchTerm, filter, allMonsters]);
 
   // Группировка по уровню опасности
   const monstersByCR = useMemo(() => {
@@ -141,6 +148,10 @@ export const BestiaryPage: React.FC<BestiaryPageProps> = ({
     setSelectedMonster(monster);
   };
 
+  const handleMonstersImported = (monsters: Monster[]) => {
+    addImportedMonsters(monsters);
+  };
+
   const resetFilters = () => {
     setFilter({});
     setSearchTerm('');
@@ -155,17 +166,29 @@ export const BestiaryPage: React.FC<BestiaryPageProps> = ({
           <div>
             <h1 className="text-2xl font-bold">Бестиарий D&D 5e</h1>
             <p className="text-sm text-muted-foreground">
-              {filteredMonsters.length} из {MONSTERS_DATABASE.length} монстров
+              {filteredMonsters.length} из {allMonsters.length} монстров
               {isDM && " • Режим ДМ"}
             </p>
           </div>
         </div>
         
-        {onClose && (
-          <Button variant="outline" onClick={onClose}>
-            Закрыть
-          </Button>
-        )}
+        <div className="flex gap-2">
+          {isDM && (
+            <Button 
+              variant="outline" 
+              onClick={() => setIsImporterOpen(true)}
+              className="flex items-center gap-2"
+            >
+              <Download className="w-4 h-4" />
+              Импорт из TTG.Club
+            </Button>
+          )}
+          {onClose && (
+            <Button variant="outline" onClick={onClose}>
+              Закрыть
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Поиск и фильтры */}
@@ -322,6 +345,13 @@ export const BestiaryPage: React.FC<BestiaryPageProps> = ({
           </div>
         </Tabs>
       </div>
+
+      {/* Импортер TTG.Club */}
+      <TTGClubImporter
+        isOpen={isImporterOpen}
+        onClose={() => setIsImporterOpen(false)}
+        onMonstersImported={handleMonstersImported}
+      />
 
       {/* Диалог с подробностями монстра */}
       {selectedMonster && (
