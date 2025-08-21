@@ -2,6 +2,7 @@
 import React, { useEffect, useRef, useCallback, useState } from 'react';
 import { useFogOfWarStore } from '@/stores/fogOfWarStore';
 import { useUnifiedBattleStore } from '@/stores/unifiedBattleStore';
+import { ContextMenu } from './ContextMenu';
 
 interface FogOfWarCanvasProps {
   mapWidth: number;
@@ -96,60 +97,105 @@ export const FogOfWarCanvas: React.FC<FogOfWarCanvasProps> = ({
     drawFog();
   }, [drawFog, lastUpdated]);
   
-  // Обработка клика для добавления точек спавна (только в режиме добавления спавнов)
-  const { mapEditMode } = useUnifiedBattleStore();
-  const [spawnMode, setSpawnMode] = useState(false);
-  
-  const handleCanvasClick = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!isDM || !spawnMode) return;
+  // Состояние для контекстного меню
+  const [contextMenu, setContextMenu] = useState({
+    visible: false,
+    x: 0,
+    y: 0,
+    mapX: 0,
+    mapY: 0
+  });
+
+  // Обработчик правого клика для показа контекстного меню
+  const handleContextMenu = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (!isDM) return;
+    
+    e.preventDefault();
     
     const canvas = canvasRef.current;
     if (!canvas) return;
     
     const rect = canvas.getBoundingClientRect();
-    const x = (e.clientX - rect.left) / mapScale - mapOffset.x / mapScale;
-    const y = (e.clientY - rect.top) / mapScale - mapOffset.y / mapScale;
+    const mapX = (e.clientX - rect.left) / mapScale - mapOffset.x / mapScale;
+    const mapY = (e.clientY - rect.top) / mapScale - mapOffset.y / mapScale;
+    
+    setContextMenu({
+      visible: true,
+      x: e.clientX,
+      y: e.clientY,
+      mapX,
+      mapY
+    });
+  }, [isDM, mapScale, mapOffset]);
+
+  // Закрытие контекстного меню
+  const closeContextMenu = useCallback(() => {
+    setContextMenu(prev => ({ ...prev, visible: false }));
+  }, []);
+
+  // Действия контекстного меню
+  const handleAddSpawn = useCallback(() => {
+    const { mapX, mapY } = contextMenu;
     
     // Проверяем не слишком ли близко к другим точкам спавна
     const minDistance = 64;
     const tooClose = spawnPoints.some(spawn => {
-      const distance = Math.sqrt((spawn.x - x) ** 2 + (spawn.y - y) ** 2);
+      const distance = Math.sqrt((spawn.x - mapX) ** 2 + (spawn.y - mapY) ** 2);
       return distance < minDistance;
     });
     
     if (!tooClose && spawnPoints.length < 6) {
-      useFogOfWarStore.getState().addSpawnPoint(x, y);
-      setSpawnMode(false); // Выключаем режим после добавления
+      useFogOfWarStore.getState().addSpawnPoint(mapX, mapY);
     }
-  }, [isDM, mapScale, mapOffset, spawnPoints, spawnMode]);
+  }, [contextMenu, spawnPoints]);
+
+  const handleAddToken = useCallback(() => {
+    console.log('🎭 Добавление токена в позицию:', contextMenu.mapX, contextMenu.mapY);
+    // TODO: Открыть диалог выбора токена
+  }, [contextMenu]);
+
+  const handleAddAsset = useCallback(() => {
+    console.log('🏛️ Добавление ассета в позицию:', contextMenu.mapX, contextMenu.mapY);
+    // TODO: Открыть библиотеку ассетов
+  }, [contextMenu]);
+
+  const handleAddEffect = useCallback(() => {
+    console.log('⚡ Добавление области эффекта в позицию:', contextMenu.mapX, contextMenu.mapY);
+    // TODO: Открыть выбор эффектов
+  }, [contextMenu]);
+
+  const handleAddTrap = useCallback(() => {
+    console.log('🎯 Добавление ловушки в позицию:', contextMenu.mapX, contextMenu.mapY);
+    // TODO: Открыть настройки ловушки
+  }, [contextMenu]);
   
   return (
     <>
       <canvas
         ref={canvasRef}
-        className={`absolute inset-0 ${spawnMode ? 'pointer-events-auto' : 'pointer-events-none'}`}
+        className="absolute inset-0 pointer-events-auto"
         style={{
           width: mapWidth,
           height: mapHeight,
-          zIndex: spawnMode ? 30 : 20,
-          cursor: spawnMode ? 'crosshair' : 'default'
+          zIndex: 20,
+          cursor: isDM ? 'context-menu' : 'default'
         }}
-        onClick={handleCanvasClick}
+        onContextMenu={handleContextMenu}
       />
       
-      {/* Кнопка для режима добавления точек спавна */}
+      {/* Контекстное меню для DM */}
       {isDM && (
-        <button
-          onClick={() => setSpawnMode(!spawnMode)}
-          className={`absolute top-4 left-4 z-40 px-3 py-2 rounded-md border text-sm transition-colors ${
-            spawnMode 
-              ? 'border-emerald-400 text-emerald-400 bg-emerald-400/10' 
-              : 'border-neutral-600 text-neutral-300 hover:border-neutral-500'
-          }`}
-          title={spawnMode ? 'Кликните по карте для добавления точки спавна' : 'Активировать режим добавления точек спавна'}
-        >
-          {spawnMode ? '✓ Добавление точек спавна' : '+ Точки спавна'}
-        </button>
+        <ContextMenu
+          x={contextMenu.x}
+          y={contextMenu.y}
+          visible={contextMenu.visible}
+          onClose={closeContextMenu}
+          onAddSpawn={handleAddSpawn}
+          onAddToken={handleAddToken}
+          onAddAsset={handleAddAsset}
+          onAddEffect={handleAddEffect}
+          onAddTrap={handleAddTrap}
+        />
       )}
       
       {/* Версия для игроков - только области вокруг их токенов */}
