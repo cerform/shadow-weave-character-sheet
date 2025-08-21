@@ -53,6 +53,7 @@ interface UnifiedBattleState {
   selectToken: (id: string | null) => void;
   setActiveToken: (id: string | null) => void;
   toggleMovementGrid: () => void;
+  setShowMovementGrid: (show: boolean) => void;
   
   // Карта
   setMapImageUrl: (url: string | null) => void;
@@ -152,6 +153,7 @@ export const useUnifiedBattleStore = create<UnifiedBattleState>()(
       selectToken: (id) => set({ selectedTokenId: id }),
       setActiveToken: (id) => set({ activeId: id }),
       toggleMovementGrid: () => set((state) => ({ showMovementGrid: !state.showMovementGrid })),
+      setShowMovementGrid: (show) => set({ showMovementGrid: show }),
       
       // Карта
       setMapImageUrl: (url) => set({ mapImageUrl: url }),

@@ -3,7 +3,7 @@ import { useFrame } from '@react-three/fiber';
 import { useRef } from 'react';
 import * as THREE from 'three';
 import { getAccessibleCells, gridToWorld, type GridPosition } from '@/utils/movementUtils';
-import { useEnhancedBattleStore } from '@/stores/enhancedBattleStore';
+import { useUnifiedBattleStore } from '@/stores/unifiedBattleStore';
 
 interface MovementIndicatorProps {
   tokenId: string;
@@ -13,7 +13,7 @@ interface MovementIndicatorProps {
 
 export const MovementIndicator: React.FC<MovementIndicatorProps> = ({ tokenId, visible, onCellClick }) => {
   const groupRef = useRef<THREE.Group>(null);
-  const tokens = useEnhancedBattleStore(s => s.tokens);
+  const tokens = useUnifiedBattleStore(s => s.tokens);
   
   const token = tokens.find(t => t.id === tokenId);
   

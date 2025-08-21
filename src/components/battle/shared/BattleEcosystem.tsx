@@ -132,14 +132,6 @@ export const BattleEcosystem: React.FC<BattleEcosystemProps> = ({
         />
       ))}
 
-      {/* Индикатор движения (только для ДМ или владельца токена) */}
-      {showMovement && activeId && isDM && (
-        <MovementIndicator 
-          tokenId={activeId} 
-          visible={showMovementGrid}
-        />
-      )}
-
       {/* Система управления камерой */}
       {enableCameraControls && <CameraControlSystem />}
       
