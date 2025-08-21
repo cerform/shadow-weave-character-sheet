@@ -18,6 +18,13 @@ export const CameraControlSystem: React.FC = () => {
 
   // Управляем OrbitControls в зависимости от режима
   useEffect(() => {
+    // Временно всегда включаем управление камерой для отладки
+    if (orbitControlsRef.current) {
+      orbitControlsRef.current.enabled = true;
+      console.log('📷 Camera controls force enabled for debugging');
+    }
+
+    /* Отключаем InteractionModeManager временно для отладки
     const unsubscribe = interactionManager.subscribe((state) => {
       if (orbitControlsRef.current) {
         const shouldEnable = state.mode === InteractionMode.CAMERA;
@@ -40,27 +47,33 @@ export const CameraControlSystem: React.FC = () => {
     return () => {
       unsubscribe();
     };
+    */
   }, []);
 
   return (
     <OrbitControls
       ref={orbitControlsRef}
-      enabled={true} // Включено по умолчанию
+      enabled={true}
       enablePan={true}
-      enableZoom={true}
+      enableZoom={true} 
       enableRotate={true}
       minDistance={5}
       maxDistance={50}
       target={[0, 0, 0]}
       mouseButtons={{
-        LEFT: null,                    // Отключаем левую кнопку
-        MIDDLE: THREE.MOUSE.PAN,       // Панорамирование на среднюю кнопку
-        RIGHT: THREE.MOUSE.ROTATE      // Поворот на правую кнопку
+        LEFT: THREE.MOUSE.ROTATE,      // ЛКМ - поворот
+        MIDDLE: THREE.MOUSE.PAN,       // СКМ - панорамирование 
+        RIGHT: THREE.MOUSE.PAN         // ПКМ - тоже панорамирование (fallback)
       }}
       touches={{
-        ONE: THREE.TOUCH.PAN,     // Панорамирование на один палец
-        TWO: THREE.TOUCH.DOLLY_PAN // Зум и панорамирование на два пальца
+        ONE: THREE.TOUCH.ROTATE,       // Один палец - поворот
+        TWO: THREE.TOUCH.DOLLY_PAN     // Два пальца - зум и панорамирование
       }}
+      enableDamping={true}
+      dampingFactor={0.05}
+      onStart={() => console.log('🎮 OrbitControls: interaction started')}
+      onChange={() => console.log('🎮 OrbitControls: camera moved')}
+      onEnd={() => console.log('🎮 OrbitControls: interaction ended')}
     />
   );
 };
