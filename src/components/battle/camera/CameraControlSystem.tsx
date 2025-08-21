@@ -2,6 +2,7 @@
 import React, { useRef, useEffect } from 'react';
 import { useThree, useFrame } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
+import * as THREE from 'three';
 import { interactionManager, InteractionMode } from '@/systems/interaction/InteractionModeManager';
 
 export const CameraControlSystem: React.FC = () => {
@@ -51,6 +52,15 @@ export const CameraControlSystem: React.FC = () => {
       minDistance={5}
       maxDistance={50}
       target={[0, 0, 0]}
+      mouseButtons={{
+        LEFT: null,                    // Отключаем левую кнопку
+        MIDDLE: THREE.MOUSE.PAN,       // Панорамирование на среднюю кнопку
+        RIGHT: THREE.MOUSE.ROTATE      // Поворот на правую кнопку
+      }}
+      touches={{
+        ONE: THREE.TOUCH.PAN,     // Панорамирование на один палец
+        TWO: THREE.TOUCH.DOLLY_PAN // Зум и панорамирование на два пальца
+      }}
     />
   );
 };

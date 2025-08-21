@@ -128,8 +128,8 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
       <div
         className="fixed z-50 min-w-48 bg-neutral-900 border border-neutral-700 rounded-lg shadow-xl"
         style={{
-          left: x,
-          top: y,
+          left: x - 8, // Смещаем меню чуть левее чтобы не перекрывать курсор
+          top: y + 8,  // Смещаем меню чуть ниже курсора
         }}
       >
         <div className="py-2">
