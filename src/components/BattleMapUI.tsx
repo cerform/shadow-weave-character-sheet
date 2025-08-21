@@ -3,9 +3,12 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useMonstersStore } from '@/stores/monstersStore';
 import { useUnifiedBattleStore } from '@/stores/unifiedBattleStore';
+import { useFogOfWarStore } from '@/stores/fogOfWarStore';
 import type { Monster } from '@/types/monsters';
 import MeshyModelLoader from '@/components/MeshyModelLoader';
 import { meshyService } from '@/services/MeshyService';
+import { FogOfWarCanvas } from '@/components/battle/FogOfWarCanvas';
+import { FogOfWarControls } from '@/components/battle/FogOfWarControls';
 
 // ==================== Типы ====================
 
@@ -25,6 +28,7 @@ type Token = {
   position: Vec2;
   initiative: number;
   conditions: string[];
+  isEnemy?: boolean; // Добавлено для различения врагов и игроков
   modelUrl?: string; // GLB/GLTF
   modelScale?: number;
 };
@@ -130,7 +134,8 @@ function TokenVisual({ token, use3D, modelReady, onModelError }: { token: Token;
 export default function BattleMapUI() {
   // Подключение к реальному бестиарию
   const { getAllMonsters, loadSupabaseMonsters, isLoadingSupabase } = useMonstersStore();
-  const { isDM, mapEditMode, setMapEditMode } = useUnifiedBattleStore();
+  const { isDM, mapEditMode, setMapEditMode, tokens: unifiedTokens, updateToken } = useUnifiedBattleStore();
+  const { updatePlayerVision, getCellAtPosition, spawnPoints } = useFogOfWarStore();
   
   // Режим и панели
   const [leftOpen, setLeftOpen] = useState(true);
@@ -329,21 +334,28 @@ export default function BattleMapUI() {
       const clampedX = Math.max(0, Math.min(MAP_W - GRID, x - dragOffset.current.x));
       const clampedY = Math.max(0, Math.min(MAP_H - GRID, y - dragOffset.current.y));
       
-      setTokens((prev) => prev.map((t) => (t.id === dragId ? { ...t, position: { x: snap(clampedX), y: snap(clampedY) } } : t)));
+      setTokens((prev) => prev.map((t) => {
+        if (t.id === dragId) {
+          const newPos = { x: snap(clampedX), y: snap(clampedY) };
+          
+          // Обновляем видимость для игроков при движении
+          if (!t.isEnemy) {
+            updatePlayerVision(t.id, newPos.x + GRID/2, newPos.y + GRID/2);
+          }
+          
+          return { ...t, position: newPos };
+        }
+        return t;
+      }));
     };
     const onUp = () => setDragId(null);
     window.addEventListener("mousemove", onMove);
     window.addEventListener("mouseup", onUp);
     return () => { window.removeEventListener("mousemove", onMove); window.removeEventListener("mouseup", onUp); };
-  }, [dragId, mapScale, mapOffset]);
+  }, [dragId, mapScale, mapOffset, updatePlayerVision]);
 
-  // Туман войны
+  // Туман войны - новая система
   const [fogEnabled, setFogEnabled] = useState(true);
-  const [fogOpacity, setFogOpacity] = useState(0.8);
-  const [fogRadius, setFogRadius] = useState(120);
-  const [autoRevealAllies, setAutoRevealAllies] = useState(true);
-  const [reveal, setReveal] = useState<FogCircle[]>([]);
-  const [hideAreas, setHideAreas] = useState<FogCircle[]>([]);
 
   // Журнал и кубы
   const [log, setLog] = useState<LogEntry[]>([{ id: uid("log"), ts: now(), text: "Бой начался. Бросьте инициативу!" }]);
@@ -485,6 +497,7 @@ export default function BattleMapUI() {
       conditions: [], 
       position: { x: snap(pos.x), y: snap(pos.y) }, 
       initiative: Math.floor(Math.random()*20)+1, 
+      isEnemy: true, // Монстры - враги
       modelUrl: monster.modelUrl, 
       modelScale: (monster as any).modelScale ?? 1 
     };
@@ -495,7 +508,44 @@ export default function BattleMapUI() {
   
   const selectMonsterForSpawn = (monsterId: string) => { setPendingSpawn(monsterId); setDmTool("add-npc"); };
 
-  // Клик по карте — туман / спавн
+  // Обнаружение столкновений и запуск боя
+  const checkForCombatEncounters = (playerToken: Token) => {
+    if (playerToken.isEnemy) return;
+    
+    // Проверяем столкновения с монстрами в открытых областях
+    const nearbyEnemies = tokens.filter(enemy => {
+      if (!enemy.isEnemy) return false;
+      
+      const distance = Math.sqrt(
+        Math.pow(playerToken.position.x - enemy.position.x, 2) + 
+        Math.pow(playerToken.position.y - enemy.position.y, 2)
+      );
+      
+      // Проверяем видимость позиции монстра
+      const { revealed } = getCellAtPosition(enemy.position.x, enemy.position.y);
+      
+      return distance <= GRID * 1.5 && revealed; // Встреча в пределах 1.5 клеток
+    });
+    
+    if (nearbyEnemies.length > 0) {
+      // Запускаем инициативу
+      setLog((l) => [
+        { id: uid("log"), ts: now(), text: `⚔️ ${playerToken.name} обнаружил врагов! Бросаем инициативу!` },
+        ...l
+      ]);
+      
+      // Можно добавить автоматический бросок инициативы
+      nearbyEnemies.forEach(enemy => {
+        enemy.initiative = Math.floor(Math.random() * 20) + 1;
+      });
+      
+      if (!playerToken.initiative) {
+        playerToken.initiative = Math.floor(Math.random() * 20) + 1;
+      }
+    }
+  };
+
+  // Клик по карте — спавн монстров
   const onMapClick = (e: React.MouseEvent<HTMLDivElement>) => {
     // Игнорируем клики во время панорамирования
     if (isPanning) return;
@@ -508,50 +558,17 @@ export default function BattleMapUI() {
     const adjustedX = (x / mapScale) - (mapOffset.x / mapScale);
     const adjustedY = (y / mapScale) - (mapOffset.y / mapScale);
     
-    // Режим редактирования карты
-    if (isDM && mapEditMode) {
-      if (e.button === 0) { // Левая кнопка - рисовать туман (скрывать)
-        setHideAreas((prev) => [...prev, { x: adjustedX, y: adjustedY, r: fogRadius }]);
-        setLog((l) => [{ id: uid("log"), ts: now(), text: `ДМ нарисовал туман в точке (${Math.round(adjustedX)}, ${Math.round(adjustedY)})` }, ...l]);
-        return;
-      }
-      // Правый клик обрабатывается в onContextMenu
-      return;
-    }
-    
-    // Обычный режим
+    // Спавн монстров
     if (isDM && dmTool === "add-npc" && pendingSpawn) { 
       addMonsterAt(pendingSpawn, { x: adjustedX, y: adjustedY }); 
       setPendingSpawn(null); 
       return; 
     }
-    
-    if (!isDM) return;
-    
-    if (dmTool === "fog-reveal") {
-      setReveal((prev) => [...prev, { x: adjustedX, y: adjustedY, r: fogRadius }]);
-      setLog((l) => [{ id: uid("log"), ts: now(), text: `ДМ открыл туман в точке (${Math.round(adjustedX)}, ${Math.round(adjustedY)})` }, ...l]);
-    } else if (dmTool === "fog-hide") {
-      setHideAreas((prev) => [...prev, { x: adjustedX, y: adjustedY, r: fogRadius }]);
-      setLog((l) => [{ id: uid("log"), ts: now(), text: `ДМ скрыл область в точке (${Math.round(adjustedX)}, ${Math.round(adjustedY)})` }, ...l]);
-    }
   };
 
-  // Правый клик в режиме редактирования карты - открывать туман
+  // Правый клик - контекстное меню
   const onMapContextMenu = (e: React.MouseEvent<HTMLDivElement>) => {
     e.preventDefault();
-    
-    if (isDM && mapEditMode) {
-      const rect = e.currentTarget.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-      
-      const adjustedX = (x / mapScale) - (mapOffset.x / mapScale);
-      const adjustedY = (y / mapScale) - (mapOffset.y / mapScale);
-      
-      setReveal((prev) => [...prev, { x: adjustedX, y: adjustedY, r: fogRadius }]);
-      setLog((l) => [{ id: uid("log"), ts: now(), text: `ДМ открыл туман в точке (${Math.round(adjustedX)}, ${Math.round(adjustedY)})` }, ...l]);
-    }
   };
 
   // ==================== Рендер ====================
@@ -602,39 +619,7 @@ export default function BattleMapUI() {
               ))}
             </div>
 
-            <div className="space-y-2">
-              <Title>Туман войны</Title>
-              <div className="flex items-center gap-2"><input id="fog" type="checkbox" checked={fogEnabled} onChange={(e)=>setFogEnabled(e.target.checked)} /><label htmlFor="fog" className="text-sm">Включить</label></div>
-              <div className="flex items-center gap-2">
-                <input id="mapEdit" type="checkbox" checked={mapEditMode} onChange={(e)=>setMapEditMode(e.target.checked)} />
-                <label htmlFor="mapEdit" className="text-sm">Режим редактирования карты</label>
-              </div>
-              <div className="flex items-center gap-2 text-sm"><span className="opacity-70 w-24">Прозрачность</span><input type="range" min={0.2} max={0.95} step={0.05} value={fogOpacity} onChange={(e)=>setFogOpacity(parseFloat(e.target.value))} className="w-full" /><span className="w-12 text-right">{Math.round(fogOpacity*100)}%</span></div>
-              <div className="flex items-center gap-2 text-sm"><span className="opacity-70 w-24">Радиус</span><input type="range" min={60} max={260} step={10} value={fogRadius} onChange={(e)=>setFogRadius(parseInt(e.target.value))} className="w-full" /><span className="w-12 text-right">{fogRadius}</span></div>
-              <div className="flex items-center gap-2"><input id="autoAlly" type="checkbox" checked={autoRevealAllies} onChange={(e)=>setAutoRevealAllies(e.target.checked)} /><label htmlFor="autoAlly" className="text-sm">Автосвет вокруг союзников</label></div>
-              <div className="flex gap-2">
-                <button className="px-2 py-1 rounded-md border border-neutral-700 text-sm" onClick={()=>{setReveal([]); setHideAreas([]); setLog((l)=>[{ id: uid("log"), ts: now(), text: "ДМ очистил весь туман" }, ...l]);}}>Очистить</button>
-                <button className="px-2 py-1 rounded-md border border-neutral-700 text-sm" onClick={()=>{setReveal(r=>r.slice(0,-1)); setLog((l)=>[{ id: uid("log"), ts: now(), text: "ДМ отменил последнее открытие" }, ...l]);}}>Отменить открытие</button>
-                <button className="px-2 py-1 rounded-md border border-neutral-700 text-sm" onClick={()=>{setHideAreas(h=>h.slice(0,-1)); setLog((l)=>[{ id: uid("log"), ts: now(), text: "ДМ отменил последнее скрытие" }, ...l]);}}>Отменить скрытие</button>
-              </div>
-              <div className="text-xs opacity-70">
-                {mapEditMode ? (
-                  <>
-                    Режим редактирования карты:
-                    <br />• ЛКМ — рисовать туман (скрывать)
-                    <br />• ПКМ — открывать туман (показывать)
-                  </>
-                ) : (
-                  <>
-                    Подсказки: 
-                    <br />• «Добавить NPC» + клик по карте — спавн монстра
-                    <br />• «Открыть туман» + клик — открыть область
-                    <br />• «Скрыть туман» + клик — скрыть область поверх открытой
-                    <br />• ПКМ — панорамирование карты
-                  </>
-                )}
-              </div>
-            </div>
+            <FogOfWarControls />
 
             <div className="space-y-2">
               <Title>Бестиарий D&D 5e ({enrichedBestiary.length} всего, {filteredBestiary.length} показано)</Title>
@@ -900,22 +885,14 @@ export default function BattleMapUI() {
                   </div>
                 ))}
 
-                {/* Туман войны */}
+                {/* Туман войны - новая система */}
                 {fogEnabled && (
-                  <svg className="absolute inset-0 pointer-events-none" width={MAP_W} height={MAP_H}>
-                    <defs>
-                      <mask id="fogMask">
-                        <rect width="100%" height="100%" fill="white" />
-                        {/* Открытые области (черные в маске = прозрачные) */}
-                        {[...reveal, ...(autoRevealAllies?tokens.filter(t=>t.type==="PC" && t.position).map(t=>({x:t.position.x+GRID/2,y:t.position.y+GRID/2,r:fogRadius})):[])].map((c,i)=>(<circle key={`reveal-${i}`} cx={c.x} cy={c.y} r={c.r} fill="black" />))}
-                        {/* Скрытые области (белые в маске = туман поверх) */}
-                        {hideAreas.map((c,i)=>(<circle key={`hide-${i}`} cx={c.x} cy={c.y} r={c.r} fill="white" />))}
-                      </mask>
-                    </defs>
-                    <rect width="100%" height="100%" fill={`rgba(0,0,0,${fogOpacity})`} mask="url(#fogMask)" />
-                    {/* Дополнительные скрытые области поверх */}
-                    {hideAreas.map((c,i)=>(<circle key={`hide-overlay-${i}`} cx={c.x} cy={c.y} r={c.r} fill={`rgba(0,0,0,${fogOpacity * 1.2})`} />))}
-                  </svg>
+                  <FogOfWarCanvas 
+                    mapWidth={MAP_W}
+                    mapHeight={MAP_H}
+                    mapScale={mapScale}
+                    mapOffset={mapOffset}
+                  />
                 )}
 
                 {/* Панель выбранного токена */}
