@@ -5,6 +5,7 @@ import * as THREE from 'three';
 import { useUnifiedBattleStore } from '@/stores/unifiedBattleStore';
 import { EnhancedBattleToken3D } from '../enhanced/EnhancedBattleToken3D';
 import { MovementIndicator } from '../enhanced/MovementIndicator';
+import { Enhanced3DTokenManager } from '../systems/Enhanced3DTokenManager';
 import { FogInteractionSystem } from '../fog/FogInteractionSystem';
 import { FogOfWar3D } from '../fog/FogOfWar3D';
 import { CameraControlSystem } from '../camera/CameraControlSystem';
@@ -212,6 +213,9 @@ export const BattleEcosystem: React.FC<BattleEcosystemProps> = ({
       
       {/* 3D Туман войны */}
       {showFog && <FogOfWar3D enabled={true} />}
+      
+      {/* Система управления токенами */}
+      <Enhanced3DTokenManager />
       
       {/* Система тумана войны (только для ДМ) */}
       {showFog && isDM && (
