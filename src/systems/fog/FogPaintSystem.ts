@@ -54,7 +54,7 @@ export class FogPaintSystem {
     
     // Преобразуем мировые координаты в координаты текстуры
     const texX = Math.floor(((worldX + mapWidth / 2) / mapWidth) * textureSize);
-    const texY = Math.floor(((worldZ + mapHeight / 2) / mapHeight) * textureSize);
+    const texY = Math.floor(((-worldZ + mapHeight / 2) / mapHeight) * textureSize);
     
     // Размер кисти в пикселях текстуры
     const brushRadius = Math.max(1, brushSize * 8);

@@ -79,28 +79,14 @@ export const FogInteractionSystem: React.FC<FogInteractionSystemProps> = ({
       if (interactionManager.isCurrentMode(InteractionMode.FOG)) {
         const shouldPaint = mouseState.isDown && mouseState.worldPosition;
         
-        if (shouldPaint && !isCurrentlyPainting.current) {
-          isCurrentlyPainting.current = true;
+        if (shouldPaint) {
           if (fogPaintSystemRef.current && mouseState.worldPosition) {
-            // Определяем режим рисования
-            let actualMode = paintMode;
-            
-            // Проверяем нажатые клавиши для переопределения режима
-            const event = new KeyboardEvent('keydown');
-            if (event.shiftKey) {
-              actualMode = 'hide';
-            } else if (event.ctrlKey) {
-              actualMode = 'reveal';
-            }
-
             fogPaintSystemRef.current.paint(
               mouseState.worldPosition.x,
               mouseState.worldPosition.z,
-              actualMode
+              paintMode
             );
           }
-        } else if (!mouseState.isDown) {
-          isCurrentlyPainting.current = false;
         }
       }
     });
