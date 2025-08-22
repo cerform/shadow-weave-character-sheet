@@ -40,6 +40,7 @@ export const SidePanel: React.FC<SidePanelProps> = ({
   const {
     searchMonsters,
     addMonsterToMap,
+    addToken,
     getTokens,
     getBattleState,
     toggleFogOfWar,
@@ -91,10 +92,31 @@ export const SidePanel: React.FC<SidePanelProps> = ({
   };
 
   // Быстрое добавление игрока
-  const handleAddPlayer = () => {
+  const handleAddPlayer = async () => {
     const playerName = `Игрок ${tokens.filter(t => !t.isEnemy).length + 1}`;
-    // TODO: интеграция с BattleEngine для добавления игрока
-    console.log('➕ Добавление игрока:', playerName);
+    
+    try {
+      const token = await addToken({
+        name: playerName,
+        hp: 25,
+        maxHp: 25,
+        ac: 15,
+        speed: 6,
+        position: [0, 0, 0],
+        conditions: [],
+        isEnemy: false,
+        isPlayer: true,
+        dexterityModifier: 2,
+        attackBonus: 3,
+        damageRoll: '1d8+1',
+      });
+      
+      if (token) {
+        console.log(`✅ Добавлен игрок: ${token.name}`);
+      }
+    } catch (error) {
+      console.error('Ошибка при добавлении игрока:', error);
+    }
   };
 
   return (

@@ -34,6 +34,7 @@ export const HUD: React.FC<HUDProps> = ({ className = '', isDM = false }) => {
   const {
     getBattleState,
     getInitiativeOrder,
+    getTokens,
     getToken,
     nextTurn,
     performAttack,
@@ -52,28 +53,36 @@ export const HUD: React.FC<HUDProps> = ({ className = '', isDM = false }) => {
   // Обработчики действий
   const handleAttack = () => {
     if (!currentToken) return;
-    // TODO: открыть модал выбора цели
-    console.log('🗡️ Attack action');
+    // Пока что атакуем случайного врага для демо
+    const enemies = getTokens().filter(t => t.isEnemy && t.id !== currentToken.id);
+    if (enemies.length > 0) {
+      const target = enemies[0];
+      const result = performAttack(currentToken.id, target.id);
+      console.log('🗡️ Результат атаки:', result);
+    } else {
+      console.log('🗡️ Нет целей для атаки');
+    }
   };
 
   const handleMove = () => {
     if (!currentToken) return;
-    console.log('🚶 Movement action');
+    // Активируем режим перемещения - пользователь должен кликнуть на карте
+    console.log('🚶 Выберите клетку для перемещения на карте');
   };
 
   const handleSpell = () => {
     if (!currentToken) return;
-    console.log('✨ Spell action');
+    console.log('✨ Применение заклинания - функция в разработке');
   };
 
   const handleItem = () => {
     if (!currentToken) return;
-    console.log('📦 Item action');
+    console.log('📦 Использование предмета - функция в разработке');
   };
 
   const handleDefend = () => {
     if (!currentToken) return;
-    console.log('🛡️ Defend action');
+    console.log('🛡️ Защитная стойка - функция в разработке');
   };
 
   const handleHeal = () => {
