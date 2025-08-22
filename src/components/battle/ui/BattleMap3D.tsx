@@ -11,6 +11,7 @@ import { Upload, X } from "lucide-react";
 import { FogInteractionSystem } from '../fog/FogInteractionSystem';
 import { CameraControlSystem } from '../camera/CameraControlSystem';
 import { SimpleBattleUI } from './SimpleBattleUI';
+import MiniMap from '../minimap/MiniMap';
 
 interface BattleMap3DProps {
   sessionId?: string;
@@ -204,6 +205,9 @@ export default function BattleMap3D({
           />
         </Canvas>
       </div>
+      
+      {/* Мини-карта */}
+      <MiniMap />
     </div>
   );
 }

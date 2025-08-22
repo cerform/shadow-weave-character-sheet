@@ -6,6 +6,7 @@ import { useUnifiedBattleStore } from '@/stores/unifiedBattleStore';
 import type { Monster } from '@/types/monsters';
 import MeshyModelLoader from '@/components/MeshyModelLoader';
 import { meshyService } from '@/services/MeshyService';
+import MiniMap2D from '@/components/battle/minimap/MiniMap2D';
 
 // ==================== Типы ====================
 
@@ -763,6 +764,15 @@ export default function BattleMapUI() {
           </div>
         </div>
       </div>
+      
+      {/* Мини-карта */}
+      <MiniMap2D
+        tokens={tokens}
+        selectedId={selectedId}
+        activeToken={activeToken}
+        mapImage={mapImage}
+        isDM={isDM}
+      />
     </div>
   );
 }
