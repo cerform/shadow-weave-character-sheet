@@ -3,12 +3,9 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useMonstersStore } from '@/stores/monstersStore';
 import { useUnifiedBattleStore } from '@/stores/unifiedBattleStore';
-import { useFogOfWarStore } from '@/stores/fogOfWarStore';
 import type { Monster } from '@/types/monsters';
 import MeshyModelLoader from '@/components/MeshyModelLoader';
 import { meshyService } from '@/services/MeshyService';
-import { FogOfWarCanvas } from '@/components/battle/FogOfWarCanvas';
-import { FogOfWarControls } from '@/components/battle/FogOfWarControls';
 
 // ==================== Типы ====================
 
@@ -28,10 +25,11 @@ type Token = {
   position: Vec2;
   initiative: number;
   conditions: string[];
-  isEnemy?: boolean; // Добавлено для различения врагов и игроков
   modelUrl?: string; // GLB/GLTF
   modelScale?: number;
 };
+
+type FogCircle = { x: number; y: number; r: number };
 
 type LogEntry = { id: string; ts: string; text: string };
 
@@ -41,7 +39,8 @@ const GRID = 64;
 const MAP_W = 1600;
 const MAP_H = 900;
 
-// Убрано: используем только Meshy.ai
+// Внешний реестр моделей D&D персонажей
+const MODEL_REGISTRY_URL = "/data/dnd-model-registry.json";
 
 // ==================== Утилиты ====================
 
@@ -55,7 +54,38 @@ function isValidModelUrl(url?: string): boolean {
 }
 const norm = (s: string) => s?.normalize("NFKD").toLowerCase().replace(/[^a-zа-я0-9 ]+/gi, "").trim();
 
-// Убрано: используем только Meshy.ai для 3D моделей
+// Мини‑реестр моделей по шаблонам (regex). Расширяется через JSON.
+const LOCAL_MODEL_REGISTRY: Array<{ match: RegExp; url: string; scale?: number }> = [
+  { match: /goblin/i,              url: "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/Fox/glTF/Fox.gltf",                                   scale: 0.02 },
+  { match: /dragon/i,              url: "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/DamagedHelmet/glTF-Binary/DamagedHelmet.glb",   scale: 18 },
+  { match: /skeleton|undead/i,     url: "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/RobotExpressive/glTF-Binary/RobotExpressive.glb", scale: 3 },
+  { match: /orc/i,                 url: "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/BarramundiFish/glTF/BarramundiFish.gltf",            scale: 8 },
+  { match: /troll/i,               url: "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/BrainStem/glTF/BrainStem.gltf",                      scale: 15 },
+];
+
+// Родовой маппинг по семействам (примерные модели GLB/GLTF)
+const FAMILY_MODEL_MAP: Array<{ match: RegExp; url: string; scale?: number }> = [
+  { match: new RegExp("(?:adult|ancient|young)?\\s*.*dragon\\b","i"),
+    url: "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/DamagedHelmet/glTF-Binary/DamagedHelmet.glb", scale: 12 },
+  { match: new RegExp("\\b(demon|devil|fiend|balor|pit fiend|erinyes|barbed devil|bearded devil)\\b","i"),
+    url: "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/RobotExpressive/glTF-Binary/RobotExpressive.glb", scale: 10 },
+  { match: new RegExp("\\b(skeleton|zombie|wraith|specter|spectre|ghost|lich|vampire|ghoul|undead)\\b","i"),
+    url: "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/RobotExpressive/glTF-Binary/RobotExpressive.glb", scale: 1 },
+  { match: new RegExp("\\b(hill|stone|frost|fire|cloud|storm)\\s+giant\\b","i"),
+    url: "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/BrainStem/glTF/BrainStem.gltf", scale: 6 },
+  { match: new RegExp("\\b(wolf|bear|boar|lion|tiger|panther|ape|elk|horse)\\b","i"),
+    url: "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/Fox/glTF/Fox.gltf", scale: 0.02 },
+  { match: new RegExp("\\b(ooze|gelatinous cube|black pudding|ochre jelly|slime)\\b","i"),
+    url: "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/WaterBottle/glTF-Binary/WaterBottle.glb", scale: 8 },
+  { match: new RegExp("\\b(beholder|mind flayer|illithid|aboleth|gibbering mouther)\\b","i"),
+    url: "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/WaterBottle/glTF-Binary/WaterBottle.glb", scale: 6 },
+  { match: new RegExp("\\b(golem|construct|animated armor|helmed horror)\\b","i"),
+    url: "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/DamagedHelmet/glTF-Binary/DamagedHelmet.glb", scale: 10 },
+  { match: new RegExp("\\b(goblin|orc|kobold|bandit|cultist|acolyte|guard|thug)\\b","i"),
+    url: "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/Fox/glTF/Fox.gltf", scale: 2 },
+  { match: new RegExp("\\b(fire|air|earth|water)\\s+elemental\\b","i"),
+    url: "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/Box/glTF/Box.gltf", scale: 6 },
+];
 
 // ==================== TSX типы для <model-viewer> ====================
 
@@ -90,7 +120,18 @@ function useModelViewerLoader(enabled: boolean) {
   return { ready, error, status } as const;
 }
 
-// Убрано: функция подбора моделей не нужна, используем только Meshy.ai
+// ==================== Подбор модели по имени ====================
+
+function pickModelFor(
+  name: string,
+  registry: Array<{ match: RegExp; url: string; scale?: number }>,
+  family?: Array<{ match: RegExp; url: string; scale?: number }>
+): { url?: string; scale?: number } {
+  const n = norm(name);
+  for (const r of registry) { if (r.match.test(n)) return { url: r.url, scale: r.scale }; }
+  if (family) { for (const r of family) { if (r.match.test(n)) return { url: r.url, scale: r.scale }; } }
+  return {};
+}
 
 // ==================== Компонент отображения токена ====================
 
@@ -132,8 +173,7 @@ function TokenVisual({ token, use3D, modelReady, onModelError }: { token: Token;
 export default function BattleMapUI() {
   // Подключение к реальному бестиарию
   const { getAllMonsters, loadSupabaseMonsters, isLoadingSupabase } = useMonstersStore();
-  const { isDM, mapEditMode, setMapEditMode, tokens: unifiedTokens, updateToken, fogEnabled, setFogEnabled } = useUnifiedBattleStore();
-  const { updatePlayerVision, getCellAtPosition, spawnPoints, initializeFog } = useFogOfWarStore();
+  const { isDM } = useUnifiedBattleStore();
   
   // Режим и панели
   const [leftOpen, setLeftOpen] = useState(true);
@@ -145,170 +185,6 @@ export default function BattleMapUI() {
   const onMapDrop = (e: React.DragEvent) => { e.preventDefault(); const f = e.dataTransfer.files?.[0]; if (f && f.type.startsWith("image/")) setMapImage(URL.createObjectURL(f)); };
   const onMapDragOver = (e: React.DragEvent) => e.preventDefault();
 
-  // Интерактивность карты
-  const [mapScale, setMapScale] = useState(1);
-  const [mapOffset, setMapOffset] = useState({ x: 0, y: 0 });
-  const [isPanning, setIsPanning] = useState(false);
-  const panStart = useRef({ x: 0, y: 0 });
-  const mapContainer = useRef<HTMLDivElement | null>(null);
-
-  // Обработчики интерактивности карты
-  useEffect(() => {
-    const container = mapContainer.current;
-    if (!container) return;
-
-    const handleWheel = (e: WheelEvent) => {
-      e.preventDefault();
-      const rect = container.getBoundingClientRect();
-      const mouseX = e.clientX - rect.left;
-      const mouseY = e.clientY - rect.top;
-      
-      const delta = e.deltaY > 0 ? 0.9 : 1.1;
-      const newScale = Math.min(3, Math.max(0.3, mapScale * delta));
-      
-      if (newScale !== mapScale) {
-        const scaleDiff = newScale / mapScale;
-        setMapOffset(prev => ({
-          x: mouseX - (mouseX - prev.x) * scaleDiff,
-          y: mouseY - (mouseY - prev.y) * scaleDiff
-        }));
-        setMapScale(newScale);
-      }
-    };
-
-    const handleMouseDown = (e: MouseEvent) => {
-      // В режиме редактирования карты - только правая кнопка для панорамирования
-      // В обычном режиме - правая кнопка для панорамирования
-      if (e.button === 2 && !mapEditMode) {
-        e.preventDefault();
-        e.stopPropagation();
-        setIsPanning(true);
-        panStart.current = { x: e.clientX - mapOffset.x, y: e.clientY - mapOffset.y };
-        container.style.cursor = 'grabbing';
-      }
-      // НЕ перехватываем левую кнопку - оставляем для игровых действий или рисования тумана
-    };
-
-    const handleMouseMove = (e: MouseEvent) => {
-      if (isPanning) {
-        e.preventDefault();
-        setMapOffset({
-          x: e.clientX - panStart.current.x,
-          y: e.clientY - panStart.current.y
-        });
-      }
-    };
-
-    const handleMouseUp = (e: MouseEvent) => {
-      if (isPanning && e.button === 2) {
-        setIsPanning(false);
-        container.style.cursor = mapEditMode ? 'crosshair' : 'default';
-      }
-    };
-
-    const handleContextMenu = (e: MouseEvent) => {
-      e.preventDefault(); // Отключаем контекстное меню для правой кнопки
-    };
-
-    // Обработчики touch для мобильных устройств
-    let lastTouchDistance = 0;
-    let touchStartOffset = { x: 0, y: 0 };
-    let touchStartTime = 0;
-
-    const handleTouchStart = (e: TouchEvent) => {
-      touchStartTime = Date.now();
-      
-      if (e.touches.length === 1) {
-        // Одиночное касание - может быть игровое действие или панорамирование
-        const touch = e.touches[0];
-        touchStartOffset = { x: touch.clientX - mapOffset.x, y: touch.clientY - mapOffset.y };
-        
-        // Ждем немного, чтобы определить намерение
-        setTimeout(() => {
-          if (Date.now() - touchStartTime > 150) { // Долгое нажатие = панорамирование
-            setIsPanning(true);
-          }
-        }, 150);
-      } else if (e.touches.length === 2) {
-        // Двойное касание - масштабирование
-        e.preventDefault();
-        const touch1 = e.touches[0];
-        const touch2 = e.touches[1];
-        lastTouchDistance = Math.sqrt(
-          Math.pow(touch2.clientX - touch1.clientX, 2) +
-          Math.pow(touch2.clientY - touch1.clientY, 2)
-        );
-      }
-    };
-
-    const handleTouchMove = (e: TouchEvent) => {
-      if (e.touches.length === 1 && isPanning) {
-        // Панорамирование
-        e.preventDefault();
-        const touch = e.touches[0];
-        setMapOffset({
-          x: touch.clientX - touchStartOffset.x,
-          y: touch.clientY - touchStartOffset.y
-        });
-      } else if (e.touches.length === 2) {
-        // Масштабирование
-        e.preventDefault();
-        const touch1 = e.touches[0];
-        const touch2 = e.touches[1];
-        const currentDistance = Math.sqrt(
-          Math.pow(touch2.clientX - touch1.clientX, 2) +
-          Math.pow(touch2.clientY - touch1.clientY, 2)
-        );
-        
-        if (lastTouchDistance > 0) {
-          const scaleDelta = currentDistance / lastTouchDistance;
-          const newScale = Math.min(3, Math.max(0.3, mapScale * scaleDelta));
-          setMapScale(newScale);
-        }
-        
-        lastTouchDistance = currentDistance;
-      }
-    };
-
-    const handleTouchEnd = (e: TouchEvent) => {
-      const touchDuration = Date.now() - touchStartTime;
-      
-      if (touchDuration < 150) {
-        // Быстрое касание - игровое действие (НЕ панорамирование)
-        setIsPanning(false);
-      } else {
-        // Долгое касание завершено
-        setIsPanning(false);
-      }
-      
-      lastTouchDistance = 0;
-    };
-
-    // Добавляем обработчики только к контейнеру карты
-    container.addEventListener('wheel', handleWheel, { passive: false });
-    container.addEventListener('mousedown', handleMouseDown);
-    container.addEventListener('contextmenu', handleContextMenu);
-    container.addEventListener('touchstart', handleTouchStart, { passive: false });
-    container.addEventListener('touchmove', handleTouchMove, { passive: false });
-    container.addEventListener('touchend', handleTouchEnd);
-    
-    // Глобальные обработчики только для завершения панорамирования
-    window.addEventListener('mousemove', handleMouseMove);
-    window.addEventListener('mouseup', handleMouseUp);
-
-    return () => {
-      container.removeEventListener('wheel', handleWheel);
-      container.removeEventListener('mousedown', handleMouseDown);
-      container.removeEventListener('contextmenu', handleContextMenu);
-      container.removeEventListener('touchstart', handleTouchStart);
-      container.removeEventListener('touchmove', handleTouchMove);
-      container.removeEventListener('touchend', handleTouchEnd);
-      
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseup', handleMouseUp);
-    };
-  }, [mapScale, mapOffset, isPanning, mapEditMode]);
-
   // Токены/инициатива
   const [tokens, setTokens] = useState<Token[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -316,58 +192,45 @@ export default function BattleMapUI() {
   const initOrder = useMemo(() => [...tokens].sort((a, b) => b.initiative - a.initiative), [tokens]);
   const activeToken = initOrder.length ? initOrder[turnIndex % initOrder.length] : undefined;
 
-  // Перетаскивание токенов
+  // Перетаскивание
   const [dragId, setDragId] = useState<string | null>(null);
   const dragOffset = useRef<Vec2>({ x: 0, y: 0 });
-  
   useEffect(() => {
     const onMove = (e: MouseEvent) => {
       if (!dragId || !mapRef.current) return;
       const rect = mapRef.current.getBoundingClientRect();
-      
-      // Корректируем координаты с учетом масштаба и смещения
-      const x = (e.clientX - rect.left) / mapScale - mapOffset.x / mapScale;
-      const y = (e.clientY - rect.top) / mapScale - mapOffset.y / mapScale;
-      
-      const clampedX = Math.max(0, Math.min(MAP_W - GRID, x - dragOffset.current.x));
-      const clampedY = Math.max(0, Math.min(MAP_H - GRID, y - dragOffset.current.y));
-      
-      setTokens((prev) => prev.map((t) => {
-        if (t.id === dragId) {
-          const newPos = { x: snap(clampedX), y: snap(clampedY) };
-          
-          // Обновляем видимость для игроков при движении
-          if (!t.isEnemy) {
-            updatePlayerVision(t.id, newPos.x + GRID/2, newPos.y + GRID/2);
-          }
-          
-          return { ...t, position: newPos };
-        }
-        return t;
-      }));
+      const x = e.clientX - rect.left - dragOffset.current.x;
+      const y = e.clientY - rect.top - dragOffset.current.y;
+      const clampedX = Math.max(0, Math.min(MAP_W - GRID, x));
+      const clampedY = Math.max(0, Math.min(MAP_H - GRID, y));
+      setTokens((prev) => prev.map((t) => (t.id === dragId ? { ...t, position: { x: snap(clampedX), y: snap(clampedY) } } : t)));
     };
     const onUp = () => setDragId(null);
     window.addEventListener("mousemove", onMove);
     window.addEventListener("mouseup", onUp);
     return () => { window.removeEventListener("mousemove", onMove); window.removeEventListener("mouseup", onUp); };
-  }, [dragId, mapScale, mapOffset, updatePlayerVision]);
+  }, [dragId]);
 
-  // Инициализация тумана войны при загрузке карты и монтировании
-  useEffect(() => {
-    console.log('🌫️ BattleMapUI: инициализация тумана войны');
-    // Инициализируем туман войны с размерами карты независимо от изображения
-    initializeFog(MAP_W, MAP_H, 32);
-    console.log('🌫️ Туман войны инициализирован для карты', MAP_W, 'x', MAP_H);
-  }, [initializeFog]);
+  // Туман войны
+  const [fogEnabled, setFogEnabled] = useState(true);
+  const [fogOpacity, setFogOpacity] = useState(0.8);
+  const [fogRadius, setFogRadius] = useState(120);
+  const [autoRevealAllies, setAutoRevealAllies] = useState(true);
+  const [reveal, setReveal] = useState<FogCircle[]>([]);
+  const [hideAreas, setHideAreas] = useState<FogCircle[]>([]);
 
   // Журнал и кубы
   const [log, setLog] = useState<LogEntry[]>([{ id: uid("log"), ts: now(), text: "Бой начался. Бросьте инициативу!" }]);
   const roll = (sides: number) => { const value = 1 + Math.floor(Math.random()*sides); setLog((l)=>[{ id: uid("log"), ts: now(), text: `🎲 d${sides} → ${value}` }, ...l]); };
   const nextTurn = () => setTurnIndex((i) => (initOrder.length ? (i + 1) % initOrder.length : 0));
 
-  // Инструменты Мастера (убраны старые инструменты тумана)
-  type DMTool = "select" | "add-npc" | "measure";
+  // Инструменты Мастера
+  type DMTool = "select" | "fog-reveal" | "fog-hide" | "add-npc" | "measure";
   const [dmTool, setDmTool] = useState<DMTool>("select");
+
+  // Реестр 3D моделей
+  const [modelRegistry, setModelRegistry] = useState<Array<{ match: RegExp; url: string; scale?: number }>>(LOCAL_MODEL_REGISTRY);
+  const [useFamilyMap, setUseFamilyMap] = useState(true);
 
   // Фильтрация и группировка монстров
   const [crFilter, setCrFilter] = useState<{ min: number; max: number }>({ min: 0, max: 30 });
@@ -381,6 +244,21 @@ export default function BattleMapUI() {
     loadSupabaseMonsters();
   }, [loadSupabaseMonsters]);
 
+  // Загрузка внешнего реестра моделей
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch(MODEL_REGISTRY_URL, { cache: "no-store" });
+        if (!res.ok) return;
+        const json = await res.json();
+        if (Array.isArray(json)) {
+          const rules = json.filter((r: any)=>r && r.match && r.url).map((r: any)=>({ match: new RegExp(r.match, "i"), url: String(r.url), scale: r.scale?Number(r.scale):undefined }));
+          if (rules.length) setModelRegistry([...LOCAL_MODEL_REGISTRY, ...rules]);
+        }
+      } catch {/* ignore */}
+    })();
+  }, []);
+
   // Получаем все монстры из реального бестиария
   const bestiary = getAllMonsters();
 
@@ -393,18 +271,20 @@ export default function BattleMapUI() {
     setLog((l) => [{ id: uid("log"), ts: now(), text: `🎯 Meshy загрузил 3D модель для ${monsterName}` }, ...l]);
   };
 
-  // Автопривязка 3D моделей к монстрам из бестиария (только Meshy.ai)
+  // Автопривязка 3D моделей к монстрам из бестиария
   const enrichedBestiary = useMemo(() => {
     return bestiary.map((monster) => {
-      // Проверяем загруженные из Meshy модели
+      // Сначала проверяем загруженные из Meshy модели
       if (loadedMeshyModels[monster.name]) {
         return { ...monster, modelUrl: loadedMeshyModels[monster.name], modelScale: 1 };
       }
       
-      // Если нет модели в Meshy, оставляем без 3D модели
-      return monster;
+      // Затем стандартная привязка
+      if (monster.modelUrl && isValidModelUrl(monster.modelUrl)) return monster;
+      const mk = pickModelFor(monster.name, modelRegistry, useFamilyMap ? FAMILY_MODEL_MAP : undefined);
+      return mk.url ? { ...monster, modelUrl: mk.url, modelScale: mk.scale } : monster;
     });
-  }, [bestiary, loadedMeshyModels]);
+  }, [bestiary, modelRegistry, useFamilyMap, loadedMeshyModels]);
 
   // Функция для получения числового значения CR
   const getCRValue = (cr: string): number => {
@@ -500,7 +380,6 @@ export default function BattleMapUI() {
       conditions: [], 
       position: { x: snap(pos.x), y: snap(pos.y) }, 
       initiative: Math.floor(Math.random()*20)+1, 
-      isEnemy: true, // Монстры - враги
       modelUrl: monster.modelUrl, 
       modelScale: (monster as any).modelScale ?? 1 
     };
@@ -511,67 +390,19 @@ export default function BattleMapUI() {
   
   const selectMonsterForSpawn = (monsterId: string) => { setPendingSpawn(monsterId); setDmTool("add-npc"); };
 
-  // Обнаружение столкновений и запуск боя
-  const checkForCombatEncounters = (playerToken: Token) => {
-    if (playerToken.isEnemy) return;
-    
-    // Проверяем столкновения с монстрами в открытых областях
-    const nearbyEnemies = tokens.filter(enemy => {
-      if (!enemy.isEnemy) return false;
-      
-      const distance = Math.sqrt(
-        Math.pow(playerToken.position.x - enemy.position.x, 2) + 
-        Math.pow(playerToken.position.y - enemy.position.y, 2)
-      );
-      
-      // Проверяем видимость позиции монстра
-      const { revealed } = getCellAtPosition(enemy.position.x, enemy.position.y);
-      
-      return distance <= GRID * 1.5 && revealed; // Встреча в пределах 1.5 клеток
-    });
-    
-    if (nearbyEnemies.length > 0) {
-      // Запускаем инициативу
-      setLog((l) => [
-        { id: uid("log"), ts: now(), text: `⚔️ ${playerToken.name} обнаружил врагов! Бросаем инициативу!` },
-        ...l
-      ]);
-      
-      // Можно добавить автоматический бросок инициативы
-      nearbyEnemies.forEach(enemy => {
-        enemy.initiative = Math.floor(Math.random() * 20) + 1;
-      });
-      
-      if (!playerToken.initiative) {
-        playerToken.initiative = Math.floor(Math.random() * 20) + 1;
-      }
-    }
-  };
-
-  // Клик по карте — спавн монстров
+  // Клик по карте — туман / спавн
   const onMapClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    // Игнорируем клики во время панорамирования
-    if (isPanning) return;
-    
     const rect = e.currentTarget.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    
-    // Корректируем координаты с учетом масштаба и смещения
-    const adjustedX = (x / mapScale) - (mapOffset.x / mapScale);
-    const adjustedY = (y / mapScale) - (mapOffset.y / mapScale);
-    
-    // Спавн монстров
-    if (isDM && dmTool === "add-npc" && pendingSpawn) { 
-      addMonsterAt(pendingSpawn, { x: adjustedX, y: adjustedY }); 
-      setPendingSpawn(null); 
-      return; 
+    const x = e.clientX - rect.left; const y = e.clientY - rect.top;
+    if (isDM && dmTool === "add-npc" && pendingSpawn) { addMonsterAt(pendingSpawn, { x, y }); setPendingSpawn(null); return; }
+    if (!isDM) return;
+    if (dmTool === "fog-reveal") {
+      setReveal((prev) => [...prev, { x, y, r: fogRadius }]);
+      setLog((l) => [{ id: uid("log"), ts: now(), text: `ДМ открыл туман в точке (${Math.round(x)}, ${Math.round(y)})` }, ...l]);
+    } else if (dmTool === "fog-hide") {
+      setHideAreas((prev) => [...prev, { x, y, r: fogRadius }]);
+      setLog((l) => [{ id: uid("log"), ts: now(), text: `ДМ скрыл область в точке (${Math.round(x)}, ${Math.round(y)})` }, ...l]);
     }
-  };
-
-  // Правый клик - контекстное меню
-  const onMapContextMenu = (e: React.MouseEvent<HTMLDivElement>) => {
-    e.preventDefault();
   };
 
   // ==================== Рендер ====================
@@ -611,16 +442,35 @@ export default function BattleMapUI() {
           <div className="p-3 space-y-4">
             <Title>Инструменты ДМ</Title>
             <div className="grid grid-cols-2 gap-2">
-              {(["select","add-npc","measure"] as const).map((tool)=>(
+              {(["select","fog-reveal","fog-hide","add-npc","measure"] as const).map((tool)=>(
                 <button key={tool} onClick={()=>setDmTool(tool)} className={`px-2 py-2 rounded-md border text-sm ${dmTool===tool?"border-emerald-400 text-emerald-400":"border-neutral-700 text-neutral-300"}`}>
                   {tool === "select" && "Выбор"}
+                  {tool === "fog-reveal" && "Открыть туман"}
+                  {tool === "fog-hide" && "Скрыть туман"}
                   {tool === "add-npc" && "Добавить NPC"}
                   {tool === "measure" && "Измерить"}
                 </button>
               ))}
             </div>
 
-            <FogOfWarControls />
+            <div className="space-y-2">
+              <Title>Туман войны</Title>
+              <div className="flex items-center gap-2"><input id="fog" type="checkbox" checked={fogEnabled} onChange={(e)=>setFogEnabled(e.target.checked)} /><label htmlFor="fog" className="text-sm">Включить</label></div>
+              <div className="flex items-center gap-2 text-sm"><span className="opacity-70 w-24">Прозрачность</span><input type="range" min={0.2} max={0.95} step={0.05} value={fogOpacity} onChange={(e)=>setFogOpacity(parseFloat(e.target.value))} className="w-full" /><span className="w-12 text-right">{Math.round(fogOpacity*100)}%</span></div>
+              <div className="flex items-center gap-2 text-sm"><span className="opacity-70 w-24">Радиус</span><input type="range" min={60} max={260} step={10} value={fogRadius} onChange={(e)=>setFogRadius(parseInt(e.target.value))} className="w-full" /><span className="w-12 text-right">{fogRadius}</span></div>
+              <div className="flex items-center gap-2"><input id="autoAlly" type="checkbox" checked={autoRevealAllies} onChange={(e)=>setAutoRevealAllies(e.target.checked)} /><label htmlFor="autoAlly" className="text-sm">Автосвет вокруг союзников</label></div>
+              <div className="flex gap-2">
+                <button className="px-2 py-1 rounded-md border border-neutral-700 text-sm" onClick={()=>{setReveal([]); setHideAreas([]); setLog((l)=>[{ id: uid("log"), ts: now(), text: "ДМ очистил весь туман" }, ...l]);}}>Очистить</button>
+                <button className="px-2 py-1 rounded-md border border-neutral-700 text-sm" onClick={()=>{setReveal(r=>r.slice(0,-1)); setLog((l)=>[{ id: uid("log"), ts: now(), text: "ДМ отменил последнее открытие" }, ...l]);}}>Отменить открытие</button>
+                <button className="px-2 py-1 rounded-md border border-neutral-700 text-sm" onClick={()=>{setHideAreas(h=>h.slice(0,-1)); setLog((l)=>[{ id: uid("log"), ts: now(), text: "ДМ отменил последнее скрытие" }, ...l]);}}>Отменить скрытие</button>
+              </div>
+              <div className="text-xs opacity-70">
+                Подсказки: 
+                <br />• «Добавить NPC» + клик по карте — спавн монстра
+                <br />• «Открыть туман» + клик — открыть область
+                <br />• «Скрыть туман» + клик — скрыть область поверх открытой
+              </div>
+            </div>
 
             <div className="space-y-2">
               <Title>Бестиарий D&D 5e ({enrichedBestiary.length} всего, {filteredBestiary.length} показано)</Title>
@@ -628,11 +478,12 @@ export default function BattleMapUI() {
               {/* Настройки 3D */}
               <div className="space-y-2 mb-2">
                 <div className="flex items-center gap-2">
-                  <input id="meshyEnabled" type="checkbox" checked={meshyEnabled} onChange={(e)=>setMeshyEnabled(e.target.checked)} />
-                  <label htmlFor="meshyEnabled" className="text-sm">Meshy.ai автозагрузка 3D моделей</label>
+                  <input id="familyMap" type="checkbox" checked={useFamilyMap} onChange={(e)=>setUseFamilyMap(e.target.checked)} />
+                  <label htmlFor="familyMap" className="text-sm">Родовой 3D-маппинг</label>
                 </div>
-                <div className="text-xs text-neutral-400">
-                  Источник: https://www.meshy.ai/tags/dnd
+                <div className="flex items-center gap-2">
+                  <input id="meshyEnabled" type="checkbox" checked={meshyEnabled} onChange={(e)=>setMeshyEnabled(e.target.checked)} />
+                  <label htmlFor="meshyEnabled" className="text-sm">Meshy.ai автозагрузка</label>
                 </div>
               </div>
 
@@ -780,10 +631,11 @@ export default function BattleMapUI() {
                 <li>model-viewer → {modelReady?"✅ Готов":modelStatus==="error"?"❌ Ошибка":"⏳ Загрузка"}</li>
                 <li>валидность 3D URL → {enrichedBestiary.filter(b=>b.modelUrl).every(b=>isValidModelUrl(b.modelUrl))?"✅ ОК":"⚠️ Есть некорректные"}</li>
                 <li>ожидается спавн → {pendingSpawn ? enrichedBestiary.find(m=>m.id===pendingSpawn)?.name : "—"}</li>
-                <li>Meshy модели → {Object.keys(loadedMeshyModels).length} загружено</li>
+                <li>реестр моделей → {modelRegistry.length} правил</li>
                 <li>монстров с 3D → {enrichedBestiary.filter(m=>isValidModelUrl(m.modelUrl)).length}</li>
               </ul>
               <div className="flex gap-2">
+                <button className="px-2 py-1 rounded-md border border-neutral-700 text-xs" onClick={()=>{ const sample = enrichedBestiary.find(m=>m.name.toLowerCase().includes('dragon')); if (sample) { const mk = pickModelFor(sample.name, modelRegistry, useFamilyMap ? FAMILY_MODEL_MAP : undefined); setLog((l)=>[{ id: uid("log"), ts: now(), text: `Тест автопривязки для "${sample.name}": ${mk.url?"нашёл 3D":"нет 3D"} ${useFamilyMap?"(с родовым)":"(без родового)"}` }, ...l]); } }}>Тест автопривязки</button>
                 <button className="px-2 py-1 rounded-md border border-neutral-700 text-xs" onClick={()=>{ if (filteredBestiary[0]) addMonsterAt(filteredBestiary[0].id, { x: MAP_W/2, y: MAP_H/2 }); }}>Тестовый спавн</button>
               </div>
               
@@ -817,47 +669,10 @@ export default function BattleMapUI() {
         </div>
 
         {/* Центр: Карта и токены */}
-        <div className="relative bg-neutral-900" onDrop={onMapDrop} onDragOver={onMapDragOver} ref={mapContainer}>
-          {/* Миникарта */}
-          <div className="absolute top-4 right-4 z-20 w-48 h-32 bg-neutral-900/90 backdrop-blur border border-neutral-700 rounded-lg overflow-hidden">
-            <div className="relative w-full h-full">
-              {mapImage && <img src={mapImage} alt="Миникарта" className="w-full h-full object-cover opacity-60" />}
-              <div className="absolute inset-0 bg-gradient-to-br from-neutral-900/40 to-transparent" />
-              
-              {/* Токены на миникарте */}
-              {tokens.filter(t => t && t.position).map((t) => {
-                const miniX = (t.position.x / MAP_W) * 192; // 192px = w-48
-                const miniY = (t.position.y / MAP_H) * 128; // 128px = h-32
-                return (
-                  <div
-                    key={`mini-${t.id}`}
-                    className={`absolute w-2 h-2 rounded-full ${t.type === "PC" ? "bg-emerald-400" : "bg-rose-400"} border border-white/50`}
-                    style={{ left: miniX - 4, top: miniY - 4 }}
-                    title={t.name}
-                  />
-                );
-              })}
-              
-              <div className="absolute bottom-1 left-1 text-xs text-white/70 font-semibold">Миникарта</div>
-              <div className="absolute bottom-1 right-1 text-xs text-white/50">{Math.round(mapScale * 100)}%</div>
-            </div>
-          </div>
-
+        <div className="relative bg-neutral-900" onDrop={onMapDrop} onDragOver={onMapDragOver}>
           <div className="absolute inset-0 overflow-hidden">
             <div className="w-full h-full flex items-center justify-center p-4">
-              <div 
-                className="relative rounded-xl shadow-xl bg-neutral-800 overflow-hidden transition-transform duration-200 select-none" 
-                style={{ 
-                  width: MAP_W, 
-                  height: MAP_H,
-                  transform: `scale(${mapScale}) translate(${mapOffset.x / mapScale}px, ${mapOffset.y / mapScale}px)`,
-                  cursor: isPanning ? 'grabbing' : (mapEditMode ? 'crosshair' : 'default'),
-                  touchAction: 'none'
-                }} 
-                onClick={onMapClick} 
-                onContextMenu={onMapContextMenu}
-                ref={mapRef}
-              >
+              <div className="relative rounded-xl shadow-xl bg-neutral-800 overflow-hidden" style={{ width: MAP_W, height: MAP_H }} onClick={onMapClick} ref={mapRef}>
                 {/* Фон карты */}
                 {mapImage ? (<img src={mapImage} alt="Карта" className="absolute inset-0 w-full h-full object-cover" />) : (<div className="absolute inset-0 flex items-center justify-center text-neutral-500 text-sm">Перетащите изображение карты или выберите файл сверху</div>)}
 
@@ -869,31 +684,28 @@ export default function BattleMapUI() {
 
                 {/* Токены */}
                 {tokens.filter(t => t && t.position).map((t) => (
-                  <div key={t.id} style={{ left: t.position.x, top: t.position.y, width: GRID, height: GRID }} className={`absolute rounded-lg border ${selectedId === t.id ? "border-yellow-400" : "border-neutral-700"}`} onMouseDown={(e)=>{ 
-                    // Только левая кнопка для токенов
-                    if (e.button !== 0) return;
-                    e.stopPropagation(); // Предотвращаем всплытие к карте
-                    if (!mapRef.current) return; 
-                    const rect = mapRef.current.getBoundingClientRect(); 
-                    const adjustedX = (e.clientX - rect.left) / mapScale - mapOffset.x / mapScale;
-                    const adjustedY = (e.clientY - rect.top) / mapScale - mapOffset.y / mapScale;
-                    dragOffset.current = { x: adjustedX - t.position.x, y: adjustedY - t.position.y }; 
-                    setDragId(t.id); 
-                    setSelectedId(t.id); 
-                  }} title={`${t.name} (${t.hp}/${t.maxHp})`}>
+                  <div key={t.id} style={{ left: t.position.x, top: t.position.y, width: GRID, height: GRID }} className={`absolute rounded-lg border ${selectedId === t.id ? "border-yellow-400" : "border-neutral-700"}`} onMouseDown={(e)=>{ if (!mapRef.current) return; const rect = mapRef.current.getBoundingClientRect(); dragOffset.current = { x: e.clientX - rect.left - t.position.x, y: e.clientY - rect.top - t.position.y }; setDragId(t.id); setSelectedId(t.id); }} title={`${t.name} (${t.hp}/${t.maxHp})`}>
                     <TokenVisual token={t} use3D={use3D} modelReady={modelReady && !brokenModels[t.id]} onModelError={handleModelError} />
                     <div className="absolute -bottom-1 left-0 right-0 h-2 bg-neutral-900/70 rounded-b-lg overflow-hidden"><div className="h-full bg-emerald-500" style={{ width: `${(t.hp / t.maxHp) * 100}%` }} /></div>
                   </div>
                 ))}
 
-                {/* Туман войны - новая система */}
+                {/* Туман войны */}
                 {fogEnabled && (
-                  <FogOfWarCanvas 
-                    mapWidth={MAP_W}
-                    mapHeight={MAP_H}
-                    mapScale={mapScale}
-                    mapOffset={mapOffset}
-                  />
+                  <svg className="absolute inset-0 pointer-events-none" width={MAP_W} height={MAP_H}>
+                    <defs>
+                      <mask id="fogMask">
+                        <rect width="100%" height="100%" fill="white" />
+                        {/* Открытые области (черные в маске = прозрачные) */}
+                        {[...reveal, ...(autoRevealAllies?tokens.filter(t=>t.type==="PC" && t.position).map(t=>({x:t.position.x+GRID/2,y:t.position.y+GRID/2,r:fogRadius})):[])].map((c,i)=>(<circle key={`reveal-${i}`} cx={c.x} cy={c.y} r={c.r} fill="black" />))}
+                        {/* Скрытые области (белые в маске = туман поверх) */}
+                        {hideAreas.map((c,i)=>(<circle key={`hide-${i}`} cx={c.x} cy={c.y} r={c.r} fill="white" />))}
+                      </mask>
+                    </defs>
+                    <rect width="100%" height="100%" fill={`rgba(0,0,0,${fogOpacity})`} mask="url(#fogMask)" />
+                    {/* Дополнительные скрытые области поверх */}
+                    {hideAreas.map((c,i)=>(<circle key={`hide-overlay-${i}`} cx={c.x} cy={c.y} r={c.r} fill={`rgba(0,0,0,${fogOpacity * 1.2})`} />))}
+                  </svg>
                 )}
 
                 {/* Панель выбранного токена */}
@@ -914,37 +726,7 @@ export default function BattleMapUI() {
             </div>
           </div>
 
-          {/* Элементы управления картой */}
-          <div className="absolute top-4 left-4 z-20 flex flex-col gap-2">
-            <div className="bg-neutral-900/90 backdrop-blur border border-neutral-700 rounded-lg p-2">
-              <div className="text-xs text-white/70 mb-1">Управление</div>
-              <div className="flex flex-col gap-1 text-xs text-white/60">
-                <div>🖱️ Правая кнопка - перемещение</div>
-                <div>🔍 Колесо - масштаб</div>
-                <div>📱 Touch - жесты</div>
-                <div>👆 ЛКМ - действия</div>
-              </div>
-            </div>
-            
-            {/* Масштаб карты */}
-            <div className="bg-neutral-900/90 backdrop-blur border border-neutral-700 rounded-lg p-2">
-              <div className="text-xs text-white/70 mb-1">Масштаб: {Math.round(mapScale * 100)}%</div>
-              <div className="flex gap-1">
-                <button className="px-2 py-1 text-xs bg-neutral-800 hover:bg-neutral-700 rounded" onClick={() => {
-                  const newScale = Math.min(3, mapScale * 1.2);
-                  setMapScale(newScale);
-                }}>+</button>
-                <button className="px-2 py-1 text-xs bg-neutral-800 hover:bg-neutral-700 rounded" onClick={() => {
-                  const newScale = Math.max(0.3, mapScale * 0.8);
-                  setMapScale(newScale);
-                }}>-</button>
-                <button className="px-2 py-1 text-xs bg-neutral-800 hover:bg-neutral-700 rounded" onClick={() => {
-                  setMapScale(1);
-                  setMapOffset({ x: 0, y: 0 });
-                }}>Сброс</button>
-              </div>
-            </div>
-          </div>
+          {/* Нижняя панель действий */}
           <div className="absolute bottom-0 left-0 right-0 p-3">
             <div className="mx-auto max-w-5xl rounded-2xl border border-neutral-800 bg-neutral-900/80 backdrop-blur px-3 py-2 shadow-2xl">
               <div className="flex items-center gap-2 justify-center flex-wrap text-sm">

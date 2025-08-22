@@ -3,14 +3,12 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { EnhancedToken, CombatEvent } from '@/stores/enhancedBattleStore';
 import type { Character, CombatState } from '@/types/dnd5e';
-import { useFogOfWarStore } from './fogOfWarStore';
 
 export type ViewMode = 'dm' | 'player';
 
 interface UnifiedBattleState {
-  // Общие настройки
-  viewMode: 'dm' | 'player';
-  battleViewMode: '2d' | '3d';
+  // Режим просмотра
+  viewMode: ViewMode;
   isDM: boolean;
   
   // 3D карта
@@ -24,7 +22,6 @@ interface UnifiedBattleState {
   fogEnabled: boolean;
   paintMode: 'reveal' | 'hide';
   brushSize: number;
-  mapEditMode: boolean;
   
   // Камера
   cameraMode: boolean;
@@ -45,9 +42,8 @@ interface UnifiedBattleState {
     playerCanSeeHP: boolean;
   };
   
-  // Действия для управления режимами
-  setViewMode: (mode: 'dm' | 'player') => void;
-  setBattleViewMode: (mode: '2d' | '3d') => void;
+  // Действия
+  setViewMode: (mode: ViewMode) => void;
   setIsDM: (isDM: boolean) => void;
   
   // Токены
@@ -67,7 +63,6 @@ interface UnifiedBattleState {
   setFogEnabled: (enabled: boolean) => void;
   setPaintMode: (mode: 'reveal' | 'hide') => void;
   setBrushSize: (size: number) => void;
-  setMapEditMode: (enabled: boolean) => void;
   
   // Камера
   setCameraMode: (enabled: boolean) => void;
@@ -96,9 +91,8 @@ interface UnifiedBattleState {
 export const useUnifiedBattleStore = create<UnifiedBattleState>()(
   persist(
     (set, get) => ({
-      // Начальные значения
-      viewMode: 'dm' as const,
-      battleViewMode: '3d' as const,
+      // Начальное состояние
+      viewMode: 'dm',
       isDM: true,
       
       // 3D карта
@@ -112,7 +106,6 @@ export const useUnifiedBattleStore = create<UnifiedBattleState>()(
       fogEnabled: true,
       paintMode: 'reveal',
       brushSize: 2,
-      mapEditMode: false,
       
       // Камера
       cameraMode: false,
@@ -133,9 +126,8 @@ export const useUnifiedBattleStore = create<UnifiedBattleState>()(
         playerCanSeeHP: false,
       },
       
-      // Действия режимов
+      // Действия
       setViewMode: (mode) => set({ viewMode: mode }),
-      setBattleViewMode: (mode) => set({ battleViewMode: mode }),
       setIsDM: (isDM) => set({ isDM }),
       
       // Токены
@@ -150,31 +142,9 @@ export const useUnifiedBattleStore = create<UnifiedBattleState>()(
       },
       
       updateToken: (id, updates) => set((state) => ({
-        tokens: state.tokens.map((token) => {
-          if (token.id === id) {
-            const updatedToken = { ...token, ...updates };
-            
-            // Проверяем, изменилась ли позиция токена игрока
-            if (updates.position && !token.isEnemy) {
-              const newPosition = updates.position;
-              const [x, y, z] = newPosition;
-              
-              // Преобразуем 3D координаты в координаты сетки тумана
-              // 3D мир: центр в (0,0,0), размер 24x24
-              // Сетка тумана: 24x24 клетки, каждая клетка = 1 unit
-              const gridX = Math.floor(x + 12); // Сдвигаем в положительные координаты
-              const gridY = 23 - Math.floor(z + 12); // Инвертируем Z для правильной ориентации
-              
-              // Обновляем туман войны для игрока
-              const fogStore = useFogOfWarStore.getState();
-              console.log('🌫️ Обновляем туман войны для токена:', token.name, '3D pos:', [x, y, z], 'grid pos:', [gridX, gridY]);
-              fogStore.updatePlayerVision(id, gridX, gridY);
-            }
-            
-            return updatedToken;
-          }
-          return token;
-        }),
+        tokens: state.tokens.map((token) =>
+          token.id === id ? { ...token, ...updates } : token
+        ),
       })),
       
       removeToken: (id) => set((state) => ({
@@ -196,7 +166,6 @@ export const useUnifiedBattleStore = create<UnifiedBattleState>()(
       setFogEnabled: (enabled) => set({ fogEnabled: enabled }),
       setPaintMode: (mode) => set({ paintMode: mode }),
       setBrushSize: (size) => set({ brushSize: size }),
-      setMapEditMode: (enabled) => set({ mapEditMode: enabled }),
       
       // Камера
       setCameraMode: (enabled) => set({ cameraMode: enabled }),
@@ -412,15 +381,14 @@ export const useUnifiedBattleStore = create<UnifiedBattleState>()(
     }),
     {
       name: 'unified-battle-storage',
-    partialize: (state) => ({
-      viewMode: state.viewMode,
-      battleViewMode: state.battleViewMode,
-      isDM: state.isDM,
-      tokens: state.tokens,
-      mapImageUrl: state.mapImageUrl,
-      characters: state.characters,
-      settings: state.settings,
-    }),
+      partialize: (state) => ({
+        viewMode: state.viewMode,
+        isDM: state.isDM,
+        tokens: state.tokens,
+        mapImageUrl: state.mapImageUrl,
+        characters: state.characters,
+        settings: state.settings,
+      }),
     }
   )
 );

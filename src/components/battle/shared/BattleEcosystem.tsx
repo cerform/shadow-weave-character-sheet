@@ -5,9 +5,7 @@ import * as THREE from 'three';
 import { useUnifiedBattleStore } from '@/stores/unifiedBattleStore';
 import { EnhancedBattleToken3D } from '../enhanced/EnhancedBattleToken3D';
 import { MovementIndicator } from '../enhanced/MovementIndicator';
-import { useEnhanced3DTokenManager } from '../systems/Enhanced3DTokenManager';
 import { FogInteractionSystem } from '../fog/FogInteractionSystem';
-import { FogOfWar3D } from '../fog/FogOfWar3D';
 import { CameraControlSystem } from '../camera/CameraControlSystem';
 import { BattleSystemAdapter } from '@/adapters/battleSystemAdapter';
 import { interactionManager, InteractionMode } from '@/systems/interaction/InteractionModeManager';
@@ -47,16 +45,6 @@ export const BattleEcosystem: React.FC<BattleEcosystemProps> = ({
 
   // Синхронизация боевых сущностей
   useBattleEntitySync(sessionId, scene);
-
-  // Система управления токенами
-  const tokenManager = useEnhanced3DTokenManager({
-    onSpawnMonster: (monster, position) => {
-      console.log('🐲 Monster spawned:', monster.name, 'at:', position);
-    },
-    onTokenClick: (tokenId) => {
-      console.log('🎯 Token clicked:', tokenId);
-    }
-  });
 
   // Синхронизация токенов с персонажами D&D 5e
   useEffect(() => {
@@ -220,9 +208,6 @@ export const BattleEcosystem: React.FC<BattleEcosystemProps> = ({
 
       {/* Система управления камерой */}
       {enableCameraControls && <CameraControlSystem />}
-      
-      {/* 3D Туман войны */}
-      {showFog && <FogOfWar3D enabled={true} />}
       
       {/* Система тумана войны (только для ДМ) */}
       {showFog && isDM && (

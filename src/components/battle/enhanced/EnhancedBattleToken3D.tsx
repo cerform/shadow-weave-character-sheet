@@ -1,12 +1,10 @@
 import { Html, useGLTF } from "@react-three/drei";
 import { ThreeEvent, useFrame } from "@react-three/fiber";
 import { useRef, useState, useMemo } from "react";
-import React from "react";
 import { useUnifiedBattleStore } from "@/stores/unifiedBattleStore";
 import { type EnhancedToken } from "@/stores/enhancedBattleStore";
 import { canMoveToPosition, snapToGrid, gridToWorld, type GridPosition } from "@/utils/movementUtils";
 import { MovementIndicator } from "./MovementIndicator";
-import { useDraggable3D } from "@/hooks/useDraggable3D";
 import * as THREE from "three";
 
 // 3D модели для разных типов персонажей
@@ -69,110 +67,27 @@ const Character3DModel = ({ modelType, position, isActive, isSelected, isEnemy, 
   }
 };
 
-export const EnhancedBattleToken3D: React.FC<EnhancedBattleToken3DProps> = ({
-  token
-}) => {
+export const EnhancedBattleToken3D: React.FC<EnhancedBattleToken3DProps> = ({ token }) => {
+  const meshRef = useRef<THREE.Group>(null);
   const ringRef = useRef<THREE.Mesh>(null);
   const [hovered, setHovered] = useState(false);
-
-  const {
+  
+  const { 
+    tokens, 
+    activeId, 
     selectedTokenId,
-    activeId,
-    tokens,
-    showMovementGrid,
-    setShowMovementGrid,
+    updateToken, 
     selectToken,
-    setActiveToken,
-    updateToken,
     addCombatEvent,
-    isDM
+    showMovementGrid,
+    setShowMovementGrid
   } = useUnifiedBattleStore();
-
-  const isSelected = selectedTokenId === token.id;
+  
   const isActive = activeId === token.id;
+  const isSelected = selectedTokenId === token.id;
   const speed = token.speed || 6;
   
-  // Можем ли перемещать токен
-  const canMove = (isDM || !token.isEnemy) && !token.hasMovedThisTurn;
-  
-  // Система перетаскивания
-  const {
-    groupRef,
-    isDragging,
-    handlePointerDown,
-    handlePointerEnter,
-    handlePointerLeave,
-  } = useDraggable3D(
-    canMove,
-    (newX: number, newZ: number) => {
-      // Обработка завершения перетаскивания
-      const newPosition: [number, number, number] = [newX, token.position[1], newZ];
-      
-      console.log('🎯 Token drag completed, new position:', newPosition);
-      
-      // Проверяем, можем ли переместиться в эту позицию
-      if (canMoveToPosition(
-        token.position,
-        newPosition,
-        speed,
-        tokens,
-        token.id,
-        token.hasMovedThisTurn
-      )) {
-        console.log('🎯 Valid move, updating token position');
-        // Обновляем позицию токена
-        updateToken(token.id, { 
-          position: newPosition,
-          hasMovedThisTurn: true 
-        });
-        
-        // Добавляем событие в лог
-        addCombatEvent({
-          actor: token.name,
-          action: 'Перемещение',
-          description: `${token.name} переместился`,
-          playerName: token.name
-        });
-        
-        console.log(`🎯 Token ${token.name} moved to:`, newPosition);
-      } else {
-        console.log('🎯 Invalid move, reverting position');
-        // Возвращаем токен на исходную позицию
-        if (groupRef.current) {
-          groupRef.current.position.set(...token.position);
-        }
-      }
-    },
-    (dragging: boolean) => {
-      console.log(`🎯 Token ${token.name} dragging:`, dragging);
-      if (dragging && !isSelected) {
-        selectToken(token.id);
-      }
-    },
-    () => {
-      // Выбор токена при клике
-      if (!isDragging) {
-        selectToken(token.id);
-        console.log(`🎯 Token selected: ${token.name}`);
-      }
-    }
-  );
-
-  // Синхронизируем позицию ref с позицией токена
-  React.useEffect(() => {
-    if (groupRef.current && !isDragging) {
-      groupRef.current.position.set(...token.position);
-    }
-  }, [token.position, isDragging]);
-
-  // Анимация кольца активного токена
-  useFrame((state) => {
-    if (ringRef.current && isActive) {
-      ringRef.current.rotation.z = state.clock.elapsedTime;
-    }
-  });
-
-  // Получаем тип модели на основе класса токена
+  // Определяем тип модели на основе имени или класса токена
   const getModelType = (token: EnhancedToken): keyof typeof MODEL_PATHS => {
     const name = token.name.toLowerCase();
     const tokenClass = token.class?.toLowerCase() || '';
@@ -183,18 +98,46 @@ export const EnhancedBattleToken3D: React.FC<EnhancedBattleToken3DProps> = ({
     if (name.includes('dragon') || tokenClass.includes('dragon')) return 'dragon';
     if (tokenClass.includes('fighter') || tokenClass.includes('warrior')) return 'fighter';
     if (tokenClass.includes('wizard') || tokenClass.includes('mage')) return 'wizard';
-    if (tokenClass.includes('rogue') || tokenClass.includes('assassin')) return 'rogue';
+    if (tokenClass.includes('rogue') || tokenClass.includes('thief')) return 'rogue';
     if (tokenClass.includes('cleric') || tokenClass.includes('priest')) return 'cleric';
     
     return 'default';
   };
-
-  // Обработчик клика по клетке движения
-  const handleCellClick = (cell: GridPosition) => {
-    const worldPosition = gridToWorld(cell);
+  
+  // Анимация активного кольца
+  useFrame((state) => {
+    if (ringRef.current && isActive) {
+      ringRef.current.rotation.y = state.clock.elapsedTime * 2;
+    }
     
-    console.log('🎯 Cell clicked:', cell);
-    console.log('🎯 World position calculated:', worldPosition);
+    if (meshRef.current) {
+      // Мягкое поднятие при наведении
+      const targetY = hovered ? 0.1 : 0;
+      meshRef.current.position.y = THREE.MathUtils.lerp(
+        meshRef.current.position.y,
+        targetY,
+        0.1
+      );
+    }
+  });
+
+  const handleTokenClick = (event: ThreeEvent<PointerEvent>) => {
+    event.stopPropagation();
+    
+    // Выбираем токен и показываем сетку перемещения
+    selectToken(token.id);
+    
+    // Показываем сетку перемещения если токен еще не двигался
+    if (!token.hasMovedThisTurn) {
+      setShowMovementGrid(true);
+    }
+  };
+
+
+  const handleCellClick = (cell: GridPosition) => {
+    if (token.hasMovedThisTurn) return;
+    
+    const worldPosition = gridToWorld(cell);
     
     // Проверяем, можем ли переместиться в эту позицию
     if (canMoveToPosition(
@@ -205,7 +148,6 @@ export const EnhancedBattleToken3D: React.FC<EnhancedBattleToken3DProps> = ({
       token.id,
       token.hasMovedThisTurn
     )) {
-      console.log('🎯 Can move to position, updating token...');
       // Обновляем позицию токена
       updateToken(token.id, { 
         position: worldPosition,
@@ -223,14 +165,12 @@ export const EnhancedBattleToken3D: React.FC<EnhancedBattleToken3DProps> = ({
         playerName: token.name
       });
       
-      console.log(`🎯 Token ${token.name} moved to position:`, worldPosition);
-    } else {
-      console.log('🎯 Cannot move to position - blocked or too far');
+      console.log(`Token ${token.name} moved to position:`, worldPosition);
     }
   };
 
   return (
-    <group ref={groupRef} position={token.position}>
+    <group position={token.position} ref={meshRef}>
       {/* Индикатор доступных ходов - показываем для выбранного токена */}
       <MovementIndicator 
         tokenId={token.id}
@@ -238,19 +178,21 @@ export const EnhancedBattleToken3D: React.FC<EnhancedBattleToken3DProps> = ({
         onCellClick={handleCellClick}
       />
       
-      {/* 3D модель персонажа с интерактивностью */}
+      {/* 3D модель персонажа */}
       <group
-        onPointerDown={handlePointerDown}
-        onPointerEnter={handlePointerEnter}
-        onPointerOut={handlePointerLeave}
+        onClick={handleTokenClick}
         onPointerOver={(e) => {
           e.stopPropagation();
           setHovered(true);
         }}
+        onPointerOut={(e) => {
+          e.stopPropagation();
+          setHovered(false);
+        }}
       >
         <Character3DModel
           modelType={getModelType(token)}
-          position={[0, 0, 0]} // Позиция относительно группы
+          position={token.position}
           isActive={isActive}
           isSelected={isSelected}
           isEnemy={token.isEnemy}
@@ -283,18 +225,6 @@ export const EnhancedBattleToken3D: React.FC<EnhancedBattleToken3DProps> = ({
         </mesh>
       )}
 
-      {/* Подсветка при наведении или перетаскивании */}
-      {(hovered || isDragging) && (
-        <mesh position={[0, 0.01, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-          <ringGeometry args={[0.4, 0.8, 8]} />
-          <meshBasicMaterial 
-            color={canMove ? "#22c55e" : "#ef4444"}
-            transparent 
-            opacity={0.3}
-          />
-        </mesh>
-      )}
-
       {/* UI информация над токеном */}
       <Html position={[0, 2, 0]} center>
         <div className="bg-black/80 text-white text-xs p-1 rounded whitespace-nowrap pointer-events-none">
@@ -302,15 +232,12 @@ export const EnhancedBattleToken3D: React.FC<EnhancedBattleToken3DProps> = ({
           <div className="text-xs">
             {token.hp}/{token.maxHp} HP | AC {token.ac}
           </div>
-          {isDragging && (
-            <div className="text-xs text-green-400">Перемещение...</div>
-          )}
           {token.conditions.length > 0 && (
             <div className="text-xs text-yellow-400">
               {token.conditions.join(', ')}
             </div>
           )}
-          {token.hasMovedThisTurn && !isDragging && (
+          {token.hasMovedThisTurn && (
             <div className="text-xs text-blue-400">Переместился</div>
           )}
         </div>

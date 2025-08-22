@@ -29,7 +29,6 @@ import AdminAssetsPage from '@/pages/AdminAssetsPage';
 import DMMapEditorPage from '@/pages/DMMapEditorPage';
 import PlayerMapPage from '@/pages/PlayerMapPage';
 import UnifiedBattlePage from '@/pages/UnifiedBattlePage';
-import BattleMapPage from '@/pages/BattleMapPage';
 import { BestiaryPage } from '@/components/bestiary/BestiaryPage';
 import DnD5ePage from '@/pages/DnD5ePage';
 
@@ -182,14 +181,6 @@ const AppRoutes: React.FC = () => {
           <DMSessionPage />
         </ProtectedDMRoute>
       } />
-      
-      {/* DM Боевая карта */}
-      <Route path="/dm/battle-map/:sessionId" element={
-        <ProtectedDMRoute>
-          <BattleMapPage />
-        </ProtectedDMRoute>
-      } />
-      
       <Route path="/dm/map-editor/:mapId" element={
         <ProtectedDMRoute>
           <DMMapEditorPage />

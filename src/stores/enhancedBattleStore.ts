@@ -17,7 +17,6 @@ export interface EnhancedToken {
   hasMovedThisTurn?: boolean; // Переместился ли в этом ходу
   class?: string; // Класс персонажа для выбора модели
   color?: string; // Цвет токена для визуального различения
-  initiative?: number; // Инициатива для боевой системы
 }
 
 export interface CombatEvent {
@@ -35,7 +34,6 @@ export interface CombatEvent {
     breakdown?: string; // e.g., "15+5"
   };
   playerName?: string; // For dice rolls by players
-  type?: 'combat' | 'movement' | 'spell' | 'healing' | 'damage' | 'dice' | 'system'; // Тип события для категоризации
 }
 
 export type FogMode = 'reveal' | 'hide';
