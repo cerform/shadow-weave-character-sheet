@@ -2,8 +2,7 @@ import React, { useRef, useEffect, useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Minimize2, Maximize2, MapPin, EyeOff } from 'lucide-react';
-import { getModelTypeFromTokenName } from '@/utils/tokenModelMapping';
-import { dragonImg, goblinImg, skeletonImg, golemImg, orcImg, wolfImg, trollImg, zombieImg, lichImg, bearImg, spiderImg, elementalImg, wizardImg, rogueImg } from '@/assets/tokens';
+import { getMonsterAvatar } from '@/data/monsterAvatarSystem';
 
 interface Token {
   id: string;
@@ -162,30 +161,11 @@ export default function MiniMap2D({
           );
         }
         
-        // Рисуем иконку или картинку токена
+        // Рисуем аватар токена
         if (!mapImage) {
-          const modelType = getModelTypeFromTokenName(token.name) || 'fighter';
-          const tokenImages: Record<string, string> = {
-            dragon: dragonImg,
-            goblin: goblinImg,
-            skeleton: skeletonImg,
-            golem: golemImg,
-            orc: orcImg,
-            wolf: wolfImg,
-            troll: trollImg,
-            zombie: zombieImg,
-            lich: lichImg,
-            bear: bearImg,
-            spider: spiderImg,
-            elemental: elementalImg,
-            wizard: wizardImg,
-            rogue: rogueImg,
-            fighter: '🛡️'
-          };
+          const avatarData = getMonsterAvatar(token.name);
           
-          const image = tokenImages[modelType];
-          
-          if (image && (image.startsWith('data:') || image.includes('.'))) {
+          if (avatarData.image) {
             // Создаем Image объект для отрисовки
             const img = new Image();
             img.onload = () => {
@@ -196,13 +176,13 @@ export default function MiniMap2D({
               ctx.drawImage(img, x - 6, y - 6, 12, 12);
               ctx.restore();
             };
-            img.src = image;
+            img.src = avatarData.image;
           } else {
-            // Отрисовываем эмодзи или первые буквы
+            // Отрисовываем эмодзи
             ctx.fillStyle = '#ffffff';
-            ctx.font = image === '🛡️' ? '10px Arial' : '8px monospace';
+            ctx.font = '10px Arial';
             ctx.textAlign = 'center';
-            ctx.fillText(image || token.name.slice(0, 2).toUpperCase(), x, y + 2);
+            ctx.fillText(avatarData.emoji, x, y + 2);
           }
         }
       });

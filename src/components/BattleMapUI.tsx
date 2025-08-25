@@ -7,7 +7,7 @@ import type { Monster } from '@/types/monsters';
 import SimpleTokenCreator from '@/components/battle/SimpleTokenCreator';
 import MiniMap2D from '@/components/battle/minimap/MiniMap2D';
 import { getModelTypeFromTokenName } from '@/utils/tokenModelMapping';
-import { dragonImg, goblinImg, skeletonImg, golemImg, orcImg, wolfImg, trollImg, zombieImg, lichImg, bearImg, spiderImg, elementalImg, wizardImg, rogueImg } from '@/assets/tokens';
+import { getMonsterAvatar } from '@/data/monsterAvatarSystem';
 
 // ==================== Типы ====================
 
@@ -150,44 +150,26 @@ function TokenVisual({ token, use3D, modelReady, onModelError }: { token: Token;
   }, [can3D, token.id, onModelError]);
 
   if (!can3D) {
-    // Определяем тип модели и картинку для токена
-    const modelType = getModelTypeFromTokenName(token.name) || 'fighter';
-    const tokenImages: Record<string, string> = {
-      dragon: dragonImg,
-      goblin: goblinImg,
-      skeleton: skeletonImg,
-      golem: golemImg,
-      orc: orcImg,
-      wolf: wolfImg,
-      troll: trollImg,
-      zombie: zombieImg,
-      lich: lichImg,
-      bear: bearImg,
-      spider: spiderImg,
-      elemental: elementalImg,
-      wizard: wizardImg,
-      rogue: rogueImg,
-      fighter: '🛡️' // Fallback emoji для персонажей
-    };
+    // Получаем данные аватара из новой системы
+    const avatarData = getMonsterAvatar(token.name);
+    const image = avatarData.image || avatarData.emoji;
     
-    const image = tokenImages[modelType];
-    
-    if (image?.startsWith('data:') || image?.includes('.')) {
+    if (avatarData.image) {
       // Отображаем изображение
       return (
         <div className={`w-full h-full ${token.color} bg-opacity-90 flex items-center justify-center overflow-hidden rounded`}>
           <img 
-            src={image} 
+            src={avatarData.image} 
             alt={token.name}
             className="w-full h-full object-cover"
           />
         </div>
       );
     } else {
-      // Отображаем эмодзи или fallback
+      // Отображаем эмодзи
       return (
         <div className={`w-full h-full ${token.color} bg-opacity-90 flex items-center justify-center text-lg select-none`}>
-          {image || token.name.slice(0, 2).toUpperCase()}
+          {avatarData.emoji}
         </div>
       );
     }
@@ -618,50 +600,31 @@ export default function BattleMapUI() {
                             <div className="truncate font-medium">{m.name}</div>
                             <div className="text-xs opacity-70 truncate">{m.type} • {m.size}</div>
                           </div>
-                          <div className="flex items-center gap-2">
-                            {(() => {
-                              const modelType = getModelTypeFromTokenName(m.name) || 'fighter';
-                              const tokenImages: Record<string, string> = {
-                                dragon: dragonImg,
-                                goblin: goblinImg,
-                                skeleton: skeletonImg,
-                                golem: golemImg,
-                                orc: orcImg,
-                                wolf: wolfImg,
-                                troll: trollImg,
-                                zombie: zombieImg,
-                                lich: lichImg,
-                                bear: bearImg,
-                                spider: spiderImg,
-                                elemental: elementalImg,
-                                wizard: wizardImg,
-                                rogue: rogueImg,
-                                fighter: '🛡️' // Fallback emoji for characters
-                              };
-                              
-                              const image = tokenImages[modelType];
-                              
-                              return image?.startsWith('data:') || image?.includes('.') ? (
-                                <img 
-                                  src={image} 
-                                  alt={m.name}
-                                  className="w-8 h-8 object-cover rounded border border-neutral-600"
-                                />
-                              ) : (
-                                <span className="text-lg">{image || '👹'}</span>
-                              );
-                            })()}
-                            <div className="flex flex-col gap-1 text-xs">
-                              <div className="flex gap-1">
-                                <span className="px-1 py-0.5 rounded bg-blue-800/50 border border-blue-700/50">
-                                  CR {m.challengeRating}
-                                </span>
-                                <span className="px-1 py-0.5 rounded bg-orange-800/50 border border-orange-700/50">
-                                  HP {m.hitPoints}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
+                           <div className="flex items-center gap-2">
+                             {(() => {
+                               const avatarData = getMonsterAvatar(m.name);
+                               
+                               return avatarData.image ? (
+                                 <img 
+                                   src={avatarData.image} 
+                                   alt={m.name}
+                                   className="w-8 h-8 object-cover rounded border border-neutral-600"
+                                 />
+                               ) : (
+                                 <span className="text-lg">{avatarData.emoji}</span>
+                               );
+                             })()}
+                             <div className="flex flex-col gap-1 text-xs">
+                               <div className="flex gap-1">
+                                 <span className="px-1 py-0.5 rounded bg-blue-800/50 border border-blue-700/50">
+                                   CR {m.challengeRating}
+                                 </span>
+                                 <span className="px-1 py-0.5 rounded bg-orange-800/50 border border-orange-700/50">
+                                   HP {m.hitPoints}
+                                 </span>
+                               </div>
+                             </div>
+                           </div>
                         </button>
                       ))}
                     </div>
