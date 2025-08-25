@@ -6,6 +6,8 @@ import { useUnifiedBattleStore } from '@/stores/unifiedBattleStore';
 import type { Monster } from '@/types/monsters';
 import SimpleTokenCreator from '@/components/battle/SimpleTokenCreator';
 import MiniMap2D from '@/components/battle/minimap/MiniMap2D';
+import { getModelTypeFromTokenName } from '@/utils/tokenModelMapping';
+import { dragonImg, goblinImg, skeletonImg, golemImg, orcImg, wolfImg } from '@/assets/tokens';
 
 // ==================== Типы ====================
 
@@ -576,18 +578,41 @@ export default function BattleMapUI() {
                             <div className="truncate font-medium">{m.name}</div>
                             <div className="text-xs opacity-70 truncate">{m.type} • {m.size}</div>
                           </div>
-                          <div className="flex items-center gap-1 text-xs">
-                            <span className="px-1 py-0.5 rounded bg-blue-800/50 border border-blue-700/50">
-                              CR {m.challengeRating}
-                            </span>
-                            <span className="px-1 py-0.5 rounded bg-orange-800/50 border border-orange-700/50">
-                              HP {m.hitPoints}
-                            </span>
-                            {isValidModelUrl(m.modelUrl) ? (
-                              <span className="px-1 py-0.5 rounded bg-emerald-800/50 border border-emerald-700/50">3D</span>
-                            ) : (
-                              <span className="px-1 py-0.5 rounded bg-neutral-800/50 border border-neutral-700/50">2D</span>
-                            )}
+                          <div className="flex items-center gap-2">
+                            {(() => {
+                              const modelType = getModelTypeFromTokenName(m.name) || 'fighter';
+                              const tokenImages: Record<string, string> = {
+                                dragon: dragonImg,
+                                goblin: goblinImg,
+                                skeleton: skeletonImg,
+                                golem: golemImg,
+                                orc: orcImg,
+                                wolf: wolfImg,
+                                fighter: '🛡️' // Fallback emoji for characters
+                              };
+                              
+                              const image = tokenImages[modelType];
+                              
+                              return image?.startsWith('data:') || image?.includes('.') ? (
+                                <img 
+                                  src={image} 
+                                  alt={m.name}
+                                  className="w-8 h-8 object-cover rounded border border-neutral-600"
+                                />
+                              ) : (
+                                <span className="text-lg">{image || '👹'}</span>
+                              );
+                            })()}
+                            <div className="flex flex-col gap-1 text-xs">
+                              <div className="flex gap-1">
+                                <span className="px-1 py-0.5 rounded bg-blue-800/50 border border-blue-700/50">
+                                  CR {m.challengeRating}
+                                </span>
+                                <span className="px-1 py-0.5 rounded bg-orange-800/50 border border-orange-700/50">
+                                  HP {m.hitPoints}
+                                </span>
+                              </div>
+                            </div>
                           </div>
                         </button>
                       ))}
