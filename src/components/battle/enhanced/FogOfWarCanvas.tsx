@@ -48,16 +48,10 @@ export const FogOfWarCanvas: React.FC = () => {
   }, [fogEnabled]);
 
   const paint = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    // Для непрерывного рисования проверяем только режим редактирования и наличие данных
     if (!fogEnabled || !fogEditMode || !fogDataRef.current) return;
     
-    // Если не рисуем, но кнопка мыши нажата - начинаем рисование
-    if (!isDrawing && e.buttons === 1) {
-      setIsDrawing(true);
-    }
-    
-    // Если рисуем или кнопка мыши нажата, продолжаем рисование
-    if (!isDrawing && e.buttons !== 1) return;
+    // Если не рисуем, не продолжаем
+    if (!isDrawing) return;
 
     const canvas = canvasRef.current;
     const ctx = canvas?.getContext('2d');
@@ -112,6 +106,11 @@ export const FogOfWarCanvas: React.FC = () => {
       console.log('🌫️ Drawing blocked - fog edit mode disabled');
       return;
     }
+    
+    // Предотвращаем перетаскивание карты
+    e.preventDefault();
+    e.stopPropagation();
+    
     console.log('🌫️ Starting fog drawing', { fogMode, fogBrushSize });
     setIsDrawing(true);
     paint(e);
@@ -134,7 +133,14 @@ export const FogOfWarCanvas: React.FC = () => {
         zIndex: 10, // Ниже чем у элементов управления
       }}
       onMouseDown={startDrawing}
-      onMouseMove={paint}
+      onMouseMove={(e) => {
+        // Предотвращаем перетаскивание карты при рисовании
+        if (isDrawing) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+        paint(e);
+      }}
       onMouseUp={stopDrawing}
       onMouseLeave={stopDrawing}
     />
