@@ -60,8 +60,9 @@ export const FogOfWarCanvas: React.FC = () => {
       
       // Create gradient for smooth edges matching global fog opacity
       const gradient = ctx.createRadialGradient(x, y, 0, x, y, fogBrushSize);
-      gradient.addColorStop(0, 'rgba(0, 0, 0, 0.6)');
-      gradient.addColorStop(0.7, 'rgba(0, 0, 0, 0.3)');
+      gradient.addColorStop(0, 'rgba(0, 0, 0, 0.5)');
+      gradient.addColorStop(0.5, 'rgba(0, 0, 0, 0.4)');
+      gradient.addColorStop(0.8, 'rgba(0, 0, 0, 0.2)');
       gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
       
       ctx.fillStyle = gradient;
