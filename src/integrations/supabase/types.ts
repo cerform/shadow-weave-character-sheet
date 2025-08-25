@@ -900,6 +900,33 @@ export type Database = {
         }
         Relationships: []
       }
+      role_audit_log: {
+        Row: {
+          action: string
+          created_at: string | null
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          target_user_id: string
+          user_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string | null
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          target_user_id: string
+          user_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          target_user_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       session_messages: {
         Row: {
           content: string
