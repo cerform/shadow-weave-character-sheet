@@ -3,7 +3,6 @@ import { AppRole, UserRolesService } from '@/services/userRolesService';
 
 export interface AdminUserProfile {
   id: string;
-  email: string | null;
   display_name?: string | null;
   avatar_url?: string | null;
   roles: AppRole[];
@@ -15,7 +14,7 @@ export class AdminService {
     // Получаем профили
     const { data: profiles, error: profilesError } = await supabase
       .from('profiles')
-      .select('id, email, display_name, avatar_url');
+      .select('id, display_name, avatar_url');
 
     if (profilesError) {
       console.error('Ошибка загрузки profiles:', profilesError);
@@ -31,7 +30,6 @@ export class AdminService {
       console.error('Ошибка загрузки user_roles:', rolesError);
       return (profiles || []).map((p) => ({
         id: p.id,
-        email: p.email,
         display_name: (p as any).display_name ?? null,
         avatar_url: (p as any).avatar_url ?? null,
         roles: [],
@@ -47,7 +45,6 @@ export class AdminService {
 
     return (profiles || []).map((p) => ({
       id: p.id,
-      email: (p as any).email ?? null,
       display_name: (p as any).display_name ?? null,
       avatar_url: (p as any).avatar_url ?? null,
       roles: rolesMap.get(p.id) || [],

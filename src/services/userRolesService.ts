@@ -69,6 +69,12 @@ export class UserRolesService {
   // Назначить роль пользователю (только для админов)
   static async assignRole(userId: string, role: AppRole): Promise<{ success: boolean; error?: string }> {
     try {
+      // SECURITY FIX: Verify current user has admin role before allowing role assignment
+      const isCurrentUserAdmin = await this.isAdmin();
+      if (!isCurrentUserAdmin) {
+        return { success: false, error: 'Access denied: Only administrators can assign roles' };
+      }
+
       const { error } = await supabase
         .from('user_roles')
         .insert({ user_id: userId, role });
@@ -86,6 +92,12 @@ export class UserRolesService {
   // Удалить роль у пользователя (только для админов)
   static async removeRole(userId: string, role: AppRole): Promise<{ success: boolean; error?: string }> {
     try {
+      // SECURITY FIX: Verify current user has admin role before allowing role removal
+      const isCurrentUserAdmin = await this.isAdmin();
+      if (!isCurrentUserAdmin) {
+        return { success: false, error: 'Access denied: Only administrators can remove roles' };
+      }
+
       const { error } = await supabase
         .from('user_roles')
         .delete()
@@ -105,6 +117,13 @@ export class UserRolesService {
   // Получить всех пользователей с их ролями (только для админов)
   static async getAllUsersWithRoles(): Promise<UserRole[]> {
     try {
+      // SECURITY FIX: Verify current user has admin role before returning all user roles
+      const isCurrentUserAdmin = await this.isAdmin();
+      if (!isCurrentUserAdmin) {
+        console.warn('Access denied: Only administrators can view all user roles');
+        return [];
+      }
+
       const { data, error } = await supabase
         .from('user_roles')
         .select('*')

@@ -30,7 +30,6 @@ export const UsersWithRoles: React.FC = () => {
     const f = filter.trim().toLowerCase();
     if (!f) return users;
     return users.filter((u) =>
-      (u.email || '').toLowerCase().includes(f) ||
       (u.display_name || '').toLowerCase().includes(f) ||
       u.id.toLowerCase().includes(f)
     );
@@ -63,7 +62,7 @@ export const UsersWithRoles: React.FC = () => {
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="flex items-center gap-2">
-          <Input placeholder="Поиск по email, имени или ID" value={filter} onChange={(e) => setFilter(e.target.value)} />
+          <Input placeholder="Поиск по имени или ID" value={filter} onChange={(e) => setFilter(e.target.value)} />
         </div>
 
         {loading ? (
@@ -74,8 +73,8 @@ export const UsersWithRoles: React.FC = () => {
               <div key={u.id} className="border rounded p-3">
                 <div className="flex items-center justify-between gap-4">
                   <div className="min-w-0">
-                    <div className="font-medium truncate">{u.display_name || u.email || 'Без имени'}</div>
-                    <div className="text-xs text-muted-foreground font-mono truncate">{u.email || '—'} · {u.id}</div>
+                    <div className="font-medium truncate">{u.display_name || 'Без имени'}</div>
+                    <div className="text-xs text-muted-foreground font-mono truncate">{u.id}</div>
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
                     {(['admin','dm','player'] as AppRole[]).map((role) => {
