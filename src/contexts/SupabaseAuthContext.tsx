@@ -33,9 +33,13 @@ interface AuthContextType {
 
 // Функция для преобразования Supabase User в ExtendedUser
 const mapSupabaseUser = (user: User | null): ExtendedUser | null => {
-  if (!user) return null;
+  console.log('mapSupabaseUser вызвана с:', user);
+  if (!user) {
+    console.log('mapSupabaseUser: пользователь null, возвращаем null');
+    return null;
+  }
   
-  return {
+  const mappedUser = {
     ...user,
     email: user.email!, // Принудительно делаем email обязательным
     uid: user.id, // Маппим id в uid для совместимости
@@ -51,6 +55,9 @@ const mapSupabaseUser = (user: User | null): ExtendedUser | null => {
     characterGuild: user.user_metadata?.characterGuild,
     role: user.user_metadata?.role || 'player'
   };
+  
+  console.log('mapSupabaseUser: результат маппинга:', mappedUser);
+  return mappedUser;
 };
 
 const AuthContext = createContext<AuthContextType>({
@@ -135,11 +142,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       if (!mounted) return;
       
       try {
+        console.log('initializeAuth: начинаем инициализацию');
         // Получаем текущую сессию один раз
         const { data: { session } } = await supabase.auth.getSession();
+        console.log('initializeAuth: получена сессия:', session);
         
         if (mounted) {
           const mappedUser = mapSupabaseUser(session?.user ?? null);
+          console.log('initializeAuth: установка пользователя:', mappedUser);
           setUser(mappedUser);
           setLoading(false);
         }
@@ -154,9 +164,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     // Слушаем изменения аутентификации
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
-        if (!mounted) return;
+        console.log('onAuthStateChange: событие:', event, 'сессия:', session);
+        if (!mounted) {
+          console.log('onAuthStateChange: компонент размонтирован, пропускаем');
+          return;
+        }
         
         const mappedUser = mapSupabaseUser(session?.user ?? null);
+        console.log('onAuthStateChange: установка пользователя:', mappedUser);
         setUser(mappedUser);
         setLoading(false);
       }
@@ -232,6 +247,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     googleLogin,
     updateProfile,
   };
+  
+  console.log('AuthProvider: текущее состояние:', {
+    user: !!user,
+    isAuthenticated: !!user,
+    loading,
+    userEmail: user?.email
+  });
 
   return (
     <AuthContext.Provider value={value}>
