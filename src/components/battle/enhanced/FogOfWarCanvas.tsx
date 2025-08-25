@@ -48,7 +48,16 @@ export const FogOfWarCanvas: React.FC = () => {
   }, [fogEnabled]);
 
   const paint = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!isDrawing || !fogEnabled || !fogEditMode || !fogDataRef.current) return;
+    // Для непрерывного рисования проверяем только режим редактирования и наличие данных
+    if (!fogEnabled || !fogEditMode || !fogDataRef.current) return;
+    
+    // Если не рисуем, но кнопка мыши нажата - начинаем рисование
+    if (!isDrawing && e.buttons === 1) {
+      setIsDrawing(true);
+    }
+    
+    // Если рисуем или кнопка мыши нажата, продолжаем рисование
+    if (!isDrawing && e.buttons !== 1) return;
 
     const canvas = canvasRef.current;
     const ctx = canvas?.getContext('2d');
