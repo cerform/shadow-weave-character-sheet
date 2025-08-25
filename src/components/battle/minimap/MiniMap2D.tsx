@@ -3,7 +3,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Minimize2, Maximize2, MapPin, EyeOff } from 'lucide-react';
 import { getModelTypeFromTokenName } from '@/utils/tokenModelMapping';
-import { dragonImg, goblinImg, skeletonImg, golemImg, orcImg, wolfImg } from '@/assets/tokens';
+import { dragonImg, goblinImg, skeletonImg, golemImg, orcImg, wolfImg, trollImg, zombieImg, lichImg, bearImg, spiderImg, elementalImg, wizardImg, rogueImg } from '@/assets/tokens';
 
 interface Token {
   id: string;
@@ -172,6 +172,14 @@ export default function MiniMap2D({
             golem: golemImg,
             orc: orcImg,
             wolf: wolfImg,
+            troll: trollImg,
+            zombie: zombieImg,
+            lich: lichImg,
+            bear: bearImg,
+            spider: spiderImg,
+            elemental: elementalImg,
+            wizard: wizardImg,
+            rogue: rogueImg,
             fighter: '🛡️'
           };
           

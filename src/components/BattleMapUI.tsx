@@ -7,7 +7,7 @@ import type { Monster } from '@/types/monsters';
 import SimpleTokenCreator from '@/components/battle/SimpleTokenCreator';
 import MiniMap2D from '@/components/battle/minimap/MiniMap2D';
 import { getModelTypeFromTokenName } from '@/utils/tokenModelMapping';
-import { dragonImg, goblinImg, skeletonImg, golemImg, orcImg, wolfImg } from '@/assets/tokens';
+import { dragonImg, goblinImg, skeletonImg, golemImg, orcImg, wolfImg, trollImg, zombieImg, lichImg, bearImg, spiderImg, elementalImg, wizardImg, rogueImg } from '@/assets/tokens';
 
 // ==================== Типы ====================
 
@@ -159,6 +159,14 @@ function TokenVisual({ token, use3D, modelReady, onModelError }: { token: Token;
       golem: golemImg,
       orc: orcImg,
       wolf: wolfImg,
+      troll: trollImg,
+      zombie: zombieImg,
+      lich: lichImg,
+      bear: bearImg,
+      spider: spiderImg,
+      elemental: elementalImg,
+      wizard: wizardImg,
+      rogue: rogueImg,
       fighter: '🛡️' // Fallback emoji для персонажей
     };
     
@@ -620,6 +628,14 @@ export default function BattleMapUI() {
                                 golem: golemImg,
                                 orc: orcImg,
                                 wolf: wolfImg,
+                                troll: trollImg,
+                                zombie: zombieImg,
+                                lich: lichImg,
+                                bear: bearImg,
+                                spider: spiderImg,
+                                elemental: elementalImg,
+                                wizard: wizardImg,
+                                rogue: rogueImg,
                                 fighter: '🛡️' // Fallback emoji for characters
                               };
                               
