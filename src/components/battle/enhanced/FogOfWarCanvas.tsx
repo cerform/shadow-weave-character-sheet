@@ -4,72 +4,98 @@ import { useEnhancedBattleStore } from '@/stores/enhancedBattleStore';
 export const FogOfWarCanvas: React.FC = () => {
   const { fogEnabled, fogBrushSize, fogMode, fogEditMode } = useEnhancedBattleStore();
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const fogDataRef = useRef<ImageData | null>(null);
   const [isDrawing, setIsDrawing] = useState(false);
 
-  // Initialize canvas with fog only when fog is first enabled
+  // Initialize canvas with fog data
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas || !fogEnabled) return;
 
     const resizeCanvas = () => {
       const rect = canvas.getBoundingClientRect();
-      canvas.width = rect.width * window.devicePixelRatio;
-      canvas.height = rect.height * window.devicePixelRatio;
+      const width = Math.floor(rect.width);
+      const height = Math.floor(rect.height);
+      
+      canvas.width = width;
+      canvas.height = height;
       
       const ctx = canvas.getContext('2d');
       if (!ctx) return;
       
-      ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+      // Create fog data if not exists
+      if (!fogDataRef.current || fogDataRef.current.width !== width || fogDataRef.current.height !== height) {
+        fogDataRef.current = ctx.createImageData(width, height);
+        const data = fogDataRef.current.data;
+        
+        // Fill with initial fog (semi-transparent black)
+        for (let i = 0; i < data.length; i += 4) {
+          data[i] = 0;     // R
+          data[i + 1] = 0; // G
+          data[i + 2] = 0; // B
+          data[i + 3] = 153; // A (0.6 opacity * 255)
+        }
+      }
       
-      // Fill with initial fog only on first initialization
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
-      ctx.fillRect(0, 0, rect.width, rect.height);
-      console.log('🌫️ Fog canvas initialized', { fogEnabled, width: rect.width, height: rect.height });
+      // Draw fog data to canvas
+      ctx.putImageData(fogDataRef.current, 0, 0);
+      console.log('🌫️ Fog canvas initialized', { fogEnabled, width, height });
     };
 
     resizeCanvas();
     window.addEventListener('resize', resizeCanvas);
     return () => window.removeEventListener('resize', resizeCanvas);
-  }, [fogEnabled]); // Убрал fogEditMode из зависимостей чтобы не сбрасывать нарисованное
+  }, [fogEnabled]);
 
   const paint = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!isDrawing || !fogEnabled || !fogEditMode) return;
+    if (!isDrawing || !fogEnabled || !fogEditMode || !fogDataRef.current) return;
 
     const canvas = canvasRef.current;
     const ctx = canvas?.getContext('2d');
     if (!canvas || !ctx) return;
 
     const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+    const x = Math.floor(e.clientX - rect.left);
+    const y = Math.floor(e.clientY - rect.top);
 
     // Check for override keys
     const forceReveal = e.shiftKey;
     const forceHide = e.altKey;
     const effectiveMode = forceReveal ? 'reveal' : forceHide ? 'hide' : fogMode;
 
-    if (effectiveMode === 'reveal') {
-      // Erase fog (reveal area)
-      ctx.globalCompositeOperation = 'destination-out';
-      ctx.beginPath();
-      ctx.arc(x, y, fogBrushSize, 0, Math.PI * 2);
-      ctx.fill();
-    } else {
-      // Draw fog (hide area)
-      ctx.globalCompositeOperation = 'source-over';
-      
-      // Create gradient for smooth edges matching global fog opacity
-      const gradient = ctx.createRadialGradient(x, y, 0, x, y, fogBrushSize);
-      gradient.addColorStop(0, 'rgba(0, 0, 0, 0.5)');
-      gradient.addColorStop(0.5, 'rgba(0, 0, 0, 0.4)');
-      gradient.addColorStop(0.8, 'rgba(0, 0, 0, 0.2)');
-      gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
-      
-      ctx.fillStyle = gradient;
-      ctx.beginPath();
-      ctx.arc(x, y, fogBrushSize, 0, Math.PI * 2);
-      ctx.fill();
+    const data = fogDataRef.current.data;
+    const width = fogDataRef.current.width;
+    const height = fogDataRef.current.height;
+    
+    // Paint in circle area
+    const brushRadius = Math.floor(fogBrushSize);
+    
+    for (let dy = -brushRadius; dy <= brushRadius; dy++) {
+      for (let dx = -brushRadius; dx <= brushRadius; dx++) {
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        if (distance <= brushRadius) {
+          const pixelX = x + dx;
+          const pixelY = y + dy;
+          
+          if (pixelX >= 0 && pixelX < width && pixelY >= 0 && pixelY < height) {
+            const index = (pixelY * width + pixelX) * 4;
+            
+            if (effectiveMode === 'reveal') {
+              // Reveal area - make transparent
+              data[index + 3] = 0;
+            } else {
+              // Hide area - soft edge based on distance
+              const opacity = Math.max(0, 1 - (distance / brushRadius));
+              const targetAlpha = Math.floor(153 * opacity); // 153 = 0.6 * 255
+              data[index + 3] = Math.max(data[index + 3], targetAlpha);
+            }
+          }
+        }
+      }
     }
+    
+    // Update canvas
+    ctx.putImageData(fogDataRef.current, 0, 0);
   };
 
   const startDrawing = (e: React.MouseEvent<HTMLCanvasElement>) => {
