@@ -143,9 +143,31 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       
       try {
         console.log('initializeAuth: начинаем инициализацию');
-        // Получаем текущую сессию один раз
-        const { data: { session } } = await supabase.auth.getSession();
-        console.log('initializeAuth: получена сессия:', session);
+        
+        // Сначала пробуем получить сессию
+        const { data: { session }, error } = await supabase.auth.getSession();
+        console.log('initializeAuth: получена сессия:', session, 'ошибка:', error);
+        
+        // Если сессии нет, пробуем получить пользователя напрямую
+        if (!session) {
+          console.log('initializeAuth: сессия null, пробуем getUser()');
+          const { data: { user }, error: userError } = await supabase.auth.getUser();
+          console.log('initializeAuth: прямой запрос пользователя:', user, 'ошибка:', userError);
+          
+          if (user && !userError) {
+            // Создаем фейковую сессию с пользователем
+            const fakeSession = { user };
+            console.log('initializeAuth: создали фейковую сессию:', fakeSession);
+            
+            if (mounted) {
+              const mappedUser = mapSupabaseUser(user);
+              console.log('initializeAuth: установка пользователя из прямого запроса:', mappedUser);
+              setUser(mappedUser);
+              setLoading(false);
+            }
+            return;
+          }
+        }
         
         if (mounted) {
           const mappedUser = mapSupabaseUser(session?.user ?? null);
