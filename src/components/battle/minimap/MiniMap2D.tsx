@@ -2,6 +2,8 @@ import React, { useRef, useEffect, useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Minimize2, Maximize2, MapPin, EyeOff } from 'lucide-react';
+import { getModelTypeFromTokenName } from '@/utils/tokenModelMapping';
+import { dragonImg, goblinImg, skeletonImg, golemImg, orcImg, wolfImg } from '@/assets/tokens';
 
 interface Token {
   id: string;
@@ -160,12 +162,40 @@ export default function MiniMap2D({
           );
         }
         
-        // Рисуем первые буквы имени
+        // Рисуем иконку или картинку токена
         if (!mapImage) {
-          ctx.fillStyle = '#ffffff';
-          ctx.font = '8px monospace';
-          ctx.textAlign = 'center';
-          ctx.fillText(token.name.slice(0, 2).toUpperCase(), x, y + 2);
+          const modelType = getModelTypeFromTokenName(token.name) || 'fighter';
+          const tokenImages: Record<string, string> = {
+            dragon: dragonImg,
+            goblin: goblinImg,
+            skeleton: skeletonImg,
+            golem: golemImg,
+            orc: orcImg,
+            wolf: wolfImg,
+            fighter: '🛡️'
+          };
+          
+          const image = tokenImages[modelType];
+          
+          if (image && (image.startsWith('data:') || image.includes('.'))) {
+            // Создаем Image объект для отрисовки
+            const img = new Image();
+            img.onload = () => {
+              ctx.save();
+              ctx.beginPath();
+              ctx.arc(x, y, 6, 0, 2 * Math.PI);
+              ctx.clip();
+              ctx.drawImage(img, x - 6, y - 6, 12, 12);
+              ctx.restore();
+            };
+            img.src = image;
+          } else {
+            // Отрисовываем эмодзи или первые буквы
+            ctx.fillStyle = '#ffffff';
+            ctx.font = image === '🛡️' ? '10px Arial' : '8px monospace';
+            ctx.textAlign = 'center';
+            ctx.fillText(image || token.name.slice(0, 2).toUpperCase(), x, y + 2);
+          }
         }
       });
       

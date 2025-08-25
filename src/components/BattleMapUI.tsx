@@ -150,7 +150,39 @@ function TokenVisual({ token, use3D, modelReady, onModelError }: { token: Token;
   }, [can3D, token.id, onModelError]);
 
   if (!can3D) {
-    return <div className={`w-full h-full ${token.color} bg-opacity-90 flex items-center justify-center text-[11px] font-semibold text-white select-none`}>{token.name.slice(0, 2).toUpperCase()}</div>;
+    // Определяем тип модели и картинку для токена
+    const modelType = getModelTypeFromTokenName(token.name) || 'fighter';
+    const tokenImages: Record<string, string> = {
+      dragon: dragonImg,
+      goblin: goblinImg,
+      skeleton: skeletonImg,
+      golem: golemImg,
+      orc: orcImg,
+      wolf: wolfImg,
+      fighter: '🛡️' // Fallback emoji для персонажей
+    };
+    
+    const image = tokenImages[modelType];
+    
+    if (image?.startsWith('data:') || image?.includes('.')) {
+      // Отображаем изображение
+      return (
+        <div className={`w-full h-full ${token.color} bg-opacity-90 flex items-center justify-center overflow-hidden rounded`}>
+          <img 
+            src={image} 
+            alt={token.name}
+            className="w-full h-full object-cover"
+          />
+        </div>
+      );
+    } else {
+      // Отображаем эмодзи или fallback
+      return (
+        <div className={`w-full h-full ${token.color} bg-opacity-90 flex items-center justify-center text-lg select-none`}>
+          {image || token.name.slice(0, 2).toUpperCase()}
+        </div>
+      );
+    }
   }
   
   return (
