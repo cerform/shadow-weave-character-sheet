@@ -9,7 +9,7 @@ interface SocketContextProps {
   connect: (sessionId: string, playerName?: string, characterId?: string) => void; // Обновляем сигнатуру с опциональными параметрами
   sessionData: any | null;
   connected: boolean;
-  lastUpdate: { character?: any; timestamp?: Date } | null; // Меняем тип lastUpdate, чтобы включить данные о персонаже
+  lastUpdate: { character?: any; music?: any; timestamp?: Date } | null; // Включаем данные о персонаже и музыке
 }
 
 const defaultSocketContext: SocketContextProps = {
@@ -37,13 +37,13 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
   const [socket, setSocket] = useState<any | null>(null);
   const [sessionData, setSessionData] = useState<any | null>(null);
   const [connected, setConnected] = useState<boolean>(false);
-  const [lastUpdate, setLastUpdate] = useState<{ character?: any; timestamp?: Date } | null>(null);
+  const [lastUpdate, setLastUpdate] = useState<{ character?: any; music?: any; timestamp?: Date } | null>(null);
 
   // Функция-заглушка для отправки данных
   const sendUpdate = (data: any) => {
     console.log('Отправка данных через сокет:', data);
     // В реальном приложении здесь будет реализована настоящая отправка через сокет
-    setLastUpdate({ character: data, timestamp: new Date() });
+    setLastUpdate({ ...data, timestamp: new Date() });
   };
 
   // Функция подключения к сессии с дополнительными параметрами
