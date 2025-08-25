@@ -429,6 +429,63 @@ export type Database = {
         }
         Relationships: []
       }
+      character_models: {
+        Row: {
+          author: string | null
+          category: string | null
+          created_at: string
+          description: string | null
+          download_url: string | null
+          file_format: string | null
+          file_size: number | null
+          id: string
+          is_approved: boolean | null
+          likes: number | null
+          meshy_id: string | null
+          model_url: string | null
+          name: string
+          tags: string[] | null
+          thumbnail_url: string | null
+          updated_at: string
+        }
+        Insert: {
+          author?: string | null
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          download_url?: string | null
+          file_format?: string | null
+          file_size?: number | null
+          id?: string
+          is_approved?: boolean | null
+          likes?: number | null
+          meshy_id?: string | null
+          model_url?: string | null
+          name: string
+          tags?: string[] | null
+          thumbnail_url?: string | null
+          updated_at?: string
+        }
+        Update: {
+          author?: string | null
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          download_url?: string | null
+          file_format?: string | null
+          file_size?: number | null
+          id?: string
+          is_approved?: boolean | null
+          likes?: number | null
+          meshy_id?: string | null
+          model_url?: string | null
+          name?: string
+          tags?: string[] | null
+          thumbnail_url?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       characters: {
         Row: {
           alignment: string | null
@@ -1211,6 +1268,14 @@ export type Database = {
       create_standard_categories: {
         Args: Record<PropertyKey, never>
         Returns: number
+      }
+      generate_monster_image: {
+        Args: {
+          monster_category: string
+          monster_name: string
+          prompt_description?: string
+        }
+        Returns: string
       }
       generate_session_code: {
         Args: Record<PropertyKey, never>
