@@ -7,6 +7,7 @@ import type { Monster } from '@/types/monsters';
 import SimpleTokenCreator from '@/components/battle/SimpleTokenCreator';
 import { MonsterImageGenerator } from '@/components/battle/MonsterImageGenerator';
 import { VideoChat } from '@/components/battle/VideoChat';
+import BackgroundMusic from '@/components/battle/BackgroundMusic';
 import MiniMap2D from '@/components/battle/minimap/MiniMap2D';
 import { getModelTypeFromTokenName } from '@/utils/tokenModelMapping';
 import { getMonsterAvatar } from '@/data/monsterAvatarSystem';
@@ -722,6 +723,10 @@ export default function BattleMapUI() {
                       {videoChatOpen ? 'Скрыть' : 'Показать'} видеочат
                     </button>
                   </div>
+                </div>
+
+                <div>
+                  <BackgroundMusic isDM={isDM} />
                 </div>
               </div>
             </div>
