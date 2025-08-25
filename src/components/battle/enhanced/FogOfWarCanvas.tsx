@@ -22,7 +22,7 @@ export const FogOfWarCanvas: React.FC = () => {
       ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
       
       // Fill with initial fog only on first initialization
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
       ctx.fillRect(0, 0, rect.width, rect.height);
       console.log('🌫️ Fog canvas initialized', { fogEnabled, width: rect.width, height: rect.height });
     };
@@ -60,8 +60,8 @@ export const FogOfWarCanvas: React.FC = () => {
       
       // Create gradient for smooth edges
       const gradient = ctx.createRadialGradient(x, y, 0, x, y, fogBrushSize);
-      gradient.addColorStop(0, 'rgba(0, 0, 0, 0.85)');
-      gradient.addColorStop(0.7, 'rgba(0, 0, 0, 0.6)');
+      gradient.addColorStop(0, 'rgba(0, 0, 0, 0.6)');
+      gradient.addColorStop(0.7, 'rgba(0, 0, 0, 0.4)');
       gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
       
       ctx.fillStyle = gradient;
