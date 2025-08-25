@@ -29,3 +29,6 @@ image_transformation = {enabled = true}
 [inbucket]
 enabled = true
 port = 54324
+
+[functions.generate-monster-images]
+verify_jwt = false

@@ -5,6 +5,7 @@ import { useMonstersStore } from '@/stores/monstersStore';
 import { useUnifiedBattleStore } from '@/stores/unifiedBattleStore';
 import type { Monster } from '@/types/monsters';
 import SimpleTokenCreator from '@/components/battle/SimpleTokenCreator';
+import { MonsterImageGenerator } from '@/components/battle/MonsterImageGenerator';
 import MiniMap2D from '@/components/battle/minimap/MiniMap2D';
 import { getModelTypeFromTokenName } from '@/utils/tokenModelMapping';
 import { getMonsterAvatar } from '@/data/monsterAvatarSystem';
@@ -665,29 +666,45 @@ export default function BattleMapUI() {
                 </div>
               </div>
 
-              {/* Создание токенов */}
-              <div className="mt-4">
-                <Title>Создание токенов</Title>
-                <SimpleTokenCreator 
-                  onCreateToken={(tokenData) => {
-                    const tok: Token = {
-                      id: uid("token"),
-                      name: tokenData.name,
-                      type: tokenData.type as TokenType,
-                      hp: tokenData.hp,
-                      maxHp: tokenData.maxHp,
-                      ac: tokenData.ac,
-                      speed: tokenData.speed,
-                      color: tokenData.type === 'PC' ? 'bg-emerald-600' : 'bg-red-600',
-                      conditions: [],
-                      position: { x: MAP_W/2 - GRID/2, y: MAP_H/2 - GRID/2 },
-                      initiative: Math.floor(Math.random()*20)+1,
-                      modelUrl: undefined
-                    };
-                    setTokens((prev) => [...prev, tok]);
-                    setLog((l) => [{ id: uid("log"), ts: now(), text: `Создан токен: ${tokenData.name}` }, ...l]);
-                  }}
-                />
+              {/* Создание токенов и генерация изображений */}
+              <div className="mt-4 space-y-4">
+                <div>
+                  <Title>Создание токенов</Title>
+                  <SimpleTokenCreator 
+                    onCreateToken={(tokenData) => {
+                      const tok: Token = {
+                        id: uid("token"),
+                        name: tokenData.name,
+                        type: tokenData.type as TokenType,
+                        hp: tokenData.hp,
+                        maxHp: tokenData.maxHp,
+                        ac: tokenData.ac,
+                        speed: tokenData.speed,
+                        color: tokenData.type === 'PC' ? 'bg-emerald-600' : 'bg-red-600',
+                        conditions: [],
+                        position: { x: MAP_W/2 - GRID/2, y: MAP_H/2 - GRID/2 },
+                        initiative: Math.floor(Math.random()*20)+1,
+                        modelUrl: undefined
+                      };
+                      setTokens((prev) => [...prev, tok]);
+                      setLog((l) => [{ id: uid("log"), ts: now(), text: `Создан токен: ${tokenData.name}` }, ...l]);
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <Title>Генератор изображений монстров</Title>
+                  <MonsterImageGenerator 
+                    onImagesGenerated={(images) => {
+                      const successCount = images.filter(img => img.imageUrl).length;
+                      setLog(l => [{ 
+                        id: uid("log"), 
+                        ts: now(), 
+                        text: `Сгенерировано ${successCount} изображений монстров` 
+                      }, ...l]);
+                    }}
+                  />
+                </div>
               </div>
             </div>
           </div>
