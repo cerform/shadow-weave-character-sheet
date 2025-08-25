@@ -34,7 +34,7 @@ const JoinSessionPage: React.FC = () => {
       const sessionId = await sessionService.joinSession(
         sessionCode.trim().toUpperCase(),
         playerName.trim(),
-        selectedCharacterId || undefined
+        selectedCharacterId && selectedCharacterId !== 'no-character' ? selectedCharacterId : undefined
       );
 
       toast({
@@ -95,7 +95,7 @@ const JoinSessionPage: React.FC = () => {
                     <SelectValue placeholder="Выберите персонажа" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Без персонажа</SelectItem>
+                    <SelectItem value="no-character">Без персонажа</SelectItem>
                     {characters.map((character) => (
                       <SelectItem key={character.id} value={character.id}>
                         {character.name} ({character.class} {character.level} уровня)
