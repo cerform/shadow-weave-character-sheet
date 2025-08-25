@@ -6,6 +6,7 @@ import { useUnifiedBattleStore } from '@/stores/unifiedBattleStore';
 import type { Monster } from '@/types/monsters';
 import SimpleTokenCreator from '@/components/battle/SimpleTokenCreator';
 import { MonsterImageGenerator } from '@/components/battle/MonsterImageGenerator';
+import { VideoChat } from '@/components/battle/VideoChat';
 import MiniMap2D from '@/components/battle/minimap/MiniMap2D';
 import { getModelTypeFromTokenName } from '@/utils/tokenModelMapping';
 import { getMonsterAvatar } from '@/data/monsterAvatarSystem';
@@ -203,6 +204,7 @@ export default function BattleMapUI() {
   // Режим и панели
   const [leftOpen, setLeftOpen] = useState(true);
   const [rightOpen, setRightOpen] = useState(true);
+  const [videoChatOpen, setVideoChatOpen] = useState(false);
 
   // Карта
   const [mapImage, setMapImage] = useState<string | null>(null);
@@ -705,6 +707,22 @@ export default function BattleMapUI() {
                     }}
                   />
                 </div>
+
+                <div>
+                  <Title>Видеочат</Title>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setVideoChatOpen(!videoChatOpen)}
+                      className={`flex-1 px-3 py-2 text-sm rounded-md border transition-colors ${
+                        videoChatOpen 
+                          ? 'border-emerald-400 text-emerald-400 bg-emerald-900/20' 
+                          : 'border-neutral-700 hover:border-neutral-600'
+                      }`}
+                    >
+                      {videoChatOpen ? 'Скрыть' : 'Показать'} видеочат
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -805,6 +823,18 @@ export default function BattleMapUI() {
           </div>
         </div>
       </div>
+      
+      {/* Видеочат */}
+      {videoChatOpen && (
+        <div className="absolute top-4 right-4 w-80 h-96 z-20">
+          <VideoChat
+            sessionId="test-session"
+            playerName="Test Player"
+            isDM={isDM}
+            onClose={() => setVideoChatOpen(false)}
+          />
+        </div>
+      )}
       
       {/* Мини-карта */}
       <MiniMap2D
