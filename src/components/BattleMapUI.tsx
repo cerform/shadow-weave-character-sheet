@@ -1033,12 +1033,6 @@ export default function BattleMapUI() {
             {showBackgroundMusic ? 'Скрыть' : 'Показать'} музыку
           </button>
           <button
-            onClick={() => setVideoChatOpen(!videoChatOpen)}
-            className="hover:text-foreground"
-          >
-            {videoChatOpen ? 'Скрыть' : 'Показать'} видео чат
-          </button>
-          <button
             onClick={() => setUseCompactUI(true)}
             className="hover:text-foreground"
           >
