@@ -30,6 +30,7 @@ import DMMapEditorPage from '@/pages/DMMapEditorPage';
 import PlayerMapPage from '@/pages/PlayerMapPage';
 import UnifiedBattlePage from '@/pages/UnifiedBattlePage';
 import { BestiaryPage } from '@/components/bestiary/BestiaryPage';
+import BattleMapPage from '@/pages/BattleMapPage';
 import DnD5ePage from '@/pages/DnD5ePage';
 
 
@@ -179,6 +180,12 @@ const AppRoutes: React.FC = () => {
       <Route path="/dm-session/:sessionId" element={
         <ProtectedDMRoute>
           <DMSessionPage />
+        </ProtectedDMRoute>
+      } />
+      
+      <Route path="/dm/battle-map/:sessionId" element={
+        <ProtectedDMRoute>
+          <BattleMapPage />
         </ProtectedDMRoute>
       } />
       <Route path="/dm/map-editor/:mapId" element={
