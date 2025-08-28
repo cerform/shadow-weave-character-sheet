@@ -306,6 +306,97 @@ export default function BattleMapUI() {
     tokenId: string;
   } | null>(null);
 
+  // VTT Actions
+  const handleAssetSelect = (asset: any) => {
+    if (asset.type === 'token') {
+      // Создаем новый токен в центре карты
+      const newToken: Token = {
+        id: uid("token"),
+        name: asset.name,
+        type: "NPC",
+        hp: 10,
+        maxHp: 10,
+        ac: 10,
+        speed: 30,
+        color: "bg-red-500",
+        position: { x: MAP_W / 2, y: MAP_H / 2 },
+        initiative: 0,
+        conditions: []
+      };
+      setTokens(prev => [...prev, newToken]);
+      setLog(l => [{ id: uid("log"), ts: now(), text: `Добавлен токен: ${asset.name}` }, ...l]);
+    } else if (asset.type === 'map') {
+      setMapImage(asset.url);
+      setLog(l => [{ id: uid("log"), ts: now(), text: `Загружена карта: ${asset.name}` }, ...l]);
+    }
+  };
+
+  const handleAssetUpload = (file: File) => {
+    const imageUrl = URL.createObjectURL(file);
+    if (file.name.toLowerCase().includes('map') || file.name.toLowerCase().includes('карта')) {
+      setMapImage(imageUrl);
+      setLog(l => [{ id: uid("log"), ts: now(), text: `Загружена карта: ${file.name}` }, ...l]);
+    } else {
+      // Создаем токен из загруженного изображения
+      const newToken: Token = {
+        id: uid("token"),
+        name: file.name.replace(/\.[^/.]+$/, ''),
+        type: "NPC",
+        hp: 10,
+        maxHp: 10,
+        ac: 10,
+        speed: 30,
+        color: "bg-blue-500",
+        position: { x: MAP_W / 2, y: MAP_H / 2 },
+        initiative: 0,
+        conditions: []
+      };
+      setTokens(prev => [...prev, newToken]);
+      setLog(l => [{ id: uid("log"), ts: now(), text: `Добавлен токен: ${newToken.name}` }, ...l]);
+    }
+  };
+
+  // Layer management
+  const handleLayerAdd = (type: Layer['type']) => {
+    const newLayer: Layer = {
+      id: uid("layer"),
+      name: `Новый ${type}`,
+      visible: true,
+      locked: false,
+      opacity: 1,
+      type
+    };
+    setLayers(prev => [...prev, newLayer]);
+  };
+
+  const handleLayerToggleVisible = (layerId: string) => {
+    setLayers(prev => prev.map(layer => 
+      layer.id === layerId ? { ...layer, visible: !layer.visible } : layer
+    ));
+  };
+
+  const handleLayerToggleLock = (layerId: string) => {
+    setLayers(prev => prev.map(layer => 
+      layer.id === layerId ? { ...layer, locked: !layer.locked } : layer
+    ));
+  };
+
+  const handleLayerOpacityChange = (layerId: string, opacity: number) => {
+    setLayers(prev => prev.map(layer => 
+      layer.id === layerId ? { ...layer, opacity } : layer
+    ));
+  };
+
+  const handleLayerDelete = (layerId: string) => {
+    setLayers(prev => prev.filter(layer => layer.id !== layerId));
+  };
+
+  const handleLayerRename = (layerId: string, name: string) => {
+    setLayers(prev => prev.map(layer => 
+      layer.id === layerId ? { ...layer, name } : layer
+    ));
+  };
+
   // Журнал и кубы
   const [log, setLog] = useState<LogEntry[]>([{ id: uid("log"), ts: now(), text: "Бой начался. Бросьте инициативу!" }]);
   const roll = (sides: number) => { const value = 1 + Math.floor(Math.random()*sides); setLog((l)=>[{ id: uid("log"), ts: now(), text: `🎲 d${sides} → ${value}` }, ...l]); };
