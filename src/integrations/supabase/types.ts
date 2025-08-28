@@ -188,6 +188,8 @@ export type Database = {
         Row: {
           background_color: string | null
           created_at: string | null
+          file_path: string | null
+          file_url: string | null
           grid_size: number | null
           height: number
           id: string
@@ -201,6 +203,8 @@ export type Database = {
         Insert: {
           background_color?: string | null
           created_at?: string | null
+          file_path?: string | null
+          file_url?: string | null
           grid_size?: number | null
           height?: number
           id?: string
@@ -214,6 +218,8 @@ export type Database = {
         Update: {
           background_color?: string | null
           created_at?: string | null
+          file_path?: string | null
+          file_url?: string | null
           grid_size?: number | null
           height?: number
           id?: string
@@ -588,6 +594,42 @@ export type Database = {
           updated_at?: string
           user_id?: string
           wisdom?: number
+        }
+        Relationships: []
+      }
+      dm_sessions: {
+        Row: {
+          created_at: string | null
+          current_map_url: string | null
+          description: string | null
+          dm_id: string
+          id: string
+          is_active: boolean | null
+          name: string
+          settings: Json | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          current_map_url?: string | null
+          description?: string | null
+          dm_id: string
+          id?: string
+          is_active?: boolean | null
+          name: string
+          settings?: Json | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          current_map_url?: string | null
+          description?: string | null
+          dm_id?: string
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          settings?: Json | null
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -1293,6 +1335,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: number
       }
+      ensure_default_session: {
+        Args: { user_id: string }
+        Returns: string
+      }
       generate_session_code: {
         Args: Record<PropertyKey, never>
         Returns: string
@@ -1325,6 +1371,18 @@ export type Database = {
           character_id_param?: string
           player_name_param: string
           session_code_param: string
+        }
+        Returns: string
+      }
+      save_battle_map: {
+        Args: {
+          p_file_path: string
+          p_file_url: string
+          p_grid_size?: number
+          p_height?: number
+          p_name: string
+          p_session_id: string
+          p_width?: number
         }
         Returns: string
       }

@@ -1,5 +1,3 @@
-// Интегрированная боевая карта с реальным бестиарием из Supabase
-// + новые функции: 3D модели через model-viewer, спавн кликом, диагностика
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useMonstersStore } from '@/stores/monstersStore';
 import { useUnifiedBattleStore } from '@/stores/unifiedBattleStore';
@@ -18,6 +16,7 @@ import ContextMenu from '@/components/battle/vtt/ContextMenu';
 import FogOfWar from '@/components/battle/FogOfWar';
 import { getModelTypeFromTokenName } from '@/utils/tokenModelMapping';
 import { getMonsterAvatar } from '@/data/monsterAvatarSystem';
+import { useBattleSession } from '@/hooks/useBattleSession';
 
 // ==================== Типы ====================
 
@@ -229,6 +228,15 @@ export default function BattleMapUI({ sessionId }: { sessionId?: string }) {
   const { getAllMonsters, loadSupabaseMonsters, isLoadingSupabase } = useMonstersStore();
   const { isDM } = useUnifiedBattleStore();
   
+  // Хук для работы с сессиями и автоматическим сохранением карт
+  const { 
+    session, 
+    currentMap, 
+    saveMapFromUrl, 
+    saveMapToSession, 
+    loading: sessionLoading 
+  } = useBattleSession(sessionId);
+  
   // Режим и панели
   const [leftOpen, setLeftOpen] = useState(false);
   const [rightOpen, setRightOpen] = useState(false);
@@ -243,6 +251,20 @@ export default function BattleMapUI({ sessionId }: { sessionId?: string }) {
   const [autoFitMap, setAutoFitMap] = useState(true);
   const mapRef = useRef<HTMLDivElement | null>(null);
   const [isDragOver, setIsDragOver] = useState<boolean>(false);
+
+  // Загружаем сохраненную карту из сессии
+  useEffect(() => {
+    if (currentMap && currentMap.file_url && !mapImage) {
+      console.log('🗺️ Загружаем сохраненную карту из сессии:', currentMap);
+      setMapImage(currentMap.file_url);
+      if (currentMap.width && currentMap.height) {
+        setMapDimensions({
+          width: currentMap.width,
+          height: currentMap.height
+        });
+      }
+    }
+  }, [currentMap, mapImage]);
   // Вычисление оптимальных размеров карты
   const calculateMapDimensions = () => {
     if (!autoFitMap || !mapDimensions) {
@@ -284,6 +306,15 @@ export default function BattleMapUI({ sessionId }: { sessionId?: string }) {
       width: img.naturalWidth,
       height: img.naturalHeight
     });
+    
+    // Автоматически сохраняем карту в сессию при загрузке
+    if (mapImage && session && isDM) {
+      const fileName = `battle-map-${Date.now()}.png`;
+      saveMapFromUrl(mapImage, fileName, {
+        width: img.naturalWidth,
+        height: img.naturalHeight
+      });
+    }
   };
   
   const onMapDrop = (e: React.DragEvent | DragEvent) => { 
@@ -300,6 +331,11 @@ export default function BattleMapUI({ sessionId }: { sessionId?: string }) {
         ts: now(), 
         text: `Загружена карта: ${file.name}` 
       }, ...l]);
+      
+      // Автоматически сохраняем карту в сессию
+      if (session && isDM) {
+        saveMapToSession(file, file.name);
+      }
     }
   };
   
