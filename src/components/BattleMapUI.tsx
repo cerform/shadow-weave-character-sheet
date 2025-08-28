@@ -723,6 +723,44 @@ export default function BattleMapUI() {
         mapImage={mapImage}
         isDM={isDM}
       />
+      
+      {/* Floating виджеты в правом нижнем углу */}
+      <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-2">
+        {/* Кнопка для бросков кубиков */}
+        <div className="flex gap-2">
+          <button
+            onClick={() => roll(20)}
+            className="bg-primary/90 hover:bg-primary text-primary-foreground rounded-lg p-3 backdrop-blur-sm shadow-lg transition-all duration-200 hover:scale-105"
+            title="Бросок d20"
+          >
+            <div className="flex items-center gap-1">
+              <span className="text-sm font-bold">d20</span>
+            </div>
+          </button>
+          <button
+            onClick={() => roll(6)}
+            className="bg-primary/90 hover:bg-primary text-primary-foreground rounded-lg p-3 backdrop-blur-sm shadow-lg transition-all duration-200 hover:scale-105"
+            title="Бросок d6"
+          >
+            <div className="flex items-center gap-1">
+              <span className="text-sm font-bold">d6</span>
+            </div>
+          </button>
+        </div>
+        
+        {/* Гамбургер меню */}
+        <button
+          onClick={() => setUseCompactUI(!useCompactUI)}
+          className="bg-secondary/90 hover:bg-secondary text-secondary-foreground rounded-lg p-3 backdrop-blur-sm shadow-lg transition-all duration-200 hover:scale-105"
+          title={useCompactUI ? "Полный интерфейс" : "Компактный интерфейс"}
+        >
+          <div className="flex flex-col gap-1">
+            <div className="w-4 h-0.5 bg-current"></div>
+            <div className="w-4 h-0.5 bg-current"></div>
+            <div className="w-4 h-0.5 bg-current"></div>
+          </div>
+        </button>
+      </div>
     </div>
   );
 }
