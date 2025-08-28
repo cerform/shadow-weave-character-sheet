@@ -5,7 +5,7 @@ import { useMonstersStore } from '@/stores/monstersStore';
 import { useUnifiedBattleStore } from '@/stores/unifiedBattleStore';
 import type { Monster } from '@/types/monsters';
 import SimpleTokenCreator from '@/components/battle/SimpleTokenCreator';
-import { MonsterImageGenerator } from '@/components/battle/MonsterImageGenerator';
+
 import { VideoChat } from '@/components/battle/VideoChat';
 import BackgroundMusic from '@/components/battle/BackgroundMusic';
 import MiniMap2D from '@/components/battle/minimap/MiniMap2D';
@@ -510,19 +510,6 @@ export default function BattleMapUI() {
                   />
                 </div>
 
-                <div>
-                  <Title>Генератор изображений монстров</Title>
-                  <MonsterImageGenerator 
-                    onImagesGenerated={(images) => {
-                      const successCount = images.filter(img => img.imageUrl).length;
-                      setLog(l => [{ 
-                        id: uid("log"), 
-                        ts: now(), 
-                        text: `Сгенерировано ${successCount} изображений монстров` 
-                      }, ...l]);
-                    }}
-                  />
-                </div>
 
                 <div>
                   <Title>Видеочат</Title>
