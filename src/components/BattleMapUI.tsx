@@ -843,6 +843,8 @@ export default function BattleMapUI() {
                         return acc;
                       }, {} as { [key: string]: boolean })}
                       onRevealCell={(row, col) => {
+                        console.log('BattleMapUI onRevealCell called:', { row, col, GRID, fogRadius });
+                        
                         if (dmTool === "fog-reveal" || vttTool === 'fog-reveal') {
                           // Конвертируем row/col в пиксельные координаты для совместимости с системой reveal
                           const newReveal = {
@@ -850,16 +852,21 @@ export default function BattleMapUI() {
                             y: row * GRID + GRID/2,
                             r: fogRadius
                           };
+                          
+                          console.log('Adding reveal area:', newReveal);
+                          
                           setReveal(prev => [...prev, newReveal]);
                           setLog((l) => [{ 
                             id: uid("log"), 
                             ts: now(), 
-                            text: `ДМ открыл туман в ячейке (${col}, ${row})` 
+                            text: `ДМ открыл туман в ячейке (${col}, ${row}) -> пиксели (${newReveal.x}, ${newReveal.y})` 
                           }, ...l]);
                         } else if (dmTool === "fog-hide" || vttTool === 'fog-hide') {
                           // Удаляем области рядом с этой клеткой
                           const targetX = col * GRID + GRID/2;
                           const targetY = row * GRID + GRID/2;
+                          
+                          console.log('Hiding fog around:', { targetX, targetY });
                           
                           setReveal(prev => prev.filter(r => {
                             const distance = Math.sqrt(
@@ -871,7 +878,7 @@ export default function BattleMapUI() {
                           setLog((l) => [{ 
                             id: uid("log"), 
                             ts: now(), 
-                            text: `ДМ скрыл туман в ячейке (${col}, ${row})` 
+                            text: `ДМ скрыл туман в ячейке (${col}, ${row}) -> пиксели (${targetX}, ${targetY})` 
                           }, ...l]);
                         }
                       }}

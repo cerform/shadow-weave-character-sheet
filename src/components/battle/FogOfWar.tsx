@@ -259,22 +259,16 @@ const FogOfWar: React.FC<FogOfWarProps> = ({
     const canvas = canvasRef.current;
     const rect = canvas.getBoundingClientRect();
     
-    // Получаем координаты клика относительно canvas с учетом масштабирования
+    // Получаем координаты клика относительно отображаемого размера canvas
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
     
-    const scaleX = canvas.width / rect.width;
-    const scaleY = canvas.height / rect.height;
-    
-    const scaledX = x * scaleX;
-    const scaledY = y * scaleY;
-    
     setIsDragging(true);
     setSelectedArea({
-      startX: scaledX,
-      startY: scaledY,
-      endX: scaledX,
-      endY: scaledY
+      startX: x,
+      startY: y,
+      endX: x,
+      endY: y
     });
   };
   
@@ -287,16 +281,10 @@ const FogOfWar: React.FC<FogOfWarProps> = ({
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
     
-    const scaleX = canvas.width / rect.width;
-    const scaleY = canvas.height / rect.height;
-    
-    const scaledX = x * scaleX;
-    const scaledY = y * scaleY;
-    
     setSelectedArea({
       ...selectedArea,
-      endX: scaledX,
-      endY: scaledY
+      endX: x,
+      endY: y
     });
   };
   
@@ -341,22 +329,28 @@ const FogOfWar: React.FC<FogOfWarProps> = ({
     const rect = canvas.getBoundingClientRect();
     
     // Получаем координаты клика относительно canvas
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+    const clientX = e.clientX - rect.left;
+    const clientY = e.clientY - rect.top;
     
-    // Масштабируем координаты к размерам canvas
-    const scaleX = canvas.width / rect.width;
-    const scaleY = canvas.height / rect.height;
+    // Отладочная информация
+    console.log('FogOfWar Click Debug:', {
+      clientX, clientY,
+      canvasWidth: canvas.width,
+      canvasHeight: canvas.height,
+      rectWidth: rect.width,
+      rectHeight: rect.height,
+      gridCols: gridSize.cols,
+      gridRows: gridSize.rows
+    });
     
-    const scaledX = x * scaleX;
-    const scaledY = y * scaleY;
+    // Прямое вычисление координат ячейки без масштабирования
+    const cellWidth = rect.width / gridSize.cols;
+    const cellHeight = rect.height / gridSize.rows;
     
-    // Определяем координаты ячейки
-    const cellWidth = canvas.width / gridSize.cols;
-    const cellHeight = canvas.height / gridSize.rows;
+    const col = Math.floor(clientX / cellWidth);
+    const row = Math.floor(clientY / cellHeight);
     
-    const col = Math.floor(scaledX / cellWidth);
-    const row = Math.floor(scaledY / cellHeight);
+    console.log('Calculated cell:', { col, row, cellWidth, cellHeight });
     
     // Проверяем границы
     if (row >= 0 && row < gridSize.rows && col >= 0 && col < gridSize.cols) {
@@ -365,8 +359,6 @@ const FogOfWar: React.FC<FogOfWarProps> = ({
     }
   };
   
-  // Если туман не активен, не отображаем
-  if (!active) return null;
   
   return (
     <canvas 
@@ -379,9 +371,10 @@ const FogOfWar: React.FC<FogOfWarProps> = ({
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
       style={{
-        width: imageSize?.width ? imageSize.width + 'px' : '100%',
-        height: imageSize?.height ? imageSize.height + 'px' : '100%',
-        objectFit: 'contain'
+        width: '100%',
+        height: '100%',
+        objectFit: 'fill',
+        pointerEvents: active ? 'auto' : 'none'
       }}
     />
   );
