@@ -1011,7 +1011,7 @@ export default function BattleMapUI() {
 
       {/* Компактный видео чат */}
       {videoChatOpen && (
-        <div className="fixed bottom-20 right-4 z-50">
+        <div className="fixed top-4 right-4 z-50">
           <CompactVideoChat
             isConnected={false}
             participantsCount={2}
