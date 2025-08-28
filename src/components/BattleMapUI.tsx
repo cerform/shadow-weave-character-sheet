@@ -13,6 +13,7 @@ import CompactBattleUI from '@/components/battle/ui/CompactBattleUI';
 import AssetLibrary from '@/components/battle/vtt/AssetLibrary';
 import VTTToolbar, { VTTTool } from '@/components/battle/vtt/VTTToolbar';
 import LayerPanel, { Layer } from '@/components/battle/vtt/LayerPanel';
+import ContextMenu from '@/components/battle/vtt/ContextMenu';
 import { getModelTypeFromTokenName } from '@/utils/tokenModelMapping';
 import { getMonsterAvatar } from '@/data/monsterAvatarSystem';
 
@@ -296,6 +297,13 @@ export default function BattleMapUI() {
   ]);
   const [activeLayerId, setActiveLayerId] = useState('tokens');
 
+  // Контекстное меню
+  const [contextMenu, setContextMenu] = useState<{
+    x: number;
+    y: number;
+    tokenId: string;
+  } | null>(null);
+
   // Журнал и кубы
   const [log, setLog] = useState<LogEntry[]>([{ id: uid("log"), ts: now(), text: "Бой начался. Бросьте инициативу!" }]);
   const roll = (sides: number) => { const value = 1 + Math.floor(Math.random()*sides); setLog((l)=>[{ id: uid("log"), ts: now(), text: `🎲 d${sides} → ${value}` }, ...l]); };
@@ -380,17 +388,31 @@ export default function BattleMapUI() {
 
   // Удалили систему спавна монстров кликом
 
-  // Клик по карте — только туман (убрали спавн)
+  // Клик по карте — обработка инструментов VTT
   const onMapClick = (e: React.MouseEvent<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
-    const x = e.clientX - rect.left; const y = e.clientY - rect.top;
+    const x = e.clientX - rect.left; 
+    const y = e.clientY - rect.top;
+    
     if (!isDM) return;
-    if (dmTool === "fog-reveal") {
-      setReveal((prev) => [...prev, { x, y, r: fogRadius }]);
-      setLog((l) => [{ id: uid("log"), ts: now(), text: `ДМ открыл туман в точке (${Math.round(x)}, ${Math.round(y)})` }, ...l]);
-    } else if (dmTool === "fog-hide") {
-      setHideAreas((prev) => [...prev, { x, y, r: fogRadius }]);
-      setLog((l) => [{ id: uid("log"), ts: now(), text: `ДМ скрыл область в точке (${Math.round(x)}, ${Math.round(y)})` }, ...l]);
+    
+    // Обработка инструментов VTT
+    switch (vttTool) {
+      case 'fog-reveal':
+        setReveal((prev) => [...prev, { x, y, r: fogRadius }]);
+        setLog((l) => [{ id: uid("log"), ts: now(), text: `ДМ открыл туман в точке (${Math.round(x)}, ${Math.round(y)})` }, ...l]);
+        break;
+      case 'fog-hide':
+        setHideAreas((prev) => [...prev, { x, y, r: fogRadius }]);
+        setLog((l) => [{ id: uid("log"), ts: now(), text: `ДМ скрыл область в точке (${Math.round(x)}, ${Math.round(y)})` }, ...l]);
+        break;
+      case 'measure':
+        // TODO: Добавить измерения
+        setLog((l) => [{ id: uid("log"), ts: now(), text: `Измерение в точке (${Math.round(x)}, ${Math.round(y)})` }, ...l]);
+        break;
+      default:
+        // select, move и другие инструменты
+        break;
     }
   };
 
@@ -590,6 +612,7 @@ export default function BattleMapUI() {
                       style={{ left: t.position.x, top: t.position.y, width: GRID, height: GRID }} 
                       className={`absolute rounded-lg border-2 ${selectedId === t.id ? "border-primary" : "border-border"} cursor-move`}
                       onMouseDown={(e) => {
+                        if (e.button !== 0) return; // Только левый клик
                         if (!mapRef.current) return;
                         const rect = mapRef.current.getBoundingClientRect();
                         dragOffset.current = { 
@@ -597,6 +620,15 @@ export default function BattleMapUI() {
                           y: e.clientY - rect.top - t.position.y 
                         };
                         setDragId(t.id);
+                        setSelectedId(t.id);
+                      }}
+                      onContextMenu={(e) => {
+                        e.preventDefault();
+                        setContextMenu({
+                          x: e.clientX,
+                          y: e.clientY,
+                          tokenId: t.id
+                        });
                         setSelectedId(t.id);
                       }}
                       title={`${t.name} (${t.hp}/${t.maxHp})`}
@@ -766,6 +798,62 @@ export default function BattleMapUI() {
           </button>
         </div>
       </div>
+
+      {/* Контекстное меню */}
+      {contextMenu && (
+        <ContextMenu
+          x={contextMenu.x}
+          y={contextMenu.y}
+          onClose={() => setContextMenu(null)}
+          onRotateLeft={() => {
+            // TODO: Реализовать поворот токена
+            setLog(l => [{ id: uid("log"), ts: now(), text: `Токен повернут влево` }, ...l]);
+          }}
+          onRotateRight={() => {
+            // TODO: Реализовать поворот токена
+            setLog(l => [{ id: uid("log"), ts: now(), text: `Токен повернут вправо` }, ...l]);
+          }}
+          onCopy={() => {
+            const token = tokens.find(t => t.id === contextMenu.tokenId);
+            if (token) {
+              const newToken = { 
+                ...token, 
+                id: uid("token"), 
+                position: { x: token.position.x + GRID, y: token.position.y + GRID }
+              };
+              setTokens(prev => [...prev, newToken]);
+              setLog(l => [{ id: uid("log"), ts: now(), text: `Токен ${token.name} скопирован` }, ...l]);
+            }
+          }}
+          onDelete={() => {
+            setTokens(prev => prev.filter(t => t.id !== contextMenu.tokenId));
+            if (selectedId === contextMenu.tokenId) setSelectedId(null);
+            setLog(l => [{ id: uid("log"), ts: now(), text: `Токен удален` }, ...l]);
+          }}
+          onHeal={() => {
+            setTokens(prev => prev.map(t => t.id === contextMenu.tokenId ? {
+              ...t,
+              hp: Math.min(t.maxHp, t.hp + Math.ceil(t.maxHp * 0.25))
+            } : t));
+            setLog(l => [{ id: uid("log"), ts: now(), text: `Токен вылечен на 25%` }, ...l]);
+          }}
+          onDamage={() => {
+            setTokens(prev => prev.map(t => t.id === contextMenu.tokenId ? {
+              ...t,
+              hp: Math.max(0, t.hp - Math.ceil(t.maxHp * 0.25))
+            } : t));
+            setLog(l => [{ id: uid("log"), ts: now(), text: `Токен получил урон 25%` }, ...l]);
+          }}
+          onEdit={() => {
+            // TODO: Открыть диалог редактирования токена
+            setLog(l => [{ id: uid("log"), ts: now(), text: `Редактирование токена` }, ...l]);
+          }}
+          onToggleVisible={() => {
+            // TODO: Скрыть/показать токен
+            setLog(l => [{ id: uid("log"), ts: now(), text: `Видимость токена изменена` }, ...l]);
+          }}
+        />
+      )}
     </div>
   );
 }
