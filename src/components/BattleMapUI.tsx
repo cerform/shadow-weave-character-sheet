@@ -254,20 +254,15 @@ export default function BattleMapUI() {
   const roll = (sides: number) => { const value = 1 + Math.floor(Math.random()*sides); setLog((l)=>[{ id: uid("log"), ts: now(), text: `🎲 d${sides} → ${value}` }, ...l]); };
   const nextTurn = () => setTurnIndex((i) => (initOrder.length ? (i + 1) % initOrder.length : 0));
 
-  // Инструменты Мастера
-  type DMTool = "select" | "fog-reveal" | "fog-hide" | "add-npc" | "measure";
+  // Инструменты Мастера - убрали add-npc
+  type DMTool = "select" | "fog-reveal" | "fog-hide" | "measure";
   const [dmTool, setDmTool] = useState<DMTool>("select");
 
   // Реестр 3D моделей
   const [modelRegistry, setModelRegistry] = useState<Array<{ match: RegExp; url: string; scale?: number }>>(LOCAL_MODEL_REGISTRY);
   const [useFamilyMap, setUseFamilyMap] = useState(true);
 
-  // Фильтрация и группировка монстров
-  const [crFilter, setCrFilter] = useState<{ min: number; max: number }>({ min: 0, max: 30 });
-  const [typeFilter, setTypeFilter] = useState<string>('');
-  const [searchFilter, setSearchFilter] = useState<string>('');
-  const [groupByType, setGroupByType] = useState(false);
-  const [sortBy, setSortBy] = useState<'name' | 'cr' | 'type'>('name');
+  // Удалили фильтрацию бестиария - она использовалась только для спавна
 
   // Загрузка реального бестиария при инициализации
   useEffect(() => {
@@ -307,46 +302,7 @@ export default function BattleMapUI() {
     return parseFloat(cr);
   };
 
-  // Фильтрация и сортировка монстров
-  const filteredBestiary = useMemo(() => {
-    let filtered = enrichedBestiary.filter((monster) => {
-      const crValue = getCRValue(monster.challengeRating);
-      const matchesCR = crValue >= crFilter.min && crValue <= crFilter.max;
-      const matchesType = !typeFilter || monster.type === typeFilter;
-      const matchesSearch = !searchFilter || 
-        monster.name.toLowerCase().includes(searchFilter.toLowerCase()) ||
-        monster.type.toLowerCase().includes(searchFilter.toLowerCase());
-      
-      return matchesCR && matchesType && matchesSearch;
-    });
-
-    // Сортировка
-    filtered.sort((a, b) => {
-      if (sortBy === 'name') return a.name.localeCompare(b.name);
-      if (sortBy === 'cr') return getCRValue(a.challengeRating) - getCRValue(b.challengeRating);
-      if (sortBy === 'type') return a.type.localeCompare(b.type);
-      return 0;
-    });
-
-    return filtered;
-  }, [enrichedBestiary, crFilter, typeFilter, searchFilter, sortBy]);
-
-  // Группировка по типам
-  const groupedBestiary = useMemo(() => {
-    if (!groupByType) return { 'Все монстры': filteredBestiary };
-    
-    return filteredBestiary.reduce((groups, monster) => {
-      const type = monster.type;
-      if (!groups[type]) groups[type] = [];
-      groups[type].push(monster);
-      return groups;
-    }, {} as Record<string, typeof filteredBestiary>);
-  }, [filteredBestiary, groupByType]);
-
-  // Уникальные типы для фильтра
-  const uniqueTypes = useMemo(() => {
-    return Array.from(new Set(enrichedBestiary.map(m => m.type))).sort();
-  }, [enrichedBestiary]);
+  // Удалили функции фильтрации - они использовались только для спавна
 
   // 3D загрузчик
   const [use3D, setUse3D] = useState(true);
@@ -354,60 +310,12 @@ export default function BattleMapUI() {
   const [brokenModels, setBrokenModels] = useState<Record<string, string>>({});
   const handleModelError = (id: string, msg: string) => { setBrokenModels(s=>({ ...s, [id]: msg })); const tok = tokens.find(t=>t.id===id); if (tok) setLog((l)=>[{ id: uid("log"), ts: now(), text: `Модель ${tok.name}: ${msg}. Переход на 2D.` }, ...l]); };
 
-  // Спавн монстров кликом по карте
-  const [pendingSpawn, setPendingSpawn] = useState<string | null>(null); // id монстра для клика
-  
-  const addMonsterAt = (monsterId: string, pos: Vec2) => {
-    const monster = enrichedBestiary.find((m) => m.id === monsterId);
-    if (!monster) return;
-    
-    // Определяем цвет по типу монстра
-    const getColorByType = (type: string): string => {
-      const colorMap: Record<string, string> = {
-        'Зверь': 'bg-amber-600',
-        'Гуманоид': 'bg-blue-600', 
-        'Нежить': 'bg-gray-600',
-        'Дракон': 'bg-red-700',
-        'Исчадие': 'bg-purple-700',
-        'Великан': 'bg-stone-600',
-        'Элементаль': 'bg-cyan-600',
-        'Фея': 'bg-pink-600',
-        'Аберрация': 'bg-indigo-700',
-        'Конструкт': 'bg-slate-600',
-        'Растение': 'bg-green-600',
-        'Слизь': 'bg-lime-600',
-        'Чудовище': 'bg-orange-600'
-      };
-      return colorMap[type] || 'bg-red-600';
-    };
+  // Удалили систему спавна монстров кликом
 
-    const tok: Token = { 
-      id: uid("npc"), 
-      name: monster.name, 
-      type: "NPC", 
-      hp: monster.hitPoints, 
-      maxHp: monster.hitPoints, 
-      ac: monster.armorClass, 
-      speed: monster.speed.walk ? Math.floor(monster.speed.walk / 5) : 6, 
-      color: getColorByType(monster.type), 
-      conditions: [], 
-      position: { x: snap(pos.x), y: snap(pos.y) }, 
-      initiative: Math.floor(Math.random()*20)+1, 
-      modelUrl: monster.modelUrl, 
-      modelScale: (monster as any).modelScale ?? 1 
-    };
-    
-    setTokens((prev)=>[...prev, tok]);
-    setLog((l)=>[{ id: uid("log"), ts: now(), text: `ДМ создал ${monster.name}${isValidModelUrl(tok.modelUrl)?" (3D)":" (2D)"} • CR ${monster.challengeRating}` }, ...l]);
-  };
-  
-  const selectMonsterForSpawn = (monsterId: string) => { setPendingSpawn(monsterId); setDmTool("add-npc"); };
-
-  // Клик по карте — туман / спавн
+  // Клик по карте — только туман (убрали спавн)
   const onMapClick = (e: React.MouseEvent<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
     const x = e.clientX - rect.left; const y = e.clientY - rect.top;
-    if (isDM && dmTool === "add-npc" && pendingSpawn) { addMonsterAt(pendingSpawn, { x, y }); setPendingSpawn(null); return; }
     if (!isDM) return;
     if (dmTool === "fog-reveal") {
       setReveal((prev) => [...prev, { x, y, r: fogRadius }]);
@@ -495,7 +403,7 @@ export default function BattleMapUI() {
           </div>
           <label className="flex items-center gap-1"><input type="checkbox" checked={use3D} onChange={(e)=>setUse3D(e.target.checked)} /> 3D модели</label>
           <span className="px-2 py-0.5 rounded-md border border-neutral-700">3D: {modelStatus === "loading" && "загрузка…"}{modelStatus === "ready" && "готово"}{modelStatus === "error" && (modelErr || "ошибка")}{modelStatus === "idle" && "выкл."}</span>
-          <StatBadge label="Монстров" value={`${filteredBestiary.length}/${enrichedBestiary.length}`} />
+          <StatBadge label="Токенов" value={tokens.length} />
           <input type="file" accept="image/*" onChange={(e)=>{ const f=e.target.files?.[0]; if (f) setMapImage(URL.createObjectURL(f)); }} />
           <button className="px-3 py-1 rounded-md border border-neutral-700 text-xs" onClick={() => setLeftOpen((v) => !v)}>
             {leftOpen ? "Скрыть инструменты" : "Показать инструменты"}
@@ -512,12 +420,11 @@ export default function BattleMapUI() {
           <div className="p-3 space-y-4">
             <Title>Инструменты ДМ</Title>
             <div className="grid grid-cols-2 gap-2">
-              {(["select","fog-reveal","fog-hide","add-npc","measure"] as const).map((tool)=>(
+              {(["select","fog-reveal","fog-hide","measure"] as const).map((tool)=>(
                 <button key={tool} onClick={()=>setDmTool(tool)} className={`px-2 py-2 rounded-md border text-sm ${dmTool===tool?"border-emerald-400 text-emerald-400":"border-neutral-700 text-neutral-300"}`}>
                   {tool === "select" && "Выбор"}
                   {tool === "fog-reveal" && "Открыть туман"}
                   {tool === "fog-hide" && "Скрыть туман"}
-                  {tool === "add-npc" && "Добавить NPC"}
                   {tool === "measure" && "Измерить"}
                 </button>
               ))}
@@ -534,16 +441,13 @@ export default function BattleMapUI() {
                 <button className="px-2 py-1 rounded-md border border-neutral-700 text-sm" onClick={()=>{setReveal(r=>r.slice(0,-1)); setLog((l)=>[{ id: uid("log"), ts: now(), text: "ДМ отменил последнее открытие" }, ...l]);}}>Отменить открытие</button>
                 <button className="px-2 py-1 rounded-md border border-neutral-700 text-sm" onClick={()=>{setHideAreas(h=>h.slice(0,-1)); setLog((l)=>[{ id: uid("log"), ts: now(), text: "ДМ отменил последнее скрытие" }, ...l]);}}>Отменить скрытие</button>
               </div>
-              <div className="text-xs opacity-70">
-                Подсказки: 
-                <br />• «Добавить NPC» + клик по карте — спавн монстра
-                <br />• «Открыть туман» + клик — открыть область
-                <br />• «Скрыть туман» + клик — скрыть область поверх открытой
+              <div className="text-sm opacity-70 text-center py-4">
+                Выберите инструмент и кликните на карту
               </div>
             </div>
 
             <div className="space-y-2">
-              <Title>Бестиарий D&D 5e ({enrichedBestiary.length} всего, {filteredBestiary.length} показано)</Title>
+              <Title>Система создания токенов</Title>
               
               {/* Настройки 3D */}
               <div className="space-y-2 mb-2">
@@ -553,178 +457,30 @@ export default function BattleMapUI() {
                 </div>
               </div>
 
-              {/* Поиск */}
+              {/* Убрали бестиарий - он использовался только для спавна */}
+
+              {/* Диагностика - убрали диагностику спавна */}
               <div className="space-y-2">
-                <input
-                  type="text"
-                  placeholder="Поиск по имени или типу..."
-                  value={searchFilter}
-                  onChange={(e) => setSearchFilter(e.target.value)}
-                  className="w-full px-2 py-1 text-sm bg-neutral-800 border border-neutral-700 rounded-md"
-                />
-              </div>
-
-              {/* Фильтры */}
-              <div className="space-y-2">
-                <div className="text-xs font-semibold text-yellow-400">ФИЛЬТРЫ</div>
-                
-                {/* Уровень опасности */}
-                <div className="space-y-1">
-                  <div className="text-xs opacity-70">Уровень опасности: {crFilter.min} - {crFilter.max}</div>
-                  <div className="flex gap-2">
-                    <input
-                      type="range"
-                      min={0}
-                      max={30}
-                      step={0.125}
-                      value={crFilter.min}
-                      onChange={(e) => setCrFilter(prev => ({ ...prev, min: parseFloat(e.target.value) }))}
-                      className="flex-1"
-                    />
-                    <input
-                      type="range"
-                      min={0}
-                      max={30}
-                      step={0.125}
-                      value={crFilter.max}
-                      onChange={(e) => setCrFilter(prev => ({ ...prev, max: parseFloat(e.target.value) }))}
-                      className="flex-1"
-                    />
-                  </div>
-                </div>
-
-                {/* Тип существа */}
-                <div className="space-y-1">
-                  <div className="text-xs opacity-70">Тип существа</div>
-                  <select
-                    value={typeFilter}
-                    onChange={(e) => setTypeFilter(e.target.value)}
-                    className="w-full px-2 py-1 text-sm bg-neutral-800 border border-neutral-700 rounded-md"
-                  >
-                    <option value="">Все типы</option>
-                    {uniqueTypes.map(type => (
-                      <option key={type} value={type}>{type}</option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Сортировка и группировка */}
+                <Title>Диагностика</Title>
+                <ul className="text-xs list-disc ml-5 space-y-1">
+                  <li>model-viewer → {modelReady?"✅ Готов":modelStatus==="error"?"❌ Ошибка":"⏳ Загрузка"}</li>
+                  <li>валидность 3D URL → {enrichedBestiary.filter(b=>b.modelUrl).every(b=>isValidModelUrl(b.modelUrl))?"✅ ОК":"⚠️ Есть некорректные"}</li>
+                  <li>реестр моделей → {modelRegistry.length} правил</li>
+                  <li>монстров с 3D → {enrichedBestiary.filter(m=>isValidModelUrl(m.modelUrl)).length}</li>
+                </ul>
                 <div className="flex gap-2">
-                  <select
-                    value={sortBy}
-                    onChange={(e) => setSortBy(e.target.value as 'name' | 'cr' | 'type')}
-                    className="flex-1 px-2 py-1 text-sm bg-neutral-800 border border-neutral-700 rounded-md"
-                  >
-                    <option value="name">По имени</option>
-                    <option value="cr">По уровню</option>
-                    <option value="type">По типу</option>
-                  </select>
-                  <label className="flex items-center gap-1 text-xs">
-                    <input type="checkbox" checked={groupByType} onChange={(e) => setGroupByType(e.target.checked)} />
-                    Группировать
-                  </label>
+                  <button className="px-2 py-1 rounded-md border border-neutral-700 text-xs" onClick={()=>{ const sample = enrichedBestiary.find(m=>m.name.toLowerCase().includes('dragon')); if (sample) { const mk = pickModelFor(sample.name, modelRegistry, useFamilyMap ? FAMILY_MODEL_MAP : undefined); setLog((l)=>[{ id: uid("log"), ts: now(), text: `Тест автопривязки для "${sample.name}": ${mk.url?"нашёл 3D":"нет 3D"} ${useFamilyMap?"(с родовым)":"(без родового)"}` }, ...l]); } }}>Тест автопривязки</button>
                 </div>
-
-                {/* Сброс фильтров */}
-                <button
-                  onClick={() => {
-                    setCrFilter({ min: 0, max: 30 });
-                    setTypeFilter('');
-                    setSearchFilter('');
-                    setSortBy('name');
-                  }}
-                  className="w-full px-2 py-1 text-xs bg-neutral-800 border border-neutral-700 rounded-md hover:border-neutral-600"
-                >
-                  Сбросить фильтры
-                </button>
-              </div>
-
-              <div className="max-h-64 overflow-y-auto pr-1">
-                {Object.entries(groupedBestiary).map(([groupName, monsters]) => (
-                  <div key={groupName} className="mb-3">
-                    {groupByType && (
-                      <div className="text-xs font-semibold text-yellow-400 mb-1 px-1">
-                        {groupName} ({monsters.length})
-                      </div>
-                    )}
-                    <div className="grid grid-cols-1 gap-1">
-                      {monsters.map((m) => (
-                        <button 
-                          key={m.id} 
-                          onClick={() => selectMonsterForSpawn(m.id)} 
-                          className={`flex items-center justify-between px-2 py-1 rounded-md border text-sm transition-colors ${
-                            pendingSpawn === m.id 
-                              ? "border-emerald-400 text-emerald-400 bg-emerald-900/20" 
-                              : "border-neutral-700 text-neutral-200 hover:border-neutral-600"
-                          }`} 
-                          title={`${m.type} • AC ${m.armorClass} • HP ${m.hitPoints} • CR ${m.challengeRating} • ${m.size}`}
-                        >
-                          <div className="flex-1 text-left">
-                            <div className="truncate font-medium">{m.name}</div>
-                            <div className="text-xs opacity-70 truncate">{m.type} • {m.size}</div>
-                          </div>
-                           <div className="flex items-center gap-2">
-                             {(() => {
-                               const avatarData = getMonsterAvatar(m.name);
-                               
-                               return avatarData.image ? (
-                                 <img 
-                                   src={avatarData.image} 
-                                   alt={m.name}
-                                   className="w-8 h-8 object-cover rounded border border-neutral-600"
-                                 />
-                               ) : (
-                                 <span className="text-lg">{avatarData.emoji}</span>
-                               );
-                             })()}
-                             <div className="flex flex-col gap-1 text-xs">
-                               <div className="flex gap-1">
-                                 <span className="px-1 py-0.5 rounded bg-blue-800/50 border border-blue-700/50">
-                                   CR {m.challengeRating}
-                                 </span>
-                                 <span className="px-1 py-0.5 rounded bg-orange-800/50 border border-orange-700/50">
-                                   HP {m.hitPoints}
-                                 </span>
-                               </div>
-                             </div>
-                           </div>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                ))}
                 
-                {filteredBestiary.length === 0 && (
-                  <div className="text-center text-neutral-500 py-4 text-sm">
-                    Монстры не найдены с текущими фильтрами
+                {/* Статистика CR */}
+                <div className="space-y-1">
+                  <div className="text-xs font-semibold text-yellow-400">СТАТИСТИКА</div>
+                  <div className="text-xs opacity-70">
+                    3D моделей: {enrichedBestiary.filter(m => isValidModelUrl(m.modelUrl)).length}/{enrichedBestiary.length}
                   </div>
-                )}
-              </div>
-            </div>
-
-            {/* Диагностика и тесты */}
-            <div className="space-y-2">
-              <Title>Диагностика</Title>
-              <ul className="text-xs list-disc ml-5 space-y-1">
-                <li>model-viewer → {modelReady?"✅ Готов":modelStatus==="error"?"❌ Ошибка":"⏳ Загрузка"}</li>
-                <li>валидность 3D URL → {enrichedBestiary.filter(b=>b.modelUrl).every(b=>isValidModelUrl(b.modelUrl))?"✅ ОК":"⚠️ Есть некорректные"}</li>
-                <li>ожидается спавн → {pendingSpawn ? enrichedBestiary.find(m=>m.id===pendingSpawn)?.name : "—"}</li>
-                <li>реестр моделей → {modelRegistry.length} правил</li>
-                <li>монстров с 3D → {enrichedBestiary.filter(m=>isValidModelUrl(m.modelUrl)).length}</li>
-              </ul>
-              <div className="flex gap-2">
-                <button className="px-2 py-1 rounded-md border border-neutral-700 text-xs" onClick={()=>{ const sample = enrichedBestiary.find(m=>m.name.toLowerCase().includes('dragon')); if (sample) { const mk = pickModelFor(sample.name, modelRegistry, useFamilyMap ? FAMILY_MODEL_MAP : undefined); setLog((l)=>[{ id: uid("log"), ts: now(), text: `Тест автопривязки для "${sample.name}": ${mk.url?"нашёл 3D":"нет 3D"} ${useFamilyMap?"(с родовым)":"(без родового)"}` }, ...l]); } }}>Тест автопривязки</button>
-                <button className="px-2 py-1 rounded-md border border-neutral-700 text-xs" onClick={()=>{ if (filteredBestiary[0]) addMonsterAt(filteredBestiary[0].id, { x: MAP_W/2, y: MAP_H/2 }); }}>Тестовый спавн</button>
-              </div>
-              
-              {/* Статистика CR */}
-              <div className="space-y-1">
-                <div className="text-xs font-semibold text-yellow-400">СТАТИСТИКА</div>
-                <div className="text-xs opacity-70">
-                  3D моделей: {enrichedBestiary.filter(m => isValidModelUrl(m.modelUrl)).length}/{enrichedBestiary.length}
-                </div>
-                <div className="text-xs opacity-70">
-                  CR диапазон: {Math.min(...filteredBestiary.map(m => getCRValue(m.challengeRating)))} - {Math.max(...filteredBestiary.map(m => getCRValue(m.challengeRating)))}
+                  <div className="text-xs opacity-70">
+                    Токенов на карте: {tokens.length}
+                  </div>
                 </div>
               </div>
 
@@ -860,12 +616,6 @@ export default function BattleMapUI() {
                 <button className="px-3 py-2 rounded-md border border-neutral-700 hover:border-yellow-400 hover:text-yellow-400">Предмет</button>
                 <button className="px-3 py-2 rounded-md border border-neutral-700 hover:border-emerald-400 hover:text-emerald-400" onClick={nextTurn}>Закончить ход</button>
                 <div className="ml-2 flex items-center gap-1 text-xs"><span className="opacity-70">Кости:</span>{[20,12,10,8,6,4].map((s)=>(<button key={s} className="px-2 py-1 rounded-md border border-neutral-700 hover:border-neutral-400" onClick={()=>roll(s)}>d{s}</button>))}</div>
-                <button
-                  onClick={() => setUseCompactUI(true)}
-                  className="ml-4 px-3 py-2 rounded-md border border-neutral-700 hover:border-blue-400 hover:text-blue-400 text-xs"
-                >
-                  Компактный режим
-                </button>
                 <button
                   onClick={() => setUseCompactUI(true)}
                   className="ml-4 px-3 py-2 rounded-md border border-neutral-700 hover:border-blue-400 hover:text-blue-400 text-xs"
