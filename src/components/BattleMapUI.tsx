@@ -398,6 +398,27 @@ export default function BattleMapUI() {
           tokensCount={tokens.length}
           onNextTurn={nextTurn}
           onRollDice={roll}
+          onCreateToken={(tokenData) => {
+            const newToken: Token = {
+              id: uid("token"),
+              name: tokenData.name,
+              type: "NPC" as TokenType,
+              hp: 100,
+              maxHp: 100,
+              ac: 12,
+              speed: 30,
+              color: 'bg-blue-600',
+              position: { x: 100, y: 100 },
+              initiative: 10,
+              conditions: []
+            };
+            setTokens(prev => [...prev, newToken]);
+            setLog(l => [{ 
+              id: uid("log"), 
+              ts: now(), 
+              text: `✨ Создан токен: ${tokenData.name}` 
+            }, ...l]);
+          }}
         />
 
         {/* Кнопка переключения на полный интерфейс */}

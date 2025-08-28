@@ -3,6 +3,8 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Slider } from '@/components/ui/slider';
+import CompactTokenCreator from './CompactTokenCreator';
+import CompactVideoChat from './CompactVideoChat';
 import { 
   Settings, 
   Eye, 
@@ -20,7 +22,9 @@ import {
   Dice6,
   Play,
   Pause,
-  SkipForward
+  SkipForward,
+  Video,
+  Plus
 } from 'lucide-react';
 
 interface CompactBattleUIProps {
@@ -39,6 +43,7 @@ interface CompactBattleUIProps {
   tokensCount: number;
   onNextTurn: () => void;
   onRollDice: (sides: number) => void;
+  onCreateToken?: (tokenData: { name: string; imageUrl: string }) => void;
 }
 
 export default function CompactBattleUI({
@@ -56,11 +61,13 @@ export default function CompactBattleUI({
   turnIndex,
   tokensCount,
   onNextTurn,
-  onRollDice
+  onRollDice,
+  onCreateToken
 }: CompactBattleUIProps) {
   const [leftPanelOpen, setLeftPanelOpen] = useState(false);
   const [rightPanelOpen, setRightPanelOpen] = useState(false);
   const [bottomPanelOpen, setBottomPanelOpen] = useState(false);
+  const [showTokenCreator, setShowTokenCreator] = useState(false);
 
   return (
     <>
@@ -106,10 +113,42 @@ export default function CompactBattleUI({
                 onClick={onMusicToggle}
                 className="h-8 w-8 p-0"
                 title={musicEnabled ? "Выключить музыку" : "Включить музыку"}
-              >
-                {musicEnabled ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
-              </Button>
-            </div>
+               >
+                 {musicEnabled ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
+               </Button>
+
+               {/* Видео чат */}
+               <CompactVideoChat
+                 isConnected={false}
+                 participantsCount={2}
+                 onToggleVideo={() => console.log('Toggle video')}
+                 onToggleAudio={() => console.log('Toggle audio')}
+                 onConnect={() => console.log('Connect video chat')}
+                 onDisconnect={() => console.log('Disconnect video chat')}
+               />
+
+               {/* Создание токенов */}
+               {showTokenCreator ? (
+                 <div className="absolute top-12 left-0 z-50">
+                   <CompactTokenCreator
+                     onCreateToken={(tokenData) => {
+                       onCreateToken?.(tokenData);
+                       setShowTokenCreator(false);
+                     }}
+                   />
+                 </div>
+               ) : (
+                 <Button
+                   size="sm"
+                   variant="ghost"
+                   onClick={() => setShowTokenCreator(true)}
+                   className="h-8 px-2"
+                   title="Создать токен"
+                 >
+                   <Plus className="h-4 w-4" />
+                 </Button>
+               )}
+             </div>
 
             {/* Кнопки панелей */}
             <div className="flex items-center gap-1 border-l pl-4">
