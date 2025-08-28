@@ -535,22 +535,19 @@ export default function BattleMapUI() {
 
   // Клик по карте — обработка инструментов VTT
   const onMapClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    // Если активен туман войны, не обрабатываем клик здесь - пусть FogOfWar компонент обрабатывает
+    if (vttTool === 'fog-reveal' || vttTool === 'fog-hide') {
+      return;
+    }
+    
     const rect = e.currentTarget.getBoundingClientRect();
     const x = e.clientX - rect.left; 
     const y = e.clientY - rect.top;
     
     if (!isDM) return;
     
-    // Обработка инструментов VTT
+    // Обработка других инструментов VTT
     switch (vttTool) {
-      case 'fog-reveal':
-        setReveal((prev) => [...prev, { x, y, r: fogRadius }]);
-        setLog((l) => [{ id: uid("log"), ts: now(), text: `ДМ открыл туман в точке (${Math.round(x)}, ${Math.round(y)})` }, ...l]);
-        break;
-      case 'fog-hide':
-        setHideAreas((prev) => [...prev, { x, y, r: fogRadius }]);
-        setLog((l) => [{ id: uid("log"), ts: now(), text: `ДМ скрыл область в точке (${Math.round(x)}, ${Math.round(y)})` }, ...l]);
-        break;
       case 'measure':
         // TODO: Добавить измерения
         setLog((l) => [{ id: uid("log"), ts: now(), text: `Измерение в точке (${Math.round(x)}, ${Math.round(y)})` }, ...l]);
@@ -846,25 +843,39 @@ export default function BattleMapUI() {
                         return acc;
                       }, {} as { [key: string]: boolean })}
                       onRevealCell={(row, col) => {
-                        if (dmTool === "fog-reveal") {
+                        if (dmTool === "fog-reveal" || vttTool === 'fog-reveal') {
+                          // Конвертируем row/col в пиксельные координаты для совместимости с системой reveal
                           const newReveal = {
                             x: col * GRID + GRID/2,
                             y: row * GRID + GRID/2,
                             r: fogRadius
                           };
                           setReveal(prev => [...prev, newReveal]);
-                        } else if (dmTool === "fog-hide") {
+                          setLog((l) => [{ 
+                            id: uid("log"), 
+                            ts: now(), 
+                            text: `ДМ открыл туман в ячейке (${col}, ${row})` 
+                          }, ...l]);
+                        } else if (dmTool === "fog-hide" || vttTool === 'fog-hide') {
                           // Удаляем области рядом с этой клеткой
+                          const targetX = col * GRID + GRID/2;
+                          const targetY = row * GRID + GRID/2;
+                          
                           setReveal(prev => prev.filter(r => {
                             const distance = Math.sqrt(
-                              Math.pow(r.x - (col * GRID + GRID/2), 2) + 
-                              Math.pow(r.y - (row * GRID + GRID/2), 2)
+                              Math.pow(r.x - targetX, 2) + 
+                              Math.pow(r.y - targetY, 2)
                             );
                             return distance > fogRadius;
                           }));
+                          setLog((l) => [{ 
+                            id: uid("log"), 
+                            ts: now(), 
+                            text: `ДМ скрыл туман в ячейке (${col}, ${row})` 
+                          }, ...l]);
                         }
                       }}
-                      active={dmTool === "fog-reveal" || dmTool === "fog-hide"}
+                      active={dmTool === "fog-reveal" || dmTool === "fog-hide" || vttTool === 'fog-reveal' || vttTool === 'fog-hide'}
                       isDM={isDM}
                       imageSize={{ width: MAP_W, height: MAP_H }}
                       tokenPositions={tokens.map(t => ({
