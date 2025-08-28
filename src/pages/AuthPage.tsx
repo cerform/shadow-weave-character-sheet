@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/use-auth';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -9,17 +9,27 @@ import SupabaseAuthForm from '@/components/auth/SupabaseAuthForm';
 
 const AuthPage = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user, isAuthenticated, loading } = useAuth();
+  const isCallback = searchParams.get('callback') === 'true';
 
-  console.log('🔍 AuthPage: рендер с состоянием:', { user: !!user, isAuthenticated, loading });
+  console.log('🔍 AuthPage: рендер с состоянием:', { user: !!user, isAuthenticated, loading, isCallback });
+
+  // Обработка OAuth callback
+  useEffect(() => {
+    if (isCallback && isAuthenticated && user && !loading) {
+      console.log('🚀 AuthPage: OAuth callback успешен - перенаправление на главную');
+      navigate('/', { replace: true });
+    }
+  }, [isCallback, isAuthenticated, user, loading, navigate]);
 
   // Если пользователь уже авторизован, перенаправляем его
   useEffect(() => {
-    if (isAuthenticated && user && !loading) {
+    if (isAuthenticated && user && !loading && !isCallback) {
       console.log('🚀 AuthPage: перенаправление на главную - пользователь авторизован');
       navigate('/', { replace: true });
     }
-  }, [isAuthenticated, user, loading, navigate]);
+  }, [isAuthenticated, user, loading, navigate, isCallback]);
 
   // Показываем загрузку если пользователь авторизован
   if (loading) {

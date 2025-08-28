@@ -166,8 +166,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         const { data: { session }, error } = await supabase.auth.getSession();
         console.log('getInitialSession: сессия:', session, 'ошибка:', error);
         
-        if (mounted && !error) {
-          const mappedUser = mapSupabaseUser(session?.user ?? null);
+        if (mounted && !error && session) {
+          const mappedUser = mapSupabaseUser(session.user);
           console.log('getInitialSession: установка пользователя:', mappedUser);
           setUser(mappedUser);
         }
