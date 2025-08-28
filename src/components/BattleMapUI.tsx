@@ -5,7 +5,7 @@ import { useMonstersStore } from '@/stores/monstersStore';
 import { useUnifiedBattleStore } from '@/stores/unifiedBattleStore';
 import type { Monster } from '@/types/monsters';
 import SimpleTokenCreator from '@/components/battle/SimpleTokenCreator';
-
+import CompactVideoChat from '@/components/battle/ui/CompactVideoChat';
 import { VideoChat } from '@/components/battle/VideoChat';
 import BackgroundMusic from '@/components/battle/BackgroundMusic';
 import MiniMap2D from '@/components/battle/minimap/MiniMap2D';
@@ -212,6 +212,7 @@ export default function BattleMapUI() {
   const [rightOpen, setRightOpen] = useState(false);
   const [videoChatOpen, setVideoChatOpen] = useState(false);
   const [useCompactUI, setUseCompactUI] = useState(true);
+  const [showBackgroundMusic, setShowBackgroundMusic] = useState(false);
 
   // Карта
   const [mapImage, setMapImage] = useState<string | null>(null);
@@ -914,6 +915,18 @@ export default function BattleMapUI() {
             {showAssetLibrary ? 'Скрыть' : 'Показать'} ассеты
           </button>
           <button
+            onClick={() => setShowBackgroundMusic(!showBackgroundMusic)}
+            className="hover:text-foreground"
+          >
+            {showBackgroundMusic ? 'Скрыть' : 'Показать'} музыку
+          </button>
+          <button
+            onClick={() => setVideoChatOpen(!videoChatOpen)}
+            className="hover:text-foreground"
+          >
+            {videoChatOpen ? 'Скрыть' : 'Показать'} видео чат
+          </button>
+          <button
             onClick={() => setUseCompactUI(true)}
             className="hover:text-foreground"
           >
@@ -976,6 +989,27 @@ export default function BattleMapUI() {
             setLog(l => [{ id: uid("log"), ts: now(), text: `Видимость токена изменена` }, ...l]);
           }}
         />
+      )}
+
+      {/* Компактный видео чат */}
+      {videoChatOpen && (
+        <div className="fixed bottom-20 right-4 z-50">
+          <CompactVideoChat
+            isConnected={false}
+            participantsCount={2}
+            onToggleVideo={() => console.log('Toggle video')}
+            onToggleAudio={() => console.log('Toggle audio')}
+            onConnect={() => console.log('Connect video chat')}
+            onDisconnect={() => console.log('Disconnect video chat')}
+          />
+        </div>
+      )}
+
+      {/* Фоновая музыка */}
+      {showBackgroundMusic && (
+        <div className="fixed bottom-4 left-4 z-50">
+          <BackgroundMusic isDM={isDM} />
+        </div>
       )}
     </div>
   );
