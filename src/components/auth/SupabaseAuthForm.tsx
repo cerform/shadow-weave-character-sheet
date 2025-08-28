@@ -187,169 +187,159 @@ const SupabaseAuthForm: React.FC<SupabaseAuthFormProps> = ({ onSuccess }) => {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-[60vh]">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold">D&D Character Creator</CardTitle>
-          <CardDescription>
-            Войдите в систему, чтобы создавать и сохранять персонажей
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Tabs defaultValue="signin" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="signin">Вход</TabsTrigger>
-              <TabsTrigger value="signup">Регистрация</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="signin" className="space-y-4">
-              <form onSubmit={handleSignIn} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="signin-email">Email</Label>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="signin-email"
-                      type="email"
-                      placeholder="your@email.com"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="pl-10"
-                      required
-                    />
-                  </div>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="signin-password">Пароль</Label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="signin-password"
-                      type="password"
-                      placeholder="••••••••"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className="pl-10"
-                      required
-                    />
-                  </div>
-                </div>
-                
-                <Button type="submit" className="w-full" disabled={loading}>
-                  {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Войти
-                </Button>
-              </form>
-            </TabsContent>
-            
-            <TabsContent value="signup" className="space-y-4">
-              <form onSubmit={handleSignUp} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="signup-name">Имя (необязательно)</Label>
-                  <div className="relative">
-                    <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="signup-name"
-                      type="text"
-                      placeholder="Ваше имя"
-                      value={displayName}
-                      onChange={(e) => setDisplayName(e.target.value)}
-                      className="pl-10"
-                    />
-                  </div>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="signup-email">Email</Label>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="signup-email"
-                      type="email"
-                      placeholder="your@email.com"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="pl-10"
-                      required
-                    />
-                  </div>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="signup-password">Пароль</Label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="signup-password"
-                      type="password"
-                      placeholder="••••••••"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className="pl-10"
-                      required
-                      minLength={6}
-                    />
-                  </div>
-                </div>
-                
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="dm-role"
-                    checked={isDM}
-                    onCheckedChange={(checked) => setIsDM(checked as boolean)}
-                  />
-                  <Label htmlFor="dm-role" className="flex items-center gap-2 text-sm">
-                    <Crown className="h-4 w-4 text-amber-500" />
-                    Я хочу быть Мастером Подземелий (DM)
-                  </Label>
-                </div>
-                
-                <Button type="submit" className="w-full" disabled={loading}>
-                  {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Зарегистрироваться
-                </Button>
-              </form>
-            </TabsContent>
-          </Tabs>
-          
-          <div className="relative my-6">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t" />
+    <div className="space-y-4">
+      <Tabs defaultValue="signin" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="signin">Вход</TabsTrigger>
+          <TabsTrigger value="signup">Регистрация</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="signin" className="space-y-4">
+          <form onSubmit={handleSignIn} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="signin-email">Email</Label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="signin-email"
+                  type="email"
+                  placeholder="your@email.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="pl-10"
+                  required
+                />
+              </div>
             </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background px-2 text-muted-foreground">или</span>
+            
+            <div className="space-y-2">
+              <Label htmlFor="signin-password">Пароль</Label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="signin-password"
+                  type="password"
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="pl-10"
+                  required
+                />
+              </div>
             </div>
-          </div>
-          
-          <Button 
-            variant="outline" 
-            className="w-full mb-2" 
-            onClick={handleGoogleSignIn}
-            disabled={loading}
-            type="button"
-          >
-            {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {!loading && <GoogleIcon />}
-            <span className="ml-2">Войти через Google</span>
-          </Button>
-          
-          <Button 
-            variant="outline" 
-            className="w-full" 
-            onClick={handleAnonymousSignIn}
-            disabled={loading}
-          >
-            {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Войти анонимно
-          </Button>
-          
-          <p className="text-xs text-muted-foreground mt-4 text-center">
-            Анонимный вход позволяет сразу начать создание персонажей.<br />
-            Ваши персонажи будут сохранены только до очистки браузера.
-          </p>
-        </CardContent>
-      </Card>
+            
+            <Button type="submit" className="w-full" disabled={loading}>
+              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Войти
+            </Button>
+          </form>
+        </TabsContent>
+        
+        <TabsContent value="signup" className="space-y-4">
+          <form onSubmit={handleSignUp} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="signup-name">Имя (необязательно)</Label>
+              <div className="relative">
+                <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="signup-name"
+                  type="text"
+                  placeholder="Ваше имя"
+                  value={displayName}
+                  onChange={(e) => setDisplayName(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="signup-email">Email</Label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="signup-email"
+                  type="email"
+                  placeholder="your@email.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="pl-10"
+                  required
+                />
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="signup-password">Пароль</Label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="signup-password"
+                  type="password"
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="pl-10"
+                  required
+                  minLength={6}
+                />
+              </div>
+            </div>
+            
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="dm-role"
+                checked={isDM}
+                onCheckedChange={(checked) => setIsDM(checked as boolean)}
+              />
+              <Label htmlFor="dm-role" className="flex items-center gap-2 text-sm">
+                <Crown className="h-4 w-4 text-amber-500" />
+                Я хочу быть Мастером Подземелий (DM)
+              </Label>
+            </div>
+            
+            <Button type="submit" className="w-full" disabled={loading}>
+              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Зарегистрироваться
+            </Button>
+          </form>
+        </TabsContent>
+      </Tabs>
+      
+      <div className="relative my-6">
+        <div className="absolute inset-0 flex items-center">
+          <span className="w-full border-t" />
+        </div>
+        <div className="relative flex justify-center text-xs uppercase">
+          <span className="bg-background px-2 text-muted-foreground">или</span>
+        </div>
+      </div>
+      
+      <Button 
+        variant="outline" 
+        className="w-full mb-2" 
+        onClick={handleGoogleSignIn}
+        disabled={loading}
+        type="button"
+      >
+        {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+        {!loading && <GoogleIcon />}
+        <span className="ml-2">Войти через Google</span>
+      </Button>
+      
+      <Button 
+        variant="outline" 
+        className="w-full" 
+        onClick={handleAnonymousSignIn}
+        disabled={loading}
+      >
+        {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+        Войти анонимно
+      </Button>
+      
+      <p className="text-xs text-muted-foreground mt-4 text-center">
+        Анонимный вход позволяет сразу начать создание персонажей.<br />
+        Ваши персонажи будут сохранены только до очистки браузера.
+      </p>
     </div>
   );
 };
