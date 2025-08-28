@@ -838,10 +838,13 @@ export default function BattleMapUI() {
                     <FogOfWar
                       gridSize={{ rows: Math.floor(MAP_H / GRID), cols: Math.floor(MAP_W / GRID) }}
                       revealedCells={reveal.reduce((acc, r) => {
-                        const key = `${Math.floor(r.x / GRID)}-${Math.floor(r.y / GRID)}`;
+                        const key = `${Math.floor(r.y / GRID)}-${Math.floor(r.x / GRID)}`;
                         acc[key] = true;
                         return acc;
                       }, {} as { [key: string]: boolean })}
+                      active={dmTool === "fog-reveal" || dmTool === "fog-hide" || vttTool === 'fog-reveal' || vttTool === 'fog-hide'}
+                      isDM={isDM}
+                      imageSize={{ width: MAP_W, height: MAP_H }}
                       onRevealCell={(row, col) => {
                         console.log('BattleMapUI onRevealCell called:', { row, col, GRID, fogRadius });
                         
@@ -882,9 +885,6 @@ export default function BattleMapUI() {
                           }, ...l]);
                         }
                       }}
-                      active={dmTool === "fog-reveal" || dmTool === "fog-hide" || vttTool === 'fog-reveal' || vttTool === 'fog-hide'}
-                      isDM={isDM}
-                      imageSize={{ width: MAP_W, height: MAP_H }}
                       tokenPositions={tokens.map(t => ({
                         id: parseInt(t.id.replace(/\D/g, '') || '0'),
                         x: t.position?.x || 0,

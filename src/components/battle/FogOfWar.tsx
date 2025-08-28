@@ -65,11 +65,27 @@ export default function FogOfWar({
 
   // Основной рендеринг
   useEffect(() => {
+    console.log('🌫️ FogOfWar: render effect triggered', {
+      renderer: !!renderer,
+      active,
+      canvasState,
+      revealedCellsCount: Object.keys(revealedCells).length,
+      lightSourcesCount: lightSources.length,
+      tokenPositionsCount: tokenPositions.length
+    });
+
     if (!renderer || !active || canvasState.width === 0 || canvasState.height === 0) {
+      console.log('🚫 FogOfWar: skipping render', {
+        hasRenderer: !!renderer,
+        active,
+        canvasWidth: canvasState.width,
+        canvasHeight: canvasState.height
+      });
       return;
     }
 
     const renderFrame = () => {
+      console.log('🎨 FogOfWar: actually rendering');
       renderer.render(
         canvasState,
         revealedCells,
