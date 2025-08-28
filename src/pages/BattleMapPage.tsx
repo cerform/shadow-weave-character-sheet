@@ -70,7 +70,7 @@ const BattleMapPage: React.FC = () => {
 
       {/* Основная область карты */}
       <div className="flex-1 overflow-hidden">
-        <BattleMapUI />
+        <BattleMapUI sessionId={sessionId} />
       </div>
     </div>
   );

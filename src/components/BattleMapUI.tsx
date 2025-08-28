@@ -223,7 +223,7 @@ function TokenVisual({ token, use3D, modelReady, onModelError }: { token: Token;
 
 // ==================== Основной компонент ====================
 
-export default function BattleMapUI() {
+export default function BattleMapUI({ sessionId }: { sessionId?: string }) {
   // Подключение к реальному бестиарию
   const { getAllMonsters, loadSupabaseMonsters, isLoadingSupabase } = useMonstersStore();
   const { isDM } = useUnifiedBattleStore();
