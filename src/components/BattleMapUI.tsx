@@ -10,7 +10,7 @@ import { VideoChat } from '@/components/battle/VideoChat';
 import BackgroundMusic from '@/components/battle/BackgroundMusic';
 import MiniMap2D from '@/components/battle/minimap/MiniMap2D';
 import CompactBattleUI from '@/components/battle/ui/CompactBattleUI';
-import AssetLibrary from '@/components/battle/vtt/AssetLibrary';
+import AssetUploader from '@/components/battle/ui/AssetUploader';
 import VTTToolbar, { VTTTool } from '@/components/battle/vtt/VTTToolbar';
 import LayerPanel, { Layer } from '@/components/battle/vtt/LayerPanel';
 import ContextMenu from '@/components/battle/vtt/ContextMenu';
@@ -649,44 +649,54 @@ export default function BattleMapUI() {
 
       {/* Main Content */}
       <div className="flex-1 flex">
-        {/* Asset Library */}
+        {/* Левая панель - Видео чат и загрузка ассетов */}
         {showAssetLibrary && (
-          <div className="w-64 border-r border-border">
-            <AssetLibrary
-              onAssetSelect={(asset) => {
-                // Создаем токен из выбранного ассета
-                const newToken: Token = {
-                  id: uid("token"),
-                  name: asset.name,
-                  type: "NPC" as TokenType,
-                  hp: 100,
-                  maxHp: 100,
-                  ac: 12,
-                  speed: 30,
-                  color: 'bg-blue-600',
-                  position: { x: 100, y: 100 },
-                  initiative: 10,
-                  conditions: []
-                };
-                setTokens(prev => [...prev, newToken]);
-                setLog(l => [{ 
-                  id: uid("log"), 
-                  ts: now(), 
-                  text: `✨ Добавлен ассет: ${asset.name}` 
-                }, ...l]);
-              }}
-              onAssetUpload={(file) => {
-                const imageUrl = URL.createObjectURL(file);
-                if (file.name.toLowerCase().includes('map')) {
-                  setMapImage(imageUrl);
+          <div className="w-64 border-r border-border flex flex-col">
+            {/* Видео чат */}
+            <div className="border-b border-border">
+              <VideoChat 
+                isDM={isDM}
+                sessionId="unified-battle-session"
+                playerName={isDM ? "ДМ" : "Игрок"}
+                onClose={() => setVideoChatOpen(false)}
+              />
+            </div>
+            
+            {/* Загрузка ассетов */}
+            <div className="flex-1 overflow-y-auto">
+              <AssetUploader
+                onAssetAdd={(name, url) => {
+                  // Создаем токен из URL
+                  const newToken: Token = {
+                    id: uid("token"),
+                    name: name,
+                    type: "NPC" as TokenType,
+                    hp: 100,
+                    maxHp: 100,
+                    ac: 12,
+                    speed: 30,
+                    color: 'bg-blue-600',
+                    position: { x: 100, y: 100 },
+                    initiative: 10,
+                    conditions: []
+                  };
+                  setTokens(prev => [...prev, newToken]);
                   setLog(l => [{ 
                     id: uid("log"), 
                     ts: now(), 
-                    text: `🗺️ Загружена карта: ${file.name}` 
+                    text: `✨ Добавлен токен: ${name}` 
                   }, ...l]);
-                }
-              }}
-            />
+                }}
+                onMapAdd={(url) => {
+                  setMapImage(url);
+                  setLog(l => [{ 
+                    id: uid("log"), 
+                    ts: now(), 
+                    text: `🗺️ Загружена карта по ссылке` 
+                  }, ...l]);
+                }}
+              />
+            </div>
           </div>
         )}
 
@@ -930,7 +940,7 @@ export default function BattleMapUI() {
             onClick={() => setShowAssetLibrary(!showAssetLibrary)}
             className="hover:text-foreground"
           >
-            {showAssetLibrary ? 'Скрыть' : 'Показать'} ассеты
+            {showAssetLibrary ? 'Скрыть' : 'Показать'} панель
           </button>
           <button
             onClick={() => setShowBackgroundMusic(!showBackgroundMusic)}
