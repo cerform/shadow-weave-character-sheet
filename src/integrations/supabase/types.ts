@@ -1293,14 +1293,6 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: number
       }
-      generate_monster_image: {
-        Args: {
-          monster_category: string
-          monster_name: string
-          prompt_description?: string
-        }
-        Returns: string
-      }
       generate_session_code: {
         Args: Record<PropertyKey, never>
         Returns: string
