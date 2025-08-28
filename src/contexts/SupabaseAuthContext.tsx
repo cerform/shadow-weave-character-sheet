@@ -139,14 +139,23 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     
     // Слушаем изменения аутентификации СНАЧАЛА
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      async (event, session) => {
         console.log('onAuthStateChange: событие:', event, 'сессия:', session);
         if (!mounted) return;
         
-        const mappedUser = mapSupabaseUser(session?.user ?? null);
-        console.log('onAuthStateChange: установка пользователя:', mappedUser);
-        setUser(mappedUser);
-        setLoading(false);
+        if (event === 'SIGNED_OUT' || !session) {
+          console.log('onAuthStateChange: пользователь вышел или сессия отсутствует');
+          setUser(null);
+          setLoading(false);
+          return;
+        }
+        
+        if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') {
+          const mappedUser = mapSupabaseUser(session?.user ?? null);
+          console.log('onAuthStateChange: установка пользователя:', mappedUser);
+          setUser(mappedUser);
+          setLoading(false);
+        }
       }
     );
 
@@ -157,10 +166,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         const { data: { session }, error } = await supabase.auth.getSession();
         console.log('getInitialSession: сессия:', session, 'ошибка:', error);
         
-        if (mounted) {
+        if (mounted && !error) {
           const mappedUser = mapSupabaseUser(session?.user ?? null);
           console.log('getInitialSession: установка пользователя:', mappedUser);
           setUser(mappedUser);
+        }
+        
+        if (mounted) {
           setLoading(false);
         }
       } catch (error) {
