@@ -701,10 +701,10 @@ export default function BattleMapUI({ sessionId }: { sessionId?: string }) {
         activeTool={vttTool}
         onToolChange={(tool) => {
           setVttTool(tool);
-          // Обновляем DM инструменты при изменении VTT инструмента
-          if (tool === 'fog-reveal') setDmTool('fog-reveal');
-          else if (tool === 'fog-hide') setDmTool('fog-hide');
-          else setDmTool('select');
+          // Синхронизируем инструмент тумана
+          if (tool === 'fog-reveal' || tool === 'fog-hide') {
+            console.log('🌫️ Activating fog tool:', tool);
+          }
         }}
         onUndo={() => {
           // Отменить последнее действие тумана
@@ -900,13 +900,13 @@ export default function BattleMapUI({ sessionId }: { sessionId?: string }) {
                         acc[key] = true;
                         return acc;
                       }, {} as { [key: string]: boolean })}
-                      active={dmTool === "fog-reveal" || dmTool === "fog-hide" || vttTool === 'fog-reveal' || vttTool === 'fog-hide'}
+                      active={vttTool === 'fog-reveal' || vttTool === 'fog-hide'}
                       isDM={isDM}
                       imageSize={{ width: currentMapSize.width, height: currentMapSize.height }}
                       onRevealCell={(row, col) => {
                         console.log('BattleMapUI onRevealCell called:', { row, col, GRID, fogRadius });
                         
-                        if (dmTool === "fog-reveal" || vttTool === 'fog-reveal') {
+                        if (vttTool === 'fog-reveal') {
                           // Конвертируем row/col в пиксельные координаты для совместимости с системой reveal
                           const newReveal = {
                             x: col * GRID + GRID/2,
@@ -922,7 +922,7 @@ export default function BattleMapUI({ sessionId }: { sessionId?: string }) {
                             ts: now(), 
                             text: `ДМ открыл туман в ячейке (${col}, ${row}) -> пиксели (${newReveal.x}, ${newReveal.y})` 
                           }, ...l]);
-                        } else if (dmTool === "fog-hide" || vttTool === 'fog-hide') {
+                        } else if (vttTool === 'fog-hide') {
                           // Удаляем области рядом с этой клеткой
                           const targetX = col * GRID + GRID/2;
                           const targetY = row * GRID + GRID/2;
