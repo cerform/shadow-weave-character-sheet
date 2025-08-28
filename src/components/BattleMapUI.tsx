@@ -10,6 +10,9 @@ import { VideoChat } from '@/components/battle/VideoChat';
 import BackgroundMusic from '@/components/battle/BackgroundMusic';
 import MiniMap2D from '@/components/battle/minimap/MiniMap2D';
 import CompactBattleUI from '@/components/battle/ui/CompactBattleUI';
+import AssetLibrary from '@/components/battle/vtt/AssetLibrary';
+import VTTToolbar, { VTTTool } from '@/components/battle/vtt/VTTToolbar';
+import LayerPanel, { Layer } from '@/components/battle/vtt/LayerPanel';
 import { getModelTypeFromTokenName } from '@/utils/tokenModelMapping';
 import { getMonsterAvatar } from '@/data/monsterAvatarSystem';
 
@@ -281,12 +284,24 @@ export default function BattleMapUI() {
   const [reveal, setReveal] = useState<FogCircle[]>([]);
   const [hideAreas, setHideAreas] = useState<FogCircle[]>([]);
 
+  // VTT состояние
+  const [vttTool, setVttTool] = useState<VTTTool>('select');
+  const [showAssetLibrary, setShowAssetLibrary] = useState(true);
+  const [showLayerPanel, setShowLayerPanel] = useState(true);
+  const [layers, setLayers] = useState<Layer[]>([
+    { id: 'background', name: 'Фон', visible: true, locked: false, opacity: 1, type: 'background' },
+    { id: 'map', name: 'Карта', visible: true, locked: false, opacity: 1, type: 'map' },
+    { id: 'tokens', name: 'Токены', visible: true, locked: false, opacity: 1, type: 'tokens' },
+    { id: 'fog', name: 'Туман войны', visible: true, locked: false, opacity: 1, type: 'fog' },
+  ]);
+  const [activeLayerId, setActiveLayerId] = useState('tokens');
+
   // Журнал и кубы
   const [log, setLog] = useState<LogEntry[]>([{ id: uid("log"), ts: now(), text: "Бой начался. Бросьте инициативу!" }]);
   const roll = (sides: number) => { const value = 1 + Math.floor(Math.random()*sides); setLog((l)=>[{ id: uid("log"), ts: now(), text: `🎲 d${sides} → ${value}` }, ...l]); };
   const nextTurn = () => setTurnIndex((i) => (initOrder.length ? (i + 1) % initOrder.length : 0));
 
-  // Инструменты Мастера - убрали add-npc
+  // Инструменты Мастера - обновляем для совместимости с VTT
   type DMTool = "select" | "fog-reveal" | "fog-hide" | "measure";
   const [dmTool, setDmTool] = useState<DMTool>("select");
 
@@ -463,331 +478,293 @@ export default function BattleMapUI() {
   }
 
   return (
-    <div className="h-screen w-screen bg-neutral-950 text-neutral-100 overflow-hidden">
-      {/* Верхняя панель */}
-      <div className="h-12 px-4 flex items-center justify-between border-b border-neutral-800 bg-neutral-900/70 backdrop-blur">
-        <div className="flex items-center gap-3">
-          <div className="text-yellow-400 font-bold">Shadow Weave • Боевая карта</div>
-          {activeToken && <StatBadge label="Активный" value={activeToken.name} />}
-          {isLoadingSupabase && <div className="text-xs opacity-70">Загрузка бестиария...</div>}
-        </div>
-        <div className="flex items-center gap-2 text-xs">
-          <div className={`px-3 py-1 rounded-md border text-xs ${isDM ? "border-emerald-400 text-emerald-400" : "border-neutral-700 text-neutral-300"}`}>
-            {isDM ? "Режим ДМ" : "Режим игрока"}
+    <div className="h-screen w-screen bg-background text-foreground overflow-hidden flex flex-col">
+      {/* VTT Toolbar */}
+      <VTTToolbar
+        activeTool={vttTool}
+        onToolChange={setVttTool}
+        onUndo={() => {}}
+        onRedo={() => {}}
+        onRotateLeft={() => {}}
+        onRotateRight={() => {}}
+        onDelete={() => {
+          if (selectedId) {
+            setTokens(prev => prev.filter(t => t.id !== selectedId));
+            setSelectedId(null);
+          }
+        }}
+        onCopy={() => {}}
+        onSettings={() => setShowLayerPanel(!showLayerPanel)}
+        canUndo={false}
+        canRedo={false}
+        hasSelection={!!selectedId}
+      />
+
+      {/* Main Content */}
+      <div className="flex-1 flex">
+        {/* Asset Library */}
+        {showAssetLibrary && (
+          <div className="w-64 border-r border-border">
+            <AssetLibrary
+              onAssetSelect={(asset) => {
+                // Создаем токен из выбранного ассета
+                const newToken: Token = {
+                  id: uid("token"),
+                  name: asset.name,
+                  type: "NPC" as TokenType,
+                  hp: 100,
+                  maxHp: 100,
+                  ac: 12,
+                  speed: 30,
+                  color: 'bg-blue-600',
+                  position: { x: 100, y: 100 },
+                  initiative: 10,
+                  conditions: []
+                };
+                setTokens(prev => [...prev, newToken]);
+                setLog(l => [{ 
+                  id: uid("log"), 
+                  ts: now(), 
+                  text: `✨ Добавлен ассет: ${asset.name}` 
+                }, ...l]);
+              }}
+              onAssetUpload={(file) => {
+                const imageUrl = URL.createObjectURL(file);
+                if (file.name.toLowerCase().includes('map')) {
+                  setMapImage(imageUrl);
+                  setLog(l => [{ 
+                    id: uid("log"), 
+                    ts: now(), 
+                    text: `🗺️ Загружена карта: ${file.name}` 
+                  }, ...l]);
+                }
+              }}
+            />
           </div>
-          <label className="flex items-center gap-1"><input type="checkbox" checked={use3D} onChange={(e)=>setUse3D(e.target.checked)} /> 3D модели</label>
-          <span className="px-2 py-0.5 rounded-md border border-neutral-700">3D: {modelStatus === "loading" && "загрузка…"}{modelStatus === "ready" && "готово"}{modelStatus === "error" && (modelErr || "ошибка")}{modelStatus === "idle" && "выкл."}</span>
-          <StatBadge label="Токенов" value={tokens.length} />
-          <input type="file" accept="image/*" onChange={(e)=>{ const f=e.target.files?.[0]; if (f) setMapImage(URL.createObjectURL(f)); }} />
-          <button className="px-3 py-1 rounded-md border border-neutral-700 text-xs" onClick={() => setLeftOpen((v) => !v)}>
-            {leftOpen ? "Скрыть инструменты" : "Показать инструменты"}
-          </button>
-          <button className="px-3 py-1 rounded-md border border-neutral-700 text-xs" onClick={() => setRightOpen((v) => !v)}>
-            {rightOpen ? "Скрыть журнал" : "Показать журнал"}
-          </button>
-        </div>
-      </div>
+        )}
 
-      <div className="h-[calc(100vh-3rem)] grid" style={{ gridTemplateColumns: `${leftOpen && isDM ? "320px" : "0px"} 1fr ${rightOpen ? "360px" : "0px"}` }}>
-        {/* Левая панель */}
-        <div className={`border-r border-neutral-800 bg-neutral-900/60 overflow-y-auto ${leftOpen && isDM ? "opacity-100" : "opacity-0 pointer-events-none"}`}>
-          <div className="p-3 space-y-4">
-            <Title>Инструменты ДМ</Title>
-            <div className="grid grid-cols-2 gap-2">
-              {(["select","fog-reveal","fog-hide","measure"] as const).map((tool)=>(
-                <button key={tool} onClick={()=>setDmTool(tool)} className={`px-2 py-2 rounded-md border text-sm ${dmTool===tool?"border-emerald-400 text-emerald-400":"border-neutral-700 text-neutral-300"}`}>
-                  {tool === "select" && "Выбор"}
-                  {tool === "fog-reveal" && "Открыть туман"}
-                  {tool === "fog-hide" && "Скрыть туман"}
-                  {tool === "measure" && "Измерить"}
-                </button>
-              ))}
-            </div>
-
-            <div className="space-y-2">
-              <Title>Туман войны</Title>
-              <div className="flex items-center gap-2"><input id="fog" type="checkbox" checked={fogEnabled} onChange={(e)=>setFogEnabled(e.target.checked)} /><label htmlFor="fog" className="text-sm">Включить</label></div>
-              <div className="flex items-center gap-2 text-sm"><span className="opacity-70 w-24">Прозрачность</span><input type="range" min={0.2} max={0.95} step={0.05} value={fogOpacity} onChange={(e)=>setFogOpacity(parseFloat(e.target.value))} className="w-full" /><span className="w-12 text-right">{Math.round(fogOpacity*100)}%</span></div>
-              <div className="flex items-center gap-2 text-sm"><span className="opacity-70 w-24">Радиус</span><input type="range" min={60} max={260} step={10} value={fogRadius} onChange={(e)=>setFogRadius(parseInt(e.target.value))} className="w-full" /><span className="w-12 text-right">{fogRadius}</span></div>
-              <div className="flex items-center gap-2"><input id="autoAlly" type="checkbox" checked={autoRevealAllies} onChange={(e)=>setAutoRevealAllies(e.target.checked)} /><label htmlFor="autoAlly" className="text-sm">Автосвет вокруг союзников</label></div>
-              <div className="flex gap-2">
-                <button className="px-2 py-1 rounded-md border border-neutral-700 text-sm" onClick={()=>{setReveal([]); setHideAreas([]); setLog((l)=>[{ id: uid("log"), ts: now(), text: "ДМ очистил весь туман" }, ...l]);}}>Очистить</button>
-                <button className="px-2 py-1 rounded-md border border-neutral-700 text-sm" onClick={()=>{setReveal(r=>r.slice(0,-1)); setLog((l)=>[{ id: uid("log"), ts: now(), text: "ДМ отменил последнее открытие" }, ...l]);}}>Отменить открытие</button>
-                <button className="px-2 py-1 rounded-md border border-neutral-700 text-sm" onClick={()=>{setHideAreas(h=>h.slice(0,-1)); setLog((l)=>[{ id: uid("log"), ts: now(), text: "ДМ отменил последнее скрытие" }, ...l]);}}>Отменить скрытие</button>
-              </div>
-              <div className="text-sm opacity-70 text-center py-4">
-                Выберите инструмент и кликните на карту
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Title>Система создания токенов</Title>
-              
-              {/* Настройки 3D */}
-              <div className="space-y-2 mb-2">
-                <div className="flex items-center gap-2">
-                  <input id="familyMap" type="checkbox" checked={useFamilyMap} onChange={(e)=>setUseFamilyMap(e.target.checked)} />
-                  <label htmlFor="familyMap" className="text-sm">Родовой 3D-маппинг</label>
-                </div>
-              </div>
-
-              {/* Убрали бестиарий - он использовался только для спавна */}
-
-              {/* Диагностика - убрали диагностику спавна */}
-              <div className="space-y-2">
-                <Title>Диагностика</Title>
-                <ul className="text-xs list-disc ml-5 space-y-1">
-                  <li>model-viewer → {modelReady?"✅ Готов":modelStatus==="error"?"❌ Ошибка":"⏳ Загрузка"}</li>
-                  <li>валидность 3D URL → {enrichedBestiary.filter(b=>b.modelUrl).every(b=>isValidModelUrl(b.modelUrl))?"✅ ОК":"⚠️ Есть некорректные"}</li>
-                  <li>реестр моделей → {modelRegistry.length} правил</li>
-                  <li>монстров с 3D → {enrichedBestiary.filter(m=>isValidModelUrl(m.modelUrl)).length}</li>
-                </ul>
-                <div className="flex gap-2">
-                  <button className="px-2 py-1 rounded-md border border-neutral-700 text-xs" onClick={()=>{ const sample = enrichedBestiary.find(m=>m.name.toLowerCase().includes('dragon')); if (sample) { const mk = pickModelFor(sample.name, modelRegistry, useFamilyMap ? FAMILY_MODEL_MAP : undefined); setLog((l)=>[{ id: uid("log"), ts: now(), text: `Тест автопривязки для "${sample.name}": ${mk.url?"нашёл 3D":"нет 3D"} ${useFamilyMap?"(с родовым)":"(без родового)"}` }, ...l]); } }}>Тест автопривязки</button>
-                </div>
-                
-                {/* Статистика CR */}
-                <div className="space-y-1">
-                  <div className="text-xs font-semibold text-yellow-400">СТАТИСТИКА</div>
-                  <div className="text-xs opacity-70">
-                    3D моделей: {enrichedBestiary.filter(m => isValidModelUrl(m.modelUrl)).length}/{enrichedBestiary.length}
-                  </div>
-                  <div className="text-xs opacity-70">
-                    Токенов на карте: {tokens.length}
-                  </div>
-                </div>
-              </div>
-
-              {/* Создание токенов и генерация изображений */}
-              <div className="mt-4 space-y-4">
-                <div>
-                  <Title>Создание токенов</Title>
-                  <SimpleTokenCreator 
-                    onCreateToken={(tokenData) => {
-                      const tok: Token = {
-                        id: uid("token"),
-                        name: tokenData.name,
-                        type: tokenData.type as TokenType,
-                        hp: tokenData.hp,
-                        maxHp: tokenData.maxHp,
-                        ac: tokenData.ac,
-                        speed: tokenData.speed,
-                        color: tokenData.type === 'PC' ? 'bg-emerald-600' : 'bg-red-600',
-                        conditions: [],
-                        position: { x: MAP_W/2 - GRID/2, y: MAP_H/2 - GRID/2 },
-                        initiative: Math.floor(Math.random()*20)+1,
-                        modelUrl: undefined
-                      };
-                      setTokens((prev) => [...prev, tok]);
-                      setLog((l) => [{ id: uid("log"), ts: now(), text: `Создан токен: ${tokenData.name}` }, ...l]);
-                    }}
-                  />
-                </div>
-
-
-                <div>
-                  <Title>Видеочат</Title>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => setVideoChatOpen(!videoChatOpen)}
-                      className={`flex-1 px-3 py-2 text-sm rounded-md border transition-colors ${
-                        videoChatOpen 
-                          ? 'border-emerald-400 text-emerald-400 bg-emerald-900/20' 
-                          : 'border-neutral-700 hover:border-neutral-600'
-                      }`}
-                    >
-                      {videoChatOpen ? 'Скрыть' : 'Показать'} видеочат
-                    </button>
-                  </div>
-                </div>
-
-                <div>
-                  <BackgroundMusic isDM={isDM} />
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Центр: Карта и токены */}
-        <div 
-          className={`relative bg-neutral-900 transition-all duration-200 ${isDragOver ? 'bg-primary/10 ring-2 ring-primary' : ''}`} 
-          onDrop={onMapDrop} 
-          onDragOver={onMapDragOver}
-          onDragLeave={onMapDragLeave}
-        >
-          <div className="absolute inset-0 overflow-hidden">
-            <div className="w-full h-full flex items-center justify-center p-4">
-              <div 
-                className={`relative rounded-xl shadow-xl bg-neutral-800 overflow-hidden transition-all duration-200 ${isDragOver ? 'ring-2 ring-primary bg-primary/5' : ''}`} 
-                style={{ width: MAP_W, height: MAP_H }} 
-                onClick={onMapClick} 
-                ref={mapRef}
-              >
-                {/* Фон карты */}
-                {mapImage ? (
-                  <img src={mapImage} alt="Карта" className="absolute inset-0 w-full h-full object-cover" />
-                ) : (
-                  <div className={`absolute inset-0 flex flex-col items-center justify-center text-neutral-500 text-sm transition-all duration-200 ${isDragOver ? 'text-primary' : ''}`}>
-                    <div className="text-center">
-                      <div className="text-lg mb-2">📍</div>
-                      <div className="font-medium">Загрузите карту</div>
-                      <div className="text-xs mt-1">Перетащите изображение сюда</div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Сетка */}
-                <svg className="absolute inset-0 pointer-events-none" width={MAP_W} height={MAP_H}>
-                  {Array.from({ length: Math.floor(MAP_W / GRID) + 1 }).map((_, i) => (<line key={`v${i}`} x1={i * GRID} y1={0} x2={i * GRID} y2={MAP_H} stroke="rgba(255,255,255,0.08)" />))}
-                  {Array.from({ length: Math.floor(MAP_H / GRID) + 1 }).map((_, i) => (<line key={`h${i}`} x1={0} y1={i * GRID} x2={MAP_W} y2={i * GRID} stroke="rgba(255,255,255,0.08)" />))}
-                </svg>
-
-                {/* Токены */}
-                {tokens.filter(t => t && t.position).map((t) => (
-                  <div key={t.id} style={{ left: t.position.x, top: t.position.y, width: GRID, height: GRID }} className={`absolute rounded-lg border ${selectedId === t.id ? "border-yellow-400" : "border-neutral-700"}`} onMouseDown={(e)=>{ if (!mapRef.current) return; const rect = mapRef.current.getBoundingClientRect(); dragOffset.current = { x: e.clientX - rect.left - t.position.x, y: e.clientY - rect.top - t.position.y }; setDragId(t.id); setSelectedId(t.id); }} title={`${t.name} (${t.hp}/${t.maxHp})`}>
-                    <TokenVisual token={t} use3D={use3D} modelReady={modelReady && !brokenModels[t.id]} onModelError={handleModelError} />
-                    <div className="absolute -bottom-1 left-0 right-0 h-2 bg-neutral-900/70 rounded-b-lg overflow-hidden"><div className="h-full bg-emerald-500" style={{ width: `${(t.hp / t.maxHp) * 100}%` }} /></div>
-                  </div>
-                ))}
-
-                {/* Туман войны */}
-                {fogEnabled && (
-                  <svg className="absolute inset-0 pointer-events-none" width={MAP_W} height={MAP_H}>
-                    <defs>
-                      <mask id="fogMask">
-                        <rect width="100%" height="100%" fill="white" />
-                        {/* Открытые области (черные в маске = прозрачные) */}
-                        {[...reveal, ...(autoRevealAllies?tokens.filter(t=>t.type==="PC" && t.position).map(t=>({x:t.position.x+GRID/2,y:t.position.y+GRID/2,r:fogRadius})):[])].map((c,i)=>(<circle key={`reveal-${i}`} cx={c.x} cy={c.y} r={c.r} fill="black" />))}
-                        {/* Скрытые области (белые в маске = туман поверх) */}
-                        {hideAreas.map((c,i)=>(<circle key={`hide-${i}`} cx={c.x} cy={c.y} r={c.r} fill="white" />))}
-                      </mask>
-                    </defs>
-                    <rect width="100%" height="100%" fill={`rgba(0,0,0,${fogOpacity})`} mask="url(#fogMask)" />
-                    {/* Дополнительные скрытые области поверх */}
-                    {hideAreas.map((c,i)=>(<circle key={`hide-overlay-${i}`} cx={c.x} cy={c.y} r={c.r} fill={`rgba(0,0,0,${fogOpacity * 1.2})`} />))}
-                  </svg>
-                )}
-
-                {/* Панель выбранного токена */}
-                {selectedId && (() => { const t = tokens.find((x)=>x.id===selectedId); if (!t || !t.position) return null; const left = Math.min(MAP_W - 260, Math.max(0, t.position.x + GRID + 8)); const top = Math.min(MAP_H - 170, Math.max(0, t.position.y - 8)); return (
-                  <div className="absolute z-10" style={{ left, top }}>
-                    <div className="w-64 rounded-xl border border-neutral-700 bg-neutral-900/95 backdrop-blur p-3 space-y-2 shadow-xl">
-                      <div className="flex items-center justify-between"><div className="font-semibold">{t.name}</div><button className="text-neutral-400 hover:text-white" onClick={()=>setSelectedId(null)}>✕</button></div>
-                      <div className="flex items-center gap-2"><StatBadge label="HP" value={`${t.hp}/${t.maxHp}`} /><StatBadge label="AC" value={t.ac} /><StatBadge label="Init" value={t.initiative} /></div>
-                      <div className="flex items-center gap-2 text-sm">
-                        <button className="px-2 py-1 rounded-md border border-neutral-700 hover:border-emerald-400 hover:text-emerald-400" onClick={()=>setTokens(prev=>prev.map(x=>x.id===t.id?{...x, hp: Math.min(x.maxHp, x.hp + Math.ceil(x.maxHp*0.25))}:x))}>Лечить 25%</button>
-                        <button className="px-2 py-1 rounded-md border border-neutral-700 hover:border-rose-400 hover:text-rose-400" onClick={()=>setTokens(prev=>prev.map(x=>x.id===t.id?{...x, hp: Math.max(0, x.hp - Math.ceil(x.maxHp*0.25))}:x))}>Урон 25%</button>
-                        <button className="ml-auto px-2 py-1 rounded-md border border-neutral-700 hover:border-rose-400 hover:text-rose-400" onClick={()=>{setTokens(prev=>prev.filter(x=>x.id!==t.id)); setSelectedId(null);}}>Удалить</button>
+        {/* Центральная область карты */}
+        <div className="flex-1 flex flex-col">
+          {/* Карта */}
+          <div 
+            className={`flex-1 relative bg-background transition-all duration-200 ${isDragOver ? 'bg-primary/10 ring-2 ring-primary' : ''}`} 
+            onDrop={onMapDrop} 
+            onDragOver={onMapDragOver}
+            onDragLeave={onMapDragLeave}
+          >
+            <div className="absolute inset-0 overflow-hidden">
+              <div className="w-full h-full flex items-center justify-center p-4">
+                <div 
+                  className={`relative rounded-xl shadow-xl bg-secondary overflow-hidden transition-all duration-200 ${isDragOver ? 'ring-2 ring-primary bg-primary/5' : ''}`} 
+                  style={{ width: MAP_W, height: MAP_H }} 
+                  onClick={onMapClick} 
+                  ref={mapRef}
+                >
+                  {/* Фон карты */}
+                  {mapImage ? (
+                    <img src={mapImage} alt="Карта" className="absolute inset-0 w-full h-full object-cover" />
+                  ) : (
+                    <div className={`absolute inset-0 flex flex-col items-center justify-center text-muted-foreground text-sm transition-all duration-200 ${isDragOver ? 'text-primary' : ''}`}>
+                      <div className="text-center">
+                        <div className="text-lg mb-2">📍</div>
+                        <div className="font-medium">Загрузите карту</div>
+                        <div className="text-xs mt-1">Перетащите изображение сюда</div>
                       </div>
                     </div>
-                  </div>
-                ); })()}
-              </div>
-            </div>
-          </div>
+                  )}
 
-          {/* Нижняя панель действий */}
-          <div className="absolute bottom-0 left-0 right-0 p-3">
-            <div className="mx-auto max-w-5xl rounded-2xl border border-neutral-800 bg-neutral-900/80 backdrop-blur px-3 py-2 shadow-2xl">
-              <div className="flex items-center gap-2 justify-center flex-wrap text-sm">
-                <button className="px-3 py-2 rounded-md border border-neutral-700 hover:border-emerald-400 hover:text-emerald-400">Движение</button>
-                <button className="px-3 py-2 rounded-md border border-neutral-700 hover:border-yellow-400 hover:text-yellow-400">Атака</button>
-                <button className="px-3 py-2 rounded-md border border-neutral-700 hover:border-yellow-400 hover:text-yellow-400">Заклинание</button>
-                <button className="px-3 py-2 rounded-md border border-neutral-700 hover:border-yellow-400 hover:text-yellow-400">Предмет</button>
-                <button className="px-3 py-2 rounded-md border border-neutral-700 hover:border-emerald-400 hover:text-emerald-400" onClick={nextTurn}>Закончить ход</button>
-                <div className="ml-2 flex items-center gap-1 text-xs"><span className="opacity-70">Кости:</span>{[20,12,10,8,6,4].map((s)=>(<button key={s} className="px-2 py-1 rounded-md border border-neutral-700 hover:border-neutral-400" onClick={()=>roll(s)}>d{s}</button>))}</div>
-                <button
-                  onClick={() => setUseCompactUI(true)}
-                  className="ml-4 px-3 py-2 rounded-md border border-neutral-700 hover:border-blue-400 hover:text-blue-400 text-xs"
-                >
-                  Компактный режим
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
+                  {/* Сетка */}
+                  <svg className="absolute inset-0 pointer-events-none" width={MAP_W} height={MAP_H}>
+                    {Array.from({ length: Math.floor(MAP_W / GRID) + 1 }).map((_, i) => (
+                      <line key={`v${i}`} x1={i * GRID} y1={0} x2={i * GRID} y2={MAP_H} stroke="hsl(var(--border))" strokeOpacity={0.3} />
+                    ))}
+                    {Array.from({ length: Math.floor(MAP_H / GRID) + 1 }).map((_, i) => (
+                      <line key={`h${i}`} x1={0} y1={i * GRID} x2={MAP_W} y2={i * GRID} stroke="hsl(var(--border))" strokeOpacity={0.3} />
+                    ))}
+                  </svg>
 
-        {/* Правая панель: Инициатива + Журнал */}
-        <div className={`border-l border-neutral-800 bg-neutral-900/60 overflow-y-auto ${rightOpen ? "opacity-100" : "opacity-0 pointer-events-none"}`}>
-          <div className="p-3 space-y-4">
-            <Title>Инициатива</Title>
-            <div className="space-y-2">
-              {initOrder.map((t, idx) => (
-                <div key={t.id} className={`flex items-center justify-between rounded-lg border px-2 py-2 ${idx === (turnIndex % (initOrder.length||1)) ? "border-emerald-400 bg-emerald-900/20" : "border-neutral-700 bg-neutral-900/60"}`}>
-                  <div className="flex items-center gap-2"><div className={`w-2 h-2 rounded-full ${t.type === "PC" ? "bg-emerald-400" : "bg-rose-400"}`} /><div className="font-medium">{t.name}</div></div>
-                  <div className="flex items-center gap-2 text-xs"><StatBadge label="Init" value={t.initiative} /><StatBadge label="HP" value={`${t.hp}/${t.maxHp}`} /></div>
+                  {/* Токены */}
+                  {tokens.filter(t => t && t.position).map((t) => (
+                    <div 
+                      key={t.id} 
+                      style={{ left: t.position.x, top: t.position.y, width: GRID, height: GRID }} 
+                      className={`absolute rounded-lg border-2 ${selectedId === t.id ? "border-primary" : "border-border"} cursor-move`}
+                      onMouseDown={(e) => {
+                        if (!mapRef.current) return;
+                        const rect = mapRef.current.getBoundingClientRect();
+                        dragOffset.current = { 
+                          x: e.clientX - rect.left - t.position.x, 
+                          y: e.clientY - rect.top - t.position.y 
+                        };
+                        setDragId(t.id);
+                        setSelectedId(t.id);
+                      }}
+                      title={`${t.name} (${t.hp}/${t.maxHp})`}
+                    >
+                      <TokenVisual token={t} use3D={use3D} modelReady={modelReady && !brokenModels[t.id]} onModelError={handleModelError} />
+                      <div className="absolute -bottom-1 left-0 right-0 h-2 bg-background/70 rounded-b-lg overflow-hidden">
+                        <div className="h-full bg-green-500" style={{ width: `${(t.hp / t.maxHp) * 100}%` }} />
+                      </div>
+                    </div>
+                  ))}
+
+                  {/* Туман войны */}
+                  {fogEnabled && (
+                    <svg className="absolute inset-0 pointer-events-none" width={MAP_W} height={MAP_H}>
+                      <defs>
+                        <mask id="fogMask">
+                          <rect width="100%" height="100%" fill="white" />
+                          {/* Открытые области */}
+                          {[...reveal, ...(autoRevealAllies ? tokens.filter(t => t.type === "PC" && t.position).map(t => ({
+                            x: t.position.x + GRID/2, 
+                            y: t.position.y + GRID/2, 
+                            r: fogRadius
+                          })) : [])].map((c, i) => (
+                            <circle key={`reveal-${i}`} cx={c.x} cy={c.y} r={c.r} fill="black" />
+                          ))}
+                          {/* Скрытые области */}
+                          {hideAreas.map((c, i) => (
+                            <circle key={`hide-${i}`} cx={c.x} cy={c.y} r={c.r} fill="white" />
+                          ))}
+                        </mask>
+                      </defs>
+                      <rect width="100%" height="100%" fill={`rgba(0,0,0,${fogOpacity})`} mask="url(#fogMask)" />
+                    </svg>
+                  )}
+
+                  {/* Панель выбранного токена */}
+                  {selectedId && (() => {
+                    const t = tokens.find(x => x.id === selectedId);
+                    if (!t || !t.position) return null;
+                    const left = Math.min(MAP_W - 260, Math.max(0, t.position.x + GRID + 8));
+                    const top = Math.min(MAP_H - 170, Math.max(0, t.position.y - 8));
+                    return (
+                      <div className="absolute z-10" style={{ left, top }}>
+                        <div className="w-64 rounded-xl border bg-card p-3 space-y-2 shadow-xl">
+                          <div className="flex items-center justify-between">
+                            <div className="font-semibold">{t.name}</div>
+                            <button 
+                              className="text-muted-foreground hover:text-foreground" 
+                              onClick={() => setSelectedId(null)}
+                            >
+                              ✕
+                            </button>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <div className="px-2 py-1 rounded bg-secondary text-xs">
+                              HP: {t.hp}/{t.maxHp}
+                            </div>
+                            <div className="px-2 py-1 rounded bg-secondary text-xs">
+                              AC: {t.ac}
+                            </div>
+                            <div className="px-2 py-1 rounded bg-secondary text-xs">
+                              Init: {t.initiative}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2 text-sm">
+                            <button 
+                              className="px-2 py-1 rounded border hover:bg-secondary"
+                              onClick={() => setTokens(prev => prev.map(x => x.id === t.id ? {
+                                ...x, 
+                                hp: Math.min(x.maxHp, x.hp + Math.ceil(x.maxHp * 0.25))
+                              } : x))}
+                            >
+                              Лечить 25%
+                            </button>
+                            <button 
+                              className="px-2 py-1 rounded border hover:bg-secondary"
+                              onClick={() => setTokens(prev => prev.map(x => x.id === t.id ? {
+                                ...x, 
+                                hp: Math.max(0, x.hp - Math.ceil(x.maxHp * 0.25))
+                              } : x))}
+                            >
+                              Урон 25%
+                            </button>
+                            <button 
+                              className="ml-auto px-2 py-1 rounded border border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                              onClick={() => {
+                                setTokens(prev => prev.filter(x => x.id !== t.id));
+                                setSelectedId(null);
+                              }}
+                            >
+                              Удалить
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })()}
                 </div>
-              ))}
+              </div>
             </div>
+          </div>
+        </div>
 
-            <Title>Журнал боя</Title>
-            <div className="space-y-2">
-              {log.map((e) => (
-                <div key={e.id} className="rounded-lg border border-neutral-700 bg-neutral-900/70 p-2 text-sm"><div className="text-xs opacity-60">{e.ts}</div><div>{e.text}</div></div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-      
-      {/* Видеочат */}
-      {videoChatOpen && (
-        <div className="absolute top-4 right-4 w-80 h-96 z-20">
-          <VideoChat
-            sessionId="test-session"
-            playerName="Test Player"
-            isDM={isDM}
-            onClose={() => setVideoChatOpen(false)}
+        {/* Layer Panel */}
+        {showLayerPanel && (
+          <LayerPanel
+            layers={layers}
+            activeLayerId={activeLayerId}
+            onLayerSelect={setActiveLayerId}
+            onLayerToggleVisible={(layerId) => {
+              setLayers(prev => prev.map(layer => 
+                layer.id === layerId ? { ...layer, visible: !layer.visible } : layer
+              ));
+            }}
+            onLayerToggleLock={(layerId) => {
+              setLayers(prev => prev.map(layer => 
+                layer.id === layerId ? { ...layer, locked: !layer.locked } : layer
+              ));
+            }}
+            onLayerOpacityChange={(layerId, opacity) => {
+              setLayers(prev => prev.map(layer => 
+                layer.id === layerId ? { ...layer, opacity } : layer
+              ));
+            }}
+            onLayerAdd={(type) => {
+              const newLayer: Layer = {
+                id: uid('layer'),
+                name: `Новый ${type}`,
+                visible: true,
+                locked: false,
+                opacity: 1,
+                type
+              };
+              setLayers(prev => [...prev, newLayer]);
+            }}
+            onLayerDelete={(layerId) => {
+              setLayers(prev => prev.filter(layer => layer.id !== layerId));
+            }}
+            onLayerRename={(layerId, name) => {
+              setLayers(prev => prev.map(layer => 
+                layer.id === layerId ? { ...layer, name } : layer
+              ));
+            }}
           />
+        )}
+      </div>
+
+      {/* Статус бар */}
+      <div className="h-8 bg-secondary border-t border-border px-4 flex items-center justify-between text-xs text-muted-foreground">
+        <div className="flex items-center gap-4">
+          <span>Инструмент: {vttTool}</span>
+          <span>Токенов: {tokens.length}</span>
+          {activeToken && <span>Активный: {activeToken.name}</span>}
         </div>
-      )}
-      
-      {/* Мини-карта */}
-      <MiniMap2D
-        tokens={tokens}
-        selectedId={selectedId}
-        activeToken={activeToken}
-        mapImage={mapImage}
-        isDM={isDM}
-      />
-      
-      {/* Floating виджеты в правом нижнем углу */}
-      <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-2">
-        {/* Кнопка для бросков кубиков */}
-        <div className="flex gap-2">
+        <div className="flex items-center gap-4">
           <button
-            onClick={() => roll(20)}
-            className="bg-primary/90 hover:bg-primary text-primary-foreground rounded-lg p-3 backdrop-blur-sm shadow-lg transition-all duration-200 hover:scale-105"
-            title="Бросок d20"
+            onClick={() => setShowAssetLibrary(!showAssetLibrary)}
+            className="hover:text-foreground"
           >
-            <div className="flex items-center gap-1">
-              <span className="text-sm font-bold">d20</span>
-            </div>
+            {showAssetLibrary ? 'Скрыть' : 'Показать'} ассеты
           </button>
           <button
-            onClick={() => roll(6)}
-            className="bg-primary/90 hover:bg-primary text-primary-foreground rounded-lg p-3 backdrop-blur-sm shadow-lg transition-all duration-200 hover:scale-105"
-            title="Бросок d6"
+            onClick={() => setUseCompactUI(true)}
+            className="hover:text-foreground"
           >
-            <div className="flex items-center gap-1">
-              <span className="text-sm font-bold">d6</span>
-            </div>
+            Компактный режим
           </button>
         </div>
-        
-        {/* Гамбургер меню */}
-        <button
-          onClick={() => setUseCompactUI(!useCompactUI)}
-          className="bg-secondary/90 hover:bg-secondary text-secondary-foreground rounded-lg p-3 backdrop-blur-sm shadow-lg transition-all duration-200 hover:scale-105"
-          title={useCompactUI ? "Полный интерфейс" : "Компактный интерфейс"}
-        >
-          <div className="flex flex-col gap-1">
-            <div className="w-4 h-0.5 bg-current"></div>
-            <div className="w-4 h-0.5 bg-current"></div>
-            <div className="w-4 h-0.5 bg-current"></div>
-          </div>
-        </button>
       </div>
     </div>
   );
