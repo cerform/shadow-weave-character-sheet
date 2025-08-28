@@ -238,8 +238,52 @@ export default function BattleMapUI({ sessionId }: { sessionId?: string }) {
 
   // Карта
   const [mapImage, setMapImage] = useState<string | null>(null);
+  const [mapDimensions, setMapDimensions] = useState<{ width: number; height: number } | null>(null);
+  const [autoFitMap, setAutoFitMap] = useState(true);
   const mapRef = useRef<HTMLDivElement | null>(null);
   const [isDragOver, setIsDragOver] = useState(false);
+  // Вычисление оптимальных размеров карты
+  const calculateMapDimensions = () => {
+    if (!autoFitMap || !mapDimensions) {
+      return { width: MAP_W, height: MAP_H };
+    }
+
+    // Получаем доступное пространство (учитываем панели и отступы)
+    const availableWidth = window.innerWidth - (showAssetLibrary ? 256 : 0) - 32; // 256px для панели + отступы
+    const availableHeight = window.innerHeight - 120; // отступ для тулбара
+
+    // Вычисляем соотношение сторон изображения
+    const aspectRatio = mapDimensions.width / mapDimensions.height;
+
+    // Подгоняем размеры с сохранением пропорций
+    let targetWidth = Math.min(availableWidth, mapDimensions.width);
+    let targetHeight = targetWidth / aspectRatio;
+
+    // Проверяем, не превышает ли высота доступное пространство
+    if (targetHeight > availableHeight) {
+      targetHeight = availableHeight;
+      targetWidth = targetHeight * aspectRatio;
+    }
+
+    // Минимальные размеры
+    const minWidth = 800;
+    const minHeight = 600;
+
+    return {
+      width: Math.max(targetWidth, minWidth),
+      height: Math.max(targetHeight, minHeight)
+    };
+  };
+
+  const currentMapSize = calculateMapDimensions();
+
+  // Обработчик загрузки изображения карты
+  const handleMapImageLoad = (img: HTMLImageElement) => {
+    setMapDimensions({
+      width: img.naturalWidth,
+      height: img.naturalHeight
+    });
+  };
   
   const onMapDrop = (e: React.DragEvent | DragEvent) => { 
     e.preventDefault(); 
@@ -780,13 +824,18 @@ export default function BattleMapUI({ sessionId }: { sessionId?: string }) {
               <div className="w-full h-full flex items-center justify-center p-4">
                 <div 
                   className={`relative rounded-xl shadow-xl bg-secondary overflow-hidden transition-all duration-200 ${isDragOver ? 'ring-2 ring-primary bg-primary/5' : ''}`} 
-                  style={{ width: MAP_W, height: MAP_H }} 
+                  style={{ width: currentMapSize.width, height: currentMapSize.height }} 
                   onClick={onMapClick} 
                   ref={mapRef}
                 >
                   {/* Фон карты */}
                   {layers.find(l => l.id === 'map')?.visible && mapImage ? (
-                    <img src={mapImage} alt="Карта" className="absolute inset-0 w-full h-full object-cover" />
+                    <img 
+                      src={mapImage} 
+                      alt="Карта" 
+                      className="absolute inset-0 w-full h-full object-cover" 
+                      onLoad={(e) => handleMapImageLoad(e.currentTarget)}
+                    />
                   ) : (
                     <div className={`absolute inset-0 flex flex-col items-center justify-center text-muted-foreground text-sm transition-all duration-200 ${isDragOver ? 'text-primary' : ''}`}>
                       <div className="text-center">
@@ -798,12 +847,12 @@ export default function BattleMapUI({ sessionId }: { sessionId?: string }) {
                   )}
 
                   {/* Сетка */}
-                  <svg className="absolute inset-0 pointer-events-none" width={MAP_W} height={MAP_H}>
-                    {Array.from({ length: Math.floor(MAP_W / GRID) + 1 }).map((_, i) => (
-                      <line key={`v${i}`} x1={i * GRID} y1={0} x2={i * GRID} y2={MAP_H} stroke="hsl(var(--border))" strokeOpacity={0.3} />
+                  <svg className="absolute inset-0 pointer-events-none" width={currentMapSize.width} height={currentMapSize.height}>
+                    {Array.from({ length: Math.floor(currentMapSize.width / GRID) + 1 }).map((_, i) => (
+                      <line key={`v${i}`} x1={i * GRID} y1={0} x2={i * GRID} y2={currentMapSize.height} stroke="hsl(var(--border))" strokeOpacity={0.3} />
                     ))}
-                    {Array.from({ length: Math.floor(MAP_H / GRID) + 1 }).map((_, i) => (
-                      <line key={`h${i}`} x1={0} y1={i * GRID} x2={MAP_W} y2={i * GRID} stroke="hsl(var(--border))" strokeOpacity={0.3} />
+                    {Array.from({ length: Math.floor(currentMapSize.height / GRID) + 1 }).map((_, i) => (
+                      <line key={`h${i}`} x1={0} y1={i * GRID} x2={currentMapSize.width} y2={i * GRID} stroke="hsl(var(--border))" strokeOpacity={0.3} />
                     ))}
                   </svg>
 
@@ -845,7 +894,7 @@ export default function BattleMapUI({ sessionId }: { sessionId?: string }) {
                   {/* Туман войны */}
                   {fogEnabled && layers.find(l => l.id === 'fog')?.visible && (
                     <FogOfWar
-                      gridSize={{ rows: Math.floor(MAP_H / GRID), cols: Math.floor(MAP_W / GRID) }}
+                      gridSize={{ rows: Math.floor(currentMapSize.height / GRID), cols: Math.floor(currentMapSize.width / GRID) }}
                       revealedCells={reveal.reduce((acc, r) => {
                         const key = `${Math.floor(r.y / GRID)}-${Math.floor(r.x / GRID)}`;
                         acc[key] = true;
@@ -853,7 +902,7 @@ export default function BattleMapUI({ sessionId }: { sessionId?: string }) {
                       }, {} as { [key: string]: boolean })}
                       active={dmTool === "fog-reveal" || dmTool === "fog-hide" || vttTool === 'fog-reveal' || vttTool === 'fog-hide'}
                       isDM={isDM}
-                      imageSize={{ width: MAP_W, height: MAP_H }}
+                      imageSize={{ width: currentMapSize.width, height: currentMapSize.height }}
                       onRevealCell={(row, col) => {
                         console.log('BattleMapUI onRevealCell called:', { row, col, GRID, fogRadius });
                         
