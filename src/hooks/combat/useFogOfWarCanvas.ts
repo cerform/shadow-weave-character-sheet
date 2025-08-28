@@ -65,16 +65,35 @@ export function useFogOfWarCanvas({ gridRows, gridCols, imageSize }: UseFogOfWar
     const rect = canvas.getBoundingClientRect();
     
     // Координаты относительно canvas на экране
-    const canvasX = e.clientX - rect.left;
-    const canvasY = e.clientY - rect.top;
+    const relativeX = e.clientX - rect.left;
+    const relativeY = e.clientY - rect.top;
+    
+    // Нормализуем координаты (0-1)
+    const normalizedX = relativeX / rect.width;
+    const normalizedY = relativeY / rect.height;
     
     // Преобразуем в координаты сетки
-    const gridCol = Math.floor((canvasX / rect.width) * gridCols);
-    const gridRow = Math.floor((canvasY / rect.height) * gridRows);
+    const gridCol = Math.floor(normalizedX * gridCols);
+    const gridRow = Math.floor(normalizedY * gridRows);
+    
+    // Координаты canvas в пикселях
+    const canvasX = normalizedX * canvasState.width;
+    const canvasY = normalizedY * canvasState.height;
+    
+    console.log('🎯 Mouse Position Debug:', {
+      screenCoords: { x: e.clientX, y: e.clientY },
+      canvasRect: { left: rect.left, top: rect.top, width: rect.width, height: rect.height },
+      relativeCoords: { x: relativeX, y: relativeY },
+      normalizedCoords: { x: normalizedX, y: normalizedY },
+      gridCoords: { row: gridRow, col: gridCol },
+      canvasCoords: { x: canvasX, y: canvasY },
+      canvasState: { width: canvasState.width, height: canvasState.height },
+      gridSize: { rows: gridRows, cols: gridCols }
+    });
     
     return {
-      canvasX: (canvasX / rect.width) * canvasState.width,
-      canvasY: (canvasY / rect.height) * canvasState.height,
+      canvasX,
+      canvasY,
       gridRow: Math.max(0, Math.min(gridRows - 1, gridRow)),
       gridCol: Math.max(0, Math.min(gridCols - 1, gridCol))
     };
@@ -97,10 +116,18 @@ export function useFogOfWarCanvas({ gridRows, gridCols, imageSize }: UseFogOfWar
   ) => {
     const cells: Array<{ row: number; col: number }> = [];
     
-    const startCol = Math.floor(Math.min(startX, endX) / canvasState.cellWidth);
-    const endCol = Math.floor(Math.max(startX, endX) / canvasState.cellWidth);
-    const startRow = Math.floor(Math.min(startY, endY) / canvasState.cellHeight);
-    const endRow = Math.floor(Math.max(startY, endY) / canvasState.cellHeight);
+    // Нормализуем координаты canvas в координаты сетки
+    const startCol = Math.floor((Math.min(startX, endX) / canvasState.width) * gridCols);
+    const endCol = Math.floor((Math.max(startX, endX) / canvasState.width) * gridCols);
+    const startRow = Math.floor((Math.min(startY, endY) / canvasState.height) * gridRows);
+    const endRow = Math.floor((Math.max(startY, endY) / canvasState.height) * gridRows);
+    
+    console.log('📦 Area Selection Debug:', {
+      canvasCoords: { startX, startY, endX, endY },
+      canvasState: { width: canvasState.width, height: canvasState.height },
+      gridBounds: { startRow, endRow, startCol, endCol },
+      gridSize: { rows: gridRows, cols: gridCols }
+    });
     
     for (let row = Math.max(0, startRow); row <= Math.min(gridRows - 1, endRow); row++) {
       for (let col = Math.max(0, startCol); col <= Math.min(gridCols - 1, endCol); col++) {
@@ -109,7 +136,7 @@ export function useFogOfWarCanvas({ gridRows, gridCols, imageSize }: UseFogOfWar
     }
     
     return cells;
-  }, [canvasState.cellWidth, canvasState.cellHeight, gridRows, gridCols]);
+  }, [canvasState.width, canvasState.height, gridRows, gridCols]);
 
   return {
     canvasRef,
