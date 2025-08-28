@@ -222,11 +222,21 @@ const FogOfWar: React.FC<FogOfWarProps> = ({
       if (selectedArea) {
         ctx.fillStyle = 'rgba(255, 255, 0, 0.2)';
         const {startX, startY, endX, endY} = selectedArea;
+        
+        // Преобразуем масштабированные координаты обратно в координаты canvas
+        const scaleX = canvas.width / (imageSize?.width || canvas.width);
+        const scaleY = canvas.height / (imageSize?.height || canvas.height);
+        
+        const displayStartX = startX * scaleX;
+        const displayStartY = startY * scaleY;
+        const displayEndX = endX * scaleX;
+        const displayEndY = endY * scaleY;
+        
         ctx.fillRect(
-          Math.min(startX, endX),
-          Math.min(startY, endY),
-          Math.abs(endX - startX),
-          Math.abs(endY - startY)
+          Math.min(displayStartX, displayEndX),
+          Math.min(displayStartY, displayEndY),
+          Math.abs(displayEndX - displayStartX),
+          Math.abs(displayEndY - displayStartY)
         );
       }
       
@@ -259,9 +269,15 @@ const FogOfWar: React.FC<FogOfWarProps> = ({
     const canvas = canvasRef.current;
     const rect = canvas.getBoundingClientRect();
     
-    // Получаем координаты клика относительно отображаемого размера canvas
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+    // Получаем координаты клика относительно canvas и масштабируем
+    const clientX = e.clientX - rect.left;
+    const clientY = e.clientY - rect.top;
+    
+    const scaleX = (imageSize?.width || canvas.width) / rect.width;
+    const scaleY = (imageSize?.height || canvas.height) / rect.height;
+    
+    const x = clientX * scaleX;
+    const y = clientY * scaleY;
     
     setIsDragging(true);
     setSelectedArea({
@@ -278,8 +294,14 @@ const FogOfWar: React.FC<FogOfWarProps> = ({
     const canvas = canvasRef.current;
     const rect = canvas.getBoundingClientRect();
     
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+    const clientX = e.clientX - rect.left;
+    const clientY = e.clientY - rect.top;
+    
+    const scaleX = (imageSize?.width || canvas.width) / rect.width;
+    const scaleY = (imageSize?.height || canvas.height) / rect.height;
+    
+    const x = clientX * scaleX;
+    const y = clientY * scaleY;
     
     setSelectedArea({
       ...selectedArea,
@@ -296,10 +318,10 @@ const FogOfWar: React.FC<FogOfWarProps> = ({
     }
     
     const canvas = canvasRef.current;
-    const cellWidth = canvas.width / gridSize.cols;
-    const cellHeight = canvas.height / gridSize.rows;
+    const cellWidth = (imageSize?.width || canvas.width) / gridSize.cols;
+    const cellHeight = (imageSize?.height || canvas.height) / gridSize.rows;
     
-    // Определяем диапазон ячеек для открытия
+    // Определяем диапазон ячеек для открытия (уже в масштабированных координатах)
     const startCol = Math.floor(Math.min(selectedArea.startX, selectedArea.endX) / cellWidth);
     const endCol = Math.floor(Math.max(selectedArea.startX, selectedArea.endX) / cellWidth);
     const startRow = Math.floor(Math.min(selectedArea.startY, selectedArea.endY) / cellHeight);
@@ -332,25 +354,31 @@ const FogOfWar: React.FC<FogOfWarProps> = ({
     const clientX = e.clientX - rect.left;
     const clientY = e.clientY - rect.top;
     
-    // Отладочная информация
+    // Масштабируем координаты к реальным размерам карты
+    const scaleX = (imageSize?.width || canvas.width) / rect.width;
+    const scaleY = (imageSize?.height || canvas.height) / rect.height;
+    
+    // Преобразуем в координаты карты
+    const mapX = clientX * scaleX;
+    const mapY = clientY * scaleY;
+    
+    // Вычисляем координаты ячейки
+    const cellWidth = (imageSize?.width || canvas.width) / gridSize.cols;
+    const cellHeight = (imageSize?.height || canvas.height) / gridSize.rows;
+    
+    const col = Math.floor(mapX / cellWidth);
+    const row = Math.floor(mapY / cellHeight);
+    
     console.log('FogOfWar Click Debug:', {
       clientX, clientY,
-      canvasWidth: canvas.width,
-      canvasHeight: canvas.height,
-      rectWidth: rect.width,
-      rectHeight: rect.height,
+      mapX, mapY,
+      scaleX, scaleY,
+      cellWidth, cellHeight,
+      col, row,
       gridCols: gridSize.cols,
-      gridRows: gridSize.rows
+      gridRows: gridSize.rows,
+      imageSize: imageSize
     });
-    
-    // Прямое вычисление координат ячейки без масштабирования
-    const cellWidth = rect.width / gridSize.cols;
-    const cellHeight = rect.height / gridSize.rows;
-    
-    const col = Math.floor(clientX / cellWidth);
-    const row = Math.floor(clientY / cellHeight);
-    
-    console.log('Calculated cell:', { col, row, cellWidth, cellHeight });
     
     // Проверяем границы
     if (row >= 0 && row < gridSize.rows && col >= 0 && col < gridSize.cols) {
