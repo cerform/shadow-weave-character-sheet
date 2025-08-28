@@ -576,8 +576,8 @@ export default function BattleMapUI({ sessionId }: { sessionId?: string }) {
         
         {/* Центровка карты */}
         <div className="w-full h-full flex items-center justify-center">
-          {/* Контейнер карты с ограниченными размерами */}
-          <div className="w-[85vw] h-[75vh] max-w-5xl max-h-[600px] border border-border/20 rounded-lg shadow-2xl overflow-hidden bg-background/10 backdrop-blur-sm relative">
+          {/* Контейнер карты с увеличенными размерами */}
+          <div className="w-[95vw] h-[90vh] max-w-[1920px] max-h-[1080px] border border-border/20 rounded-lg shadow-2xl overflow-hidden bg-background/10 backdrop-blur-sm relative">
           {mapImage ? (
             <img 
               src={mapImage} 
