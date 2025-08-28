@@ -216,6 +216,7 @@ export default function BattleMapUI() {
   
   const onMapDrop = (e: React.DragEvent) => { 
     e.preventDefault(); 
+    e.stopPropagation();
     setIsDragOver(false);
     const files = e.dataTransfer.files;
     if (files && files[0] && files[0].type.startsWith("image/")) {
@@ -232,11 +233,17 @@ export default function BattleMapUI() {
   
   const onMapDragOver = (e: React.DragEvent) => {
     e.preventDefault();
+    e.stopPropagation();
     setIsDragOver(true);
   };
   
   const onMapDragLeave = (e: React.DragEvent) => {
     e.preventDefault();
+    e.stopPropagation();
+    // Проверяем, что мы действительно покидаем контейнер
+    if (e.currentTarget.contains(e.relatedTarget as Node)) {
+      return;
+    }
     setIsDragOver(false);
   };
 
@@ -293,6 +300,27 @@ export default function BattleMapUI() {
   useEffect(() => {
     loadSupabaseMonsters();
   }, [loadSupabaseMonsters]);
+
+  // Предотвращение стандартного поведения браузера для drag and drop
+  useEffect(() => {
+    const preventDefaults = (e: DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+    };
+
+    // Добавляем обработчики на весь документ
+    document.addEventListener('dragenter', preventDefaults);
+    document.addEventListener('dragover', preventDefaults);
+    document.addEventListener('dragleave', preventDefaults);
+    document.addEventListener('drop', preventDefaults);
+
+    return () => {
+      document.removeEventListener('dragenter', preventDefaults);
+      document.removeEventListener('dragover', preventDefaults);
+      document.removeEventListener('dragleave', preventDefaults);
+      document.removeEventListener('drop', preventDefaults);
+    };
+  }, []);
 
   // Загрузка внешнего реестра моделей
   useEffect(() => {
