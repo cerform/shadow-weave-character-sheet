@@ -218,11 +218,11 @@ export default function BattleMapUI() {
   const mapRef = useRef<HTMLDivElement | null>(null);
   const [isDragOver, setIsDragOver] = useState(false);
   
-  const onMapDrop = (e: React.DragEvent) => { 
+  const onMapDrop = (e: React.DragEvent | DragEvent) => { 
     e.preventDefault(); 
     e.stopPropagation();
     setIsDragOver(false);
-    const files = e.dataTransfer.files;
+    const files = (e as DragEvent).dataTransfer?.files || (e as React.DragEvent).dataTransfer.files;
     if (files && files[0] && files[0].type.startsWith("image/")) {
       const file = files[0];
       const imageUrl = URL.createObjectURL(file);
@@ -235,17 +235,19 @@ export default function BattleMapUI() {
     }
   };
   
-  const onMapDragOver = (e: React.DragEvent) => {
+  const onMapDragOver = (e: React.DragEvent | DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
     setIsDragOver(true);
   };
   
-  const onMapDragLeave = (e: React.DragEvent) => {
+  const onMapDragLeave = (e: React.DragEvent | DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
     // Проверяем, что мы действительно покидаем контейнер
-    if (e.currentTarget.contains(e.relatedTarget as Node)) {
+    const target = e.currentTarget as Element;
+    const related = e.relatedTarget as Element;
+    if (target && related && target.contains(related)) {
       return;
     }
     setIsDragOver(false);
@@ -326,22 +328,52 @@ export default function BattleMapUI() {
 
   // Предотвращение стандартного поведения браузера для drag and drop
   useEffect(() => {
-    const preventDefaults = (e: DragEvent) => {
+    const handleDragEnter = (e: DragEvent) => {
       e.preventDefault();
       e.stopPropagation();
+      if (e.dataTransfer?.items && e.dataTransfer.items.length > 0) {
+        const hasImage = Array.from(e.dataTransfer.items).some(item => item.type.startsWith('image/'));
+        if (hasImage) {
+          setIsDragOver(true);
+        }
+      }
+    };
+
+    const handleDragOver = (e: DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (e.dataTransfer) {
+        e.dataTransfer.dropEffect = 'copy';
+      }
+    };
+
+    const handleDragLeave = (e: DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      // Проверяем, покидает ли курсор окно браузера
+      if (e.clientX <= 0 || e.clientY <= 0 || 
+          e.clientX >= window.innerWidth || e.clientY >= window.innerHeight) {
+        setIsDragOver(false);
+      }
+    };
+
+    const handleDrop = (e: DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      onMapDrop(e);
     };
 
     // Добавляем обработчики на весь документ
-    document.addEventListener('dragenter', preventDefaults);
-    document.addEventListener('dragover', preventDefaults);
-    document.addEventListener('dragleave', preventDefaults);
-    document.addEventListener('drop', preventDefaults);
+    document.addEventListener('dragenter', handleDragEnter);
+    document.addEventListener('dragover', handleDragOver);
+    document.addEventListener('dragleave', handleDragLeave);
+    document.addEventListener('drop', handleDrop);
 
     return () => {
-      document.removeEventListener('dragenter', preventDefaults);
-      document.removeEventListener('dragover', preventDefaults);
-      document.removeEventListener('dragleave', preventDefaults);
-      document.removeEventListener('drop', preventDefaults);
+      document.removeEventListener('dragenter', handleDragEnter);
+      document.removeEventListener('dragover', handleDragOver);
+      document.removeEventListener('dragleave', handleDragLeave);
+      document.removeEventListener('drop', handleDrop);
     };
   }, []);
 
