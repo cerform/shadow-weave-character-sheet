@@ -39,6 +39,7 @@ type Token = {
   modelUrl?: string; // GLB/GLTF
   modelScale?: number;
   rotation?: number; // Поворот токена в градусах
+  imageUrl?: string; // Пользовательское изображение токена
 };
 
 type FogCircle = { x: number; y: number; r: number };
@@ -160,7 +161,25 @@ function TokenVisual({ token, use3D, modelReady, onModelError }: { token: Token;
   }, [can3D, token.id, onModelError]);
 
   if (!can3D) {
-    // Получаем данные аватара из новой системы
+    // Сначала проверяем пользовательское изображение
+    if (token.imageUrl) {
+      return (
+        <div className={`w-full h-full ${token.color} bg-opacity-90 flex items-center justify-center overflow-hidden rounded`}>
+          <img 
+            src={token.imageUrl} 
+            alt={token.name}
+            className="w-full h-full object-cover"
+            onError={(e) => {
+              // Если изображение не загрузилось, показываем эмодзи
+              e.currentTarget.style.display = 'none';
+              e.currentTarget.parentElement!.innerHTML = getMonsterAvatar(token.name).emoji;
+            }}
+          />
+        </div>
+      );
+    }
+    
+    // Затем используем систему аватаров по умолчанию
     const avatarData = getMonsterAvatar(token.name);
     const image = avatarData.image || avatarData.emoji;
     
@@ -719,7 +738,8 @@ export default function BattleMapUI() {
                     color: 'bg-blue-600',
                     position: { x: 100, y: 100 },
                     initiative: 10,
-                    conditions: []
+                    conditions: [],
+                    imageUrl: url // Сохраняем URL изображения
                   };
                   setTokens(prev => [...prev, newToken]);
                   setLog(l => [{ 
