@@ -137,60 +137,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   useEffect(() => {
     let mounted = true;
     
-    // Единая функция инициализации
-    const initializeAuth = async () => {
-      if (!mounted) return;
-      
-      try {
-        console.log('initializeAuth: начинаем инициализацию');
-        
-        // Сначала пробуем получить сессию
-        const { data: { session }, error } = await supabase.auth.getSession();
-        console.log('initializeAuth: получена сессия:', session, 'ошибка:', error);
-        
-        // Если сессии нет, пробуем получить пользователя напрямую
-        if (!session) {
-          console.log('initializeAuth: сессия null, пробуем getUser()');
-          const { data: { user }, error: userError } = await supabase.auth.getUser();
-          console.log('initializeAuth: прямой запрос пользователя:', user, 'ошибка:', userError);
-          
-          if (user && !userError) {
-            // Создаем фейковую сессию с пользователем
-            const fakeSession = { user };
-            console.log('initializeAuth: создали фейковую сессию:', fakeSession);
-            
-            if (mounted) {
-              const mappedUser = mapSupabaseUser(user);
-              console.log('initializeAuth: установка пользователя из прямого запроса:', mappedUser);
-              setUser(mappedUser);
-              setLoading(false);
-            }
-            return;
-          }
-        }
-        
-        if (mounted) {
-          const mappedUser = mapSupabaseUser(session?.user ?? null);
-          console.log('initializeAuth: установка пользователя:', mappedUser);
-          setUser(mappedUser);
-          setLoading(false);
-        }
-      } catch (error) {
-        console.error('Auth initialization error:', error);
-        if (mounted) {
-          setLoading(false);
-        }
-      }
-    };
-
-    // Слушаем изменения аутентификации
+    // Слушаем изменения аутентификации СНАЧАЛА
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         console.log('onAuthStateChange: событие:', event, 'сессия:', session);
-        if (!mounted) {
-          console.log('onAuthStateChange: компонент размонтирован, пропускаем');
-          return;
-        }
+        if (!mounted) return;
         
         const mappedUser = mapSupabaseUser(session?.user ?? null);
         console.log('onAuthStateChange: установка пользователя:', mappedUser);
@@ -199,8 +150,29 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
     );
 
-    // Инициализируем авторизацию
-    initializeAuth();
+    // ЗАТЕМ получаем текущую сессию
+    const getInitialSession = async () => {
+      try {
+        console.log('getInitialSession: получаем начальную сессию');
+        const { data: { session }, error } = await supabase.auth.getSession();
+        console.log('getInitialSession: сессия:', session, 'ошибка:', error);
+        
+        if (mounted) {
+          const mappedUser = mapSupabaseUser(session?.user ?? null);
+          console.log('getInitialSession: установка пользователя:', mappedUser);
+          setUser(mappedUser);
+          setLoading(false);
+        }
+      } catch (error) {
+        console.error('getInitialSession error:', error);
+        if (mounted) {
+          setUser(null);
+          setLoading(false);
+        }
+      }
+    };
+
+    getInitialSession();
 
     return () => {
       mounted = false;
