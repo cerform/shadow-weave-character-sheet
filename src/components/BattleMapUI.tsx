@@ -9,6 +9,7 @@ import { MonsterImageGenerator } from '@/components/battle/MonsterImageGenerator
 import { VideoChat } from '@/components/battle/VideoChat';
 import BackgroundMusic from '@/components/battle/BackgroundMusic';
 import MiniMap2D from '@/components/battle/minimap/MiniMap2D';
+import CompactBattleUI from '@/components/battle/ui/CompactBattleUI';
 import { getModelTypeFromTokenName } from '@/utils/tokenModelMapping';
 import { getMonsterAvatar } from '@/data/monsterAvatarSystem';
 
@@ -203,9 +204,10 @@ export default function BattleMapUI() {
   const { isDM } = useUnifiedBattleStore();
   
   // Режим и панели
-  const [leftOpen, setLeftOpen] = useState(true);
-  const [rightOpen, setRightOpen] = useState(true);
+  const [leftOpen, setLeftOpen] = useState(false);
+  const [rightOpen, setRightOpen] = useState(false);
   const [videoChatOpen, setVideoChatOpen] = useState(false);
+  const [useCompactUI, setUseCompactUI] = useState(true);
 
   // Карта
   const [mapImage, setMapImage] = useState<string | null>(null);
@@ -420,6 +422,63 @@ export default function BattleMapUI() {
 
   const Title = ({ children }: { children: React.ReactNode }) => (<div className="text-yellow-400 font-semibold tracking-wide uppercase text-xs">{children}</div>);
   const StatBadge = ({ label, value }: { label: string; value: React.ReactNode }) => (<div className="px-2 py-0.5 rounded-md text-[11px] text-white bg-neutral-800 border border-neutral-700"><span className="opacity-70 mr-1">{label}</span><span className="font-semibold">{value}</span></div>);
+
+  if (useCompactUI) {
+    return (
+      <div className="w-full h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white overflow-hidden relative">
+        <BackgroundMusic />
+        
+        {/* 3D карта полноэкранно */}
+        <div className="w-full h-full relative">
+          {mapImage ? (
+            <img 
+              src={mapImage} 
+              alt="Battle Map" 
+              className="w-full h-full object-cover"
+              style={{ imageRendering: 'pixelated' }}
+            />
+          ) : (
+            <div className="w-full h-full bg-slate-800 flex items-center justify-center">
+              <div className="text-center">
+                <div className="text-4xl mb-4">🗺️</div>
+                <div className="text-xl mb-2">Загрузите карту</div>
+                <div className="text-sm text-slate-400">Перетащите изображение сюда</div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Компактный интерфейс */}
+        <CompactBattleUI
+          isDM={isDM}
+          fogEnabled={fogEnabled}
+          onFogToggle={() => setFogEnabled(!fogEnabled)}
+          fogOpacity={fogOpacity}
+          onFogOpacityChange={setFogOpacity}
+          brushSize={fogRadius / 10}
+          onBrushSizeChange={(size) => setFogRadius(size * 10)}
+          paintMode={dmTool === 'fog-reveal' ? 'reveal' : 'hide'}
+          onPaintModeChange={(mode) => setDmTool(mode === 'reveal' ? 'fog-reveal' : 'fog-hide')}
+          musicEnabled={true}
+          onMusicToggle={() => {}}
+          turnIndex={turnIndex}
+          tokensCount={tokens.length}
+          onNextTurn={nextTurn}
+          onRollDice={roll}
+        />
+
+        {/* Кнопка переключения на полный интерфейс */}
+        <div className="absolute top-4 right-4 z-60">
+          <button
+            onClick={() => setUseCompactUI(false)}
+            className="px-3 py-2 bg-background/90 backdrop-blur-sm border rounded-lg text-sm hover:bg-background"
+          >
+            Полный интерфейс
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="h-screen w-screen bg-neutral-950 text-neutral-100 overflow-hidden">
@@ -801,6 +860,18 @@ export default function BattleMapUI() {
                 <button className="px-3 py-2 rounded-md border border-neutral-700 hover:border-yellow-400 hover:text-yellow-400">Предмет</button>
                 <button className="px-3 py-2 rounded-md border border-neutral-700 hover:border-emerald-400 hover:text-emerald-400" onClick={nextTurn}>Закончить ход</button>
                 <div className="ml-2 flex items-center gap-1 text-xs"><span className="opacity-70">Кости:</span>{[20,12,10,8,6,4].map((s)=>(<button key={s} className="px-2 py-1 rounded-md border border-neutral-700 hover:border-neutral-400" onClick={()=>roll(s)}>d{s}</button>))}</div>
+                <button
+                  onClick={() => setUseCompactUI(true)}
+                  className="ml-4 px-3 py-2 rounded-md border border-neutral-700 hover:border-blue-400 hover:text-blue-400 text-xs"
+                >
+                  Компактный режим
+                </button>
+                <button
+                  onClick={() => setUseCompactUI(true)}
+                  className="ml-4 px-3 py-2 rounded-md border border-neutral-700 hover:border-blue-400 hover:text-blue-400 text-xs"
+                >
+                  Компактный режим
+                </button>
               </div>
             </div>
           </div>

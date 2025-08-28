@@ -32,12 +32,12 @@ export const WorkingFogSystem: React.FC<WorkingFogSystemProps> = ({ paintMode, b
     // Создаем текстуру тумана
     const textureData = new Uint8Array(TEXTURE_SIZE * TEXTURE_SIZE * 4);
     
-    // Изначально весь туман (альфа = 255)
+    // Изначально туман со средней прозрачностью
     for (let i = 0; i < textureData.length; i += 4) {
-      textureData[i] = 0;     // R
-      textureData[i + 1] = 0; // G  
-      textureData[i + 2] = 0; // B
-      textureData[i + 3] = 200; // A - туман
+      textureData[i] = 50;     // R - темно-серый
+      textureData[i + 1] = 50; // G - темно-серый
+      textureData[i + 2] = 50; // B - темно-серый
+      textureData[i + 3] = 120; // A - умеренный туман (вместо 200)
     }
     
     const texture = new THREE.DataTexture(textureData, TEXTURE_SIZE, TEXTURE_SIZE, THREE.RGBAFormat);
@@ -46,13 +46,14 @@ export const WorkingFogSystem: React.FC<WorkingFogSystemProps> = ({ paintMode, b
     
     fogTextureRef.current = texture;
     
-    // Создаем материал
+    // Создаем материал с улучшенными настройками
     const material = new THREE.MeshBasicMaterial({
       map: texture,
       transparent: true,
-      opacity: 0.8,
-      color: 0x000000,
-      side: THREE.DoubleSide
+      opacity: 0.7, // Меньше непрозрачности
+      color: 0x222222, // Светло-серый вместо черного
+      side: THREE.DoubleSide,
+      blending: THREE.NormalBlending
     });
     
     fogMaterialRef.current = material;
@@ -120,13 +121,19 @@ export const WorkingFogSystem: React.FC<WorkingFogSystemProps> = ({ paintMode, b
             if (actualPaintMode === 'reveal') {
               // Убираем туман (делаем прозрачным)
               if (data[index + 3] > 0) {
-                data[index + 3] = 0;
+                data[index] = 255;     // R - белый при открытии
+                data[index + 1] = 255; // G - белый при открытии 
+                data[index + 2] = 255; // B - белый при открытии
+                data[index + 3] = 0;   // A - полностью прозрачно
                 changed = true;
               }
             } else {
               // Добавляем туман
-              if (data[index + 3] < 200) {
-                data[index + 3] = 200;
+              if (data[index + 3] < 120) {
+                data[index] = 50;      // R - темно-серый
+                data[index + 1] = 50;  // G - темно-серый
+                data[index + 2] = 50;  // B - темно-серый
+                data[index + 3] = 120; // A - умеренный туман
                 changed = true;
               }
             }
@@ -230,9 +237,12 @@ export const WorkingFogSystem: React.FC<WorkingFogSystemProps> = ({ paintMode, b
     const texture = fogTextureRef.current;
     const data = texture.image.data as Uint8Array;
     
-    // Делаем всю текстуру непрозрачной
-    for (let i = 3; i < data.length; i += 4) {
-      data[i] = 200;
+    // Делаем всю текстуру с умеренным туманом
+    for (let i = 0; i < data.length; i += 4) {
+      data[i] = 50;      // R
+      data[i + 1] = 50;  // G
+      data[i + 2] = 50;  // B
+      data[i + 3] = 120; // A - умеренный туман
     }
     
     texture.needsUpdate = true;
