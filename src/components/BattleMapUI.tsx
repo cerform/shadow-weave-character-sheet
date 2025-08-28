@@ -235,6 +235,7 @@ export default function BattleMapUI({ sessionId }: { sessionId?: string }) {
   const [videoChatOpen, setVideoChatOpen] = useState(false);
   const [useCompactUI, setUseCompactUI] = useState(true);
   const [showBackgroundMusic, setShowBackgroundMusic] = useState(false);
+  const [showAssetLibrary, setShowAssetLibrary] = useState(true);
 
   // Карта
   const [mapImage, setMapImage] = useState<string | null>(null);
@@ -361,7 +362,6 @@ export default function BattleMapUI({ sessionId }: { sessionId?: string }) {
 
   // VTT состояние
   const [vttTool, setVttTool] = useState<VTTTool>('select');
-  const [showAssetLibrary, setShowAssetLibrary] = useState(true);
   const [showLayerPanel, setShowLayerPanel] = useState(true);
   const [layers, setLayers] = useState<Layer[]>([
     { id: 'background', name: 'Фон', visible: true, locked: false, opacity: 1, type: 'background' },
