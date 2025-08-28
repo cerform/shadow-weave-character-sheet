@@ -17,6 +17,7 @@ import FogOfWar from '@/components/battle/FogOfWar';
 import { getModelTypeFromTokenName } from '@/utils/tokenModelMapping';
 import { getMonsterAvatar } from '@/data/monsterAvatarSystem';
 import { useBattleSession } from '@/hooks/useBattleSession';
+import { useUserRole } from '@/hooks/use-auth';
 
 // ==================== Типы ====================
 
@@ -226,7 +227,9 @@ function TokenVisual({ token, use3D, modelReady, onModelError }: { token: Token;
 export default function BattleMapUI({ sessionId }: { sessionId?: string }) {
   // Подключение к реальному бестиарию
   const { getAllMonsters, loadSupabaseMonsters, isLoadingSupabase } = useMonstersStore();
-  const { isDM } = useUnifiedBattleStore();
+  
+  // Получаем реальный DM статус из ролей пользователя
+  const { isDM } = useUserRole();
   
   // Хук для работы с сессиями и автоматическим сохранением карт
   const { 
@@ -308,7 +311,7 @@ export default function BattleMapUI({ sessionId }: { sessionId?: string }) {
     });
     
     // Автоматически сохраняем карту в сессию при загрузке
-    if (mapImage && session && isDM) {
+    if (mapImage && session) {
       const fileName = `battle-map-${Date.now()}.png`;
       saveMapFromUrl(mapImage, fileName, {
         width: img.naturalWidth,
@@ -333,7 +336,7 @@ export default function BattleMapUI({ sessionId }: { sessionId?: string }) {
       }, ...l]);
       
       // Автоматически сохраняем карту в сессию
-      if (session && isDM) {
+      if (session) {
         saveMapToSession(file, file.name);
       }
     }
