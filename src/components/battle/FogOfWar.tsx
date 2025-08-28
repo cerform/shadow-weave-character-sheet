@@ -122,6 +122,20 @@ export default function FogOfWar({
 
   return (
     <div className="absolute inset-0 z-10">
+      {/* Canvas для рендеринга тумана */}
+      <canvas
+        ref={canvasRef}
+        className="absolute inset-0 pointer-events-none"
+        width={canvasState.width}
+        height={canvasState.height}
+        style={{
+          width: '100%',
+          height: '100%',
+          objectFit: 'fill'
+        }}
+      />
+      
+      {/* Слой взаимодействия */}
       <FogInteractionLayer
         canvasRef={canvasRef}
         canvasState={canvasState}
