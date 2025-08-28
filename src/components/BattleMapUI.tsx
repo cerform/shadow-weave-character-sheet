@@ -3,6 +3,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useMonstersStore } from '@/stores/monstersStore';
 import { useUnifiedBattleStore } from '@/stores/unifiedBattleStore';
+import useBattleStore from '@/stores/battleStore';
 import type { Monster } from '@/types/monsters';
 import SimpleTokenCreator from '@/components/battle/SimpleTokenCreator';
 import CompactVideoChat from '@/components/battle/ui/CompactVideoChat';
@@ -301,7 +302,12 @@ export default function BattleMapUI({ sessionId }: { sessionId?: string }) {
     return () => { window.removeEventListener("mousemove", onMove); window.removeEventListener("mouseup", onUp); };
   }, [dragId]);
 
-  // Туман войны
+  // Туман войны - используем состояние из battleStore для revealedCells
+  const battleStore = useBattleStore();
+  const { revealedCells } = battleStore.mapSettings;
+  const { revealCell } = battleStore;
+  
+  // Локальные состояния для UI
   const [fogEnabled, setFogEnabled] = useState(true);
   const [fogOpacity, setFogOpacity] = useState(0.8);
   const [fogRadius, setFogRadius] = useState(120);
