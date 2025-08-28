@@ -571,16 +571,16 @@ export default function BattleMapUI({ sessionId }: { sessionId?: string }) {
 
   if (useCompactUI) {
     return (
-      <div className="w-full h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white overflow-hidden relative">
+      <div className="w-full h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white overflow-hidden relative flex items-center justify-center">
         <BackgroundMusic />
         
-        {/* 3D карта полноэкранно */}
-        <div className="w-full h-full relative">
+        {/* Контейнер карты с ограниченными размерами по центру */}
+        <div className="w-[90vw] h-[80vh] max-w-6xl max-h-4xl border border-border/20 rounded-lg shadow-2xl overflow-hidden bg-background/10 backdrop-blur-sm relative">
           {mapImage ? (
             <img 
               src={mapImage} 
               alt="Battle Map" 
-              className="w-full h-full object-cover"
+              className="w-full h-full object-contain"
               style={{ imageRendering: 'pixelated' }}
             />
           ) : (
