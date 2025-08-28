@@ -571,11 +571,13 @@ export default function BattleMapUI({ sessionId }: { sessionId?: string }) {
 
   if (useCompactUI) {
     return (
-      <div className="w-full h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white overflow-hidden relative flex items-center justify-center">
+      <div className="w-full h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white overflow-hidden relative">
         <BackgroundMusic />
         
-        {/* Контейнер карты с ограниченными размерами по центру */}
-        <div className="w-[90vw] h-[80vh] max-w-6xl max-h-4xl border border-border/20 rounded-lg shadow-2xl overflow-hidden bg-background/10 backdrop-blur-sm relative">
+        {/* Центровка карты */}
+        <div className="w-full h-full flex items-center justify-center">
+          {/* Контейнер карты с ограниченными размерами */}
+          <div className="w-[85vw] h-[75vh] max-w-5xl max-h-[600px] border border-border/20 rounded-lg shadow-2xl overflow-hidden bg-background/10 backdrop-blur-sm relative">
           {mapImage ? (
             <img 
               src={mapImage} 
@@ -592,6 +594,7 @@ export default function BattleMapUI({ sessionId }: { sessionId?: string }) {
               </div>
             </div>
           )}
+          </div>
         </div>
 
         {/* Компактный интерфейс */}
