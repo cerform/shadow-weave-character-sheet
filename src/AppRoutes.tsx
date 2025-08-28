@@ -198,6 +198,13 @@ const AppRoutes: React.FC = () => {
           <PlayerMapPage />
         </ProtectedPlayerRoute>
       } />
+      
+      {/* Игрок в сессии */}
+      <Route path="/player-session/:sessionId" element={
+        <ProtectedPlayerRoute>
+          <PlayerMapPage />
+        </ProtectedPlayerRoute>
+      } />
 
       {/* Админские маршруты */}
       <Route path="/admin" element={
