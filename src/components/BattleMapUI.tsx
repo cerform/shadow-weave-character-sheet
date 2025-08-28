@@ -212,8 +212,33 @@ export default function BattleMapUI() {
   // Карта
   const [mapImage, setMapImage] = useState<string | null>(null);
   const mapRef = useRef<HTMLDivElement | null>(null);
-  const onMapDrop = (e: React.DragEvent) => { e.preventDefault(); const f = e.dataTransfer.files?.[0]; if (f && f.type.startsWith("image/")) setMapImage(URL.createObjectURL(f)); };
-  const onMapDragOver = (e: React.DragEvent) => e.preventDefault();
+  const [isDragOver, setIsDragOver] = useState(false);
+  
+  const onMapDrop = (e: React.DragEvent) => { 
+    e.preventDefault(); 
+    setIsDragOver(false);
+    const files = e.dataTransfer.files;
+    if (files && files[0] && files[0].type.startsWith("image/")) {
+      const file = files[0];
+      const imageUrl = URL.createObjectURL(file);
+      setMapImage(imageUrl);
+      setLog(l => [{ 
+        id: uid("log"), 
+        ts: now(), 
+        text: `Загружена карта: ${file.name}` 
+      }, ...l]);
+    }
+  };
+  
+  const onMapDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(true);
+  };
+  
+  const onMapDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(false);
+  };
 
   // Токены/инициатива
   const [tokens, setTokens] = useState<Token[]>([]);
@@ -536,12 +561,32 @@ export default function BattleMapUI() {
         </div>
 
         {/* Центр: Карта и токены */}
-        <div className="relative bg-neutral-900" onDrop={onMapDrop} onDragOver={onMapDragOver}>
+        <div 
+          className={`relative bg-neutral-900 transition-all duration-200 ${isDragOver ? 'bg-primary/10 ring-2 ring-primary' : ''}`} 
+          onDrop={onMapDrop} 
+          onDragOver={onMapDragOver}
+          onDragLeave={onMapDragLeave}
+        >
           <div className="absolute inset-0 overflow-hidden">
             <div className="w-full h-full flex items-center justify-center p-4">
-              <div className="relative rounded-xl shadow-xl bg-neutral-800 overflow-hidden" style={{ width: MAP_W, height: MAP_H }} onClick={onMapClick} ref={mapRef}>
+              <div 
+                className={`relative rounded-xl shadow-xl bg-neutral-800 overflow-hidden transition-all duration-200 ${isDragOver ? 'ring-2 ring-primary bg-primary/5' : ''}`} 
+                style={{ width: MAP_W, height: MAP_H }} 
+                onClick={onMapClick} 
+                ref={mapRef}
+              >
                 {/* Фон карты */}
-                {mapImage ? (<img src={mapImage} alt="Карта" className="absolute inset-0 w-full h-full object-cover" />) : (<div className="absolute inset-0 flex items-center justify-center text-neutral-500 text-sm">Перетащите изображение карты или выберите файл сверху</div>)}
+                {mapImage ? (
+                  <img src={mapImage} alt="Карта" className="absolute inset-0 w-full h-full object-cover" />
+                ) : (
+                  <div className={`absolute inset-0 flex flex-col items-center justify-center text-neutral-500 text-sm transition-all duration-200 ${isDragOver ? 'text-primary' : ''}`}>
+                    <div className="text-center">
+                      <div className="text-lg mb-2">📍</div>
+                      <div className="font-medium">Загрузите карту</div>
+                      <div className="text-xs mt-1">Перетащите изображение сюда</div>
+                    </div>
+                  </div>
+                )}
 
                 {/* Сетка */}
                 <svg className="absolute inset-0 pointer-events-none" width={MAP_W} height={MAP_H}>
