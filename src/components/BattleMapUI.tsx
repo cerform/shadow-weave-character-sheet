@@ -14,6 +14,7 @@ import AssetLibrary from '@/components/battle/vtt/AssetLibrary';
 import VTTToolbar, { VTTTool } from '@/components/battle/vtt/VTTToolbar';
 import LayerPanel, { Layer } from '@/components/battle/vtt/LayerPanel';
 import ContextMenu from '@/components/battle/vtt/ContextMenu';
+import FogOfWar from '@/components/battle/FogOfWar';
 import { getModelTypeFromTokenName } from '@/utils/tokenModelMapping';
 import { getMonsterAvatar } from '@/data/monsterAvatarSystem';
 
@@ -766,26 +767,43 @@ export default function BattleMapUI() {
 
                   {/* Туман войны */}
                   {fogEnabled && (
-                    <svg className="absolute inset-0 pointer-events-none" width={MAP_W} height={MAP_H}>
-                      <defs>
-                        <mask id="fogMask">
-                          <rect width="100%" height="100%" fill="white" />
-                          {/* Открытые области */}
-                          {[...reveal, ...(autoRevealAllies ? tokens.filter(t => t.type === "PC" && t.position).map(t => ({
-                            x: t.position.x + GRID/2, 
-                            y: t.position.y + GRID/2, 
+                    <FogOfWar
+                      gridSize={{ rows: Math.floor(MAP_H / GRID), cols: Math.floor(MAP_W / GRID) }}
+                      revealedCells={reveal.reduce((acc, r) => {
+                        const key = `${Math.floor(r.x / GRID)}-${Math.floor(r.y / GRID)}`;
+                        acc[key] = true;
+                        return acc;
+                      }, {} as { [key: string]: boolean })}
+                      onRevealCell={(row, col) => {
+                        if (dmTool === "fog-reveal") {
+                          const newReveal = {
+                            x: col * GRID + GRID/2,
+                            y: row * GRID + GRID/2,
                             r: fogRadius
-                          })) : [])].map((c, i) => (
-                            <circle key={`reveal-${i}`} cx={c.x} cy={c.y} r={c.r} fill="black" />
-                          ))}
-                          {/* Скрытые области */}
-                          {hideAreas.map((c, i) => (
-                            <circle key={`hide-${i}`} cx={c.x} cy={c.y} r={c.r} fill="white" />
-                          ))}
-                        </mask>
-                      </defs>
-                      <rect width="100%" height="100%" fill={`rgba(0,0,0,${fogOpacity})`} mask="url(#fogMask)" />
-                    </svg>
+                          };
+                          setReveal(prev => [...prev, newReveal]);
+                        } else if (dmTool === "fog-hide") {
+                          // Удаляем области рядом с этой клеткой
+                          setReveal(prev => prev.filter(r => {
+                            const distance = Math.sqrt(
+                              Math.pow(r.x - (col * GRID + GRID/2), 2) + 
+                              Math.pow(r.y - (row * GRID + GRID/2), 2)
+                            );
+                            return distance > fogRadius;
+                          }));
+                        }
+                      }}
+                      active={dmTool === "fog-reveal" || dmTool === "fog-hide"}
+                      isDM={isDM}
+                      imageSize={{ width: MAP_W, height: MAP_H }}
+                      tokenPositions={tokens.map(t => ({
+                        id: parseInt(t.id.replace(/\D/g, '') || '0'),
+                        x: t.position?.x || 0,
+                        y: t.position?.y || 0,
+                        visible: true,
+                        type: t.type || 'NPC'
+                      }))}
+                    />
                   )}
 
                   {/* Панель выбранного токена */}
@@ -1001,6 +1019,22 @@ export default function BattleMapUI() {
             onToggleAudio={() => console.log('Toggle audio')}
             onConnect={() => console.log('Connect video chat')}
             onDisconnect={() => console.log('Disconnect video chat')}
+          />
+        </div>
+      )}
+
+      {/* Библиотека ассетов */}
+      {showAssetLibrary && (
+        <div className="fixed top-0 right-0 bottom-0 w-80 bg-card border-l border-border shadow-xl z-40">
+          <AssetLibrary
+            onAssetSelect={(asset) => {
+              console.log('Выбран ассет:', asset);
+              // TODO: Интеграция с добавлением ассетов на карту
+            }}
+            onAssetUpload={(file) => {
+              console.log('Загружен файл:', file);
+              // TODO: Интеграция с загрузкой файлов
+            }}
           />
         </div>
       )}
