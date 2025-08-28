@@ -1023,22 +1023,6 @@ export default function BattleMapUI() {
         </div>
       )}
 
-      {/* Библиотека ассетов */}
-      {showAssetLibrary && (
-        <div className="fixed top-0 right-0 bottom-0 w-80 bg-card border-l border-border shadow-xl z-40">
-          <AssetLibrary
-            onAssetSelect={(asset) => {
-              console.log('Выбран ассет:', asset);
-              // TODO: Интеграция с добавлением ассетов на карту
-            }}
-            onAssetUpload={(file) => {
-              console.log('Загружен файл:', file);
-              // TODO: Интеграция с загрузкой файлов
-            }}
-          />
-        </div>
-      )}
-
       {/* Фоновая музыка */}
       {showBackgroundMusic && (
         <div className="fixed bottom-4 left-4 z-50">
