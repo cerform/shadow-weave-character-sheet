@@ -38,6 +38,7 @@ type Token = {
   conditions: string[];
   modelUrl?: string; // GLB/GLTF
   modelScale?: number;
+  rotation?: number; // Поворот токена в градусах
 };
 
 type FogCircle = { x: number; y: number; r: number };
@@ -629,20 +630,60 @@ export default function BattleMapUI() {
       {/* VTT Toolbar */}
       <VTTToolbar
         activeTool={vttTool}
-        onToolChange={setVttTool}
-        onUndo={() => {}}
-        onRedo={() => {}}
-        onRotateLeft={() => {}}
-        onRotateRight={() => {}}
+        onToolChange={(tool) => {
+          setVttTool(tool);
+          // Обновляем DM инструменты при изменении VTT инструмента
+          if (tool === 'fog-reveal') setDmTool('fog-reveal');
+          else if (tool === 'fog-hide') setDmTool('fog-hide');
+          else setDmTool('select');
+        }}
+        onUndo={() => {
+          // Отменить последнее действие тумана
+          if (reveal.length > 0) {
+            setReveal(prev => prev.slice(0, -1));
+          }
+        }}
+        onRedo={() => {
+          // TODO: Реализовать redo функциональность
+        }}
         onDelete={() => {
           if (selectedId) {
             setTokens(prev => prev.filter(t => t.id !== selectedId));
             setSelectedId(null);
           }
         }}
-        onCopy={() => {}}
+        onRotateLeft={() => {
+          // Поворот выбранного токена влево
+          if (selectedId) {
+            setTokens(prev => prev.map(t => 
+              t.id === selectedId ? { ...t, rotation: (t.rotation || 0) - 45 } : t
+            ));
+          }
+        }}
+        onRotateRight={() => {
+          // Поворот выбранного токена вправо  
+          if (selectedId) {
+            setTokens(prev => prev.map(t => 
+              t.id === selectedId ? { ...t, rotation: (t.rotation || 0) + 45 } : t
+            ));
+          }
+        }}
+        onCopy={() => {
+          // Копировать выбранный токен
+          if (selectedId) {
+            const token = tokens.find(t => t.id === selectedId);
+            if (token) {
+              const newToken = { 
+                ...token, 
+                id: uid("token"), 
+                position: { x: token.position.x + GRID, y: token.position.y + GRID }
+              };
+              setTokens(prev => [...prev, newToken]);
+            }
+          }
+        }}
         onSettings={() => setShowLayerPanel(!showLayerPanel)}
-        canUndo={false}
+        canUndo={reveal.length > 0}
         canRedo={false}
         hasSelection={!!selectedId}
       />
@@ -718,7 +759,7 @@ export default function BattleMapUI() {
                   ref={mapRef}
                 >
                   {/* Фон карты */}
-                  {mapImage ? (
+                  {layers.find(l => l.id === 'map')?.visible && mapImage ? (
                     <img src={mapImage} alt="Карта" className="absolute inset-0 w-full h-full object-cover" />
                   ) : (
                     <div className={`absolute inset-0 flex flex-col items-center justify-center text-muted-foreground text-sm transition-all duration-200 ${isDragOver ? 'text-primary' : ''}`}>
@@ -741,7 +782,7 @@ export default function BattleMapUI() {
                   </svg>
 
                   {/* Токены */}
-                  {tokens.filter(t => t && t.position).map((t) => (
+                  {layers.find(l => l.id === 'tokens')?.visible && tokens.filter(t => t && t.position).map((t) => (
                     <div 
                       key={t.id} 
                       style={{ left: t.position.x, top: t.position.y, width: GRID, height: GRID }} 
@@ -776,7 +817,7 @@ export default function BattleMapUI() {
                   ))}
 
                   {/* Туман войны */}
-                  {fogEnabled && (
+                  {fogEnabled && layers.find(l => l.id === 'fog')?.visible && (
                     <FogOfWar
                       gridSize={{ rows: Math.floor(MAP_H / GRID), cols: Math.floor(MAP_W / GRID) }}
                       revealedCells={reveal.reduce((acc, r) => {
@@ -894,6 +935,11 @@ export default function BattleMapUI() {
               setLayers(prev => prev.map(layer => 
                 layer.id === layerId ? { ...layer, visible: !layer.visible } : layer
               ));
+              
+              // Применяем изменения видимости
+              if (layerId === 'fog') {
+                setFogEnabled(prev => !prev);
+              }
             }}
             onLayerToggleLock={(layerId) => {
               setLayers(prev => prev.map(layer => 
