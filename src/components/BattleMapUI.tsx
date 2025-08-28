@@ -241,7 +241,7 @@ export default function BattleMapUI({ sessionId }: { sessionId?: string }) {
   const [mapDimensions, setMapDimensions] = useState<{ width: number; height: number } | null>(null);
   const [autoFitMap, setAutoFitMap] = useState(true);
   const mapRef = useRef<HTMLDivElement | null>(null);
-  const [isDragOver, setIsDragOver] = useState(false);
+  const [isDragOver, setIsDragOver] = useState<boolean>(false);
   // Вычисление оптимальных размеров карты
   const calculateMapDimensions = () => {
     if (!autoFitMap || !mapDimensions) {
