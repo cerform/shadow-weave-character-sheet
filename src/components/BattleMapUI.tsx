@@ -625,8 +625,8 @@ export default function BattleMapUI() {
   // ===== Полный интерфейс VTT =====
   
   return (
-    <div className="w-full h-screen bg-background text-foreground overflow-hidden flex flex-col">
-      <div className="flex flex-1 relative">
+    <div className="w-full h-screen bg-background text-foreground overflow-hidden">
+      <div className="flex h-full w-full relative">
         {/* VTT Toolbar - только для режима VTT */}
         {!useCompactUI && (
           <VTTToolbar
