@@ -24,6 +24,8 @@ import {
   Package
 } from 'lucide-react';
 import { useEnhancedBattleStore } from '@/stores/enhancedBattleStore';
+import { MapScaleController } from '../controls/MapScaleController';
+import { MapZoomWidget } from '../controls/MapZoomWidget';
 
 interface SimpleBattleUIProps {
   paintMode: 'reveal' | 'hide';
@@ -301,6 +303,22 @@ export const SimpleBattleUI: React.FC<SimpleBattleUIProps> = ({
             {currentMode === InteractionMode.CAMERA && (
               <div className="space-y-2">
                 <div className="text-xs font-medium text-muted-foreground">Управление камерой</div>
+                <MapScaleController
+                  scale={20}
+                  onScaleChange={(value) => {
+                    toast({
+                      title: "Камера изменена",
+                      description: `Дистанция: ${value}`,
+                    });
+                    // Здесь можно добавить логику изменения дистанции камеры
+                  }}
+                  min={5}
+                  max={50}
+                  step={1}
+                  label="Дистанция камеры"
+                  showSlider={true}
+                  showButtons={false}
+                />
                 <div className="text-xs text-muted-foreground bg-muted/20 p-2 rounded">
                   <div className="font-medium mb-1">Активно:</div>
                   <div>• Мышь - поворот камеры</div>

@@ -3,8 +3,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Slider } from '@/components/ui/slider';
-import { Upload, Download, FolderOpen, X, RotateCcw, ZoomIn, ZoomOut } from 'lucide-react';
+import { Upload, Download, FolderOpen, X } from 'lucide-react';
+import { MapScaleController } from './controls/MapScaleController';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useParams } from 'react-router-dom';
@@ -176,48 +176,14 @@ const MapUploader: React.FC<MapUploaderProps> = ({
               </Button>
             </div>
 
-            <div className="space-y-2">
-              <Label>Масштаб карты: {scale[0]}%</Label>
-              <Slider
-                value={scale}
-                onValueChange={handleScaleChange}
-                min={50}
-                max={500}
-                step={10}
-                className="w-full"
-              />
-              <div className="flex justify-between text-xs text-muted-foreground">
-                <span>50%</span>
-                <span>500%</span>
-              </div>
-            </div>
-
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handleScaleChange([100])}
-              >
-                <RotateCcw className="h-4 w-4 mr-2" />
-                Сброс
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handleScaleChange([scale[0] - 25])}
-                disabled={scale[0] <= 50}
-              >
-                <ZoomOut className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handleScaleChange([scale[0] + 25])}
-                disabled={scale[0] >= 500}
-              >
-                <ZoomIn className="h-4 w-4" />
-              </Button>
-            </div>
+            <MapScaleController
+              scale={scale[0]}
+              onScaleChange={(newScale) => handleScaleChange([newScale])}
+              min={50}
+              max={500}
+              step={10}
+              label="Масштаб карты"
+            />
 
             <Button
               variant="outline"
