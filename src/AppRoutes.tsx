@@ -20,6 +20,7 @@ import CharactersListPage from '@/pages/CharactersListPage';
 import CharacterManagementPage from '@/pages/CharacterManagementPage';
 import DMDashboardPageNew from '@/pages/DMDashboardPageNew';
 import DMSessionPage from '@/pages/DMSessionPage';
+import PlayerBattleMapPage from '@/pages/PlayerBattleMapPage';
 
 // import DMMapGenerator3D from '@/pages/DMMapGenerator3D';
 // import BattleMap3DPage from '@/pages/BattleMap3DPage';
@@ -202,7 +203,7 @@ const AppRoutes: React.FC = () => {
       {/* Игрок в сессии */}
       <Route path="/player-session/:sessionId" element={
         <ProtectedPlayerRoute>
-          <PlayerMapPage />
+          <PlayerBattleMapPage />
         </ProtectedPlayerRoute>
       } />
 

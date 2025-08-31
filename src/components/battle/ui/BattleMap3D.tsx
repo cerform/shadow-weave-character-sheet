@@ -27,7 +27,7 @@ export default function BattleMap3D({
   sessionId = 'default-session',
   mapId = 'default-map',
   isDM = false
-}: Partial<BattleMap3DProps> & { isDM?: boolean } = {}) {
+}: Partial<BattleMap3DProps> & { isDM?: boolean }) {
   const tokens = useBattleUIStore((s) => s.tokens);
   const { 
     tokens: enhancedTokens, 
