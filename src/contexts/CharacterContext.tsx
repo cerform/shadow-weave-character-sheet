@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useCallback, useEffect } from 'react';
 import { Character } from '@/types/character';
 import { useCharacterState } from '@/hooks/useCharacterState';
-import { useCharacterOperations } from '@/hooks/useCharacterOperations';
+import { useCharacterOperations } from '@/hooks/useCharacterOperations.tsx';
 import { supabase } from '@/integrations/supabase/client';
 
 interface CharacterContextType {
