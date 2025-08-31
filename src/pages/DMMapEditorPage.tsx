@@ -10,6 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { publicModelUrl } from '@/utils/storageUrls';
 import { SafeGLTFLoader } from '@/components/battle/SafeGLTFLoader';
 import { GithubAssetsLibrary } from '@/components/admin/GithubAssetsLibrary';
+import { MapScaleController } from '@/components/battle/controls/MapScaleController';
 
 function GLTFModel({ path, position = [0,0,0], rotation = [0,0,0], scale = [1,1,1] }: any) {
   const url = useMemo(() => (typeof path === 'string' && /^https?:/i.test(path) ? path : publicModelUrl(path)), [path]);
@@ -95,6 +96,27 @@ const DMMapEditorPage: React.FC = () => {
           </CardContent>
         </Card>
         <GithubAssetsLibrary mapId={mapId} />
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Масштаб сцены</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <MapScaleController
+              scale={100}
+              onScaleChange={(value) => {
+                // Логика изменения масштаба 3D сцены
+                console.log('Scene scale changed to:', value);
+              }}
+              min={25}
+              max={300}
+              step={5}
+              label="Масштаб"
+              showSlider={true}
+              showButtons={true}
+            />
+          </CardContent>
+        </Card>
 
         <Card>
           <CardHeader>

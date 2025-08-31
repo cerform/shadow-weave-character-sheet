@@ -299,6 +299,32 @@ export const SimpleBattleUI: React.FC<SimpleBattleUIProps> = ({
               </div>
             )}
 
+            {/* Секция карты - только в режиме навигации */}
+            {currentMode === InteractionMode.NAVIGATION && (
+              <div className="space-y-2">
+                <div className="text-xs font-medium text-muted-foreground">Масштаб карты</div>
+                <MapScaleController
+                  scale={100}
+                  onScaleChange={(value) => {
+                    toast({
+                      title: "Масштаб изменен",
+                      description: `Масштаб: ${value}%`,
+                    });
+                    // Логика изменения масштаба карты
+                    if ((window as any).battleMap?.setScale) {
+                      (window as any).battleMap.setScale(value / 100);
+                    }
+                  }}
+                  min={25}
+                  max={300}
+                  step={5}
+                  label="Масштаб карты"
+                  showSlider={true}
+                  showButtons={true}
+                />
+              </div>
+            )}
+
             {/* Секция камеры - только в режиме камеры */}
             {currentMode === InteractionMode.CAMERA && (
               <div className="space-y-2">
