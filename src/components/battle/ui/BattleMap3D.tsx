@@ -12,6 +12,9 @@ import { FogInteractionSystem } from '../fog/FogInteractionSystem';
 import { CameraControlSystem } from '../camera/CameraControlSystem';
 import { SimpleBattleUI } from './SimpleBattleUI';
 import MiniMap from '../minimap/MiniMap';
+import SessionChat from '@/components/session/SessionChat';
+import { SessionAudioPlayer } from '@/components/session/SessionAudioPlayer';
+import { useSessionSync } from '@/hooks/useSessionSync';
 
 interface BattleMap3DProps {
   sessionId?: string;
@@ -21,9 +24,10 @@ interface BattleMap3DProps {
 }
 
 export default function BattleMap3D({ 
-  sessionId = 'default-session', 
-  mapId = 'default-map'
-}: Partial<BattleMap3DProps> = {}) {
+  sessionId = 'default-session',
+  mapId = 'default-map',
+  isDM = false
+}: Partial<BattleMap3DProps> & { isDM?: boolean } = {}) {
   const tokens = useBattleUIStore((s) => s.tokens);
   const { 
     tokens: enhancedTokens, 
@@ -35,6 +39,7 @@ export default function BattleMap3D({
     clearMap
   } = useEnhancedBattleStore();
   
+  const { sessionState, updateSessionState } = useSessionSync(sessionId);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
@@ -62,6 +67,12 @@ export default function BattleMap3D({
         const url = URL.createObjectURL(file);
         console.log('🗺️ Creating object URL:', url);
         setMapImageUrl(url);
+        
+        // Синхронизируем с другими участниками
+        if (isDM) {
+          updateSessionState({ current_map_url: url });
+        }
+        
         console.log('🗺️ Map image loaded successfully');
       } else {
         console.log('❌ Invalid file type:', file.type);
@@ -88,8 +99,21 @@ export default function BattleMap3D({
     console.log('🗑️ handleClearMap called');
     console.log('🗑️ Current mapImageUrl:', mapImageUrl);
     clearMap();
+    
+    // Синхронизируем с другими участниками
+    if (isDM) {
+      updateSessionState({ current_map_url: null });
+    }
+    
     console.log('🗑️ Map cleared');
   };
+
+  // Синхронизируем URL карты с состоянием сессии
+  useEffect(() => {
+    if (sessionState?.current_map_url && sessionState.current_map_url !== mapImageUrl) {
+      setMapImageUrl(sessionState.current_map_url);
+    }
+  }, [sessionState?.current_map_url, mapImageUrl]);
 
   // Map Texture Components
   const MapPlaneWithTexture = ({ imageUrl }: { imageUrl: string }) => {
@@ -120,24 +144,39 @@ export default function BattleMap3D({
 
   return (
     <div className="w-full h-full relative bg-background rounded-xl overflow-hidden border border-border">
-      {/* Современный UI */}
-      <SimpleBattleUI
-        paintMode={uiPaintMode}
-        setPaintMode={setUiPaintMode}
-        brushSize={uiBrushSize}
-        setBrushSize={setUiBrushSize}
-        onUploadMap={handleUploadMap}
-        onClearMap={handleClearMap}
+      {/* Современный UI - только для ДМ */}
+      {isDM && (
+        <SimpleBattleUI
+          paintMode={uiPaintMode}
+          setPaintMode={setUiPaintMode}
+          brushSize={uiBrushSize}
+          setBrushSize={setUiBrushSize}
+          onUploadMap={handleUploadMap}
+          onClearMap={handleClearMap}
+        />
+      )}
+
+      {/* Чат сессии */}
+      <SessionChat sessionId={sessionId} />
+      
+      {/* Аудио плеер */}
+      <SessionAudioPlayer 
+        sessionId={sessionId} 
+        isDM={isDM}
+        className="fixed bottom-4 left-4"
       />
 
-      {/* Скрытый инпут для загрузки карты */}
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="image/*"
-        onChange={handleFileSelect}
-        className="hidden"
-      />
+      {/* Современный UI */}
+      {/* Скрытый инпут для загрузки карты - только для ДМ */}
+      {isDM && (
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          onChange={handleFileSelect}
+          className="hidden"
+        />
+      )}
       
       {/* 3D Canvas */}
       <div className="absolute inset-0 z-0">
