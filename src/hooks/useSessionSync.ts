@@ -95,7 +95,7 @@ export const useSessionSync = (sessionId: string) => {
     loadInitialData();
   }, [sessionId, toast]);
 
-  // Подписываемся на изменения в реальном времени (только сообщения пока)
+  // Подписываемся на изменения в реальном времени
   useEffect(() => {
     if (!sessionId) return;
 
@@ -111,7 +111,7 @@ export const useSessionSync = (sessionId: string) => {
           filter: `session_id=eq.${sessionId}`
         },
         (payload) => {
-          console.log('💬 New message:', payload);
+          console.log('💬 Новое сообщение:', payload);
           const newMessage = {
             id: payload.new.id,
             session_id: payload.new.session_id,
@@ -126,24 +126,106 @@ export const useSessionSync = (sessionId: string) => {
       )
       .subscribe();
 
+    // Подписка на изменения игровых сессий  
+    const sessionChannel = supabase
+      .channel('game-session-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'game_sessions',
+          filter: `id=eq.${sessionId}`
+        },
+        (payload) => {
+          console.log('🎮 Обновление сессии:', payload);
+          toast({
+            title: "Сессия обновлена",
+            description: "Мастер изменил настройки сессии",
+          });
+        }
+      )
+      .subscribe();
+
+    // Подписка на изменения токенов на карте
+    const tokensChannel = supabase
+      .channel('battle-tokens-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'battle_tokens',
+          filter: `session_id=eq.${sessionId}`
+        },
+        (payload) => {
+          console.log('🎯 Изменение токенов:', payload);
+          toast({
+            title: "Карта обновлена",
+            description: "Позиции токенов изменились",
+          });
+        }
+      )
+      .subscribe();
+
+    // Подписка на изменения карт
+    const mapsChannel = supabase
+      .channel('battle-maps-changes') 
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'battle_maps',
+          filter: `session_id=eq.${sessionId}`
+        },
+        (payload) => {
+          console.log('🗺️ Изменение карты:', payload);
+          toast({
+            title: "Новая карта",
+            description: "Мастер сменил карту боя",
+          });
+        }
+      )
+      .subscribe();
+
     return () => {
       supabase.removeChannel(messagesChannel);
+      supabase.removeChannel(sessionChannel);
+      supabase.removeChannel(tokensChannel);
+      supabase.removeChannel(mapsChannel);
     };
-  }, [sessionId]);
+  }, [sessionId, toast]);
 
-  // Функции для обновления состояния (пока заглушки)
+  // Функции для обновления состояния сессии через Supabase
   const updateSessionState = async (updates: Partial<Omit<SessionState, 'id' | 'session_id' | 'created_at' | 'updated_at'>>) => {
     try {
-      console.log('Update session state:', updates);
-      // Пока просто логируем, так как таблица session_state еще не создана
+      console.log('🔄 Обновление состояния сессии:', updates);
+      
+      // Обновляем основную таблицу игровой сессии
+      const { error } = await supabase
+        .from('game_sessions')
+        .update({
+          fog_of_war_enabled: updates.fog_enabled,
+          grid_enabled: updates.grid_visible,
+          grid_size: updates.grid_scale,
+          zoom_level: updates.map_scale,
+          view_center_x: updates.camera_position?.x,
+          view_center_y: updates.camera_position?.y,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', sessionId);
+
+      if (error) throw error;
+
       toast({
-        title: "Обновление состояния",
-        description: "Состояние будет синхронизировано",
+        title: "Состояние обновлено",
+        description: "Изменения синхронизированы со всеми участниками",
       });
     } catch (error) {
-      console.error('Error updating session state:', error);
+      console.error('❌ Ошибка обновления состояния сессии:', error);
       toast({
-        title: "Ошибка",
+        title: "Ошибка синхронизации",
         description: "Не удалось обновить состояние сессии",
         variant: "destructive"
       });
