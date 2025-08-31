@@ -182,9 +182,9 @@ const BattleMap2DPlayer: React.FC<BattleMap2DPlayerProps> = ({
       </Stage>
 
       {/* Контролы масштаба */}
-      <div className="absolute bottom-4 right-4 flex flex-col gap-2">
+      <div className="absolute bottom-4 right-4 flex flex-col gap-2 bg-background/90 backdrop-blur-sm border border-border rounded-lg p-2">
         <button
-          className="w-8 h-8 bg-background border border-border rounded flex items-center justify-center hover:bg-muted"
+          className="w-8 h-8 bg-primary text-primary-foreground border border-border rounded flex items-center justify-center hover:bg-primary/80 transition-colors"
           onClick={() => {
             const newScale = Math.min(3, scale * 1.2);
             setScale(newScale);
@@ -192,17 +192,35 @@ const BattleMap2DPlayer: React.FC<BattleMap2DPlayerProps> = ({
         >
           +
         </button>
-        <div className="text-xs text-center text-muted-foreground px-1">
+        <div className="text-xs text-center text-muted-foreground px-1 font-mono">
           {Math.round(scale * 100)}%
         </div>
         <button
-          className="w-8 h-8 bg-background border border-border rounded flex items-center justify-center hover:bg-muted"
+          className="w-8 h-8 bg-primary text-primary-foreground border border-border rounded flex items-center justify-center hover:bg-primary/80 transition-colors"
           onClick={() => {
             const newScale = Math.max(0.1, scale / 1.2);
             setScale(newScale);
           }}
         >
           -
+        </button>
+        <button
+          className="w-8 h-8 bg-secondary text-secondary-foreground border border-border rounded flex items-center justify-center hover:bg-secondary/80 transition-colors text-xs"
+          onClick={() => {
+            setScale(1);
+            setPosition({ x: 0, y: 0 });
+          }}
+        >
+          1:1
+        </button>
+        <button
+          className="w-8 h-8 bg-secondary text-secondary-foreground border border-border rounded flex items-center justify-center hover:bg-secondary/80 transition-colors text-xs"
+          onClick={() => {
+            setScale(0.5);
+            setPosition({ x: 0, y: 0 });
+          }}
+        >
+          Fit
         </button>
       </div>
 

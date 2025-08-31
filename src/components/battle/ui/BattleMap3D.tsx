@@ -15,6 +15,7 @@ import MiniMap from '../minimap/MiniMap';
 import SessionChat from '@/components/session/SessionChat';
 import { SessionAudioPlayer } from '@/components/session/SessionAudioPlayer';
 import { useSessionSync } from '@/hooks/useSessionSync';
+import ZoomControls from './ZoomControls';
 
 interface BattleMap3DProps {
   sessionId?: string;
@@ -243,6 +244,11 @@ export default function BattleMap3D({
             brushSize={uiBrushSize}
           />
         </Canvas>
+      </div>
+      
+      {/* Контролы масштаба для 3D карты */}
+      <div className="absolute bottom-4 right-4 flex flex-col gap-2 bg-background/90 backdrop-blur-sm border border-border rounded-lg p-2">
+        <ZoomControls canvasRef={canvasRef} />
       </div>
       
       {/* Мини-карта */}
