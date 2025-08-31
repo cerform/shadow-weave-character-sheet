@@ -235,7 +235,7 @@ export type Database = {
             foreignKeyName: "battle_maps_session_id_fkey"
             columns: ["session_id"]
             isOneToOne: false
-            referencedRelation: "game_sessions"
+            referencedRelation: "dm_sessions"
             referencedColumns: ["id"]
           },
         ]
