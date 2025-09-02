@@ -183,7 +183,12 @@ const SupabaseAuthForm: React.FC<SupabaseAuthFormProps> = ({ onSuccess }) => {
         throw error;
       }
 
-      // OAuth редирект происходит автоматически
+      // Перенаправляем на Google для авторизации
+      if (data?.url) {
+        console.log('🔄 Перенаправляем на Google:', data.url);
+        window.location.href = data.url;
+        return; // Не сбрасываем loading, так как происходит редирект
+      }
     } catch (error: any) {
       console.error('❌ Google auth catch error:', error);
       toast({
