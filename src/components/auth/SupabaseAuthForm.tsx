@@ -163,16 +163,6 @@ const SupabaseAuthForm: React.FC<SupabaseAuthFormProps> = ({ onSuccess }) => {
   const handleGoogleSignIn = async () => {
     setLoading(true);
     
-    // Проверяем, находимся ли мы в iframe (редакторе Lovable)
-    if (window.top !== window.self) {
-      console.log('🔄 Обнаружен iframe, открываем в новой вкладке');
-      // Открываем страницу аутентификации в новой вкладке
-      const authUrl = `${window.location.origin}/auth`;
-      window.open(authUrl, '_blank');
-      setLoading(false);
-      return;
-    }
-    
     try {
       console.log('🔄 Начинаем Google авторизацию');
       const { data, error } = await supabase.auth.signInWithOAuth({
