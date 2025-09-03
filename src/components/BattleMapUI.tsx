@@ -992,12 +992,81 @@ export default function BattleMapUI({ sessionId }: { sessionId?: string }) {
                     />
                   )}
 
-                  {/* Панель выбранного токена */}
-                  {selectedId && (() => {
-                    const t = tokens.find(x => x.id === selectedId);
-                    if (!t || !t.position) return null;
-                    const left = Math.min(MAP_W - 260, Math.max(0, t.position.x + GRID + 8));
-                    const top = Math.min(MAP_H - 170, Math.max(0, t.position.y - 8));
+                   {/* Контролы масштабирования */}
+                   <div className="absolute bottom-4 right-4 flex flex-col gap-1 bg-card/95 backdrop-blur-sm border-2 border-border rounded-lg p-2 shadow-lg z-10">
+                     <button
+                       className="w-10 h-10 bg-primary text-primary-foreground border border-border rounded-md flex items-center justify-center hover:bg-primary/90 transition-colors text-lg font-bold shadow-sm"
+                       onClick={() => {
+                         const container = mapRef.current?.parentElement;
+                         if (container) {
+                           const currentWidth = currentMapSize.width;
+                           const newWidth = Math.min(currentWidth * 1.2, 2400);
+                           const scale = newWidth / MAP_W;
+                           // Применяем масштабирование через CSS transform
+                           if (mapRef.current) {
+                             mapRef.current.style.transform = `scale(${scale})`;
+                             mapRef.current.style.transformOrigin = 'center center';
+                           }
+                         }
+                       }}
+                       title="Увеличить масштаб"
+                     >
+                       +
+                     </button>
+                     <div className="text-sm text-center text-foreground px-1 font-mono bg-background/50 rounded border border-border/50 py-1">
+                       100%
+                     </div>
+                     <button
+                       className="w-10 h-10 bg-primary text-primary-foreground border border-border rounded-md flex items-center justify-center hover:bg-primary/90 transition-colors text-lg font-bold shadow-sm"
+                       onClick={() => {
+                         const container = mapRef.current?.parentElement;
+                         if (container) {
+                           const currentWidth = currentMapSize.width;
+                           const newWidth = Math.max(currentWidth / 1.2, 400);
+                           const scale = newWidth / MAP_W;
+                           // Применяем масштабирование через CSS transform
+                           if (mapRef.current) {
+                             mapRef.current.style.transform = `scale(${scale})`;
+                             mapRef.current.style.transformOrigin = 'center center';
+                           }
+                         }
+                       }}
+                       title="Уменьшить масштаб"
+                     >
+                       -
+                     </button>
+                     <button
+                       className="w-10 h-10 bg-secondary text-secondary-foreground border border-border rounded-md flex items-center justify-center hover:bg-secondary/90 transition-colors text-xs font-semibold shadow-sm"
+                       onClick={() => {
+                         if (mapRef.current) {
+                           mapRef.current.style.transform = 'scale(1)';
+                           mapRef.current.style.transformOrigin = 'center center';
+                         }
+                       }}
+                       title="Сброс масштаба"
+                     >
+                       1:1
+                     </button>
+                     <button
+                       className="w-10 h-10 bg-secondary text-secondary-foreground border border-border rounded-md flex items-center justify-center hover:bg-secondary/90 transition-colors text-xs font-semibold shadow-sm"
+                       onClick={() => {
+                         if (mapRef.current) {
+                           mapRef.current.style.transform = 'scale(0.7)';
+                           mapRef.current.style.transformOrigin = 'center center';
+                         }
+                       }}
+                       title="Подогнать карту"
+                     >
+                       Fit
+                     </button>
+                   </div>
+
+                   {/* Панель выбранного токена */}
+                   {selectedId && (() => {
+                     const t = tokens.find(x => x.id === selectedId);
+                     if (!t || !t.position) return null;
+                     const left = Math.min(MAP_W - 260, Math.max(0, t.position.x + GRID + 8));
+                     const top = Math.min(MAP_H - 170, Math.max(0, t.position.y - 8));
                     return (
                       <div className="absolute z-10" style={{ left, top }}>
                         <div className="w-64 rounded-xl border bg-card p-3 space-y-2 shadow-xl">
