@@ -13,6 +13,7 @@ serve(async (req) => {
 
   try {
     const { code } = await req.json()
+    console.log('🔄 Получен код от Google:', code ? 'есть' : 'нет')
 
     if (!code) {
       return new Response(
@@ -29,7 +30,7 @@ serve(async (req) => {
     const googleClientSecret = Deno.env.get('GOOGLE_CLIENT_SECRET')
     
     if (!googleClientId || !googleClientSecret) {
-      console.error('Google credentials не настроены')
+      console.error('❌ Google credentials не настроены')
       return new Response(
         JSON.stringify({ error: 'Google credentials не настроены' }),
         { 
@@ -59,7 +60,7 @@ serve(async (req) => {
     const tokenData = await tokenResponse.json()
 
     if (!tokenResponse.ok) {
-      console.error('Ошибка обмена токенов:', tokenData)
+      console.error('❌ Ошибка обмена токенов:', tokenData)
       return new Response(
         JSON.stringify({ error: 'Ошибка получения токенов от Google' }),
         { 
@@ -81,7 +82,7 @@ serve(async (req) => {
     const userData = await userResponse.json()
 
     if (!userResponse.ok) {
-      console.error('Ошибка получения данных пользователя:', userData)
+      console.error('❌ Ошибка получения данных пользователя:', userData)
       return new Response(
         JSON.stringify({ error: 'Ошибка получения данных пользователя' }),
         { 
@@ -91,7 +92,7 @@ serve(async (req) => {
       )
     }
 
-    console.log('✅ Получили данные пользователя от Google')
+    console.log('✅ Получили данные пользователя от Google:', userData.email)
 
     // Создаем Supabase клиент
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
@@ -99,51 +100,22 @@ serve(async (req) => {
     
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
-    // Проверяем, существует ли пользователь с таким email
-    const { data: existingUser, error: userError } = await supabase.auth.admin.getUserByEmail(userData.email)
-
-    let userId = existingUser?.user?.id
-
-    if (!existingUser?.user) {
-      // Создаем нового пользователя
-      console.log('🔄 Создаем нового пользователя')
-      const { data: newUser, error: createError } = await supabase.auth.admin.createUser({
-        email: userData.email,
-        email_confirm: true,
-        user_metadata: {
-          display_name: userData.name,
-          avatar_url: userData.picture,
-          provider: 'google',
+    // Используем signInWithOAuth для создания или входа пользователя
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: 'postmessage',
+        queryParams: {
+          code,
+          access_token: tokenData.access_token,
         }
-      })
-
-      if (createError) {
-        console.error('Ошибка создания пользователя:', createError)
-        return new Response(
-          JSON.stringify({ error: 'Ошибка создания пользователя' }),
-          { 
-            status: 500,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-          }
-        )
       }
-
-      userId = newUser.user?.id
-      console.log('✅ Создан новый пользователь')
-    } else {
-      console.log('✅ Пользователь уже существует')
-    }
-
-    // Создаем сессию для пользователя
-    const { data: sessionData, error: sessionError } = await supabase.auth.admin.generateLink({
-      type: 'magiclink',
-      email: userData.email,
     })
 
-    if (sessionError) {
-      console.error('Ошибка создания сессии:', sessionError)
+    if (error) {
+      console.error('❌ Ошибка Supabase OAuth:', error)
       return new Response(
-        JSON.stringify({ error: 'Ошибка создания сессии' }),
+        JSON.stringify({ error: 'Ошибка создания сессии Supabase' }),
         { 
           status: 500,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -151,13 +123,13 @@ serve(async (req) => {
       )
     }
 
-    console.log('✅ Сессия создана успешно')
+    console.log('✅ Успешно создана сессия Supabase')
 
     return new Response(
       JSON.stringify({ 
         success: true,
         user: userData,
-        session_url: sessionData.properties?.action_link
+        message: 'Авторизация успешна'
       }),
       { 
         status: 200,
@@ -166,7 +138,7 @@ serve(async (req) => {
     )
 
   } catch (error) {
-    console.error('Неожиданная ошибка:', error)
+    console.error('❌ Неожиданная ошибка:', error)
     return new Response(
       JSON.stringify({ error: 'Произошла неожиданная ошибка' }),
       { 

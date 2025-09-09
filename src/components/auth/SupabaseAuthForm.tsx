@@ -171,8 +171,9 @@ const SupabaseAuthForm: React.FC<SupabaseAuthFormProps> = ({ onSuccess }) => {
         throw new Error('Google Identity Services не загружен. Обновите страницу и попробуйте снова.');
       }
 
-      // Google Client ID (публичный ключ)
-      const googleClientId = '60ca1f07-9f8f-4253-82ad-54f81c6c2667-web-app.googleusercontent.com';
+      // Google Client ID (нужно получить из Google Cloud Console)
+      // Для тестирования используется фиктивный ID
+      const googleClientId = 'your-google-client-id.googleusercontent.com';
       
       const codeClient = window.google.accounts.oauth2.initCodeClient({
         client_id: googleClientId,
@@ -194,31 +195,26 @@ const SupabaseAuthForm: React.FC<SupabaseAuthFormProps> = ({ onSuccess }) => {
             console.log('🔄 Получили код от Google, отправляем на сервер');
             
             // Отправляем код на edge function
-            const result = await fetch('/api/auth/google/callback', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ code: response.code }),
+            const result = await supabase.functions.invoke('google-auth', {
+              body: { code: response.code },
             });
 
-            const data = await result.json();
-            
-            if (!result.ok) {
-              throw new Error(data.error || 'Ошибка авторизации');
+            if (result.error) {
+              throw new Error(result.error.message || 'Ошибка авторизации');
             }
 
             console.log('✅ Успешная авторизация через Google');
 
-            // Если есть session_url, используем его для авторизации в Supabase
-            if (data.session_url) {
-              // Перенаправляем на magic link для установки сессии
-              window.location.href = data.session_url;
-            } else {
-              toast({
-                title: "Вход выполнен!",
-                description: "Добро пожаловать!",
-              });
+            // Перезагружаем страницу для обновления сессии
+            toast({
+              title: "Вход выполнен!",
+              description: "Добро пожаловать!",
+            });
+            
+            // Небольшая задержка перед перенаправлением
+            setTimeout(() => {
               onSuccess?.();
-            }
+            }, 1000);
             
           } catch (error) {
             console.error('❌ Ошибка обмена кода:', error);
