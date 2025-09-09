@@ -187,12 +187,42 @@ const SupabaseAuthForm: React.FC<SupabaseAuthFormProps> = ({ onSuccess }) => {
         throw error;
       }
 
-      // Перенаправляем на Google для авторизации
+      // Открываем popup окно для авторизации
       if (data?.url) {
-        console.log('🔄 Перенаправляем на Google:', data.url);
-        // Открываем в новом окне чтобы избежать X-Frame-Options ошибки
-        window.open(data.url, '_blank', 'noopener,noreferrer');
-        return; // Не сбрасываем loading, так как происходит редирект
+        console.log('🔄 Открываем popup для Google:', data.url);
+        
+        // Параметры popup окна
+        const popupWidth = 500;
+        const popupHeight = 600;
+        const left = (window.screen.width / 2) - (popupWidth / 2);
+        const top = (window.screen.height / 2) - (popupHeight / 2);
+        
+        const popup = window.open(
+          data.url,
+          'google-auth',
+          `width=${popupWidth},height=${popupHeight},left=${left},top=${top},resizable=yes,scrollbars=yes,status=yes`
+        );
+
+        // Слушаем сообщения от popup окна или проверяем его закрытие
+        const checkClosed = setInterval(() => {
+          if (popup?.closed) {
+            clearInterval(checkClosed);
+            console.log('🔄 Popup закрыт, проверяем авторизацию');
+            // Небольшая задержка перед проверкой сессии
+            setTimeout(async () => {
+              const { data: session } = await supabase.auth.getSession();
+              if (session?.session?.user) {
+                console.log('✅ Авторизация успешна!');
+                onSuccess?.();
+              } else {
+                console.log('❌ Авторизация не завершена');
+                setLoading(false);
+              }
+            }, 1000);
+          }
+        }, 1000);
+
+        return; // Не сбрасываем loading сразу
       }
     } catch (error: any) {
       console.error('❌ Google auth catch error:', error);
