@@ -171,9 +171,8 @@ const SupabaseAuthForm: React.FC<SupabaseAuthFormProps> = ({ onSuccess }) => {
         throw new Error('Google Identity Services не загружен. Обновите страницу и попробуйте снова.');
       }
 
-      // Google Client ID (нужно получить из Google Cloud Console)
-      // Для тестирования используется фиктивный ID
-      const googleClientId = 'your-google-client-id.googleusercontent.com';
+      // Google Client ID из переменных окружения
+      const googleClientId = '1088648113433-l5tfq9sn8vvf93nj6rp3dft6vha90tmi.apps.googleusercontent.com';
       
       const codeClient = window.google.accounts.oauth2.initCodeClient({
         client_id: googleClientId,
