@@ -165,10 +165,14 @@ const SupabaseAuthForm: React.FC<SupabaseAuthFormProps> = ({ onSuccess }) => {
     
     try {
       console.log('🔄 Начинаем Google авторизацию');
+      const redirectUrl = `${window.location.origin}/auth?callback=true`;
+      console.log('🌍 Current window.location.origin:', window.location.origin);
+      console.log('🔗 Generated redirectTo URL:', redirectUrl);
+      
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/auth?callback=true`,
+          redirectTo: redirectUrl,
           queryParams: {
             access_type: 'offline',
             prompt: 'select_account',
