@@ -164,78 +164,80 @@ const SupabaseAuthForm: React.FC<SupabaseAuthFormProps> = ({ onSuccess }) => {
     setLoading(true);
     
     try {
-      console.log('🔄 Начинаем Google авторизацию');
+      console.log('🔄 Начинаем Google авторизацию через GIS');
       
-      // Определяем правильный redirect URL для текущего окна
-      let redirectUrl;
-      if (window.location.hostname.includes('lovable.dev')) {
-        // Для development окна используем development URL
-        redirectUrl = `https://lovable.dev/projects/60ca1f07-9f8f-4253-82ad-54f81c6c2667/auth?callback=true`;
-      } else {
-        // Для preview и других доменов используем текущий origin
-        redirectUrl = `${window.location.origin}/auth?callback=true`;
+      // Проверяем, загружен ли Google Identity Services
+      if (!window.google?.accounts?.oauth2) {
+        throw new Error('Google Identity Services не загружен. Обновите страницу и попробуйте снова.');
       }
+
+      // Google Client ID (публичный ключ)
+      const googleClientId = '60ca1f07-9f8f-4253-82ad-54f81c6c2667-web-app.googleusercontent.com';
       
-      console.log('🌍 Current hostname:', window.location.hostname);
-      console.log('🔗 Generated redirectTo URL:', redirectUrl);
-      
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: redirectUrl,
-          queryParams: {
-            access_type: 'offline',
-            prompt: 'select_account',
-          },
+      const codeClient = window.google.accounts.oauth2.initCodeClient({
+        client_id: googleClientId,
+        scope: 'openid email profile',
+        ux_mode: 'popup',
+        callback: async (response: { code: string; error?: string }) => {
+          if (response.error) {
+            console.error('❌ Google auth error:', response.error);
+            toast({
+              title: "Ошибка входа через Google",
+              description: response.error,
+              variant: "destructive",
+            });
+            setLoading(false);
+            return;
+          }
+
+          try {
+            console.log('🔄 Получили код от Google, отправляем на сервер');
+            
+            // Отправляем код на edge function
+            const result = await fetch('/api/auth/google/callback', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ code: response.code }),
+            });
+
+            const data = await result.json();
+            
+            if (!result.ok) {
+              throw new Error(data.error || 'Ошибка авторизации');
+            }
+
+            console.log('✅ Успешная авторизация через Google');
+
+            // Если есть session_url, используем его для авторизации в Supabase
+            if (data.session_url) {
+              // Перенаправляем на magic link для установки сессии
+              window.location.href = data.session_url;
+            } else {
+              toast({
+                title: "Вход выполнен!",
+                description: "Добро пожаловать!",
+              });
+              onSuccess?.();
+            }
+            
+          } catch (error) {
+            console.error('❌ Ошибка обмена кода:', error);
+            toast({
+              title: "Ошибка входа через Google",
+              description: error instanceof Error ? error.message : 'Произошла ошибка',
+              variant: "destructive",
+            });
+          } finally {
+            setLoading(false);
+          }
         },
       });
 
-      console.log('✅ Google auth response:', { data, error });
-
-      if (error) {
-        console.error('❌ Google auth error:', error);
-        throw error;
-      }
-
-      // Открываем popup окно для авторизации
-      if (data?.url) {
-        console.log('🔄 Открываем popup для Google:', data.url);
-        
-        // Параметры popup окна
-        const popupWidth = 500;
-        const popupHeight = 600;
-        const left = (window.screen.width / 2) - (popupWidth / 2);
-        const top = (window.screen.height / 2) - (popupHeight / 2);
-        
-        const popup = window.open(
-          data.url,
-          'google-auth',
-          `width=${popupWidth},height=${popupHeight},left=${left},top=${top},resizable=yes,scrollbars=yes,status=yes`
-        );
-
-        // Слушаем сообщения от popup окна или проверяем его закрытие
-        const checkClosed = setInterval(() => {
-          if (popup?.closed) {
-            clearInterval(checkClosed);
-            console.log('🔄 Popup закрыт, проверяем авторизацию');
-            // Небольшая задержка перед проверкой сессии
-            setTimeout(async () => {
-              const { data: session } = await supabase.auth.getSession();
-              if (session?.session?.user) {
-                console.log('✅ Авторизация успешна!');
-                onSuccess?.();
-              } else {
-                console.log('❌ Авторизация не завершена');
-                setLoading(false);
-              }
-            }, 1000);
-          }
-        }, 1000);
-
-        return; // Не сбрасываем loading сразу
-      }
+      // Запускаем авторизацию
+      codeClient.requestCode();
+      
     } catch (error: any) {
-      console.error('❌ Google auth catch error:', error);
+      console.error('❌ Google auth initialization error:', error);
       toast({
         title: "Ошибка входа через Google",
         description: error.message || "Произошла неизвестная ошибка",
