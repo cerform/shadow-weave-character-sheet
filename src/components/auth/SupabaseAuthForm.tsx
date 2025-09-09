@@ -165,8 +165,18 @@ const SupabaseAuthForm: React.FC<SupabaseAuthFormProps> = ({ onSuccess }) => {
     
     try {
       console.log('🔄 Начинаем Google авторизацию');
-      const redirectUrl = `${window.location.origin}/auth?callback=true`;
-      console.log('🌍 Current window.location.origin:', window.location.origin);
+      
+      // Определяем правильный redirect URL для текущего окна
+      let redirectUrl;
+      if (window.location.hostname.includes('lovable.dev')) {
+        // Для development окна используем development URL
+        redirectUrl = `https://lovable.dev/projects/60ca1f07-9f8f-4253-82ad-54f81c6c2667/auth?callback=true`;
+      } else {
+        // Для preview и других доменов используем текущий origin
+        redirectUrl = `${window.location.origin}/auth?callback=true`;
+      }
+      
+      console.log('🌍 Current hostname:', window.location.hostname);
       console.log('🔗 Generated redirectTo URL:', redirectUrl);
       
       const { data, error } = await supabase.auth.signInWithOAuth({
