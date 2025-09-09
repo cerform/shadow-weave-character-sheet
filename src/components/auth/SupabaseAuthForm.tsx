@@ -190,7 +190,8 @@ const SupabaseAuthForm: React.FC<SupabaseAuthFormProps> = ({ onSuccess }) => {
       // Перенаправляем на Google для авторизации
       if (data?.url) {
         console.log('🔄 Перенаправляем на Google:', data.url);
-        window.location.href = data.url;
+        // Открываем в новом окне чтобы избежать X-Frame-Options ошибки
+        window.open(data.url, '_blank', 'noopener,noreferrer');
         return; // Не сбрасываем loading, так как происходит редирект
       }
     } catch (error: any) {
