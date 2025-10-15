@@ -18,9 +18,6 @@ verify_jwt = false
 [functions.meshy-models]
 verify_jwt = false
 
-[functions.google-auth]
-verify_jwt = false
-
 [db]
 port = 54322
 

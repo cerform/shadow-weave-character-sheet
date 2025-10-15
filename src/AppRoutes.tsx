@@ -137,7 +137,6 @@ const AppRoutes: React.FC = () => {
       
       {/* Аутентификация */}
       <Route path="/auth" element={<AuthPage />} />
-      <Route path="/api/auth/google/callback" element={<div>Processing Google auth...</div>} />
       <Route path="/unauthorized" element={<UnauthorizedPage />} />
       <Route path="/dashboard" element={<RoleBasedRedirect />} />
       
