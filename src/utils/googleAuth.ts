@@ -32,7 +32,7 @@ export function initGoogleAuth({ clientId, onSuccess, onError }: GoogleAuthConfi
         console.log('🔄 Получили код от Google, отправляем на сервер');
         
         // Отправляем code на edge function для обмена на токены
-        const result = await fetch('/api/auth/google/callback', {
+        const result = await fetch('https://mqdjwhjtvjnktobgruuu.supabase.co/functions/v1/auth-google-callback', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ code: response.code }),

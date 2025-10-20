@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,6 +8,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Mail, Lock, User, Crown } from 'lucide-react';
+import { initGoogleAuth, startGoogleAuth } from '@/utils/googleAuth';
 
 // Google icon as SVG component
 const GoogleIcon = () => (
@@ -41,7 +42,34 @@ const SupabaseAuthForm: React.FC<SupabaseAuthFormProps> = ({ onSuccess }) => {
   const [password, setPassword] = useState('');
   const [displayName, setDisplayName] = useState('');
   const [isDM, setIsDM] = useState(false);
+  const [googleCodeClient, setGoogleCodeClient] = useState<any>(null);
   const { toast } = useToast();
+
+  // Инициализируем Google Identity Services
+  useEffect(() => {
+    const clientId = 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com'; // TODO: заменить на реальный
+    
+    const codeClient = initGoogleAuth({
+      clientId,
+      onSuccess: () => {
+        toast({
+          title: "Вход выполнен!",
+          description: "Добро пожаловать!",
+        });
+        onSuccess?.();
+      },
+      onError: (error) => {
+        toast({
+          title: "Ошибка входа через Google",
+          description: error,
+          variant: "destructive",
+        });
+        setLoading(false);
+      }
+    });
+
+    setGoogleCodeClient(codeClient);
+  }, [toast, onSuccess]);
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -160,54 +188,19 @@ const SupabaseAuthForm: React.FC<SupabaseAuthFormProps> = ({ onSuccess }) => {
     }
   };
 
-  const handleGoogleSignIn = async () => {
-    setLoading(true);
-    
-    try {
-      console.log('🔄 Начинаем Google OAuth через Supabase');
-      console.log('🌐 Current origin:', window.location.origin);
-      console.log('🌐 Supabase URL:', 'https://mqdjwhjtvjnktobgruuu.supabase.co');
-      
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}/auth`,
-          skipBrowserRedirect: false,
-          queryParams: {
-            access_type: 'offline',
-            prompt: 'select_account',
-          }
-        }
-      });
-
-      if (error) {
-        console.error('❌ Google auth error:', error);
-        
-        // Если Google блокирует в iframe, показываем инструкции
-        if (error.message?.includes('popup') || error.message?.includes('refused')) {
-          toast({
-            title: "Требуется настройка Google OAuth",
-            description: "Проверьте настройки в Google Cloud Console и Supabase Dashboard",
-            variant: "destructive",
-          });
-        } else {
-          throw error;
-        }
-      } else {
-        console.log('✅ OAuth initiated:', data);
-      }
-      
-    } catch (error: any) {
-      console.error('❌ Google auth catch error:', error);
+  const handleGoogleSignIn = () => {
+    if (!googleCodeClient) {
       toast({
-        title: "Ошибка входа через Google",
-        description: "Убедитесь, что Google OAuth настроен правильно в Supabase",
+        title: "Google OAuth не готов",
+        description: "Пожалуйста, подождите загрузки Google Identity Services",
         variant: "destructive",
       });
-    } finally {
-      // Не сбрасываем loading здесь, т.к. будет редирект
-      setTimeout(() => setLoading(false), 3000);
+      return;
     }
+    
+    setLoading(true);
+    console.log('🔄 Начинаем Google OAuth через popup');
+    startGoogleAuth(googleCodeClient);
   };
 
   return (
