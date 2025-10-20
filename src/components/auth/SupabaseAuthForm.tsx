@@ -165,34 +165,48 @@ const SupabaseAuthForm: React.FC<SupabaseAuthFormProps> = ({ onSuccess }) => {
     
     try {
       console.log('🔄 Начинаем Google OAuth через Supabase');
+      console.log('🌐 Current origin:', window.location.origin);
+      console.log('🌐 Supabase URL:', 'https://mqdjwhjtvjnktobgruuu.supabase.co');
       
-      const { error } = await supabase.auth.signInWithOAuth({
+      const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/`,
+          redirectTo: `${window.location.origin}/auth`,
+          skipBrowserRedirect: false,
           queryParams: {
             access_type: 'offline',
-            prompt: 'consent',
+            prompt: 'select_account',
           }
         }
       });
 
       if (error) {
         console.error('❌ Google auth error:', error);
-        throw error;
+        
+        // Если Google блокирует в iframe, показываем инструкции
+        if (error.message?.includes('popup') || error.message?.includes('refused')) {
+          toast({
+            title: "Требуется настройка Google OAuth",
+            description: "Проверьте настройки в Google Cloud Console и Supabase Dashboard",
+            variant: "destructive",
+          });
+        } else {
+          throw error;
+        }
+      } else {
+        console.log('✅ OAuth initiated:', data);
       }
       
-      // Supabase автоматически перенаправит на Google OAuth
-      console.log('✅ Перенаправляем на Google OAuth');
-      
     } catch (error: any) {
-      console.error('❌ Google auth error:', error);
+      console.error('❌ Google auth catch error:', error);
       toast({
         title: "Ошибка входа через Google",
-        description: error.message || "Произошла неизвестная ошибка",
+        description: "Убедитесь, что Google OAuth настроен правильно в Supabase",
         variant: "destructive",
       });
-      setLoading(false);
+    } finally {
+      // Не сбрасываем loading здесь, т.к. будет редирект
+      setTimeout(() => setLoading(false), 3000);
     }
   };
 
