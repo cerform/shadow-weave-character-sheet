@@ -99,7 +99,7 @@ class SocketService {
       console.log('🔌 Подключение к D&D серверу...');
       
       // Для разработки используем mock-соединение без реального сервера
-      if (process.env.NODE_ENV === 'development' && !window.location.hostname.includes('localhost:3001')) {
+      if (import.meta.env.DEV && !window.location.hostname.includes('localhost:3001')) {
         console.log('📝 Режим разработки: используется mock-соединение');
         setTimeout(() => {
           console.log('✅ Mock-соединение установлено');
@@ -469,7 +469,7 @@ class SocketService {
 
   isConnected(): boolean {
     // В режиме разработки возвращаем true для mock-соединения
-    if (process.env.NODE_ENV === 'development') {
+    if (import.meta.env.DEV) {
       return true;
     }
     return this.socket?.connected || false;
