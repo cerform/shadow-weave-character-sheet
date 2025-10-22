@@ -1,14 +1,14 @@
-import React, { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
-import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
-import { Loader2, Mail, Lock, User, Crown } from 'lucide-react';
-import { initGoogleAuth, requestGoogleCode } from '@/utils/googleAuth';
+import React, { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { Loader2, Mail, Lock, User, Crown } from "lucide-react";
+import { initGoogleAuth, requestGoogleCode } from "@/utils/googleAuth";
 
 // Google icon as SVG component
 const GoogleIcon = () => (
@@ -38,17 +38,17 @@ interface SupabaseAuthFormProps {
 
 const SupabaseAuthForm: React.FC<SupabaseAuthFormProps> = ({ onSuccess }) => {
   const [loading, setLoading] = useState(false);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [displayName, setDisplayName] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [displayName, setDisplayName] = useState("");
   const [isDM, setIsDM] = useState(false);
   const [googleInitialized, setGoogleInitialized] = useState(false);
   const { toast } = useToast();
 
   // Инициализируем Google Identity Services
   useEffect(() => {
-    const clientId = 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com'; // Замените на ваш реальный Client ID
-    
+    const clientId = "843682073178-vqnnigc1l8ekndfa8ama2d2j6026ou8v.apps.googleusercontent.com"; // Замените на ваш реальный Client ID
+
     initGoogleAuth({
       clientId,
       onSuccess: () => {
@@ -66,7 +66,7 @@ const SupabaseAuthForm: React.FC<SupabaseAuthFormProps> = ({ onSuccess }) => {
           variant: "destructive",
         });
         setLoading(false);
-      }
+      },
     });
 
     setGoogleInitialized(true);
@@ -77,8 +77,8 @@ const SupabaseAuthForm: React.FC<SupabaseAuthFormProps> = ({ onSuccess }) => {
     setLoading(true);
 
     try {
-      console.log('🔄 Attempting to sign up with email:', email);
-      
+      console.log("🔄 Attempting to sign up with email:", email);
+
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -87,32 +87,32 @@ const SupabaseAuthForm: React.FC<SupabaseAuthFormProps> = ({ onSuccess }) => {
           data: {
             display_name: displayName,
             is_dm: isDM,
-          }
-        }
+          },
+        },
       });
 
-      console.log('✅ Sign up response:', { data, error });
+      console.log("✅ Sign up response:", { data, error });
 
       if (error) {
-        console.error('❌ Sign up error:', error);
+        console.error("❌ Sign up error:", error);
         throw error;
       }
 
       if (data?.user) {
         toast({
           title: "Регистрация успешна!",
-          description: data.user.email_confirmed_at 
-            ? "Добро пожаловать в мир D&D!" 
+          description: data.user.email_confirmed_at
+            ? "Добро пожаловать в мир D&D!"
             : "Проверьте email для подтверждения аккаунта",
         });
-        
+
         // Только если email подтвержден, вызываем onSuccess
-        if (data.user.email_confirmed_at || data.user.aud === 'authenticated') {
+        if (data.user.email_confirmed_at || data.user.aud === "authenticated") {
           onSuccess?.();
         }
       }
     } catch (error: any) {
-      console.error('❌ Sign up catch error:', error);
+      console.error("❌ Sign up catch error:", error);
       toast({
         title: "Ошибка регистрации",
         description: error.message || "Произошла неизвестная ошибка",
@@ -128,17 +128,17 @@ const SupabaseAuthForm: React.FC<SupabaseAuthFormProps> = ({ onSuccess }) => {
     setLoading(true);
 
     try {
-      console.log('🔄 Attempting to sign in with email:', email);
-      
+      console.log("🔄 Attempting to sign in with email:", email);
+
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
-      console.log('✅ Sign in response:', { data, error });
+      console.log("✅ Sign in response:", { data, error });
 
       if (error) {
-        console.error('❌ Sign in error:', error);
+        console.error("❌ Sign in error:", error);
         throw error;
       }
 
@@ -150,7 +150,7 @@ const SupabaseAuthForm: React.FC<SupabaseAuthFormProps> = ({ onSuccess }) => {
         onSuccess?.();
       }
     } catch (error: any) {
-      console.error('❌ Sign in catch error:', error);
+      console.error("❌ Sign in catch error:", error);
       toast({
         title: "Ошибка входа",
         description: error.message || "Произошла неизвестная ошибка",
@@ -198,9 +198,9 @@ const SupabaseAuthForm: React.FC<SupabaseAuthFormProps> = ({ onSuccess }) => {
       });
       return;
     }
-    
+
     setLoading(true);
-    console.log('🔄 Начинаем Google OAuth через popup');
+    console.log("🔄 Начинаем Google OAuth через popup");
     requestGoogleCode();
   };
 
@@ -211,7 +211,7 @@ const SupabaseAuthForm: React.FC<SupabaseAuthFormProps> = ({ onSuccess }) => {
           <TabsTrigger value="signin">Вход</TabsTrigger>
           <TabsTrigger value="signup">Регистрация</TabsTrigger>
         </TabsList>
-        
+
         <TabsContent value="signin" className="space-y-4">
           <form onSubmit={handleSignIn} className="space-y-4">
             <div className="space-y-2">
@@ -229,7 +229,7 @@ const SupabaseAuthForm: React.FC<SupabaseAuthFormProps> = ({ onSuccess }) => {
                 />
               </div>
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="signin-password">Пароль</Label>
               <div className="relative">
@@ -245,14 +245,14 @@ const SupabaseAuthForm: React.FC<SupabaseAuthFormProps> = ({ onSuccess }) => {
                 />
               </div>
             </div>
-            
+
             <Button type="submit" className="w-full" disabled={loading}>
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Войти
             </Button>
           </form>
         </TabsContent>
-        
+
         <TabsContent value="signup" className="space-y-4">
           <form onSubmit={handleSignUp} className="space-y-4">
             <div className="space-y-2">
@@ -269,7 +269,7 @@ const SupabaseAuthForm: React.FC<SupabaseAuthFormProps> = ({ onSuccess }) => {
                 />
               </div>
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="signup-email">Email</Label>
               <div className="relative">
@@ -285,7 +285,7 @@ const SupabaseAuthForm: React.FC<SupabaseAuthFormProps> = ({ onSuccess }) => {
                 />
               </div>
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="signup-password">Пароль</Label>
               <div className="relative">
@@ -302,19 +302,14 @@ const SupabaseAuthForm: React.FC<SupabaseAuthFormProps> = ({ onSuccess }) => {
                 />
               </div>
             </div>
-            
+
             <div className="flex items-center space-x-2">
-              <Checkbox
-                id="dm-role"
-                checked={isDM}
-                onCheckedChange={(checked) => setIsDM(checked as boolean)}
-              />
+              <Checkbox id="dm-role" checked={isDM} onCheckedChange={(checked) => setIsDM(checked as boolean)} />
               <Label htmlFor="dm-role" className="flex items-center gap-2 text-sm">
-                <Crown className="h-4 w-4 text-amber-500" />
-                Я хочу быть Мастером Подземелий (DM)
+                <Crown className="h-4 w-4 text-amber-500" />Я хочу быть Мастером Подземелий (DM)
               </Label>
             </div>
-            
+
             <Button type="submit" className="w-full" disabled={loading}>
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Зарегистрироваться
@@ -322,7 +317,7 @@ const SupabaseAuthForm: React.FC<SupabaseAuthFormProps> = ({ onSuccess }) => {
           </form>
         </TabsContent>
       </Tabs>
-      
+
       <div className="relative my-6">
         <div className="absolute inset-0 flex items-center">
           <span className="w-full border-t" />
@@ -331,31 +326,21 @@ const SupabaseAuthForm: React.FC<SupabaseAuthFormProps> = ({ onSuccess }) => {
           <span className="bg-background px-2 text-muted-foreground">или</span>
         </div>
       </div>
-      
-      <Button 
-        variant="outline" 
-        className="w-full mb-2" 
-        onClick={handleGoogleSignIn}
-        disabled={loading}
-        type="button"
-      >
+
+      <Button variant="outline" className="w-full mb-2" onClick={handleGoogleSignIn} disabled={loading} type="button">
         {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
         {!loading && <GoogleIcon />}
         <span className="ml-2">Войти через Google</span>
       </Button>
-      
-      <Button 
-        variant="outline" 
-        className="w-full" 
-        onClick={handleAnonymousSignIn}
-        disabled={loading}
-      >
+
+      <Button variant="outline" className="w-full" onClick={handleAnonymousSignIn} disabled={loading}>
         {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
         Войти анонимно
       </Button>
-      
+
       <p className="text-xs text-muted-foreground mt-4 text-center">
-        Анонимный вход позволяет сразу начать создание персонажей.<br />
+        Анонимный вход позволяет сразу начать создание персонажей.
+        <br />
         Ваши персонажи будут сохранены только до очистки браузера.
       </p>
     </div>
