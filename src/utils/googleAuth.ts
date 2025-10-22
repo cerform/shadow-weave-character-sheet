@@ -10,6 +10,8 @@ interface GoogleAuthConfig {
   onError?: (error: string) => void;
 }
 
+let codeClient: any | null = null;
+
 export function initGoogleAuth({ clientId, onSuccess, onError }: GoogleAuthConfig) {
   if (!window.google?.accounts?.oauth2) {
     console.error('Google Identity Services не загружен');
@@ -17,21 +19,25 @@ export function initGoogleAuth({ clientId, onSuccess, onError }: GoogleAuthConfi
     return null;
   }
 
-  const codeClient = window.google.accounts.oauth2.initCodeClient({
+  codeClient = window.google.accounts.oauth2.initCodeClient({
     client_id: clientId,
     scope: 'openid email profile',
     ux_mode: 'popup',
-    callback: async (response: { code: string; error?: string }) => {
+    callback: async (response: { code?: string; error?: string }) => {
       if (response.error) {
         console.error('Google auth error:', response.error);
         onError?.(response.error);
         return;
       }
 
+      if (!response.code) {
+        onError?.('Не получен код авторизации');
+        return;
+      }
+
       try {
         console.log('🔄 Получили код от Google, отправляем на сервер');
         
-        // Отправляем code на edge function для обмена на токены
         const result = await fetch('https://mqdjwhjtvjnktobgruuu.supabase.co/functions/v1/auth-google-callback', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -57,8 +63,9 @@ export function initGoogleAuth({ clientId, onSuccess, onError }: GoogleAuthConfi
   return codeClient;
 }
 
-export function startGoogleAuth(codeClient: any) {
-  if (codeClient) {
-    codeClient.requestCode();
+export function requestGoogleCode() {
+  if (!codeClient) {
+    throw new Error('Google codeClient не инициализирован');
   }
+  codeClient.requestCode();
 }

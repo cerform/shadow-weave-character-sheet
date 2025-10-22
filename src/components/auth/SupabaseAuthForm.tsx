@@ -8,7 +8,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Mail, Lock, User, Crown } from 'lucide-react';
-import { initGoogleAuth, startGoogleAuth } from '@/utils/googleAuth';
+import { initGoogleAuth, requestGoogleCode } from '@/utils/googleAuth';
 
 // Google icon as SVG component
 const GoogleIcon = () => (
@@ -42,20 +42,21 @@ const SupabaseAuthForm: React.FC<SupabaseAuthFormProps> = ({ onSuccess }) => {
   const [password, setPassword] = useState('');
   const [displayName, setDisplayName] = useState('');
   const [isDM, setIsDM] = useState(false);
-  const [googleCodeClient, setGoogleCodeClient] = useState<any>(null);
+  const [googleInitialized, setGoogleInitialized] = useState(false);
   const { toast } = useToast();
 
   // Инициализируем Google Identity Services
   useEffect(() => {
     const clientId = 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com'; // TODO: заменить на реальный
     
-    const codeClient = initGoogleAuth({
+    initGoogleAuth({
       clientId,
       onSuccess: () => {
         toast({
           title: "Вход выполнен!",
           description: "Добро пожаловать!",
         });
+        setLoading(false);
         onSuccess?.();
       },
       onError: (error) => {
@@ -68,7 +69,7 @@ const SupabaseAuthForm: React.FC<SupabaseAuthFormProps> = ({ onSuccess }) => {
       }
     });
 
-    setGoogleCodeClient(codeClient);
+    setGoogleInitialized(true);
   }, [toast, onSuccess]);
 
   const handleSignUp = async (e: React.FormEvent) => {
@@ -189,7 +190,7 @@ const SupabaseAuthForm: React.FC<SupabaseAuthFormProps> = ({ onSuccess }) => {
   };
 
   const handleGoogleSignIn = () => {
-    if (!googleCodeClient) {
+    if (!googleInitialized) {
       toast({
         title: "Google OAuth не готов",
         description: "Пожалуйста, подождите загрузки Google Identity Services",
@@ -200,7 +201,7 @@ const SupabaseAuthForm: React.FC<SupabaseAuthFormProps> = ({ onSuccess }) => {
     
     setLoading(true);
     console.log('🔄 Начинаем Google OAuth через popup');
-    startGoogleAuth(googleCodeClient);
+    requestGoogleCode();
   };
 
   return (
