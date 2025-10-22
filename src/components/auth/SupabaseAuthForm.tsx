@@ -47,7 +47,12 @@ const SupabaseAuthForm: React.FC<SupabaseAuthFormProps> = ({ onSuccess }) => {
 
   // Инициализируем Google Identity Services
   useEffect(() => {
-    const clientId = 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com'; // TODO: заменить на реальный
+    const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+    
+    if (!clientId) {
+      console.error('VITE_GOOGLE_CLIENT_ID не настроен');
+      return;
+    }
     
     initGoogleAuth({
       clientId,
