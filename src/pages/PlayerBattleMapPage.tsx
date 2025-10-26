@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useSessionSync } from '@/hooks/useSessionSync';
 import { useBattleTokensSync } from '@/hooks/useBattleTokensSync';
+import { useBattleMapSync } from '@/hooks/useBattleMapSync';
 import { useEnhancedBattleStore } from '@/stores/enhancedBattleStore';
 import SessionChat from '@/components/session/SessionChat';
 import { SessionAudioPlayer } from '@/components/session/SessionAudioPlayer';
@@ -15,15 +16,9 @@ const PlayerBattleMapPage: React.FC = () => {
   const { sessionState, loading } = useSessionSync(sessionId || 'default-session');
   const { tokens, mapImageUrl, setMapImageUrl } = useEnhancedBattleStore();
   
-  // Синхронизируем токены с Supabase
+  // Синхронизируем токены и карту с Supabase
   useBattleTokensSync(sessionId || 'default-session');
-
-  // Синхронизируем URL карты с состоянием сессии
-  useEffect(() => {
-    if (sessionState?.current_map_url && sessionState.current_map_url !== mapImageUrl) {
-      setMapImageUrl(sessionState.current_map_url);
-    }
-  }, [sessionState?.current_map_url, mapImageUrl, setMapImageUrl]);
+  useBattleMapSync(sessionId || 'default-session', false);
 
   if (loading) {
     return (

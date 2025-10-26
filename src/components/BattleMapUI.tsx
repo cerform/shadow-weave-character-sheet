@@ -20,6 +20,7 @@ import { useBattleSession } from '@/hooks/useBattleSession';
 import { useUserRole } from '@/hooks/use-auth';
 import { useBattleTokensSync } from '@/hooks/useBattleTokensSync';
 import { useBattleTokensToSupabase } from '@/hooks/useBattleTokensToSupabase';
+import { useBattleMapSync } from '@/hooks/useBattleMapSync';
 
 // ==================== Типы ====================
 
@@ -242,10 +243,13 @@ export default function BattleMapUI({ sessionId }: { sessionId?: string }) {
     loading: sessionLoading 
   } = useBattleSession(sessionId);
   
-  // СИНХРОНИЗАЦИЯ ТОКЕНОВ С SUPABASE
-  // Игроки получают токены из БД, мастер отправляет токены в БД
+  // СИНХРОНИЗАЦИЯ С SUPABASE
+  // Синхронизируем токены: игроки получают из БД, мастер отправляет в БД
   useBattleTokensSync(sessionId || '');
   useBattleTokensToSupabase(sessionId || '', isDM);
+  
+  // Синхронизируем карту: игроки получают URL, мастер отправляет URL
+  useBattleMapSync(sessionId || '', isDM);
   
   // Режим и панели
   const [leftOpen, setLeftOpen] = useState(false);
@@ -311,23 +315,28 @@ export default function BattleMapUI({ sessionId }: { sessionId?: string }) {
   const currentMapSize = calculateMapDimensions();
 
   // Обработчик загрузки изображения карты
-  const handleMapImageLoad = (img: HTMLImageElement) => {
+  const handleMapImageLoad = async (img: HTMLImageElement) => {
     setMapDimensions({
       width: img.naturalWidth,
       height: img.naturalHeight
     });
     
-    // Автоматически сохраняем карту в сессию при загрузке
-    if (mapImage && session) {
+    // Автоматически сохраняем карту в сессию при загрузке (если это blob URL)
+    if (mapImage && session && isDM && mapImage.startsWith('blob:')) {
       const fileName = `battle-map-${Date.now()}.png`;
-      saveMapFromUrl(mapImage, fileName, {
+      const result = await saveMapFromUrl(mapImage, fileName, {
         width: img.naturalWidth,
         height: img.naturalHeight
       });
+      
+      if (result?.file_url) {
+        setMapImage(result.file_url);
+        console.log('✅ Карта автоматически сохранена с публичным URL');
+      }
     }
   };
   
-  const onMapDrop = (e: React.DragEvent | DragEvent) => { 
+  const onMapDrop = async (e: React.DragEvent | DragEvent) => { 
     e.preventDefault(); 
     e.stopPropagation();
     setIsDragOver(false);
@@ -343,8 +352,13 @@ export default function BattleMapUI({ sessionId }: { sessionId?: string }) {
       }, ...l]);
       
       // Автоматически сохраняем карту в сессию
-      if (session) {
-        saveMapToSession(file, file.name);
+      if (session && isDM) {
+        const result = await saveMapToSession(file, file.name);
+        // Обновляем на публичный URL после сохранения
+        if (result?.file_url) {
+          setMapImage(result.file_url);
+          console.log('✅ Карта обновлена публичным URL:', result.file_url);
+        }
       }
     }
   };
@@ -449,11 +463,19 @@ export default function BattleMapUI({ sessionId }: { sessionId?: string }) {
     }
   };
 
-  const handleAssetUpload = (file: File) => {
+  const handleAssetUpload = async (file: File) => {
     const imageUrl = URL.createObjectURL(file);
     if (file.name.toLowerCase().includes('map') || file.name.toLowerCase().includes('карта')) {
       setMapImage(imageUrl);
       setLog(l => [{ id: uid("log"), ts: now(), text: `Загружена карта: ${file.name}` }, ...l]);
+      
+      // Сохраняем в Supabase если это ДМ
+      if (session && isDM) {
+        const result = await saveMapToSession(file, file.name);
+        if (result?.file_url) {
+          setMapImage(result.file_url);
+        }
+      }
     } else {
       // Создаем токен из загруженного изображения
       const newToken: Token = {
@@ -844,13 +866,21 @@ export default function BattleMapUI({ sessionId }: { sessionId?: string }) {
                     text: `✨ Добавлен токен: ${name}` 
                   }, ...l]);
                 }}
-                onMapAdd={(url) => {
+                onMapAdd={async (url) => {
                   setMapImage(url);
                   setLog(l => [{ 
                     id: uid("log"), 
                     ts: now(), 
                     text: `🗺️ Загружена карта по ссылке` 
                   }, ...l]);
+                  
+                  // Сохраняем в Supabase если это ДМ
+                  if (session && isDM) {
+                    const result = await saveMapFromUrl(url, 'Карта по ссылке');
+                    if (result?.file_url) {
+                      setMapImage(result.file_url);
+                    }
+                  }
                 }}
               />
             </div>
