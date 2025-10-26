@@ -228,14 +228,31 @@ export const useBattleSession = (sessionId?: string) => {
       // Конвертируем blob URL в File для загрузки
       const response = await fetch(imageUrl);
       const blob = await response.blob();
-      const file = new File([blob], mapName || 'battle-map.png', { type: blob.type });
+      
+      // Определяем расширение файла из MIME типа
+      const mimeType = blob.type;
+      let extension = 'png';
+      if (mimeType.includes('jpeg') || mimeType.includes('jpg')) {
+        extension = 'jpg';
+      } else if (mimeType.includes('webp')) {
+        extension = 'webp';
+      } else if (mimeType.includes('gif')) {
+        extension = 'gif';
+      }
+      
+      // Генерируем безопасное имя файла с расширением
+      const timestamp = Date.now();
+      const fileName = `battle-map-${timestamp}.${extension}`;
+      const file = new File([blob], fileName, { type: blob.type });
 
-      return await saveMapToSession(file, mapName, dimensions);
+      return await saveMapToSession(file, mapName || fileName, dimensions);
     } catch (err: any) {
       console.error('❌ Ошибка конвертации URL в файл:', err);
       toast({
-        title: "Ошибка",
-        description: "Не удалось сохранить карту",
+        title: "Ошибка загрузки карты",
+        description: err.message === 'Failed to fetch' 
+          ? "Не удалось загрузить изображение. Проверьте URL или попробуйте загрузить файл напрямую."
+          : "Не удалось сохранить карту",
         variant: "destructive"
       });
       return null;
