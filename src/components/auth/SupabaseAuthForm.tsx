@@ -47,7 +47,7 @@ const SupabaseAuthForm: React.FC<SupabaseAuthFormProps> = ({ onSuccess }) => {
 
   // Инициализируем Google Identity Services
   useEffect(() => {
-    const clientId = "843682073178-vqnnigc1l8ekndfa8ama2d2j6026ou8v.apps.googleusercontent.com"; // Замените на ваш реальный Client ID
+    const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || "843682073178-vqnnigc1l8ekndfa8ama2d2j6026ou8v.apps.googleusercontent.com";
 
     initGoogleAuth({
       clientId,
@@ -77,7 +77,9 @@ const SupabaseAuthForm: React.FC<SupabaseAuthFormProps> = ({ onSuccess }) => {
     setLoading(true);
 
     try {
-      console.log("🔄 Attempting to sign up with email:", email);
+      if (import.meta.env.DEV) {
+        console.log("🔄 Attempting to sign up");
+      }
 
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -91,7 +93,9 @@ const SupabaseAuthForm: React.FC<SupabaseAuthFormProps> = ({ onSuccess }) => {
         },
       });
 
-      console.log("✅ Sign up response:", { data, error });
+      if (import.meta.env.DEV) {
+        console.log("✅ Sign up response received");
+      }
 
       if (error) {
         console.error("❌ Sign up error:", error);
@@ -128,14 +132,18 @@ const SupabaseAuthForm: React.FC<SupabaseAuthFormProps> = ({ onSuccess }) => {
     setLoading(true);
 
     try {
-      console.log("🔄 Attempting to sign in with email:", email);
+      if (import.meta.env.DEV) {
+        console.log("🔄 Attempting to sign in");
+      }
 
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
-      console.log("✅ Sign in response:", { data, error });
+      if (import.meta.env.DEV) {
+        console.log("✅ Sign in response received");
+      }
 
       if (error) {
         console.error("❌ Sign in error:", error);
@@ -200,7 +208,9 @@ const SupabaseAuthForm: React.FC<SupabaseAuthFormProps> = ({ onSuccess }) => {
     }
 
     setLoading(true);
-    console.log("🔄 Начинаем Google OAuth через popup");
+    if (import.meta.env.DEV) {
+      console.log("🔄 Начинаем Google OAuth через popup");
+    }
     requestGoogleCode();
   };
 

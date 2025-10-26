@@ -36,7 +36,9 @@ export function initGoogleAuth({ clientId, onSuccess, onError }: GoogleAuthConfi
       }
 
       try {
-        console.log('🔄 Получили код от Google, отправляем на сервер');
+        if (import.meta.env.DEV) {
+          console.log('🔄 Получили код от Google, отправляем на сервер');
+        }
         
         const result = await fetch('https://mqdjwhjtvjnktobgruuu.supabase.co/functions/v1/auth-google-callback', {
           method: 'POST',
@@ -50,7 +52,9 @@ export function initGoogleAuth({ clientId, onSuccess, onError }: GoogleAuthConfi
           throw new Error(data.error || 'Ошибка авторизации');
         }
 
-        console.log('✅ Успешная авторизация через Google');
+        if (import.meta.env.DEV) {
+          console.log('✅ Успешная авторизация через Google');
+        }
         onSuccess?.();
         
       } catch (error) {
