@@ -113,9 +113,13 @@ export const useBattleSession = (sessionId?: string) => {
       if (maps && maps.length > 0) {
         setCurrentMap(maps[0]);
         return maps[0];
+      } else {
+        // Если карты нет - очищаем
+        setCurrentMap(null);
       }
     } catch (err: any) {
       console.error('Ошибка загрузки карты:', err);
+      setCurrentMap(null);
     }
     return null;
   };
@@ -243,6 +247,8 @@ export const useBattleSession = (sessionId?: string) => {
     const initialize = async () => {
       setLoading(true);
       setError(null);
+      // Очищаем текущую карту при смене сессии
+      setCurrentMap(null);
 
       const sessionData = await ensureSession();
       if (sessionData) {
@@ -256,6 +262,7 @@ export const useBattleSession = (sessionId?: string) => {
       initialize();
     } else {
       setLoading(false);
+      setCurrentMap(null);
     }
   }, [isAuthenticated, user, sessionId]);
 

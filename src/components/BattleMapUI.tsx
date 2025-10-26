@@ -268,7 +268,7 @@ export default function BattleMapUI({ sessionId }: { sessionId?: string }) {
 
   // Загружаем сохраненную карту из сессии
   useEffect(() => {
-    if (currentMap && currentMap.file_url && !mapImage) {
+    if (currentMap && currentMap.file_url) {
       console.log('🗺️ Загружаем сохраненную карту из сессии:', currentMap);
       setMapImage(currentMap.file_url);
       if (currentMap.width && currentMap.height) {
@@ -277,8 +277,13 @@ export default function BattleMapUI({ sessionId }: { sessionId?: string }) {
           height: currentMap.height
         });
       }
+    } else if (!currentMap && mapImage) {
+      // Очищаем карту если currentMap === null
+      console.log('🗺️ Очищаем карту (нет currentMap)');
+      setMapImage(null);
+      setMapDimensions(null);
     }
-  }, [currentMap, mapImage]);
+  }, [currentMap]);
   // Вычисление оптимальных размеров карты
   const calculateMapDimensions = () => {
     if (!autoFitMap || !mapDimensions) {
