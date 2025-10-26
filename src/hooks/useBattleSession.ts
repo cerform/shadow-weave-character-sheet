@@ -216,7 +216,7 @@ export const useBattleSession = (sessionId?: string) => {
     }
   };
 
-  // Загрузка карты из URL (blob)
+  // Загрузка карты из URL (blob или внешний URL)
   const saveMapFromUrl = async (
     imageUrl: string, 
     mapName?: string,
@@ -225,9 +225,30 @@ export const useBattleSession = (sessionId?: string) => {
     if (!session || !user) return null;
 
     try {
-      // Конвертируем blob URL в File для загрузки
-      const response = await fetch(imageUrl);
-      const blob = await response.blob();
+      let blob: Blob;
+      
+      // Если это blob URL - используем напрямую
+      if (imageUrl.startsWith('blob:')) {
+        const response = await fetch(imageUrl);
+        blob = await response.blob();
+      } else {
+        // Для внешних URL используем Edge Function прокси
+        toast({
+          title: "Загрузка изображения",
+          description: "Загружаем изображение с внешнего сайта...",
+        });
+        
+        const { data, error } = await supabase.functions.invoke('fetch-image', {
+          body: { url: imageUrl }
+        });
+
+        if (error) throw error;
+        if (!data?.data) throw new Error('No image data received');
+
+        // Конвертируем base64 обратно в blob
+        const base64Response = await fetch(data.data);
+        blob = await base64Response.blob();
+      }
       
       // Определяем расширение файла из MIME типа
       const mimeType = blob.type;
@@ -251,8 +272,8 @@ export const useBattleSession = (sessionId?: string) => {
       toast({
         title: "Ошибка загрузки карты",
         description: err.message === 'Failed to fetch' 
-          ? "Не удалось загрузить изображение. Проверьте URL или попробуйте загрузить файл напрямую."
-          : "Не удалось сохранить карту",
+          ? "Не удалось загрузить изображение. Попробуйте скачать файл и загрузить его напрямую."
+          : err.details || "Не удалось сохранить карту",
         variant: "destructive"
       });
       return null;
