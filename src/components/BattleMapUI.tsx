@@ -173,7 +173,7 @@ function TokenVisual({ token, use3D, modelReady, onModelError }: { token: Token;
             onError={(e) => {
               // Если изображение не загрузилось, показываем эмодзи
               e.currentTarget.style.display = 'none';
-              e.currentTarget.parentElement!.innerHTML = getMonsterAvatar(token.name).emoji;
+              e.currentTarget.parentElement!.textContent = getMonsterAvatar(token.name).emoji;
             }}
           />
         </div>

@@ -440,6 +440,7 @@ export type Database = {
           author: string | null
           category: string | null
           created_at: string
+          created_by: string | null
           description: string | null
           download_url: string | null
           file_format: string | null
@@ -458,6 +459,7 @@ export type Database = {
           author?: string | null
           category?: string | null
           created_at?: string
+          created_by?: string | null
           description?: string | null
           download_url?: string | null
           file_format?: string | null
@@ -476,6 +478,7 @@ export type Database = {
           author?: string | null
           category?: string | null
           created_at?: string
+          created_by?: string | null
           description?: string | null
           download_url?: string | null
           file_format?: string | null
@@ -1323,26 +1326,11 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      clear_asset_categories: {
-        Args: Record<PropertyKey, never>
-        Returns: number
-      }
-      clear_assets: {
-        Args: Record<PropertyKey, never>
-        Returns: number
-      }
-      create_standard_categories: {
-        Args: Record<PropertyKey, never>
-        Returns: number
-      }
-      ensure_default_session: {
-        Args: { user_id: string }
-        Returns: string
-      }
-      generate_session_code: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
+      clear_asset_categories: { Args: never; Returns: number }
+      clear_assets: { Args: never; Returns: number }
+      create_standard_categories: { Args: never; Returns: number }
+      ensure_default_session: { Args: { user_id: string }; Returns: string }
+      generate_session_code: { Args: never; Returns: string }
       get_user_roles: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"][]
@@ -1354,14 +1342,8 @@ export type Database = {
         }
         Returns: boolean
       }
-      import_models_bucket_assets: {
-        Args: Record<PropertyKey, never>
-        Returns: number
-      }
-      is_user_dm_of_session: {
-        Args: { _session_id: string }
-        Returns: boolean
-      }
+      import_models_bucket_assets: { Args: never; Returns: number }
+      is_user_dm_of_session: { Args: { _session_id: string }; Returns: boolean }
       is_user_participant_of_session: {
         Args: { _session_id: string }
         Returns: boolean

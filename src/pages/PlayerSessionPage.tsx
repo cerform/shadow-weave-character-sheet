@@ -1,6 +1,6 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import DOMPurify from 'dompurify';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -279,7 +279,7 @@ const PlayerSessionPage: React.FC = () => {
                         </span>
                       </div>
                       <div className="mt-1" dangerouslySetInnerHTML={{ 
-                        __html: message.content.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') 
+                        __html: DOMPurify.sanitize(message.content.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>'))
                       }} />
                     </div>
                   ))}
