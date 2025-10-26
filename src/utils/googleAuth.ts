@@ -22,7 +22,8 @@ export function initGoogleAuth({ clientId, onSuccess, onError }: GoogleAuthConfi
   codeClient = window.google.accounts.oauth2.initCodeClient({
     client_id: clientId,
     scope: 'openid email profile',
-    ux_mode: 'popup',
+    ux_mode: 'redirect',
+    redirect_uri: `${window.location.origin}/auth?callback=true`,
     callback: async (response: { code?: string; error?: string }) => {
       if (response.error) {
         console.error('Google auth error:', response.error);
