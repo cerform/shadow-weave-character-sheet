@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/use-auth';
 import { ArrowLeft } from 'lucide-react';
@@ -12,26 +12,45 @@ const AuthPage = () => {
   const [searchParams] = useSearchParams();
   const { user, isAuthenticated, loading } = useAuth();
   const isCallback = searchParams.get('callback') === 'true';
+  const [redirectAttempted, setRedirectAttempted] = useState(false);
 
-  console.log('🔍 AuthPage: рендер с состоянием:', { user: !!user, isAuthenticated, loading, isCallback });
+  console.log('🔍 AuthPage: рендер с состоянием:', { user: !!user, isAuthenticated, loading, isCallback, redirectAttempted });
 
-  // Обработка OAuth callback
+  // Объединенная логика редиректа для всех случаев
   useEffect(() => {
-    if (isCallback && isAuthenticated && user && !loading) {
-      console.log('🚀 AuthPage: OAuth callback успешен - перенаправление на главную');
-      navigate('/', { replace: true });
+    // Если уже пытались сделать редирект, не пытаемся снова
+    if (redirectAttempted) {
+      console.log('⏭️ AuthPage: редирект уже выполнен, пропуск');
+      return;
+    }
+
+    // Условие для редиректа: пользователь авторизован и загрузка завершена
+    const shouldRedirect = isAuthenticated && user && !loading;
+
+    if (shouldRedirect) {
+      console.log('🚀 AuthPage: выполняем редирект на главную страницу', {
+        isAuthenticated,
+        hasUser: !!user,
+        loading,
+        isCallback
+      });
+      
+      setRedirectAttempted(true);
+      
+      // Небольшая задержка для OAuth callback чтобы убедиться что состояние обновилось
+      const delay = isCallback ? 100 : 0;
+      
+      setTimeout(() => {
+        navigate('/', { replace: true });
+      }, delay);
     } else if (isCallback) {
-      console.log('⏳ AuthPage: OAuth callback в процессе...', { isAuthenticated, user: !!user, loading });
+      console.log('⏳ AuthPage: OAuth callback в процессе, ожидание...', { 
+        isAuthenticated, 
+        user: !!user, 
+        loading 
+      });
     }
-  }, [isCallback, isAuthenticated, user, loading, navigate]);
-
-  // Если пользователь уже авторизован, перенаправляем его
-  useEffect(() => {
-    if (isAuthenticated && user && !loading && !isCallback) {
-      console.log('🚀 AuthPage: перенаправление на главную - пользователь авторизован');
-      navigate('/', { replace: true });
-    }
-  }, [isAuthenticated, user, loading, navigate, isCallback]);
+  }, [isAuthenticated, user, loading, isCallback, navigate, redirectAttempted]);
 
   // Показываем загрузку если пользователь авторизован
   if (loading) {

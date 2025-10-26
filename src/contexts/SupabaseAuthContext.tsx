@@ -150,6 +150,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           return;
         }
         
+        // Обрабатываем все события входа немедленно
         if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') {
           const mappedUser = mapSupabaseUser(session?.user ?? null);
           console.log('onAuthStateChange: установка пользователя:', mappedUser);
@@ -164,19 +165,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       try {
         console.log('getInitialSession: получаем начальную сессию');
         
-        // Проверяем localStorage
-        const storageKeys = Object.keys(localStorage).filter(k => k.includes('supabase'));
-        console.log('localStorage keys:', storageKeys);
-        storageKeys.forEach(key => {
-          console.log(`localStorage[${key}]:`, localStorage.getItem(key)?.substring(0, 100));
-        });
-        
         const { data: { session }, error } = await supabase.auth.getSession();
-        console.log('getInitialSession: сессия:', session, 'ошибка:', error);
+        console.log('getInitialSession: сессия:', !!session, 'ошибка:', error);
         
         if (mounted && !error && session) {
           const mappedUser = mapSupabaseUser(session.user);
-          console.log('getInitialSession: установка пользователя:', mappedUser);
+          console.log('getInitialSession: установка пользователя:', !!mappedUser);
           setUser(mappedUser);
         } else if (mounted) {
           console.log('getInitialSession: сессия отсутствует или ошибка');
