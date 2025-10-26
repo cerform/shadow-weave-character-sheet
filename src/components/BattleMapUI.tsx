@@ -18,6 +18,8 @@ import { getModelTypeFromTokenName } from '@/utils/tokenModelMapping';
 import { getMonsterAvatar } from '@/data/monsterAvatarSystem';
 import { useBattleSession } from '@/hooks/useBattleSession';
 import { useUserRole } from '@/hooks/use-auth';
+import { useBattleTokensSync } from '@/hooks/useBattleTokensSync';
+import { useBattleTokensToSupabase } from '@/hooks/useBattleTokensToSupabase';
 
 // ==================== Типы ====================
 
@@ -239,6 +241,11 @@ export default function BattleMapUI({ sessionId }: { sessionId?: string }) {
     saveMapToSession, 
     loading: sessionLoading 
   } = useBattleSession(sessionId);
+  
+  // СИНХРОНИЗАЦИЯ ТОКЕНОВ С SUPABASE
+  // Игроки получают токены из БД, мастер отправляет токены в БД
+  useBattleTokensSync(sessionId || '');
+  useBattleTokensToSupabase(sessionId || '', isDM);
   
   // Режим и панели
   const [leftOpen, setLeftOpen] = useState(false);
