@@ -8,25 +8,49 @@ const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiO
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
-// Пытаемся использовать localStorage, если доступен, иначе используем in-memory storage
+// Глобальное in-memory хранилище (сохраняется между перерендерами)
+const globalMemoryStorage: Record<string, string> = {};
+
+// Пытаемся использовать sessionStorage (работает в iframe), затем localStorage, затем memory
 const getStorageAdapter = () => {
+  // Сначала пробуем sessionStorage (работает даже в iframe)
   try {
-    // Проверяем, работает ли localStorage
+    const testKey = '__supabase_test__';
+    window.sessionStorage.setItem(testKey, 'test');
+    window.sessionStorage.removeItem(testKey);
+    console.log('✅ sessionStorage доступен');
+    return window.sessionStorage;
+  } catch (e) {
+    console.warn('⚠️ sessionStorage недоступен:', e);
+  }
+
+  // Затем пробуем localStorage
+  try {
     const testKey = '__supabase_test__';
     window.localStorage.setItem(testKey, 'test');
     window.localStorage.removeItem(testKey);
     console.log('✅ localStorage доступен');
     return window.localStorage;
   } catch (e) {
-    console.warn('⚠️ localStorage недоступен, используем in-memory storage:', e);
-    // In-memory storage для sandbox/iframe окружений
-    const memoryStorage: Record<string, string> = {};
-    return {
-      getItem: (key: string) => memoryStorage[key] || null,
-      setItem: (key: string, value: string) => { memoryStorage[key] = value; },
-      removeItem: (key: string) => { delete memoryStorage[key]; },
-    };
+    console.warn('⚠️ localStorage недоступен:', e);
   }
+
+  // Fallback: глобальное in-memory storage
+  console.warn('⚠️ Используем глобальное in-memory storage (сессия будет потеряна при перезагрузке страницы)');
+  return {
+    getItem: (key: string) => {
+      console.log('📖 memory.getItem:', key, '→', globalMemoryStorage[key]?.substring(0, 50));
+      return globalMemoryStorage[key] || null;
+    },
+    setItem: (key: string, value: string) => {
+      console.log('💾 memory.setItem:', key, '→', value.substring(0, 50));
+      globalMemoryStorage[key] = value;
+    },
+    removeItem: (key: string) => {
+      console.log('🗑️ memory.removeItem:', key);
+      delete globalMemoryStorage[key];
+    },
+  };
 };
 
 export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
