@@ -251,15 +251,18 @@ export type Database = {
           id: string
           image_url: string | null
           is_hidden_from_players: boolean | null
+          is_summoned: boolean | null
           is_visible: boolean | null
           map_id: string | null
           max_hp: number | null
           name: string
           notes: string | null
+          owner_id: string | null
           position_x: number
           position_y: number
           session_id: string
           size: number | null
+          summoned_by: string | null
           token_type: string
           updated_at: string | null
         }
@@ -273,15 +276,18 @@ export type Database = {
           id?: string
           image_url?: string | null
           is_hidden_from_players?: boolean | null
+          is_summoned?: boolean | null
           is_visible?: boolean | null
           map_id?: string | null
           max_hp?: number | null
           name: string
           notes?: string | null
+          owner_id?: string | null
           position_x?: number
           position_y?: number
           session_id: string
           size?: number | null
+          summoned_by?: string | null
           token_type?: string
           updated_at?: string | null
         }
@@ -295,15 +301,18 @@ export type Database = {
           id?: string
           image_url?: string | null
           is_hidden_from_players?: boolean | null
+          is_summoned?: boolean | null
           is_visible?: boolean | null
           map_id?: string | null
           max_hp?: number | null
           name?: string
           notes?: string | null
+          owner_id?: string | null
           position_x?: number
           position_y?: number
           session_id?: string
           size?: number | null
+          summoned_by?: string | null
           token_type?: string
           updated_at?: string | null
         }
@@ -320,6 +329,13 @@ export type Database = {
             columns: ["session_id"]
             isOneToOne: false
             referencedRelation: "game_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "battle_tokens_summoned_by_fkey"
+            columns: ["summoned_by"]
+            isOneToOne: false
+            referencedRelation: "battle_tokens"
             referencedColumns: ["id"]
           },
         ]

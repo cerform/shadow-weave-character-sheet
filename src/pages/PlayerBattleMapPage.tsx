@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import { useSessionSync } from '@/hooks/useSessionSync';
 import { useBattleTokensSync } from '@/hooks/useBattleTokensSync';
 import { useBattleMapSync } from '@/hooks/useBattleMapSync';
+import { usePlayerTokenSync } from '@/hooks/usePlayerTokenSync';
 import { useEnhancedBattleStore } from '@/stores/enhancedBattleStore';
 import SessionChat from '@/components/session/SessionChat';
 import { SessionAudioPlayer } from '@/components/session/SessionAudioPlayer';
@@ -19,6 +20,9 @@ const PlayerBattleMapPage: React.FC = () => {
   // Синхронизируем токены и карту с Supabase
   useBattleTokensSync(sessionId || 'default-session');
   useBattleMapSync(sessionId || 'default-session', false);
+  
+  // Автоматически создаем токен игрока когда карта загружена
+  usePlayerTokenSync(sessionId || 'default-session');
 
   if (loading) {
     return (

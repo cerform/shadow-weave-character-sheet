@@ -1,8 +1,13 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { Stage, Layer, Image, Circle, Text } from 'react-konva';
+import { Stage, Layer, Image, Circle } from 'react-konva';
 import useImage from 'use-image';
 import { useSessionSync } from '@/hooks/useSessionSync';
-import { EnhancedToken } from '@/stores/enhancedBattleStore';
+import { EnhancedToken, useEnhancedBattleStore } from '@/stores/enhancedBattleStore';
+import { TokenAvatarEditor } from './TokenAvatarEditor';
+import { SummonCreatureDialog } from './SummonCreatureDialog';
+import { TokenRenderer } from './TokenRenderer';
+import { useAuth } from '@/hooks/use-auth';
+import { Settings } from 'lucide-react';
 
 interface BattleMap2DPlayerProps {
   sessionId: string;
@@ -20,6 +25,9 @@ const BattleMap2DPlayer: React.FC<BattleMap2DPlayerProps> = ({
   const [stageSize, setStageSize] = useState({ width: 800, height: 600 });
   const [scale, setScale] = useState(1);
   const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [selectedToken, setSelectedToken] = useState<EnhancedToken | null>(null);
+  const { user } = useAuth();
+  const { updateToken, addToken } = useEnhancedBattleStore();
 
   // Обновляем размер stage при изменении размера контейнера
   useEffect(() => {
@@ -66,6 +74,21 @@ const BattleMap2DPlayer: React.FC<BattleMap2DPlayerProps> = ({
 
   return (
     <div className="w-full h-full relative bg-muted">
+      {/* Сообщение когда нет карты */}
+      {!mapImageUrl && (
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="text-center p-8 bg-card/80 backdrop-blur-sm rounded-lg border-2 border-border max-w-md">
+            <div className="text-6xl mb-4">🗺️</div>
+            <h2 className="text-2xl font-bold text-foreground mb-2">
+              Карта еще не загружена
+            </h2>
+            <p className="text-muted-foreground">
+              Мастер подготавливает боевую карту. Она появится здесь, когда будет готова.
+            </p>
+          </div>
+        </div>
+      )}
+
       <Stage
         ref={stageRef}
         width={stageSize.width}
@@ -118,65 +141,7 @@ const BattleMap2DPlayer: React.FC<BattleMap2DPlayerProps> = ({
 
           {/* Токены */}
           {tokens.map((token) => (
-            <React.Fragment key={token.id}>
-              {/* Круг токена */}
-              <Circle
-                x={token.position[0] * 25 + 12.5}
-                y={token.position[2] * 25 + 12.5}
-                radius={12}
-                fill={token.color || (token.isEnemy ? "#ef4444" : "#22c55e")}
-                stroke="hsl(var(--border))"
-                strokeWidth={2}
-                opacity={0.8}
-              />
-              
-              {/* Имя токена */}
-              <Text
-                x={token.position[0] * 25 + 12.5}
-                y={token.position[2] * 25 + 30}
-                text={token.name}
-                fontSize={10}
-                fill="hsl(var(--foreground))"
-                width={50}
-                align="center"
-                offsetX={25}
-              />
-
-              {/* HP индикатор */}
-              {token.hp !== undefined && token.maxHp !== undefined && (
-                <React.Fragment>
-                  {/* Фон HP бара */}
-                  <Circle
-                    x={token.position[0] * 25 + 12.5}
-                    y={token.position[2] * 25 - 8}
-                    radius={8}
-                    fill="hsl(var(--destructive))"
-                    opacity={0.3}
-                  />
-                  
-                  {/* HP бар */}
-                  <Circle
-                    x={token.position[0] * 25 + 12.5}
-                    y={token.position[2] * 25 - 8}
-                    radius={8 * (token.hp / token.maxHp)}
-                    fill="hsl(var(--destructive))"
-                    opacity={0.8}
-                  />
-                  
-                  {/* Текст HP */}
-                  <Text
-                    x={token.position[0] * 25 + 12.5}
-                    y={token.position[2] * 25 - 12}
-                    text={`${token.hp}/${token.maxHp}`}
-                    fontSize={8}
-                    fill="hsl(var(--foreground))"
-                    width={30}
-                    align="center"
-                    offsetX={15}
-                  />
-                </React.Fragment>
-              )}
-            </React.Fragment>
+            <TokenRenderer key={token.id} token={token} gridSize={25} />
           ))}
         </Layer>
       </Stage>
@@ -228,7 +193,7 @@ const BattleMap2DPlayer: React.FC<BattleMap2DPlayerProps> = ({
         </button>
       </div>
 
-      {/* Информация */}
+      {/* Информация и кнопка настройки токена */}
       <div className="absolute top-4 left-4 bg-background/80 backdrop-blur-sm border border-border rounded p-2">
         <div className="text-sm text-muted-foreground">
           Токенов: {tokens.length}
@@ -240,6 +205,43 @@ const BattleMap2DPlayer: React.FC<BattleMap2DPlayerProps> = ({
           Колесо мыши для масштабирования
         </div>
       </div>
+
+      {/* Кнопка настройки своего токена */}
+      {user && tokens.find(t => t.owner_id === user.id && !t.is_summoned) && (
+        <div className="absolute top-4 right-20 flex flex-col gap-2">
+          {/* Настройки токена */}
+          <div className="bg-background/80 backdrop-blur-sm border border-border rounded p-2">
+            <TokenAvatarEditor
+              token={tokens.find(t => t.owner_id === user.id && !t.is_summoned)!}
+              onUpdate={(updates) => {
+                const myToken = tokens.find(t => t.owner_id === user.id && !t.is_summoned);
+                if (myToken) {
+                  updateToken(myToken.id, updates);
+                }
+              }}
+              trigger={
+                <button className="flex items-center gap-2 text-sm hover:text-primary transition-colors w-full">
+                  <Settings className="h-4 w-4" />
+                  Настроить токен
+                </button>
+              }
+            />
+          </div>
+
+          {/* Кнопка призыва существ для некромантов и других классов */}
+          {['necromancer', 'druid', 'wizard', 'warlock', 'ranger'].includes(
+            tokens.find(t => t.owner_id === user.id && !t.is_summoned)?.class?.toLowerCase() || ''
+          ) && (
+            <div className="bg-background/80 backdrop-blur-sm border border-border rounded p-2">
+              <SummonCreatureDialog
+                parentToken={tokens.find(t => t.owner_id === user.id && !t.is_summoned)!}
+                sessionId={sessionId}
+                onSummon={addToken}
+              />
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };

@@ -17,6 +17,9 @@ export interface EnhancedToken {
   hasMovedThisTurn?: boolean; // Переместился ли в этом ходу
   class?: string; // Класс персонажа для выбора модели
   color?: string; // Цвет токена для визуального различения
+  owner_id?: string; // ID владельца токена (игрока)
+  summoned_by?: string; // ID токена, который призвал это существо
+  is_summoned?: boolean; // Является ли призванным существом
 }
 
 export interface CombatEvent {
@@ -109,39 +112,12 @@ interface EnhancedBattleState {
 }
 
 export const useEnhancedBattleStore = create<EnhancedBattleState>((set, get) => ({
-  // Initial state
-  tokens: [
-    {
-      id: 'hero-1',
-      name: 'Воин',
-      hp: 30,
-      maxHp: 40,
-      ac: 18,
-      position: [0, 0, 0],
-      conditions: [],
-      isVisible: true,
-      isEnemy: false,
-      speed: 6,
-      hasMovedThisTurn: false,
-    },
-    {
-      id: 'goblin-1',
-      name: 'Гоблин',
-      hp: 12,
-      maxHp: 12,
-      ac: 14,
-      position: [3, 0, 3],
-      conditions: ['отравлен'],
-      isEnemy: true,
-      isVisible: true,
-      speed: 6,
-      hasMovedThisTurn: false,
-    },
-  ],
-  activeId: 'hero-1',
-  initiativeOrder: ['hero-1', 'goblin-1'],
+  // Initial state - токены загружаются из БД, не используем начальные значения
+  tokens: [],
+  activeId: null,
+  initiativeOrder: [],
   currentRound: 1,
-  combatStarted: true,
+  combatStarted: false,
   
   fogEnabled: false, // Выключаем по умолчанию чтобы не блокировать UI
   fogBrushSize: 60,
@@ -159,50 +135,7 @@ export const useEnhancedBattleStore = create<EnhancedBattleState>((set, get) => 
   
   mapImageUrl: null,
   
-  combatLog: [
-    {
-      id: 'demo-1',
-      timestamp: Date.now() - 120000,
-      actor: 'Воин',
-      action: 'Атака',
-      target: 'Гоблин',
-      damage: 8,
-      description: 'Воин атакует мечом',
-      diceRoll: {
-        dice: '1d20+5',
-        result: 18,
-        breakdown: '13+5'
-      },
-      playerName: 'Игрок 1'
-    },
-    {
-      id: 'demo-2',
-      timestamp: Date.now() - 60000,
-      actor: 'Гоблин',
-      action: 'Бросок кубика',
-      description: 'Проверка на Скрытность',
-      diceRoll: {
-        dice: '1d20+2',
-        result: 15,
-        breakdown: '13+2'
-      },
-      playerName: 'ДМ'
-    },
-    {
-      id: 'demo-3',
-      timestamp: Date.now() - 30000,
-      actor: 'Воин',
-      action: 'Заклинание',
-      target: 'Воин',
-      description: 'Лечение',
-      diceRoll: {
-        dice: '1d8+3',
-        result: 7,
-        breakdown: '4+3'
-      },
-      playerName: 'Игрок 1'
-    }
-  ],
+  combatLog: [],
   
   // Actions
   setTokens: (tokens) => set({ tokens }),
