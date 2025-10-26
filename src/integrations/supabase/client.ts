@@ -8,11 +8,34 @@ const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiO
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
+// Пытаемся использовать localStorage, если доступен, иначе используем in-memory storage
+const getStorageAdapter = () => {
+  try {
+    // Проверяем, работает ли localStorage
+    const testKey = '__supabase_test__';
+    window.localStorage.setItem(testKey, 'test');
+    window.localStorage.removeItem(testKey);
+    console.log('✅ localStorage доступен');
+    return window.localStorage;
+  } catch (e) {
+    console.warn('⚠️ localStorage недоступен, используем in-memory storage:', e);
+    // In-memory storage для sandbox/iframe окружений
+    const memoryStorage: Record<string, string> = {};
+    return {
+      getItem: (key: string) => memoryStorage[key] || null,
+      setItem: (key: string, value: string) => { memoryStorage[key] = value; },
+      removeItem: (key: string) => { delete memoryStorage[key]; },
+    };
+  }
+};
+
 export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: {
-    storage: window.localStorage,
+    storage: getStorageAdapter() as any,
     persistSession: true,
     autoRefreshToken: true,
-    detectSessionInUrl: true
+    detectSessionInUrl: true,
+    flowType: 'pkce',
+    storageKey: 'sb-auth-token'
   }
 });
