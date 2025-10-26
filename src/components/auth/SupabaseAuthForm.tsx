@@ -8,7 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Mail, Lock, User, Crown } from "lucide-react";
-import { initGoogleAuth, requestGoogleCode } from "@/utils/googleAuth";
+// Removed custom Google auth - using native Supabase OAuth instead
 
 // Google icon as SVG component
 const GoogleIcon = () => (
@@ -42,35 +42,7 @@ const SupabaseAuthForm: React.FC<SupabaseAuthFormProps> = ({ onSuccess }) => {
   const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [isDM, setIsDM] = useState(false);
-  const [googleInitialized, setGoogleInitialized] = useState(false);
   const { toast } = useToast();
-
-  // Инициализируем Google Identity Services
-  useEffect(() => {
-    const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || "843682073178-vqnnigc1l8ekndfa8ama2d2j6026ou8v.apps.googleusercontent.com";
-
-    initGoogleAuth({
-      clientId,
-      onSuccess: () => {
-        toast({
-          title: "Вход выполнен!",
-          description: "Добро пожаловать!",
-        });
-        setLoading(false);
-        onSuccess?.();
-      },
-      onError: (error) => {
-        toast({
-          title: "Ошибка входа через Google",
-          description: error,
-          variant: "destructive",
-        });
-        setLoading(false);
-      },
-    });
-
-    setGoogleInitialized(true);
-  }, [toast, onSuccess]);
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -197,21 +169,28 @@ const SupabaseAuthForm: React.FC<SupabaseAuthFormProps> = ({ onSuccess }) => {
     }
   };
 
-  const handleGoogleSignIn = () => {
-    if (!googleInitialized) {
+  const handleGoogleSignIn = async () => {
+    setLoading(true);
+    
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth?callback=true`,
+        },
+      });
+
+      if (error) {
+        throw error;
+      }
+    } catch (error: any) {
       toast({
-        title: "Google OAuth не готов",
-        description: "Пожалуйста, подождите загрузки Google Identity Services",
+        title: "Ошибка входа через Google",
+        description: error.message || "Произошла неизвестная ошибка",
         variant: "destructive",
       });
-      return;
+      setLoading(false);
     }
-
-    setLoading(true);
-    if (import.meta.env.DEV) {
-      console.log("🔄 Начинаем Google OAuth через popup");
-    }
-    requestGoogleCode();
   };
 
   return (
