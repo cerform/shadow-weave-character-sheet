@@ -26,6 +26,7 @@ export const useBattleTokensSync = (sessionId: string) => {
 
         if (error) {
           console.error('Ошибка загрузки токенов:', error);
+          setTokens([]); // Очищаем токены при ошибке
           return;
         }
 
@@ -50,15 +51,20 @@ export const useBattleTokensSync = (sessionId: string) => {
             speed: 6, // По умолчанию
             hasMovedThisTurn: false,
             color: token.color || undefined,
+            owner_id: token.owner_id || undefined,
+            summoned_by: token.summoned_by || undefined,
+            is_summoned: token.is_summoned || false,
           }));
 
           console.log('✅ Загружено токенов:', mappedTokens.length);
           setTokens(mappedTokens);
         } else {
-          console.log('ℹ️ Токены не найдены для сессии');
+          console.log('ℹ️ Токены не найдены для сессии, очищаем');
+          setTokens([]); // Очищаем токены если их нет
         }
       } catch (error) {
         console.error('Ошибка при загрузке токенов:', error);
+        setTokens([]); // Очищаем токены при ошибке
       }
     };
 
@@ -104,6 +110,9 @@ export const useBattleTokensSync = (sessionId: string) => {
             speed: 6,
             hasMovedThisTurn: false,
             color: token.color || undefined,
+            owner_id: token.owner_id || undefined,
+            summoned_by: token.summoned_by || undefined,
+            is_summoned: token.is_summoned || false,
           };
 
           addToken(newToken);

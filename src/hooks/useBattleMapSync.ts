@@ -26,15 +26,21 @@ export const useBattleMapSync = (sessionId: string, isDM: boolean) => {
 
         if (error) {
           console.error('Ошибка загрузки URL карты:', error);
+          setMapImageUrl(null); // Очищаем карту при ошибке
           return;
         }
 
+        // Устанавливаем карту только если она есть, иначе очищаем
         if (data?.current_map_url) {
           console.log('✅ URL карты загружен:', data.current_map_url);
           setMapImageUrl(data.current_map_url);
+        } else {
+          console.log('ℹ️ У сессии нет карты, очищаем');
+          setMapImageUrl(null);
         }
       } catch (error) {
         console.error('Ошибка при загрузке URL карты:', error);
+        setMapImageUrl(null);
       }
     };
 
@@ -75,6 +81,42 @@ export const useBattleMapSync = (sessionId: string, isDM: boolean) => {
   // Мастер сохраняет URL карты в game_sessions
   const { mapImageUrl } = useEnhancedBattleStore();
   
+  // При смене сессии очищаем карту и загружаем карту текущей сессии
+  useEffect(() => {
+    if (!isDM || !sessionId) return;
+
+    const loadCurrentSessionMap = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('game_sessions')
+          .select('current_map_url')
+          .eq('id', sessionId)
+          .single();
+
+        if (error) {
+          console.error('Ошибка загрузки карты сессии:', error);
+          setMapImageUrl(null);
+          return;
+        }
+
+        // Устанавливаем карту сессии или очищаем если её нет
+        if (data?.current_map_url) {
+          console.log('✅ Загружена карта сессии:', data.current_map_url);
+          setMapImageUrl(data.current_map_url);
+        } else {
+          console.log('ℹ️ Новая сессия без карты');
+          setMapImageUrl(null);
+        }
+      } catch (error) {
+        console.error('Ошибка при загрузке карты сессии:', error);
+        setMapImageUrl(null);
+      }
+    };
+
+    loadCurrentSessionMap();
+  }, [isDM, sessionId, setMapImageUrl]);
+
+  // Синхронизируем изменения карты в БД
   useEffect(() => {
     if (!isDM || !sessionId || !mapImageUrl) return;
 
