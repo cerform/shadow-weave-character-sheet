@@ -673,6 +673,7 @@ export type Database = {
         Row: {
           created_at: string | null
           current_map_id: string | null
+          current_map_url: string | null
           description: string | null
           dm_id: string
           ended_at: string | null
@@ -692,6 +693,7 @@ export type Database = {
         Insert: {
           created_at?: string | null
           current_map_id?: string | null
+          current_map_url?: string | null
           description?: string | null
           dm_id: string
           ended_at?: string | null
@@ -711,6 +713,7 @@ export type Database = {
         Update: {
           created_at?: string | null
           current_map_id?: string | null
+          current_map_url?: string | null
           description?: string | null
           dm_id?: string
           ended_at?: string | null

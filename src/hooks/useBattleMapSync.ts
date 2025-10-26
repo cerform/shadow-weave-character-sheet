@@ -10,7 +10,7 @@ export const useBattleMapSync = (sessionId: string, isDM: boolean) => {
   const { setMapImageUrl } = useEnhancedBattleStore();
   const { toast } = useToast();
 
-  // Игроки получают URL карты из dm_sessions
+  // Игроки получают URL карты из game_sessions
   useEffect(() => {
     if (isDM || !sessionId) return;
 
@@ -19,7 +19,7 @@ export const useBattleMapSync = (sessionId: string, isDM: boolean) => {
         console.log('🗺️ Загрузка URL карты для сессии:', sessionId);
         
         const { data, error } = await supabase
-          .from('dm_sessions')
+          .from('game_sessions')
           .select('current_map_url')
           .eq('id', sessionId)
           .single();
@@ -48,7 +48,7 @@ export const useBattleMapSync = (sessionId: string, isDM: boolean) => {
         {
           event: 'UPDATE',
           schema: 'public',
-          table: 'dm_sessions',
+          table: 'game_sessions',
           filter: `id=eq.${sessionId}`
         },
         (payload) => {
@@ -72,7 +72,7 @@ export const useBattleMapSync = (sessionId: string, isDM: boolean) => {
     };
   }, [sessionId, isDM, setMapImageUrl, toast]);
 
-  // Мастер сохраняет URL карты в dm_sessions
+  // Мастер сохраняет URL карты в game_sessions
   const { mapImageUrl } = useEnhancedBattleStore();
   
   useEffect(() => {
@@ -83,7 +83,7 @@ export const useBattleMapSync = (sessionId: string, isDM: boolean) => {
         console.log('📤 Синхронизация URL карты:', mapImageUrl);
         
         const { error } = await supabase
-          .from('dm_sessions')
+          .from('game_sessions')
           .update({ 
             current_map_url: mapImageUrl,
             updated_at: new Date().toISOString()
