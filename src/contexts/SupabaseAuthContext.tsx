@@ -163,6 +163,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const getInitialSession = async () => {
       try {
         console.log('getInitialSession: получаем начальную сессию');
+        
+        // Проверяем localStorage
+        const storageKeys = Object.keys(localStorage).filter(k => k.includes('supabase'));
+        console.log('localStorage keys:', storageKeys);
+        storageKeys.forEach(key => {
+          console.log(`localStorage[${key}]:`, localStorage.getItem(key)?.substring(0, 100));
+        });
+        
         const { data: { session }, error } = await supabase.auth.getSession();
         console.log('getInitialSession: сессия:', session, 'ошибка:', error);
         
@@ -170,6 +178,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           const mappedUser = mapSupabaseUser(session.user);
           console.log('getInitialSession: установка пользователя:', mappedUser);
           setUser(mappedUser);
+        } else if (mounted) {
+          console.log('getInitialSession: сессия отсутствует или ошибка');
+          setUser(null);
         }
         
         if (mounted) {

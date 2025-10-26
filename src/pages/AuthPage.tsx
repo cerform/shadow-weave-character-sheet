@@ -20,6 +20,8 @@ const AuthPage = () => {
     if (isCallback && isAuthenticated && user && !loading) {
       console.log('🚀 AuthPage: OAuth callback успешен - перенаправление на главную');
       navigate('/', { replace: true });
+    } else if (isCallback) {
+      console.log('⏳ AuthPage: OAuth callback в процессе...', { isAuthenticated, user: !!user, loading });
     }
   }, [isCallback, isAuthenticated, user, loading, navigate]);
 
