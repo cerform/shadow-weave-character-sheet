@@ -53,25 +53,50 @@ const MapUploader: React.FC<MapUploaderProps> = ({
     setUploading(true);
 
     try {
+      // Проверяем авторизацию
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      
+      if (authError || !user) {
+        console.error('Пользователь не авторизован:', authError);
+        toast({
+          title: "Требуется авторизация",
+          description: "Войдите в систему, чтобы загружать карты",
+          variant: "destructive"
+        });
+        setUploading(false);
+        return;
+      }
+
+      console.log('✅ Пользователь авторизован:', user.id);
+
       const fileExt = file.name.split('.').pop();
       const fileName = `map_${Date.now()}.${fileExt}`;
       const filePath = fileName;
 
-      const { error: uploadError } = await supabase.storage
+      console.log('📤 Загрузка файла в bucket battle-maps:', filePath);
+
+      const { error: uploadError, data: uploadData } = await supabase.storage
         .from('battle-maps')
         .upload(filePath, file);
 
       if (uploadError) {
+        console.error('❌ Ошибка загрузки в storage:', uploadError);
         throw uploadError;
       }
+
+      console.log('✅ Файл загружен:', uploadData);
 
       const { data } = supabase.storage
         .from('battle-maps')
         .getPublicUrl(filePath);
 
+      console.log('🔗 Получен публичный URL:', data.publicUrl);
+
       // Сохраняем карту в базе данных, если есть sessionId
       if (sessionId) {
         try {
+          console.log('💾 Сохранение карты в БД для сессии:', sessionId);
+          
           const { error: dbError } = await supabase
             .from('battle_maps')
             .insert({
@@ -84,12 +109,12 @@ const MapUploader: React.FC<MapUploaderProps> = ({
             });
 
           if (dbError) {
-            console.warn('Не удалось сохранить карту в базе данных:', dbError);
+            console.warn('⚠️ Не удалось сохранить карту в базе данных:', dbError);
           } else {
-            console.log('Карта успешно сохранена в базе данных');
+            console.log('✅ Карта успешно сохранена в базе данных');
           }
         } catch (dbError) {
-          console.warn('Ошибка при сохранении карты в базе данных:', dbError);
+          console.warn('⚠️ Ошибка при сохранении карты в базе данных:', dbError);
         }
       }
 
@@ -100,11 +125,18 @@ const MapUploader: React.FC<MapUploaderProps> = ({
         description: "Карта успешно загружена и сохранена",
       });
 
-    } catch (error) {
-      console.error('Ошибка загрузки карты:', error);
+    } catch (error: any) {
+      console.error('❌ Критическая ошибка загрузки карты:', error);
+      console.error('Детали ошибки:', {
+        message: error.message,
+        statusCode: error.statusCode,
+        error: error.error,
+        hint: error.hint
+      });
+      
       toast({
         title: "Ошибка загрузки",
-        description: "Не удалось загрузить карту. Попробуйте еще раз.",
+        description: error.message || "Не удалось загрузить карту. Попробуйте еще раз.",
         variant: "destructive"
       });
     } finally {
