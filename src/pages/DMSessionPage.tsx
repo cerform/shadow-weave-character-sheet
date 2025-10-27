@@ -69,6 +69,7 @@ const DMSessionPage = () => {
   const { toast } = useToast();
   const { theme, setTheme } = useTheme();
 
+  // Загрузка сессии
   useEffect(() => {
     if (!isAuthenticated) {
       navigate('/auth');
@@ -144,6 +145,103 @@ const DMSessionPage = () => {
     
     loadSession();
   }, [isAuthenticated, navigate, sessionId, user?.id, toast]);
+
+  // Real-time синхронизация участников и карт
+  useEffect(() => {
+    if (!sessionId || !user?.id) return;
+
+    console.log('🔄 Подписка на real-time изменения для сессии:', sessionId);
+
+    // Обновляем статус "онлайн" для DM
+    const updateDMStatus = async () => {
+      try {
+        const { error } = await supabase
+          .from('game_sessions')
+          .update({ updated_at: new Date().toISOString() })
+          .eq('id', sessionId)
+          .eq('dm_id', user.id);
+
+        if (!error) {
+          console.log('✅ DM статус обновлен');
+        }
+      } catch (error) {
+        console.error('Ошибка обновления статуса DM:', error);
+      }
+    };
+
+    updateDMStatus();
+
+    // Подписка на изменения игроков
+    const playersChannel = supabase
+      .channel(`session-players-${sessionId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'session_players',
+          filter: `session_id=eq.${sessionId}`
+        },
+        async (payload) => {
+          console.log('👥 Изменение в session_players:', payload);
+          
+          // Перезагружаем список игроков
+          const { data: sessionPlayers } = await supabase
+            .from('session_players')
+            .select(`
+              *,
+              characters (
+                id,
+                name,
+                class,
+                level
+              )
+            `)
+            .eq('session_id', sessionId);
+
+          if (sessionPlayers) {
+            setPlayers(sessionPlayers);
+            toast({
+              title: "Обновление участников",
+              description: `Список участников обновлен (${sessionPlayers.length} игроков)`,
+            });
+          }
+        }
+      )
+      .subscribe();
+
+    // Подписка на изменения сессии
+    const sessionChannel = supabase
+      .channel(`game-session-${sessionId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'game_sessions',
+          filter: `id=eq.${sessionId}`
+        },
+        (payload) => {
+          console.log('🎮 Обновление сессии:', payload);
+          setCurrentSession(payload.new);
+          toast({
+            title: "Сессия обновлена",
+            description: "Настройки сессии изменены",
+          });
+        }
+      )
+      .subscribe();
+
+    // Heartbeat для обновления статуса каждые 30 секунд
+    const heartbeatInterval = setInterval(updateDMStatus, 30000);
+
+    return () => {
+      console.log('🔌 Отписка от real-time каналов');
+      clearInterval(heartbeatInterval);
+      supabase.removeChannel(playersChannel);
+      supabase.removeChannel(sessionChannel);
+    };
+  }, [sessionId, user?.id, toast]);
 
   const handleEndSession = async () => {
     if (!sessionId) return;

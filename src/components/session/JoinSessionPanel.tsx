@@ -8,6 +8,8 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { useCharacter } from '@/contexts/CharacterContext';
 import { socketService, GameSession } from '@/services/socket';
+import { sessionService } from '@/services/sessionService';
+import { supabase } from '@/integrations/supabase/client';
 import { Users, Play, Loader2 } from 'lucide-react';
 
 interface JoinSessionPanelProps {
@@ -57,6 +59,44 @@ const JoinSessionPanel: React.FC<JoinSessionPanelProps> = ({ onSessionJoined }) 
         playerName,
         character || undefined
       );
+
+      // Обновляем статус online в Supabase для синхронизации с DM
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user && session.id) {
+          await supabase
+            .from('session_players')
+            .update({ 
+              is_online: true,
+              last_seen: new Date().toISOString()
+            })
+            .eq('session_id', session.id)
+            .eq('user_id', user.id);
+
+          console.log('✅ Статус online обновлен в Supabase');
+
+          // Устанавливаем heartbeat для обновления статуса каждые 30 секунд
+          const heartbeat = setInterval(async () => {
+            try {
+              await supabase
+                .from('session_players')
+                .update({ 
+                  is_online: true,
+                  last_seen: new Date().toISOString()
+                })
+                .eq('session_id', session.id)
+                .eq('user_id', user.id);
+            } catch (error) {
+              console.error('Ошибка heartbeat:', error);
+            }
+          }, 30000);
+
+          // Сохраняем heartbeat ID для очистки
+          (window as any).__playerHeartbeat = heartbeat;
+        }
+      } catch (error) {
+        console.error('Ошибка обновления статуса online:', error);
+      }
       
       toast({
         title: "🎉 Успешно присоединились!",
