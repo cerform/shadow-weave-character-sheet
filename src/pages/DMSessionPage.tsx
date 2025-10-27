@@ -268,6 +268,29 @@ const DMSessionPage = () => {
     }
   };
 
+  const handleRemovePlayer = async (playerId: string) => {
+    try {
+      const { error } = await supabase
+        .from('session_players')
+        .delete()
+        .eq('id', playerId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Игрок удален",
+        description: "Игрок успешно удален из сессии",
+      });
+    } catch (error) {
+      console.error('Error removing player:', error);
+      toast({
+        title: "Ошибка",
+        description: "Не удалось удалить игрока",
+        variant: "destructive"
+      });
+    }
+  };
+
   const handleAddPlayer = () => {
     if (!newPlayerName.trim()) {
       toast({
@@ -277,8 +300,6 @@ const DMSessionPage = () => {
       });
       return;
     }
-    
-    // Add player logic would go here
     
     setNewPlayerName('');
     setIsAddingPlayer(false);
@@ -394,11 +415,15 @@ const DMSessionPage = () => {
                              <div className={`w-3 h-3 rounded-full ${player.is_online ? 'bg-green-500' : 'bg-red-500'} mr-2 inline-block`}></div>
                              {player.is_online ? 'Онлайн' : 'Оффлайн'}
                            </TableCell>
-                           <TableCell>
-                             <Button variant="ghost" size="sm">
-                               Просмотр
-                             </Button>
-                           </TableCell>
+                            <TableCell>
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                onClick={() => handleRemovePlayer(player.id)}
+                              >
+                                Удалить
+                              </Button>
+                            </TableCell>
                          </TableRow>
                        ))
                      ) : (
