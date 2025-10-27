@@ -11,28 +11,28 @@ const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiO
 // Глобальное in-memory хранилище (сохраняется между перерендерами)
 const globalMemoryStorage: Record<string, string> = {};
 
-// Пытаемся использовать sessionStorage (работает в iframe), затем localStorage, затем memory
+// Используем localStorage для персистентности сессии между страницами
 const getStorageAdapter = () => {
-  // Сначала пробуем sessionStorage (работает даже в iframe)
-  try {
-    const testKey = '__supabase_test__';
-    window.sessionStorage.setItem(testKey, 'test');
-    window.sessionStorage.removeItem(testKey);
-    console.log('✅ sessionStorage доступен');
-    return window.sessionStorage;
-  } catch (e) {
-    console.warn('⚠️ sessionStorage недоступен:', e);
-  }
-
-  // Затем пробуем localStorage
+  // Сначала пробуем localStorage - главный способ хранения для web-приложений
   try {
     const testKey = '__supabase_test__';
     window.localStorage.setItem(testKey, 'test');
     window.localStorage.removeItem(testKey);
-    console.log('✅ localStorage доступен');
+    console.log('✅ localStorage доступен (используется для сохранения сессии)');
     return window.localStorage;
   } catch (e) {
     console.warn('⚠️ localStorage недоступен:', e);
+  }
+
+  // Затем пробуем sessionStorage как fallback
+  try {
+    const testKey = '__supabase_test__';
+    window.sessionStorage.setItem(testKey, 'test');
+    window.sessionStorage.removeItem(testKey);
+    console.log('✅ sessionStorage доступен (fallback)');
+    return window.sessionStorage;
+  } catch (e) {
+    console.warn('⚠️ sessionStorage недоступен:', e);
   }
 
   // Fallback: глобальное in-memory storage
