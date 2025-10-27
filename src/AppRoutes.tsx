@@ -178,6 +178,13 @@ const AppRoutes: React.FC = () => {
         </ProtectedDMRoute>
       } />
       
+      <Route path="/dm/session/:sessionId" element={
+        <ProtectedDMRoute>
+          <DMSessionPage />
+        </ProtectedDMRoute>
+      } />
+      
+      {/* Обратная совместимость со старым путем */}
       <Route path="/dm-session/:sessionId" element={
         <ProtectedDMRoute>
           <DMSessionPage />
