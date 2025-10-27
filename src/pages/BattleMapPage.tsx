@@ -28,7 +28,7 @@ const BattleMapPage: React.FC = () => {
 
   const handleBack = () => {
     if (sessionId) {
-      navigate(`/battle/${sessionId}`);
+      navigate(`/dm/session/${sessionId}`);
     } else {
       navigate('/dm');
     }

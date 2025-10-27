@@ -20,7 +20,7 @@ const BattleMapWithSidebar: React.FC<BattleMapWithSidebarProps> = ({ isDM = fals
 
   const handleBackClick = () => {
     if (sessionId) {
-      navigate(isDM ? `/dm-session/${sessionId}` : `/player-session/${sessionId}`);
+      navigate(isDM ? `/dm/session/${sessionId}` : `/player-session/${sessionId}`);
     } else {
       navigate('/');
     }
