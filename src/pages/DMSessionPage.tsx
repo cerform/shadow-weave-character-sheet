@@ -113,6 +113,7 @@ const DMSessionPage = () => {
         setCurrentSession(session);
 
         // Загружаем игроков
+        console.log('🔍 Загружаем игроков для сессии:', sessionId);
         const { data: sessionPlayers, error: playersError } = await supabase
           .from('session_players')
           .select(`
@@ -126,8 +127,13 @@ const DMSessionPage = () => {
           `)
           .eq('session_id', sessionId);
 
-        if (!playersError && sessionPlayers) {
-          setPlayers(sessionPlayers);
+        console.log('📊 Результат загрузки игроков:', { sessionPlayers, playersError });
+
+        if (playersError) {
+          console.error('❌ Ошибка загрузки игроков:', playersError);
+        } else {
+          console.log(`✅ Загружено игроков: ${sessionPlayers?.length || 0}`);
+          setPlayers(sessionPlayers || []);
         }
 
       } catch (error) {
@@ -404,7 +410,16 @@ const DMSessionPage = () => {
                     </TableRow>
                   </TableHeader>
                    <TableBody>
-                     {players && players.length > 0 ? (
+                     {loading ? (
+                       <TableRow>
+                         <TableCell colSpan={4} className="text-center py-8">
+                           <div className="flex items-center justify-center gap-2">
+                             <div className="animate-spin h-5 w-5 border-2 border-primary border-t-transparent rounded-full"></div>
+                             <span>Загрузка участников...</span>
+                           </div>
+                         </TableCell>
+                       </TableRow>
+                     ) : players && players.length > 0 ? (
                        players.map((player: any) => (
                          <TableRow key={player.id}>
                            <TableCell className="font-medium">{player.player_name}</TableCell>
@@ -412,24 +427,29 @@ const DMSessionPage = () => {
                              {player.characters ? player.characters.name : 'Не выбран'}
                            </TableCell>
                            <TableCell>
-                             <div className={`w-3 h-3 rounded-full ${player.is_online ? 'bg-green-500' : 'bg-red-500'} mr-2 inline-block`}></div>
-                             {player.is_online ? 'Онлайн' : 'Оффлайн'}
+                             <div className={`flex items-center gap-2`}>
+                               <div className={`w-3 h-3 rounded-full ${player.is_online ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                               {player.is_online ? 'Онлайн' : 'Оффлайн'}
+                             </div>
                            </TableCell>
-                            <TableCell>
-                              <Button 
-                                variant="ghost" 
-                                size="sm"
-                                onClick={() => handleRemovePlayer(player.id)}
-                              >
-                                Удалить
-                              </Button>
-                            </TableCell>
+                           <TableCell>
+                             <Button 
+                               variant="ghost" 
+                               size="sm"
+                               onClick={() => handleRemovePlayer(player.id)}
+                             >
+                               Удалить
+                             </Button>
+                           </TableCell>
                          </TableRow>
                        ))
                      ) : (
                        <TableRow>
-                         <TableCell colSpan={4} className="text-center py-4">
-                           Нет игроков в сессии
+                         <TableCell colSpan={4} className="text-center py-8">
+                           <div className="text-muted-foreground">
+                             Нет игроков в сессии
+                           </div>
+                           <p className="text-sm mt-2">Поделитесь кодом сессии <strong>{currentSession.session_code}</strong> с игроками</p>
                          </TableCell>
                        </TableRow>
                      )}
