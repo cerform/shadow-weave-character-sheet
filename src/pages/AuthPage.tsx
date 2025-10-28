@@ -37,8 +37,8 @@ const AuthPage = () => {
       
       setRedirectAttempted(true);
       
-      // Небольшая задержка для OAuth callback чтобы убедиться что состояние обновилось
-      const delay = isCallback ? 100 : 0;
+      // Увеличенная задержка для OAuth callback чтобы Supabase успел сохранить сессию
+      const delay = isCallback ? 1000 : 300;
       
       setTimeout(() => {
         navigate('/', { replace: true });
