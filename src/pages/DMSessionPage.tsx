@@ -116,15 +116,7 @@ const DMSessionPage = () => {
         console.log('🔍 Загружаем игроков для сессии:', sessionId);
         const { data: sessionPlayers, error: playersError } = await supabase
           .from('session_players')
-          .select(`
-            *,
-            characters (
-              id,
-              name,
-              class,
-              level
-            )
-          `)
+          .select('*')
           .eq('session_id', sessionId);
 
         console.log('📊 Результат загрузки игроков:', { sessionPlayers, playersError });
@@ -194,15 +186,7 @@ const DMSessionPage = () => {
           // Перезагружаем список игроков
           const { data: sessionPlayers } = await supabase
             .from('session_players')
-            .select(`
-              *,
-              characters (
-                id,
-                name,
-                class,
-                level
-              )
-            `)
+            .select('*')
             .eq('session_id', sessionId);
 
           if (sessionPlayers) {
@@ -420,29 +404,29 @@ const DMSessionPage = () => {
                          </TableCell>
                        </TableRow>
                      ) : players && players.length > 0 ? (
-                       players.map((player: any) => (
-                         <TableRow key={player.id}>
-                           <TableCell className="font-medium">{player.player_name}</TableCell>
-                           <TableCell>
-                             {player.characters ? player.characters.name : 'Не выбран'}
-                           </TableCell>
-                           <TableCell>
-                             <div className={`flex items-center gap-2`}>
-                               <div className={`w-3 h-3 rounded-full ${player.is_online ? 'bg-green-500' : 'bg-red-500'}`}></div>
-                               {player.is_online ? 'Онлайн' : 'Оффлайн'}
-                             </div>
-                           </TableCell>
-                           <TableCell>
-                             <Button 
-                               variant="ghost" 
-                               size="sm"
-                               onClick={() => handleRemovePlayer(player.id)}
-                             >
-                               Удалить
-                             </Button>
-                           </TableCell>
-                         </TableRow>
-                       ))
+                        players.map((player: any) => (
+                          <TableRow key={player.id}>
+                            <TableCell className="font-medium">{player.player_name}</TableCell>
+                            <TableCell>
+                              {player.character_id ? 'Персонаж выбран' : 'Не выбран'}
+                            </TableCell>
+                            <TableCell>
+                              <div className={`flex items-center gap-2`}>
+                                <div className={`w-3 h-3 rounded-full ${player.is_online ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                                {player.is_online ? 'Онлайн' : 'Оффлайн'}
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                onClick={() => handleRemovePlayer(player.id)}
+                              >
+                                Удалить
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))
                      ) : (
                        <TableRow>
                          <TableCell colSpan={4} className="text-center py-8">
