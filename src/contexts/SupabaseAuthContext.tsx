@@ -137,30 +137,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   useEffect(() => {
     let mounted = true;
     
-    // Слушаем изменения аутентификации СНАЧАЛА
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        console.log('onAuthStateChange: событие:', event, 'сессия:', session);
-        if (!mounted) return;
-        
-        if (event === 'SIGNED_OUT' || !session) {
-          console.log('onAuthStateChange: пользователь вышел или сессия отсутствует');
-          setUser(null);
-          setLoading(false);
-          return;
-        }
-        
-        // Обрабатываем все события входа немедленно
-        if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') {
-          const mappedUser = mapSupabaseUser(session?.user ?? null);
-          console.log('onAuthStateChange: установка пользователя:', mappedUser);
-          setUser(mappedUser);
-          setLoading(false);
-        }
-      }
-    );
-
-    // ЗАТЕМ получаем текущую сессию
+    // СНАЧАЛА получаем текущую сессию
     const getInitialSession = async () => {
       try {
         console.log('getInitialSession: получаем начальную сессию');
@@ -190,6 +167,35 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     };
 
     getInitialSession();
+
+    // ЗАТЕМ слушаем изменения аутентификации
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        console.log('onAuthStateChange: событие:', event, 'сессия:', session);
+        if (!mounted) return;
+        
+        // Игнорируем INITIAL_SESSION - оно уже обработано в getInitialSession
+        if (event === 'INITIAL_SESSION') {
+          console.log('onAuthStateChange: игнорируем INITIAL_SESSION');
+          return;
+        }
+        
+        if (event === 'SIGNED_OUT') {
+          console.log('onAuthStateChange: пользователь вышел');
+          setUser(null);
+          return;
+        }
+        
+        // Обрабатываем события входа и обновления токена
+        if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+          if (session?.user) {
+            const mappedUser = mapSupabaseUser(session.user);
+            console.log('onAuthStateChange: установка пользователя:', mappedUser);
+            setUser(mappedUser);
+          }
+        }
+      }
+    );
 
     return () => {
       mounted = false;
