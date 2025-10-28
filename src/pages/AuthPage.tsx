@@ -38,26 +38,42 @@ const AuthPage = () => {
       
       setRedirectAttempted(true);
       
-      // Проверяем, что сессия действительно сохранена в localStorage
+      // Проверяем localStorage напрямую в цикле до появления токенов
       const checkAndRedirect = async () => {
-        // Ждем чтобы Supabase сохранил токены
-        await new Promise(resolve => setTimeout(resolve, 1500));
+        let attempts = 0;
+        const maxAttempts = 15; // 15 попыток по 500мс = 7.5 секунд максимум
         
-        // Проверяем наличие токенов в localStorage
-        const session = await supabase.auth.getSession();
-        console.log('🔍 Проверка сессии перед редиректом:', {
-          hasSession: !!session.data.session,
-          hasAccessToken: !!session.data.session?.access_token
-        });
-        
-        if (session.data.session?.access_token) {
-          console.log('✅ Сессия подтверждена, выполняем редирект');
-          navigate('/', { replace: true });
-        } else {
-          console.error('❌ Сессия не сохранена, повторяем попытку');
-          await new Promise(resolve => setTimeout(resolve, 1000));
-          navigate('/', { replace: true });
+        while (attempts < maxAttempts) {
+          await new Promise(resolve => setTimeout(resolve, 500));
+          
+          // Проверяем напрямую localStorage
+          const storageKey = 'sb-auth-token';
+          let hasToken = false;
+          
+          try {
+            const stored = localStorage.getItem(storageKey);
+            if (stored) {
+              const parsed = JSON.parse(stored);
+              hasToken = !!(parsed?.access_token || parsed?.currentSession?.access_token);
+            }
+          } catch (e) {
+            console.warn('Ошибка проверки localStorage:', e);
+          }
+          
+          console.log(`🔍 Попытка ${attempts + 1}/${maxAttempts}: токен ${hasToken ? 'найден' : 'не найден'}`);
+          
+          if (hasToken) {
+            console.log('✅ Токен найден в localStorage, выполняем редирект');
+            navigate('/', { replace: true });
+            return;
+          }
+          
+          attempts++;
         }
+        
+        // Если токен так и не появился, все равно редиректим
+        console.warn('⚠️ Токен не найден после всех попыток, редиректим принудительно');
+        navigate('/', { replace: true });
       };
       
       checkAndRedirect();
