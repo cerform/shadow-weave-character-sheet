@@ -5,6 +5,7 @@ import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import SupabaseAuthForm from '@/components/auth/SupabaseAuthForm';
+import { supabase } from '@/integrations/supabase/client';
 
 
 const AuthPage = () => {
@@ -27,8 +28,8 @@ const AuthPage = () => {
     // Условие для редиректа: пользователь авторизован и загрузка завершена
     const shouldRedirect = isAuthenticated && user && !loading;
 
-    if (shouldRedirect) {
-      console.log('🚀 AuthPage: выполняем редирект на главную страницу', {
+    if (shouldRedirect && isCallback) {
+      console.log('🚀 AuthPage: подготовка к редиректу после OAuth', {
         isAuthenticated,
         hasUser: !!user,
         loading,
@@ -37,12 +38,36 @@ const AuthPage = () => {
       
       setRedirectAttempted(true);
       
-      // Увеличенная задержка для OAuth callback чтобы Supabase успел сохранить сессию
-      const delay = isCallback ? 1000 : 300;
+      // Проверяем, что сессия действительно сохранена в localStorage
+      const checkAndRedirect = async () => {
+        // Ждем чтобы Supabase сохранил токены
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        
+        // Проверяем наличие токенов в localStorage
+        const session = await supabase.auth.getSession();
+        console.log('🔍 Проверка сессии перед редиректом:', {
+          hasSession: !!session.data.session,
+          hasAccessToken: !!session.data.session?.access_token
+        });
+        
+        if (session.data.session?.access_token) {
+          console.log('✅ Сессия подтверждена, выполняем редирект');
+          navigate('/', { replace: true });
+        } else {
+          console.error('❌ Сессия не сохранена, повторяем попытку');
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          navigate('/', { replace: true });
+        }
+      };
       
+      checkAndRedirect();
+    } else if (shouldRedirect) {
+      // Обычный вход (не OAuth)
+      console.log('🚀 AuthPage: обычный редирект');
+      setRedirectAttempted(true);
       setTimeout(() => {
         navigate('/', { replace: true });
-      }, delay);
+      }, 300);
     } else if (isCallback) {
       console.log('⏳ AuthPage: OAuth callback в процессе, ожидание...', { 
         isAuthenticated, 
