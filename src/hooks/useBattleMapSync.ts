@@ -16,39 +16,42 @@ export const useBattleMapSync = (sessionId: string, isDM: boolean) => {
 
     const loadMapUrl = async () => {
       try {
-        console.log('🗺️ Загрузка URL карты для сессии:', sessionId);
+        console.log('🗺️ [PLAYER] Загрузка URL карты для сессии:', sessionId);
         
         const { data, error } = await supabase
           .from('game_sessions')
-          .select('current_map_url')
+          .select('current_map_url, updated_at')
           .eq('id', sessionId)
           .single();
 
         if (error) {
-          console.error('Ошибка загрузки URL карты:', error);
-          setMapImageUrl(null); // Очищаем карту при ошибке
+          console.error('❌ [PLAYER] Ошибка загрузки URL карты:', error);
+          setMapImageUrl(null);
           return;
         }
 
-        // Устанавливаем карту только если она есть, иначе очищаем
+        console.log('📦 [PLAYER] Получены данные сессии:', data);
+
+        // Устанавливаем карту только если она есть
         if (data?.current_map_url) {
-          console.log('✅ URL карты загружен:', data.current_map_url);
+          console.log('✅ [PLAYER] URL карты установлен:', data.current_map_url);
           setMapImageUrl(data.current_map_url);
         } else {
-          console.log('ℹ️ У сессии нет карты, очищаем');
+          console.log('ℹ️ [PLAYER] У сессии нет карты (current_map_url пустой)');
           setMapImageUrl(null);
         }
       } catch (error) {
-        console.error('Ошибка при загрузке URL карты:', error);
+        console.error('❌ [PLAYER] Исключение при загрузке URL карты:', error);
         setMapImageUrl(null);
       }
     };
 
     loadMapUrl();
 
-    // Подписываемся на изменения URL карты
+    // Подписываемся на изменения URL карты в game_sessions
+    console.log('📡 [PLAYER] Подписка на изменения карты для сессии:', sessionId);
     const channel = supabase
-      .channel(`map-sync-${sessionId}`)
+      .channel(`map-sync-player-${sessionId}`)
       .on(
         'postgres_changes',
         {
@@ -58,22 +61,29 @@ export const useBattleMapSync = (sessionId: string, isDM: boolean) => {
           filter: `id=eq.${sessionId}`
         },
         (payload) => {
-          console.log('🗺️ Обновление карты:', payload.new);
+          console.log('🔄 [PLAYER] Real-time обновление game_sessions:', payload);
           const newMapUrl = (payload.new as any).current_map_url;
           
+          console.log('🗺️ [PLAYER] Новый URL карты из real-time:', newMapUrl);
+          
           if (newMapUrl) {
+            console.log('✅ [PLAYER] Применяем новую карту:', newMapUrl);
             setMapImageUrl(newMapUrl);
             toast({
               title: "Карта обновлена",
               description: "Мастер сменил карту боя",
             });
+          } else {
+            console.log('ℹ️ [PLAYER] Обновление без карты (current_map_url пустой)');
           }
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('📡 [PLAYER] Статус подписки на карту:', status);
+      });
 
     return () => {
-      console.log('🔕 Отписка от изменений карты');
+      console.log('🔕 [PLAYER] Отписка от изменений карты');
       supabase.removeChannel(channel);
     };
   }, [sessionId, isDM, setMapImageUrl, toast]);
@@ -122,23 +132,27 @@ export const useBattleMapSync = (sessionId: string, isDM: boolean) => {
 
     const syncMapUrl = async () => {
       try {
-        console.log('📤 Синхронизация URL карты:', mapImageUrl);
+        console.log('📤 [DM] Синхронизация URL карты в game_sessions:', {
+          sessionId,
+          mapImageUrl,
+        });
         
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from('game_sessions')
           .update({ 
             current_map_url: mapImageUrl,
             updated_at: new Date().toISOString()
           })
-          .eq('id', sessionId);
+          .eq('id', sessionId)
+          .select();
 
         if (error) {
-          console.error('Ошибка синхронизации URL карты:', error);
+          console.error('❌ [DM] Ошибка синхронизации URL карты:', error);
         } else {
-          console.log('✅ URL карты синхронизирован');
+          console.log('✅ [DM] URL карты синхронизирован в game_sessions:', data);
         }
       } catch (error) {
-        console.error('Ошибка при синхронизации URL карты:', error);
+        console.error('❌ [DM] Исключение при синхронизации URL карты:', error);
       }
     };
 
