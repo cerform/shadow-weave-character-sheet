@@ -38,15 +38,15 @@ const BattleMap2DPlayer: React.FC<BattleMap2DPlayerProps> = ({
 
   // Центрируем карту при загрузке изображения
   useEffect(() => {
-    if (mapImage && stageSize.width > 0 && stageSize.height > 0) {
-      const mapWidth = 800 * scale;
-      const mapHeight = 600 * scale;
-      setPosition({
-        x: (stageSize.width - mapWidth) / 2,
-        y: (stageSize.height - mapHeight) / 2
-      });
+    if (mapImage && stageSize.width > 0 && stageSize.height > 0 && position.x === 0 && position.y === 0) {
+      const mapWidth = 800;
+      const mapHeight = 600;
+      const newX = (stageSize.width - mapWidth) / 2;
+      const newY = (stageSize.height - mapHeight) / 2;
+      console.log('🎯 Centering map:', { stageSize, mapWidth, mapHeight, newX, newY });
+      setPosition({ x: newX, y: newY });
     }
-  }, [mapImage]);
+  }, [mapImage, stageSize.width, stageSize.height]);
 
   // Обновляем размер stage при изменении размера контейнера
   useEffect(() => {
@@ -101,10 +101,12 @@ const BattleMap2DPlayer: React.FC<BattleMap2DPlayerProps> = ({
   };
 
   return (
-    <div className="w-full h-full relative bg-[#1a1a2e] bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-primary/5 via-background to-background">
+    <div className="w-full h-full relative overflow-hidden" style={{
+      background: 'linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%)'
+    }}>
       {/* Сообщение когда нет карты */}
       {!mapImageUrl && (
-        <div className="absolute inset-0 flex items-center justify-center">
+        <div className="absolute inset-0 flex items-center justify-center z-50">
           <div className="text-center p-8 bg-card/80 backdrop-blur-sm rounded-lg border-2 border-border max-w-md">
             <div className="text-6xl mb-4">🗺️</div>
             <h2 className="text-2xl font-bold text-foreground mb-2">
@@ -167,45 +169,74 @@ const BattleMap2DPlayer: React.FC<BattleMap2DPlayerProps> = ({
             </React.Fragment>
           ))}
 
-          {/* Токены */}
-          {tokens.map((token) => (
-            <TokenRenderer 
-              key={token.id} 
-              token={token} 
-              gridSize={25}
-              onDragEnd={(newPosition) => {
-                updateToken(token.id, { position: newPosition });
-              }}
+          {/* Токены - показываем только в открытых областях */}
+          {tokens.map((token) => {
+            // Проверяем, находится ли токен в открытой области
+            if (fogMap && fogSize.w > 0 && fogSize.h > 0) {
+              const cellSize = 800 / fogSize.w;
+              const tokenX = token.position[0];
+              const tokenY = token.position[1];
+              const tokenGridX = Math.floor(tokenX / cellSize);
+              const tokenGridY = Math.floor(tokenY / cellSize);
+              const idx = tokenGridY * fogSize.w + tokenGridX;
+              const isInRevealedArea = fogMap[idx] === 1;
+              
+              // Не показываем токены в скрытых областях (кроме токена игрока)
+              if (!isInRevealedArea && token.owner_id !== user?.id) {
+                return null;
+              }
+            }
+            
+            return (
+              <TokenRenderer 
+                key={token.id} 
+                token={token} 
+                gridSize={25}
+                onDragEnd={(newPosition) => {
+                  updateToken(token.id, { position: newPosition });
+                }}
+              />
+            );
+          })}
+        </Layer>
+        
+        {/* Отдельный слой для тумана войны */}
+        <Layer listening={false}>
+          {/* Рисуем черные клетки там, где туман не раскрыт */}
+          {fogMap && fogSize.w > 0 && fogSize.h > 0 ? (
+            Array.from({ length: fogSize.h }, (_, y) =>
+              Array.from({ length: fogSize.w }, (_, x) => {
+                const idx = y * fogSize.w + x;
+                const isRevealed = fogMap[idx] === 1;
+                
+                // Рисуем черные клетки только для скрытых областей
+                if (!isRevealed) {
+                  const cellSize = 800 / fogSize.w;
+                  return (
+                    <Rect
+                      key={`fog-${x}-${y}`}
+                      x={x * cellSize}
+                      y={y * cellSize}
+                      width={cellSize + 0.5}
+                      height={cellSize + 0.5}
+                      fill="black"
+                      opacity={0.95}
+                    />
+                  );
+                }
+                return null;
+              })
+            )
+          ) : (
+            // Если нет данных о тумане - покрываем всю карту
+            <Rect
+              x={0}
+              y={0}
+              width={800}
+              height={600}
+              fill="black"
+              opacity={0.95}
             />
-          ))}
-          
-          {/* Туман войны - рисуем тёмные клетки там, где туман не раскрыт */}
-          {fogMap && fogSize.w > 0 && fogSize.h > 0 && (
-            <>
-              {Array.from({ length: fogSize.h }, (_, y) =>
-                Array.from({ length: fogSize.w }, (_, x) => {
-                  const idx = y * fogSize.w + x;
-                  const isRevealed = fogMap[idx] === 1;
-                  
-                  // Рисуем только скрытые клетки
-                  if (!isRevealed) {
-                    return (
-                      <Rect
-                        key={`fog-${x}-${y}`}
-                        x={x * 25}
-                        y={y * 25}
-                        width={25}
-                        height={25}
-                        fill="black"
-                        opacity={0.85}
-                        listening={false}
-                      />
-                    );
-                  }
-                  return null;
-                })
-              )}
-            </>
           )}
         </Layer>
       </Stage>
