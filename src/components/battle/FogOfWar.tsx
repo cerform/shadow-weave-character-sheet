@@ -14,6 +14,7 @@ interface FogOfWarProps {
   isDM?: boolean;
   isDynamicLighting?: boolean;
   imageSize?: { width: number; height: number };
+  showFullFogForPlayers?: boolean; // Показывать полный туман для игроков
 }
 
 const defaultRenderConfig: FogRenderConfig = {
@@ -32,7 +33,8 @@ export default function FogOfWar({
   tokenPositions = [],
   isDM = false,
   isDynamicLighting = false,
-  imageSize
+  imageSize,
+  showFullFogForPlayers = false
 }: FogOfWarProps) {
   const [renderer, setRenderer] = useState<FogRenderer | null>(null);
   const [selectedArea, setSelectedArea] = useState<{
@@ -85,10 +87,16 @@ export default function FogOfWar({
     }
 
     const renderFrame = () => {
-      console.log('🎨 FogOfWar: actually rendering');
+      console.log('🎨 FogOfWar: actually rendering', { showFullFogForPlayers, isDM });
+      
+      // Для игроков с включенным showFullFogForPlayers показываем полный туман
+      const effectiveRevealedCells = (showFullFogForPlayers && !isDM) 
+        ? {} // Пустой объект = все ячейки под туманом
+        : revealedCells;
+      
       renderer.render(
         canvasState,
-        revealedCells,
+        effectiveRevealedCells,
         lightSources,
         tokenPositions,
         isDM,
@@ -107,7 +115,8 @@ export default function FogOfWar({
     tokenPositions,
     isDM,
     isDynamicLighting,
-    selectedArea
+    selectedArea,
+    showFullFogForPlayers
   ]);
 
   // Обработка клика по ячейке

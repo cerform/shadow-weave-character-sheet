@@ -980,19 +980,18 @@ export default function BattleMapUI({ sessionId }: { sessionId?: string }) {
         <div className="flex-1 flex flex-col">
           {/* Карта */}
           <div 
-            className={`flex-1 relative bg-background transition-all duration-200 ${isDragOver ? 'bg-primary/10 ring-2 ring-primary' : ''}`} 
+            className={`flex-1 relative bg-background transition-all duration-200 flex items-center justify-center ${isDragOver ? 'bg-primary/10 ring-2 ring-primary' : ''}`} 
             onDrop={onMapDrop} 
             onDragOver={onMapDragOver}
             onDragLeave={onMapDragLeave}
           >
-            <div className="absolute inset-0 overflow-hidden">
-              <div className="w-full h-full flex items-center justify-center p-4">
-                <div 
-                  className={`relative rounded-xl shadow-xl bg-secondary overflow-hidden transition-all duration-200 ${isDragOver ? 'ring-2 ring-primary bg-primary/5' : ''}`} 
-                  style={{ width: currentMapSize.width, height: currentMapSize.height }} 
-                  onClick={onMapClick} 
-                  ref={mapRef}
-                >
+            <div className="w-full h-full flex items-center justify-center p-4">
+              <div 
+                className={`relative rounded-xl shadow-xl bg-secondary overflow-hidden transition-all duration-200 ${isDragOver ? 'ring-2 ring-primary bg-primary/5' : ''}`} 
+                style={{ width: currentMapSize.width, height: currentMapSize.height }} 
+                onClick={onMapClick} 
+                ref={mapRef}
+              >
                   {/* Фон карты */}
                   {layers.find(l => l.id === 'map')?.visible && mapImage ? (
                     <img 
@@ -1090,6 +1089,7 @@ export default function BattleMapUI({ sessionId }: { sessionId?: string }) {
                       active={vttTool === 'fog-reveal' || vttTool === 'fog-hide'}
                       isDM={isDM}
                       imageSize={{ width: currentMapSize.width, height: currentMapSize.height }}
+                      showFullFogForPlayers={!isDM && mapImage !== null} // Игроки видят полный туман если карта загружена
                       onRevealCell={(row, col) => {
                         console.log('BattleMapUI onRevealCell called:', { row, col, GRID, fogRadius });
                         
@@ -1275,9 +1275,8 @@ export default function BattleMapUI({ sessionId }: { sessionId?: string }) {
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Layer Panel */}
+          {/* Layer Panel */}
         {showLayerPanel && (
           <LayerPanel
             layers={layers}
