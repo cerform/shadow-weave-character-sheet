@@ -896,17 +896,18 @@ export default function BattleMapUI({ sessionId }: { sessionId?: string }) {
               />
             </div>
             
-            {/* Список игроков */}
-            {isDM && sessionId && (
+            {/* Список игроков - показываем и ДМ и игрокам */}
+            {sessionId && (
               <PlayersList 
                 sessionId={sessionId} 
                 isDM={isDM}
               />
             )}
             
-            {/* Загрузка ассетов */}
-            <div className="flex-1 overflow-y-auto">
-              <AssetUploader
+            {/* Загрузка ассетов - только для ДМ */}
+            {isDM && (
+              <div className="flex-1 overflow-y-auto">
+                <AssetUploader
                 onAssetAdd={(name, url) => {
                   // Создаем токен из URL
                   const newToken: Token = {
@@ -947,7 +948,31 @@ export default function BattleMapUI({ sessionId }: { sessionId?: string }) {
                   }
                 }}
               />
-            </div>
+              </div>
+            )}
+            
+            {/* Информация для игроков */}
+            {!isDM && (
+              <div className="flex-1 p-4 overflow-y-auto">
+                <div className="space-y-4">
+                  <div className="p-3 bg-card rounded-lg border border-border">
+                    <h3 className="text-sm font-semibold mb-2 text-foreground">Игровая сессия</h3>
+                    <p className="text-xs text-muted-foreground">
+                      Вы подключены к боевой карте. Следите за действиями DM и своим персонажем на карте.
+                    </p>
+                  </div>
+                  
+                  {session && (
+                    <div className="p-3 bg-primary/5 rounded-lg border border-primary/20">
+                      <div className="text-xs text-muted-foreground mb-1">Код сессии:</div>
+                      <code className="text-sm font-mono font-bold text-primary">
+                        {session.session_code || session.id.slice(0, 8).toUpperCase()}
+                      </code>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         )}
 
