@@ -49,7 +49,7 @@ export const useBattleSession = (sessionId?: string) => {
           .from('dm_sessions')
           .select('*')
           .eq('id', sessionId)
-          .single();
+          .maybeSingle();
 
         if (!sessionError && existingSession) {
           setSession(existingSession);
@@ -57,29 +57,20 @@ export const useBattleSession = (sessionId?: string) => {
         }
       }
 
-      // Ищем активную сессию пользователя
-      const { data: activeSessions, error: activeError } = await supabase
+      // ВАЖНО: При создании новой сессии деактивируем все старые
+      console.log('🆕 Создание новой сессии - деактивируем старые');
+      await supabase
         .from('dm_sessions')
-        .select('*')
+        .update({ is_active: false })
         .eq('dm_id', user.id)
-        .eq('is_active', true)
-        .order('created_at', { ascending: false })
-        .limit(1);
-
-      if (activeError) throw activeError;
-
-      if (activeSessions && activeSessions.length > 0) {
-        const activeSession = activeSessions[0];
-        setSession(activeSession);
-        return activeSession;
-      }
+        .eq('is_active', true);
 
       // Создаем новую сессию
       const { data: newSession, error: createError } = await supabase
         .from('dm_sessions')
         .insert({
           dm_id: user.id,
-          name: sessionId ? `Сессия ${sessionId.slice(0, 8)}` : 'Основная сессия',
+          name: sessionId ? `Сессия ${sessionId.slice(0, 8)}` : 'Новая сессия',
           description: 'Автоматически созданная сессия',
           is_active: true
         })
@@ -88,6 +79,7 @@ export const useBattleSession = (sessionId?: string) => {
 
       if (createError) throw createError;
 
+      console.log('✅ Создана новая пустая сессия:', newSession);
       setSession(newSession);
       return newSession;
     } catch (err: any) {

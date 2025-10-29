@@ -24,10 +24,16 @@ export const useBattleMapSync = (sessionId: string, isDM: boolean) => {
           .from('game_sessions')
           .select('current_map_url, updated_at')
           .eq('id', sessionId)
-          .single();
+          .maybeSingle();
 
         if (error) {
           console.error('❌ [PLAYER] Ошибка загрузки URL карты:', error);
+          setMapImageUrl(null);
+          return;
+        }
+
+        if (!data) {
+          console.log('ℹ️ [PLAYER] Сессия не найдена');
           setMapImageUrl(null);
           return;
         }

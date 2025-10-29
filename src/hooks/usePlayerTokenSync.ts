@@ -30,10 +30,15 @@ export const usePlayerTokenSync = (sessionId: string) => {
           .select('character_id, player_name, characters(*)')
           .eq('session_id', sessionId)
           .eq('user_id', user.id)
-          .single();
+          .maybeSingle();
 
         if (playerError) {
           console.error('Ошибка получения информации об игроке:', playerError);
+          return;
+        }
+
+        if (!sessionPlayer) {
+          console.log('ℹ️ Игрок не найден в сессии');
           return;
         }
 
@@ -47,7 +52,7 @@ export const usePlayerTokenSync = (sessionId: string) => {
             .from('characters')
             .select('*')
             .eq('id', sessionPlayer.character_id)
-            .single();
+            .maybeSingle();
 
           if (!charError && charData) {
             character = charData;
