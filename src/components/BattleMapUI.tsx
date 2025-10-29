@@ -23,7 +23,7 @@ import { useBattleTokensSync } from '@/hooks/useBattleTokensSync';
 import { useBattleTokensToSupabase } from '@/hooks/useBattleTokensToSupabase';
 import { useBattleMapSync } from '@/hooks/useBattleMapSync';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Map as MapIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 // ==================== Типы ====================
@@ -277,6 +277,7 @@ export default function BattleMapUI({ sessionId }: { sessionId?: string }) {
   const [autoFitMap, setAutoFitMap] = useState(true);
   const mapRef = useRef<HTMLDivElement | null>(null);
   const [isDragOver, setIsDragOver] = useState<boolean>(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Загружаем сохраненную карту из сессии
   useEffect(() => {
@@ -417,6 +418,44 @@ export default function BattleMapUI({ sessionId }: { sessionId?: string }) {
       return;
     }
     setIsDragOver(false);
+  };
+
+  // Обработчик выбора файла через input
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: "Неверный формат",
+        description: "Пожалуйста, выберите изображение",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const imageUrl = URL.createObjectURL(file);
+    setMapImage(imageUrl);
+    setLog(l => [{ 
+      id: uid("log"), 
+      ts: now(), 
+      text: `Загружена карта: ${file.name}` 
+    }, ...l]);
+    
+    // Автоматически сохраняем карту в сессию
+    if (session && isDM) {
+      const result = await saveMapToSession(file, file.name);
+      // Обновляем на публичный URL после сохранения
+      if (result?.file_url) {
+        setMapImage(result.file_url);
+        console.log('✅ Карта обновлена публичным URL:', result.file_url);
+      }
+    }
+
+    // Очищаем input для возможности повторной загрузки того же файла
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   };
 
   // Токены/инициатива
@@ -823,6 +862,27 @@ export default function BattleMapUI({ sessionId }: { sessionId?: string }) {
                     Копировать
                   </button>
                 </div>
+                
+                {/* Кнопка загрузки карты */}
+                <div className="mt-3">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileSelect}
+                    className="hidden"
+                  />
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    className="w-full px-3 py-2 text-sm bg-secondary text-secondary-foreground rounded hover:bg-secondary/90 transition-colors flex items-center justify-center gap-2"
+                  >
+                    <MapIcon className="h-4 w-4" />
+                    Загрузить карту
+                  </button>
+                  <p className="text-xs text-muted-foreground mt-1 text-center">
+                    или перетащите на карту
+                  </p>
+                </div>
               </div>
             )}
             
@@ -917,11 +977,33 @@ export default function BattleMapUI({ sessionId }: { sessionId?: string }) {
                       onLoad={(e) => handleMapImageLoad(e.currentTarget)}
                     />
                   ) : (
-                    <div className={`absolute inset-0 flex flex-col items-center justify-center text-muted-foreground text-sm transition-all duration-200 ${isDragOver ? 'text-primary' : ''}`}>
-                      <div className="text-center">
-                        <div className="text-lg mb-2">📍</div>
-                        <div className="font-medium">Загрузите карту</div>
-                        <div className="text-xs mt-1">Перетащите изображение сюда</div>
+                    <div className={`absolute inset-0 flex flex-col items-center justify-center text-muted-foreground transition-all duration-200 ${isDragOver ? 'bg-primary/20 text-primary scale-105' : ''}`}>
+                      <div className={`text-center p-8 rounded-2xl border-2 border-dashed transition-all duration-200 ${isDragOver ? 'border-primary bg-primary/10 scale-110' : 'border-border'}`}>
+                        <div className={`text-6xl mb-4 transition-transform duration-200 ${isDragOver ? 'scale-125' : ''}`}>
+                          {isDragOver ? '📥' : '🗺️'}
+                        </div>
+                        <div className="font-semibold text-lg mb-2">
+                          {isDragOver ? 'Отпустите для загрузки' : 'Карта не загружена'}
+                        </div>
+                        <div className="text-sm opacity-70">
+                          {isDragOver ? 'Файл будет загружен на карту' : (
+                            <>
+                              Перетащите изображение сюда<br />
+                              или используйте кнопку "Загрузить карту"
+                            </>
+                          )}
+                        </div>
+                        {isDM && !isDragOver && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="mt-4"
+                            onClick={() => fileInputRef.current?.click()}
+                          >
+                            <MapIcon className="h-4 w-4 mr-2" />
+                            Выбрать файл
+                          </Button>
+                        )}
                       </div>
                     </div>
                   )}
