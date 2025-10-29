@@ -97,6 +97,24 @@ const MapUploader: React.FC<MapUploaderProps> = ({
         try {
           console.log('💾 Сохранение карты в БД для сессии:', sessionId);
           
+          // Проверяем, что сессия существует в game_sessions
+          const { data: sessionData, error: sessionCheckError } = await supabase
+            .from('game_sessions')
+            .select('id')
+            .eq('id', sessionId)
+            .maybeSingle();
+
+          if (sessionCheckError) {
+            console.error('❌ Ошибка проверки сессии:', sessionCheckError);
+            throw new Error('Не удалось проверить сессию');
+          }
+
+          if (!sessionData) {
+            console.warn('⚠️ Сессия не найдена в game_sessions:', sessionId);
+            throw new Error('Сессия не найдена');
+          }
+
+          // Сохраняем карту в battle_maps
           const { error: dbError } = await supabase
             .from('battle_maps')
             .insert({
@@ -109,12 +127,30 @@ const MapUploader: React.FC<MapUploaderProps> = ({
             });
 
           if (dbError) {
-            console.warn('⚠️ Не удалось сохранить карту в базе данных:', dbError);
-          } else {
-            console.log('✅ Карта успешно сохранена в базе данных');
+            console.error('❌ Ошибка сохранения в battle_maps:', dbError);
+            throw dbError;
           }
-        } catch (dbError) {
-          console.warn('⚠️ Ошибка при сохранении карты в базе данных:', dbError);
+
+          // Обновляем current_map_url в game_sessions
+          const { error: updateError } = await supabase
+            .from('game_sessions')
+            .update({ current_map_url: data.publicUrl })
+            .eq('id', sessionId);
+
+          if (updateError) {
+            console.warn('⚠️ Не удалось обновить current_map_url в game_sessions:', updateError);
+          } else {
+            console.log('✅ current_map_url обновлен в game_sessions');
+          }
+
+          console.log('✅ Карта успешно сохранена в базе данных');
+        } catch (dbError: any) {
+          console.error('❌ Ошибка при сохранении карты в базе данных:', dbError);
+          toast({
+            title: "Предупреждение",
+            description: `Карта загружена, но не сохранена в сессии: ${dbError.message}`,
+            variant: "destructive"
+          });
         }
       }
 
