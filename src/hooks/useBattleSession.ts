@@ -43,50 +43,56 @@ export const useBattleSession = (sessionId?: string) => {
     if (!isAuthenticated || !user) return null;
 
     try {
-      // Если передан sessionId, ищем конкретную сессию
+      // Если передан sessionId, ищем конкретную сессию в game_sessions
       if (sessionId) {
-        console.log('🔍 Ищем существующую сессию:', sessionId);
+        console.log('🔍 Ищем существующую сессию в game_sessions:', sessionId);
         const { data: existingSession, error: sessionError } = await supabase
-          .from('dm_sessions')
+          .from('game_sessions')
           .select('*')
           .eq('id', sessionId)
           .maybeSingle();
 
         if (!sessionError && existingSession) {
           console.log('✅ Найдена существующая сессия:', existingSession.id);
-          setSession(existingSession);
-          return existingSession;
+          setSession(existingSession as any);
+          return existingSession as any;
         }
       }
 
       // Если sessionId не передан - ВСЕГДА создаем НОВУЮ сессию
-      console.log('🆕 Создание новой сессии (sessionId не передан)');
+      console.log('🆕 Создание новой сессии в game_sessions');
       
-      // Деактивируем все старые активные сессии
+      // Деактивируем все старые активные сессии этого DM
       await supabase
-        .from('dm_sessions')
+        .from('game_sessions')
         .update({ is_active: false })
         .eq('dm_id', user.id)
         .eq('is_active', true);
 
-      // Создаем новую сессию без карты
+      // Генерируем уникальный код сессии
+      const { data: codeData } = await supabase.rpc('generate_session_code');
+      const sessionCode = codeData || Math.random().toString(36).substring(2, 8).toUpperCase();
+
+      // Создаем новую сессию в game_sessions
       const { data: newSession, error: createError } = await supabase
-        .from('dm_sessions')
+        .from('game_sessions')
         .insert({
           dm_id: user.id,
           name: `Новая сессия ${new Date().toLocaleString('ru')}`,
           description: 'Автоматически созданная сессия',
+          session_code: sessionCode,
           is_active: true,
-          current_map_url: null // ВАЖНО: новая сессия без карты
+          current_map_url: null,
+          max_players: 6
         })
         .select()
         .single();
 
       if (createError) throw createError;
 
-      console.log('✅ Создана новая пустая сессия:', newSession);
-      setSession(newSession);
-      return newSession;
+      console.log('✅ Создана новая пустая сессия в game_sessions:', newSession);
+      setSession(newSession as any);
+      return newSession as any;
     } catch (err: any) {
       console.error('Ошибка создания/получения сессии:', err);
       setError(err.message);
@@ -94,24 +100,33 @@ export const useBattleSession = (sessionId?: string) => {
     }
   };
 
-  // Загрузка текущей карты сессии
+  // Загрузка текущей карты сессии из game_sessions
   const loadCurrentMap = async (sessionId: string) => {
     try {
-      const { data: maps, error: mapsError } = await supabase
-        .from('battle_maps')
-        .select('*')
-        .eq('session_id', sessionId)
-        .eq('is_active', true)
-        .order('created_at', { ascending: false })
-        .limit(1);
+      const { data: session, error: sessionError } = await supabase
+        .from('game_sessions')
+        .select('current_map_url')
+        .eq('id', sessionId)
+        .maybeSingle();
 
-      if (mapsError) throw mapsError;
+      if (sessionError) throw sessionError;
 
-      if (maps && maps.length > 0) {
-        setCurrentMap(maps[0]);
-        return maps[0];
+      if (session?.current_map_url) {
+        // Создаем запись в battle_maps для отображения
+        const mapData: BattleMap = {
+          id: sessionId,
+          session_id: sessionId,
+          name: 'Текущая карта',
+          file_url: session.current_map_url,
+          image_url: session.current_map_url,
+          grid_size: 64,
+          is_active: true,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        };
+        setCurrentMap(mapData);
+        return mapData;
       } else {
-        // Если карты нет - очищаем
         setCurrentMap(null);
       }
     } catch (err: any) {
@@ -181,9 +196,9 @@ export const useBattleSession = (sessionId?: string) => {
 
       if (mapError) throw mapError;
 
-      // Обновляем текущую карту сессии
+      // Обновляем текущую карту сессии в game_sessions
       await supabase
-        .from('dm_sessions')
+        .from('game_sessions')
         .update({
           current_map_url: urlData.publicUrl,
           updated_at: new Date().toISOString()
