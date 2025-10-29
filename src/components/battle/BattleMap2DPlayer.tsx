@@ -36,24 +36,45 @@ const BattleMap2DPlayer: React.FC<BattleMap2DPlayerProps> = ({
   const fogMap = useFogStore(state => state.maps['main-map']);
   const fogSize = useFogStore(state => state.size);
 
+  // Центрируем карту при загрузке изображения
+  useEffect(() => {
+    if (mapImage && stageSize.width > 0 && stageSize.height > 0) {
+      const mapWidth = 800 * scale;
+      const mapHeight = 600 * scale;
+      setPosition({
+        x: (stageSize.width - mapWidth) / 2,
+        y: (stageSize.height - mapHeight) / 2
+      });
+    }
+  }, [mapImage]);
+
   // Обновляем размер stage при изменении размера контейнера
   useEffect(() => {
     const updateSize = () => {
       const container = stageRef.current?.container().parentElement;
       if (container) {
-        setStageSize({
-          width: container.offsetWidth,
-          height: container.offsetHeight
-        });
+        const width = container.offsetWidth;
+        const height = container.offsetHeight;
+        setStageSize({ width, height });
+        
+        // Центрируем карту при первой загрузке
+        if (mapImage && position.x === 0 && position.y === 0) {
+          const mapWidth = 800 * scale;
+          const mapHeight = 600 * scale;
+          setPosition({
+            x: (width - mapWidth) / 2,
+            y: (height - mapHeight) / 2
+          });
+        }
       }
     };
 
     updateSize();
     window.addEventListener('resize', updateSize);
     return () => window.removeEventListener('resize', updateSize);
-  }, []);
+  }, [mapImage, scale]);
 
-  // Обработчик колеса мыши для зума
+  // Обработчик колеса мыши для зума с сохранением центрирования
   const handleWheel = (e: any) => {
     e.evt.preventDefault();
     
@@ -80,7 +101,7 @@ const BattleMap2DPlayer: React.FC<BattleMap2DPlayerProps> = ({
   };
 
   return (
-    <div className="w-full h-full relative bg-muted">
+    <div className="w-full h-full relative bg-[#1a1a2e] bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-primary/5 via-background to-background">
       {/* Сообщение когда нет карты */}
       {!mapImageUrl && (
         <div className="absolute inset-0 flex items-center justify-center">
@@ -218,9 +239,22 @@ const BattleMap2DPlayer: React.FC<BattleMap2DPlayerProps> = ({
           className="w-10 h-10 bg-secondary text-secondary-foreground border border-border rounded-md flex items-center justify-center hover:bg-secondary/90 transition-colors text-xs font-semibold shadow-sm"
           onClick={() => {
             setScale(1);
-            setPosition({ x: 0, y: 0 });
+            // Центрируем карту
+            const container = stageRef.current?.container().parentElement;
+            if (container) {
+              const width = container.offsetWidth;
+              const height = container.offsetHeight;
+              const mapWidth = 800;
+              const mapHeight = 600;
+              setPosition({
+                x: (width - mapWidth) / 2,
+                y: (height - mapHeight) / 2
+              });
+            } else {
+              setPosition({ x: 0, y: 0 });
+            }
           }}
-          title="Сброс масштаба"
+          title="Сброс масштаба и центрирование"
         >
           1:1
         </button>
