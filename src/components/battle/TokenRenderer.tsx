@@ -1,29 +1,78 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Circle, Text, Group, Image as KonvaImage } from 'react-konva';
 import useImage from 'use-image';
 import { EnhancedToken } from '@/stores/enhancedBattleStore';
+import { useAuth } from '@/hooks/use-auth';
 
 interface TokenRendererProps {
   token: EnhancedToken;
   gridSize?: number;
+  onDragEnd?: (newPosition: [number, number, number]) => void;
 }
 
-export const TokenRenderer: React.FC<TokenRendererProps> = ({ token, gridSize = 25 }) => {
-  const [avatarImage] = useImage(token.avatarUrl || '');
+export const TokenRenderer: React.FC<TokenRendererProps> = ({ 
+  token, 
+  gridSize = 25,
+  onDragEnd
+}) => {
+  const { user } = useAuth();
+  const [avatarImage] = useImage(token.image_url || token.avatarUrl || '');
+  const [isDragging, setIsDragging] = useState(false);
 
   const x = token.position[0] * gridSize + gridSize / 2;
   const y = token.position[2] * gridSize + gridSize / 2;
   const radius = 12;
 
+  // Игрок может перемещать только свои токены
+  const canDrag = token.owner_id === user?.id;
+
+  const handleDragStart = () => {
+    if (canDrag) {
+      setIsDragging(true);
+    }
+  };
+
+  const handleDragEnd = (e: any) => {
+    if (!canDrag) return;
+    
+    setIsDragging(false);
+    const stage = e.target.getStage();
+    const pointerPosition = stage.getPointerPosition();
+    
+    // Snap to grid
+    const newX = Math.round((pointerPosition.x - gridSize / 2) / gridSize);
+    const newY = Math.round((pointerPosition.y - gridSize / 2) / gridSize);
+    
+    if (onDragEnd) {
+      onDragEnd([newX, 0, newY]);
+    }
+  };
+
   return (
-    <Group>
+    <Group
+      x={x}
+      y={y}
+      draggable={canDrag}
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
+      opacity={isDragging ? 0.7 : 1}
+    >
+      {/* Подсветка своего токена */}
+      {canDrag && (
+        <Circle
+          radius={radius + 4}
+          stroke="hsl(var(--primary))"
+          strokeWidth={2}
+          dash={[5, 5]}
+          opacity={0.6}
+        />
+      )}
+
       {/* Круг токена */}
       <Circle
-        x={x}
-        y={y}
         radius={radius}
         fill={token.color || (token.isEnemy ? "#ef4444" : "#22c55e")}
-        stroke="hsl(var(--border))"
+        stroke={canDrag ? "hsl(var(--primary))" : "hsl(var(--border))"}
         strokeWidth={2}
         opacity={0.8}
       />
@@ -32,13 +81,13 @@ export const TokenRenderer: React.FC<TokenRendererProps> = ({ token, gridSize = 
       {avatarImage && (
         <KonvaImage
           image={avatarImage}
-          x={x - radius}
-          y={y - radius}
+          x={-radius}
+          y={-radius}
           width={radius * 2}
           height={radius * 2}
           cornerRadius={radius}
           clipFunc={(ctx) => {
-            ctx.arc(x, y, radius, 0, Math.PI * 2, false);
+            ctx.arc(0, 0, radius, 0, Math.PI * 2, false);
           }}
         />
       )}
@@ -46,8 +95,8 @@ export const TokenRenderer: React.FC<TokenRendererProps> = ({ token, gridSize = 
       {/* Индикатор призванного существа */}
       {token.is_summoned && (
         <Circle
-          x={x + radius - 4}
-          y={y - radius + 4}
+          x={radius - 4}
+          y={-radius + 4}
           radius={4}
           fill="#8b5cf6"
           stroke="#ffffff"
@@ -57,8 +106,7 @@ export const TokenRenderer: React.FC<TokenRendererProps> = ({ token, gridSize = 
       
       {/* Имя токена */}
       <Text
-        x={x}
-        y={y + radius + 5}
+        y={radius + 5}
         text={token.name}
         fontSize={10}
         fill="hsl(var(--foreground))"
@@ -72,8 +120,7 @@ export const TokenRenderer: React.FC<TokenRendererProps> = ({ token, gridSize = 
         <>
           {/* Фон HP бара */}
           <Circle
-            x={x}
-            y={y - radius - 6}
+            y={-radius - 6}
             radius={8}
             fill="hsl(var(--destructive))"
             opacity={0.3}
@@ -81,17 +128,21 @@ export const TokenRenderer: React.FC<TokenRendererProps> = ({ token, gridSize = 
           
           {/* HP бар */}
           <Circle
-            x={x}
-            y={y - radius - 6}
+            y={-radius - 6}
             radius={8 * (token.hp / token.maxHp)}
-            fill="hsl(var(--destructive))"
+            fill={
+              token.hp / token.maxHp > 0.5 
+                ? "#22c55e" 
+                : token.hp / token.maxHp > 0.25 
+                ? "#eab308" 
+                : "#ef4444"
+            }
             opacity={0.8}
           />
           
           {/* Текст HP */}
           <Text
-            x={x}
-            y={y - radius - 10}
+            y={-radius - 10}
             text={`${token.hp}/${token.maxHp}`}
             fontSize={8}
             fill="hsl(var(--foreground))"
@@ -100,6 +151,25 @@ export const TokenRenderer: React.FC<TokenRendererProps> = ({ token, gridSize = 
             offsetX={15}
           />
         </>
+      )}
+
+      {/* Индикатор текущего хода */}
+      {token.initiative !== undefined && (
+        <Text
+          x={radius + 2}
+          y={-radius - 2}
+          text={`⚔️${token.initiative}`}
+          fontSize={8}
+          fill="hsl(var(--primary))"
+        />
+      )}
+
+      {/* Курсор указателя для своих токенов */}
+      {canDrag && !isDragging && (
+        <Circle
+          radius={radius}
+          fill="transparent"
+        />
       )}
     </Group>
   );

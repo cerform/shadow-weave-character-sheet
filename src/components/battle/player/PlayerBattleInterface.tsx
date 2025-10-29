@@ -2,13 +2,14 @@ import React, { useState } from 'react';
 import { PlayerProfile } from './PlayerProfile';
 import { PlayerActionsPanel } from './PlayerActionsPanel';
 import { PlayerTokensList } from './PlayerTokensList';
-import { VideoChat } from '../VideoChat';
+import { VideoChatMini } from './VideoChatMini';
+import { CombatLogMini } from './CombatLogMini';
 import BattleMap2DPlayer from '../BattleMap2DPlayer';
 import { EnhancedToken, useEnhancedBattleStore } from '@/stores/enhancedBattleStore';
 import { useAuth } from '@/hooks/use-auth';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Video, VideoOff, Users } from 'lucide-react';
+import { Video, VideoOff, Users, Eye, EyeOff } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface PlayerBattleInterfaceProps {
@@ -21,9 +22,10 @@ export const PlayerBattleInterface: React.FC<PlayerBattleInterfaceProps> = ({
   sessionCode
 }) => {
   const { user } = useAuth();
-  const { tokens, mapImageUrl, addToken, updateToken } = useEnhancedBattleStore();
-  const [showVideoChat, setShowVideoChat] = useState(false);
+  const { tokens, mapImageUrl, addToken, updateToken, combatLog } = useEnhancedBattleStore();
+  const [showVideoChat, setShowVideoChat] = useState(true);
   const [showTokensList, setShowTokensList] = useState(true);
+  const [showCombatLog, setShowCombatLog] = useState(true);
 
   // Найти токен игрока
   const playerToken = tokens.find(t => t.owner_id === user?.id && !t.is_summoned);
@@ -46,20 +48,6 @@ export const PlayerBattleInterface: React.FC<PlayerBattleInterfaceProps> = ({
 
   return (
     <div className="h-screen flex flex-col bg-background">
-      {/* Верхняя панель - видеочат (опционально) */}
-      {showVideoChat && (
-        <div className="border-b border-border">
-          <div className="max-h-48 overflow-hidden">
-            <VideoChat
-              sessionId={sessionId}
-              playerName={playerToken?.name || 'Игрок'}
-              isDM={false}
-              onClose={() => setShowVideoChat(false)}
-            />
-          </div>
-        </div>
-      )}
-
       {/* Основной контент */}
       <div className="flex-1 flex overflow-hidden">
         {/* Левая панель - профиль и группа */}
@@ -117,17 +105,35 @@ export const PlayerBattleInterface: React.FC<PlayerBattleInterfaceProps> = ({
               <Users className="h-4 w-4 mr-2" />
               {showTokensList ? 'Скрыть группу' : 'Показать группу'}
             </Button>
+            <Button
+              variant={showCombatLog ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setShowCombatLog(!showCombatLog)}
+              className="w-full"
+            >
+              {showCombatLog ? <EyeOff className="h-4 w-4 mr-2" /> : <Eye className="h-4 w-4 mr-2" />}
+              {showCombatLog ? 'Скрыть лог' : 'Показать лог'}
+            </Button>
           </div>
         </div>
 
         {/* Центр - карта */}
-        <div className="flex-1 flex flex-col">
+        <div className="flex-1 flex flex-col relative">
           <div className="flex-1 relative">
             <BattleMap2DPlayer
               sessionId={sessionId}
               mapImageUrl={mapImageUrl}
               tokens={visibleTokens}
             />
+            
+            {/* WebRTC мини-камеры (поверх карты справа снизу) */}
+            {showVideoChat && (
+              <VideoChatMini
+                sessionId={sessionId}
+                playerName={playerToken?.name || 'Игрок'}
+                isDM={false}
+              />
+            )}
           </div>
 
           {/* Нижняя панель - действия */}
@@ -140,6 +146,13 @@ export const PlayerBattleInterface: React.FC<PlayerBattleInterfaceProps> = ({
             />
           </div>
         </div>
+
+        {/* Правая панель - лог боя */}
+        {showCombatLog && (
+          <div className="w-80 border-l border-border">
+            <CombatLogMini events={combatLog} />
+          </div>
+        )}
       </div>
     </div>
   );

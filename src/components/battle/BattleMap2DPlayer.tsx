@@ -141,7 +141,14 @@ const BattleMap2DPlayer: React.FC<BattleMap2DPlayerProps> = ({
 
           {/* Токены */}
           {tokens.map((token) => (
-            <TokenRenderer key={token.id} token={token} gridSize={25} />
+            <TokenRenderer 
+              key={token.id} 
+              token={token} 
+              gridSize={25}
+              onDragEnd={(newPosition) => {
+                updateToken(token.id, { position: newPosition });
+              }}
+            />
           ))}
         </Layer>
       </Stage>
