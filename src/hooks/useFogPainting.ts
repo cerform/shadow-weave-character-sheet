@@ -3,22 +3,48 @@ import { useCallback, useRef } from 'react';
 import { useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useFogStore } from '@/stores/fogStore';
+import { supabase } from '@/integrations/supabase/client';
 
 interface FogPaintingOptions {
   mode: 'reveal' | 'hide';
   brushSize: number;
   mapId?: string;
   tileSize?: number;
+  sessionId: string; // Добавляем sessionId для синхронизации
 }
 
 export function useFogPainting({
   mode,
   brushSize,
   mapId = 'main-map',
-  tileSize = 5
+  tileSize = 5,
+  sessionId
 }: FogPaintingOptions) {
   const { scene, camera, raycaster, pointer } = useThree();
   const isDrawingRef = useRef(false);
+  
+  // Функция для синхронизации с Supabase
+  const syncFogToDatabase = useCallback(async (gridX: number, gridZ: number, isRevealed: boolean) => {
+    try {
+      const { error } = await supabase
+        .from('fog_of_war')
+        .upsert({
+          session_id: sessionId,
+          map_id: mapId,
+          grid_x: gridX,
+          grid_y: gridZ,
+          is_revealed: isRevealed
+        }, {
+          onConflict: 'session_id,map_id,grid_x,grid_y'
+        });
+      
+      if (error) {
+        console.error('Error syncing fog to database:', error);
+      }
+    } catch (error) {
+      console.error('Error in syncFogToDatabase:', error);
+    }
+  }, [sessionId, mapId]);
 
   const handlePointerDown = useCallback((event: PointerEvent) => {
     event.preventDefault();
@@ -74,6 +100,19 @@ export function useFogPainting({
       
       if (currentMode === 'reveal') {
         useFogStore.getState().reveal(mapId, gridX, gridZ, brushSize);
+        
+        // Синхронизируем с базой данных
+        for (let dy = -brushSize; dy <= brushSize; dy++) {
+          for (let dx = -brushSize; dx <= brushSize; dx++) {
+            if (dx * dx + dy * dy <= brushSize * brushSize) {
+              const px = gridX + dx;
+              const py = gridZ + dy;
+              if (px >= 0 && px < size.w && py >= 0 && py < size.h) {
+                syncFogToDatabase(px, py, true); // Открываем клетку
+              }
+            }
+          }
+        }
       } else {
         // Скрываем область (добавляем туман)
         const { maps, size } = useFogStore.getState();
@@ -90,6 +129,7 @@ export function useFogPainting({
               const py = gridZ + dy;
               if (px >= 0 && px < width && py >= 0 && py < size.h) {
                 newMap[py * width + px] = 0; // 0 = туман (скрыто)
+                syncFogToDatabase(px, py, false); // Скрываем клетку
               }
             }
           }
@@ -98,7 +138,7 @@ export function useFogPainting({
         useFogStore.getState().setMap(mapId, newMap, size.w, size.h);
       }
     }
-  }, [mode, brushSize, mapId, tileSize, raycaster, pointer, camera]);
+  }, [mode, brushSize, mapId, tileSize, raycaster, pointer, camera, syncFogToDatabase]);
 
   return {
     handlePointerDown,

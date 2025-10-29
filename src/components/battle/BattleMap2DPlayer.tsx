@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { Stage, Layer, Image, Circle } from 'react-konva';
+import { Stage, Layer, Image, Circle, Rect } from 'react-konva';
 import useImage from 'use-image';
 import { useSessionSync } from '@/hooks/useSessionSync';
 import { EnhancedToken, useEnhancedBattleStore } from '@/stores/enhancedBattleStore';
@@ -8,6 +8,8 @@ import { SummonCreatureDialog } from './SummonCreatureDialog';
 import { TokenRenderer } from './TokenRenderer';
 import { useAuth } from '@/hooks/use-auth';
 import { Settings } from 'lucide-react';
+import { useFogSync } from '@/hooks/useFogSync';
+import { useFogStore } from '@/stores/fogStore';
 
 interface BattleMap2DPlayerProps {
   sessionId: string;
@@ -28,6 +30,11 @@ const BattleMap2DPlayer: React.FC<BattleMap2DPlayerProps> = ({
   const [selectedToken, setSelectedToken] = useState<EnhancedToken | null>(null);
   const { user } = useAuth();
   const { updateToken, addToken } = useEnhancedBattleStore();
+  
+  // Синхронизация тумана войны
+  useFogSync(sessionId, 'main-map');
+  const fogMap = useFogStore(state => state.maps['main-map']);
+  const fogSize = useFogStore(state => state.size);
 
   // Обновляем размер stage при изменении размера контейнера
   useEffect(() => {
@@ -150,6 +157,35 @@ const BattleMap2DPlayer: React.FC<BattleMap2DPlayerProps> = ({
               }}
             />
           ))}
+          
+          {/* Туман войны - рисуем тёмные клетки там, где туман не раскрыт */}
+          {fogMap && fogSize.w > 0 && fogSize.h > 0 && (
+            <>
+              {Array.from({ length: fogSize.h }, (_, y) =>
+                Array.from({ length: fogSize.w }, (_, x) => {
+                  const idx = y * fogSize.w + x;
+                  const isRevealed = fogMap[idx] === 1;
+                  
+                  // Рисуем только скрытые клетки
+                  if (!isRevealed) {
+                    return (
+                      <Rect
+                        key={`fog-${x}-${y}`}
+                        x={x * 25}
+                        y={y * 25}
+                        width={25}
+                        height={25}
+                        fill="black"
+                        opacity={0.85}
+                        listening={false}
+                      />
+                    );
+                  }
+                  return null;
+                })
+              )}
+            </>
+          )}
         </Layer>
       </Stage>
 

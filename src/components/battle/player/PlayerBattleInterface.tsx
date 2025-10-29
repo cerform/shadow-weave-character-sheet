@@ -11,6 +11,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Video, VideoOff, Users, Eye, EyeOff } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { useFogSync } from '@/hooks/useFogSync';
 
 interface PlayerBattleInterfaceProps {
   sessionId: string;
@@ -26,6 +27,9 @@ export const PlayerBattleInterface: React.FC<PlayerBattleInterfaceProps> = ({
   const [showVideoChat, setShowVideoChat] = useState(true);
   const [showTokensList, setShowTokensList] = useState(true);
   const [showCombatLog, setShowCombatLog] = useState(true);
+  
+  // Синхронизация тумана войны для игрока
+  useFogSync(sessionId, 'main-map');
 
   // Найти токен игрока
   const playerToken = tokens.find(t => t.owner_id === user?.id && !t.is_summoned);

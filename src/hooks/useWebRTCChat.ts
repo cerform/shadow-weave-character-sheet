@@ -42,12 +42,14 @@ export const useWebRTCChat = (sessionId: string, userId: string, userName: strin
         audio: true
       });
       
-      // По умолчанию отключаем
-      stream.getVideoTracks().forEach(track => track.enabled = false);
-      stream.getAudioTracks().forEach(track => track.enabled = false);
+      // По умолчанию включаем видео и аудио для лучшего UX
+      stream.getVideoTracks().forEach(track => track.enabled = true);
+      stream.getAudioTracks().forEach(track => track.enabled = true);
       
       setLocalStream(stream);
-      console.log('✅ Local stream initialized');
+      setIsVideoEnabled(true);
+      setIsAudioEnabled(true);
+      console.log('✅ Local stream initialized with video and audio enabled');
       return stream;
     } catch (error) {
       console.error('❌ Error accessing media devices:', error);
@@ -61,11 +63,16 @@ export const useWebRTCChat = (sessionId: string, userId: string, userName: strin
     
     const pc = new RTCPeerConnection(rtcConfig);
 
-    // Добавляем локальные треки
+    // Добавляем локальные треки если они есть
     if (localStream) {
-      localStream.getTracks().forEach(track => {
+      const tracks = localStream.getTracks();
+      console.log(`📤 Adding ${tracks.length} local tracks to peer connection`);
+      tracks.forEach(track => {
+        console.log(`  - Adding ${track.kind} track (enabled: ${track.enabled})`);
         pc.addTrack(track, localStream);
       });
+    } else {
+      console.warn('⚠️ No local stream available when creating peer connection');
     }
 
     // Обрабатываем входящие треки
