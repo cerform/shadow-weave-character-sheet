@@ -39,15 +39,15 @@ export const CombatLogMini: React.FC<CombatLogMiniProps> = ({
   };
 
   return (
-    <Card className="w-full h-full bg-card/95 backdrop-blur-sm">
-      <CardHeader className="pb-2">
+    <Card className="w-full h-full flex flex-col bg-card">
+      <CardHeader className="pb-2 flex-shrink-0">
         <CardTitle className="text-sm flex items-center gap-2">
           <Scroll className="h-4 w-4" />
           Лог боя
         </CardTitle>
       </CardHeader>
-      <CardContent className="p-2">
-        <ScrollArea className="h-[300px] pr-2">
+      <CardContent className="p-2 flex-1 overflow-hidden">
+        <ScrollArea className="h-full pr-2">
           {recentEvents.length === 0 ? (
             <div className="text-center text-muted-foreground text-xs py-8">
               Бой еще не начался

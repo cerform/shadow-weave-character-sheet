@@ -47,8 +47,8 @@ export const PlayerBattleInterface: React.FC<PlayerBattleInterfaceProps> = ({
   };
 
   return (
-    <div className="h-screen flex flex-col bg-background">
-      {/* Основной контент */}
+    <div className="h-screen flex bg-background">
+      {/* Основной контент - full height */}
       <div className="flex-1 flex overflow-hidden">
         {/* Левая панель - профиль и группа */}
         <div className="w-80 border-r border-border flex flex-col">
@@ -118,26 +118,17 @@ export const PlayerBattleInterface: React.FC<PlayerBattleInterfaceProps> = ({
         </div>
 
         {/* Центр - карта */}
-        <div className="flex-1 flex flex-col relative">
+        <div className="flex-1 flex flex-col">
           <div className="flex-1 relative">
             <BattleMap2DPlayer
               sessionId={sessionId}
               mapImageUrl={mapImageUrl}
               tokens={visibleTokens}
             />
-            
-            {/* WebRTC мини-камеры (поверх карты справа снизу) */}
-            {showVideoChat && (
-              <VideoChatMini
-                sessionId={sessionId}
-                playerName={playerToken?.name || 'Игрок'}
-                isDM={false}
-              />
-            )}
           </div>
 
           {/* Нижняя панель - действия */}
-          <div className="border-t border-border">
+          <div className="border-t border-border flex-shrink-0">
             <PlayerActionsPanel
               token={playerToken}
               sessionId={sessionId}
@@ -147,12 +138,26 @@ export const PlayerBattleInterface: React.FC<PlayerBattleInterfaceProps> = ({
           </div>
         </div>
 
-        {/* Правая панель - лог боя */}
-        {showCombatLog && (
-          <div className="w-80 border-l border-border">
-            <CombatLogMini events={combatLog} />
-          </div>
-        )}
+        {/* Правая панель - комбинированная */}
+        <div className="w-80 border-l border-border flex flex-col">
+          {/* Видеочат */}
+          {showVideoChat && (
+            <div className="h-64 border-b border-border flex-shrink-0">
+              <VideoChatMini
+                sessionId={sessionId}
+                playerName={playerToken?.name || 'Игрок'}
+                isDM={false}
+              />
+            </div>
+          )}
+          
+          {/* Лог боя */}
+          {showCombatLog && (
+            <div className="flex-1 min-h-0">
+              <CombatLogMini events={combatLog} />
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

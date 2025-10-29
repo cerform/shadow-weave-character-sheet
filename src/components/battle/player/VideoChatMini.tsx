@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Video, VideoOff, Mic, MicOff, Maximize2, User } from 'lucide-react';
 import { Card } from '@/components/ui/card';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface Participant {
   id: string;
@@ -108,58 +109,65 @@ export const VideoChatMini: React.FC<VideoChatMiniProps> = ({
   ];
 
   return (
-    <div className="fixed bottom-4 right-4 z-50 flex gap-2">
-      {/* Контролы */}
-      <Card className="p-2 flex flex-col gap-1 bg-card/95 backdrop-blur-sm border-2">
-        <Button
-          variant={isConnected ? 'default' : 'outline'}
-          size="icon"
-          onClick={toggleConnection}
-          className="h-8 w-8"
-          title={isConnected ? 'Отключиться' : 'Подключиться'}
-        >
-          {isConnected ? '🟢' : '🔴'}
-        </Button>
-        
-        <Button
-          variant={isVideoEnabled ? 'default' : 'outline'}
-          size="icon"
-          onClick={toggleVideo}
-          className="h-8 w-8"
-          disabled={!localStream}
-        >
-          {isVideoEnabled ? <Video className="h-4 w-4" /> : <VideoOff className="h-4 w-4" />}
-        </Button>
-        
-        <Button
-          variant={isAudioEnabled ? 'default' : 'outline'}
-          size="icon"
-          onClick={toggleAudio}
-          className="h-8 w-8"
-          disabled={!localStream}
-        >
-          {isAudioEnabled ? <Mic className="h-4 w-4" /> : <MicOff className="h-4 w-4" />}
-        </Button>
-      </Card>
+    <div className="h-full flex flex-col bg-card">
+      {/* Заголовок с контролами */}
+      <div className="p-3 border-b border-border flex items-center justify-between bg-card/95">
+        <h3 className="text-sm font-semibold flex items-center gap-2">
+          <Video className="h-4 w-4" />
+          Видеочат
+        </h3>
+        <div className="flex gap-1">
+          <Button
+            variant={isConnected ? 'default' : 'outline'}
+            size="icon"
+            onClick={toggleConnection}
+            className="h-7 w-7"
+            title={isConnected ? 'Отключиться' : 'Подключиться'}
+          >
+            {isConnected ? '🟢' : '🔴'}
+          </Button>
+          
+          <Button
+            variant={isVideoEnabled ? 'default' : 'outline'}
+            size="icon"
+            onClick={toggleVideo}
+            className="h-7 w-7"
+            disabled={!localStream}
+          >
+            {isVideoEnabled ? <Video className="h-3 w-3" /> : <VideoOff className="h-3 w-3" />}
+          </Button>
+          
+          <Button
+            variant={isAudioEnabled ? 'default' : 'outline'}
+            size="icon"
+            onClick={toggleAudio}
+            className="h-7 w-7"
+            disabled={!localStream}
+          >
+            {isAudioEnabled ? <Mic className="h-3 w-3" /> : <MicOff className="h-3 w-3" />}
+          </Button>
+        </div>
+      </div>
 
       {/* Камеры участников */}
-      <div className="flex gap-2">
-        {allParticipants.map((participant) => {
-          const isExpanded = expandedId === participant.id;
-          
-          return (
-            <Card 
-              key={participant.id}
-              className={`relative overflow-hidden border-2 transition-all ${
-                isExpanded 
-                  ? 'w-80 h-60' 
-                  : 'w-32 h-24'
-              } ${
-                participant.isDM 
-                  ? 'border-primary' 
-                  : 'border-border'
-              }`}
-            >
+      <ScrollArea className="flex-1">
+        <div className="p-3 grid grid-cols-2 gap-2">
+          {allParticipants.map((participant) => {
+            const isExpanded = expandedId === participant.id;
+            
+            return (
+              <Card 
+                key={participant.id}
+                className={`relative overflow-hidden border-2 transition-all ${
+                  isExpanded 
+                    ? 'col-span-2' 
+                    : ''
+                } ${
+                  participant.isDM 
+                    ? 'border-primary' 
+                    : 'border-border'
+                } aspect-video`}
+              >
               {/* Видео */}
               <div className="w-full h-full bg-muted flex items-center justify-center">
                 {participant.stream && participant.id === 'local' ? (
@@ -227,10 +235,11 @@ export const VideoChatMini: React.FC<VideoChatMiniProps> = ({
                   )}
                 </div>
               )}
-            </Card>
-          );
-        })}
-      </div>
+              </Card>
+            );
+          })}
+        </div>
+      </ScrollArea>
     </div>
   );
 };
