@@ -8,6 +8,7 @@ interface DMSession {
   dm_id: string;
   name: string;
   description?: string;
+  session_code?: string;
   current_map_url?: string;
   settings: any;
   is_active: boolean;

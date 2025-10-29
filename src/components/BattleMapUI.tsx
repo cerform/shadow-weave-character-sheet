@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useMonstersStore } from '@/stores/monstersStore';
 import { useUnifiedBattleStore } from '@/stores/unifiedBattleStore';
 import { useEnhancedBattleStore } from '@/stores/enhancedBattleStore';
@@ -21,6 +22,8 @@ import { useBattleTokensSync } from '@/hooks/useBattleTokensSync';
 import { useBattleTokensToSupabase } from '@/hooks/useBattleTokensToSupabase';
 import { useBattleMapSync } from '@/hooks/useBattleMapSync';
 import { useToast } from '@/hooks/use-toast';
+import { ArrowLeft } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 // ==================== Типы ====================
 
@@ -228,6 +231,9 @@ function TokenVisual({ token, use3D, modelReady, onModelError }: { token: Token;
 // ==================== Основной компонент ====================
 
 export default function BattleMapUI({ sessionId }: { sessionId?: string }) {
+  // Навигация
+  const navigate = useNavigate();
+  
   // Подключение к реальному бестиарию
   const { getAllMonsters, loadSupabaseMonsters, isLoadingSupabase } = useMonstersStore();
   
@@ -714,6 +720,21 @@ export default function BattleMapUI({ sessionId }: { sessionId?: string }) {
 
   return (
     <div className="h-screen w-screen bg-background text-foreground overflow-hidden flex flex-col">
+      {/* Кнопка "Назад" */}
+      {isDM && (
+        <div className="absolute top-4 left-4 z-50">
+          <Button 
+            variant="ghost" 
+            size="sm"
+            onClick={() => navigate('/dm')}
+            className="bg-background/80 backdrop-blur-sm hover:bg-background/90"
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Назад
+          </Button>
+        </div>
+      )}
+      
       {/* VTT Toolbar */}
       <VTTToolbar
         activeTool={vttTool}
@@ -786,14 +807,14 @@ export default function BattleMapUI({ sessionId }: { sessionId?: string }) {
                 <div className="text-xs text-muted-foreground mb-1">Код сессии:</div>
                 <div className="flex items-center gap-2">
                   <code className="flex-1 px-2 py-1 bg-background rounded text-sm font-mono font-bold text-primary">
-                    {session.id.slice(0, 8).toUpperCase()}
+                    {session.session_code || session.id.slice(0, 8).toUpperCase()}
                   </code>
                   <button
                     onClick={() => {
-                      navigator.clipboard.writeText(session.id);
+                      navigator.clipboard.writeText(session.session_code || session.id);
                       toast({
                         title: "Скопировано!",
-                        description: "ID сессии скопирован в буфер обмена",
+                        description: "Код сессии скопирован в буфер обмена",
                       });
                     }}
                     className="px-2 py-1 text-xs bg-primary text-primary-foreground rounded hover:bg-primary/90"
