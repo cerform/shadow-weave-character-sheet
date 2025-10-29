@@ -93,16 +93,20 @@ export const useBattleMapSync = (sessionId: string, isDM: boolean) => {
   
   // При смене сессии СНАЧАЛА очищаем карту, затем загружаем карту текущей сессии
   useEffect(() => {
-    if (!isDM || !sessionId) {
+    if (!isDM) return;
+    
+    if (!sessionId) {
       // Очищаем карту если нет сессии
+      console.log('🗺️ [DM] Нет sessionId - очищаем карту');
       setMapImageUrl(null);
       return;
     }
 
     // КРИТИЧНО: Сразу очищаем карту при смене сессии
-    console.log('🗺️ [DM] Смена сессии - очищаем карту перед загрузкой новой');
+    console.log('🗺️ [DM] Смена сессии - очищаем карту:', sessionId);
     setMapImageUrl(null);
 
+    // Загружаем карту для новой сессии БЕЗ setTimeout
     const loadCurrentSessionMap = async () => {
       try {
         console.log('🗺️ [DM] Загрузка карты для сессии:', sessionId);
@@ -115,7 +119,6 @@ export const useBattleMapSync = (sessionId: string, isDM: boolean) => {
 
         if (error) {
           console.error('❌ [DM] Ошибка загрузки карты сессии:', error);
-          setMapImageUrl(null);
           return;
         }
 
@@ -125,17 +128,13 @@ export const useBattleMapSync = (sessionId: string, isDM: boolean) => {
           setMapImageUrl(data.current_map_url);
         } else {
           console.log('ℹ️ [DM] Новая сессия без карты - карта остается пустой');
-          // Карта уже очищена выше, ничего не делаем
         }
       } catch (error) {
         console.error('❌ [DM] Ошибка при загрузке карты сессии:', error);
-        setMapImageUrl(null);
       }
     };
 
-    // Даем время на очистку перед загрузкой
-    const timeoutId = setTimeout(loadCurrentSessionMap, 100);
-    return () => clearTimeout(timeoutId);
+    loadCurrentSessionMap();
   }, [isDM, sessionId, setMapImageUrl]);
 
   // Синхронизируем изменения карты в БД
