@@ -19,6 +19,7 @@ import { useUserRole } from '@/hooks/use-auth';
 import { useBattleTokensSync } from '@/hooks/useBattleTokensSync';
 import { useBattleTokensToSupabase } from '@/hooks/useBattleTokensToSupabase';
 import { useBattleMapSync } from '@/hooks/useBattleMapSync';
+import { useToast } from '@/hooks/use-toast';
 
 // ==================== Типы ====================
 
@@ -231,6 +232,9 @@ export default function BattleMapUI({ sessionId }: { sessionId?: string }) {
   
   // Получаем реальный DM статус из ролей пользователя
   const { isDM } = useUserRole();
+  
+  // Toast для уведомлений
+  const { toast } = useToast();
   
   // Хук для работы с сессиями и автоматическим сохранением карт
   const { 
@@ -758,6 +762,30 @@ export default function BattleMapUI({ sessionId }: { sessionId?: string }) {
         {/* Левая панель - Видео чат и загрузка ассетов */}
         {showAssetLibrary && (
           <div className="w-64 border-r border-border flex flex-col">
+            {/* Код сессии для DM */}
+            {isDM && session && (
+              <div className="p-3 border-b border-border bg-primary/5">
+                <div className="text-xs text-muted-foreground mb-1">Код сессии:</div>
+                <div className="flex items-center gap-2">
+                  <code className="flex-1 px-2 py-1 bg-background rounded text-sm font-mono font-bold text-primary">
+                    {session.id.slice(0, 8).toUpperCase()}
+                  </code>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(session.id);
+                      toast({
+                        title: "Скопировано!",
+                        description: "ID сессии скопирован в буфер обмена",
+                      });
+                    }}
+                    className="px-2 py-1 text-xs bg-primary text-primary-foreground rounded hover:bg-primary/90"
+                  >
+                    Копировать
+                  </button>
+                </div>
+              </div>
+            )}
+            
             {/* Видео чат */}
             <div className="border-b border-border">
               <VideoChat 
