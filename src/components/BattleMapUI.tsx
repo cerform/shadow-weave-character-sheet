@@ -7,6 +7,7 @@ import useBattleStore from '@/stores/battleStore';
 import type { Monster } from '@/types/monsters';
 import SimpleTokenCreator from '@/components/battle/SimpleTokenCreator';
 import { VideoChat } from '@/components/battle/VideoChat';
+import { PlayersList } from '@/components/battle/PlayersList';
 import BackgroundMusic from '@/components/battle/BackgroundMusic';
 import MiniMap2D from '@/components/battle/minimap/MiniMap2D';
 import AssetUploader from '@/components/battle/ui/AssetUploader';
@@ -834,6 +835,14 @@ export default function BattleMapUI({ sessionId }: { sessionId?: string }) {
                 onClose={() => setVideoChatOpen(false)}
               />
             </div>
+            
+            {/* Список игроков */}
+            {isDM && sessionId && (
+              <PlayersList 
+                sessionId={sessionId} 
+                isDM={isDM}
+              />
+            )}
             
             {/* Загрузка ассетов */}
             <div className="flex-1 overflow-y-auto">
