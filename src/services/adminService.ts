@@ -58,4 +58,32 @@ export class AdminService {
   static async removeRole(userId: string, role: AppRole) {
     return UserRolesService.removeRole(userId, role);
   }
+
+  // Полное удаление пользователя
+  static async deleteUser(userId: string): Promise<{ success: boolean; error?: string }> {
+    try {
+      // Вызываем edge function для удаления пользователя
+      const { data, error } = await supabase.functions.invoke('delete-user', {
+        body: { userId }
+      });
+
+      if (error) {
+        console.error('Ошибка при вызове функции delete-user:', error);
+        return { success: false, error: error.message };
+      }
+
+      if (data?.error) {
+        console.error('Ошибка от функции delete-user:', data.error);
+        return { success: false, error: data.error };
+      }
+
+      return { success: true };
+    } catch (error) {
+      console.error('Ошибка удаления пользователя:', error);
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Неизвестная ошибка' 
+      };
+    }
+  }
 }
