@@ -4,11 +4,9 @@ import { useUnifiedBattleStore } from '@/stores/unifiedBattleStore';
 import useBattleStore from '@/stores/battleStore';
 import type { Monster } from '@/types/monsters';
 import SimpleTokenCreator from '@/components/battle/SimpleTokenCreator';
-import CompactVideoChat from '@/components/battle/ui/CompactVideoChat';
 import { VideoChat } from '@/components/battle/VideoChat';
 import BackgroundMusic from '@/components/battle/BackgroundMusic';
 import MiniMap2D from '@/components/battle/minimap/MiniMap2D';
-import CompactBattleUI from '@/components/battle/ui/CompactBattleUI';
 import AssetUploader from '@/components/battle/ui/AssetUploader';
 import VTTToolbar, { VTTTool } from '@/components/battle/vtt/VTTToolbar';
 import LayerPanel, { Layer } from '@/components/battle/vtt/LayerPanel';
@@ -255,8 +253,6 @@ export default function BattleMapUI({ sessionId }: { sessionId?: string }) {
   const [leftOpen, setLeftOpen] = useState(false);
   const [rightOpen, setRightOpen] = useState(false);
   const [videoChatOpen, setVideoChatOpen] = useState(false);
-  // DM всегда видит полный интерфейс, игроки - компактный
-  const [useCompactUI, setUseCompactUI] = useState(!isDM);
   const [showBackgroundMusic, setShowBackgroundMusic] = useState(false);
   const [showAssetLibrary, setShowAssetLibrary] = useState(true);
 
@@ -693,89 +689,6 @@ export default function BattleMapUI({ sessionId }: { sessionId?: string }) {
 
   const Title = ({ children }: { children: React.ReactNode }) => (<div className="text-yellow-400 font-semibold tracking-wide uppercase text-xs">{children}</div>);
   const StatBadge = ({ label, value }: { label: string; value: React.ReactNode }) => (<div className="px-2 py-0.5 rounded-md text-[11px] text-white bg-neutral-800 border border-neutral-700"><span className="opacity-70 mr-1">{label}</span><span className="font-semibold">{value}</span></div>);
-
-  if (useCompactUI) {
-    return (
-      <div className="w-full h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white overflow-hidden relative">
-        <BackgroundMusic />
-        
-        {/* Центровка карты без отступа сверху */}
-        <div className="w-full h-full flex items-start justify-center pt-0">
-          {/* Контейнер карты с увеличенными размерами */}
-          <div className="w-[95vw] h-[90vh] max-w-[1920px] max-h-[1080px] border border-border/20 rounded-lg shadow-2xl overflow-hidden bg-background/10 backdrop-blur-sm relative">
-          {mapImage ? (
-            <img 
-              src={mapImage} 
-              alt="Battle Map" 
-              className="w-full h-full object-contain"
-              style={{ imageRendering: 'pixelated' }}
-            />
-          ) : (
-            <div className="w-full h-full bg-slate-800 flex items-center justify-center">
-              <div className="text-center">
-                <div className="text-4xl mb-4">🗺️</div>
-                <div className="text-xl mb-2">Загрузите карту</div>
-                <div className="text-sm text-slate-400">Перетащите изображение сюда</div>
-              </div>
-            </div>
-          )}
-          </div>
-        </div>
-
-        {/* Компактный интерфейс */}
-        <CompactBattleUI
-          isDM={isDM}
-          fogEnabled={fogEnabled}
-          onFogToggle={() => setFogEnabled(!fogEnabled)}
-          fogOpacity={fogOpacity}
-          onFogOpacityChange={setFogOpacity}
-          brushSize={fogRadius / 10}
-          onBrushSizeChange={(size) => setFogRadius(size * 10)}
-          paintMode={dmTool === 'fog-reveal' ? 'reveal' : 'hide'}
-          onPaintModeChange={(mode) => setDmTool(mode === 'reveal' ? 'fog-reveal' : 'fog-hide')}
-          musicEnabled={true}
-          onMusicToggle={() => {}}
-          turnIndex={turnIndex}
-          tokensCount={tokens.length}
-          onNextTurn={nextTurn}
-          onRollDice={roll}
-          onCreateToken={(tokenData) => {
-            const newToken: Token = {
-              id: uid("token"),
-              name: tokenData.name,
-              type: "NPC" as TokenType,
-              hp: 100,
-              maxHp: 100,
-              ac: 12,
-              speed: 30,
-              color: 'bg-blue-600',
-              position: { x: 100, y: 100 },
-              initiative: 10,
-              conditions: []
-            };
-            setTokens(prev => [...prev, newToken]);
-            setLog(l => [{ 
-              id: uid("log"), 
-              ts: now(), 
-              text: `✨ Создан токен: ${tokenData.name}` 
-            }, ...l]);
-          }}
-        />
-
-        {/* Кнопка переключения на полный интерфейс - только для игроков */}
-        {!isDM && (
-          <div className="absolute top-4 right-4 z-60">
-            <button
-              onClick={() => setUseCompactUI(false)}
-              className="px-3 py-2 bg-background/90 backdrop-blur-sm border rounded-lg text-sm hover:bg-background"
-            >
-              Полный интерфейс
-            </button>
-          </div>
-        )}
-      </div>
-    );
-  }
 
   return (
     <div className="h-screen w-screen bg-background text-foreground overflow-hidden flex flex-col">
@@ -1250,15 +1163,6 @@ export default function BattleMapUI({ sessionId }: { sessionId?: string }) {
           >
             {showBackgroundMusic ? 'Скрыть' : 'Показать'} музыку
           </button>
-          {/* Кнопка компактного режима - только для игроков */}
-          {!isDM && (
-            <button
-              onClick={() => setUseCompactUI(true)}
-              className="hover:text-foreground"
-            >
-              Компактный режим
-            </button>
-          )}
         </div>
       </div>
 
@@ -1318,17 +1222,10 @@ export default function BattleMapUI({ sessionId }: { sessionId?: string }) {
         />
       )}
 
-      {/* Компактный видео чат */}
-      {videoChatOpen && (
+      {/* Видео чат */}
+      {videoChatOpen && sessionId && (
         <div className="fixed top-4 right-4 z-50">
-          <CompactVideoChat
-            isConnected={false}
-            participantsCount={2}
-            onToggleVideo={() => console.log('Toggle video')}
-            onToggleAudio={() => console.log('Toggle audio')}
-            onConnect={() => console.log('Connect video chat')}
-            onDisconnect={() => console.log('Disconnect video chat')}
-          />
+          <VideoChat sessionId={sessionId} playerName="Player" />
         </div>
       )}
 

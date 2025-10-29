@@ -2,7 +2,6 @@ import React, { useRef, useEffect } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Grid } from '@react-three/drei';
 import { Scene } from 'three';
-import { CompactTopPanel } from '../ui/CompactTopPanel';
 import { ActionBar } from '../ui/ActionBar';
 import { DMToolsPanel } from '../ui/DMToolsPanel';
 import { CombatLogPanel } from '../ui/CombatLogPanel';
@@ -71,16 +70,6 @@ export function TacticalBattleView({ isDM }: TacticalBattleViewProps) {
 
   return (
     <div className="w-full h-full relative bg-background text-foreground">
-      {/* Compact Top Panel - Combat Status */}
-      <CompactTopPanel 
-        combatState={combatState}
-        activeEntity={activeEntity}
-        isDM={currentDM}
-        onPauseCombat={() => console.log('Pause combat')}
-        onResetCombat={() => console.log('Reset combat')}
-        combatActive={combatState.phase !== 'idle'}
-      />
-
       {/* DM Tools Panel - Left Side */}
       {currentDM && (
         <DMToolsPanel
