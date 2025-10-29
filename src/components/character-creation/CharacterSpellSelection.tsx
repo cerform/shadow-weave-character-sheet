@@ -410,7 +410,8 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
 
   return (
     <div className="flex flex-col h-full">
-      <div className="mb-4">
+      {/* Заголовок и информация */}
+      <div className="flex-shrink-0 mb-4">
         <h4 className="text-lg font-semibold" style={{color: currentTheme.textColor}}>Выберите заклинания</h4>
         <p className="text-sm text-muted-foreground" style={{color: currentTheme.mutedTextColor}}>
           Уровень: {effectiveLevel}, Класс: {effectiveClass}
@@ -435,9 +436,12 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
             color: currentTheme.textColor
           }}
         />
+      </div>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="w-full mb-4 flex flex-wrap">
+      {/* Вкладки и список заклинаний - занимают оставшееся пространство */}
+      <div className="flex-1 flex flex-col min-h-0 mb-4">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full flex flex-col flex-1 min-h-0">
+          <TabsList className="w-full mb-4 flex flex-wrap flex-shrink-0">
             <TabsTrigger value="all">
               Все ({spellsToFilter.length})
             </TabsTrigger>
@@ -451,7 +455,7 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
             ))}
           </TabsList>
 
-          <ScrollArea className="flex-1 h-[400px]">
+          <ScrollArea className="flex-1">
             <div className="space-y-2 p-1">
               {filteredSpells.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
@@ -500,8 +504,9 @@ const CharacterSpellSelection: React.FC<CharacterSpellSelectionProps> = ({
         </Tabs>
       </div>
 
+      {/* Кнопки навигации - всегда внизу */}
       {nextStep && prevStep && (
-        <div className="mt-auto pt-4 space-y-2">
+        <div className="flex-shrink-0 pt-4 space-y-2 border-t">
           <NavigationButtons 
             onPrev={prevStep}
             onNext={handleSaveAndContinue}
