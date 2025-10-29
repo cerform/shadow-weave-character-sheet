@@ -1149,10 +1149,9 @@ export default function BattleMapUI({ sessionId }: { sessionId?: string }) {
                          if (container) {
                            const currentWidth = currentMapSize.width;
                            const newWidth = Math.min(currentWidth * 1.2, 2400);
-                           const scale = newWidth / MAP_W;
-                           // Применяем масштабирование через CSS transform
+                           const newScale = newWidth / currentMapSize.width;
                            if (mapRef.current) {
-                             mapRef.current.style.transform = `scale(${scale})`;
+                             mapRef.current.style.transform = `scale(${newScale})`;
                              mapRef.current.style.transformOrigin = 'center center';
                            }
                          }
@@ -1162,7 +1161,7 @@ export default function BattleMapUI({ sessionId }: { sessionId?: string }) {
                        +
                      </button>
                      <div className="text-sm text-center text-foreground px-1 font-mono bg-background/50 rounded border border-border/50 py-1">
-                       100%
+                       {Math.round((parseFloat(mapRef.current?.style.transform?.match(/scale\(([\d.]+)\)/)?.[1] || '1') * 100))}%
                      </div>
                      <button
                        className="w-10 h-10 bg-primary text-primary-foreground border border-border rounded-md flex items-center justify-center hover:bg-primary/90 transition-colors text-lg font-bold shadow-sm"
@@ -1171,10 +1170,9 @@ export default function BattleMapUI({ sessionId }: { sessionId?: string }) {
                          if (container) {
                            const currentWidth = currentMapSize.width;
                            const newWidth = Math.max(currentWidth / 1.2, 400);
-                           const scale = newWidth / MAP_W;
-                           // Применяем масштабирование через CSS transform
+                           const newScale = newWidth / currentMapSize.width;
                            if (mapRef.current) {
-                             mapRef.current.style.transform = `scale(${scale})`;
+                             mapRef.current.style.transform = `scale(${newScale})`;
                              mapRef.current.style.transformOrigin = 'center center';
                            }
                          }
