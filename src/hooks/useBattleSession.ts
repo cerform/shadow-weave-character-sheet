@@ -45,6 +45,7 @@ export const useBattleSession = (sessionId?: string) => {
     try {
       // Если передан sessionId, ищем конкретную сессию
       if (sessionId) {
+        console.log('🔍 Ищем существующую сессию:', sessionId);
         const { data: existingSession, error: sessionError } = await supabase
           .from('dm_sessions')
           .select('*')
@@ -52,27 +53,31 @@ export const useBattleSession = (sessionId?: string) => {
           .maybeSingle();
 
         if (!sessionError && existingSession) {
+          console.log('✅ Найдена существующая сессия:', existingSession.id);
           setSession(existingSession);
           return existingSession;
         }
       }
 
-      // ВАЖНО: При создании новой сессии деактивируем все старые
-      console.log('🆕 Создание новой сессии - деактивируем старые');
+      // Если sessionId не передан - ВСЕГДА создаем НОВУЮ сессию
+      console.log('🆕 Создание новой сессии (sessionId не передан)');
+      
+      // Деактивируем все старые активные сессии
       await supabase
         .from('dm_sessions')
         .update({ is_active: false })
         .eq('dm_id', user.id)
         .eq('is_active', true);
 
-      // Создаем новую сессию
+      // Создаем новую сессию без карты
       const { data: newSession, error: createError } = await supabase
         .from('dm_sessions')
         .insert({
           dm_id: user.id,
-          name: sessionId ? `Сессия ${sessionId.slice(0, 8)}` : 'Новая сессия',
+          name: `Новая сессия ${new Date().toLocaleString('ru')}`,
           description: 'Автоматически созданная сессия',
-          is_active: true
+          is_active: true,
+          current_map_url: null // ВАЖНО: новая сессия без карты
         })
         .select()
         .single();
