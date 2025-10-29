@@ -4,18 +4,13 @@ import { useSessionSync } from '@/hooks/useSessionSync';
 import { useBattleTokensSync } from '@/hooks/useBattleTokensSync';
 import { useBattleMapSync } from '@/hooks/useBattleMapSync';
 import { usePlayerTokenSync } from '@/hooks/usePlayerTokenSync';
-import { useEnhancedBattleStore } from '@/stores/enhancedBattleStore';
-import SessionChat from '@/components/session/SessionChat';
-import { SessionAudioPlayer } from '@/components/session/SessionAudioPlayer';
-import BattleMap2DPlayer from '@/components/battle/BattleMap2DPlayer';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Users, Map } from 'lucide-react';
+import { PlayerBattleInterface } from '@/components/battle/player/PlayerBattleInterface';
+import { supabase } from '@/integrations/supabase/client';
 
 const PlayerBattleMapPage: React.FC = () => {
   const { sessionId } = useParams<{ sessionId: string }>();
   const { sessionState, loading } = useSessionSync(sessionId || 'default-session');
-  const { tokens, mapImageUrl, setMapImageUrl } = useEnhancedBattleStore();
+  const [sessionCode, setSessionCode] = useState<string>('');
   
   // Синхронизируем токены и карту с Supabase
   useBattleTokensSync(sessionId || 'default-session');
@@ -23,6 +18,25 @@ const PlayerBattleMapPage: React.FC = () => {
   
   // Автоматически создаем токен игрока когда карта загружена
   usePlayerTokenSync(sessionId || 'default-session');
+
+  // Получаем код сессии из game_sessions
+  useEffect(() => {
+    const fetchSessionCode = async () => {
+      if (!sessionId) return;
+      
+      const { data } = await supabase
+        .from('game_sessions')
+        .select('session_code')
+        .eq('id', sessionId)
+        .single();
+      
+      if (data?.session_code) {
+        setSessionCode(data.session_code);
+      }
+    };
+    
+    fetchSessionCode();
+  }, [sessionId]);
 
   if (loading) {
     return (
@@ -33,50 +47,10 @@ const PlayerBattleMapPage: React.FC = () => {
   }
 
   return (
-    <div className="h-screen flex flex-col bg-background">
-      {/* Заголовок */}
-      <div className="border-b border-border p-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <h1 className="text-2xl font-bold flex items-center gap-2">
-              <Map className="h-6 w-6" />
-              Боевая карта
-            </h1>
-            <Badge variant="outline" className="flex items-center gap-2">
-              <Users className="h-4 w-4" />
-              Сессия: {sessionId}
-            </Badge>
-          </div>
-        </div>
-      </div>
-
-      {/* Основной контент */}
-      <div className="flex-1 flex">
-        {/* Боевая карта */}
-        <div className="flex-1 relative">
-          <BattleMap2DPlayer 
-            sessionId={sessionId || 'default-session'}
-            mapImageUrl={mapImageUrl}
-            tokens={tokens}
-          />
-        </div>
-
-        {/* Боковая панель с чатом */}
-        <div className="w-80 border-l border-border flex flex-col">
-          <div className="flex-1">
-            <SessionChat sessionId={sessionId || 'default-session'} />
-          </div>
-          
-          {/* Аудио плеер */}
-          <div className="p-4 border-t border-border">
-            <SessionAudioPlayer 
-              sessionId={sessionId || 'default-session'} 
-              isDM={false}
-            />
-          </div>
-        </div>
-      </div>
-    </div>
+    <PlayerBattleInterface 
+      sessionId={sessionId || 'default-session'}
+      sessionCode={sessionCode}
+    />
   );
 };
 

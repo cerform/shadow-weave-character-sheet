@@ -102,9 +102,13 @@ export const usePlayerTokenSync = (sessionId: string) => {
           isEnemy: false,
           isVisible: true,
           color: newToken.color || '#22c55e',
+          avatarUrl: newToken.image_url || undefined,
+          image_url: newToken.image_url || undefined,
           class: characterClass,
           owner_id: user.id,
           is_summoned: false,
+          level: character?.level || 1,
+          speed: character?.speed || 30,
         });
 
         toast({

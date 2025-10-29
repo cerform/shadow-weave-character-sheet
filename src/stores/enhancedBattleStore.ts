@@ -11,6 +11,7 @@ export interface EnhancedToken {
   isEnemy?: boolean;
   isVisible?: boolean;
   avatarUrl?: string;
+  image_url?: string; // Алиас для avatarUrl для совместимости
   size?: number;
   modelUrl?: string; // URL для 3D модели
   speed?: number; // Скорость перемещения в клетках за ход (по умолчанию 6)
@@ -20,6 +21,8 @@ export interface EnhancedToken {
   owner_id?: string; // ID владельца токена (игрока)
   summoned_by?: string; // ID токена, который призвал это существо
   is_summoned?: boolean; // Является ли призванным существом
+  level?: number; // Уровень персонажа
+  initiative?: number; // Инициатива в бою
 }
 
 export interface CombatEvent {
