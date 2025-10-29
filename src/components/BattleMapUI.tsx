@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useMonstersStore } from '@/stores/monstersStore';
 import { useUnifiedBattleStore } from '@/stores/unifiedBattleStore';
+import { useEnhancedBattleStore } from '@/stores/enhancedBattleStore';
 import useBattleStore from '@/stores/battleStore';
 import type { Monster } from '@/types/monsters';
 import SimpleTokenCreator from '@/components/battle/SimpleTokenCreator';
@@ -262,6 +263,9 @@ export default function BattleMapUI({ sessionId }: { sessionId?: string }) {
 
   // Карта
   const [mapImage, setMapImage] = useState<string | null>(null);
+  
+  // Получаем URL карты из enhancedBattleStore (для игроков из real-time синхронизации)
+  const { mapImageUrl: syncedMapUrl } = useEnhancedBattleStore();
   const [mapDimensions, setMapDimensions] = useState<{ width: number; height: number } | null>(null);
   const [autoFitMap, setAutoFitMap] = useState(true);
   const mapRef = useRef<HTMLDivElement | null>(null);
@@ -292,6 +296,20 @@ export default function BattleMapUI({ sessionId }: { sessionId?: string }) {
     setMapImage(null);
     setMapDimensions(null);
   }, [sessionId]);
+  
+  // ДЛЯ ИГРОКОВ: синхронизируем карту из real-time подписки
+  useEffect(() => {
+    if (isDM) return; // Мастер управляет картой через currentMap
+    
+    if (syncedMapUrl) {
+      console.log('🗺️ [PLAYER] Применяем карту из real-time синхронизации:', syncedMapUrl);
+      setMapImage(syncedMapUrl);
+    } else {
+      console.log('🗺️ [PLAYER] Очищаем карту (нет syncedMapUrl)');
+      setMapImage(null);
+    }
+  }, [syncedMapUrl, isDM]);
+  
   // Вычисление оптимальных размеров карты
   const calculateMapDimensions = () => {
     if (!autoFitMap || !mapDimensions) {
