@@ -9,7 +9,8 @@ export const useAuth = useSupabaseAuth;
 export const useProtectedRoute = () => {
   const { user, loading, isAuthenticated } = useAuth();
   const [userRoles, setUserRoles] = useState<AppRole[]>([]);
-  const [rolesLoading, setRolesLoading] = useState(false);
+  const [rolesLoading, setRolesLoading] = useState(true); // Начинаем с true
+  const [rolesFetched, setRolesFetched] = useState(false);
   
   useEffect(() => {
     const fetchUserRoles = async () => {
@@ -24,10 +25,13 @@ export const useProtectedRoute = () => {
           setUserRoles(['player']); // Дефолтная роль при ошибке
         } finally {
           setRolesLoading(false);
+          setRolesFetched(true);
         }
       } else if (!loading) {
+        // Если не авторизован и загрузка auth завершена
         setUserRoles([]);
         setRolesLoading(false);
+        setRolesFetched(true);
       }
     };
 
@@ -38,7 +42,11 @@ export const useProtectedRoute = () => {
   const isDM = userRoles.includes('dm') || isAdmin;
   const isPlayer = userRoles.includes('player') || userRoles.length === 0;
 
-  const combinedLoading = loading || rolesLoading;
+  // loading = true если:
+  // 1. Идет загрузка auth ИЛИ
+  // 2. Идет загрузка ролей ИЛИ
+  // 3. Пользователь авторизован, но роли еще не загружены
+  const combinedLoading = loading || rolesLoading || (isAuthenticated && !rolesFetched);
 
   return {
     loading: combinedLoading,
