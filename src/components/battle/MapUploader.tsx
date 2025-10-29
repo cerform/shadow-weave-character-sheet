@@ -21,7 +21,7 @@ const MapUploader: React.FC<MapUploaderProps> = ({
   onMapRemove
 }) => {
   const { toast } = useToast();
-  const { id: sessionId } = useParams<{ id: string }>();
+  const { sessionId } = useParams<{ sessionId: string }>();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [scale, setScale] = useState([100]);
