@@ -9,44 +9,36 @@ export const useAuth = useSupabaseAuth;
 export const useProtectedRoute = () => {
   const { user, loading, isAuthenticated } = useAuth();
   const [userRoles, setUserRoles] = useState<AppRole[]>([]);
-  const [rolesLoading, setRolesLoading] = useState(true);
-  const [rolesFetched, setRolesFetched] = useState(false);
+  const [rolesLoading, setRolesLoading] = useState(false);
   
   useEffect(() => {
     const fetchUserRoles = async () => {
       if (isAuthenticated && user) {
         setRolesLoading(true);
-        const roles = await UserRolesService.getCurrentUserRoles();
-        setUserRoles(roles);
-        console.log('Загружены роли пользователя:', roles);
-        setRolesLoading(false);
-        setRolesFetched(true);
-      } else {
+        try {
+          const roles = await UserRolesService.getCurrentUserRoles();
+          setUserRoles(roles);
+          console.log('Загружены роли пользователя:', roles);
+        } catch (error) {
+          console.error('Ошибка загрузки ролей:', error);
+          setUserRoles(['player']); // Дефолтная роль при ошибке
+        } finally {
+          setRolesLoading(false);
+        }
+      } else if (!loading) {
         setUserRoles([]);
         setRolesLoading(false);
-        setRolesFetched(true);
       }
     };
 
     fetchUserRoles();
-  }, [isAuthenticated, user]);
+  }, [isAuthenticated, user, loading]);
 
   const isAdmin = userRoles.includes('admin');
   const isDM = userRoles.includes('dm') || isAdmin;
   const isPlayer = userRoles.includes('player') || userRoles.length === 0;
 
-  const combinedLoading = loading || rolesLoading || (isAuthenticated && !rolesFetched);
-
-  console.log('useProtectedRoute состояние:', {
-    loading: combinedLoading,
-    isAuthenticated,
-    userRoles,
-    isAdmin,
-    isDM,
-    rolesLoading,
-    rolesFetched,
-    canAccessDMDashboard: isAuthenticated && isDM
-  });
+  const combinedLoading = loading || rolesLoading;
 
   return {
     loading: combinedLoading,
