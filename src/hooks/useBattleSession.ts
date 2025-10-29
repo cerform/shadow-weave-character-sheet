@@ -155,6 +155,21 @@ export const useBattleSession = (sessionId?: string) => {
     try {
       setLoading(true);
       
+      // Проверяем, что сессия существует в game_sessions
+      const { data: sessionCheck, error: checkError } = await supabase
+        .from('game_sessions')
+        .select('id, dm_id')
+        .eq('id', session.id)
+        .maybeSingle();
+
+      if (checkError || !sessionCheck) {
+        throw new Error(`Сессия ${session.id} не найдена в game_sessions`);
+      }
+
+      if (sessionCheck.dm_id !== user.id) {
+        throw new Error('Только мастер сессии может загружать карты');
+      }
+
       // Создаем путь к файлу: user_id/session_id/filename
       const fileName = `${file.name}`;
       const filePath = `${user.id}/${session.id}/${fileName}`;
@@ -178,6 +193,13 @@ export const useBattleSession = (sessionId?: string) => {
 
       console.log('🗺️ Получен URL карты:', urlData.publicUrl);
 
+      // Деактивируем старые карты
+      await supabase
+        .from('battle_maps')
+        .update({ is_active: false })
+        .eq('session_id', session.id)
+        .eq('is_active', true);
+
       // Сохраняем информацию о карте в базу данных
       const { data: mapData, error: mapError } = await supabase
         .from('battle_maps')
@@ -195,16 +217,23 @@ export const useBattleSession = (sessionId?: string) => {
         .select()
         .single();
 
-      if (mapError) throw mapError;
+      if (mapError) {
+        console.error('❌ Ошибка вставки в battle_maps:', mapError);
+        throw new Error(`Не удалось сохранить карту в базу: ${mapError.message}`);
+      }
 
       // Обновляем текущую карту сессии в game_sessions
-      await supabase
+      const { error: updateError } = await supabase
         .from('game_sessions')
         .update({
           current_map_url: urlData.publicUrl,
           updated_at: new Date().toISOString()
         })
         .eq('id', session.id);
+
+      if (updateError) {
+        console.warn('⚠️ Не удалось обновить current_map_url:', updateError);
+      }
 
       setCurrentMap(mapData);
       

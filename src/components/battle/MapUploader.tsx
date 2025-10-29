@@ -100,19 +100,33 @@ const MapUploader: React.FC<MapUploaderProps> = ({
           // Проверяем, что сессия существует в game_sessions
           const { data: sessionData, error: sessionCheckError } = await supabase
             .from('game_sessions')
-            .select('id')
+            .select('id, dm_id')
             .eq('id', sessionId)
             .maybeSingle();
 
           if (sessionCheckError) {
             console.error('❌ Ошибка проверки сессии:', sessionCheckError);
-            throw new Error('Не удалось проверить сессию');
+            throw new Error(`Не удалось проверить сессию: ${sessionCheckError.message}`);
           }
 
           if (!sessionData) {
             console.warn('⚠️ Сессия не найдена в game_sessions:', sessionId);
-            throw new Error('Сессия не найдена');
+            throw new Error(`Сессия с ID ${sessionId} не найдена в базе данных. Убедитесь, что используете правильную игровую сессию.`);
           }
+
+          // Проверяем, является ли текущий пользователь DM этой сессии
+          if (sessionData.dm_id !== user.id) {
+            throw new Error('Только мастер сессии может загружать карты');
+          }
+
+          console.log('✅ Сессия найдена и пользователь является DM');
+
+          // Деактивируем предыдущие карты для этой сессии
+          await supabase
+            .from('battle_maps')
+            .update({ is_active: false })
+            .eq('session_id', sessionId)
+            .eq('is_active', true);
 
           // Сохраняем карту в battle_maps
           const { error: dbError } = await supabase
@@ -121,14 +135,17 @@ const MapUploader: React.FC<MapUploaderProps> = ({
               session_id: sessionId,
               name: file.name,
               image_url: data.publicUrl,
+              file_url: data.publicUrl,
+              file_path: filePath,
               width: 800,
               height: 600,
-              grid_size: 25
+              grid_size: 25,
+              is_active: true
             });
 
           if (dbError) {
             console.error('❌ Ошибка сохранения в battle_maps:', dbError);
-            throw dbError;
+            throw new Error(`Не удалось сохранить карту: ${dbError.message}`);
           }
 
           // Обновляем current_map_url в game_sessions
@@ -147,10 +164,12 @@ const MapUploader: React.FC<MapUploaderProps> = ({
         } catch (dbError: any) {
           console.error('❌ Ошибка при сохранении карты в базе данных:', dbError);
           toast({
-            title: "Предупреждение",
-            description: `Карта загружена, но не сохранена в сессии: ${dbError.message}`,
+            title: "Ошибка сохранения карты",
+            description: dbError.message || "Не удалось сохранить карту в базе данных",
             variant: "destructive"
           });
+          // Не продолжаем, если не удалось сохранить в БД
+          throw dbError;
         }
       }
 
