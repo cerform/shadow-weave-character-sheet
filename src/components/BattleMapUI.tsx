@@ -255,7 +255,8 @@ export default function BattleMapUI({ sessionId }: { sessionId?: string }) {
   const [leftOpen, setLeftOpen] = useState(false);
   const [rightOpen, setRightOpen] = useState(false);
   const [videoChatOpen, setVideoChatOpen] = useState(false);
-  const [useCompactUI, setUseCompactUI] = useState(true);
+  // DM всегда видит полный интерфейс, игроки - компактный
+  const [useCompactUI, setUseCompactUI] = useState(!isDM);
   const [showBackgroundMusic, setShowBackgroundMusic] = useState(false);
   const [showAssetLibrary, setShowAssetLibrary] = useState(true);
 
@@ -754,15 +755,17 @@ export default function BattleMapUI({ sessionId }: { sessionId?: string }) {
           }}
         />
 
-        {/* Кнопка переключения на полный интерфейс */}
-        <div className="absolute top-4 right-4 z-60">
-          <button
-            onClick={() => setUseCompactUI(false)}
-            className="px-3 py-2 bg-background/90 backdrop-blur-sm border rounded-lg text-sm hover:bg-background"
-          >
-            Полный интерфейс
-          </button>
-        </div>
+        {/* Кнопка переключения на полный интерфейс - только для игроков */}
+        {!isDM && (
+          <div className="absolute top-4 right-4 z-60">
+            <button
+              onClick={() => setUseCompactUI(false)}
+              className="px-3 py-2 bg-background/90 backdrop-blur-sm border rounded-lg text-sm hover:bg-background"
+            >
+              Полный интерфейс
+            </button>
+          </div>
+        )}
       </div>
     );
   }
@@ -1240,12 +1243,15 @@ export default function BattleMapUI({ sessionId }: { sessionId?: string }) {
           >
             {showBackgroundMusic ? 'Скрыть' : 'Показать'} музыку
           </button>
-          <button
-            onClick={() => setUseCompactUI(true)}
-            className="hover:text-foreground"
-          >
-            Компактный режим
-          </button>
+          {/* Кнопка компактного режима - только для игроков */}
+          {!isDM && (
+            <button
+              onClick={() => setUseCompactUI(true)}
+              className="hover:text-foreground"
+            >
+              Компактный режим
+            </button>
+          )}
         </div>
       </div>
 
