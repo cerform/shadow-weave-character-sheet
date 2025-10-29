@@ -91,12 +91,22 @@ export const useBattleMapSync = (sessionId: string, isDM: boolean) => {
   // Мастер сохраняет URL карты в game_sessions
   const { mapImageUrl } = useEnhancedBattleStore();
   
-  // При смене сессии очищаем карту и загружаем карту текущей сессии
+  // При смене сессии СНАЧАЛА очищаем карту, затем загружаем карту текущей сессии
   useEffect(() => {
-    if (!isDM || !sessionId) return;
+    if (!isDM || !sessionId) {
+      // Очищаем карту если нет сессии
+      setMapImageUrl(null);
+      return;
+    }
+
+    // КРИТИЧНО: Сразу очищаем карту при смене сессии
+    console.log('🗺️ [DM] Смена сессии - очищаем карту перед загрузкой новой');
+    setMapImageUrl(null);
 
     const loadCurrentSessionMap = async () => {
       try {
+        console.log('🗺️ [DM] Загрузка карты для сессии:', sessionId);
+        
         const { data, error } = await supabase
           .from('game_sessions')
           .select('current_map_url')
@@ -104,26 +114,28 @@ export const useBattleMapSync = (sessionId: string, isDM: boolean) => {
           .single();
 
         if (error) {
-          console.error('Ошибка загрузки карты сессии:', error);
+          console.error('❌ [DM] Ошибка загрузки карты сессии:', error);
           setMapImageUrl(null);
           return;
         }
 
-        // Устанавливаем карту сессии или очищаем если её нет
+        // Устанавливаем карту сессии ТОЛЬКО если она есть
         if (data?.current_map_url) {
-          console.log('✅ Загружена карта сессии:', data.current_map_url);
+          console.log('✅ [DM] Загружена карта сессии:', data.current_map_url);
           setMapImageUrl(data.current_map_url);
         } else {
-          console.log('ℹ️ Новая сессия без карты');
-          setMapImageUrl(null);
+          console.log('ℹ️ [DM] Новая сессия без карты - карта остается пустой');
+          // Карта уже очищена выше, ничего не делаем
         }
       } catch (error) {
-        console.error('Ошибка при загрузке карты сессии:', error);
+        console.error('❌ [DM] Ошибка при загрузке карты сессии:', error);
         setMapImageUrl(null);
       }
     };
 
-    loadCurrentSessionMap();
+    // Даем время на очистку перед загрузкой
+    const timeoutId = setTimeout(loadCurrentSessionMap, 100);
+    return () => clearTimeout(timeoutId);
   }, [isDM, sessionId, setMapImageUrl]);
 
   // Синхронизируем изменения карты в БД

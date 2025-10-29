@@ -278,13 +278,20 @@ export default function BattleMapUI({ sessionId }: { sessionId?: string }) {
           height: currentMap.height
         });
       }
-    } else if (!currentMap && mapImage) {
-      // Очищаем карту если currentMap === null
-      console.log('🗺️ Очищаем карту (нет currentMap)');
+    } else {
+      // Очищаем карту если currentMap === null (новая сессия или нет карты)
+      console.log('🗺️ Очищаем карту (нет currentMap для текущей сессии)');
       setMapImage(null);
       setMapDimensions(null);
     }
   }, [currentMap]);
+
+  // При смене sessionId СРАЗУ очищаем состояние карты
+  useEffect(() => {
+    console.log('🗺️ Смена sessionId - очищаем карту:', sessionId);
+    setMapImage(null);
+    setMapDimensions(null);
+  }, [sessionId]);
   // Вычисление оптимальных размеров карты
   const calculateMapDimensions = () => {
     if (!autoFitMap || !mapDimensions) {

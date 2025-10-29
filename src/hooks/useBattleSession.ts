@@ -285,12 +285,17 @@ export const useBattleSession = (sessionId?: string) => {
     const initialize = async () => {
       setLoading(true);
       setError(null);
-      // Очищаем текущую карту при смене сессии
+      
+      // КРИТИЧНО: Очищаем текущую карту при смене сессии ДО загрузки новой
+      console.log('🗺️ Очищаем карту перед инициализацией сессии');
       setCurrentMap(null);
 
       const sessionData = await ensureSession();
       if (sessionData) {
+        console.log('🗺️ Загружаем карту для сессии:', sessionData.id);
         await loadCurrentMap(sessionData.id);
+      } else {
+        console.log('ℹ️ Нет сессии - карта остается пустой');
       }
 
       setLoading(false);
