@@ -26,7 +26,7 @@ interface BattleMap3DProps {
 
 export default function BattleMap3D({ 
   sessionId = 'default-session',
-  mapId = 'default-map',
+  mapId = 'main-map',
   isDM = false
 }: Partial<BattleMap3DProps> & { isDM?: boolean }) {
   const tokens = useBattleUIStore((s) => s.tokens);
