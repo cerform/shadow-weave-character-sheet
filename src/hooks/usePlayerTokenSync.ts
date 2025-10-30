@@ -27,7 +27,7 @@ export const usePlayerTokenSync = (sessionId: string) => {
         // Получаем информацию о персонаже игрока
         const { data: sessionPlayer, error: playerError } = await supabase
           .from('session_players')
-          .select('character_id, player_name, characters(*)')
+          .select('character_id, player_name')
           .eq('session_id', sessionId)
           .eq('user_id', user.id)
           .maybeSingle();

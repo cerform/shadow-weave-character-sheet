@@ -58,14 +58,18 @@ export function useFogSync(sessionId: string, mapId: string = 'main-map') {
 
     // Подписываемся на изменения в realtime
     const channel = supabase
-      .channel(`fog:${sessionId}:${mapId}`)
+      .channel(`fog:${sessionId}:${mapId}`, {
+        config: {
+          broadcast: { self: true }
+        }
+      })
       .on(
         'postgres_changes',
         {
           event: '*',
           schema: 'public',
           table: 'fog_of_war',
-          filter: `session_id=eq.${sessionId}`
+          filter: `session_id=eq.${sessionId},map_id=eq.${mapId}`
         },
         (payload) => {
           console.log('🔄 Real-time fog change:', payload.eventType, payload);
