@@ -3,31 +3,39 @@ import { create } from 'zustand';
 
 interface FogState {
   maps: { [key: string]: Uint8Array };
-  size: { w: number; h: number };
+  sizes: { [key: string]: { w: number; h: number } }; // Размеры для каждой карты
+  size: { w: number; h: number }; // Deprecated, для обратной совместимости
   setMap: (id: string, data: Uint8Array, width: number, height: number) => void;
   reveal: (id: string, x: number, y: number, radius: number) => void;
   clearMap: (id: string) => void;
+  getSize: (id: string) => { w: number; h: number };
 }
 
 export const useFogStore = create<FogState>((set, get) => ({
   maps: {},
+  sizes: {},
   size: { w: 0, h: 0 },
   
   setMap: (id: string, data: Uint8Array, width: number, height: number) => {
-    const { maps } = get();
+    const { maps, sizes } = get();
     set({
       maps: {
         ...maps,
         [id]: new Uint8Array(data)
       },
-      size: { w: width, h: height }
+      sizes: {
+        ...sizes,
+        [id]: { w: width, h: height }
+      },
+      size: { w: width, h: height } // Для обратной совместимости
     });
   },
   
   reveal: (id: string, x: number, y: number, radius: number) => {
-    const { maps, size } = get();
+    const { maps, sizes } = get();
     const map = maps[id];
-    if (!map) return;
+    const size = sizes[id];
+    if (!map || !size) return;
     
     const newMap = new Uint8Array(map);
     const width = size.w;
@@ -54,9 +62,16 @@ export const useFogStore = create<FogState>((set, get) => ({
   },
   
   clearMap: (id: string) => {
-    const { maps } = get();
-    const updated = { ...maps };
-    delete updated[id];
-    set({ maps: updated });
+    const { maps, sizes } = get();
+    const updatedMaps = { ...maps };
+    const updatedSizes = { ...sizes };
+    delete updatedMaps[id];
+    delete updatedSizes[id];
+    set({ maps: updatedMaps, sizes: updatedSizes });
+  },
+  
+  getSize: (id: string) => {
+    const { sizes } = get();
+    return sizes[id] || { w: 0, h: 0 };
   }
 }));

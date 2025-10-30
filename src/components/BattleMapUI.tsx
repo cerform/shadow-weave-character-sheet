@@ -281,7 +281,7 @@ export default function BattleMapUI({ sessionId }: { sessionId?: string }) {
   const mapId = syncedMapUrl ? `map-${sessionId}` : 'main-map';
   useFogSync(sessionId || '', mapId);
   const fogMap = useFogStore(state => state.maps[mapId]);
-  const fogSize = useFogStore(state => state.size);
+  const fogSize = useFogStore(state => state.sizes[mapId] || { w: 0, h: 0 });
   const [mapDimensions, setMapDimensions] = useState<{ width: number; height: number } | null>(null);
   const [autoFitMap, setAutoFitMap] = useState(true);
   const mapRef = useRef<HTMLDivElement | null>(null);

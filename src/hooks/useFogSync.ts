@@ -98,19 +98,24 @@ export function useFogSync(sessionId: string, mapId: string = 'main-map') {
               return;
             }
             
-            const { maps, size } = useFogStore.getState();
+            const { maps, sizes } = useFogStore.getState();
             let map = maps[mapId];
+            let size = sizes[mapId];
             
-            if (!map) {
+            if (!map || !size) {
               console.warn('⚠️ Fog map not initialized, creating new map');
               // Создаем карту если ее еще нет
               const w = Math.max(cell.grid_x + 1, 50);
               const h = Math.max(cell.grid_y + 1, 50);
               map = new Uint8Array(w * h);
+              size = { w, h };
               useFogStore.getState().setMap(mapId, map, w, h);
             }
 
             // Если координаты выходят за границы, расширяем карту
+            let currentW = size.w;
+            let currentH = size.h;
+            
             if (cell.grid_x >= size.w || cell.grid_y >= size.h) {
               const newW = Math.max(size.w, cell.grid_x + 10);
               const newH = Math.max(size.h, cell.grid_y + 10);
@@ -124,20 +129,22 @@ export function useFogSync(sessionId: string, mapId: string = 'main-map') {
               }
               
               map = newMap;
+              currentW = newW;
+              currentH = newH;
               console.log(`📏 Expanded fog map to ${newW}x${newH}`);
             } else {
               map = new Uint8Array(map);
             }
 
-            const idx = cell.grid_y * (cell.grid_x >= size.w ? Math.max(size.w, cell.grid_x + 10) : size.w) + cell.grid_x;
+            const idx = cell.grid_y * currentW + cell.grid_x;
             
             if (idx >= 0 && idx < map.length) {
               map[idx] = cell.is_revealed ? 1 : 0;
               useFogStore.getState().setMap(
                 mapId, 
                 map, 
-                cell.grid_x >= size.w ? Math.max(size.w, cell.grid_x + 10) : size.w,
-                cell.grid_y >= size.h ? Math.max(size.h, cell.grid_y + 10) : size.h
+                currentW,
+                currentH
               );
               console.log(`✅ Real-time update: cell (${cell.grid_x}, ${cell.grid_y}) = ${cell.is_revealed ? 'revealed' : 'hidden'}`);
             }
