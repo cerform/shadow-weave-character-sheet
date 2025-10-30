@@ -20,40 +20,32 @@ export function useFogSync(sessionId: string, mapId: string = 'main-map') {
           .eq('map_id', mapId);
 
         if (error) {
-          console.error('Error loading fog state:', error);
+          console.error('❌ Error loading fog state:', error);
           return;
         }
 
-        if (!data || data.length === 0) {
-          // Инициализируем пустую карту тумана (30x30)
-          const w = 30, h = 30;
-          useFogStore.getState().setMap(mapId, new Uint8Array(w * h), w, h);
-          console.log('🌫️ Initialized empty fog map');
-          return;
-        }
+        console.log(`📦 Loaded ${data?.length || 0} fog cells from DB`);
 
-        // Находим границы карты
-        let maxX = 0, maxY = 0;
-        data.forEach(cell => {
-          if (cell.grid_x > maxX) maxX = cell.grid_x;
-          if (cell.grid_y > maxY) maxY = cell.grid_y;
-        });
-
-        const w = maxX + 1;
-        const h = maxY + 1;
+        // Всегда инициализируем карту 30x30
+        const w = 30, h = 30;
         const fogMap = new Uint8Array(w * h); // 0 = скрыто, 1 = открыто
 
-        // Заполняем карту
-        data.forEach(cell => {
-          if (cell.is_revealed) {
-            fogMap[cell.grid_y * w + cell.grid_x] = 1;
-          }
-        });
+        if (data && data.length > 0) {
+          // Заполняем карту данными из БД
+          data.forEach(cell => {
+            if (cell.grid_x < w && cell.grid_y < h) {
+              const idx = cell.grid_y * w + cell.grid_x;
+              fogMap[idx] = cell.is_revealed ? 1 : 0;
+            }
+          });
+          console.log(`✅ Loaded fog state: ${w}x${h}, ${data.filter(c => c.is_revealed).length} revealed cells`);
+        } else {
+          console.log(`🌫️ Initialized empty fog map (${w}x${h})`);
+        }
 
         useFogStore.getState().setMap(mapId, fogMap, w, h);
-        console.log(`🌫️ Loaded fog state: ${w}x${h}, ${data.filter(c => c.is_revealed).length} revealed cells`);
       } catch (error) {
-        console.error('Error in loadFogState:', error);
+        console.error('❌ Exception in loadFogState:', error);
       }
     };
 
@@ -71,7 +63,7 @@ export function useFogSync(sessionId: string, mapId: string = 'main-map') {
           filter: `session_id=eq.${sessionId}`
         },
         (payload) => {
-          console.log('🌫️ Fog change received:', payload);
+          console.log('🔄 Real-time fog change:', payload.eventType, payload);
           
           if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
             const cell = payload.new as any;
@@ -79,7 +71,12 @@ export function useFogSync(sessionId: string, mapId: string = 'main-map') {
             const map = maps[mapId];
             
             if (!map) {
-              console.warn('Fog map not initialized');
+              console.warn('⚠️ Fog map not initialized for real-time update');
+              return;
+            }
+
+            if (cell.grid_x >= size.w || cell.grid_y >= size.h) {
+              console.warn(`⚠️ Cell coordinates out of bounds: (${cell.grid_x}, ${cell.grid_y}), map size: ${size.w}x${size.h}`);
               return;
             }
 
@@ -89,12 +86,19 @@ export function useFogSync(sessionId: string, mapId: string = 'main-map') {
             if (idx >= 0 && idx < newMap.length) {
               newMap[idx] = cell.is_revealed ? 1 : 0;
               useFogStore.getState().setMap(mapId, newMap, size.w, size.h);
-              console.log(`🌫️ Updated cell (${cell.grid_x}, ${cell.grid_y}): ${cell.is_revealed ? 'revealed' : 'hidden'}`);
+              console.log(`✅ Real-time update: cell (${cell.grid_x}, ${cell.grid_y}) = ${cell.is_revealed ? 'revealed' : 'hidden'}`);
             }
           }
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log(`📡 Fog sync subscription status: ${status}`);
+        if (status === 'SUBSCRIBED') {
+          console.log('✅ Successfully subscribed to fog updates');
+        } else if (status === 'CHANNEL_ERROR') {
+          console.error('❌ Error subscribing to fog updates');
+        }
+      });
 
     return () => {
       console.log('🌫️ Cleaning up fog sync');

@@ -35,6 +35,16 @@ const BattleMap2DPlayer: React.FC<BattleMap2DPlayerProps> = ({
   useFogSync(sessionId, 'main-map');
   const fogMap = useFogStore(state => state.maps['main-map']);
   const fogSize = useFogStore(state => state.size);
+  
+  // Логируем состояние тумана для отладки
+  useEffect(() => {
+    if (fogMap) {
+      const revealed = Array.from(fogMap).filter(v => v === 1).length;
+      console.log(`🎭 [PLAYER] Fog state: ${fogSize.w}x${fogSize.h}, ${revealed} revealed cells`);
+    } else {
+      console.log(`⚠️ [PLAYER] No fog map data yet`);
+    }
+  }, [fogMap, fogSize]);
 
   // Центрируем карту при загрузке изображения
   useEffect(() => {
