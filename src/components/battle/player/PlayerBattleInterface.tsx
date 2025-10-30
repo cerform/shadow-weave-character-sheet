@@ -29,13 +29,17 @@ export const PlayerBattleInterface: React.FC<PlayerBattleInterfaceProps> = ({
   const [showCombatLog, setShowCombatLog] = useState(true);
   
   // Синхронизация тумана войны для игрока
-  useFogSync(sessionId, 'main-map');
+  // Используем URL карты как уникальный идентификатор
+  const mapId = mapImageUrl ? `map-${sessionId}` : 'main-map';
+  useFogSync(sessionId, mapId);
   
-  // Логируем для отладки
+  // Очищаем туман войны при смене карты
   useEffect(() => {
     console.log('🎮 [PLAYER] Session ID:', sessionId);
     console.log('🎮 [PLAYER] User ID:', user?.id);
-  }, [sessionId, user]);
+    console.log('🗺️ [PLAYER] Map ID:', mapId);
+    console.log('🗺️ [PLAYER] Map URL:', mapImageUrl);
+  }, [sessionId, user, mapId, mapImageUrl]);
 
   // Найти токен игрока
   const playerToken = tokens.find(t => t.owner_id === user?.id && !t.is_summoned);

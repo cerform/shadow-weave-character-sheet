@@ -15,6 +15,13 @@ export function useFogSync(sessionId: string, mapId: string = 'main-map') {
     
     console.log(`🌫️ Initializing fog sync for session ${sessionId}, map ${mapId}`);
     
+    // Очищаем старые данные тумана войны при смене mapId
+    const { maps } = useFogStore.getState();
+    if (maps[mapId]) {
+      console.log(`🧹 Clearing existing fog data for map ${mapId}`);
+      useFogStore.getState().clearMap(mapId);
+    }
+    
     // Загружаем начальное состояние тумана войны
     const loadFogState = async () => {
       try {

@@ -6,6 +6,7 @@ interface FogState {
   size: { w: number; h: number };
   setMap: (id: string, data: Uint8Array, width: number, height: number) => void;
   reveal: (id: string, x: number, y: number, radius: number) => void;
+  clearMap: (id: string) => void;
 }
 
 export const useFogStore = create<FogState>((set, get) => ({
@@ -50,5 +51,12 @@ export const useFogStore = create<FogState>((set, get) => ({
         [id]: newMap
       }
     });
+  },
+  
+  clearMap: (id: string) => {
+    const { maps } = get();
+    const updated = { ...maps };
+    delete updated[id];
+    set({ maps: updated });
   }
 }));

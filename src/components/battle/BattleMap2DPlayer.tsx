@@ -31,9 +31,10 @@ const BattleMap2DPlayer: React.FC<BattleMap2DPlayerProps> = ({
   const { user } = useAuth();
   const { updateToken, addToken } = useEnhancedBattleStore();
   
-  // Синхронизация тумана войны
-  useFogSync(sessionId, 'main-map');
-  const fogMap = useFogStore(state => state.maps['main-map']);
+  // Синхронизация тумана войны - используем уникальный ID на основе карты
+  const mapId = mapImageUrl ? `map-${sessionId}` : 'main-map';
+  useFogSync(sessionId, mapId);
+  const fogMap = useFogStore(state => state.maps[mapId]);
   const fogSize = useFogStore(state => state.size);
   
   // Логируем состояние тумана для отладки
