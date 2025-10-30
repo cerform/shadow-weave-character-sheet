@@ -65,35 +65,26 @@ export default function FogOfWar({
     }
   }, [canvasState.width, canvasState.height]);
 
-  // Основной рендеринг
+  // Анимация тумана
   useEffect(() => {
-    console.log('🌫️ FogOfWar: render effect triggered', {
-      renderer: !!renderer,
-      active,
-      canvasState,
-      revealedCellsCount: Object.keys(revealedCells).length,
-      lightSourcesCount: lightSources.length,
-      tokenPositionsCount: tokenPositions.length
-    });
-
-    if (!renderer || !active || canvasState.width === 0 || canvasState.height === 0) {
-      console.log('🚫 FogOfWar: skipping render', {
-        hasRenderer: !!renderer,
-        active,
-        canvasWidth: canvasState.width,
-        canvasHeight: canvasState.height
-      });
-      return;
-    }
-
-    const renderFrame = () => {
-      console.log('🎨 FogOfWar: actually rendering', { showFullFogForPlayers, isDM });
+    if (!renderer || !active) return;
+    
+    let animationFrameId: number;
+    let lastTime = performance.now();
+    
+    const animate = (currentTime: number) => {
+      const deltaTime = (currentTime - lastTime) / 1000; // в секундах
+      lastTime = currentTime;
+      
+      // Обновляем анимацию
+      renderer.updateAnimation(deltaTime);
       
       // Для игроков с включенным showFullFogForPlayers показываем полный туман
       const effectiveRevealedCells = (showFullFogForPlayers && !isDM) 
         ? {} // Пустой объект = все ячейки под туманом
         : revealedCells;
       
+      // Рендерим
       renderer.render(
         canvasState,
         effectiveRevealedCells,
@@ -103,13 +94,22 @@ export default function FogOfWar({
         isDynamicLighting,
         selectedArea
       );
+      
+      animationFrameId = requestAnimationFrame(animate);
     };
-
-    renderFrame();
+    
+    animationFrameId = requestAnimationFrame(animate);
+    
+    return () => {
+      cancelAnimationFrame(animationFrameId);
+    };
   }, [
     renderer,
     active,
-    canvasState,
+    canvasState.width,
+    canvasState.height,
+    canvasState.gridRows,
+    canvasState.gridCols,
     revealedCells,
     lightSources,
     tokenPositions,

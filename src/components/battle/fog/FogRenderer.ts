@@ -1,9 +1,20 @@
 import type { FogCanvasState, FogRenderConfig, LightSource, TokenPosition } from '@/types/fog';
 
+interface FogCloud {
+  x: number;
+  y: number;
+  radius: number;
+  speed: number;
+  offset: number;
+  direction: number;
+}
+
 export class FogRenderer {
   private canvas: HTMLCanvasElement;
   private ctx: CanvasRenderingContext2D;
   private config: FogRenderConfig;
+  private animationTime: number = 0;
+  private fogClouds: FogCloud[] = [];
 
   constructor(canvas: HTMLCanvasElement, config: FogRenderConfig) {
     this.canvas = canvas;
@@ -13,6 +24,25 @@ export class FogRenderer {
     }
     this.ctx = context;
     this.config = config;
+    this.initializeFogClouds();
+  }
+
+  private initializeFogClouds() {
+    // Создаем несколько слоев облаков тумана для реалистичной анимации
+    for (let i = 0; i < 20; i++) {
+      this.fogClouds.push({
+        x: Math.random(),
+        y: Math.random(),
+        radius: 80 + Math.random() * 120,
+        speed: 0.01 + Math.random() * 0.02,
+        offset: Math.random() * Math.PI * 2,
+        direction: Math.random() * Math.PI * 2
+      });
+    }
+  }
+
+  updateAnimation(deltaTime: number) {
+    this.animationTime += deltaTime;
   }
 
   render(
@@ -27,8 +57,8 @@ export class FogRenderer {
     this.clear();
     this.setupCanvas(canvasState);
     
-    // Рисуем базовый туман
-    this.renderBaseFog(isDynamicLighting);
+    // Рисуем анимированный туман
+    this.renderAnimatedFog(canvasState, isDynamicLighting);
     
     // Переключаем в режим вырезания для освещения
     this.ctx.globalCompositeOperation = 'destination-out';
@@ -60,10 +90,69 @@ export class FogRenderer {
     this.canvas.height = canvasState.height;
   }
 
-  private renderBaseFog(isDynamicLighting: boolean) {
-    const opacity = isDynamicLighting ? 0.85 : 0.7;
-    this.ctx.fillStyle = `rgba(0, 0, 0, ${opacity})`;
-    this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+  private renderAnimatedFog(canvasState: FogCanvasState, isDynamicLighting: boolean) {
+    const { width, height } = canvasState;
+    const baseOpacity = isDynamicLighting ? 0.85 : 0.7;
+    
+    // Базовый слой тумана
+    this.ctx.fillStyle = `rgba(15, 15, 25, ${baseOpacity})`;
+    this.ctx.fillRect(0, 0, width, height);
+    
+    // Анимированные облака тумана
+    this.ctx.globalAlpha = 0.3;
+    this.fogClouds.forEach((cloud) => {
+      // Вычисляем позицию облака с учетом времени
+      const animX = (cloud.x + Math.cos(this.animationTime * cloud.speed + cloud.offset) * 0.05) % 1;
+      const animY = (cloud.y + Math.sin(this.animationTime * cloud.speed + cloud.offset) * 0.05) % 1;
+      
+      const x = animX * width;
+      const y = animY * height;
+      
+      // Создаем радиальный градиент для облака
+      const gradient = this.ctx.createRadialGradient(
+        x, y, 0,
+        x, y, cloud.radius
+      );
+      
+      // Темно-серый туман с легким голубоватым оттенком
+      gradient.addColorStop(0, 'rgba(80, 85, 95, 0.8)');
+      gradient.addColorStop(0.4, 'rgba(60, 65, 75, 0.5)');
+      gradient.addColorStop(0.7, 'rgba(40, 45, 55, 0.2)');
+      gradient.addColorStop(1, 'rgba(20, 25, 35, 0)');
+      
+      this.ctx.fillStyle = gradient;
+      this.ctx.beginPath();
+      this.ctx.arc(x, y, cloud.radius, 0, Math.PI * 2);
+      this.ctx.fill();
+    });
+    
+    // Добавляем второй слой с другой скоростью для глубины
+    this.ctx.globalAlpha = 0.2;
+    this.fogClouds.forEach((cloud, index) => {
+      if (index % 2 === 0) return; // Используем только половину облаков
+      
+      const animX = (cloud.x - Math.sin(this.animationTime * cloud.speed * 0.7 + cloud.offset) * 0.07) % 1;
+      const animY = (cloud.y + Math.cos(this.animationTime * cloud.speed * 0.7 + cloud.offset) * 0.07) % 1;
+      
+      const x = (animX < 0 ? 1 + animX : animX) * width;
+      const y = (animY < 0 ? 1 + animY : animY) * height;
+      
+      const gradient = this.ctx.createRadialGradient(
+        x, y, 0,
+        x, y, cloud.radius * 1.2
+      );
+      
+      gradient.addColorStop(0, 'rgba(70, 75, 85, 0.6)');
+      gradient.addColorStop(0.5, 'rgba(50, 55, 65, 0.3)');
+      gradient.addColorStop(1, 'rgba(30, 35, 45, 0)');
+      
+      this.ctx.fillStyle = gradient;
+      this.ctx.beginPath();
+      this.ctx.arc(x, y, cloud.radius * 1.2, 0, Math.PI * 2);
+      this.ctx.fill();
+    });
+    
+    this.ctx.globalAlpha = 1.0;
   }
 
   private renderRevealedAreas(
@@ -121,12 +210,19 @@ export class FogRenderer {
   }
 
   private renderLightSource(light: LightSource, radius: number) {
+    // Добавляем легкое мерцание для факелов
+    const flicker = light.type === 'torch' 
+      ? 0.95 + Math.sin(this.animationTime * 8 + light.x + light.y) * 0.05
+      : 1.0;
+    
+    const effectiveRadius = radius * flicker;
+    
     const gradient = this.ctx.createRadialGradient(
       light.x, light.y, 0,
-      light.x, light.y, radius
+      light.x, light.y, effectiveRadius
     );
     
-    const alphaMax = Math.min(0.95, light.intensity);
+    const alphaMax = Math.min(0.95, light.intensity * flicker);
     
     switch (light.type) {
       case 'torch':
@@ -150,7 +246,7 @@ export class FogRenderer {
     
     this.ctx.fillStyle = gradient;
     this.ctx.beginPath();
-    this.ctx.arc(light.x, light.y, radius, 0, Math.PI * 2);
+    this.ctx.arc(light.x, light.y, effectiveRadius, 0, Math.PI * 2);
     this.ctx.fill();
   }
 
