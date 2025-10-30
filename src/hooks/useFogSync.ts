@@ -31,8 +31,20 @@ export function useFogSync(sessionId: string, mapId: string = 'main-map') {
 
         console.log(`📦 Loaded ${data?.length || 0} fog cells from DB`);
 
-        // Всегда инициализируем карту 30x30
-        const w = 30, h = 30;
+        // Определяем размер сетки динамически на основе данных или используем максимальный размер
+        let maxX = 0;
+        let maxY = 0;
+        
+        if (data && data.length > 0) {
+          data.forEach(cell => {
+            if (cell.grid_x > maxX) maxX = cell.grid_x;
+            if (cell.grid_y > maxY) maxY = cell.grid_y;
+          });
+        }
+        
+        // Увеличиваем на 1 для размера и добавляем запас
+        const w = Math.max(maxX + 1, 50);
+        const h = Math.max(maxY + 1, 50);
         const fogMap = new Uint8Array(w * h); // 0 = скрыто, 1 = открыто
 
         if (data && data.length > 0) {
@@ -58,7 +70,7 @@ export function useFogSync(sessionId: string, mapId: string = 'main-map') {
 
     // Подписываемся на изменения в realtime
     const channel = supabase
-      .channel(`fog-sync-${sessionId}-${mapId}`)
+      .channel(`fog:${sessionId}:${mapId}`)
       .on(
         'postgres_changes',
         {
@@ -72,25 +84,54 @@ export function useFogSync(sessionId: string, mapId: string = 'main-map') {
           
           if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
             const cell = payload.new as any;
+            
+            // Проверяем что это наша карта
+            if (cell.map_id !== mapId) {
+              console.log(`⏭️ Skipping fog update for different map: ${cell.map_id}`);
+              return;
+            }
+            
             const { maps, size } = useFogStore.getState();
-            const map = maps[mapId];
+            let map = maps[mapId];
             
             if (!map) {
-              console.warn('⚠️ Fog map not initialized for real-time update');
-              return;
+              console.warn('⚠️ Fog map not initialized, creating new map');
+              // Создаем карту если ее еще нет
+              const w = Math.max(cell.grid_x + 1, 50);
+              const h = Math.max(cell.grid_y + 1, 50);
+              map = new Uint8Array(w * h);
+              useFogStore.getState().setMap(mapId, map, w, h);
             }
 
+            // Если координаты выходят за границы, расширяем карту
             if (cell.grid_x >= size.w || cell.grid_y >= size.h) {
-              console.warn(`⚠️ Cell coordinates out of bounds: (${cell.grid_x}, ${cell.grid_y}), map size: ${size.w}x${size.h}`);
-              return;
+              const newW = Math.max(size.w, cell.grid_x + 10);
+              const newH = Math.max(size.h, cell.grid_y + 10);
+              const newMap = new Uint8Array(newW * newH);
+              
+              // Копируем старые данные
+              for (let y = 0; y < size.h; y++) {
+                for (let x = 0; x < size.w; x++) {
+                  newMap[y * newW + x] = map[y * size.w + x];
+                }
+              }
+              
+              map = newMap;
+              console.log(`📏 Expanded fog map to ${newW}x${newH}`);
+            } else {
+              map = new Uint8Array(map);
             }
 
-            const newMap = new Uint8Array(map);
-            const idx = cell.grid_y * size.w + cell.grid_x;
+            const idx = cell.grid_y * (cell.grid_x >= size.w ? Math.max(size.w, cell.grid_x + 10) : size.w) + cell.grid_x;
             
-            if (idx >= 0 && idx < newMap.length) {
-              newMap[idx] = cell.is_revealed ? 1 : 0;
-              useFogStore.getState().setMap(mapId, newMap, size.w, size.h);
+            if (idx >= 0 && idx < map.length) {
+              map[idx] = cell.is_revealed ? 1 : 0;
+              useFogStore.getState().setMap(
+                mapId, 
+                map, 
+                cell.grid_x >= size.w ? Math.max(size.w, cell.grid_x + 10) : size.w,
+                cell.grid_y >= size.h ? Math.max(size.h, cell.grid_y + 10) : size.h
+              );
               console.log(`✅ Real-time update: cell (${cell.grid_x}, ${cell.grid_y}) = ${cell.is_revealed ? 'revealed' : 'hidden'}`);
             }
           }
