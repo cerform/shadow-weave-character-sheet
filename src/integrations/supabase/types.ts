@@ -1362,6 +1362,10 @@ export type Database = {
         Returns: boolean
       }
       import_models_bucket_assets: { Args: never; Returns: number }
+      is_parent_token_owner: {
+        Args: { _summoned_by: string; _user_id: string }
+        Returns: boolean
+      }
       is_user_dm_of_session: { Args: { _session_id: string }; Returns: boolean }
       is_user_participant_of_session: {
         Args: { _session_id: string }

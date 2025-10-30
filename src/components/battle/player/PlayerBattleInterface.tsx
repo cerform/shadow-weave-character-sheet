@@ -29,8 +29,8 @@ export const PlayerBattleInterface: React.FC<PlayerBattleInterfaceProps> = ({
   const [showCombatLog, setShowCombatLog] = useState(true);
   
   // Синхронизация тумана войны для игрока
-  // Используем URL карты как уникальный идентификатор
-  const mapId = mapImageUrl ? `map-${sessionId}` : 'main-map';
+  // Всегда используем main-map для текущей активной карты сессии
+  const mapId = 'main-map';
   useFogSync(sessionId, mapId);
   
   // Очищаем туман войны при смене карты

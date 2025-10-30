@@ -278,7 +278,7 @@ export default function BattleMapUI({ sessionId }: { sessionId?: string }) {
   const { mapImageUrl: syncedMapUrl } = useEnhancedBattleStore();
   
   // Синхронизируем туман войны с Supabase
-  const mapId = syncedMapUrl ? `map-${sessionId}` : 'main-map';
+  const mapId = 'main-map'; // Всегда используем main-map для текущей активной карты
   useFogSync(sessionId || '', mapId);
   const fogMap = useFogStore(state => state.maps[mapId]);
   const fogSize = useFogStore(state => state.sizes[mapId] || { w: 0, h: 0 });
@@ -399,6 +399,38 @@ export default function BattleMapUI({ sessionId }: { sessionId?: string }) {
         text: `Загружена карта: ${file.name}` 
       }, ...l]);
       
+      // Очищаем старый туман войны при смене карты
+      if (sessionId && isDM) {
+        try {
+          await supabase
+            .from('fog_of_war')
+            .delete()
+            .eq('session_id', sessionId)
+            .eq('map_id', 'main-map');
+          console.log('🧹 Cleared old fog data for new map');
+          
+          // Открываем центральную область для начала
+          const centerX = 12;
+          const centerY = 8;
+          const initialCells = [];
+          for (let y = centerY - 2; y <= centerY + 2; y++) {
+            for (let x = centerX - 2; x <= centerX + 2; x++) {
+              initialCells.push({
+                session_id: sessionId,
+                map_id: 'main-map',
+                grid_x: x,
+                grid_y: y,
+                is_revealed: true
+              });
+            }
+          }
+          await supabase.from('fog_of_war').upsert(initialCells);
+          console.log('✨ Created initial revealed area');
+        } catch (error) {
+          console.error('❌ Error clearing/initializing fog:', error);
+        }
+      }
+      
       // Автоматически сохраняем карту в сессию
       if (session && isDM) {
         const result = await saveMapToSession(file, file.name);
@@ -450,20 +482,51 @@ export default function BattleMapUI({ sessionId }: { sessionId?: string }) {
       ts: now(), 
       text: `Загружена карта: ${file.name}` 
     }, ...l]);
-    
-    // Автоматически сохраняем карту в сессию
-    if (session && isDM) {
-      const result = await saveMapToSession(file, file.name);
-      // Обновляем на публичный URL после сохранения
-      if (result?.file_url) {
-        setMapImage(result.file_url);
-        console.log('✅ Карта обновлена публичным URL:', result.file_url);
+
+    // Очищаем старый туман войны при смене карты
+    if (sessionId && isDM) {
+      try {
+        await supabase
+          .from('fog_of_war')
+          .delete()
+          .eq('session_id', sessionId)
+          .eq('map_id', 'main-map');
+        console.log('🧹 Cleared old fog data for new map');
+        
+        // Открываем центральную область для начала
+        const centerX = 12;
+        const centerY = 8;
+        const initialCells = [];
+        for (let y = centerY - 2; y <= centerY + 2; y++) {
+          for (let x = centerX - 2; x <= centerX + 2; x++) {
+            initialCells.push({
+              session_id: sessionId,
+              map_id: 'main-map',
+              grid_x: x,
+              grid_y: y,
+              is_revealed: true
+            });
+          }
+        }
+        await supabase.from('fog_of_war').upsert(initialCells);
+        console.log('✨ Created initial revealed area');
+      } catch (error) {
+        console.error('❌ Error clearing/initializing fog:', error);
       }
     }
 
-    // Очищаем input для возможности повторной загрузки того же файла
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
+    // Автоматически сохраняем карту в сессию
+    if (session && isDM) {
+      const result = await saveMapToSession(file, file.name);
+      if (result?.file_url) {
+        setMapImage(result.file_url);
+        console.log('✅ Карта обновлена публичным URL:', result.file_url);
+        
+        toast({
+          title: "Карта загружена",
+          description: "Карта успешно сохранена и синхронизирована с игроками",
+        });
+      }
     }
   };
 
