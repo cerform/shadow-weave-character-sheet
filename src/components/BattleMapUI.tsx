@@ -23,6 +23,8 @@ import { useBattleTokensSync } from '@/hooks/useBattleTokensSync';
 import { useBattleTokensToSupabase } from '@/hooks/useBattleTokensToSupabase';
 import { useBattleMapSync } from '@/hooks/useBattleMapSync';
 import { useToast } from '@/hooks/use-toast';
+import { useFogSync } from '@/hooks/useFogSync';
+import { useFogStore } from '@/stores/fogStore';
 import { ArrowLeft, Map as MapIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
@@ -274,6 +276,12 @@ export default function BattleMapUI({ sessionId }: { sessionId?: string }) {
   
   // Получаем URL карты из enhancedBattleStore (для игроков из real-time синхронизации)
   const { mapImageUrl: syncedMapUrl } = useEnhancedBattleStore();
+  
+  // Синхронизируем туман войны с Supabase
+  const mapId = syncedMapUrl ? `map-${sessionId}` : 'main-map';
+  useFogSync(sessionId || '', mapId);
+  const fogMap = useFogStore(state => state.maps[mapId]);
+  const fogSize = useFogStore(state => state.size);
   const [mapDimensions, setMapDimensions] = useState<{ width: number; height: number } | null>(null);
   const [autoFitMap, setAutoFitMap] = useState(true);
   const mapRef = useRef<HTMLDivElement | null>(null);
@@ -1082,107 +1090,47 @@ export default function BattleMapUI({ sessionId }: { sessionId?: string }) {
                   {fogEnabled && layers.find(l => l.id === 'fog')?.visible && (
                     <FogOfWar
                       gridSize={{ rows: Math.floor(currentMapSize.height / GRID), cols: Math.floor(currentMapSize.width / GRID) }}
-                      revealedCells={reveal.reduce((acc, r) => {
-                        const key = `${Math.floor(r.y / GRID)}-${Math.floor(r.x / GRID)}`;
-                        acc[key] = true;
-                        return acc;
-                      }, {} as { [key: string]: boolean })}
-                      active={vttTool === 'fog-reveal' || vttTool === 'fog-hide'}
-                      isDM={isDM}
-                      imageSize={{ width: currentMapSize.width, height: currentMapSize.height }}
-                      showFullFogForPlayers={!isDM && mapImage !== null} // Игроки видят полный туман если карта загружена
-                      onRevealCell={async (row, col) => {
-                        console.log('BattleMapUI onRevealCell called:', { row, col, GRID, fogRadius });
-                        
-                        if (vttTool === 'fog-reveal') {
-                          // Конвертируем row/col в пиксельные координаты для совместимости с системой reveal
-                          const newReveal = {
-                            x: col * GRID + GRID/2,
-                            y: row * GRID + GRID/2,
-                            r: fogRadius
-                          };
-                          
-                          console.log('Adding reveal area:', newReveal);
-                          
-                          setReveal(prev => [...prev, newReveal]);
-                          setLog((l) => [{ 
-                            id: uid("log"), 
-                            ts: now(), 
-                            text: `ДМ открыл туман в ячейке (${col}, ${row}) -> пиксели (${newReveal.x}, ${newReveal.y})` 
-                          }, ...l]);
-                          
-                          // Сохраняем открытую ячейку в БД
-                          if (sessionId && isDM) {
-                            try {
-                              const { error } = await supabase
-                                .from('fog_of_war')
-                                .upsert({
-                                  session_id: sessionId,
-                                  map_id: 'main-map',
-                                  grid_x: col,
-                                  grid_y: row,
-                                  is_revealed: true,
-                                  updated_at: new Date().toISOString()
-                                }, {
-                                  onConflict: 'session_id,map_id,grid_x,grid_y'
-                                });
-                              
-                              if (error) {
-                                console.error('❌ Error saving fog cell:', error);
-                              } else {
-                                console.log(`✅ Saved fog cell (${col}, ${row}) to DB`);
-                              }
-                            } catch (err) {
-                              console.error('❌ Exception saving fog cell:', err);
-                            }
-                          }
-                        } else if (vttTool === 'fog-hide') {
-                          // Удаляем области рядом с этой клеткой
-                          const targetX = col * GRID + GRID/2;
-                          const targetY = row * GRID + GRID/2;
-                          
-                          console.log('Hiding fog around:', { targetX, targetY });
-                          
-                          setReveal(prev => prev.filter(r => {
-                            const distance = Math.sqrt(
-                              Math.pow(r.x - targetX, 2) + 
-                              Math.pow(r.y - targetY, 2)
-                            );
-                            return distance > fogRadius;
-                          }));
-                          setLog((l) => [{ 
-                            id: uid("log"), 
-                            ts: now(), 
-                            text: `ДМ скрыл туман в ячейке (${col}, ${row}) -> пиксели (${targetX}, ${targetY})` 
-                          }, ...l]);
-                          
-                          // Сохраняем скрытую ячейку в БД
-                          if (sessionId && isDM) {
-                            try {
-                              const { error } = await supabase
-                                .from('fog_of_war')
-                                .upsert({
-                                  session_id: sessionId,
-                                  map_id: 'main-map',
-                                  grid_x: col,
-                                  grid_y: row,
-                                  is_revealed: false,
-                                  updated_at: new Date().toISOString()
-                                }, {
-                                  onConflict: 'session_id,map_id,grid_x,grid_y'
-                                });
-                              
-                              if (error) {
-                                console.error('❌ Error hiding fog cell:', error);
-                              } else {
-                                console.log(`✅ Hid fog cell (${col}, ${row}) in DB`);
-                              }
-                            } catch (err) {
-                              console.error('❌ Exception hiding fog cell:', err);
+                      revealedCells={fogMap ? (() => {
+                        const revealed: { [key: string]: boolean } = {};
+                        for (let y = 0; y < fogSize.h; y++) {
+                          for (let x = 0; x < fogSize.w; x++) {
+                            const idx = y * fogSize.w + x;
+                            if (fogMap[idx] === 1) {
+                              revealed[`${y}-${x}`] = true;
                             }
                           }
                         }
+                        return revealed;
+                      })() : {}}
+                      onRevealCell={async (row: number, col: number) => {
+                        if (!isDM) return; // Только DM может открывать туман
+                        
+                        const mode = vttTool === 'fog-reveal' ? 'reveal' : 'hide';
+                        const isRevealing = mode === 'reveal';
+                        
+                        // Обновляем в Supabase
+                        try {
+                          await supabase
+                            .from('fog_of_war')
+                            .upsert({
+                              session_id: sessionId,
+                              map_id: mapId,
+                              grid_x: col,
+                              grid_y: row,
+                              is_revealed: isRevealing
+                            }, {
+                              onConflict: 'session_id,map_id,grid_x,grid_y'
+                            });
+                          
+                          console.log(`✅ Fog cell updated: (${col}, ${row}) = ${isRevealing ? 'revealed' : 'hidden'}`);
+                        } catch (error) {
+                          console.error('❌ Error updating fog cell:', error);
+                        }
                       }}
+                      active={vttTool === 'fog-reveal' || vttTool === 'fog-hide'}
+                      isDM={isDM}
+                      imageSize={{ width: currentMapSize.width, height: currentMapSize.height }}
+                      showFullFogForPlayers={!isDM && mapImage !== null}
                       tokenPositions={tokens.map(t => ({
                         id: parseInt(t.id.replace(/\D/g, '') || '0'),
                         x: t.position?.x || 0,
