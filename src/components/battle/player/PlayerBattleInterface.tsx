@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { PlayerProfile } from './PlayerProfile';
 import { PlayerActionsPanel } from './PlayerActionsPanel';
 import { PlayerTokensList } from './PlayerTokensList';
@@ -30,6 +30,12 @@ export const PlayerBattleInterface: React.FC<PlayerBattleInterfaceProps> = ({
   
   // Синхронизация тумана войны для игрока
   useFogSync(sessionId, 'main-map');
+  
+  // Логируем для отладки
+  useEffect(() => {
+    console.log('🎮 [PLAYER] Session ID:', sessionId);
+    console.log('🎮 [PLAYER] User ID:', user?.id);
+  }, [sessionId, user]);
 
   // Найти токен игрока
   const playerToken = tokens.find(t => t.owner_id === user?.id && !t.is_summoned);

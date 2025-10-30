@@ -8,6 +8,11 @@ import { useFogStore } from '@/stores/fogStore';
  */
 export function useFogSync(sessionId: string, mapId: string = 'main-map') {
   useEffect(() => {
+    if (!sessionId || sessionId === 'default-session' || sessionId === 'current-session') {
+      console.warn('⚠️ Invalid sessionId for fog sync:', sessionId);
+      return;
+    }
+    
     console.log(`🌫️ Initializing fog sync for session ${sessionId}, map ${mapId}`);
     
     // Загружаем начальное состояние тумана войны
