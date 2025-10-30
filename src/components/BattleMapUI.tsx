@@ -1127,11 +1127,11 @@ export default function BattleMapUI({ sessionId }: { sessionId?: string }) {
                           console.error('❌ Error updating fog cell:', error);
                         }
                       }}
-                      active={vttTool === 'fog-reveal' || vttTool === 'fog-hide'}
-                      isDM={isDM}
-                      imageSize={{ width: currentMapSize.width, height: currentMapSize.height }}
-                      showFullFogForPlayers={!isDM && mapImage !== null}
-                      tokenPositions={tokens.map(t => ({
+                       active={vttTool === 'fog-reveal' || vttTool === 'fog-hide'}
+                       isDM={isDM}
+                       imageSize={{ width: currentMapSize.width, height: currentMapSize.height }}
+                       showFullFogForPlayers={false}
+                       tokenPositions={tokens.map(t => ({
                         id: parseInt(t.id.replace(/\D/g, '') || '0'),
                         x: t.position?.x || 0,
                         y: t.position?.y || 0,
