@@ -1,5 +1,6 @@
 // Система рисования тумана
 import * as THREE from 'three';
+import { supabase } from '@/integrations/supabase/client';
 
 export interface FogPaintConfig {
   brushSize: number;
@@ -7,6 +8,8 @@ export interface FogPaintConfig {
   textureSize: number;
   mapWidth: number;
   mapHeight: number;
+  sessionId?: string;
+  mapId?: string;
 }
 
 export class FogPaintSystem {
@@ -47,7 +50,7 @@ export class FogPaintSystem {
   paint(worldX: number, worldZ: number, mode?: 'reveal' | 'hide') {
     if (!this.texture) return;
 
-    const { textureSize, mapWidth, mapHeight, brushSize } = this.config;
+    const { textureSize, mapWidth, mapHeight, brushSize, sessionId, mapId } = this.config;
     const actualMode = mode || this.config.paintMode;
     
     const data = this.texture.image.data as Uint8Array;
@@ -60,6 +63,7 @@ export class FogPaintSystem {
     const brushRadius = Math.max(1, brushSize * 8);
     
     let changed = false;
+    const changedCells = new Set<string>();
     
     for (let dy = -brushRadius; dy <= brushRadius; dy++) {
       for (let dx = -brushRadius; dx <= brushRadius; dx++) {
@@ -79,6 +83,11 @@ export class FogPaintSystem {
                 data[index + 2] = 255; // B - белый при открытии
                 data[index + 3] = 0;   // A - полностью прозрачно
                 changed = true;
+                
+                // Преобразуем обратно в grid координаты для БД
+                const gridX = Math.floor((x / textureSize) * 30); // 30x30 grid
+                const gridY = Math.floor((y / textureSize) * 30);
+                changedCells.add(`${gridX},${gridY},true`);
               }
             } else {
               // Добавляем туман
@@ -88,6 +97,11 @@ export class FogPaintSystem {
                 data[index + 2] = 50;  // B - темно-серый
                 data[index + 3] = 120; // A - умеренный туман
                 changed = true;
+                
+                // Преобразуем обратно в grid координаты для БД
+                const gridX = Math.floor((x / textureSize) * 30); // 30x30 grid
+                const gridY = Math.floor((y / textureSize) * 30);
+                changedCells.add(`${gridX},${gridY},false`);
               }
             }
           }
@@ -97,6 +111,40 @@ export class FogPaintSystem {
     
     if (changed) {
       this.texture.needsUpdate = true;
+      
+      // Синхронизируем с БД
+      if (sessionId && mapId && changedCells.size > 0) {
+        this.syncToDatabase(sessionId, mapId, changedCells);
+      }
+    }
+  }
+
+  private async syncToDatabase(sessionId: string, mapId: string, changedCells: Set<string>) {
+    try {
+      const updates = Array.from(changedCells).map(cell => {
+        const [gridX, gridY, isRevealed] = cell.split(',');
+        return {
+          session_id: sessionId,
+          map_id: mapId,
+          grid_x: parseInt(gridX),
+          grid_y: parseInt(gridY),
+          is_revealed: isRevealed === 'true'
+        };
+      });
+
+      const { error } = await supabase
+        .from('fog_of_war')
+        .upsert(updates, {
+          onConflict: 'session_id,map_id,grid_x,grid_y'
+        });
+
+      if (error) {
+        console.error('❌ Error syncing fog to database:', error);
+      } else {
+        console.log(`🌫️ Synced ${updates.length} fog cells to database`);
+      }
+    } catch (error) {
+      console.error('❌ Exception syncing fog to database:', error);
     }
   }
 

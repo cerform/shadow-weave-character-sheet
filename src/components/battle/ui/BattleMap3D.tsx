@@ -242,6 +242,8 @@ export default function BattleMap3D({
           <FogInteractionSystem 
             paintMode={uiPaintMode}
             brushSize={uiBrushSize}
+            sessionId={sessionId}
+            mapId={mapId}
           />
         </Canvas>
       </div>

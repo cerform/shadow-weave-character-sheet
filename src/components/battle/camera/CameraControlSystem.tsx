@@ -50,7 +50,10 @@ export const CameraControlSystem: React.FC = () => {
       enableRotate={true}
       minDistance={5}
       maxDistance={50}
+      maxPolarAngle={Math.PI / 2} // Ограничиваем поворот, чтобы камера не уходила под карту
       target={[0, 0, 0]}
+      zoomSpeed={1.5} // Увеличиваем скорость зума
+      panSpeed={1.2} // Увеличиваем скорость панорамирования
     />
   );
 };

@@ -9,11 +9,15 @@ import { interactionManager, InteractionMode } from '@/systems/interaction/Inter
 interface FogInteractionSystemProps {
   brushSize: number;
   paintMode: 'reveal' | 'hide';
+  sessionId?: string;
+  mapId?: string;
 }
 
 export const FogInteractionSystem: React.FC<FogInteractionSystemProps> = ({ 
   brushSize, 
-  paintMode 
+  paintMode,
+  sessionId = 'default-session',
+  mapId = 'main-map'
 }) => {
   const { scene, camera, gl } = useThree();
   const fogPaintSystemRef = useRef<FogPaintSystem | null>(null);
@@ -34,7 +38,9 @@ export const FogInteractionSystem: React.FC<FogInteractionSystemProps> = ({
       paintMode,
       textureSize: TEXTURE_SIZE,
       mapWidth: MAP_WIDTH,
-      mapHeight: MAP_HEIGHT
+      mapHeight: MAP_HEIGHT,
+      sessionId,
+      mapId
     });
 
     fogPaintSystemRef.current = fogPaintSystem;
