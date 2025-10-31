@@ -64,8 +64,8 @@ export const PlayerBattleInterface: React.FC<PlayerBattleInterfaceProps> = ({
     <div className="h-screen flex bg-background">
       {/* Основной контент - full height */}
       <div className="flex-1 flex overflow-hidden">
-        {/* Левая панель - профиль и группа */}
-        <div className="w-80 border-r border-border flex flex-col">
+        {/* Левая панель - профиль и группа - скрыта на мобильных */}
+        <div className="hidden lg:flex w-80 border-r border-border flex-col">
           <ScrollArea className="flex-1 p-4">
             <div className="space-y-4">
               {/* Профиль игрока */}
@@ -133,6 +133,7 @@ export const PlayerBattleInterface: React.FC<PlayerBattleInterfaceProps> = ({
 
         {/* Центр - карта */}
         <div className="flex-1 flex flex-col">
+          {/* Карта - занимает весь экран на мобильных */}
           <div className="flex-1 relative">
             <BattleMap2DPlayer
               sessionId={sessionId}
@@ -141,8 +142,8 @@ export const PlayerBattleInterface: React.FC<PlayerBattleInterfaceProps> = ({
             />
           </div>
 
-          {/* Нижняя панель - действия */}
-          <div className="border-t border-border flex-shrink-0">
+          {/* Нижняя панель - действия - скрыта на мобильных */}
+          <div className="hidden lg:block border-t border-border flex-shrink-0">
             <PlayerActionsPanel
               token={playerToken}
               sessionId={sessionId}
@@ -152,8 +153,8 @@ export const PlayerBattleInterface: React.FC<PlayerBattleInterfaceProps> = ({
           </div>
         </div>
 
-        {/* Правая панель - комбинированная */}
-        <div className="w-80 border-l border-border flex flex-col">
+        {/* Правая панель - комбинированная - скрыта на мобильных */}
+        <div className="hidden lg:flex w-80 border-l border-border flex-col">
           {/* Видеочат */}
           {showVideoChat && (
             <div className="h-64 border-b border-border flex-shrink-0">
@@ -172,6 +173,16 @@ export const PlayerBattleInterface: React.FC<PlayerBattleInterfaceProps> = ({
             </div>
           )}
         </div>
+      </div>
+
+      {/* Мобильная нижняя панель действий */}
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-background border-t border-border z-50">
+        <PlayerActionsPanel
+          token={playerToken}
+          sessionId={sessionId}
+          onAction={handleAction}
+          onSummon={addToken}
+        />
       </div>
     </div>
   );
