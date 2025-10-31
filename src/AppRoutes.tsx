@@ -119,6 +119,21 @@ const ProtectedPlayerRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
+// Компонент для защиты маршрутов, требующих только аутентификацию
+const ProtectedAuthRoute = ({ children }: { children: React.ReactNode }) => {
+  const { loading, isAuthenticated } = useProtectedRoute();
+  
+  if (loading) {
+    return <LazyLoading />;
+  }
+  
+  if (!isAuthenticated) {
+    return <Navigate to="/auth" replace />;
+  }
+  
+  return <>{children}</>;
+};
+
 // Компонент для маршрутизации на основе роли
 const RoleBasedRedirect = () => {
   const { loading, isDM, isPlayer } = useProtectedRoute();
@@ -232,9 +247,9 @@ const AppRoutes: React.FC = () => {
       } />
       
       <Route path="/player-session/:sessionId" element={
-        <ProtectedPlayerRoute>
+        <ProtectedAuthRoute>
           <PlayerBattleMapPage />
-        </ProtectedPlayerRoute>
+        </ProtectedAuthRoute>
       } />
 
       {/* Админские маршруты */}
