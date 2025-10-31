@@ -5,13 +5,15 @@ import { PlayerTokensList } from './PlayerTokensList';
 import { VideoChatMini } from './VideoChatMini';
 import { CombatLogMini } from './CombatLogMini';
 import BattleMap2DPlayer from '../BattleMap2DPlayer';
+import { PlayerBattleInterfaceMobile } from './PlayerBattleInterfaceMobile';
 import { EnhancedToken, useEnhancedBattleStore } from '@/stores/enhancedBattleStore';
 import { useAuth } from '@/hooks/use-auth';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Video, VideoOff, Users, Eye, EyeOff } from 'lucide-react';
+import { Video, VideoOff, Users, Eye, EyeOff, Smartphone, Monitor } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useFogSync } from '@/hooks/useFogSync';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface PlayerBattleInterfaceProps {
   sessionId: string;
@@ -27,6 +29,11 @@ export const PlayerBattleInterface: React.FC<PlayerBattleInterfaceProps> = ({
   const [showVideoChat, setShowVideoChat] = useState(true);
   const [showTokensList, setShowTokensList] = useState(true);
   const [showCombatLog, setShowCombatLog] = useState(true);
+  const isMobileDevice = useIsMobile();
+  const [forceMobileMode, setForceMobileMode] = useState(false);
+  
+  // Определяем, использовать ли мобильный режим
+  const useMobileMode = forceMobileMode || isMobileDevice;
   
   // Синхронизация тумана войны для игрока
   // Всегда используем main-map для текущей активной карты сессии
@@ -60,8 +67,44 @@ export const PlayerBattleInterface: React.FC<PlayerBattleInterfaceProps> = ({
     // Здесь можно добавить логику отправки действий DM
   };
 
+  // Если мобильный режим, используем специальный мобильный интерфейс
+  if (useMobileMode) {
+    return (
+      <>
+        {/* Кнопка переключения режима */}
+        <div className="fixed top-4 right-4 z-50">
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => setForceMobileMode(!forceMobileMode)}
+            className="bg-background/95 backdrop-blur-sm"
+          >
+            {forceMobileMode ? <Monitor className="h-4 w-4" /> : <Smartphone className="h-4 w-4" />}
+          </Button>
+        </div>
+        
+        <PlayerBattleInterfaceMobile
+          sessionId={sessionId}
+          sessionCode={sessionCode}
+        />
+      </>
+    );
+  }
+
   return (
-    <div className="h-screen flex bg-background">
+    <div className="h-screen flex bg-background relative">
+      {/* Кнопка переключения режима для десктопа */}
+      <div className="fixed top-4 right-4 z-50">
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={() => setForceMobileMode(!forceMobileMode)}
+          className="bg-background/95 backdrop-blur-sm"
+        >
+          <Smartphone className="h-4 w-4" />
+        </Button>
+      </div>
+
       {/* Основной контент - full height */}
       <div className="flex-1 flex overflow-hidden">
         {/* Левая панель - профиль и группа - скрыта на мобильных */}
