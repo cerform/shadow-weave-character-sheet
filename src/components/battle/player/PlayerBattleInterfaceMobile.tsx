@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { PlayerProfile } from './PlayerProfile';
 import { PlayerActionsPanel } from './PlayerActionsPanel';
 import { PlayerTokensList } from './PlayerTokensList';
@@ -8,7 +9,7 @@ import { EnhancedToken, useEnhancedBattleStore } from '@/stores/enhancedBattleSt
 import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-import { Menu, Users, User, Scroll, X, ChevronUp } from 'lucide-react';
+import { Menu, Users, User, Scroll, X, ChevronUp, Home } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
@@ -21,6 +22,7 @@ export const PlayerBattleInterfaceMobile: React.FC<PlayerBattleInterfaceMobilePr
   sessionId,
   sessionCode
 }) => {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const { tokens, mapImageUrl, addToken, updateToken, combatLog } = useEnhancedBattleStore();
   const [showBottomPanel, setShowBottomPanel] = useState(false);
@@ -45,12 +47,21 @@ export const PlayerBattleInterfaceMobile: React.FC<PlayerBattleInterfaceMobilePr
     <div className="h-screen flex flex-col bg-background relative">
       {/* Верхняя панель с меню */}
       <div className="flex items-center justify-between p-2 bg-background/95 backdrop-blur-sm border-b border-border z-50">
-        <Sheet>
-          <SheetTrigger asChild>
-            <Button variant="ghost" size="icon">
-              <Menu className="h-5 w-5" />
-            </Button>
-          </SheetTrigger>
+        <div className="flex items-center gap-2">
+          <Button 
+            variant="ghost" 
+            size="icon"
+            onClick={() => navigate('/')}
+          >
+            <Home className="h-5 w-5" />
+          </Button>
+          
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button variant="ghost" size="icon">
+                <Menu className="h-5 w-5" />
+              </Button>
+            </SheetTrigger>
           <SheetContent side="left" className="w-80 p-0">
             <SheetHeader className="p-4 border-b">
               <SheetTitle>Профиль и группа</SheetTitle>
@@ -81,7 +92,8 @@ export const PlayerBattleInterfaceMobile: React.FC<PlayerBattleInterfaceMobilePr
               </div>
             </ScrollArea>
           </SheetContent>
-        </Sheet>
+          </Sheet>
+        </div>
 
         <div className="flex items-center gap-2">
           {playerToken && (
