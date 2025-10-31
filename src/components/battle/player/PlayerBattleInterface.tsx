@@ -74,12 +74,13 @@ export const PlayerBattleInterface: React.FC<PlayerBattleInterfaceProps> = ({
         {/* Кнопка переключения режима */}
         <div className="fixed top-4 right-4 z-50">
           <Button
-            variant="outline"
-            size="icon"
+            variant="default"
+            size="sm"
             onClick={() => setForceMobileMode(!forceMobileMode)}
-            className="bg-background/95 backdrop-blur-sm"
+            className="bg-primary/90 backdrop-blur-sm shadow-lg gap-2"
           >
-            {forceMobileMode ? <Monitor className="h-4 w-4" /> : <Smartphone className="h-4 w-4" />}
+            <Monitor className="h-4 w-4" />
+            Веб-версия
           </Button>
         </div>
         
@@ -97,11 +98,12 @@ export const PlayerBattleInterface: React.FC<PlayerBattleInterfaceProps> = ({
       <div className="fixed top-4 right-4 z-50">
         <Button
           variant="outline"
-          size="icon"
+          size="sm"
           onClick={() => setForceMobileMode(!forceMobileMode)}
-          className="bg-background/95 backdrop-blur-sm"
+          className="bg-background/95 backdrop-blur-sm shadow-lg gap-2"
         >
           <Smartphone className="h-4 w-4" />
+          Мобильная версия
         </Button>
       </div>
 
