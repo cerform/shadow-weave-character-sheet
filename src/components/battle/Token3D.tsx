@@ -234,8 +234,8 @@ const Token3D: React.FC<Token3DProps> = ({
 
   // HP бар над токеном
   const HPBar = () => {
-    if (!token.hp || !token.maxHp) return null;
-    
+    if (token.hp === undefined || token.maxHp === undefined) return null;
+
     const hpPercentage = token.hp / token.maxHp;
     const barWidth = (token.size || 50) * 0.02;
     const barHeight = 0.1;
