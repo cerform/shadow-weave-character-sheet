@@ -21,6 +21,12 @@ verify_jwt = false
 [functions.auth-google-callback]
 verify_jwt = false
 
+[functions.debug-error]
+verify_jwt = true
+
+[functions.auto-fix-error]
+verify_jwt = true
+
 [db]
 port = 54322
 

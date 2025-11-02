@@ -32,6 +32,8 @@ const ErrorLogsPage: React.FC = () => {
   const [stats, setStats] = useState<any>(null);
   const [aiAnalysis, setAiAnalysis] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [autoFixSuggestion, setAutoFixSuggestion] = useState<any>(null);
+  const [isAutoFixing, setIsAutoFixing] = useState(false);
 
   useEffect(() => {
     if (!loading && !isAdmin) {
@@ -169,6 +171,30 @@ const ErrorLogsPage: React.FC = () => {
       });
     } finally {
       setIsAnalyzing(false);
+    }
+  };
+
+  const handleAutoFix = async (errorLogId: string) => {
+    setIsAutoFixing(true);
+    setAutoFixSuggestion(null);
+    try {
+      const fix = await ErrorDebugService.getAutoFixSuggestion(errorLogId);
+      setAutoFixSuggestion(fix);
+      toast({
+        title: fix.canAutoFix ? '✅ Решение найдено!' : 'Рекомендации готовы',
+        description: fix.canAutoFix 
+          ? 'Предложено автоматическое исправление' 
+          : 'Получены рекомендации по исправлению',
+      });
+    } catch (error) {
+      console.error('Ошибка автоисправления:', error);
+      toast({
+        title: 'Ошибка',
+        description: 'Не удалось получить предложение по исправлению',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsAutoFixing(false);
     }
   };
 
@@ -466,6 +492,7 @@ const ErrorLogsPage: React.FC = () => {
       <Dialog open={!!selectedLog} onOpenChange={() => {
         setSelectedLog(null);
         setAiAnalysis(null);
+        setAutoFixSuggestion(null);
       }}>
         <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
@@ -543,53 +570,122 @@ const ErrorLogsPage: React.FC = () => {
               )}
 
               {/* AI Debug Section */}
-              <div className="border-t pt-4">
-                <h4 className="font-medium flex items-center gap-2 mb-3">
-                  <Sparkles className="h-4 w-4 text-primary" />
-                  AI Дебаггер
-                </h4>
-                
-                <Button
-                  className="w-full mb-3"
-                  onClick={() => handleAiDebug(selectedLog)}
-                  disabled={isAnalyzing}
-                  variant="default"
-                >
-                  {isAnalyzing ? (
-                    <>
-                      <div className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full mr-2" />
-                      Анализ...
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles className="h-4 w-4 mr-2" />
-                      Анализировать с AI
-                    </>
-                  )}
-                </Button>
-                
-                {aiAnalysis && (
-                  <div className="bg-secondary/50 border border-primary/20 rounded-lg p-4">
-                    <pre className="text-sm whitespace-pre-wrap font-sans">
-                      {aiAnalysis}
-                    </pre>
+              <div className="border-t pt-4 space-y-4">
+                <div>
+                  <h4 className="font-medium flex items-center gap-2 mb-3">
+                    <Sparkles className="h-4 w-4 text-primary" />
+                    AI Дебаггер
+                  </h4>
+                  
+                  <div className="flex gap-2 mb-3">
+                    <Button
+                      className="flex-1"
+                      onClick={() => handleAiDebug(selectedLog)}
+                      disabled={isAnalyzing}
+                      variant="default"
+                    >
+                      {isAnalyzing ? (
+                        <>
+                          <div className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full mr-2" />
+                          Анализ...
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="h-4 w-4 mr-2" />
+                          Анализировать
+                        </>
+                      )}
+                    </Button>
+                    
+                    <Button
+                      className="flex-1"
+                      onClick={() => handleAutoFix(selectedLog.id)}
+                      disabled={isAutoFixing}
+                      variant="secondary"
+                    >
+                      {isAutoFixing ? (
+                        <>
+                          <div className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full mr-2" />
+                          Исправление...
+                        </>
+                      ) : (
+                        <>
+                          🔧 Автоисправление
+                        </>
+                      )}
+                    </Button>
                   </div>
-                )}
-                
-                {!aiAnalysis && !isAnalyzing && (
-                  <p className="text-sm text-muted-foreground">
-                    Нажмите кнопку "Анализировать с AI" для получения рекомендаций по исправлению ошибки
-                  </p>
-                )}
+                  
+                  {aiAnalysis && (
+                    <div className="bg-secondary/50 border border-primary/20 rounded-lg p-4 mb-3">
+                      <div className="text-xs font-semibold text-primary mb-2">📋 Анализ:</div>
+                      <pre className="text-sm whitespace-pre-wrap font-sans">
+                        {aiAnalysis}
+                      </pre>
+                    </div>
+                  )}
+                  
+                  {autoFixSuggestion && (
+                    <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-4">
+                      <div className="flex items-center gap-2 mb-3">
+                        <div className="text-xs font-semibold text-green-600">
+                          {autoFixSuggestion.canAutoFix ? '✅ Решение найдено' : '💡 Рекомендации'}
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-3">
+                        {autoFixSuggestion.fixSteps && autoFixSuggestion.fixSteps.length > 0 && (
+                          <div>
+                            <div className="text-xs font-semibold mb-1">Шаги исправления:</div>
+                            <ol className="text-sm space-y-1 list-decimal list-inside">
+                              {autoFixSuggestion.fixSteps.map((step: string, i: number) => (
+                                <li key={i}>{step}</li>
+                              ))}
+                            </ol>
+                          </div>
+                        )}
+                        
+                        {autoFixSuggestion.codeChanges && autoFixSuggestion.codeChanges.length > 0 && (
+                          <div>
+                            <div className="text-xs font-semibold mb-1">Изменения в коде:</div>
+                            {autoFixSuggestion.codeChanges.map((change: any, i: number) => (
+                              <div key={i} className="bg-secondary/50 rounded p-2 mb-2">
+                                <div className="text-xs font-mono text-primary">{change.file}</div>
+                                <div className="text-xs text-muted-foreground">{change.description}</div>
+                                <pre className="text-xs mt-1 bg-background/50 p-2 rounded overflow-x-auto">
+                                  {change.suggestion}
+                                </pre>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                        
+                        {autoFixSuggestion.prevention && (
+                          <div>
+                            <div className="text-xs font-semibold mb-1">Профилактика:</div>
+                            <p className="text-sm text-muted-foreground">{autoFixSuggestion.prevention}</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {!aiAnalysis && !isAnalyzing && !autoFixSuggestion && !isAutoFixing && (
+                    <p className="text-sm text-muted-foreground">
+                      Используйте "Анализировать" для детального анализа или "Автоисправление" для получения конкретного решения
+                    </p>
+                  )}
+                </div>
               </div>
 
               <div className="flex gap-2 pt-4 border-t">
                 {!selectedLog.resolved && (
                   <Button
                     onClick={() => {
-                      handleMarkAsResolved(selectedLog.id);
+                    handleMarkAsResolved(selectedLog.id);
                       setSelectedLog(null);
                       setAiAnalysis(null);
+                      setAutoFixSuggestion(null);
                     }}
                   >
                     <CheckCircle className="h-4 w-4 mr-2" />
@@ -602,6 +698,7 @@ const ErrorLogsPage: React.FC = () => {
                     handleDelete(selectedLog.id);
                     setSelectedLog(null);
                     setAiAnalysis(null);
+                    setAutoFixSuggestion(null);
                   }}
                 >
                   <Trash2 className="h-4 w-4 mr-2" />

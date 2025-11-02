@@ -210,7 +210,7 @@ export class ErrorLogsService {
   }
 
   /**
-   * Логировать ошибку фронтенда
+   * Логировать ошибку фронтенда (работает для всех пользователей, включая неавторизованных)
    */
   static async logFrontendError(
     error: Error,
@@ -218,20 +218,43 @@ export class ErrorLogsService {
     metadata?: Record<string, any>
   ): Promise<void> {
     try {
-      await this.createErrorLog({
-        category: 'frontend',
-        severity,
-        message: error.message,
-        stack_trace: error.stack,
-        url: window.location.href,
-        user_agent: navigator.userAgent,
-        metadata: {
-          ...metadata,
-          timestamp: new Date().toISOString(),
-        },
-      });
+      // Получаем пользователя, но не требуем авторизации
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      // Генерируем или получаем session_id для неавторизованных пользователей
+      let sessionId = window.sessionStorage.getItem('anonymous_session_id');
+      if (!sessionId) {
+        sessionId = `anon_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        window.sessionStorage.setItem('anonymous_session_id', sessionId);
+      }
+
+      const { error: insertError } = await supabase
+        .from('error_logs')
+        .insert({
+          category: 'frontend',
+          severity,
+          message: error.message,
+          stack_trace: error.stack || null,
+          url: window.location.href,
+          user_agent: navigator.userAgent,
+          user_id: user?.id || null,
+          user_email: user?.email || null,
+          metadata: {
+            ...metadata,
+            sessionId: user?.id || sessionId,
+            isAuthenticated: !!user,
+            timestamp: new Date().toISOString(),
+          },
+        });
+
+      if (insertError) {
+        console.error('❌ Ошибка логирования:', insertError);
+      } else {
+        console.log('✅ Ошибка залогирована:', error.message);
+      }
     } catch (e) {
       console.error('❌ Не удалось залогировать ошибку:', e);
+      // Не выбрасываем ошибку, чтобы не создать бесконечный цикл
     }
   }
 }
