@@ -11,22 +11,15 @@ export interface UserRole {
 }
 
 export class UserRolesService {
-  // Получить роли текущего пользователя
-  static async getCurrentUserRoles(): Promise<AppRole[]> {
+  // Получить роли пользователя по userId
+  static async getUserRoles(userId: string): Promise<AppRole[]> {
     try {
-      console.log('🔍 UserRolesService: получаем текущего пользователя');
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        console.log('❌ UserRolesService: пользователь не найден');
-        return [];
-      }
-
-      console.log('✅ UserRolesService: пользователь найден:', user.id);
+      console.log('🔍 UserRolesService: получаем роли для пользователя:', userId);
 
       // Сначала пробуем безопасную функцию БД (SECURITY DEFINER)
       console.log('📡 UserRolesService: вызываем RPC get_user_roles');
       const { data: rpcRoles, error: rpcError } = await supabase
-        .rpc('get_user_roles', { _user_id: user.id });
+        .rpc('get_user_roles', { _user_id: userId });
 
       if (!rpcError && Array.isArray(rpcRoles)) {
         console.log('✅ UserRolesService: роли получены через RPC:', rpcRoles);
@@ -42,7 +35,7 @@ export class UserRolesService {
       const { data, error } = await supabase
         .from('user_roles')
         .select('role')
-        .eq('user_id', user.id);
+        .eq('user_id', userId);
 
       if (error) {
         console.error('❌ UserRolesService: ошибка получения ролей из таблицы:', error);
@@ -54,6 +47,20 @@ export class UserRolesService {
       return roles;
     } catch (error) {
       console.error('❌ UserRolesService: критическая ошибка:', error);
+      return [];
+    }
+  }
+
+  // Получить роли текущего пользователя
+  static async getCurrentUserRoles(): Promise<AppRole[]> {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        return [];
+      }
+      return this.getUserRoles(user.id);
+    } catch (error) {
+      console.error('❌ UserRolesService: ошибка получения текущего пользователя:', error);
       return [];
     }
   }

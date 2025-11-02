@@ -20,7 +20,8 @@ export const useProtectedRoute = () => {
         setRolesLoading(true);
         console.log('📋 Загружаем роли для пользователя:', user.id);
         try {
-          const roles = await UserRolesService.getCurrentUserRoles();
+          // Используем user.id напрямую вместо повторного getUser()
+          const roles = await UserRolesService.getUserRoles(user.id);
           console.log('✅ Загружены роли пользователя:', roles);
           setUserRoles(roles.length > 0 ? roles : ['player']); // Дефолтная роль если пусто
         } catch (error) {
@@ -43,7 +44,7 @@ export const useProtectedRoute = () => {
     };
 
     fetchUserRoles();
-  }, [isAuthenticated, user, loading]);
+  }, [isAuthenticated, user?.id, loading]);
 
   const isAdmin = userRoles.includes('admin');
   const isDM = userRoles.includes('dm') || isAdmin;
