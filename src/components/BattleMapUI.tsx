@@ -238,6 +238,23 @@ export default function BattleMapUI({ sessionId }: { sessionId?: string }) {
   // Навигация
   const navigate = useNavigate();
   
+  // Проверяем sessionId
+  if (!sessionId) {
+    console.error('❌ BattleMapUI: sessionId is undefined');
+    return (
+      <div className="h-screen w-screen flex items-center justify-center bg-background">
+        <div className="text-center">
+          <p className="text-muted-foreground">Некорректный ID сессии</p>
+          <Button onClick={() => navigate('/dm')} className="mt-4">
+            Вернуться к панели DM
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  console.log('✅ BattleMapUI: Инициализация с sessionId:', sessionId);
+  
   // Подключение к реальному бестиарию
   const { getAllMonsters, loadSupabaseMonsters, isLoadingSupabase } = useMonstersStore();
   
@@ -962,7 +979,7 @@ export default function BattleMapUI({ sessionId }: { sessionId?: string }) {
             <div className="border-b border-border">
               <VideoChat 
                 isDM={isDM}
-                sessionId="unified-battle-session"
+                sessionId={sessionId}
                 playerName={isDM ? "ДМ" : "Игрок"}
                 onClose={() => setVideoChatOpen(false)}
               />

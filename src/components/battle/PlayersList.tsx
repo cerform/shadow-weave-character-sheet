@@ -42,7 +42,7 @@ export const PlayersList: React.FC<PlayersListProps> = ({ sessionId, isDM = fals
         setPlayers(data.map(p => ({
           userId: p.user_id,
           userName: p.player_name || 'Игрок',
-          character: p.character_id || undefined,
+          character: typeof p.character_id === 'string' ? p.character_id : undefined,
           online: p.is_online || false,
           lastSeen: p.last_seen || new Date().toISOString()
         })));
@@ -116,7 +116,7 @@ export const PlayersList: React.FC<PlayersListProps> = ({ sessionId, isDM = fals
               setPlayers(data.map(p => ({
                 userId: p.user_id,
                 userName: p.player_name || 'Игрок',
-                character: p.character_id || undefined,
+                character: typeof p.character_id === 'string' ? p.character_id : undefined,
                 online: p.is_online || false,
                 lastSeen: p.last_seen || new Date().toISOString()
               })));
@@ -174,7 +174,7 @@ export const PlayersList: React.FC<PlayersListProps> = ({ sessionId, isDM = fals
                       </div>
                       {player.character && (
                         <div className="text-[10px] text-muted-foreground truncate">
-                          {player.character}
+                          {typeof player.character === 'string' ? player.character : 'Персонаж'}
                         </div>
                       )}
                     </div>
