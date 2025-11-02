@@ -652,6 +652,60 @@ export type Database = {
         }
         Relationships: []
       }
+      error_logs: {
+        Row: {
+          category: Database["public"]["Enums"]["error_category"]
+          created_at: string | null
+          id: string
+          message: string
+          metadata: Json | null
+          resolved: boolean | null
+          resolved_at: string | null
+          resolved_by: string | null
+          severity: Database["public"]["Enums"]["error_severity"]
+          stack_trace: string | null
+          updated_at: string | null
+          url: string | null
+          user_agent: string | null
+          user_email: string | null
+          user_id: string | null
+        }
+        Insert: {
+          category?: Database["public"]["Enums"]["error_category"]
+          created_at?: string | null
+          id?: string
+          message: string
+          metadata?: Json | null
+          resolved?: boolean | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: Database["public"]["Enums"]["error_severity"]
+          stack_trace?: string | null
+          updated_at?: string | null
+          url?: string | null
+          user_agent?: string | null
+          user_email?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          category?: Database["public"]["Enums"]["error_category"]
+          created_at?: string | null
+          id?: string
+          message?: string
+          metadata?: Json | null
+          resolved?: boolean | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: Database["public"]["Enums"]["error_severity"]
+          stack_trace?: string | null
+          updated_at?: string | null
+          url?: string | null
+          user_agent?: string | null
+          user_email?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       fog_of_war: {
         Row: {
           created_at: string
@@ -1345,6 +1399,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      cleanup_old_error_logs: { Args: never; Returns: number }
       clear_asset_categories: { Args: never; Returns: number }
       clear_assets: { Args: never; Returns: number }
       create_standard_categories: { Args: never; Returns: number }
@@ -1394,6 +1449,15 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "dm" | "player"
+      error_category:
+        | "frontend"
+        | "backend"
+        | "database"
+        | "auth"
+        | "api"
+        | "network"
+        | "other"
+      error_severity: "info" | "warning" | "error" | "critical"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1522,6 +1586,16 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "dm", "player"],
+      error_category: [
+        "frontend",
+        "backend",
+        "database",
+        "auth",
+        "api",
+        "network",
+        "other",
+      ],
+      error_severity: ["info", "warning", "error", "critical"],
     },
   },
 } as const

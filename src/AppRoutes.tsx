@@ -16,6 +16,7 @@ import CharacterSheetPage from '@/pages/CharacterSheetPage';
 import UnauthorizedPage from '@/pages/UnauthorizedPage';
 import DebugPage from '@/pages/DebugPage';
 import AdminPage from '@/pages/AdminPage';
+import ErrorLogsPage from '@/pages/admin/ErrorLogsPage';
 import CharactersListPage from '@/pages/CharactersListPage';
 import CharacterManagementPage from '@/pages/CharacterManagementPage';
 import DMDashboardPageNew from '@/pages/DMDashboardPageNew';
@@ -262,6 +263,11 @@ const AppRoutes: React.FC = () => {
       <Route path="/admin/assets" element={
         <ProtectedAdminRoute>
           <AdminAssetsPage />
+        </ProtectedAdminRoute>
+      } />
+      <Route path="/admin/error-logs" element={
+        <ProtectedAdminRoute>
+          <ErrorLogsPage />
         </ProtectedAdminRoute>
       } />
       

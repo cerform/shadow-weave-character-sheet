@@ -1,6 +1,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { AlertTriangle } from 'lucide-react';
+import { ErrorLogsService } from '@/services/ErrorLogsService';
 
 interface ErrorBoundaryProps {
   children: React.ReactNode;
@@ -25,6 +26,14 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     console.error('❌ Error Boundary caught error:', error);
     console.error('Error Info:', errorInfo);
+    
+    // Логируем ошибку в базу данных
+    ErrorLogsService.logFrontendError(error, 'error', {
+      componentStack: errorInfo.componentStack,
+      errorBoundary: true,
+    }).catch(err => {
+      console.error('❌ Не удалось залогировать ошибку в БД:', err);
+    });
   }
 
   render() {

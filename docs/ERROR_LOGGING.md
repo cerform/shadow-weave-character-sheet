@@ -1,0 +1,324 @@
+# Система логирования ошибок
+
+Система автоматического сбора и мониторинга ошибок с категоризацией и управлением через админ-панель.
+
+## Возможности
+
+- ✅ Автоматическое логирование ошибок React (через ErrorBoundary)
+- ✅ Автоматическое логирование глобальных ошибок и unhandled promises
+- ✅ Ручное логирование ошибок из любой части приложения
+- ✅ Категоризация по типам: Frontend, Backend, Database, Auth, API, Network
+- ✅ Уровни серьезности: Info, Warning, Error, Critical
+- ✅ Админ-панель для просмотра и управления логами
+- ✅ Фильтрация и поиск по логам
+- ✅ Автоматическая очистка старых логов (90+ дней)
+- ✅ Статистика по ошибкам
+
+## Доступ к логам
+
+Админская панель: `/admin/error-logs`
+
+Доступна только пользователям с ролью `admin`.
+
+## Автоматическое логирование
+
+### Frontend ошибки
+
+Все необработанные ошибки React автоматически логируются через `ErrorBoundary`:
+
+```tsx
+// Автоматически логируется
+throw new Error('Что-то пошло не так');
+```
+
+Глобальные ошибки и unhandled promises тоже логируются автоматически благодаря `useErrorLogger`:
+
+```tsx
+// Автоматически логируется
+window.addEventListener('error', ...);
+window.addEventListener('unhandledrejection', ...);
+```
+
+## Ручное логирование
+
+### Из Frontend кода
+
+```typescript
+import { ErrorLogsService } from '@/services/ErrorLogsService';
+
+// Простое логирование ошибки
+try {
+  // ... код
+} catch (error) {
+  await ErrorLogsService.logFrontendError(
+    error as Error,
+    'error', // severity: 'info' | 'warning' | 'error' | 'critical'
+    {
+      component: 'MyComponent',
+      action: 'handleSubmit',
+      userId: user?.id,
+    }
+  );
+}
+
+// Создание кастомного лога
+await ErrorLogsService.createErrorLog({
+  category: 'api',
+  severity: 'warning',
+  message: 'API rate limit exceeded',
+  url: window.location.href,
+  metadata: {
+    endpoint: '/api/users',
+    statusCode: 429,
+  },
+});
+```
+
+### Из Edge Functions
+
+```typescript
+import { createClient } from '@supabase/supabase-js';
+import { logBackendError, logApiError } from '../_shared/errorLogger.ts';
+
+const supabase = createClient(
+  Deno.env.get('SUPABASE_URL') ?? '',
+  Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+);
+
+// В edge function
+try {
+  // ... код
+} catch (error) {
+  await logBackendError(supabase, error, 'critical', {
+    function: 'my-edge-function',
+    requestId: crypto.randomUUID(),
+  });
+  
+  return new Response(
+    JSON.stringify({ error: 'Internal server error' }),
+    { status: 500 }
+  );
+}
+
+// Логирование ошибки внешнего API
+try {
+  const response = await fetch('https://api.example.com/data');
+  if (!response.ok) {
+    throw new Error(`API error: ${response.status}`);
+  }
+} catch (error) {
+  await logApiError(supabase, error, 'error', {
+    api: 'external-service',
+    endpoint: '/data',
+  });
+}
+```
+
+## Категории ошибок
+
+- **frontend** - Ошибки React компонентов, UI логики
+- **backend** - Ошибки edge functions, серверной логики
+- **database** - Ошибки работы с БД, RPC функций
+- **auth** - Ошибки аутентификации и авторизации
+- **api** - Ошибки внешних API
+- **network** - Сетевые ошибки, таймауты
+- **other** - Прочие ошибки
+
+## Уровни серьезности
+
+- **info** - Информационное сообщение
+- **warning** - Предупреждение, не критично
+- **error** - Ошибка, требует внимания
+- **critical** - Критическая ошибка, требует немедленного исправления
+
+## API ErrorLogsService
+
+### Получение логов
+
+```typescript
+// Все логи
+const logs = await ErrorLogsService.getErrorLogs();
+
+// С фильтрами
+const logs = await ErrorLogsService.getErrorLogs({
+  category: 'frontend',
+  severity: 'error',
+  resolved: false,
+  dateFrom: '2024-01-01',
+  search: 'timeout',
+});
+```
+
+### Статистика
+
+```typescript
+const stats = await ErrorLogsService.getErrorStats();
+// Returns:
+// {
+//   total: number,
+//   byCategory: { frontend: 10, backend: 5, ... },
+//   bySeverity: { error: 12, critical: 3, ... },
+//   resolved: number,
+//   unresolved: number,
+// }
+```
+
+### Управление логами
+
+```typescript
+// Пометить как исправленную
+await ErrorLogsService.markAsResolved(errorId);
+
+// Удалить лог
+await ErrorLogsService.deleteErrorLog(errorId);
+
+// Очистить старые логи
+const deletedCount = await ErrorLogsService.cleanupOldLogs();
+```
+
+## База данных
+
+### Таблица error_logs
+
+```sql
+CREATE TABLE error_logs (
+  id UUID PRIMARY KEY,
+  category error_category NOT NULL,
+  severity error_severity NOT NULL,
+  message TEXT NOT NULL,
+  stack_trace TEXT,
+  user_id UUID,
+  user_email TEXT,
+  url TEXT,
+  user_agent TEXT,
+  metadata JSONB,
+  resolved BOOLEAN DEFAULT false,
+  resolved_by UUID,
+  resolved_at TIMESTAMP,
+  created_at TIMESTAMP,
+  updated_at TIMESTAMP
+);
+```
+
+### RLS Политики
+
+- Читать могут только админы
+- Создавать могут все аутентифицированные пользователи
+- Обновлять и удалять могут только админы
+
+## Best Practices
+
+1. **Не логируйте чувствительные данные** (пароли, токены, личную информацию)
+2. **Добавляйте контекст** в metadata для упрощения отладки
+3. **Используйте правильные уровни серьезности**
+4. **Регулярно проверяйте логи** в админ-панели
+5. **Помечайте исправленные ошибки** как resolved
+6. **Периодически очищайте старые логи** для экономии места
+
+## Примеры использования
+
+### Логирование ошибки сети
+
+```typescript
+try {
+  const response = await fetch('/api/data');
+  const data = await response.json();
+} catch (error) {
+  await ErrorLogsService.createErrorLog({
+    category: 'network',
+    severity: 'warning',
+    message: 'Failed to fetch data',
+    url: window.location.href,
+    metadata: {
+      endpoint: '/api/data',
+      error: error.message,
+    },
+  });
+}
+```
+
+### Логирование ошибки БД
+
+```typescript
+try {
+  const { data, error } = await supabase
+    .from('users')
+    .select('*');
+    
+  if (error) throw error;
+} catch (error) {
+  await ErrorLogsService.createErrorLog({
+    category: 'database',
+    severity: 'error',
+    message: 'Database query failed',
+    metadata: {
+      table: 'users',
+      operation: 'select',
+      error: error.message,
+    },
+  });
+}
+```
+
+### Wrapper для безопасного выполнения
+
+```typescript
+async function safeExecute<T>(
+  fn: () => Promise<T>,
+  errorContext: string
+): Promise<T | null> {
+  try {
+    return await fn();
+  } catch (error) {
+    await ErrorLogsService.logFrontendError(
+      error as Error,
+      'error',
+      { context: errorContext }
+    );
+    return null;
+  }
+}
+
+// Использование
+const data = await safeExecute(
+  () => fetchUserData(userId),
+  'fetchUserData'
+);
+```
+
+## Мониторинг
+
+В админ-панели доступны:
+
+- 📊 Статистика по категориям и уровням серьезности
+- 🔍 Поиск и фильтрация логов
+- 📝 Детальный просмотр стека ошибок
+- ✅ Управление статусом (resolved/unresolved)
+- 🗑️ Удаление логов
+- 🧹 Массовая очистка старых логов
+
+## Troubleshooting
+
+### Логи не сохраняются
+
+1. Проверьте RLS политики в Supabase
+2. Убедитесь, что пользователь аутентифицирован
+3. Проверьте консоль на наличие ошибок
+
+### Нет доступа к админ-панели
+
+1. Убедитесь, что у пользователя роль `admin`
+2. Проверьте функцию `has_role` в БД
+
+### Слишком много логов
+
+1. Используйте фильтры для поиска нужных
+2. Помечайте исправленные ошибки как resolved
+3. Запустите очистку старых логов
+
+## Дополнительная информация
+
+- Логи автоматически удаляются через 90 дней (только resolved)
+- Для очистки вручную используйте кнопку "Очистить старые" в админке
+- Stack traces доступны для всех ошибок
+- Метаданные хранятся в формате JSONB для гибкости

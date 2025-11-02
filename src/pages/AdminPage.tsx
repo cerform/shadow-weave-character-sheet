@@ -136,7 +136,12 @@ const AdminPage: React.FC = () => {
             <Badge variant="destructive">Admin Only</Badge>
           </div>
           <div className="flex gap-2">
-            <Button variant="secondary" onClick={() => navigate('/admin/assets')}>Галерея ассетов</Button>
+            <Button variant="secondary" onClick={() => navigate('/admin/assets')}>
+              Галерея ассетов
+            </Button>
+            <Button variant="secondary" onClick={() => navigate('/admin/error-logs')}>
+              Логи ошибок
+            </Button>
           </div>
         </div>
 

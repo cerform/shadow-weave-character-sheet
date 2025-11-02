@@ -12,8 +12,12 @@ import DynamicFantasyBackground from '@/components/layout/DynamicFantasyBackgrou
 import FloatingActionWidget from '@/components/ui/FloatingActionWidget';
 import AppRoutes from '@/AppRoutes';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { useErrorLogger } from '@/hooks/useErrorLogger';
 
 function App() {
+  // Инициализируем глобальный обработчик ошибок
+  useErrorLogger();
+  
   return (
     <ErrorBoundary>
       <ThemeProvider>
