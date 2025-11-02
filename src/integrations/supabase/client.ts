@@ -59,7 +59,7 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
     persistSession: true,
     autoRefreshToken: true,
     detectSessionInUrl: true,
-    flowType: 'implicit', // Используем implicit flow для работы в iframe
+    flowType: 'pkce', // Используем PKCE flow для лучшей безопасности
     storageKey: 'sb-auth-token'
   }
 });
