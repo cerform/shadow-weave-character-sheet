@@ -55,34 +55,35 @@ const LazyLoading = () => (
 const ProtectedDMRoute = ({ children }: { children: React.ReactNode }) => {
   const { loading, canAccessDMDashboard, isAuthenticated, isDM, isAdmin, userRoles } = useProtectedRoute();
   
-  console.log('ProtectedDMRoute check:', { 
+  console.log('🔒 ProtectedDMRoute проверка:', { 
     loading, 
     canAccessDMDashboard, 
     isAuthenticated, 
     isDM,
     isAdmin,
-    userRoles 
+    userRoles,
+    timestamp: new Date().toISOString()
   });
   
   // Показываем загрузку пока идет проверка авторизации или ролей
   if (loading) {
-    console.log('ProtectedDMRoute: loading roles...');
+    console.log('⏳ ProtectedDMRoute: загрузка ролей...');
     return <LazyLoading />;
   }
   
   // Если не авторизован, редиректим на /auth
   if (!isAuthenticated) {
-    console.log('ProtectedDMRoute: not authenticated, redirecting to /auth');
+    console.log('❌ ProtectedDMRoute: не авторизован, редирект на /auth');
     return <Navigate to="/auth" replace />;
   }
   
   // Проверяем доступ: либо isDM, либо isAdmin, либо canAccessDMDashboard
   if (!isDM && !isAdmin && !canAccessDMDashboard) {
-    console.log('ProtectedDMRoute: no DM or admin access, redirecting to /unauthorized');
+    console.log('❌ ProtectedDMRoute: нет доступа DM/Admin, редирект на /unauthorized');
     return <Navigate to="/unauthorized" replace />;
   }
   
-  console.log('ProtectedDMRoute: access granted');
+  console.log('✅ ProtectedDMRoute: доступ разрешен');
   return <>{children}</>;
 };
 

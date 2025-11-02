@@ -14,24 +14,31 @@ export const useProtectedRoute = () => {
   
   useEffect(() => {
     const fetchUserRoles = async () => {
+      console.log('📋 fetchUserRoles: начало', { isAuthenticated, hasUser: !!user, loading, rolesFetched });
+      
       if (isAuthenticated && user) {
         setRolesLoading(true);
+        console.log('📋 Загружаем роли для пользователя:', user.id);
         try {
           const roles = await UserRolesService.getCurrentUserRoles();
-          setUserRoles(roles);
-          console.log('Загружены роли пользователя:', roles);
+          console.log('✅ Загружены роли пользователя:', roles);
+          setUserRoles(roles.length > 0 ? roles : ['player']); // Дефолтная роль если пусто
         } catch (error) {
-          console.error('Ошибка загрузки ролей:', error);
+          console.error('❌ Ошибка загрузки ролей:', error);
           setUserRoles(['player']); // Дефолтная роль при ошибке
         } finally {
           setRolesLoading(false);
           setRolesFetched(true);
+          console.log('✅ Загрузка ролей завершена');
         }
       } else if (!loading) {
         // Если не авторизован и загрузка auth завершена
+        console.log('👤 Пользователь не авторизован, устанавливаем пустые роли');
         setUserRoles([]);
         setRolesLoading(false);
         setRolesFetched(true);
+      } else {
+        console.log('⏳ Ожидание завершения загрузки auth...');
       }
     };
 

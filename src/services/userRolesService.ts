@@ -14,31 +14,46 @@ export class UserRolesService {
   // Получить роли текущего пользователя
   static async getCurrentUserRoles(): Promise<AppRole[]> {
     try {
+      console.log('🔍 UserRolesService: получаем текущего пользователя');
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return [];
+      if (!user) {
+        console.log('❌ UserRolesService: пользователь не найден');
+        return [];
+      }
+
+      console.log('✅ UserRolesService: пользователь найден:', user.id);
 
       // Сначала пробуем безопасную функцию БД (SECURITY DEFINER)
+      console.log('📡 UserRolesService: вызываем RPC get_user_roles');
       const { data: rpcRoles, error: rpcError } = await supabase
         .rpc('get_user_roles', { _user_id: user.id });
 
       if (!rpcError && Array.isArray(rpcRoles)) {
+        console.log('✅ UserRolesService: роли получены через RPC:', rpcRoles);
         return (rpcRoles as any[]).map((r) => r as AppRole);
       }
 
+      if (rpcError) {
+        console.warn('⚠️ UserRolesService: ошибка RPC, пробуем прямой запрос:', rpcError);
+      }
+
       // Фолбэк на прямое чтение таблицы (может быть заблокировано RLS)
+      console.log('📡 UserRolesService: прямой запрос к user_roles');
       const { data, error } = await supabase
         .from('user_roles')
         .select('role')
         .eq('user_id', user.id);
 
       if (error) {
-        console.error('Error fetching user roles:', error);
+        console.error('❌ UserRolesService: ошибка получения ролей из таблицы:', error);
         return [];
       }
 
-      return data?.map(item => item.role as AppRole) || [];
+      const roles = data?.map(item => item.role as AppRole) || [];
+      console.log('✅ UserRolesService: роли получены из таблицы:', roles);
+      return roles;
     } catch (error) {
-      console.error('Error in getCurrentUserRoles:', error);
+      console.error('❌ UserRolesService: критическая ошибка:', error);
       return [];
     }
   }
