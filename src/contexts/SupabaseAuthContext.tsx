@@ -84,55 +84,9 @@ interface AuthProviderProps {
   children: React.ReactNode;
 }
 
-// Fallback component that doesn't use hooks
-function FallbackAuthProvider({ children }: AuthProviderProps) {
-  const fallbackValue = {
-    user: null,
-    currentUser: null,
-    isAuthenticated: false,
-    loading: false,
-    login: async () => {},
-    register: async () => {},
-    logout: async () => {},
-    googleLogin: async () => {},
-    updateProfile: async () => {},
-  };
-
-  return (
-    <AuthContext.Provider value={fallbackValue}>
-      {children}
-    </AuthContext.Provider>
-  );
-}
-
-// Check if React hooks are available
-function isReactHooksAvailable() {
-  try {
-    // @ts-ignore - accessing internal React API
-    return React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED?.ReactCurrentDispatcher?.current !== null;
-  } catch {
-    return false;
-  }
-}
-
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  // If React hooks are not available, use fallback
-  if (!isReactHooksAvailable()) {
-    return <FallbackAuthProvider>{children}</FallbackAuthProvider>;
-  }
-
-  let user: ExtendedUser | null;
-  let setUser: (user: ExtendedUser | null) => void;
-  let loading: boolean;
-  let setLoading: (loading: boolean) => void;
-  
-  try {
-    [user, setUser] = useState<ExtendedUser | null>(null);
-    [loading, setLoading] = useState(true);
-  } catch (error) {
-    console.error('useState error in AuthProvider:', error);
-    return <FallbackAuthProvider>{children}</FallbackAuthProvider>;
-  }
+  const [user, setUser] = useState<ExtendedUser | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let mounted = true;

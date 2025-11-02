@@ -10,88 +10,24 @@ import { supabase } from '@/integrations/supabase/client';
 
 const AuthPage = () => {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
   const { user, isAuthenticated, loading } = useAuth();
-  const isCallback = searchParams.get('callback') === 'true';
-  const [redirectAttempted, setRedirectAttempted] = useState(false);
 
-  console.log('🔍 AuthPage: рендер с состоянием:', { user: !!user, isAuthenticated, loading, isCallback, redirectAttempted });
+  console.log('🔍 AuthPage: рендер', { user: !!user, isAuthenticated, loading });
 
-  // Объединенная логика редиректа для всех случаев
+  // Простой редирект после успешной авторизации
   useEffect(() => {
-    // Если уже пытались сделать редирект, не пытаемся снова
-    if (redirectAttempted) {
-      console.log('⏭️ AuthPage: редирект уже выполнен, пропуск');
+    // Ждем завершения загрузки
+    if (loading) {
+      console.log('⏳ AuthPage: загрузка...');
       return;
     }
 
-    // Условие для редиректа: пользователь авторизован и загрузка завершена
-    const shouldRedirect = isAuthenticated && user && !loading;
-
-    if (shouldRedirect && isCallback) {
-      console.log('🚀 AuthPage: подготовка к редиректу после OAuth', {
-        isAuthenticated,
-        hasUser: !!user,
-        loading,
-        isCallback
-      });
-      
-      setRedirectAttempted(true);
-      
-      // Проверяем localStorage напрямую в цикле до появления токенов
-      const checkAndRedirect = async () => {
-        let attempts = 0;
-        const maxAttempts = 15; // 15 попыток по 500мс = 7.5 секунд максимум
-        
-        while (attempts < maxAttempts) {
-          await new Promise(resolve => setTimeout(resolve, 500));
-          
-          // Проверяем напрямую localStorage
-          const storageKey = 'sb-auth-token';
-          let hasToken = false;
-          
-          try {
-            const stored = localStorage.getItem(storageKey);
-            if (stored) {
-              const parsed = JSON.parse(stored);
-              hasToken = !!(parsed?.access_token || parsed?.currentSession?.access_token);
-            }
-          } catch (e) {
-            console.warn('Ошибка проверки localStorage:', e);
-          }
-          
-          console.log(`🔍 Попытка ${attempts + 1}/${maxAttempts}: токен ${hasToken ? 'найден' : 'не найден'}`);
-          
-          if (hasToken) {
-            console.log('✅ Токен найден в localStorage, выполняем редирект');
-            navigate('/', { replace: true });
-            return;
-          }
-          
-          attempts++;
-        }
-        
-        // Если токен так и не появился, все равно редиректим
-        console.warn('⚠️ Токен не найден после всех попыток, редиректим принудительно');
-        navigate('/', { replace: true });
-      };
-      
-      checkAndRedirect();
-    } else if (shouldRedirect) {
-      // Обычный вход (не OAuth)
-      console.log('🚀 AuthPage: обычный редирект');
-      setRedirectAttempted(true);
-      setTimeout(() => {
-        navigate('/', { replace: true });
-      }, 300);
-    } else if (isCallback) {
-      console.log('⏳ AuthPage: OAuth callback в процессе, ожидание...', { 
-        isAuthenticated, 
-        user: !!user, 
-        loading 
-      });
+    // Если авторизован, редиректим на главную
+    if (isAuthenticated && user) {
+      console.log('✅ AuthPage: пользователь авторизован, редирект на главную');
+      navigate('/', { replace: true });
     }
-  }, [isAuthenticated, user, loading, isCallback, navigate, redirectAttempted]);
+  }, [isAuthenticated, user, loading, navigate]);
 
   // Показываем загрузку если пользователь авторизован
   if (loading) {
