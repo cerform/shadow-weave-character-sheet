@@ -69,7 +69,7 @@ export const useBattleTokensSync = (sessionId: string) => {
     };
 
     loadTokens();
-  }, [sessionId, setTokens]);
+  }, [sessionId]); // Убрали setTokens из зависимостей
 
   // Подписываемся на изменения в реальном времени
   useEffect(() => {
@@ -178,5 +178,5 @@ export const useBattleTokensSync = (sessionId: string) => {
       console.log('🔕 Отписка от изменений токенов');
       supabase.removeChannel(channel);
     };
-  }, [sessionId, addToken, updateToken, removeToken, toast]);
+  }, [sessionId]); // Убрали addToken, updateToken, removeToken, toast из зависимостей
 };

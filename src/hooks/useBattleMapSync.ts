@@ -95,7 +95,7 @@ export const useBattleMapSync = (sessionId: string, isDM: boolean) => {
       console.log('🔕 [PLAYER] Отписка от изменений карты');
       supabase.removeChannel(channel);
     };
-  }, [sessionId, isDM, setMapImageUrl, toast]);
+  }, [sessionId, isDM]); // Убрали setMapImageUrl и toast из зависимостей
 
   // ДЛЯ МАСТЕРА: управление картой происходит через useBattleSession + currentMap
   // Этот хук для мастера НЕ используется
