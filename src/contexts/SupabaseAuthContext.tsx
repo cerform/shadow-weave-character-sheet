@@ -136,45 +136,48 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   useEffect(() => {
     let mounted = true;
+    let sessionChecked = false;
     
-    // Подписываемся на изменения аутентификации
+    // Подписываемся на изменения аутентификации СНАЧАЛА
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
-        console.log('🔐 onAuthStateChange:', event, 'сессия:', !!session);
+        console.log('🔐 onAuthStateChange:', event, 'сессия:', !!session, 'user:', session?.user?.email);
         if (!mounted) return;
         
-        // Обрабатываем все события, включая INITIAL_SESSION
+        // Обрабатываем события
         if (event === 'SIGNED_OUT') {
           console.log('👋 Пользователь вышел');
           setUser(null);
-        } else if (session?.user) {
-          // SIGNED_IN, TOKEN_REFRESHED, INITIAL_SESSION - все устанавливают пользователя
-          const mappedUser = mapSupabaseUser(session.user);
-          console.log('✅ Установка пользователя:', mappedUser?.email);
-          setUser(mappedUser);
-        } else {
-          console.log('❌ Нет сессии');
-          setUser(null);
+          setLoading(false);
+        } else if (event === 'TOKEN_REFRESHED') {
+          console.log('🔄 Токен обновлен');
+          if (session?.user) {
+            const mappedUser = mapSupabaseUser(session.user);
+            setUser(mappedUser);
+          }
+        } else if (event === 'SIGNED_IN') {
+          console.log('✅ Пользователь вошел');
+          if (session?.user) {
+            const mappedUser = mapSupabaseUser(session.user);
+            setUser(mappedUser);
+          }
+          setLoading(false);
+        } else if (event === 'INITIAL_SESSION') {
+          console.log('🎯 Начальная сессия');
+          if (session?.user) {
+            const mappedUser = mapSupabaseUser(session.user);
+            setUser(mappedUser);
+          } else {
+            setUser(null);
+          }
+          // Только после INITIAL_SESSION считаем загрузку завершенной
+          if (!sessionChecked) {
+            setLoading(false);
+            sessionChecked = true;
+          }
         }
-        
-        setLoading(false);
       }
     );
-
-    // Получаем текущую сессию один раз при инициализации
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (mounted) {
-        if (session?.user) {
-          const mappedUser = mapSupabaseUser(session.user);
-          console.log('🎯 Начальная сессия:', mappedUser?.email);
-          setUser(mappedUser);
-        } else {
-          console.log('🎯 Начальная сессия отсутствует');
-          setUser(null);
-        }
-        setLoading(false);
-      }
-    });
 
     return () => {
       mounted = false;
