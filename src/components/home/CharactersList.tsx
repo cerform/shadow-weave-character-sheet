@@ -6,13 +6,14 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { UserPlus, User, Play, Trash2, RefreshCw } from 'lucide-react';
-import { useAuth } from '@/hooks/use-auth';
+import { useAuth, useProtectedRoute } from '@/hooks/use-auth';
 import { getUserCharacters } from '@/services/supabaseCharacterService';
 import { toast } from 'sonner';
 
 const CharactersList = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { isAdmin, isDM } = useProtectedRoute();
   const [characters, setCharacters] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -81,7 +82,7 @@ const CharactersList = () => {
                   {user.username || user.displayName || user.email || "Искатель приключений"}
                 </span>
                 <span className="text-xs text-muted-foreground">
-                  {user.role === 'admin' ? "👑 Администратор" : user.role === 'dm' ? "🎩 Мастер" : "🎲 Игрок"}
+                  {isAdmin ? "👑 Администратор" : isDM ? "🎩 Мастер" : "🎲 Игрок"}
                 </span>
               </div>
             </div>
