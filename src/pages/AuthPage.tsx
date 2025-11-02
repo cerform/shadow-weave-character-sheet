@@ -1,37 +1,30 @@
-import React, { useEffect, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/use-auth';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import SupabaseAuthForm from '@/components/auth/SupabaseAuthForm';
-import { supabase } from '@/integrations/supabase/client';
 
 
 const AuthPage = () => {
   const navigate = useNavigate();
-  const { user, isAuthenticated, loading } = useAuth();
+  const { isAuthenticated, loading } = useAuth();
 
-  console.log('🔍 AuthPage: рендер', { user: !!user, isAuthenticated, loading });
+  console.log('🔍 AuthPage: рендер', { isAuthenticated, loading });
 
-  // Простой редирект после успешной авторизации
+  // Простой редирект: загрузка завершена + авторизован = на главную
   useEffect(() => {
-    // Ждем завершения загрузки
-    if (loading) {
-      console.log('⏳ AuthPage: загрузка...');
-      return;
-    }
+    if (loading) return;
 
-    // Если авторизован, редиректим на главную
-    if (isAuthenticated && user) {
-      console.log('✅ AuthPage: пользователь авторизован, редирект на главную');
+    if (isAuthenticated) {
+      console.log('✅ Пользователь авторизован, редирект на главную');
       navigate('/', { replace: true });
     }
-  }, [isAuthenticated, user, loading, navigate]);
+  }, [loading, isAuthenticated, navigate]);
 
-  // Показываем загрузку если пользователь авторизован
+  // Пока идет загрузка - показываем спиннер
   if (loading) {
-    console.log('⏳ AuthPage: показываем загрузку (loading=true)');
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
@@ -39,14 +32,9 @@ const AuthPage = () => {
     );
   }
 
-  // Если пользователь авторизован, показываем загрузку
+  // Если авторизован - ничего не показываем (идет редирект)
   if (isAuthenticated) {
-    console.log('🔄 AuthPage: показываем загрузку (isAuthenticated=true)');
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
-      </div>
-    );
+    return null;
   }
 
   console.log('📝 AuthPage: показываем форму аутентификации');
