@@ -544,29 +544,29 @@ const ErrorLogsPage: React.FC = () => {
 
               {/* AI Debug Section */}
               <div className="border-t pt-4">
-                <div className="flex items-center justify-between mb-3">
-                  <h4 className="font-medium flex items-center gap-2">
-                    <Sparkles className="h-4 w-4 text-primary" />
-                    AI Дебаггер
-                  </h4>
-                  <Button
-                    size="sm"
-                    onClick={() => handleAiDebug(selectedLog)}
-                    disabled={isAnalyzing}
-                  >
-                    {isAnalyzing ? (
-                      <>
-                        <div className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full mr-2" />
-                        Анализ...
-                      </>
-                    ) : (
-                      <>
-                        <Sparkles className="h-4 w-4 mr-2" />
-                        Анализировать с AI
-                      </>
-                    )}
-                  </Button>
-                </div>
+                <h4 className="font-medium flex items-center gap-2 mb-3">
+                  <Sparkles className="h-4 w-4 text-primary" />
+                  AI Дебаггер
+                </h4>
+                
+                <Button
+                  className="w-full mb-3"
+                  onClick={() => handleAiDebug(selectedLog)}
+                  disabled={isAnalyzing}
+                  variant="default"
+                >
+                  {isAnalyzing ? (
+                    <>
+                      <div className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full mr-2" />
+                      Анализ...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="h-4 w-4 mr-2" />
+                      Анализировать с AI
+                    </>
+                  )}
+                </Button>
                 
                 {aiAnalysis && (
                   <div className="bg-secondary/50 border border-primary/20 rounded-lg p-4">
