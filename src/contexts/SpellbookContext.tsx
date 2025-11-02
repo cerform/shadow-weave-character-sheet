@@ -1,6 +1,6 @@
 
 
-import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect, useRef } from 'react';
 import { SpellData } from '@/types/spells';
 import { CharacterSpell } from '@/types/character';
 import { getAllSpellsFromDatabase, saveSpellToDatabase, deleteSpellFromDatabase } from '@/services/spellService';
@@ -149,6 +149,8 @@ export const SpellbookContext = createContext<SpellbookContextType>({
 });
 
 export const SpellbookProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const isMountedRef = useRef(true);
+  
   const [spells, setSpells] = useState<SpellData[]>([]);
   const [filteredSpells, setFilteredSpells] = useState<SpellData[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -357,7 +359,7 @@ export const SpellbookProvider: React.FC<{ children: ReactNode }> = ({ children 
       const staticSpells = getAllSpells();
       console.log('SpellbookContext: Загружено статических заклинаний:', staticSpells.length);
       
-      if (staticSpells.length > 0) {
+      if (isMountedRef.current && staticSpells.length > 0) {
         setSpells(staticSpells);
         setFilteredSpells(staticSpells);
         setAvailableSpells(staticSpells);
@@ -366,7 +368,7 @@ export const SpellbookProvider: React.FC<{ children: ReactNode }> = ({ children 
       // Пытаемся дополнить данными из БД
       try {
         const dbSpells = await getAllSpellsFromDatabase();
-        if (dbSpells.length > 0) {
+        if (isMountedRef.current && dbSpells.length > 0) {
           const combinedSpells = [...staticSpells, ...dbSpells];
           setSpells(combinedSpells);
           setFilteredSpells(combinedSpells);
@@ -379,15 +381,24 @@ export const SpellbookProvider: React.FC<{ children: ReactNode }> = ({ children 
       
     } catch (error) {
       console.error('SpellbookContext: Ошибка загрузки:', error);
-      toast.error('Ошибка загрузки заклинаний');
+      if (isMountedRef.current) {
+        toast.error('Ошибка загрузки заклинаний');
+      }
     } finally {
-      setLoading(false);
+      if (isMountedRef.current) {
+        setLoading(false);
+      }
     }
   };
   
   // Загрузим заклинания при первом монтировании
   useEffect(() => {
+    isMountedRef.current = true;
     loadSpells();
+    
+    return () => {
+      isMountedRef.current = false;
+    };
   }, []);
 
   // Функция для применения сохраненных фильтров
@@ -633,7 +644,9 @@ export const SpellbookProvider: React.FC<{ children: ReactNode }> = ({ children 
   };
 
   // Добавляем новые методы
-  const loadSpellsForCharacter = (characterClass: string, level: number) => {
+  const loadSpellsForCharacter = async (characterClass: string, level: number) => {
+    if (!isMountedRef.current) return;
+    
     setLoading(true);
     
     // Здесь должна быть логика загрузки заклинаний для конкретного класса и уровня
@@ -641,34 +654,29 @@ export const SpellbookProvider: React.FC<{ children: ReactNode }> = ({ children 
     try {
       // Загрузка всех заклинаний, если еще не загружены
       if (spells.length === 0) {
-        loadSpells().then(() => {
-          // После загрузки всех заклинаний фильтруем их
-          const filtered = spells.filter(spell => {
-            const classes = Array.isArray(spell.classes) 
-              ? spell.classes 
-              : typeof spell.classes === 'string' 
-                ? [spell.classes] 
-                : [];
-            return classes.some(c => c.toLowerCase() === characterClass.toLowerCase());
-          });
-          setAvailableSpells(filtered);
-        });
-      } else {
-        // Если заклинания уже загружены, просто фильтруем
-        const filtered = spells.filter(spell => {
-          const classes = Array.isArray(spell.classes) 
-            ? spell.classes 
-            : typeof spell.classes === 'string' 
-              ? [spell.classes] 
-              : [];
-          return classes.some(c => c.toLowerCase() === characterClass.toLowerCase());
-        });
+        await loadSpells();
+        if (!isMountedRef.current) return;
+      }
+      
+      // После загрузки всех заклинаний фильтруем их
+      const filtered = spells.filter(spell => {
+        const classes = Array.isArray(spell.classes) 
+          ? spell.classes 
+          : typeof spell.classes === 'string' 
+            ? [spell.classes] 
+            : [];
+        return classes.some(c => c.toLowerCase() === characterClass.toLowerCase());
+      });
+      
+      if (isMountedRef.current) {
         setAvailableSpells(filtered);
       }
     } catch (error) {
-      console.error('Error loading spells for character:', error);
+      console.error('SpellbookContext: Ошибка загрузки заклинаний для персонажа:', error);
     } finally {
-      setLoading(false);
+      if (isMountedRef.current) {
+        setLoading(false);
+      }
     }
   };
 

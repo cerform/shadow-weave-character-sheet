@@ -28,13 +28,17 @@ const PlayerSessionClient: React.FC<PlayerSessionClientProps> = ({
   const diceTypes = ['d4', 'd6', 'd8', 'd10', 'd12', 'd20', 'd100'];
 
   useEffect(() => {
+    let isMounted = true;
+    
     websocketService.connect();
 
     const handleMessage = (message: SocketMessage) => {
+      if (!isMounted) return;
       setMessages(prev => [...prev, message]);
     };
 
     const handleDiceRoll = (roll: DiceRoll) => {
+      if (!isMounted) return;
       const diceMessage: SocketMessage = {
         id: Date.now().toString(),
         type: 'dice',
@@ -46,6 +50,7 @@ const PlayerSessionClient: React.FC<PlayerSessionClientProps> = ({
     };
 
     const handlePlayerUpdate = (updatedPlayers: any[]) => {
+      if (!isMounted) return;
       setPlayers(updatedPlayers);
     };
 
@@ -56,6 +61,7 @@ const PlayerSessionClient: React.FC<PlayerSessionClientProps> = ({
     // Присоединяемся к комнате
     websocketService.joinRoom(roomCode, playerName)
       .then(() => {
+        if (!isMounted) return;
         setIsConnected(true);
         toast({
           title: "Подключение успешно",
@@ -63,6 +69,7 @@ const PlayerSessionClient: React.FC<PlayerSessionClientProps> = ({
         });
       })
       .catch((error) => {
+        if (!isMounted) return;
         toast({
           title: "Ошибка подключения",
           description: error,
@@ -71,6 +78,7 @@ const PlayerSessionClient: React.FC<PlayerSessionClientProps> = ({
       });
 
     return () => {
+      isMounted = false;
       websocketService.removeMessageListener(handleMessage);
       websocketService.removeDiceListener(handleDiceRoll);
       websocketService.removePlayerUpdateListener(handlePlayerUpdate);

@@ -21,13 +21,23 @@ function ModelPreview({ path }: { path: string }) {
   const url = useMemo(() => publicModelUrl(path), [path]);
 
   useEffect(() => {
+    let isMounted = true;
+    
     fetch(url, { method: 'GET' })
       .then((r) => {
+        if (!isMounted) return;
         const msg = `Storage check ${r.status} for ${url}`;
         if (!r.ok) console.error(msg);
         else console.info(msg);
       })
-      .catch((e) => console.error('Storage fetch failed', url, e));
+      .catch((e) => {
+        if (!isMounted) return;
+        console.error('Storage fetch failed', url, e);
+      });
+    
+    return () => {
+      isMounted = false;
+    };
   }, [url]);
 
   const gltf: any = useLoader(GLTFLoader as any, url, (loader: any) => {
