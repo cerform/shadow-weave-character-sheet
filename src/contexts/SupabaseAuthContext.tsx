@@ -90,7 +90,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   useEffect(() => {
     let mounted = true;
-    let initialSessionReceived = false;
+    let initialSessionProcessed = false;
     
     // Подписываемся на изменения аутентификации
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -98,40 +98,44 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         console.log('🔐 onAuthStateChange:', event, 'сессия:', !!session, 'user:', session?.user?.email);
         if (!mounted) return;
         
-        // INITIAL_SESSION всегда приходит первым - только после него снимаем loading
+        // INITIAL_SESSION - обрабатываем только первый раз
         if (event === 'INITIAL_SESSION') {
-          console.log('🎯 Начальная сессия');
-          initialSessionReceived = true;
+          // Игнорируем повторные INITIAL_SESSION (из-за StrictMode или двойной инициализации)
+          if (initialSessionProcessed) {
+            console.log('⚠️ Игнорируем повторный INITIAL_SESSION');
+            return;
+          }
+          
+          console.log('🎯 Обработка первого INITIAL_SESSION');
+          initialSessionProcessed = true;
           
           if (session?.user) {
             const mappedUser = mapSupabaseUser(session.user);
-            console.log('✅ Установка пользователя:', mappedUser?.email);
+            console.log('✅ Установка пользователя из INITIAL_SESSION:', mappedUser?.email);
             setUser(mappedUser);
           } else {
-            console.log('❌ Нет сессии');
+            console.log('ℹ️ INITIAL_SESSION без сессии - ожидаем событий входа');
             setUser(null);
           }
           
-          // Только после INITIAL_SESSION снимаем loading
+          // Только после первого INITIAL_SESSION снимаем loading
           setLoading(false);
         } 
-        // Остальные события обрабатываем только после INITIAL_SESSION
-        else if (initialSessionReceived) {
-          if (event === 'SIGNED_IN') {
-            console.log('✅ Пользователь вошел');
-            if (session?.user) {
-              const mappedUser = mapSupabaseUser(session.user);
-              setUser(mappedUser);
-            }
-          } else if (event === 'SIGNED_OUT') {
-            console.log('👋 Пользователь вышел');
-            setUser(null);
-          } else if (event === 'TOKEN_REFRESHED') {
-            console.log('🔄 Токен обновлен');
-            if (session?.user) {
-              const mappedUser = mapSupabaseUser(session.user);
-              setUser(mappedUser);
-            }
+        // Остальные события обрабатываем всегда
+        else if (event === 'SIGNED_IN') {
+          console.log('✅ Пользователь вошел');
+          if (session?.user) {
+            const mappedUser = mapSupabaseUser(session.user);
+            setUser(mappedUser);
+          }
+        } else if (event === 'SIGNED_OUT') {
+          console.log('👋 Пользователь вышел');
+          setUser(null);
+        } else if (event === 'TOKEN_REFRESHED') {
+          console.log('🔄 Токен обновлен');
+          if (session?.user) {
+            const mappedUser = mapSupabaseUser(session.user);
+            setUser(mappedUser);
           }
         }
       }
