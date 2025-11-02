@@ -343,13 +343,14 @@ export const useBattleSession = (sessionId?: string) => {
       setLoading(false);
     };
 
-    if (isAuthenticated) {
+    if (isAuthenticated && user) {
       initialize();
     } else {
       setLoading(false);
       setCurrentMap(null);
     }
-  }, [isAuthenticated, user, sessionId]);
+    // Используем user?.id вместо user чтобы избежать бесконечного цикла
+  }, [isAuthenticated, user?.id, sessionId]);
 
   return {
     session,
