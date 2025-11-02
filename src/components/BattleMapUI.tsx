@@ -1132,7 +1132,7 @@ export default function BattleMapUI({ sessionId }: { sessionId?: string }) {
                   </svg>
 
                   {/* Токены */}
-                  {layers.find(l => l.id === 'tokens')?.visible && tokens.filter(t => t && t.position).map((t) => (
+                  {layers.find(l => l.id === 'tokens')?.visible ? tokens.filter(t => t && t.position).map((t) => (
                     <div 
                       key={t.id} 
                       style={{ left: t.position.x, top: t.position.y, width: GRID, height: GRID }} 
@@ -1164,7 +1164,7 @@ export default function BattleMapUI({ sessionId }: { sessionId?: string }) {
                         <div className="h-full bg-green-500" style={{ width: `${(t.hp / t.maxHp) * 100}%` }} />
                       </div>
                     </div>
-                  ))}
+                  )) : null}
 
                   {/* Туман войны */}
                   {fogEnabled && layers.find(l => l.id === 'fog')?.visible && (
