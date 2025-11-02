@@ -127,5 +127,5 @@ export const useBattleTokensToSupabase = (sessionId: string, isDM: boolean) => {
     };
 
     syncTokens();
-  }, [tokens, sessionId, isDM, toast]);
+  }, [tokens, sessionId, isDM]); // Убрали toast из зависимостей
 };
