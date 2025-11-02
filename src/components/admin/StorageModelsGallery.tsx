@@ -9,7 +9,7 @@ import { OrbitControls } from '@react-three/drei';
 import { supabase } from '@/integrations/supabase/client';
 import { useProtectedRoute } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
-import ErrorBoundary from '@/components/ErrorBoundary';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { convertGltfFromStorageToGlb } from '@/utils/convertGltfFromStorageToGlb';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 

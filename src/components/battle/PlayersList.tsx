@@ -172,9 +172,9 @@ export const PlayersList: React.FC<PlayersListProps> = ({ sessionId, isDM = fals
                       <div className="text-xs font-medium truncate">
                         {player.userName}
                       </div>
-                      {player.character && (
+                      {player.character && typeof player.character === 'string' && (
                         <div className="text-[10px] text-muted-foreground truncate">
-                          {typeof player.character === 'string' ? player.character : 'Персонаж'}
+                          {player.character}
                         </div>
                       )}
                     </div>

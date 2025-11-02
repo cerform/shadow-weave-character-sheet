@@ -10,7 +10,7 @@ import OBSLayout from '@/components/OBSLayout';
 import IconOnlyNavigation from '@/components/navigation/IconOnlyNavigation';
 import { useTheme } from '@/hooks/use-theme';
 import { themes } from '@/lib/themes';
-import ErrorBoundary from '@/components/ErrorBoundary';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 import CharacterNavigation from '@/components/characters/CharacterNavigation';
 import ErrorDisplay from '@/components/characters/ErrorDisplay';
 import LoadingState from '@/components/characters/LoadingState';

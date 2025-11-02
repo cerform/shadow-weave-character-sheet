@@ -1,97 +1,77 @@
-
-import React, { Component, ErrorInfo, ReactNode } from 'react';
+import React from 'react';
 import { Button } from '@/components/ui/button';
+import { AlertTriangle } from 'lucide-react';
 
 interface ErrorBoundaryProps {
-  children: ReactNode;
-  fallback?: ReactNode;
+  children: React.ReactNode;
+  fallback?: React.ReactNode;
 }
 
 interface ErrorBoundaryState {
   hasError: boolean;
   error: Error | null;
-  errorInfo: ErrorInfo | null;
 }
 
-class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
   constructor(props: ErrorBoundaryProps) {
     super(props);
-    this.state = {
-      hasError: false,
-      error: null,
-      errorInfo: null
-    };
+    this.state = { hasError: false, error: null };
   }
 
-  static getDerivedStateFromError(error: Error): Partial<ErrorBoundaryState> {
-    // Обновляем состояние, чтобы при следующем рендере показать fallback UI
+  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
     return { hasError: true, error };
   }
 
-  componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
-    // Логируем ошибку
-    console.error('ErrorBoundary перехватил ошибку:', error, errorInfo);
-    this.setState({ errorInfo });
-    
-    // Здесь можно отправить ошибку в сервис аналитики
-  }
-
-  resetError = () => {
-    this.setState({ hasError: false, error: null, errorInfo: null });
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error('❌ Error Boundary caught error:', error);
+    console.error('Error Info:', errorInfo);
   }
 
   render() {
     if (this.state.hasError) {
-      // Если есть пользовательский fallback, используем его
+      // Если есть кастомный fallback, используем его
       if (this.props.fallback) {
         return this.props.fallback;
       }
-
-      // Иначе используем дефолтный fallback UI
+      
+      // Иначе показываем стандартную страницу ошибки
       return (
-        <div className="p-6 max-w-xl mx-auto my-8 bg-card rounded-lg border border-red-500/50 shadow-lg">
-          <h2 className="text-xl font-semibold text-red-500 mb-4">
-            Что-то пошло не так
-          </h2>
-          
-          <div className="bg-black/30 p-4 rounded-md mb-4">
-            <p className="text-sm text-white mb-2">Ошибка:</p>
-            <pre className="text-xs text-red-300 whitespace-pre-wrap overflow-auto max-h-32">
-              {this.state.error?.toString()}
-            </pre>
-            
-            {this.state.errorInfo && (
-              <>
-                <p className="text-sm text-white mt-4 mb-2">Стек вызовов:</p>
-                <pre className="text-xs text-gray-300 whitespace-pre-wrap overflow-auto max-h-64">
-                  {this.state.errorInfo.componentStack}
-                </pre>
-              </>
+        <div className="h-screen w-screen flex items-center justify-center bg-background">
+          <div className="max-w-md text-center space-y-4 p-6">
+            <AlertTriangle className="h-16 w-16 mx-auto text-destructive" />
+            <h1 className="text-2xl font-bold">Что-то пошло не так</h1>
+            <p className="text-muted-foreground">
+              Произошла ошибка при отображении страницы
+            </p>
+            {this.state.error && (
+              <pre className="text-xs text-left bg-secondary p-4 rounded overflow-auto max-h-40">
+                {this.state.error.message}
+              </pre>
             )}
-          </div>
-          
-          <div className="flex space-x-4">
-            <Button 
-              onClick={this.resetError} 
-              variant="default"
-            >
-              Попробовать снова
-            </Button>
-            
-            <Button 
-              onClick={() => window.location.href = '/'}
-              variant="outline"
-            >
-              Вернуться на главную
-            </Button>
+            <div className="space-x-2">
+              <Button
+                onClick={() => {
+                  this.setState({ hasError: false, error: null });
+                  window.location.reload();
+                }}
+              >
+                Перезагрузить страницу
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  this.setState({ hasError: false, error: null });
+                  window.location.href = '/dm';
+                }}
+              >
+                На главную
+              </Button>
+            </div>
           </div>
         </div>
       );
     }
 
-    // Если ошибок нет, рендерим детей
     return this.props.children;
   }
 }
-
-export default ErrorBoundary;

@@ -10,7 +10,7 @@ import { convertToCharacter } from '@/utils/characterConverter';
 import { Button } from '@/components/ui/button';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { ArrowLeft, RefreshCw, Trash2 } from 'lucide-react';
-import ErrorBoundary from '@/components/ErrorBoundary';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 import InfoMessage from '@/components/ui/InfoMessage';
 
 const CharacterViewPage = () => {

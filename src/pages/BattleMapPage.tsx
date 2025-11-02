@@ -1,6 +1,7 @@
 import React from 'react';
 import { useParams } from 'react-router-dom';
 import BattleMapUI from '@/components/BattleMapUI';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 const BattleMapPage: React.FC = () => {
   const { sessionId } = useParams<{ sessionId: string }>();
@@ -16,9 +17,11 @@ const BattleMapPage: React.FC = () => {
   }
 
   return (
-    <div className="h-screen w-screen bg-background overflow-hidden">
-      <BattleMapUI sessionId={sessionId} />
-    </div>
+    <ErrorBoundary>
+      <div className="h-screen w-screen bg-background overflow-hidden">
+        <BattleMapUI sessionId={sessionId} />
+      </div>
+    </ErrorBoundary>
   );
 };
 
