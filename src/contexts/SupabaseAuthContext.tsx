@@ -136,44 +136,48 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   useEffect(() => {
     let mounted = true;
-    let sessionChecked = false;
+    let initialSessionReceived = false;
     
-    // Подписываемся на изменения аутентификации СНАЧАЛА
+    // Подписываемся на изменения аутентификации
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         console.log('🔐 onAuthStateChange:', event, 'сессия:', !!session, 'user:', session?.user?.email);
         if (!mounted) return;
         
-        // Обрабатываем события
-        if (event === 'SIGNED_OUT') {
-          console.log('👋 Пользователь вышел');
-          setUser(null);
-          setLoading(false);
-        } else if (event === 'TOKEN_REFRESHED') {
-          console.log('🔄 Токен обновлен');
-          if (session?.user) {
-            const mappedUser = mapSupabaseUser(session.user);
-            setUser(mappedUser);
-          }
-        } else if (event === 'SIGNED_IN') {
-          console.log('✅ Пользователь вошел');
-          if (session?.user) {
-            const mappedUser = mapSupabaseUser(session.user);
-            setUser(mappedUser);
-          }
-          setLoading(false);
-        } else if (event === 'INITIAL_SESSION') {
+        // INITIAL_SESSION всегда приходит первым - только после него снимаем loading
+        if (event === 'INITIAL_SESSION') {
           console.log('🎯 Начальная сессия');
+          initialSessionReceived = true;
+          
           if (session?.user) {
             const mappedUser = mapSupabaseUser(session.user);
+            console.log('✅ Установка пользователя:', mappedUser?.email);
             setUser(mappedUser);
           } else {
+            console.log('❌ Нет сессии');
             setUser(null);
           }
-          // Только после INITIAL_SESSION считаем загрузку завершенной
-          if (!sessionChecked) {
-            setLoading(false);
-            sessionChecked = true;
+          
+          // Только после INITIAL_SESSION снимаем loading
+          setLoading(false);
+        } 
+        // Остальные события обрабатываем только после INITIAL_SESSION
+        else if (initialSessionReceived) {
+          if (event === 'SIGNED_IN') {
+            console.log('✅ Пользователь вошел');
+            if (session?.user) {
+              const mappedUser = mapSupabaseUser(session.user);
+              setUser(mappedUser);
+            }
+          } else if (event === 'SIGNED_OUT') {
+            console.log('👋 Пользователь вышел');
+            setUser(null);
+          } else if (event === 'TOKEN_REFRESHED') {
+            console.log('🔄 Токен обновлен');
+            if (session?.user) {
+              const mappedUser = mapSupabaseUser(session.user);
+              setUser(mappedUser);
+            }
           }
         }
       }
