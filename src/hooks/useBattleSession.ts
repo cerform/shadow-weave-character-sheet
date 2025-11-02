@@ -60,15 +60,27 @@ export const useBattleSession = (sessionId?: string) => {
         }
       }
 
-      // Если sessionId не передан - ВСЕГДА создаем НОВУЮ сессию
-      console.log('🆕 Создание новой сессии в game_sessions');
+      // Если sessionId не передан - ищем или создаем активную сессию
+      console.log('🔍 Поиск активной сессии для DM:', user.id);
       
-      // Деактивируем все старые активные сессии этого DM
-      await supabase
+      // Сначала пытаемся найти активную сессию
+      const { data: activeSession, error: activeError } = await supabase
         .from('game_sessions')
-        .update({ is_active: false })
+        .select('*')
         .eq('dm_id', user.id)
-        .eq('is_active', true);
+        .eq('is_active', true)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      
+      if (!activeError && activeSession) {
+        console.log('✅ Найдена существующая активная сессия:', activeSession.id);
+        setSession(activeSession as any);
+        return activeSession as any;
+      }
+      
+      // Только если нет активной сессии - создаем новую
+      console.log('🆕 Создание новой сессии в game_sessions');
 
       // Генерируем уникальный код сессии
       const { data: codeData } = await supabase.rpc('generate_session_code');
