@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, AlertCircle, CheckCircle, Trash2, RefreshCw, Filter, Search, Database, Server, Globe, Lock, Wifi, HelpCircle, Sparkles } from 'lucide-react';
+import { ArrowLeft, AlertCircle, CheckCircle, Trash2, RefreshCw, Filter, Search, Database, Server, Globe, Lock, Wifi, HelpCircle, Sparkles, Copy, Check } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -34,6 +35,7 @@ const ErrorLogsPage: React.FC = () => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [autoFixSuggestion, setAutoFixSuggestion] = useState<any>(null);
   const [isAutoFixing, setIsAutoFixing] = useState(false);
+  const [copiedCode, setCopiedCode] = useState<string | null>(null);
 
   useEffect(() => {
     if (!loading && !isAdmin) {
@@ -195,6 +197,24 @@ const ErrorLogsPage: React.FC = () => {
       });
     } finally {
       setIsAutoFixing(false);
+    }
+  };
+
+  const handleCopyCode = async (code: string, id: string) => {
+    try {
+      await navigator.clipboard.writeText(code);
+      setCopiedCode(id);
+      toast({
+        title: '✅ Скопировано',
+        description: 'Код скопирован в буфер обмена',
+      });
+      setTimeout(() => setCopiedCode(null), 2000);
+    } catch (error) {
+      toast({
+        title: '❌ Ошибка',
+        description: 'Не удалось скопировать код',
+        variant: 'destructive',
+      });
     }
   };
 
@@ -619,9 +639,43 @@ const ErrorLogsPage: React.FC = () => {
                   {aiAnalysis && (
                     <div className="bg-secondary/50 border border-primary/20 rounded-lg p-4 mb-3">
                       <div className="text-xs font-semibold text-primary mb-2">📋 Анализ:</div>
-                      <pre className="text-sm whitespace-pre-wrap font-sans">
-                        {aiAnalysis}
-                      </pre>
+                      <div className="prose prose-sm max-w-none dark:prose-invert text-sm">
+                        <ReactMarkdown
+                          components={{
+                            code: ({ node, inline, className, children, ...props }: any) => {
+                              const codeString = String(children).replace(/\n$/, '');
+                              const codeId = `analysis-code-${Math.random()}`;
+                              return inline ? (
+                                <code className="bg-muted px-1 py-0.5 rounded text-xs" {...props}>
+                                  {children}
+                                </code>
+                              ) : (
+                                <div className="relative group">
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    className="absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                                    onClick={() => handleCopyCode(codeString, codeId)}
+                                  >
+                                    {copiedCode === codeId ? (
+                                      <Check className="h-4 w-4 text-green-500" />
+                                    ) : (
+                                      <Copy className="h-4 w-4" />
+                                    )}
+                                  </Button>
+                                  <pre className="bg-muted p-4 rounded-lg overflow-x-auto">
+                                    <code className={className} {...props}>
+                                      {children}
+                                    </code>
+                                  </pre>
+                                </div>
+                              );
+                            },
+                          }}
+                        >
+                          {aiAnalysis}
+                        </ReactMarkdown>
+                      </div>
                     </div>
                   )}
                   
@@ -648,15 +702,32 @@ const ErrorLogsPage: React.FC = () => {
                         {autoFixSuggestion.codeChanges && autoFixSuggestion.codeChanges.length > 0 && (
                           <div>
                             <div className="text-xs font-semibold mb-1">Изменения в коде:</div>
-                            {autoFixSuggestion.codeChanges.map((change: any, i: number) => (
-                              <div key={i} className="bg-secondary/50 rounded p-2 mb-2">
-                                <div className="text-xs font-mono text-primary">{change.file}</div>
-                                <div className="text-xs text-muted-foreground">{change.description}</div>
-                                <pre className="text-xs mt-1 bg-background/50 p-2 rounded overflow-x-auto">
-                                  {change.suggestion}
-                                </pre>
-                              </div>
-                            ))}
+                            {autoFixSuggestion.codeChanges.map((change: any, i: number) => {
+                              const changeId = `change-${i}`;
+                              return (
+                                <div key={i} className="bg-secondary/50 rounded p-2 mb-2">
+                                  <div className="text-xs font-mono text-primary">{change.file}</div>
+                                  <div className="text-xs text-muted-foreground mb-1">{change.description}</div>
+                                  <div className="relative group">
+                                    <Button
+                                      size="sm"
+                                      variant="ghost"
+                                      className="absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                                      onClick={() => handleCopyCode(change.suggestion, changeId)}
+                                    >
+                                      {copiedCode === changeId ? (
+                                        <Check className="h-4 w-4 text-green-500" />
+                                      ) : (
+                                        <Copy className="h-4 w-4" />
+                                      )}
+                                    </Button>
+                                    <pre className="text-xs mt-1 bg-background/50 p-2 rounded overflow-x-auto">
+                                      {change.suggestion}
+                                    </pre>
+                                  </div>
+                                </div>
+                              );
+                            })}
                           </div>
                         )}
                         
