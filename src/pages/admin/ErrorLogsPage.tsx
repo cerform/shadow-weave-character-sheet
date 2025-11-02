@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, AlertCircle, CheckCircle, Trash2, RefreshCw, Filter, Search, Database, Server, Globe, Lock, Wifi, HelpCircle } from 'lucide-react';
+import { ArrowLeft, AlertCircle, CheckCircle, Trash2, RefreshCw, Filter, Search, Database, Server, Globe, Lock, Wifi, HelpCircle, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { ErrorLogsService, ErrorLog, ErrorCategory, ErrorSeverity } from '@/services/ErrorLogsService';
+import { ErrorDebugService } from '@/services/ErrorDebugService';
 import { useProtectedRoute } from '@/hooks/use-auth';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -29,6 +30,8 @@ const ErrorLogsPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedLog, setSelectedLog] = useState<ErrorLog | null>(null);
   const [stats, setStats] = useState<any>(null);
+  const [aiAnalysis, setAiAnalysis] = useState<string | null>(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
 
   useEffect(() => {
     if (!loading && !isAdmin) {
@@ -144,6 +147,28 @@ const ErrorLogsPage: React.FC = () => {
         description: 'Не удалось очистить логи',
         variant: 'destructive',
       });
+    }
+  };
+
+  const handleAiDebug = async (errorLog: ErrorLog) => {
+    setIsAnalyzing(true);
+    setAiAnalysis(null);
+    try {
+      const analysis = await ErrorDebugService.analyzeError(errorLog);
+      setAiAnalysis(analysis);
+      toast({
+        title: 'AI-анализ готов',
+        description: 'Проверьте результаты ниже',
+      });
+    } catch (error) {
+      console.error('Ошибка AI-анализа:', error);
+      toast({
+        title: 'Ошибка',
+        description: 'Не удалось получить AI-анализ',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsAnalyzing(false);
     }
   };
 
@@ -438,7 +463,10 @@ const ErrorLogsPage: React.FC = () => {
       </div>
 
       {/* Error Details Dialog */}
-      <Dialog open={!!selectedLog} onOpenChange={() => setSelectedLog(null)}>
+      <Dialog open={!!selectedLog} onOpenChange={() => {
+        setSelectedLog(null);
+        setAiAnalysis(null);
+      }}>
         <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
@@ -514,12 +542,54 @@ const ErrorLogsPage: React.FC = () => {
                 </div>
               )}
 
-              <div className="flex gap-2 pt-4">
+              {/* AI Debug Section */}
+              <div className="border-t pt-4">
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="font-medium flex items-center gap-2">
+                    <Sparkles className="h-4 w-4 text-primary" />
+                    AI Дебаггер
+                  </h4>
+                  <Button
+                    size="sm"
+                    onClick={() => handleAiDebug(selectedLog)}
+                    disabled={isAnalyzing}
+                  >
+                    {isAnalyzing ? (
+                      <>
+                        <div className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full mr-2" />
+                        Анализ...
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="h-4 w-4 mr-2" />
+                        Анализировать с AI
+                      </>
+                    )}
+                  </Button>
+                </div>
+                
+                {aiAnalysis && (
+                  <div className="bg-secondary/50 border border-primary/20 rounded-lg p-4">
+                    <pre className="text-sm whitespace-pre-wrap font-sans">
+                      {aiAnalysis}
+                    </pre>
+                  </div>
+                )}
+                
+                {!aiAnalysis && !isAnalyzing && (
+                  <p className="text-sm text-muted-foreground">
+                    Нажмите кнопку "Анализировать с AI" для получения рекомендаций по исправлению ошибки
+                  </p>
+                )}
+              </div>
+
+              <div className="flex gap-2 pt-4 border-t">
                 {!selectedLog.resolved && (
                   <Button
                     onClick={() => {
                       handleMarkAsResolved(selectedLog.id);
                       setSelectedLog(null);
+                      setAiAnalysis(null);
                     }}
                   >
                     <CheckCircle className="h-4 w-4 mr-2" />
@@ -531,6 +601,7 @@ const ErrorLogsPage: React.FC = () => {
                   onClick={() => {
                     handleDelete(selectedLog.id);
                     setSelectedLog(null);
+                    setAiAnalysis(null);
                   }}
                 >
                   <Trash2 className="h-4 w-4 mr-2" />
