@@ -11,28 +11,31 @@ import { Toaster } from '@/components/ui/toaster';
 import DynamicFantasyBackground from '@/components/layout/DynamicFantasyBackground';
 import FloatingActionWidget from '@/components/ui/FloatingActionWidget';
 import AppRoutes from '@/AppRoutes';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 function App() {
   return (
-    <ThemeProvider>
-      <AuthProvider>
-        <CharacterProvider>
-          <SpellbookProvider>
-            <SessionProvider>
-              <SocketProvider>
-              <Router>
-                <DynamicFantasyBackground>
-                  <AppRoutes />
-                  <FloatingActionWidget />
-                  <Toaster />
-                </DynamicFantasyBackground>
-              </Router>
-              </SocketProvider>
-            </SessionProvider>
-          </SpellbookProvider>
-        </CharacterProvider>
-      </AuthProvider>
-    </ThemeProvider>
+    <ErrorBoundary>
+      <ThemeProvider>
+        <AuthProvider>
+          <CharacterProvider>
+            <SpellbookProvider>
+              <SessionProvider>
+                <SocketProvider>
+                <Router>
+                  <DynamicFantasyBackground>
+                    <AppRoutes />
+                    <FloatingActionWidget />
+                    <Toaster />
+                  </DynamicFantasyBackground>
+                </Router>
+                </SocketProvider>
+              </SessionProvider>
+            </SpellbookProvider>
+          </CharacterProvider>
+        </AuthProvider>
+      </ThemeProvider>
+    </ErrorBoundary>
   );
 }
 
