@@ -19,6 +19,15 @@ const HomePage = () => {
     console.log("Home: Переход на страницу /auth");
     navigate('/auth');
   };
+  
+  // Показываем загрузку пока роли загружаются
+  if (rolesLoading) {
+    return (
+      <div className="h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   const quickActions = [
     {
@@ -88,7 +97,7 @@ const HomePage = () => {
   }
 
   // Объединяем все действия
-  const allActions = [...quickActions, ...adminActions];
+  const allActions = [...quickActions, ...(Array.isArray(adminActions) ? adminActions : [])];
 
   const features = [
     {
@@ -175,7 +184,7 @@ const HomePage = () => {
 
             {/* Быстрые действия - внутри фрейма */}
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-8">
-              {allActions.map((action, index) => (
+              {Array.isArray(allActions) && allActions.map((action, index) => (
                 <Link 
                   key={index}
                   to={action.href}
@@ -217,7 +226,7 @@ const HomePage = () => {
           <div className="text-center mb-12">
             <h3 className="text-3xl font-bold mb-8">Возможности приложения</h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {features.map((feature, index) => (
+              {Array.isArray(features) && features.map((feature, index) => (
                 <div 
                   key={index} 
                   className="text-center group hover:scale-105 transition-transform duration-300"

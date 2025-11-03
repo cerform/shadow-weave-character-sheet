@@ -14,7 +14,7 @@ const CharactersList = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { isAdmin, isDM } = useProtectedRoute();
-  const [characters, setCharacters] = useState<any[]>([]);
+  const [characters, setCharacters] = useState<any[]>([]);  // Всегда инициализируем пустым массивом
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -27,8 +27,9 @@ const CharactersList = () => {
     try {
       console.log('🔄 Загружаем персонажей пользователя через Supabase');
       const userCharacters = await getUserCharacters();
-      console.log('✅ Получено персонажей:', userCharacters.length);
-      setCharacters(userCharacters);
+      console.log('✅ Получено персонажей:', userCharacters?.length || 0);
+      // Убеждаемся, что это массив
+      setCharacters(Array.isArray(userCharacters) ? userCharacters : []);
     } catch (err) {
       console.error('❌ Ошибка загрузки персонажей:', err);
       setError('Ошибка загрузки персонажей');
@@ -139,7 +140,7 @@ const CharactersList = () => {
               </TooltipProvider>
 
               {/* Characters */}
-              {characters.map((character) => (
+              {Array.isArray(characters) && characters.map((character) => (
                 <TooltipProvider key={character.id}>
                   <Tooltip>
                     <TooltipTrigger asChild>
@@ -191,7 +192,7 @@ const CharactersList = () => {
             </div>
 
             {/* Сообщение если нет персонажей */}
-            {characters.length === 0 && (
+            {Array.isArray(characters) && characters.length === 0 && (
               <div className="text-center py-8">
                 <User className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
                 <h4 className="text-lg font-semibold mb-2">Нет персонажей</h4>
