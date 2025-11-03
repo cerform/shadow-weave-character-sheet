@@ -181,7 +181,7 @@ const BattleMap2DPlayer: React.FC<BattleMap2DPlayerProps> = ({
           ))}
 
           {/* Токены - показываем только в открытых областях */}
-          {tokens.map((token) => {
+          {Array.isArray(tokens) && tokens.map((token) => {
             // Проверяем, находится ли токен в открытой области
             if (fogMap && fogSize.w > 0 && fogSize.h > 0) {
               const cellSize = 800 / fogSize.w;
@@ -315,7 +315,7 @@ const BattleMap2DPlayer: React.FC<BattleMap2DPlayerProps> = ({
       {/* Информация и кнопка настройки токена */}
       <div className="absolute top-4 left-4 bg-background/80 backdrop-blur-sm border border-border rounded p-2">
         <div className="text-sm text-muted-foreground">
-          Токенов: {tokens.length}
+          Токенов: {Array.isArray(tokens) ? tokens.length : 0}
         </div>
         <div className="text-xs text-muted-foreground">
           Зажмите и перетаскивайте для перемещения
@@ -326,7 +326,7 @@ const BattleMap2DPlayer: React.FC<BattleMap2DPlayerProps> = ({
       </div>
 
       {/* Кнопка настройки своего токена */}
-      {user && tokens.find(t => t.owner_id === user.id && !t.is_summoned) && (
+      {user && Array.isArray(tokens) && tokens.find(t => t.owner_id === user.id && !t.is_summoned) && (
         <div className="absolute top-4 right-20 flex flex-col gap-2">
           {/* Настройки токена */}
           <div className="bg-background/80 backdrop-blur-sm border border-border rounded p-2">

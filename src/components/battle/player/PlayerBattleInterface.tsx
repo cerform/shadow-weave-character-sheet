@@ -49,12 +49,12 @@ export const PlayerBattleInterface: React.FC<PlayerBattleInterfaceProps> = ({
   }, [sessionId, user, mapId, mapImageUrl]);
 
   // Найти токен игрока
-  const playerToken = tokens.find(t => t.owner_id === user?.id && !t.is_summoned);
+  const playerToken = Array.isArray(tokens) ? tokens.find(t => t.owner_id === user?.id && !t.is_summoned) : undefined;
   
   // Все видимые токены (персонажи + призванные существа игрока)
-  const visibleTokens = tokens.filter(t => 
+  const visibleTokens = Array.isArray(tokens) ? tokens.filter(t => 
     t.isVisible && (!t.isEnemy || t.owner_id === user?.id)
-  );
+  ) : [];
 
   const handleAvatarUpdate = (url: string) => {
     if (playerToken) {

@@ -1132,7 +1132,7 @@ export default function BattleMapUI({ sessionId }: { sessionId?: string }) {
                   </svg>
 
                   {/* Токены */}
-                  {layers.find(l => l.id === 'tokens')?.visible ? tokens.filter(t => t && t.position).map((t) => (
+                  {layers.find(l => l.id === 'tokens')?.visible && Array.isArray(tokens) ? tokens.filter(t => t && t.position).map((t) => (
                     <div 
                       key={t.id} 
                       style={{ left: t.position.x, top: t.position.y, width: GRID, height: GRID }} 
@@ -1211,13 +1211,13 @@ export default function BattleMapUI({ sessionId }: { sessionId?: string }) {
                        isDM={isDM}
                        imageSize={{ width: currentMapSize.width, height: currentMapSize.height }}
                        showFullFogForPlayers={false}
-                       tokenPositions={tokens.map(t => ({
+                       tokenPositions={Array.isArray(tokens) ? tokens.map(t => ({
                         id: parseInt(t.id.replace(/\D/g, '') || '0'),
                         x: t.position?.x || 0,
                         y: t.position?.y || 0,
                         visible: true,
                         type: t.type || 'NPC'
-                      }))}
+                      })) : []}
                     />
                   )}
 

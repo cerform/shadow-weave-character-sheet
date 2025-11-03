@@ -48,7 +48,7 @@ export const SimpleBattleUI: React.FC<SimpleBattleUIProps> = ({
   const [currentMode, setCurrentMode] = useState<InteractionMode>(InteractionMode.NAVIGATION);
   const { toast } = useToast();
   
-  const activeToken = tokens.find(t => t.id === activeId);
+  const activeToken = Array.isArray(tokens) ? tokens.find(t => t.id === activeId) : undefined;
 
   // Подписка на изменения режима
   useEffect(() => {
@@ -378,7 +378,7 @@ export const SimpleBattleUI: React.FC<SimpleBattleUIProps> = ({
             <div className="space-y-1">
               <div className="text-xs font-medium text-muted-foreground flex items-center gap-1">
                 <Users className="w-3 h-3" />
-                Токены ({tokens.length})
+                Токены ({Array.isArray(tokens) ? tokens.length : 0})
               </div>
               {activeToken && (
                 <div className="text-xs p-2 bg-muted/30 rounded">
