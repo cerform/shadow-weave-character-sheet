@@ -349,7 +349,7 @@ export const SpellbookProvider: React.FC<{ children: ReactNode }> = ({ children 
     return colors[school] || 'bg-gray-700';
   };
   
-  const loadSpells = async () => {
+  const loadSpells = React.useCallback(async () => {
     try {
       setLoading(true);
       console.log('SpellbookContext: Загрузка заклинаний');
@@ -389,7 +389,7 @@ export const SpellbookProvider: React.FC<{ children: ReactNode }> = ({ children 
         setLoading(false);
       }
     }
-  };
+  }, []);
   
   // Загрузим заклинания при первом монтировании
   useEffect(() => {
@@ -399,7 +399,7 @@ export const SpellbookProvider: React.FC<{ children: ReactNode }> = ({ children 
     return () => {
       isMountedRef.current = false;
     };
-  }, []);
+  }, [loadSpells]);
 
   // Функция для применения сохраненных фильтров
   const applySavedFilters = (savedFilters: any) => {
