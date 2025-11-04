@@ -111,10 +111,6 @@ const FAMILY_MODEL_MAP: Array<{ match: RegExp; url: string; scale?: number }> = 
     url: "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/Box/glTF/Box.gltf", scale: 6 },
 ];
 
-// ==================== TSX типы для <model-viewer> ====================
-
-declare global { namespace JSX { interface IntrinsicElements { "model-viewer": React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement> & { src?: string; style?: React.CSSProperties; "camera-controls"?: boolean|""; "disable-zoom"?: boolean|""; autoplay?: boolean|""; exposure?: string|number; "ar-modes"?: string; "shadow-intensity"?: string|number; "interaction-prompt"?: string; scale?: string; }; } } }
-
 // ==================== Загрузчик model-viewer ====================
 
 function useModelViewerLoader(enabled: boolean) {
@@ -159,7 +155,7 @@ function pickModelFor(
 
 // ==================== Компонент отображения токена ====================
 
-function TokenVisual({ token, use3D, modelReady, onModelError }: { token: Token; use3D: boolean; modelReady: boolean; onModelError: (id: string, msg: string)=>void; }) {
+function TokenVisual({ token, use3D, modelReady, onModelError }: { token: Token; use3D: boolean; modelReady: boolean; onModelError: (id: string, msg: string)=>void; }): JSX.Element {
   const can3D = use3D && modelReady && isValidModelUrl(token.modelUrl);
   const ref = useRef<HTMLElement | null>(null);
   useEffect(() => {
@@ -213,6 +209,15 @@ function TokenVisual({ token, use3D, modelReady, onModelError }: { token: Token;
         </div>
       );
     }
+  }
+  
+  // Fallback if model URL is invalid
+  if (!token.modelUrl) {
+    return (
+      <div className={`w-full h-full ${token.color} bg-opacity-90 flex items-center justify-center text-lg select-none`}>
+        ?
+      </div>
+    );
   }
   
   return (
