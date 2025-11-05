@@ -542,7 +542,7 @@ const ErrorLogsPage: React.FC = () => {
         setAiAnalysis(null);
         setAutoFixSuggestion(null);
       }}>
-        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className="max-w-4xl max-h-[90vh]">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               {selectedLog && getCategoryIcon(selectedLog.category)}
@@ -553,69 +553,80 @@ const ErrorLogsPage: React.FC = () => {
             </DialogDescription>
           </DialogHeader>
           {selectedLog && (
-            <div className="space-y-4">
-              <div>
-                <h4 className="font-medium mb-2">Категория и серьезность</h4>
-                <div className="flex gap-2">
-                  <Badge variant="outline">
-                    {getCategoryName(selectedLog.category)}
-                  </Badge>
-                  <Badge variant="outline" className={getSeverityColor(selectedLog.severity)}>
-                    {selectedLog.severity}
-                  </Badge>
-                  {selectedLog.resolved && (
-                    <Badge variant="outline" className="bg-green-500/10 text-green-500 border-green-500/20">
-                      Исправлено
+            <ScrollArea className="max-h-[calc(90vh-120px)] pr-4">
+              <div className="space-y-4">
+                <div>
+                  <h4 className="font-medium mb-2">Категория и серьезность</h4>
+                  <div className="flex gap-2">
+                    <Badge variant="outline">
+                      {getCategoryName(selectedLog.category)}
                     </Badge>
-                  )}
+                    <Badge variant="outline" className={getSeverityColor(selectedLog.severity)}>
+                      {selectedLog.severity}
+                    </Badge>
+                    {selectedLog.resolved && (
+                      <Badge variant="outline" className="bg-green-500/10 text-green-500 border-green-500/20">
+                        Исправлено
+                      </Badge>
+                    )}
+                  </div>
                 </div>
-              </div>
 
-              <div>
-                <h4 className="font-medium mb-2">Сообщение</h4>
-                <p className="text-sm bg-secondary p-3 rounded-md">{selectedLog.message}</p>
-              </div>
-
-              {selectedLog.stack_trace && (
                 <div>
-                  <h4 className="font-medium mb-2">Stack Trace</h4>
-                  <pre className="text-xs bg-secondary p-3 rounded-md overflow-x-auto">
-                    {selectedLog.stack_trace}
-                  </pre>
+                  <h4 className="font-medium mb-2">Сообщение</h4>
+                  <ScrollArea className="max-h-32">
+                    <p className="text-sm bg-secondary p-3 rounded-md whitespace-pre-wrap break-words">
+                      {selectedLog.message}
+                    </p>
+                  </ScrollArea>
                 </div>
-              )}
 
-              {selectedLog.url && (
-                <div>
-                  <h4 className="font-medium mb-2">URL</h4>
-                  <p className="text-sm text-muted-foreground">{selectedLog.url}</p>
-                </div>
-              )}
+                {selectedLog.stack_trace && (
+                  <div>
+                    <h4 className="font-medium mb-2">Stack Trace</h4>
+                    <ScrollArea className="max-h-64">
+                      <pre className="text-xs bg-secondary p-3 rounded-md whitespace-pre-wrap break-all">
+                        {selectedLog.stack_trace}
+                      </pre>
+                    </ScrollArea>
+                  </div>
+                )}
 
-              {selectedLog.user_email && (
-                <div>
-                  <h4 className="font-medium mb-2">Пользователь</h4>
-                  <p className="text-sm text-muted-foreground">{selectedLog.user_email}</p>
-                </div>
-              )}
+                {selectedLog.url && (
+                  <div>
+                    <h4 className="font-medium mb-2">URL</h4>
+                    <ScrollArea className="max-h-20">
+                      <p className="text-sm text-muted-foreground break-all">{selectedLog.url}</p>
+                    </ScrollArea>
+                  </div>
+                )}
 
-              {selectedLog.metadata && Object.keys(selectedLog.metadata).length > 0 && (
-                <div>
-                  <h4 className="font-medium mb-2">Метаданные</h4>
-                  <pre className="text-xs bg-secondary p-3 rounded-md overflow-x-auto">
-                    {JSON.stringify(selectedLog.metadata, null, 2)}
-                  </pre>
-                </div>
-              )}
+                {selectedLog.user_email && (
+                  <div>
+                    <h4 className="font-medium mb-2">Пользователь</h4>
+                    <p className="text-sm text-muted-foreground">{selectedLog.user_email}</p>
+                  </div>
+                )}
 
-              {selectedLog.resolved && selectedLog.resolved_at && (
-                <div>
-                  <h4 className="font-medium mb-2">Исправлено</h4>
-                  <p className="text-sm text-muted-foreground">
-                    {format(new Date(selectedLog.resolved_at), 'dd MMMM yyyy, HH:mm:ss', { locale: ru })}
-                  </p>
-                </div>
-              )}
+                {selectedLog.metadata && Object.keys(selectedLog.metadata).length > 0 && (
+                  <div>
+                    <h4 className="font-medium mb-2">Метаданные</h4>
+                    <ScrollArea className="max-h-48">
+                      <pre className="text-xs bg-secondary p-3 rounded-md whitespace-pre-wrap break-all">
+                        {JSON.stringify(selectedLog.metadata, null, 2)}
+                      </pre>
+                    </ScrollArea>
+                  </div>
+                )}
+
+                {selectedLog.resolved && selectedLog.resolved_at && (
+                  <div>
+                    <h4 className="font-medium mb-2">Исправлено</h4>
+                    <p className="text-sm text-muted-foreground">
+                      {format(new Date(selectedLog.resolved_at), 'dd MMMM yyyy, HH:mm:ss', { locale: ru })}
+                    </p>
+                  </div>
+                )}
 
               {/* AI Debug Section */}
               <div className="border-t pt-4 space-y-4">
@@ -826,6 +837,7 @@ const ErrorLogsPage: React.FC = () => {
                 </Button>
               </div>
             </div>
+          </ScrollArea>
           )}
         </DialogContent>
       </Dialog>
