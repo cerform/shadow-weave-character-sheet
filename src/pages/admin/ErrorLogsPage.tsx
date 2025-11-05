@@ -636,12 +636,12 @@ const ErrorLogsPage: React.FC = () => {
                     AI Дебаггер
                   </h4>
                   
-                  <div className="flex gap-2 mb-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3">
                     <Button
-                      className="flex-1"
                       onClick={() => handleAiDebug(selectedLog)}
                       disabled={isAnalyzing}
                       variant="default"
+                      className="w-full"
                     >
                       {isAnalyzing ? (
                         <>
@@ -657,10 +657,10 @@ const ErrorLogsPage: React.FC = () => {
                     </Button>
                     
                     <Button
-                      className="flex-1"
                       onClick={() => handleAutoFix(selectedLog.id)}
                       disabled={isAutoFixing}
                       variant="secondary"
+                      className="w-full"
                     >
                       {isAutoFixing ? (
                         <>
