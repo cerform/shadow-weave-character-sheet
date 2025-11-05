@@ -36,6 +36,7 @@ const ErrorLogsPage: React.FC = () => {
   const [autoFixSuggestion, setAutoFixSuggestion] = useState<any>(null);
   const [isAutoFixing, setIsAutoFixing] = useState(false);
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
+  const [applyingFix, setApplyingFix] = useState(false);
 
   useEffect(() => {
     if (!loading && !isAdmin) {
@@ -215,6 +216,33 @@ const ErrorLogsPage: React.FC = () => {
         description: 'Не удалось скопировать код',
         variant: 'destructive',
       });
+    }
+  };
+
+  const handleApplyFix = async (codeChange: any) => {
+    setApplyingFix(true);
+    try {
+      // Копируем код в буфер обмена для ручного применения
+      await navigator.clipboard.writeText(codeChange.suggestion);
+      
+      toast({
+        title: '✅ Код готов к применению',
+        description: `Код для файла ${codeChange.file} скопирован в буфер обмена. Откройте файл и примените изменения.`,
+        duration: 5000,
+      });
+
+      // Помечаем ошибку как исправленную после применения фикса
+      if (selectedLog?.id) {
+        await handleMarkAsResolved(selectedLog.id);
+      }
+    } catch (error) {
+      toast({
+        title: '❌ Ошибка',
+        description: 'Не удалось подготовить код к применению',
+        variant: 'destructive',
+      });
+    } finally {
+      setApplyingFix(false);
     }
   };
 
@@ -705,9 +733,30 @@ const ErrorLogsPage: React.FC = () => {
                             {autoFixSuggestion.codeChanges.map((change: any, i: number) => {
                               const changeId = `change-${i}`;
                               return (
-                                <div key={i} className="bg-secondary/50 rounded p-2 mb-2">
-                                  <div className="text-xs font-mono text-primary">{change.file}</div>
-                                  <div className="text-xs text-muted-foreground mb-1">{change.description}</div>
+                                <div key={i} className="bg-secondary/50 rounded p-3 mb-2 border border-border">
+                                  <div className="flex items-center justify-between mb-2">
+                                    <div>
+                                      <div className="text-xs font-mono text-primary font-semibold">{change.file}</div>
+                                      <div className="text-xs text-muted-foreground mt-1">{change.description}</div>
+                                    </div>
+                                    <Button
+                                      size="sm"
+                                      onClick={() => handleApplyFix(change)}
+                                      disabled={applyingFix}
+                                      className="ml-2"
+                                    >
+                                      {applyingFix ? (
+                                        <>
+                                          <div className="animate-spin h-3 w-3 border-2 border-current border-t-transparent rounded-full mr-2" />
+                                          Применение...
+                                        </>
+                                      ) : (
+                                        <>
+                                          ✅ Применить фикс
+                                        </>
+                                      )}
+                                    </Button>
+                                  </div>
                                   <div className="relative group">
                                     <Button
                                       size="sm"
@@ -721,7 +770,7 @@ const ErrorLogsPage: React.FC = () => {
                                         <Copy className="h-4 w-4" />
                                       )}
                                     </Button>
-                                    <pre className="text-xs mt-1 bg-background/50 p-2 rounded overflow-x-auto">
+                                    <pre className="text-xs mt-1 bg-background/50 p-3 rounded overflow-x-auto border border-border">
                                       {change.suggestion}
                                     </pre>
                                   </div>
