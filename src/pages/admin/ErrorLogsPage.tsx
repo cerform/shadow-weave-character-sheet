@@ -542,7 +542,7 @@ const ErrorLogsPage: React.FC = () => {
         setAiAnalysis(null);
         setAutoFixSuggestion(null);
       }}>
-        <DialogContent className="max-w-4xl max-h-[90vh]">
+        <DialogContent className="max-w-6xl max-h-[90vh] w-[95vw]">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               {selectedLog && getCategoryIcon(selectedLog.category)}
@@ -553,7 +553,7 @@ const ErrorLogsPage: React.FC = () => {
             </DialogDescription>
           </DialogHeader>
           {selectedLog && (
-            <ScrollArea className="max-h-[calc(90vh-120px)] pr-4">
+            <ScrollArea className="max-h-[calc(90vh-140px)] pr-4">
               <div className="space-y-4">
                 <div>
                   <h4 className="font-medium mb-2">Категория и серьезность</h4>
@@ -574,30 +574,30 @@ const ErrorLogsPage: React.FC = () => {
 
                 <div>
                   <h4 className="font-medium mb-2">Сообщение</h4>
-                  <ScrollArea className="max-h-32">
-                    <p className="text-sm bg-secondary p-3 rounded-md whitespace-pre-wrap break-words">
+                  <div className="max-h-40 overflow-auto bg-secondary p-3 rounded-md">
+                    <p className="text-sm whitespace-pre-wrap break-words">
                       {selectedLog.message}
                     </p>
-                  </ScrollArea>
+                  </div>
                 </div>
 
                 {selectedLog.stack_trace && (
                   <div>
                     <h4 className="font-medium mb-2">Stack Trace</h4>
-                    <ScrollArea className="max-h-64">
-                      <pre className="text-xs bg-secondary p-3 rounded-md whitespace-pre-wrap break-all">
+                    <div className="max-h-80 overflow-auto bg-secondary p-3 rounded-md">
+                      <pre className="text-xs whitespace-pre break-words">
                         {selectedLog.stack_trace}
                       </pre>
-                    </ScrollArea>
+                    </div>
                   </div>
                 )}
 
                 {selectedLog.url && (
                   <div>
                     <h4 className="font-medium mb-2">URL</h4>
-                    <ScrollArea className="max-h-20">
-                      <p className="text-sm text-muted-foreground break-all">{selectedLog.url}</p>
-                    </ScrollArea>
+                    <div className="max-h-24 overflow-auto bg-secondary p-3 rounded-md">
+                      <p className="text-sm break-all">{selectedLog.url}</p>
+                    </div>
                   </div>
                 )}
 
@@ -611,11 +611,11 @@ const ErrorLogsPage: React.FC = () => {
                 {selectedLog.metadata && Object.keys(selectedLog.metadata).length > 0 && (
                   <div>
                     <h4 className="font-medium mb-2">Метаданные</h4>
-                    <ScrollArea className="max-h-48">
-                      <pre className="text-xs bg-secondary p-3 rounded-md whitespace-pre-wrap break-all">
+                    <div className="max-h-60 overflow-auto bg-secondary p-3 rounded-md">
+                      <pre className="text-xs whitespace-pre break-words">
                         {JSON.stringify(selectedLog.metadata, null, 2)}
                       </pre>
-                    </ScrollArea>
+                    </div>
                   </div>
                 )}
 
