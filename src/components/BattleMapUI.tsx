@@ -156,7 +156,12 @@ function pickModelFor(
 // ==================== Компонент отображения токена ====================
 
 function TokenVisual({ token, use3D, modelReady, onModelError }: { token: Token; use3D: boolean; modelReady: boolean; onModelError: (id: string, msg: string)=>void; }): JSX.Element {
-  const can3D = use3D && modelReady && isValidModelUrl(token.modelUrl);
+  // Проверяем, что model-viewer определен в customElements
+  const isModelViewerDefined = typeof window !== 'undefined' && 
+    window.customElements && 
+    window.customElements.get('model-viewer');
+  
+  const can3D = use3D && modelReady && isValidModelUrl(token.modelUrl) && isModelViewerDefined;
   const ref = useRef<HTMLElement | null>(null);
   useEffect(() => {
     if (!can3D || !ref.current) return;
