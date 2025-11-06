@@ -553,7 +553,7 @@ const ErrorLogsPage: React.FC = () => {
             </DialogDescription>
           </DialogHeader>
           {selectedLog && (
-            <ScrollArea className="max-h-[calc(90vh-140px)] pr-4">
+            <ScrollArea className="max-h-[calc(90vh-100px)] pr-4">
               <div className="space-y-4">
                 <div>
                   <h4 className="font-medium mb-2">Категория и серьезность</h4>
