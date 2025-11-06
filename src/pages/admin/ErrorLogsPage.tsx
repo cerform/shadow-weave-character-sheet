@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, AlertCircle, CheckCircle, Trash2, RefreshCw, Filter, Search, Database, Server, Globe, Lock, Wifi, HelpCircle, Sparkles, Copy, Check } from 'lucide-react';
+import { ArrowLeft, AlertCircle, CheckCircle, Trash2, RefreshCw, Filter, Search, Database, Server, Globe, Lock, Wifi, HelpCircle, Sparkles, Copy, Check, Download } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -289,6 +289,99 @@ const ErrorLogsPage: React.FC = () => {
     return names[category];
   };
 
+  const handleExportCSV = () => {
+    try {
+      // Подготовка данных для CSV
+      const headers = ['ID', 'Дата', 'Категория', 'Серьезность', 'Сообщение', 'URL', 'Пользователь', 'Исправлено'];
+      const csvData = filteredLogs.map(log => [
+        log.id,
+        format(new Date(log.created_at), 'dd.MM.yyyy HH:mm:ss'),
+        getCategoryName(log.category),
+        log.severity,
+        log.message.replace(/"/g, '""'), // Экранирование кавычек
+        log.url || '',
+        log.user_email || 'Анонимный',
+        log.resolved ? 'Да' : 'Нет'
+      ]);
+
+      // Формирование CSV строки
+      const csvContent = [
+        headers.join(','),
+        ...csvData.map(row => row.map(cell => `"${cell}"`).join(','))
+      ].join('\n');
+
+      // Создание и скачивание файла
+      const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', `error-logs-${format(new Date(), 'yyyy-MM-dd-HHmmss')}.csv`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      toast({
+        title: '✅ Экспорт выполнен',
+        description: `Экспортировано ${filteredLogs.length} записей в CSV`,
+      });
+    } catch (error) {
+      console.error('Ошибка экспорта CSV:', error);
+      toast({
+        title: '❌ Ошибка',
+        description: 'Не удалось экспортировать данные в CSV',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleExportJSON = () => {
+    try {
+      // Подготовка данных для JSON
+      const exportData = filteredLogs.map(log => ({
+        id: log.id,
+        created_at: log.created_at,
+        category: log.category,
+        category_name: getCategoryName(log.category),
+        severity: log.severity,
+        message: log.message,
+        stack_trace: log.stack_trace,
+        url: log.url,
+        user_id: log.user_id,
+        user_email: log.user_email,
+        user_agent: log.user_agent,
+        metadata: log.metadata,
+        resolved: log.resolved,
+        resolved_by: log.resolved_by,
+        resolved_at: log.resolved_at,
+      }));
+
+      // Создание и скачивание файла
+      const jsonContent = JSON.stringify(exportData, null, 2);
+      const blob = new Blob([jsonContent], { type: 'application/json' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', `error-logs-${format(new Date(), 'yyyy-MM-dd-HHmmss')}.json`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      toast({
+        title: '✅ Экспорт выполнен',
+        description: `Экспортировано ${filteredLogs.length} записей в JSON`,
+      });
+    } catch (error) {
+      console.error('Ошибка экспорта JSON:', error);
+      toast({
+        title: '❌ Ошибка',
+        description: 'Не удалось экспортировать данные в JSON',
+        variant: 'destructive',
+      });
+    }
+  };
+
   if (loading || isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -318,6 +411,24 @@ const ErrorLogsPage: React.FC = () => {
             </div>
           </div>
           <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleExportCSV}
+              disabled={filteredLogs.length === 0}
+            >
+              <Download className="h-4 w-4 mr-2" />
+              CSV
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleExportJSON}
+              disabled={filteredLogs.length === 0}
+            >
+              <Download className="h-4 w-4 mr-2" />
+              JSON
+            </Button>
             <Button
               variant="outline"
               size="sm"
