@@ -12,19 +12,22 @@ import '@fontsource/philosopher/700.css'
 
 
 const rootElement = document.getElementById('root');
+if (!rootElement) throw new Error('Root element not found');
 
-if (!rootElement) {
-  throw new Error("Root element not found");
-}
-
-// Очищаем localStorage для предотвращения конфликтов
+// Очистка кэша локальных данных для избежания конфликтов
 try {
-  localStorage.removeItem("characters");
-  localStorage.removeItem("recentCharacters");
+  localStorage.removeItem('characters');
+  localStorage.removeItem('recentCharacters');
 } catch (error) {
   console.warn('localStorage cleanup error:', error);
 }
 
-ReactDOM.createRoot(rootElement).render(
-  <App />
-);
+// ✅ Создание root только если не существует (Lovable safe)
+if (!rootElement.hasChildNodes()) {
+  const root = ReactDOM.createRoot(rootElement);
+  root.render(
+    <React.StrictMode>
+      <App />
+    </React.StrictMode>
+  );
+}
