@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { ErrorLogsService } from '@/services/ErrorLogsService';
+import { SentryService } from '@/services/SentryService';
 
 /**
  * Хук для автоматического логирования глобальных ошибок
@@ -10,16 +11,23 @@ export const useErrorLogger = () => {
     const handleError = (event: ErrorEvent) => {
       console.error('🔥 Глобальная ошибка:', event.error);
       
-      ErrorLogsService.logFrontendError(
-        event.error || new Error(event.message),
-        'error',
-        {
-          filename: event.filename,
-          lineno: event.lineno,
-          colno: event.colno,
-          type: 'unhandled_error',
-        }
-      ).catch(err => {
+      const error = event.error || new Error(event.message);
+      const context = {
+        filename: event.filename,
+        lineno: event.lineno,
+        colno: event.colno,
+        type: 'unhandled_error',
+      };
+
+      // Отправляем в Sentry
+      SentryService.captureError(error, {
+        level: 'error',
+        tags: { type: 'unhandled_error' },
+        extra: context,
+      });
+      
+      // Отправляем в Supabase
+      ErrorLogsService.logFrontendError(error, 'error', context).catch(err => {
         console.error('❌ Не удалось залогировать ошибку:', err);
       });
     };
@@ -32,14 +40,20 @@ export const useErrorLogger = () => {
         ? event.reason 
         : new Error(String(event.reason));
 
-      ErrorLogsService.logFrontendError(
-        error,
-        'error',
-        {
-          type: 'unhandled_rejection',
-          promise: event.promise,
-        }
-      ).catch(err => {
+      const context = {
+        type: 'unhandled_rejection',
+        promise: event.promise,
+      };
+
+      // Отправляем в Sentry
+      SentryService.captureError(error, {
+        level: 'error',
+        tags: { type: 'unhandled_rejection' },
+        extra: context,
+      });
+
+      // Отправляем в Supabase
+      ErrorLogsService.logFrontendError(error, 'error', context).catch(err => {
         console.error('❌ Не удалось залогировать ошибку:', err);
       });
     };

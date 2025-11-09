@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { User, Session } from '@supabase/supabase-js';
+import { SentryService } from '@/services/SentryService';
 
 // Расширенный интерфейс пользователя с дополнительными свойствами
 interface ExtendedUser extends User {
@@ -113,9 +114,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             const mappedUser = mapSupabaseUser(session.user);
             console.log('✅ Установка пользователя из INITIAL_SESSION:', mappedUser?.email);
             setUser(mappedUser);
+            // Устанавливаем пользователя в Sentry
+            SentryService.setUser({
+              id: mappedUser?.id,
+              email: mappedUser?.email,
+              username: mappedUser?.displayName,
+            });
           } else {
             console.log('ℹ️ INITIAL_SESSION без сессии - ожидаем событий входа');
             setUser(null);
+            SentryService.setUser(null);
           }
           
           // Только после первого INITIAL_SESSION снимаем loading
@@ -127,15 +135,26 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           if (session?.user) {
             const mappedUser = mapSupabaseUser(session.user);
             setUser(mappedUser);
+            SentryService.setUser({
+              id: mappedUser?.id,
+              email: mappedUser?.email,
+              username: mappedUser?.displayName,
+            });
           }
         } else if (event === 'SIGNED_OUT') {
           console.log('👋 Пользователь вышел');
           setUser(null);
+          SentryService.setUser(null);
         } else if (event === 'TOKEN_REFRESHED') {
           console.log('🔄 Токен обновлен');
           if (session?.user) {
             const mappedUser = mapSupabaseUser(session.user);
             setUser(mappedUser);
+            SentryService.setUser({
+              id: mappedUser?.id,
+              email: mappedUser?.email,
+              username: mappedUser?.displayName,
+            });
           }
         }
       }

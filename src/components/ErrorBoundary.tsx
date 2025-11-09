@@ -2,6 +2,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { AlertTriangle, RefreshCw, Home, ChevronDown, ChevronUp, Copy, Check } from 'lucide-react';
 import { ErrorLogsService } from '@/services/ErrorLogsService';
+import { SentryService } from '@/services/SentryService';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card } from '@/components/ui/card';
 
@@ -86,6 +87,19 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
       errorInfo, 
       errorContext,
       retryCount: this.state.retryCount + 1,
+    });
+
+    // Отправляем в Sentry
+    SentryService.captureError(error, {
+      level: 'error',
+      tags: {
+        errorBoundary: 'true',
+        retryCount: String(this.state.retryCount),
+      },
+      extra: {
+        ...errorContext,
+        componentStack: errorInfo.componentStack,
+      },
     });
 
     // Логируем ошибку в базу данных с полным контекстом
