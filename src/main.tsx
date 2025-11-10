@@ -14,7 +14,6 @@ import '@fontsource/philosopher/700.css'
 // Инициализация Sentry
 SentryService.init();
 
-
 const rootElement = document.getElementById('root');
 if (!rootElement) throw new Error('Root element not found');
 
@@ -26,27 +25,25 @@ try {
   console.warn('localStorage cleanup error:', error);
 }
 
-// Глобальная ссылка на root для предотвращения повторного создания
-declare global {
-  interface Window {
-    __REACT_ROOT__?: ReactDOM.Root;
-  }
+// Полная очистка старого root перед созданием нового (Vite HMR fix)
+if ((rootElement as any)._reactRootContainer || rootElement.firstChild) {
+  console.log('🔄 Очистка существующего React root для HMR');
+  rootElement.innerHTML = '';
+  delete (rootElement as any)._reactRootContainer;
 }
 
-// Безопасное создание/переиспользование root (защита от Lovable Preview + HMR)
-if (!window.__REACT_ROOT__) {
-  const root = ReactDOM.createRoot(rootElement);
-  window.__REACT_ROOT__ = root;
-  root.render(
-    <React.StrictMode>
-      <App />
-    </React.StrictMode>
-  );
-} else {
-  // Если root уже существует, обновляем его вместо создания нового
-  window.__REACT_ROOT__.render(
-    <React.StrictMode>
-      <App />
-    </React.StrictMode>
-  );
+// Создаём новый root после очистки
+const root = ReactDOM.createRoot(rootElement);
+root.render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
+);
+
+// Vite HMR: при горячей перезагрузке unmount'им root
+if (import.meta.hot) {
+  import.meta.hot.dispose(() => {
+    console.log('🔥 HMR: Unmounting React root');
+    root.unmount();
+  });
 }
