@@ -16,7 +16,10 @@ SentryService.init();
 const rootElement = document.getElementById("root");
 if (!rootElement) throw new Error("Root element not found");
 
-// Очистка локального кэша (по желанию)
+// 💣 Полная очистка контейнера перед созданием React root
+rootElement.innerHTML = "";
+
+// Очистка локального кэша (опционально)
 try {
   localStorage.removeItem("characters");
   localStorage.removeItem("recentCharacters");
@@ -24,13 +27,14 @@ try {
   console.warn("localStorage cleanup error:", e);
 }
 
+// Глобальная ссылка на root
 declare global {
   interface Window {
     __REACT_ROOT__?: ReactDOM.Root;
   }
 }
 
-// 🔧 Главное исправление — безопасное размонтирование перед новым createRoot
+// 🧹 Безопасное размонтирование старого root, если был
 if (window.__REACT_ROOT__) {
   try {
     window.__REACT_ROOT__.unmount();
@@ -40,6 +44,7 @@ if (window.__REACT_ROOT__) {
   }
 }
 
+// 🚀 Создаём новый root и рендерим
 const root = ReactDOM.createRoot(rootElement);
 window.__REACT_ROOT__ = root;
 
