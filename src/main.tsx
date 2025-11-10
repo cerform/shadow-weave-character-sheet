@@ -26,10 +26,25 @@ try {
   console.warn('localStorage cleanup error:', error);
 }
 
-// ✅ Создание root только если не существует (Lovable safe)
-if (!rootElement.hasChildNodes()) {
+// Глобальная ссылка на root для предотвращения повторного создания
+declare global {
+  interface Window {
+    __REACT_ROOT__?: ReactDOM.Root;
+  }
+}
+
+// Безопасное создание/переиспользование root (защита от Lovable Preview + HMR)
+if (!window.__REACT_ROOT__) {
   const root = ReactDOM.createRoot(rootElement);
+  window.__REACT_ROOT__ = root;
   root.render(
+    <React.StrictMode>
+      <App />
+    </React.StrictMode>
+  );
+} else {
+  // Если root уже существует, обновляем его вместо создания нового
+  window.__REACT_ROOT__.render(
     <React.StrictMode>
       <App />
     </React.StrictMode>
