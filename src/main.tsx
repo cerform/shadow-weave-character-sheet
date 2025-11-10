@@ -16,11 +16,12 @@ SentryService.init();
 const rootElement = document.getElementById("root");
 if (!rootElement) throw new Error("Root element not found");
 
+// Очистка локального кэша (по желанию)
 try {
   localStorage.removeItem("characters");
   localStorage.removeItem("recentCharacters");
-} catch (error) {
-  console.warn("localStorage cleanup error:", error);
+} catch (e) {
+  console.warn("localStorage cleanup error:", e);
 }
 
 declare global {
@@ -29,13 +30,13 @@ declare global {
   }
 }
 
-// 🧠 Исправлено: безопасная очистка старого root
+// 🔧 Главное исправление — безопасное размонтирование перед новым createRoot
 if (window.__REACT_ROOT__) {
   try {
     window.__REACT_ROOT__.unmount();
     console.log("Previous React root unmounted safely");
-  } catch (e) {
-    console.warn("Unmounting previous root failed:", e);
+  } catch (err) {
+    console.warn("React unmount failed:", err);
   }
 }
 
