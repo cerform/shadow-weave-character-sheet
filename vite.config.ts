@@ -3,16 +3,15 @@ import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
 
-// https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
   server: {
-    host: "::", // слушает на всех интерфейсах
+    host: "::",
     port: 8080,
-    strictPort: true, // предотвращает смену порта
+    strictPort: true,
     allowedHosts: ["60ca1f07-9f8f-4253-82ad-54f81c6c2667.lovableproject.com", "localhost"],
     hmr: {
-      overlay: false, // ❗ выключает ошибочный overlay, вызывающий React error #185
-      host: "localhost", // гарантирует корректную перезагрузку в Lovable Preview
+      overlay: false, // ❗ отключаем всплывающее окно ошибок Lovable
+      host: "localhost",
       protocol: "ws",
     },
   },
