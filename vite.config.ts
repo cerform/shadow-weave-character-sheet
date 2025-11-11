@@ -1,27 +1,22 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
-import { componentTagger } from "lovable-tagger";
 
-export default defineConfig(({ mode }) => ({
+export default defineConfig(() => ({
   server: {
-    host: "::",
-    port: 8080,
-    strictPort: true,
-    allowedHosts: ["60ca1f07-9f8f-4253-82ad-54f81c6c2667.lovableproject.com", "localhost"],
-    hmr: {
-      overlay: false, // ❗ отключаем всплывающее окно ошибок Lovable
-      host: "localhost",
-      protocol: "ws",
-    },
+    host: true, // слушать 0.0.0.0 — корректно в облаке
+    port: 8080, // ок оставить, но не настаиваем
+    strictPort: false, // позволить занять соседний порт, если 8080 занят
+    // ⚠️ НИЧЕГО не задаём для allowedHosts / hmr — пусть Vite/Lovable решают
   },
-  plugins: [react(), mode === "development" && componentTagger()].filter(Boolean),
+  plugins: [react()],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
-      react: path.resolve(__dirname, "./node_modules/react"),
-      "react-dom": path.resolve(__dirname, "./node_modules/react-dom"),
-      three: path.resolve(__dirname, "./node_modules/three"),
+      // ⚠️ Удалены спорные алиасы:
+      // "react": path.resolve(__dirname, "./node_modules/react"),
+      // "react-dom": path.resolve(__dirname, "./node_modules/react-dom"),
+      // "three": path.resolve(__dirname, "./node_modules/three"),
     },
   },
   test: {
