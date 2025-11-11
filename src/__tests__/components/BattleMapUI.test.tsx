@@ -1,6 +1,8 @@
 /// <reference types="vitest/globals" />
 import "@testing-library/jest-dom";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render } from "@testing-library/react";
+import { screen } from "@testing-library/dom";
+import userEvent from "@testing-library/user-event";
 import { BrowserRouter } from "react-router-dom";
 import React from "react";
 import BattleMapUI from "@/components/BattleMapUI";
@@ -190,11 +192,12 @@ describe("BattleMapUI Component", () => {
     expect(screen.getByTestId("vtt-toolbar")).toBeInTheDocument();
   });
 
-  test("кнопка возврата вызывает navigate", () => {
+  test("кнопка возврата вызывает navigate", async () => {
+    const user = userEvent.setup();
     renderBattleMapUI(undefined);
     
     const backButton = screen.getByRole("button", { name: /вернуться/i });
-    fireEvent.click(backButton);
+    await user.click(backButton);
     
     expect(mockNavigate).toHaveBeenCalledWith("/dm");
   });

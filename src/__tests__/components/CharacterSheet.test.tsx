@@ -1,6 +1,8 @@
 /// <reference types="vitest/globals" />
 import "@testing-library/jest-dom";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render } from "@testing-library/react";
+import { screen } from "@testing-library/dom";
+import userEvent from "@testing-library/user-event";
 import { BrowserRouter } from "react-router-dom";
 import React from "react";
 import CharacterSheet from "@/components/character-sheet/CharacterSheet";
@@ -147,6 +149,7 @@ describe("CharacterSheet Component", () => {
   });
 
   test("переключает вкладки корректно", async () => {
+    const user = userEvent.setup();
     renderCharacterSheet(mockCharacter);
     
     // По умолчанию показывается вкладка "Общее"
@@ -154,20 +157,16 @@ describe("CharacterSheet Component", () => {
     
     // Переключаемся на вкладку "Навыки"
     const skillsTab = screen.getByRole("tab", { name: /навыки/i });
-    fireEvent.click(skillsTab);
+    await user.click(skillsTab);
     
-    await waitFor(() => {
-      expect(screen.getByTestId("skills-panel")).toBeInTheDocument();
-    });
+    expect(screen.getByTestId("skills-panel")).toBeInTheDocument();
     
     // Переключаемся на вкладку "Управление"
     const managementTab = screen.getByRole("tab", { name: /управление/i });
-    fireEvent.click(managementTab);
+    await user.click(managementTab);
     
-    await waitFor(() => {
-      expect(screen.getByTestId("rest-panel")).toBeInTheDocument();
-      expect(screen.getByTestId("levelup-panel")).toBeInTheDocument();
-    });
+    expect(screen.getByTestId("rest-panel")).toBeInTheDocument();
+    expect(screen.getByTestId("levelup-panel")).toBeInTheDocument();
   });
 
   test("вызывает onUpdate при изменениях", () => {
