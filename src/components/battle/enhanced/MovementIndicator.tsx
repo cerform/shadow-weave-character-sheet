@@ -21,12 +21,13 @@ export const MovementIndicator: React.FC<MovementIndicatorProps> = ({ tokenId, v
     if (!token || !visible || token.hasMovedThisTurn) return [];
     
     const speed = token.speed || 6;
-    return getAccessibleCells(
+    const cells = getAccessibleCells(
       token.position,
       speed,
       tokens,
       tokenId
     );
+    return Array.isArray(cells) ? cells : [];
   }, [token, tokens, tokenId, visible]);
 
   useFrame((state) => {

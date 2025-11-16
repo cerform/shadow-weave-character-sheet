@@ -232,7 +232,7 @@ export const EnhancedBattleToken3D: React.FC<EnhancedBattleToken3DProps> = ({ to
           <div className="text-xs">
             {token.hp}/{token.maxHp} HP | AC {token.ac}
           </div>
-          {token.conditions.length > 0 && (
+          {token.conditions && token.conditions.length > 0 && (
             <div className="text-xs text-yellow-400">
               {token.conditions.join(', ')}
             </div>
