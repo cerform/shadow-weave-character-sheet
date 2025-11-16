@@ -17,6 +17,7 @@ import UnauthorizedPage from '@/pages/UnauthorizedPage';
 import DebugPage from '@/pages/DebugPage';
 import HooksDebugPage from '@/pages/HooksDebugPage';
 import AdminPage from '@/pages/AdminPage';
+import AdminTestingPage from '@/pages/admin/AdminTestingPage';
 import ErrorLogsPage from '@/pages/admin/ErrorLogsPage';
 import CharactersListPage from '@/pages/CharactersListPage';
 import CharacterManagementPage from '@/pages/CharacterManagementPage';
@@ -277,6 +278,11 @@ const AppRoutes: React.FC = () => {
       <Route path="/admin/error-logs" element={
         <ProtectedAdminRoute>
           <ErrorLogsPage />
+        </ProtectedAdminRoute>
+      } />
+      <Route path="/admin/testing" element={
+        <ProtectedAdminRoute>
+          <AdminTestingPage />
         </ProtectedAdminRoute>
       } />
       
