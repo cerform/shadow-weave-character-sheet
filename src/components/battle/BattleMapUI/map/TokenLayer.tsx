@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import type { EnhancedToken } from '@/stores/enhancedBattleStore';
 import { TokenVisual } from '@/components/battle/TokenVisual';
-import { stableSort } from '../utils/stableSort';
+import { sanitizeTokens } from '@/utils/tokenSanitizer';
 import { GRID } from '../utils/constants';
 
 interface TokenLayerProps {
@@ -26,9 +26,9 @@ export function TokenLayer({
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
 
-  // CRITICAL: Stable sort prevents React Error #185
+  // CRITICAL: Global TokenSanitizer prevents React Error #185
   const sortedTokens = useMemo(
-    () => stableSort(tokens, (a, b) => a.id.localeCompare(b.id)),
+    () => sanitizeTokens(tokens),
     [tokens]
   );
 

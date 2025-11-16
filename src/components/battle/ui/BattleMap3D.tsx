@@ -16,6 +16,7 @@ import SessionChat from '@/components/session/SessionChat';
 import { SessionAudioPlayer } from '@/components/session/SessionAudioPlayer';
 import { useSessionSync } from '@/hooks/useSessionSync';
 import ZoomControls from './ZoomControls';
+import { sanitizeTokens } from '@/utils/tokenSanitizer';
 
 interface BattleMap3DProps {
   sessionId?: string;
@@ -40,13 +41,12 @@ export default function BattleMap3D({
     clearMap
   } = useEnhancedBattleStore();
   
-  // Стабилизируем список токенов чтобы избежать ошибки #185
-  // Используем глубокую сравнение для предотвращения лишних ререндеров
-  const stableTokens = useMemo(() => {
-    const filtered = enhancedTokens.filter(token => token && token.id);
-    // Сортируем по id для стабильности порядка
-    return filtered.sort((a, b) => a.id.localeCompare(b.id));
-  }, [enhancedTokens]);
+  // Стабилизируем список токенов с помощью глобального TokenSanitizer
+  // Предотвращает React Error #185 через глубокое клонирование и валидацию
+  const stableTokens = useMemo(
+    () => sanitizeTokens(enhancedTokens),
+    [enhancedTokens]
+  );
   
   const { sessionState, updateSessionState } = useSessionSync(sessionId);
   const canvasRef = useRef<HTMLCanvasElement>(null);

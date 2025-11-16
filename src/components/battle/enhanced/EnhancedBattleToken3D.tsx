@@ -25,6 +25,7 @@ interface EnhancedBattleToken3DProps {
 }
 
 // Компонент 3D модели персонажа
+// ИСПРАВЛЕНО: useGLTF вызывается ВНЕ try-catch для предотвращения React Error #185
 const Character3DModel = ({ modelType, position, isActive, isSelected, isEnemy, scale = 1, token }: {
   modelType: keyof typeof MODEL_PATHS;
   position: [number, number, number];
@@ -36,20 +37,16 @@ const Character3DModel = ({ modelType, position, isActive, isSelected, isEnemy, 
 }) => {
   const modelPath = MODEL_PATHS[modelType] || MODEL_PATHS.default;
   
+  // ✅ КРИТИЧНО: Хук ВСЕГДА вызывается, независимо от ошибок
+  let gltf;
   try {
-    const { scene } = useGLTF(modelPath);
-    const clonedScene = useMemo(() => scene.clone(), [scene]);
-    
-    return (
-      <primitive 
-        object={clonedScene} 
-        position={[0, 0, 0]}
-        scale={[scale, scale, scale]}
-        castShadow
-        receiveShadow
-      />
-    );
+    gltf = useGLTF(modelPath);
   } catch (error) {
+    gltf = null;
+  }
+  
+  // Условный РЕНДЕРИНГ, а не условный ХУК
+  if (!gltf || !gltf.scene) {
     // Fallback к базовой геометрии если модель не загрузилась
     const tokenColor = token.color || (isEnemy ? "#ef4444" : "#22c55e");
     const emissiveColor = isSelected ? "#fbbf24" : (isActive ? "#3b82f6" : "#000000");
@@ -65,6 +62,18 @@ const Character3DModel = ({ modelType, position, isActive, isSelected, isEnemy, 
       </mesh>
     );
   }
+  
+  const clonedScene = useMemo(() => gltf.scene.clone(), [gltf.scene]);
+  
+  return (
+    <primitive 
+      object={clonedScene} 
+      position={[0, 0, 0]}
+      scale={[scale, scale, scale]}
+      castShadow
+      receiveShadow
+    />
+  );
 };
 
 export const EnhancedBattleToken3D: React.FC<EnhancedBattleToken3DProps> = ({ token }) => {
