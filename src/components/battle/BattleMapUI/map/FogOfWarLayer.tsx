@@ -1,0 +1,47 @@
+import React, { useEffect, useRef } from 'react';
+
+interface FogOfWarLayerProps {
+  fogData: Uint8Array;
+  width: number;
+  height: number;
+  visible: boolean;
+}
+
+export function FogOfWarLayer({ fogData, width, height, visible }: FogOfWarLayerProps) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    if (!visible || !canvasRef.current || !fogData.length) return;
+
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    // Create image data from fog data
+    const imageData = ctx.createImageData(width, height);
+    
+    for (let i = 0; i < fogData.length; i++) {
+      const revealed = fogData[i];
+      const idx = i * 4;
+      // Black fog where not revealed
+      imageData.data[idx] = 0; // R
+      imageData.data[idx + 1] = 0; // G
+      imageData.data[idx + 2] = 0; // B
+      imageData.data[idx + 3] = revealed ? 0 : 200; // Alpha (transparent if revealed)
+    }
+
+    ctx.putImageData(imageData, 0, 0);
+  }, [fogData, width, height, visible]);
+
+  if (!visible) return null;
+
+  return (
+    <canvas
+      ref={canvasRef}
+      width={width}
+      height={height}
+      className="absolute inset-0 pointer-events-none"
+      style={{ mixBlendMode: 'multiply' }}
+    />
+  );
+}
