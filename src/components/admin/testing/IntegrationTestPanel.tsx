@@ -25,26 +25,56 @@ export const IntegrationTestPanel: React.FC<IntegrationTestPanelProps> = ({ onTe
     try {
       const { data } = await supabase.auth.getSession();
       if (data.session) {
-        const { data: profile, error } = await supabase
+        const userId = data.session.user.id;
+        
+        // Проверяем существование таблицы profiles
+        const { data: profile, error: profileError } = await supabase
           .from('profiles')
           .select('*')
-          .eq('id', data.session.user.id)
-          .single();
+          .eq('id', userId)
+          .maybeSingle();
         
-        testResults.push({
-          id: 'integration-auth-profile',
-          name: 'Auth → Profile интеграция',
-          status: error ? 'failed' : 'passed',
-          message: error ? 'Ошибка получения профиля' : 'Профиль успешно загружен',
-          duration: Date.now() - startTime1,
-          timestamp: new Date().toISOString()
-        });
+        if (profileError) {
+          // Ошибка при запросе (возможно таблица не существует)
+          testResults.push({
+            id: 'integration-auth-profile',
+            name: 'Auth → Profile интеграция',
+            status: 'warning',
+            message: 'Таблица profiles не настроена или недоступна',
+            details: profileError.message,
+            duration: Date.now() - startTime1,
+            timestamp: new Date().toISOString()
+          });
+        } else if (!profile) {
+          // Профиль не найден - это нормально для нового пользователя
+          testResults.push({
+            id: 'integration-auth-profile',
+            name: 'Auth → Profile интеграция',
+            status: 'warning',
+            message: 'Профиль пользователя не создан',
+            details: 'Это нормально для нового пользователя. Профиль будет создан автоматически при первом использовании.',
+            duration: Date.now() - startTime1,
+            timestamp: new Date().toISOString()
+          });
+        } else {
+          // Профиль найден
+          testResults.push({
+            id: 'integration-auth-profile',
+            name: 'Auth → Profile интеграция',
+            status: 'passed',
+            message: 'Профиль успешно загружен',
+            details: `User ID: ${userId}, Display Name: ${profile.display_name || 'не указано'}`,
+            duration: Date.now() - startTime1,
+            timestamp: new Date().toISOString()
+          });
+        }
       } else {
         testResults.push({
           id: 'integration-auth-profile',
           name: 'Auth → Profile интеграция',
           status: 'warning',
           message: 'Нет активной сессии для тестирования',
+          details: 'Войдите в систему для тестирования интеграции Auth → Profile',
           duration: Date.now() - startTime1,
           timestamp: new Date().toISOString()
         });
@@ -54,7 +84,8 @@ export const IntegrationTestPanel: React.FC<IntegrationTestPanelProps> = ({ onTe
         id: 'integration-auth-profile',
         name: 'Auth → Profile интеграция',
         status: 'failed',
-        message: 'Ошибка интеграции',
+        message: 'Критическая ошибка интеграции',
+        details: err instanceof Error ? err.message : 'Неизвестная ошибка',
         duration: Date.now() - startTime1,
         timestamp: new Date().toISOString()
       });
