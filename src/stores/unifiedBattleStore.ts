@@ -1,6 +1,7 @@
 // Единое хранилище для объединенной боевой системы
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { shallow } from 'zustand/shallow';
 import type { EnhancedToken, CombatEvent } from '@/stores/enhancedBattleStore';
 import type { Character, CombatState } from '@/types/dnd5e';
 

@@ -4,6 +4,7 @@ import * as THREE from "three";
 import { useBattleUIStore } from "@/stores/battleUIStore";
 import BattleToken3D from "./BattleToken3D";
 import { useEnhancedBattleStore } from "@/stores/enhancedBattleStore";
+import { useTokensStable } from "@/stores/unifiedBattleStoreExports";
 import { EnhancedBattleToken3D } from "../enhanced/EnhancedBattleToken3D";
 import { Model3DErrorBoundary } from "../enhanced/Model3DErrorBoundary";
 import { Button } from "@/components/ui/button";
@@ -30,7 +31,9 @@ export default function BattleMap3D({
   mapId = 'main-map',
   isDM = false
 }: Partial<BattleMap3DProps> & { isDM?: boolean }) {
-  const tokens = useBattleUIStore((s) => s.tokens);
+  // Стабилизируем список токенов с помощью безопасного селектора
+  // ✅ КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Используем useTokensStable вместо прямого обращения к store
+  const tokens = useTokensStable();
   const { 
     tokens: enhancedTokens, 
     selectedTokenId, 
