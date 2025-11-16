@@ -2,6 +2,8 @@
 // Полный улучшенный валидатор хуков для Lovable + Vite
 // Анализирует исходные файлы через Vite dev server
 
+import { HookErrorsService } from '@/services/HookErrorsService';
+
 async function startHookValidator() {
   const forbidden = ["useState", "useEffect", "useMemo", "useCallback", "useRef", "useReducer"];
 
@@ -67,6 +69,24 @@ async function startHookValidator() {
             `%c${v.type} → line ${v.line}:\n   ${v.text}`,
             "color: orange"
           );
+          
+          // Определяем тип нарушения и хук
+          const hookMatch = v.text.match(/(useState|useEffect|useMemo|useCallback|useRef|useReducer)/);
+          const hook = hookMatch ? hookMatch[1] : 'unknown';
+          
+          let violationType: 'map' | 'conditional' | 'nested_function' | 'switch' = 'nested_function';
+          if (v.type.includes('.map()')) violationType = 'map';
+          else if (v.type.includes('conditional')) violationType = 'conditional';
+          else if (v.type.includes('switch')) violationType = 'switch';
+          
+          // Сохраняем ошибку в сервис
+          HookErrorsService.add({
+            file: path,
+            line: v.line,
+            code: v.text,
+            type: violationType,
+            hook: hook,
+          });
         }
         console.groupEnd();
       }

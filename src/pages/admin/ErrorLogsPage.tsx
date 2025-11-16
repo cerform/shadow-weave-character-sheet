@@ -16,6 +16,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
+import { HookErrorsTab } from '@/components/admin/HookErrorsTab';
 
 const ErrorLogsPage: React.FC = () => {
   const navigate = useNavigate();
@@ -450,8 +451,16 @@ const ErrorLogsPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Stats */}
-        {stats && (
+        {/* Tabs */}
+        <Tabs defaultValue="errors" className="w-full">
+          <TabsList className="grid w-full grid-cols-2 max-w-md">
+            <TabsTrigger value="errors">Ошибки системы</TabsTrigger>
+            <TabsTrigger value="hooks">Ошибки хуков</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="errors" className="space-y-6">
+            {/* Stats */}
+            {stats && (
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <Card>
               <CardHeader className="pb-2">
@@ -639,12 +648,18 @@ const ErrorLogsPage: React.FC = () => {
                 {filteredLogs.length === 0 && (
                   <div className="text-center py-12 text-muted-foreground">
                     Логов не найдено
-                  </div>
-                )}
-              </div>
-            </ScrollArea>
-          </CardContent>
-        </Card>
+                </div>
+              )}
+            </div>
+          </ScrollArea>
+        </CardContent>
+      </Card>
+          </TabsContent>
+
+          <TabsContent value="hooks" className="space-y-6">
+            <HookErrorsTab />
+          </TabsContent>
+        </Tabs>
       </div>
 
       {/* Error Details Dialog */}
