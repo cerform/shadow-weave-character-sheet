@@ -95,7 +95,7 @@ export const PlayerTokensList: React.FC<PlayerTokensListProps> = ({
                             variant="destructive" 
                             className="text-xs py-0 px-1"
                           >
-                            {condition}
+                            {String(condition)}
                           </Badge>
                         ))}
                       </div>

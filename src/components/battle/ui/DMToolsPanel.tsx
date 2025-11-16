@@ -103,7 +103,7 @@ export function DMToolsPanel({
                       <div className="flex-1">
                         <div className="font-medium text-sm">{entity.name}</div>
                         <div className="text-xs text-muted-foreground">
-                          HP: {entity.hp.current}/{entity.hp.max} | AC: {entity.ac}
+                          HP: {Number(entity.hp.current || 0)}/{Number(entity.hp.max || 1)} | AC: {Number(entity.ac || 0)}
                         </div>
                       </div>
                       <Button variant="outline" size="sm">

@@ -270,7 +270,7 @@ export const BottomPanel: React.FC<BottomPanelProps> = ({
                   <div>Тип: {selectedAction.type}</div>
                   <div>Дальность: {selectedAction.range === -1 ? 'Self' : `${selectedAction.range} ft`}</div>
                   {selectedAction.damage && (
-                    <div>Урон: {selectedAction.damage.dice} ({selectedAction.damage.type})</div>
+                    <div>Урон: {String(selectedAction.damage.dice || '')} ({String(selectedAction.damage.type || '')})</div>
                   )}
                 </>
               ) : (

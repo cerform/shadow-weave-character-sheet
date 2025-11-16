@@ -698,7 +698,7 @@ const ModernDMDashboard: React.FC = () => {
                             variant="destructive" 
                             className="text-xs px-1 py-0"
                           >
-                            {condition}
+                            {String(condition)}
                           </Badge>
                         ))}
                       </div>

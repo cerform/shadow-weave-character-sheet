@@ -139,7 +139,7 @@ export const ConditionsPanel: React.FC<ConditionsPanelProps> = ({ tokenId }) => 
                     <SelectContent>
                       {PRESET_CONDITIONS.map(condition => (
                         <SelectItem key={condition.name} value={condition.name}>
-                          {condition.name}
+                          {String(condition.name || '')}
                         </SelectItem>
                       ))}
                       <SelectItem value="custom">Пользовательское...</SelectItem>
@@ -211,13 +211,13 @@ export const ConditionsPanel: React.FC<ConditionsPanelProps> = ({ tokenId }) => 
               >
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="font-medium">{condition.name}</span>
+                    <span className="font-medium">{String(condition.name || '')}</span>
                     <Badge variant="outline">
-                      {condition.duration} раунд{condition.duration > 1 ? 'ов' : ''}
+                      {String(condition.duration || 0)} раунд{(condition.duration || 0) > 1 ? 'ов' : ''}
                     </Badge>
                   </div>
                   <p className="text-sm text-muted-foreground">
-                    {condition.description}
+                    {String(condition.description || '')}
                   </p>
                 </div>
                 <Button

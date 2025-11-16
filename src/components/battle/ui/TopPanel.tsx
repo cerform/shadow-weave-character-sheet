@@ -107,7 +107,7 @@ export const TopPanel: React.FC<TopPanelProps> = ({
                 />
               </div>
               <div className="text-xs font-mono min-w-[50px] text-right">
-                {activeEntity.hp.current}/{activeEntity.hp.max}
+                {Number(activeEntity.hp.current || 0)}/{Number(activeEntity.hp.max || 1)}
               </div>
             </div>
           </>

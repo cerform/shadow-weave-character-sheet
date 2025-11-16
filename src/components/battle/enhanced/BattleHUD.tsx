@@ -183,11 +183,11 @@ export const BattleHUD: React.FC = () => {
                       {event.diceRoll && (
                         <div className="flex items-center gap-2 text-xs bg-secondary/50 rounded p-1">
                           <Dice6 className="w-3 h-3 text-primary" />
-                          <span className="font-mono">{event.diceRoll.dice}</span>
+                          <span className="font-mono">{String(event.diceRoll.dice || '')}</span>
                           <span className="text-muted-foreground">→</span>
-                          <span className="font-bold text-primary">{event.diceRoll.result}</span>
+                          <span className="font-bold text-primary">{Number(event.diceRoll.result || 0)}</span>
                           {event.diceRoll.breakdown && (
-                            <span className="text-muted-foreground">({event.diceRoll.breakdown})</span>
+                            <span className="text-muted-foreground">({String(event.diceRoll.breakdown)})</span>
                           )}
                         </div>
                       )}
