@@ -1214,34 +1214,34 @@ export default function BattleMapUI({ sessionId }: { sessionId?: string }) {
                    </div>
 
                    {/* Панель выбранного токена */}
-                   {selectedId && (() => {
-                     const t = tokens.find(x => x.id === selectedId);
-                     if (!t || !t.position) return null;
-                     const left = Math.min(MAP_W - 260, Math.max(0, t.position.x + GRID + 8));
-                     const top = Math.min(MAP_H - 170, Math.max(0, t.position.y - 8));
-                    return (
-                      <div className="absolute z-10" style={{ left, top }}>
-                        <div className="w-64 rounded-xl border bg-card p-3 space-y-2 shadow-xl">
-                          <div className="flex items-center justify-between">
-                            <div className="font-semibold">{t.name}</div>
-                            <button 
-                              className="text-muted-foreground hover:text-foreground" 
-                              onClick={() => setSelectedId(null)}
-                            >
-                              ✕
-                            </button>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <div className="px-2 py-1 rounded bg-secondary text-xs">
-                              HP: {t.hp}/{t.maxHp}
-                            </div>
-                            <div className="px-2 py-1 rounded bg-secondary text-xs">
-                              AC: {t.ac}
-                            </div>
-                            <div className="px-2 py-1 rounded bg-secondary text-xs">
-                              Init: {t.initiative}
-                            </div>
-                          </div>
+                    {selectedId && (() => {
+                      const t = tokens.find(x => x.id === selectedId);
+                      if (!t || !t.position) return null;
+                      const left = Math.min(MAP_W - 260, Math.max(0, Number(t.position.x || 0) + GRID + 8));
+                      const top = Math.min(MAP_H - 170, Math.max(0, Number(t.position.y || 0) - 8));
+                     return (
+                       <div className="absolute z-10" style={{ left, top }}>
+                         <div className="w-64 rounded-xl border bg-card p-3 space-y-2 shadow-xl">
+                           <div className="flex items-center justify-between">
+                             <div className="font-semibold">{String(t.name || 'Токен')}</div>
+                             <button 
+                               className="text-muted-foreground hover:text-foreground" 
+                               onClick={() => setSelectedId(null)}
+                             >
+                               ✕
+                             </button>
+                           </div>
+                           <div className="flex items-center gap-2">
+                             <div className="px-2 py-1 rounded bg-secondary text-xs">
+                               HP: {Number(t.hp || 0)}/{Number(t.maxHp || 0)}
+                             </div>
+                             <div className="px-2 py-1 rounded bg-secondary text-xs">
+                               AC: {Number(t.ac || 0)}
+                             </div>
+                             <div className="px-2 py-1 rounded bg-secondary text-xs">
+                               Init: {Number(t.initiative || 0)}
+                             </div>
+                           </div>
                           <div className="flex items-center gap-2 text-sm">
                             <button 
                               className="px-2 py-1 rounded border hover:bg-secondary"
