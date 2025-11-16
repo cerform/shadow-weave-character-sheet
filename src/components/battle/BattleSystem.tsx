@@ -499,7 +499,7 @@ export const BattleSystem: React.FC<BattleSystemProps> = ({
           <ScrollArea className="h-32">
             {tokens.map((token) => (
               <div key={token.id} className="flex items-center justify-between p-2 border-b">
-                <span className="text-sm">{token.name}</span>
+                <span className="text-sm">{String(token.name || 'Token')}</span>
                 <Button
                   size="sm"
                   variant="outline"

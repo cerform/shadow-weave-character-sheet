@@ -173,14 +173,14 @@ export const IntegratedCombatSystem: React.FC<IntegratedCombatSystemProps> = ({
                     >
                       <div className="flex justify-between items-center">
                         <div>
-                          <div className="font-medium">{character.name}</div>
+                          <div className="font-medium">{String(character.name || 'Character')}</div>
                           <div className="text-sm text-muted-foreground">
-                            Уровень {character.level}
+                            Уровень {Number(character.level || 1)}
                           </div>
                         </div>
                         <div className="text-right">
                           <div className="text-sm">
-                            HP: {character.hitPoints}/{character.maxHitPoints}
+                            HP: {Number(character.hitPoints || 0)}/{Number(character.maxHitPoints || 0)}
                           </div>
                           <div className="text-sm text-muted-foreground">
                             AC: {character.armorClass}

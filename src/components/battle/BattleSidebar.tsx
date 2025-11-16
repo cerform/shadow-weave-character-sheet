@@ -227,13 +227,13 @@ const BattleSidebar: React.FC<BattleSidebarProps> = ({
                               <div className="flex items-center gap-2">
                                 <div 
                                   className="w-3 h-3 rounded-full" 
-                                  style={{ backgroundColor: token.color || '#3b82f6' }}
+                                  style={{ backgroundColor: String(token.color || '#3b82f6') }}
                                 />
-                                <span>{token.name || `Токен ${index + 1}`}</span>
+                                <span>{String(token.name || `Токен ${index + 1}`)}</span>
                               </div>
                               {token.hp && (
                                 <Badge variant="outline" className="text-xs">
-                                  {token.hp}/{token.maxHp}
+                                  {Number(token.hp || 0)}/{Number(token.maxHp || 0)}
                                 </Badge>
                               )}
                             </div>

@@ -171,9 +171,9 @@ export const PlayerView: React.FC = () => {
                       onClick={() => handleTokenSelect(character.id)}
                     >
                       <div className="text-xs space-y-1">
-                        <div className="font-medium">{character.name}</div>
+                        <div className="font-medium">{String(character.name || 'Character')}</div>
                         <div className="text-muted-foreground">
-                          Уровень {character.level}
+                          Уровень {Number(character.level || 1)}
                         </div>
                         {token && currentCharacter?.id === character.id && (
                           <Badge variant="outline" className="text-xs">

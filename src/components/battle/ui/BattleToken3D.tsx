@@ -116,13 +116,13 @@ export default function BattleToken3D({ token }: { token: Token }) {
                   hpPercent > 30 ? 'bg-yellow-500' : 'bg-red-500'
                 }`}
                 style={{ width: `${hpPercent}%` }}
-                title={`${token.hp}/${token.maxHp} HP`}
+                title={`${Number(token.hp || 0)}/${Number(token.maxHp || 0)} HP`}
               />
             </div>
             
             {/* Числовые HP */}
             <div className="text-xs text-muted-foreground mt-0.5">
-              {token.hp}/{token.maxHp}
+              {Number(token.hp || 0)}/{Number(token.maxHp || 0)}
             </div>
 
             {/* Иконки состояний */}

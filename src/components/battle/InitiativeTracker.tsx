@@ -45,14 +45,14 @@ const InitiativeTracker: React.FC<InitiativeTrackerProps> = ({
                   ${item.isActive ? 'bg-primary/20 border-primary' : 'bg-card border-transparent'}`}
               >
                 <div className="w-6 h-6 flex items-center justify-center bg-muted/30 rounded-full font-medium">
-                  {item.roll}
+                  {Number(item.roll || 0)}
                 </div>
                 
                 {token && (
                   <div 
                     className="w-6 h-6 rounded-full bg-center bg-cover"
                     style={{ 
-                      backgroundImage: `url(${token.img})`,
+                      backgroundImage: `url(${String(token.img || '')})`,
                       border: `1px solid ${
                         token.type === "boss" 
                           ? "#ff5555" 
@@ -64,7 +64,7 @@ const InitiativeTracker: React.FC<InitiativeTrackerProps> = ({
                   />
                 )}
                 
-                <div className="flex-1 truncate">{item.name}</div>
+                <div className="flex-1 truncate">{String(item.name || 'Character')}</div>
                 
                 {item.isActive && (
                   <div className="text-xs bg-primary text-primary-foreground px-2 py-0.5 rounded">
