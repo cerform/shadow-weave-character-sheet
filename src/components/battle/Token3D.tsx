@@ -263,7 +263,7 @@ const Token3D: React.FC<Token3DProps> = ({
           anchorX="center"
           anchorY="middle"
         >
-          {`${token.hp}/${token.maxHp}`}
+          {`${Number(token.hp || 0)}/${Number(token.maxHp || 1)}`}
         </Text>
       </group>
     );
@@ -310,7 +310,7 @@ const Token3D: React.FC<Token3DProps> = ({
         anchorX="center"
         anchorY="middle"
       >
-        {token.name}
+        {String(token.name || 'Token')}
       </Text>
 
       {/* Индикатор выделения */}

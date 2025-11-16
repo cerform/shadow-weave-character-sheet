@@ -160,7 +160,7 @@ const DraggableToken3D: React.FC<DraggableToken3DProps> = ({
           outlineWidth={0.05}
           outlineColor="black"
         >
-          {token.name}
+          {String(token.name || 'Token')}
         </Text>
       )}
 
@@ -188,7 +188,7 @@ const DraggableToken3D: React.FC<DraggableToken3DProps> = ({
             anchorX="center"
             anchorY="middle"
           >
-            {`${token.hp}/${token.maxHp}`}
+            {`${Number(token.hp || 0)}/${Number(token.maxHp || 1)}`}
           </Text>
         </group>
       )}

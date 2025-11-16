@@ -107,7 +107,7 @@ export const TokenRenderer: React.FC<TokenRendererProps> = ({
       {/* Имя токена */}
       <Text
         y={radius + 5}
-        text={token.name}
+        text={String(token.name || 'Token')}
         fontSize={10}
         fill="hsl(var(--foreground))"
         width={50}
@@ -143,7 +143,7 @@ export const TokenRenderer: React.FC<TokenRendererProps> = ({
           {/* Текст HP */}
           <Text
             y={-radius - 10}
-            text={`${token.hp}/${token.maxHp}`}
+            text={`${Number(token.hp || 0)}/${Number(token.maxHp || 1)}`}
             fontSize={8}
             fill="hsl(var(--foreground))"
             width={30}
