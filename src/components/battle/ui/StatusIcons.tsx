@@ -16,12 +16,14 @@ export default function StatusIcons({ conditions }: { conditions: string[] }) {
   return (
     <div className="flex gap-1 mt-1 justify-center flex-wrap">
       {conditions.map((condition, index) => {
-        const statusInfo = iconMap[condition.toLowerCase()];
+        // Ensure condition is a string
+        const conditionStr = typeof condition === 'string' ? condition : String(condition);
+        const statusInfo = iconMap[conditionStr.toLowerCase()];
         if (!statusInfo) return null;
         
         return (
           <span
-            key={`${condition}-${index}`}
+            key={`${conditionStr}-${index}`}
             className={`${statusInfo.color} text-sm drop-shadow-md`}
             title={statusInfo.title}
           >
