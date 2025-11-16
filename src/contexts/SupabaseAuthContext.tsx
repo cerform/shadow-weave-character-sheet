@@ -87,78 +87,58 @@ interface AuthProviderProps {
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<ExtendedUser | null>(null);
+  const [session, setSession] = useState<Session | null>(null); // КРИТИЧНО: храним сессию для токенов
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let mounted = true;
-    let initialSessionProcessed = false;
     
-    // Подписываемся на изменения аутентификации
+    // 1. СНАЧАЛА подписываемся на события
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         console.log('🔐 onAuthStateChange:', event, 'сессия:', !!session, 'user:', session?.user?.email);
         if (!mounted) return;
         
-        // INITIAL_SESSION - обрабатываем только первый раз
-        if (event === 'INITIAL_SESSION') {
-          // Игнорируем повторные INITIAL_SESSION (из-за StrictMode или двойной инициализации)
-          if (initialSessionProcessed) {
-            console.log('⚠️ Игнорируем повторный INITIAL_SESSION');
-            return;
-          }
-          
-          console.log('🎯 Обработка первого INITIAL_SESSION');
-          initialSessionProcessed = true;
-          
-          if (session?.user) {
-            const mappedUser = mapSupabaseUser(session.user);
-            console.log('✅ Установка пользователя из INITIAL_SESSION:', mappedUser?.email);
-            setUser(mappedUser);
-            // Устанавливаем пользователя в Sentry
-            SentryService.setUser({
-              id: mappedUser?.id,
-              email: mappedUser?.email,
-              username: mappedUser?.displayName,
-            });
-          } else {
-            console.log('ℹ️ INITIAL_SESSION без сессии - ожидаем событий входа');
-            setUser(null);
-            SentryService.setUser(null);
-          }
-          
-          // Только после первого INITIAL_SESSION снимаем loading
-          setLoading(false);
-        } 
-        // Остальные события обрабатываем всегда
-        else if (event === 'SIGNED_IN') {
-          console.log('✅ Пользователь вошел');
-          if (session?.user) {
-            const mappedUser = mapSupabaseUser(session.user);
-            setUser(mappedUser);
-            SentryService.setUser({
-              id: mappedUser?.id,
-              email: mappedUser?.email,
-              username: mappedUser?.displayName,
-            });
-          }
-        } else if (event === 'SIGNED_OUT') {
-          console.log('👋 Пользователь вышел');
+        // Сохраняем сессию и пользователя
+        setSession(session);
+        const mappedUser = session?.user ? mapSupabaseUser(session.user) : null;
+        
+        if (mappedUser) {
+          console.log(`✅ ${event}: установка пользователя`, mappedUser.email);
+          setUser(mappedUser);
+          SentryService.setUser({
+            id: mappedUser.id,
+            email: mappedUser.email,
+            username: mappedUser.displayName,
+          });
+        } else {
+          console.log(`👋 ${event}: очистка пользователя`);
           setUser(null);
           SentryService.setUser(null);
-        } else if (event === 'TOKEN_REFRESHED') {
-          console.log('🔄 Токен обновлен');
-          if (session?.user) {
-            const mappedUser = mapSupabaseUser(session.user);
-            setUser(mappedUser);
-            SentryService.setUser({
-              id: mappedUser?.id,
-              email: mappedUser?.email,
-              username: mappedUser?.displayName,
-            });
-          }
+        }
+        
+        // Снимаем loading после первого события
+        if (event === 'INITIAL_SESSION') {
+          setLoading(false);
         }
       }
     );
+    
+    // 2. ЗАТЕМ проверяем существующую сессию
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!mounted) return;
+      console.log('📦 getSession результат:', !!session, session?.user?.email);
+      setSession(session);
+      const mappedUser = session?.user ? mapSupabaseUser(session.user) : null;
+      setUser(mappedUser);
+      if (mappedUser) {
+        SentryService.setUser({
+          id: mappedUser.id,
+          email: mappedUser.email,
+          username: mappedUser.displayName,
+        });
+      }
+    });
 
     return () => {
       mounted = false;
