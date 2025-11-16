@@ -3,6 +3,7 @@ import React, { useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useVTT } from '@/vtt/hooks/useVTT';
 import { VTTUI } from '@/vtt/ui/VTTUI';
+import { FogTools } from '@/vtt/ui/FogTools';
 import { Loader2 } from 'lucide-react';
 
 export default function VTTBattlePage() {
@@ -12,12 +13,23 @@ export default function VTTBattlePage() {
   // Test map URL - можно заменить на реальную карту из Supabase
   const testMapUrl = 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=1200&q=80'; // Fantasy map placeholder
   
-  const { canvasRef, core, state } = useVTT({
+  const { canvasRef, core, state, fog } = useVTT({
     sessionId: sessionId || 'test-session',
     isDM,
     gridSize: 50,
     mapUrl: testMapUrl
   });
+
+  // Initialize fog of war
+  useEffect(() => {
+    if (!core || !state.initialized) return;
+
+    const mapId = 'test-map-id';
+    const gridWidth = 40;
+    const gridHeight = 40;
+
+    fog.initializeFog(sessionId || 'test-session', mapId, isDM, gridWidth, gridHeight);
+  }, [core, state.initialized, sessionId, isDM]);
 
   // Add test tokens for demonstration
   useEffect(() => {
@@ -118,7 +130,20 @@ export default function VTTBattlePage() {
 
       {/* React UI overlay (only when initialized) */}
       {state.initialized && (
-        <VTTUI core={core} isDM={isDM} />
+        <>
+          <VTTUI core={core} isDM={isDM} />
+          
+          {/* Fog Tools (DM only) */}
+          {isDM && (
+            <FogTools
+              brush={fog.brush}
+              onBrushChange={fog.setBrush}
+              onRevealAll={() => core?.revealAllFog()}
+              onHideAll={() => core?.hideAllFog()}
+              visible={fog.enabled}
+            />
+          )}
+        </>
       )}
     </div>
   );
