@@ -1,6 +1,6 @@
 import { Html, useGLTF } from "@react-three/drei";
 import { ThreeEvent, useFrame } from "@react-three/fiber";
-import { useRef, useState, useMemo } from "react";
+import { useRef, useState, useMemo, memo } from "react";
 import { useUnifiedBattleStore } from "@/stores/unifiedBattleStore";
 import { type EnhancedToken } from "@/stores/enhancedBattleStore";
 import { canMoveToPosition, snapToGrid, gridToWorld, type GridPosition } from "@/utils/movementUtils";
@@ -27,7 +27,8 @@ interface EnhancedBattleToken3DProps {
 
 // Компонент 3D модели персонажа
 // ✅ ИСПРАВЛЕНО: useGLTF вызывается БЕЗУСЛОВНО (не в try-catch)
-const Character3DModel = ({ modelType, position, isActive, isSelected, isEnemy, scale = 1, token }: {
+// ✅ МЕМОИЗАЦИЯ: Обёрнут в React.memo() для стабильности при рендеринге массива
+const Character3DModel = memo(({ modelType, position, isActive, isSelected, isEnemy, scale = 1, token }: {
   modelType: keyof typeof MODEL_PATHS;
   position: [number, number, number];
   isActive: boolean;
@@ -76,7 +77,7 @@ const Character3DModel = ({ modelType, position, isActive, isSelected, isEnemy, 
       receiveShadow
     />
   );
-};
+});
 
 export const EnhancedBattleToken3D: React.FC<EnhancedBattleToken3DProps> = ({ token }) => {
   const meshRef = useRef<THREE.Group>(null);

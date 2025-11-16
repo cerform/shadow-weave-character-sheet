@@ -6,7 +6,6 @@ import BattleToken3D from "./BattleToken3D";
 import { useEnhancedBattleStore } from "@/stores/enhancedBattleStore";
 import { EnhancedBattleToken3D } from "../enhanced/EnhancedBattleToken3D";
 import { Model3DErrorBoundary } from "../enhanced/Model3DErrorBoundary";
-import { MovementIndicator } from "../enhanced/MovementIndicator";
 import { Button } from "@/components/ui/button";
 import { Upload, X } from "lucide-react";
 import { FogInteractionSystem } from '../fog/FogInteractionSystem';
@@ -244,14 +243,6 @@ export default function BattleMap3D({
               </Model3DErrorBoundary>
             ))}
           </React.Suspense>
-
-          {/* Индикатор доступных клеток для движения */}
-          {enhancedActiveId && (
-            <MovementIndicator 
-              tokenId={enhancedActiveId} 
-              visible={showMovementGrid}
-            />
-          )}
 
           {/* Система управления камерой */}
           <CameraControlSystem />
