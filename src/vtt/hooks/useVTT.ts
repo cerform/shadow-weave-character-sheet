@@ -2,6 +2,8 @@
 import { useRef, useEffect, useState } from 'react';
 import { VTTCore } from '../engine/VTTCore';
 import type { VTTConfig, VTTState } from '../types/engine';
+import { useEnhancedBattleStore } from '@/stores/enhancedBattleStore';
+import { enhancedTokenToVTT } from '../utils/tokenAdapter';
 
 export function useVTT(config: VTTConfig) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -11,6 +13,9 @@ export function useVTT(config: VTTConfig) {
     loading: true,
     error: null
   });
+
+  // Get tokens from Zustand store
+  const tokens = useEnhancedBattleStore((state) => state.tokens);
 
   useEffect(() => {
     if (!canvasRef.current) return;
@@ -47,6 +52,23 @@ export function useVTT(config: VTTConfig) {
       }
     };
   }, [config.sessionId]); // Only re-initialize if sessionId changes
+
+  // Sync tokens from Zustand store to WebGL renderer
+  useEffect(() => {
+    if (!coreRef.current || !state.initialized) return;
+
+    console.log('[useVTT] Syncing tokens from Zustand store:', tokens.length);
+
+    // Update all tokens in WebGL renderer
+    tokens.forEach((token) => {
+      const vttToken = enhancedTokenToVTT(token);
+      coreRef.current?.addOrUpdateToken(vttToken);
+    });
+
+    // TODO: Remove tokens that no longer exist in store
+    // (need to track previous tokens)
+
+  }, [tokens, state.initialized]);
 
   return { 
     canvasRef, 
