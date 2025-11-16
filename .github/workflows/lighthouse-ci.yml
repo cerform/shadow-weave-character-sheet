@@ -1,0 +1,85 @@
+name: Lighthouse CI
+
+on:
+  pull_request:
+    branches: [main, master]
+  push:
+    branches: [main, master]
+
+jobs:
+  lighthouse:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build project
+        run: npm run build
+
+      - name: Run Lighthouse CI
+        run: |
+          npm install -g @lhci/cli@latest
+          lhci autorun
+        env:
+          LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
+
+      - name: Check Lighthouse scores
+        run: |
+          SCORE=$(cat .lighthouseci/lighthouse-results.json | jq '.categories.performance.score * 100')
+          echo "Performance Score: $SCORE"
+          if (( $(echo "$SCORE < 80" | bc -l) )); then
+            echo "❌ Performance score $SCORE is below 80!"
+            exit 1
+          else
+            echo "✅ Performance score $SCORE meets requirements"
+          fi
+
+      - name: Upload Lighthouse results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lighthouse-results
+          path: .lighthouseci/
+
+      - name: Comment PR with Lighthouse results
+        uses: actions/github-script@v7
+        if: github.event_name == 'pull_request'
+        with:
+          script: |
+            const fs = require('fs');
+            const results = JSON.parse(fs.readFileSync('.lighthouseci/lighthouse-results.json', 'utf8'));
+            
+            const scores = {
+              performance: Math.round(results.categories.performance.score * 100),
+              accessibility: Math.round(results.categories.accessibility.score * 100),
+              bestPractices: Math.round(results.categories['best-practices'].score * 100),
+              seo: Math.round(results.categories.seo.score * 100),
+            };
+
+            const emoji = (score) => score >= 90 ? '🟢' : score >= 50 ? '🟠' : '🔴';
+
+            const comment = `## 🔦 Lighthouse CI Results
+
+            | Category | Score |
+            |----------|-------|
+            | ${emoji(scores.performance)} Performance | ${scores.performance} |
+            | ${emoji(scores.accessibility)} Accessibility | ${scores.accessibility} |
+            | ${emoji(scores.bestPractices)} Best Practices | ${scores.bestPractices} |
+            | ${emoji(scores.seo)} SEO | ${scores.seo} |
+
+            ${scores.performance < 80 ? '❌ **Performance score is below 80 - PR blocked!**' : '✅ All scores meet requirements'}
+            `;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
