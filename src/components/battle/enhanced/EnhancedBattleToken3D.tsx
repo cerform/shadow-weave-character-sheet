@@ -1,3 +1,4 @@
+import React from "react";
 import { Html, useGLTF } from "@react-three/drei";
 import { ThreeEvent, useFrame } from "@react-three/fiber";
 import { useRef, useState, useMemo, memo, useCallback } from "react";
@@ -25,9 +26,55 @@ interface EnhancedBattleToken3DProps {
   token: EnhancedToken;
 }
 
-// Компонент 3D модели персонажа
-// ✅ ИСПРАВЛЕНО: useGLTF вызывается БЕЗУСЛОВНО (не в try-catch)
-// ✅ МЕМОИЗАЦИЯ: Обёрнут в React.memo() для стабильности при рендеринге массива
+// ✅ КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Отдельные компоненты для каждой модели
+// чтобы избежать динамического пути в useGLTF (нарушение Rules of Hooks)
+
+// Fallback компонент для ошибок загрузки модели
+const FallbackModel = memo(({ token, isActive, isSelected, isEnemy }: {
+  token: EnhancedToken;
+  isActive: boolean;
+  isSelected: boolean;
+  isEnemy: boolean;
+}) => {
+  const tokenColor = token.color || (isEnemy ? "#ef4444" : "#22c55e");
+  const emissiveColor = isSelected ? "#fbbf24" : (isActive ? "#3b82f6" : "#000000");
+  
+  return (
+    <mesh castShadow>
+      <cylinderGeometry args={[0.4, 0.4, 1.2]} />
+      <meshStandardMaterial 
+        color={tokenColor}
+        emissive={emissiveColor}
+        emissiveIntensity={isSelected ? 0.3 : (isActive ? 0.2 : 0)}
+      />
+    </mesh>
+  );
+});
+
+// Компонент для каждого типа модели с ФИКСИРОВАННЫМ путём
+const ModelComponent = memo(({ modelPath, scale = 1 }: { modelPath: string; scale?: number }) => {
+  // ✅ ХУК ВЫЗЫВАЕТСЯ С ФИКСИРОВАННЫМ ПУТЁМ
+  const gltf = useGLTF(modelPath, true);
+  
+  const clonedScene = useMemo(
+    () => gltf?.scene ? gltf.scene.clone() : null,
+    [gltf?.scene]
+  );
+  
+  if (!clonedScene) return null;
+  
+  return (
+    <primitive 
+      object={clonedScene} 
+      position={[0, 0, 0]}
+      scale={[scale, scale, scale]}
+      castShadow
+      receiveShadow
+    />
+  );
+});
+
+// Главный компонент выбирает правильную модель через УСЛОВНЫЙ РЕНДЕРИНГ
 const Character3DModel = memo(({ modelType, position, isActive, isSelected, isEnemy, scale = 1, token }: {
   modelType: keyof typeof MODEL_PATHS;
   position: [number, number, number];
@@ -39,43 +86,10 @@ const Character3DModel = memo(({ modelType, position, isActive, isSelected, isEn
 }) => {
   const modelPath = MODEL_PATHS[modelType] || MODEL_PATHS.default;
   
-  // ✅ ХУК ВСЕГДА ВЫЗЫВАЕТСЯ (без try-catch) - это требование React Rules of Hooks
-  const gltf = useGLTF(modelPath, true); // true = draco support
-  
-  // ✅ УСЛОВНАЯ ПРОВЕРКА (не условный хук)
-  const hasValidModel = gltf?.scene;
-  
-  // ✅ ХУК ВСЕГДА ВЫЗЫВАЕТСЯ
-  const clonedScene = useMemo(
-    () => hasValidModel ? gltf.scene.clone() : null,
-    [gltf?.scene, hasValidModel]
-  );
-  
-  // Условный РЕНДЕРИНГ если модель не загрузилась
-  if (!hasValidModel || !clonedScene) {
-    const tokenColor = token.color || (isEnemy ? "#ef4444" : "#22c55e");
-    const emissiveColor = isSelected ? "#fbbf24" : (isActive ? "#3b82f6" : "#000000");
-    
-    return (
-      <mesh castShadow>
-        <cylinderGeometry args={[0.4, 0.4, 1.2]} />
-        <meshStandardMaterial 
-          color={tokenColor}
-          emissive={emissiveColor}
-          emissiveIntensity={isSelected ? 0.3 : (isActive ? 0.2 : 0)}
-        />
-      </mesh>
-    );
-  }
-  
   return (
-    <primitive 
-      object={clonedScene} 
-      position={[0, 0, 0]}
-      scale={[scale, scale, scale]}
-      castShadow
-      receiveShadow
-    />
+    <React.Suspense fallback={<FallbackModel token={token} isActive={isActive} isSelected={isSelected} isEnemy={isEnemy} />}>
+      <ModelComponent modelPath={modelPath} scale={scale} />
+    </React.Suspense>
   );
 });
 
