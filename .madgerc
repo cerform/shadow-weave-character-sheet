@@ -1,0 +1,34 @@
+{
+  "fontSize": "10px",
+  "fontName": "Arial",
+  "backgroundColor": "#000000",
+  "nodeColor": "#c6c5fe",
+  "edgeColor": "#757575",
+  "graphVizPath": false,
+  "excludeRegExp": [
+    "node_modules",
+    "\\.test\\.",
+    "\\.spec\\.",
+    "\\.stories\\.",
+    "__tests__",
+    "__mocks__",
+    "vite\\.config",
+    "vitest\\.config",
+    "jest\\.config"
+  ],
+  "fileExtensions": [
+    "ts",
+    "tsx",
+    "js",
+    "jsx"
+  ],
+  "includeNpm": false,
+  "detectiveOptions": {
+    "ts": {
+      "skipTypeImports": true
+    },
+    "tsx": {
+      "skipTypeImports": true
+    }
+  }
+}
