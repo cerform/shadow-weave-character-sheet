@@ -34,14 +34,14 @@ const ActivePlayerIndicator: React.FC<ActivePlayerIndicatorProps> = ({
         {activePlayer.img && (
           <div className="w-8 h-8 rounded-full overflow-hidden border-2 border-white/60">
             <img 
-              src={activePlayer.img} 
-              alt={activePlayer.name} 
+              src={String(activePlayer.img || '')} 
+              alt={String(activePlayer.name || 'Player')} 
               className="w-full h-full object-cover"
             />
           </div>
         )}
         <div className="flex flex-col">
-          <span className="text-white font-bold">{activePlayer.name}</span>
+          <span className="text-white font-bold">{String(activePlayer.name || 'Player')}</span>
           <span className="text-white/80 text-xs">
             {isYourTurn ? 'Ваш ход!' : 'Текущий ход'}
           </span>
@@ -55,7 +55,7 @@ const ActivePlayerIndicator: React.FC<ActivePlayerIndicatorProps> = ({
             borderColor: 'rgba(255,255,255,0.5)'
           }}
         >
-          {activePlayer.type}
+          {String(activePlayer.type || '')}
         </Badge>
       </div>
     </div>

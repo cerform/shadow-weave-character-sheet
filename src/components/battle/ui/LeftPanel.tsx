@@ -188,13 +188,13 @@ export const LeftPanel: React.FC<LeftPanelProps> = ({
                   key={index}
                   variant="outline"
                   className="text-xs px-1 py-0 h-5"
-                  title={`${condition.name}: ${condition.description}`}
+                  title={`${String(condition.name || 'Condition')}: ${String(condition.description || '')}`}
                 >
                   <span className="mr-1">{getConditionIcon(condition)}</span>
-                  {condition.name}
+                  {String(condition.name || 'Condition')}
                   {condition.duration.type === 'rounds' && (
                     <span className="ml-1 text-muted-foreground">
-                      ({condition.duration.value}r)
+                      ({Number(condition.duration.value || 0)}r)
                     </span>
                   )}
                 </Badge>

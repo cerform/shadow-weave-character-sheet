@@ -487,16 +487,16 @@ const ModernDMDashboard: React.FC = () => {
                 key={token.id}
                 className="absolute w-8 h-8 rounded-full border-2 border-white shadow-lg cursor-pointer transform hover:scale-110 transition-transform overflow-hidden"
                 style={{
-                  left: `${token.position_x}px`,
-                  top: `${token.position_y}px`
+                  left: `${Number(token.position_x || 0)}px`,
+                  top: `${Number(token.position_y || 0)}px`
                 }}
-                title={`${token.name} (${token.current_hp}/${token.max_hp} HP)`}
+                title={`${String(token.name || 'Token')} (${Number(token.current_hp || 0)}/${Number(token.max_hp || 0)} HP)`}
                 onClick={() => openTokenEditor(token)}
               >
                 {token.image_url ? (
                   <img 
-                    src={token.image_url} 
-                    alt={token.name}
+                    src={String(token.image_url || '')} 
+                    alt={String(token.name || 'Token')}
                     className="w-full h-full object-cover"
                     onError={(e) => {
                       // Fallback при ошибке загрузки изображения

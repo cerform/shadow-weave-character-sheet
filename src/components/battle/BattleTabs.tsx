@@ -294,13 +294,13 @@ const BattleTabs: React.FC<BattleTabsProps> = ({
                       <div 
                         className="w-6 h-6 rounded-full overflow-hidden flex-shrink-0"
                         style={{
-                          backgroundImage: `url(${token.img})`,
+                          backgroundImage: `url(${String(token.img || '')})`,
                           backgroundSize: 'cover',
                           backgroundPosition: 'center',
                           border: `2px solid ${currentTheme.accent}80`,
                         }}
                       />
-                      <span className="text-sm truncate">{token.name}</span>
+                      <span className="text-sm truncate">{String(token.name || 'Token')}</span>
                     </div>
                     
                     {item.isActive && (
@@ -383,13 +383,13 @@ const TokenCard: React.FC<TokenCardProps> = ({ token, isSelected, onSelect, onUp
             <div className="flex justify-between items-start">
               <div 
                 className="font-medium truncate" 
-                title={token.name}
+                title={String(token.name || 'Token')}
                 style={{
                   textShadow: '0px 1px 2px rgba(0, 0, 0, 0.8)',
                   color: token.type === 'player' ? '#FFFFFF' : token.type === 'boss' ? '#FFCCBC' : '#FFFFFF',
                 }}
               >
-                {token.name}
+                {String(token.name || 'Token')}
               </div>
               {onRemove && (
                 <Button 
@@ -404,12 +404,12 @@ const TokenCard: React.FC<TokenCardProps> = ({ token, isSelected, onSelect, onUp
             </div>
             
             <div className="text-xs text-muted-foreground flex justify-between items-center gap-1">
-              <div>КЗ: {token.ac}</div>
+              <div>КЗ: {Number(token.ac || 0)}</div>
               <div className="flex-1 flex items-center gap-1">
                 <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
                   <div className={`h-full ${healthColor}`} style={{width: `${healthPercent}%`}}></div>
                 </div>
-                <span>{token.hp}/{token.maxHp}</span>
+                <span>{Number(token.hp || 0)}/{Number(token.maxHp || 0)}</span>
               </div>
             </div>
             

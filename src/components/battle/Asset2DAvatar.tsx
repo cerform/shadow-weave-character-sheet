@@ -114,7 +114,7 @@ const Asset2DAvatar: React.FC<Asset2DAvatarProps> = ({
         outlineWidth={0.02}
         outlineColor="black"
       >
-        {avatar.name}
+        {String(avatar.name || 'Avatar')}
       </Text>
 
       {/* Выделение при выборе */}

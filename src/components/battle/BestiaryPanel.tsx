@@ -264,13 +264,13 @@ export const BestiaryPanel: React.FC<BestiaryPanelProps> = ({ addToMap }) => {
                   />
                 </div>
                 <div>
-                  <div className="font-medium">{monster.name}</div>
+                  <div className="font-medium">{String(monster.name || 'Monster')}</div>
                   <div className="text-xs text-muted-foreground">
-                    {monster.size} {monster.type} • CR {monster.challenge}
+                    {String(monster.size || '')} {String(monster.type || '')} • CR {String(monster.challenge || '0')}
                   </div>
                   <div className="text-xs mt-1">
-                    <span className="mr-2">AC: {monster.ac}</span>
-                    <span>HP: {monster.hp}</span>
+                    <span className="mr-2">AC: {Number(monster.ac || 0)}</span>
+                    <span>HP: {Number(monster.hp || 0)}</span>
                   </div>
                 </div>
               </div>

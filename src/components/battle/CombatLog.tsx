@@ -59,7 +59,7 @@ export const CombatLog: React.FC = () => {
                 <div key={logEntry.id} className="space-y-2">
                   <div className="flex items-center gap-2 text-sm font-medium">
                     <Badge variant="outline">
-                      Раунд {logEntry.round}, Ход {logEntry.turn + 1}
+                      Раунд {Number(logEntry.round || 0)}, Ход {Number(logEntry.turn || 0) + 1}
                     </Badge>
                     <span className="text-muted-foreground">
                       {format(logEntry.timestamp, 'HH:mm:ss', { locale: ru })}
@@ -72,28 +72,28 @@ export const CombatLog: React.FC = () => {
                         key={action.id}
                         className="flex items-start gap-2 p-2 rounded-lg bg-muted"
                       >
-                        <span className="text-lg">{getActionIcon(action.type)}</span>
+                        <span className="text-lg">{getActionIcon(String(action.type || ''))}</span>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-1">
-                            <span className="font-medium">{action.actor}</span>
+                            <span className="font-medium">{String(action.actor || 'Unknown')}</span>
                             <Badge 
-                              variant={getActionColor(action.type) as any}
+                              variant={getActionColor(String(action.type || '')) as any}
                               className="text-xs"
                             >
-                              {action.type}
+                              {String(action.type || 'action')}
                             </Badge>
                             {action.damage && (
                               <Badge variant="destructive" className="text-xs">
-                                {action.damage} урона
+                                {Number(action.damage || 0)} урона
                               </Badge>
                             )}
                           </div>
                           <p className="text-sm text-muted-foreground">
-                            {action.description}
+                            {String(action.description || '')}
                           </p>
                           {action.target && (
                             <p className="text-xs text-muted-foreground mt-1">
-                              Цель: {action.target}
+                              Цель: {String(action.target || '')}
                             </p>
                           )}
                         </div>

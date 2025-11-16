@@ -103,10 +103,10 @@ export const BottomPanel: React.FC<BottomPanelProps> = ({
           }
         }}
         className="relative flex flex-col items-center p-2 h-16 min-w-[80px] transition-all"
-        title={`${action.name}\n${action.description}\nRange: ${action.range === -1 ? 'Self' : action.range + 'ft'}\nType: ${action.type}`}
+        title={`${String(action.name || 'Action')}\n${String(action.description || '')}\nRange: ${action.range === -1 ? 'Self' : String(action.range) + 'ft'}\nType: ${String(action.type || '')}`}
       >
         <Icon className="w-5 h-5 mb-1" />
-        <span className="text-xs leading-tight text-center">{action.name}</span>
+        <span className="text-xs leading-tight text-center">{String(action.name || 'Action')}</span>
         
         {/* Hotkey indicator */}
         <Badge 
