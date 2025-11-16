@@ -40,6 +40,11 @@ export default function BattleMap3D({
     clearMap
   } = useEnhancedBattleStore();
   
+  // Стабилизируем список токенов чтобы избежать ошибки #185
+  const stableTokens = useMemo(() => {
+    return enhancedTokens.filter(token => token && token.id);
+  }, [enhancedTokens]);
+  
   const { sessionState, updateSessionState } = useSessionSync(sessionId);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -223,7 +228,7 @@ export default function BattleMap3D({
           <gridHelper args={[24, 24, "hsl(var(--primary))", "hsl(var(--muted))"]} />
 
           {/* Токены с улучшенной механикой движения */}
-          {enhancedTokens.filter(token => token && token.id).map((token) => (
+          {stableTokens.map((token) => (
             <EnhancedBattleToken3D key={token.id} token={token} />
           ))}
 
