@@ -1,0 +1,57 @@
+name: Visual Regression Tests (Chromatic)
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+    branches:
+      - main
+      - master
+
+jobs:
+  chromatic:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Required for Chromatic
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build Storybook
+        run: npm run build-storybook
+
+      - name: Run Chromatic
+        uses: chromaui/action@latest
+        with:
+          projectToken: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
+          exitZeroOnChanges: false # Fail if visual changes detected
+          exitOnceUploaded: false # Wait for results
+          autoAcceptChanges: main # Auto-accept changes on main branch
+          onlyChanged: true # Only test changed stories
+          buildScriptName: 'build-storybook'
+        env:
+          CHROMATIC_PROJECT_TOKEN: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
+
+      - name: Comment on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const output = process.env.CHROMATIC_BUILD_URL || 'No build URL available';
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `## 📸 Visual Regression Tests\n\n${output}\n\nReview visual changes in Chromatic before merging.`
+            });
