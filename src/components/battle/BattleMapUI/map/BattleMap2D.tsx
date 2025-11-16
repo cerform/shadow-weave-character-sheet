@@ -11,7 +11,9 @@ interface BattleMap2DProps {
   mapHeight: number;
   tokens: EnhancedToken[];
   selectedTokenId: string | null;
-  fogData: Uint8Array;
+  fogGrid: number[][];
+  fogWidth: number;
+  fogHeight: number;
   gridVisible: boolean;
   fogVisible: boolean;
   use3D: boolean;
@@ -27,7 +29,9 @@ export function BattleMap2D({
   mapHeight,
   tokens,
   selectedTokenId,
-  fogData,
+  fogGrid,
+  fogWidth,
+  fogHeight,
   gridVisible,
   fogVisible,
   use3D,
@@ -76,9 +80,9 @@ export function BattleMap2D({
 
       {/* Fog of War */}
       <FogOfWarLayer
-        fogData={fogData}
-        width={mapWidth}
-        height={mapHeight}
+        grid={fogGrid}
+        width={fogWidth}
+        height={fogHeight}
         visible={fogVisible}
       />
     </div>

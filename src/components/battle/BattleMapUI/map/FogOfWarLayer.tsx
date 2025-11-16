@@ -1,17 +1,17 @@
 import React, { useEffect, useRef } from 'react';
 
 interface FogOfWarLayerProps {
-  fogData: Uint8Array;
+  grid: number[][];
   width: number;
   height: number;
   visible: boolean;
 }
 
-export function FogOfWarLayer({ fogData, width, height, visible }: FogOfWarLayerProps) {
+export function FogOfWarLayer({ grid, width, height, visible }: FogOfWarLayerProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
-    if (!visible || !canvasRef.current || !fogData.length) return;
+    if (!visible || !canvasRef.current || !grid.length) return;
 
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
@@ -20,18 +20,20 @@ export function FogOfWarLayer({ fogData, width, height, visible }: FogOfWarLayer
     // Create image data from fog data
     const imageData = ctx.createImageData(width, height);
     
-    for (let i = 0; i < fogData.length; i++) {
-      const revealed = fogData[i];
-      const idx = i * 4;
-      // Black fog where not revealed
-      imageData.data[idx] = 0; // R
-      imageData.data[idx + 1] = 0; // G
-      imageData.data[idx + 2] = 0; // B
-      imageData.data[idx + 3] = revealed ? 0 : 200; // Alpha (transparent if revealed)
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        const revealed = grid[y]?.[x] ?? 0;
+        const idx = (y * width + x) * 4;
+        // Black fog where not revealed
+        imageData.data[idx] = 0; // R
+        imageData.data[idx + 1] = 0; // G
+        imageData.data[idx + 2] = 0; // B
+        imageData.data[idx + 3] = revealed ? 0 : 200; // Alpha (transparent if revealed)
+      }
     }
 
     ctx.putImageData(imageData, 0, 0);
-  }, [fogData, width, height, visible]);
+  }, [grid, width, height, visible]);
 
   if (!visible) return null;
 
