@@ -357,6 +357,3 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
     return this.props.children;
   }
 }
-
-// ✅ ИСПРАВЛЕНИЕ: Экспортируем ErrorBoundary
-export { ErrorBoundary };
