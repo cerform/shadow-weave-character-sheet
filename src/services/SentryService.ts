@@ -1,4 +1,5 @@
 import * as Sentry from '@sentry/react';
+import React from 'react';
 
 /**
  * Сервис для интеграции с Sentry
@@ -23,26 +24,92 @@ export class SentryService {
       Sentry.init({
         dsn: sentryDsn,
         environment: import.meta.env.MODE,
+        release: import.meta.env.VITE_APP_VERSION || 'development',
+        
         integrations: [
+          // Трейсинг производительности
           Sentry.browserTracingIntegration(),
+          
+          // Session Replay с расширенными настройками
           Sentry.replayIntegration({
             maskAllText: false,
             blockAllMedia: false,
+            maskAllInputs: true, // Маскируем input поля для безопасности
+            // Сохраняем больше информации при ошибках
+            networkDetailAllowUrls: [window.location.origin],
+          }),
+          
+          // Автоматические breadcrumbs для DOM событий
+          Sentry.breadcrumbsIntegration({
+            console: true,
+            dom: true,
+            fetch: true,
+            history: true,
+            sentry: true,
+            xhr: true,
           }),
         ],
+        
         // Трейсинг
         tracesSampleRate: import.meta.env.MODE === 'production' ? 0.1 : 1.0,
+        
+        // Propagation targets для трейсинга
+        tracePropagationTargets: [
+          'localhost',
+          /^\//,
+          /^https:\/\/[^/]*\.lovableproject\.com/,
+        ],
+        
         // Session Replay
-        replaysSessionSampleRate: 0.1,
-        replaysOnErrorSampleRate: 1.0,
-        // Игнорируем некоторые ошибки
+        replaysSessionSampleRate: import.meta.env.MODE === 'production' ? 0.1 : 1.0,
+        replaysOnErrorSampleRate: 1.0, // Всегда записываем при ошибках
+        
+        // Игнорируем известные не критичные ошибки
         ignoreErrors: [
           'ResizeObserver loop limit exceeded',
           'Non-Error promise rejection captured',
+          'Network request failed',
+          /Loading chunk \d+ failed/,
         ],
+        
+        // Обработка перед отправкой
         beforeSend(event, hint) {
-          // Можно добавить дополнительную фильтрацию
+          // Группировка по severity
+          if (event.exception?.values?.[0]) {
+            const error = event.exception.values[0];
+            
+            // Устанавливаем уровень серьезности на основе типа ошибки
+            if (error.type?.includes('TypeError') || error.type?.includes('ReferenceError')) {
+              event.level = 'error';
+            } else if (error.type?.includes('NetworkError')) {
+              event.level = 'warning';
+            }
+          }
+          
+          // Добавляем дополнительный контекст
+          event.contexts = {
+            ...event.contexts,
+            app: {
+              version: import.meta.env.VITE_APP_VERSION || 'development',
+              build_time: import.meta.env.VITE_BUILD_TIME,
+            },
+            browser: {
+              viewport: `${window.innerWidth}x${window.innerHeight}`,
+              online: navigator.onLine,
+            },
+          };
+          
           return event;
+        },
+        
+        // Сэмплинг breadcrumbs
+        beforeBreadcrumb(breadcrumb, hint) {
+          // Фильтруем слишком частые breadcrumbs
+          if (breadcrumb.category === 'console' && breadcrumb.level === 'log') {
+            return null; // Игнорируем обычные console.log
+          }
+          
+          return breadcrumb;
         },
       });
 
