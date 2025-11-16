@@ -2,6 +2,7 @@
 import { useRef, useEffect, useState } from 'react';
 import { VTTCore } from '../engine/VTTCore';
 import type { VTTConfig, VTTState } from '../types/engine';
+import type { FogBrush } from '../types/fog';
 import { useEnhancedBattleStore } from '@/stores/enhancedBattleStore';
 import { enhancedTokenToVTT } from '../utils/tokenAdapter';
 
@@ -12,6 +13,14 @@ export function useVTT(config: VTTConfig) {
     initialized: false,
     loading: true,
     error: null
+  });
+
+  // Fog state
+  const [fogEnabled, setFogEnabled] = useState(true);
+  const [brush, setBrush] = useState<FogBrush>({
+    mode: 'reveal',
+    radius: 3,
+    strength: 1.0
   });
 
   // Get tokens from Zustand store
@@ -70,9 +79,34 @@ export function useVTT(config: VTTConfig) {
 
   }, [tokens, state.initialized]);
 
+  // Initialize fog of war
+  const initializeFog = async (sessionId: string, mapId: string, isDM: boolean, gridWidth: number, gridHeight: number) => {
+    if (!coreRef.current) return;
+    await coreRef.current.initializeFog(sessionId, mapId, isDM, gridWidth, gridHeight);
+  };
+
+  // Handle fog brush interaction
+  const handleFogBrush = (worldX: number, worldZ: number) => {
+    if (!coreRef.current || !config.isDM) return;
+
+    if (brush.mode === 'reveal') {
+      coreRef.current.revealFog(worldX, worldZ, brush);
+    } else {
+      coreRef.current.hideFog(worldX, worldZ, brush);
+    }
+  };
+
   return { 
     canvasRef, 
     core: coreRef.current,
-    state
+    state,
+    fog: {
+      enabled: fogEnabled,
+      setEnabled: setFogEnabled,
+      brush,
+      setBrush,
+      handleBrush: handleFogBrush,
+      initializeFog
+    }
   };
 }
