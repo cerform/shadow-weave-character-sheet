@@ -2,7 +2,7 @@
 if (import.meta.env.DEV) {
   const files = import.meta.glob("/src/**/*.{ts,tsx}", { as: "raw" });
 
-  const hookPattern = /\buse(State|Effect|Memo|Callback|Ref|Store|LayoutEffect|Reducer|Theme|Toast|Query|Mutation)\b/;
+  const hookPattern = /\buse(State|Effect|Memo|Callback|Ref|Store|LayoutEffect|Reducer|Theme|Toast|Query|Mutation|Frame)\b/;
   const problems: { file: string; line: number; lineText: string; reason: string }[] = [];
 
   for (const [file, loader] of Object.entries(files)) {
@@ -12,27 +12,56 @@ if (import.meta.env.DEV) {
       let mapCallbackDepth = 0;
       let inConditional = false;
       let conditionalDepth = 0;
+      let inComponent = false;
+      let componentDepth = 0;
 
       for (let i = 0; i < lines.length; i++) {
         const line = lines[i];
         const trimmedLine = line.trim();
 
-        // Пропускаем комментарии и импорты
-        if (trimmedLine.startsWith('//') || trimmedLine.startsWith('/*') || 
-            trimmedLine.startsWith('*') || trimmedLine.startsWith('import ')) {
+        // Пропускаем комментарии, импорты и пустые строки
+        if (trimmedLine.startsWith('//') || 
+            trimmedLine.startsWith('/*') || 
+            trimmedLine.startsWith('*') ||
+            trimmedLine.startsWith('import ') ||
+            trimmedLine.length === 0) {
           continue;
         }
 
+        // Определяем компоненты (функции с заглавной буквы)
+        if (/^(export\s+)?(default\s+)?function\s+[A-Z]/.test(trimmedLine) ||
+            /^(export\s+)?(default\s+)?const\s+[A-Z][a-zA-Z]*\s*[:=]/.test(trimmedLine)) {
+          inComponent = true;
+          componentDepth = 0;
+        }
+
+        // Отслеживаем вложенность компонента
+        if (inComponent) {
+          const openBraces = (line.match(/\{/g) || []).length;
+          const closeBraces = (line.match(/\}/g) || []).length;
+          componentDepth += openBraces - closeBraces;
+          
+          // Вышли из компонента
+          if (componentDepth < 0) {
+            inComponent = false;
+            componentDepth = 0;
+          }
+        }
+
+        // Только внутри компонентов проверяем
+        if (!inComponent) continue;
+
         // Трекаем .map( callback начало
-        if (/\.map\s*\(/.test(line)) {
+        if (/\.map\s*\(/.test(line) && !/\/\//.test(line.split('.map')[0])) {
           inMapCallback = true;
           mapCallbackDepth = 0;
         }
 
         // Трекаем глубину вложенности в map callback
         if (inMapCallback) {
-          mapCallbackDepth += (line.match(/\{/g) || []).length;
-          mapCallbackDepth -= (line.match(/\}/g) || []).length;
+          const openBraces = (line.match(/\{/g) || []).length;
+          const closeBraces = (line.match(/\}/g) || []).length;
+          mapCallbackDepth += openBraces - closeBraces;
           
           // Если вышли из map callback
           if (mapCallbackDepth < 0) {
@@ -41,16 +70,17 @@ if (import.meta.env.DEV) {
           }
         }
 
-        // Трекаем условные конструкции (if внутри компонента, не на уровне функции)
-        if (/\bif\s*\(/.test(line) && !trimmedLine.startsWith('if')) {
+        // Трекаем условные конструкции (только if внутри тела компонента)
+        if (/\bif\s*\(/.test(line) && !trimmedLine.startsWith('if') && componentDepth > 0) {
           inConditional = true;
           conditionalDepth = 0;
         }
 
         // Трекаем глубину вложенности в условной конструкции
         if (inConditional) {
-          conditionalDepth += (line.match(/\{/g) || []).length;
-          conditionalDepth -= (line.match(/\}/g) || []).length;
+          const openBraces = (line.match(/\{/g) || []).length;
+          const closeBraces = (line.match(/\}/g) || []).length;
+          conditionalDepth += openBraces - closeBraces;
           
           if (conditionalDepth < 0) {
             inConditional = false;
@@ -66,12 +96,15 @@ if (import.meta.env.DEV) {
           // Игнорируем определения кастомных хуков
           const isHookDefinition = /^(export\s+)?(function|const)\s+use[A-Z]/.test(trimmedLine);
           
-          if (!isTopLevel && !isHookDefinition) {
+          // Игнорируем импорты хуков
+          const isImport = /^import/.test(trimmedLine);
+          
+          if (!isTopLevel && !isHookDefinition && !isImport) {
             let reason = '';
             if (inMapCallback) {
-              reason = 'Hook внутри .map() callback';
+              reason = '❌ Hook внутри .map() callback';
             } else if (inConditional) {
-              reason = 'Hook внутри условной конструкции';
+              reason = '❌ Hook внутри условной конструкции';
             }
 
             problems.push({
@@ -113,12 +146,13 @@ if (import.meta.env.DEV) {
       const topFiles = Object.entries(byFile)
         .sort((a, b) => b[1].length - a[1].length)
         .slice(0, 5)
-        .map(([file, probs]) => `${file}: ${probs.length}`)
+        .map(([file, probs]) => `  • ${file}: ${probs.length}`)
         .join('\n');
 
       console.warn(
-        `🔍 HookValidator: Найдено ${problems.length} потенциальных нарушений\n\n` +
-        `Топ-5 проблемных файлов:\n${topFiles}\n\n` +
+        `\n🔍 HookValidator: Найдено ${problems.length} потенциальных нарушений\n\n` +
+        `Топ проблемных файлов:\n${topFiles}\n\n` +
+        `📖 Смотрите src/dev/HOOKS_RULES.md для примеров исправлений\n` +
         `Подробности в Console → "❌ Invalid React hook usage detected"`
       );
     } else {
