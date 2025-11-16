@@ -9,6 +9,22 @@ export default defineConfig({
     globals: true,
     environment: 'jsdom',
     setupFiles: './src/__tests__/setup.ts',
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'json', 'html'],
+      include: [
+        'src/stores/**/*.ts',
+        'src/components/battle/enhanced/**/*.tsx',
+        'src/utils/**/*.ts',
+      ],
+      exclude: [
+        '**/__tests__/**',
+        '**/*.test.ts',
+        '**/*.test.tsx',
+        '**/types.ts',
+        '**/index.ts',
+      ],
+    },
   },
   resolve: {
     alias: {
