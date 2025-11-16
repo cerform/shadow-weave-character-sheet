@@ -15,6 +15,11 @@ import "@fontsource/philosopher/700.css";
 // Initialize Sentry
 SentryService.init();
 
+// Hook validator in development mode
+if (import.meta.env.DEV) {
+  import("./dev/HookValidator");
+}
+
 // Get root DOM node
 const rootElement = document.getElementById("root");
 if (!rootElement) throw new Error("Root element not found");
