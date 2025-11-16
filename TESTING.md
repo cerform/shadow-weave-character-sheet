@@ -282,6 +282,101 @@ A: Это признак регрессии Rules of Hooks. Не игнорир�
 **Q: Можно ли пропустить тесты?**
 A: Используйте `git commit --no-verify` ТОЛЬКО в крайних случаях. Это может привести к React Error #185 в production!
 
+## CI/CD Integration
+
+### GitHub Actions
+
+Тесты автоматически запускаются в облаке при каждом push и pull request:
+
+**Workflows:**
+
+1. **Tests & Coverage** (`.github/workflows/test.yml`)
+   - Запускается при каждом push и PR
+   - Проверяет ESLint
+   - Запускает все тесты
+   - Генерирует coverage отчет
+   - Публикует в Codecov
+   - Комментирует PR с результатами
+
+2. **Coverage Report** (`.github/workflows/coverage-report.yml`)
+   - Запускается при push в main/master
+   - Публикует HTML отчет на GitHub Pages
+   - Создает coverage badge
+
+3. **Hooks Protection Job**
+   - Специальная проверка защиты от React Error #185
+   - Блокирует PR с нарушениями Rules of Hooks
+   - Проверяет стабильность селекторов
+
+**Статусы в PR:**
+```
+✅ test / test - All tests passed (35/35)
+✅ test / hooks-protection - React Error #185 Protected
+✅ eslint - No violations found
+```
+
+### Настройка GitHub Actions
+
+1. **Codecov токен** (опционально):
+   ```
+   Settings → Secrets → New secret
+   Name: CODECOV_TOKEN
+   Value: [your-codecov-token]
+   ```
+
+2. **GitHub Pages для coverage**:
+   ```
+   Settings → Pages
+   Source: Deploy from branch
+   Branch: gh-pages / (root)
+   ```
+
+3. **Branch protection**:
+   ```
+   Settings → Branches → Add rule
+   Branch name: main
+   ✅ Require status checks to pass
+      - test / test
+      - test / hooks-protection
+   ```
+
+4. **Обновление badges в README**:
+   Замените `YOUR_USERNAME` и `YOUR_REPO` в badges на реальные значения.
+
+**Подробнее:** `GITHUB_ACTIONS_SETUP.md`
+
+### Coverage Reports
+
+Coverage отчеты доступны в трех форматах:
+
+1. **Codecov Dashboard**
+   - Интерактивные графики
+   - Сравнение между коммитами
+   - Sunburst диаграммы
+
+2. **GitHub Pages**
+   - Детальный HTML отчет
+   - `https://[username].github.io/[repo]/coverage/`
+
+3. **PR Comments**
+   - Coverage diff прямо в PR
+   - Файлы с изменениями coverage
+
+### Локальная эмуляция CI
+
+Используйте [act](https://github.com/nektos/act) для запуска GitHub Actions локально:
+
+```bash
+# Установка
+brew install act  # macOS
+# или
+curl https://raw.githubusercontent.com/nektos/act/master/install.sh | sudo bash
+
+# Запуск
+act push          # Эмулировать push event
+act pull_request  # Эмулировать PR event
+```
+
 ## Дополнительные ресурсы
 
 ### Документация проекта

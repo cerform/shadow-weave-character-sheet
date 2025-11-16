@@ -1,0 +1,21 @@
+# Auto detect text files and perform LF normalization
+* text=auto
+
+# Coverage files
+coverage/** linguist-generated=true
+*.lcov linguist-generated=true
+
+# Build artifacts
+dist/** linguist-generated=true
+build/** linguist-generated=true
+
+# Lock files
+package-lock.json linguist-generated=true
+bun.lockb linguist-generated=true
+
+# Shell scripts should use LF
+*.sh text eol=lf
+
+# Windows scripts should use CRLF
+*.bat text eol=crlf
+*.cmd text eol=crlf
