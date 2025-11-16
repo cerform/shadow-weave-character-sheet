@@ -112,6 +112,7 @@ async function startHookValidator() {
 }
 
 // Автозапуск при импорте (только в dev-режиме)
-if (import.meta.env.DEV) {
-  startHookValidator();
-}
+// ОТКЛЮЧЕНО: используем ESLint с eslint-plugin-react-hooks для профессиональной валидации
+// if (import.meta.env.DEV) {
+//   startHookValidator();
+// }
