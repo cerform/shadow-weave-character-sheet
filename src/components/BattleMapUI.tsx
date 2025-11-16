@@ -299,7 +299,7 @@ export default function BattleMapUI({ sessionId }: { sessionId?: string }) {
     };
   };
 
-  const currentMapSize = calculateMapDimensions();
+  const currentMapSize = useMemo(() => calculateMapDimensions(), [autoFitMap, mapDimensions, showAssetLibrary]);
 
   // Обработчик загрузки изображения карты
   const handleMapImageLoad = async (img: HTMLImageElement) => {
