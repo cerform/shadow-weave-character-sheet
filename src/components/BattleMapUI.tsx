@@ -569,6 +569,9 @@ export default function BattleMapUI({ sessionId }: { sessionId?: string }) {
   const [turnIndex, setTurnIndex] = useState(0);
   const initOrder = useMemo(() => [...tokens].sort((a, b) => b.initiative - a.initiative), [tokens]);
   const activeToken = initOrder.length ? initOrder[turnIndex % initOrder.length] : undefined;
+  
+  // Стабилизируем массив токенов для рендера (предотвращает Error #185)
+  const validTokens = useMemo(() => tokens.filter(t => t && t.position), [tokens]);
 
   // Перетаскивание
   const [dragId, setDragId] = useState<string | null>(null);
@@ -1148,7 +1151,7 @@ export default function BattleMapUI({ sessionId }: { sessionId?: string }) {
                   </svg>
 
                   {/* Токены */}
-                  {layers.find(l => l.id === 'tokens')?.visible && Array.isArray(tokens) ? tokens.filter(t => t && t.position).map((t) => (
+                  {layers.find(l => l.id === 'tokens')?.visible && validTokens.map((t) => (
                     <div 
                       key={t.id} 
                       style={{ left: t.position.x, top: t.position.y, width: GRID, height: GRID }} 
@@ -1180,7 +1183,7 @@ export default function BattleMapUI({ sessionId }: { sessionId?: string }) {
                         <div className="h-full bg-green-500" style={{ width: `${(t.hp / t.maxHp) * 100}%` }} />
                       </div>
                     </div>
-                  )) : null}
+                  ))}
 
                   {/* Туман войны */}
                   {fogEnabled && layers.find(l => l.id === 'fog')?.visible && (
