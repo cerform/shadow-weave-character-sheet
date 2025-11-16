@@ -12,28 +12,35 @@ export const useProtectedRoute = () => {
   const [rolesLoading, setRolesLoading] = useState(true); // Начинаем с true
   const [rolesFetched, setRolesFetched] = useState(false);
   
+  // Сбрасываем rolesFetched при смене пользователя
   useEffect(() => {
+    setRolesFetched(false);
+    setUserRoles([]);
+  }, [user?.id]);
+
+  useEffect(() => {
+    // Guard: не загружаем если уже загружены
+    if (rolesFetched) return;
+    
     const fetchUserRoles = async () => {
-      console.log('📋 fetchUserRoles: начало', { isAuthenticated, hasUser: !!user, rolesFetched, loading });
+      console.log('📋 fetchUserRoles: начало', { isAuthenticated, hasUser: !!user, rolesFetched });
       
       if (isAuthenticated && user) {
         setRolesLoading(true);
         console.log('📋 Загружаем роли для пользователя:', user.id);
         try {
-          // Используем user.id напрямую вместо повторного getUser()
           const roles = await UserRolesService.getUserRoles(user.id);
           console.log('✅ Загружены роли пользователя:', roles);
-          setUserRoles(roles.length > 0 ? roles : ['player']); // Дефолтная роль если пусто
+          setUserRoles(roles.length > 0 ? roles : ['player']);
         } catch (error) {
           console.error('❌ Ошибка загрузки ролей:', error);
-          setUserRoles(['player']); // Дефолтная роль при ошибке
+          setUserRoles(['player']);
         } finally {
           setRolesLoading(false);
           setRolesFetched(true);
           console.log('✅ Загрузка ролей завершена');
         }
-      } else if (!loading && !isAuthenticated) {
-        // Если не авторизован и загрузка auth завершена
+      } else if (!isAuthenticated) {
         console.log('👤 Пользователь не авторизован, устанавливаем пустые роли');
         setUserRoles([]);
         setRolesLoading(false);
@@ -42,7 +49,7 @@ export const useProtectedRoute = () => {
     };
 
     fetchUserRoles();
-  }, [isAuthenticated, user?.id, loading, rolesFetched]);
+  }, [isAuthenticated, user?.id, rolesFetched]);
 
   const isAdmin = userRoles.includes('admin');
   const isDM = userRoles.includes('dm') || isAdmin;
