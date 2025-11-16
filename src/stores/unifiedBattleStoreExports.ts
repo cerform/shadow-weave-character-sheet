@@ -9,8 +9,11 @@ import { useUnifiedBattleStore } from './unifiedBattleStore';
 export const useTokensStable = () => {
   const tokens = useUnifiedBattleStore((state) => state.tokens);
   
+  // ✅ ИСПРАВЛЕНО: Используем стабильную строку ID вместо создания новой при каждом рендере
+  const tokensIds = useMemo(() => tokens.map(t => t.id).join(','), [tokens]);
+  
   // ✅ Мемоизируем массив, чтобы ссылка менялась только при реальных изменениях
-  return useMemo(() => [...tokens], [tokens.length, tokens.map(t => t.id).join(',')]);
+  return useMemo(() => [...tokens], [tokens.length, tokensIds]);
 };
 
 /**
