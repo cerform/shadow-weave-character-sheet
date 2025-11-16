@@ -3,6 +3,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Shield, ArrowLeft } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/hooks/use-auth';
@@ -10,6 +11,29 @@ import { useAuth } from '@/hooks/use-auth';
 const UnauthorizedPage = () => {
   const navigate = useNavigate();
   const { currentUser, isAuthenticated } = useAuth();
+  
+  // Автоматический редирект если пользователь авторизован с правами admin
+  React.useEffect(() => {
+    if (isAuthenticated && currentUser) {
+      // Проверяем роли через user_roles
+      const checkAdminAccess = async () => {
+        const { data } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', currentUser.uid);
+        
+        if (data?.some(r => r.role === 'admin')) {
+          console.log('🔄 Редирект admin с /unauthorized на /admin');
+          navigate('/admin', { replace: true });
+        } else if (data?.some(r => r.role === 'dm')) {
+          console.log('🔄 Редирект DM с /unauthorized на /dm');
+          navigate('/dm', { replace: true });
+        }
+      };
+      
+      checkAdminAccess();
+    }
+  }, [isAuthenticated, currentUser, navigate]);
   
   const handleRedirect = () => {
     if (!isAuthenticated) {
