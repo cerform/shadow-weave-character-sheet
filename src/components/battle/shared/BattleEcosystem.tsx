@@ -4,7 +4,6 @@ import { Canvas } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useUnifiedBattleStore } from '@/stores/unifiedBattleStore';
 import { EnhancedBattleToken3D } from '../enhanced/EnhancedBattleToken3D';
-import { MovementIndicator } from '../enhanced/MovementIndicator';
 import { FogInteractionSystem } from '../fog/FogInteractionSystem';
 import { CameraControlSystem } from '../camera/CameraControlSystem';
 import { BattleSystemAdapter } from '@/adapters/battleSystemAdapter';
