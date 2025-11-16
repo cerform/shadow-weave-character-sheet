@@ -2,14 +2,17 @@
 import { WebGLRendererCore } from './WebGLRenderer';
 import { MapRenderer } from './MapRenderer';
 import { GridRenderer } from './GridRenderer';
+import { TokenRenderer } from './TokenRenderer';
 import type { VTTConfig } from '../types/engine';
 import type { MapDimensions } from '../types/map';
+import type { VTTToken } from '../types/token';
 import * as THREE from 'three';
 
 export class VTTCore {
   private renderer: WebGLRendererCore;
   private mapRenderer: MapRenderer;
   private gridRenderer: GridRenderer;
+  private tokenRenderer: TokenRenderer;
   private config: VTTConfig;
   
   private currentMapDimensions: MapDimensions | null = null;
@@ -24,6 +27,11 @@ export class VTTCore {
     this.renderer = new WebGLRendererCore(canvas);
     this.mapRenderer = new MapRenderer(this.renderer);
     this.gridRenderer = new GridRenderer(this.renderer);
+    this.tokenRenderer = new TokenRenderer(this.renderer, {
+      glowIntensity: 1.0,
+      showHPBars: true,
+      showNames: true
+    });
     
     // Initialize scene
     this.initScene();
@@ -132,6 +140,29 @@ export class VTTCore {
     return this.currentMapDimensions;
   }
 
+  /**
+   * Token management
+   */
+  addOrUpdateToken(token: VTTToken) {
+    this.tokenRenderer.addOrUpdateToken(token);
+  }
+
+  removeToken(tokenId: string) {
+    this.tokenRenderer.removeToken(tokenId);
+  }
+
+  selectToken(tokenId: string) {
+    this.tokenRenderer.selectToken(tokenId);
+  }
+
+  deselectAllTokens() {
+    this.tokenRenderer.deselectAll();
+  }
+
+  getSelectedTokenId(): string | null {
+    return this.tokenRenderer.getSelectedTokenId();
+  }
+
   start() {
     console.log('[VTTCore] Starting renderer');
     this.renderer.start();
@@ -144,6 +175,7 @@ export class VTTCore {
 
   dispose() {
     console.log('[VTTCore] Disposing VTT Core');
+    this.tokenRenderer.dispose();
     this.mapRenderer.dispose();
     this.gridRenderer.dispose();
     this.renderer.dispose();
@@ -159,5 +191,9 @@ export class VTTCore {
 
   getGridRenderer(): GridRenderer {
     return this.gridRenderer;
+  }
+
+  getTokenRenderer(): TokenRenderer {
+    return this.tokenRenderer;
   }
 }

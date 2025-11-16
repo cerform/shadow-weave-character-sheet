@@ -1,5 +1,5 @@
 // src/pages/VTTBattlePage.tsx
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useVTT } from '@/vtt/hooks/useVTT';
 import { VTTUI } from '@/vtt/ui/VTTUI';
@@ -18,6 +18,72 @@ export default function VTTBattlePage() {
     gridSize: 50,
     mapUrl: testMapUrl
   });
+
+  // Add test tokens for demonstration
+  useEffect(() => {
+    if (!core || !state.initialized) return;
+
+    // Add demo tokens
+    const demoTokens = [
+      {
+        id: 'player-1',
+        name: 'Fighter',
+        position: [-100, -100] as [number, number],
+        size: 1,
+        color: '#4444ff',
+        hp: 45,
+        maxHp: 50,
+        ac: 18,
+        isPlayer: true,
+        isVisible: true
+      },
+      {
+        id: 'player-2',
+        name: 'Wizard',
+        position: [-50, -100] as [number, number],
+        size: 1,
+        color: '#8844ff',
+        hp: 28,
+        maxHp: 30,
+        ac: 12,
+        isPlayer: true,
+        isVisible: true
+      },
+      {
+        id: 'enemy-1',
+        name: 'Goblin',
+        position: [100, 100] as [number, number],
+        size: 0.8,
+        color: '#ff4444',
+        hp: 7,
+        maxHp: 7,
+        ac: 15,
+        isPlayer: false,
+        isVisible: true
+      },
+      {
+        id: 'enemy-2',
+        name: 'Orc',
+        position: [150, 100] as [number, number],
+        size: 1.2,
+        color: '#dd2222',
+        hp: 15,
+        maxHp: 15,
+        ac: 13,
+        isPlayer: false,
+        isVisible: true
+      }
+    ];
+
+    demoTokens.forEach(token => core.addOrUpdateToken(token));
+    
+    // Select first player token for demo
+    setTimeout(() => {
+      core.selectToken('player-1');
+    }, 500);
+
+    console.log('[VTTBattlePage] Demo tokens added');
+  }, [core, state.initialized]);
 
   return (
     <div className="relative w-screen h-screen overflow-hidden bg-background">
