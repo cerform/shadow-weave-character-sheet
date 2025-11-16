@@ -3,6 +3,7 @@ import ReactDOM from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
 import { SentryService } from "./services/SentryService";
+import { ErrorBoundary } from "./components/ErrorBoundary";
 
 // Fonts
 import "@fontsource/cormorant/400.css";
@@ -28,6 +29,8 @@ if (!rootElement) throw new Error("Root element not found");
 // No manual unmounting, no DOM cleaning, no global root storage.
 ReactDOM.createRoot(rootElement).render(
   <React.StrictMode>
-    <App />
+    <ErrorBoundary>
+      <App />
+    </ErrorBoundary>
   </React.StrictMode>,
 );
