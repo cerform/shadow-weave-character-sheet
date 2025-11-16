@@ -15,6 +15,7 @@ import CharacterSheetPage from '@/pages/CharacterSheetPage';
 
 import UnauthorizedPage from '@/pages/UnauthorizedPage';
 import DebugPage from '@/pages/DebugPage';
+import HooksDebugPage from '@/pages/HooksDebugPage';
 import AdminPage from '@/pages/AdminPage';
 import ErrorLogsPage from '@/pages/admin/ErrorLogsPage';
 import CharactersListPage from '@/pages/CharactersListPage';
@@ -301,6 +302,7 @@ const AppRoutes: React.FC = () => {
       
       {/* Отладочные страницы */}
       <Route path="/debug" element={<DebugPage />} />
+      <Route path="/debug/hooks" element={<HooksDebugPage />} />
       <Route path="/test" element={
         <React.Suspense fallback={<LazyLoading />}>
           <TestPage />
