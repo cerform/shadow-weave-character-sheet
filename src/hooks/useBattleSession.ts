@@ -41,6 +41,7 @@ export const useBattleSession = (sessionId?: string) => {
   
   // Guard для предотвращения повторной инициализации
   const sessionInitialized = useRef(false);
+  const lastSessionId = useRef<string | undefined>(undefined);
 
   // Получение или создание сессии по умолчанию
   const ensureSession = async () => {
@@ -339,8 +340,15 @@ export const useBattleSession = (sessionId?: string) => {
 
   // Инициализация при монтировании с guard
   useEffect(() => {
-    // Guard: пропускаем если уже инициализированы для этого sessionId
+    // Guard: сбрасываем флаг при смене sessionId
     const key = sessionId || 'default';
+    if (lastSessionId.current !== key) {
+      console.log('🔄 Смена sessionId, сбрасываем флаг инициализации:', lastSessionId.current, '->', key);
+      sessionInitialized.current = false;
+      lastSessionId.current = key;
+    }
+    
+    // Пропускаем если уже инициализированы для текущего sessionId
     if (sessionInitialized.current) {
       console.log('⏭️ Пропуск повторной инициализации сессии:', key);
       return;
