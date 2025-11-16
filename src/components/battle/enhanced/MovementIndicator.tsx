@@ -1,9 +1,9 @@
-import React, { useMemo } from 'react';
-import { useFrame } from '@react-three/fiber';
-import { useRef } from 'react';
-import * as THREE from 'three';
-import { getAccessibleCells, gridToWorld, type GridPosition } from '@/utils/movementUtils';
-import { useUnifiedBattleStore } from '@/stores/unifiedBattleStore';
+import { useMemo, useRef, useEffect } from "react";
+import { InstancedMesh, Object3D, Color } from "three";
+import * as THREE from "three";
+import { useFrame } from "@react-three/fiber";
+import { useUnifiedBattleStore } from "@/stores/unifiedBattleStore";
+import { getAccessibleCells, gridToWorld, type GridPosition } from "@/utils/movementUtils";
 
 interface MovementIndicatorProps {
   tokenId: string;
@@ -11,12 +11,20 @@ interface MovementIndicatorProps {
   onCellClick?: (position: GridPosition) => void;
 }
 
-export const MovementIndicator: React.FC<MovementIndicatorProps> = ({ tokenId, visible, onCellClick }) => {
-  const groupRef = useRef<THREE.Group>(null);
-  const tokens = useUnifiedBattleStore(s => s.tokens);
+export const MovementIndicator: React.FC<MovementIndicatorProps> = ({ 
+  tokenId, 
+  visible, 
+  onCellClick 
+}) => {
+  const meshRef = useRef<InstancedMesh>(null);
+  const dummy = useMemo(() => new Object3D(), []);
+  const baseColor = useMemo(() => new Color("#3b82f6"), []);
+  const hoverColor = useMemo(() => new Color("#60a5fa"), []);
   
+  const tokens = useUnifiedBattleStore(s => s.tokens);
   const token = tokens.find(t => t.id === tokenId);
   
+  // Вычисляем доступные клетки
   const accessibleCells = useMemo(() => {
     if (!token || !visible || token.hasMovedThisTurn) return [];
     
@@ -30,52 +38,92 @@ export const MovementIndicator: React.FC<MovementIndicatorProps> = ({ tokenId, v
     return Array.isArray(cells) ? cells : [];
   }, [token, tokens, tokenId, visible]);
 
-  useFrame((state) => {
-    if (groupRef.current && visible && accessibleCells.length > 0) {
-      // Мягкая пульсация
-      const pulse = Math.sin(state.clock.elapsedTime * 2) * 0.1 + 0.9;
-      groupRef.current.scale.setScalar(pulse);
+  // Обновляем позиции инстансов при изменении доступных клеток
+  useEffect(() => {
+    if (!meshRef.current || accessibleCells.length === 0) return;
+    
+    const mesh = meshRef.current;
+    
+    accessibleCells.forEach((cell, i) => {
+      const worldPos = gridToWorld(cell);
+      dummy.position.set(worldPos[0], 0.01, worldPos[2]);
+      dummy.rotation.set(-Math.PI / 2, 0, 0);
+      dummy.scale.set(1, 1, 1);
+      dummy.updateMatrix();
+      mesh.setMatrixAt(i, dummy.matrix);
+    });
+    
+    mesh.instanceMatrix.needsUpdate = true;
+    
+    // Устанавливаем базовый цвет для всех инстансов
+    if (mesh.instanceColor) {
+      for (let i = 0; i < accessibleCells.length; i++) {
+        mesh.setColorAt(i, baseColor);
+      }
+      mesh.instanceColor.needsUpdate = true;
     }
+  }, [accessibleCells, dummy, baseColor]);
+
+  // Анимация пульсации
+  useFrame((state) => {
+    if (!meshRef.current || !visible || accessibleCells.length === 0) return;
+    
+    const pulse = Math.sin(state.clock.elapsedTime * 2) * 0.05 + 0.95;
+    meshRef.current.scale.setScalar(pulse);
   });
+
+  // Обработка кликов на инстансы
+  const handlePointerDown = (e: any) => {
+    e.stopPropagation();
+    const instanceId = e.instanceId;
+    
+    if (instanceId != null && instanceId < accessibleCells.length) {
+      const cell = accessibleCells[instanceId];
+      onCellClick?.(cell);
+    }
+  };
+
+  // Обработка наведения
+  const handlePointerOver = (e: any) => {
+    e.stopPropagation();
+    if (!meshRef.current) return;
+    
+    const instanceId = e.instanceId;
+    if (instanceId != null && meshRef.current.instanceColor) {
+      meshRef.current.setColorAt(instanceId, hoverColor);
+      meshRef.current.instanceColor.needsUpdate = true;
+    }
+  };
+
+  const handlePointerOut = (e: any) => {
+    e.stopPropagation();
+    if (!meshRef.current) return;
+    
+    const instanceId = e.instanceId;
+    if (instanceId != null && meshRef.current.instanceColor) {
+      meshRef.current.setColorAt(instanceId, baseColor);
+      meshRef.current.instanceColor.needsUpdate = true;
+    }
+  };
 
   if (!visible || !token || token.hasMovedThisTurn || accessibleCells.length === 0) {
     return null;
   }
 
   return (
-    <group ref={groupRef}>
-      {accessibleCells.map((cell, index) => {
-        const worldPos = gridToWorld(cell);
-        const opacity = 0.4;
-        
-        return (
-          <mesh
-            key={`movement-${cell.x}-${cell.z}`}
-            position={[worldPos[0], 0.01, worldPos[2]]}
-            rotation={[-Math.PI / 2, 0, 0]}
-            onClick={(e) => {
-              e.stopPropagation();
-              onCellClick?.(cell);
-            }}
-            onPointerOver={(e) => {
-              e.stopPropagation();
-              (e.object as any).material.color.setHex(0x60a5fa);
-            }}
-            onPointerOut={(e) => {
-              e.stopPropagation();
-              (e.object as any).material.color.setHex(0x3b82f6);
-            }}
-          >
-            <circleGeometry args={[0.4, 16]} />
-            <meshBasicMaterial
-              color="#3b82f6"
-              transparent
-              opacity={opacity}
-              side={THREE.DoubleSide}
-            />
-          </mesh>
-        );
-      })}
-    </group>
+    <instancedMesh
+      ref={meshRef}
+      args={[undefined, undefined, accessibleCells.length]}
+      onPointerDown={handlePointerDown}
+      onPointerOver={handlePointerOver}
+      onPointerOut={handlePointerOut}
+    >
+      <circleGeometry args={[0.4, 16]} />
+      <meshBasicMaterial
+        transparent
+        opacity={0.4}
+        side={THREE.DoubleSide}
+      />
+    </instancedMesh>
   );
 };
