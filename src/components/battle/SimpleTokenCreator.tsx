@@ -127,21 +127,9 @@ export default function SimpleTokenCreator({ onCreateToken, onClose }: SimpleTok
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="PC">
-                  <div className="flex items-center gap-2">
-                    {getTypeIcon('PC')} Игрок (PC)
-                  </div>
-                </SelectItem>
-                <SelectItem value="NPC">
-                  <div className="flex items-center gap-2">
-                    {getTypeIcon('NPC')} НИП (NPC)
-                  </div>
-                </SelectItem>
-                <SelectItem value="monster">
-                  <div className="flex items-center gap-2">
-                    {getTypeIcon('monster')} Монстр
-                  </div>
-                </SelectItem>
+                <SelectItem value="PC">Игрок (PC)</SelectItem>
+                <SelectItem value="NPC">НИП (NPC)</SelectItem>
+                <SelectItem value="monster">Монстр</SelectItem>
               </SelectContent>
             </Select>
           </div>
