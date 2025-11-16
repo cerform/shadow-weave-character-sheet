@@ -237,13 +237,13 @@ export const EnhancedBattleToken3D: React.FC<EnhancedBattleToken3DProps> = ({ to
       {/* UI информация над токеном */}
       <Html position={[0, 2, 0]} center>
         <div className="bg-black/80 text-white text-xs p-1 rounded whitespace-nowrap pointer-events-none">
-          <div className="font-medium">{token.name}</div>
+          <div className="font-medium">{String(token.name || 'Token')}</div>
           <div className="text-xs">
-            {token.hp}/{token.maxHp} HP | AC {token.ac}
+            {Number(token.hp || 0)}/{Number(token.maxHp || 0)} HP | AC {Number(token.ac || 0)}
           </div>
           {token.conditions && token.conditions.length > 0 && (
             <div className="text-xs text-yellow-400">
-              {token.conditions.join(', ')}
+              {Array.isArray(token.conditions) ? token.conditions.map(c => String(c)).join(', ') : ''}
             </div>
           )}
           {token.hasMovedThisTurn && (
