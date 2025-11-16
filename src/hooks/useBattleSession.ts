@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
@@ -38,6 +38,9 @@ export const useBattleSession = (sessionId?: string) => {
   const [currentMap, setCurrentMap] = useState<BattleMap | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // Guard для предотвращения повторной инициализации
+  const sessionInitialized = useRef(false);
 
   // Получение или создание сессии по умолчанию
   const ensureSession = async () => {
@@ -334,8 +337,15 @@ export const useBattleSession = (sessionId?: string) => {
     }
   };
 
-  // Инициализация при монтировании
+  // Инициализация при монтировании с guard
   useEffect(() => {
+    // Guard: пропускаем если уже инициализированы для этого sessionId
+    const key = sessionId || 'default';
+    if (sessionInitialized.current) {
+      console.log('⏭️ Пропуск повторной инициализации сессии:', key);
+      return;
+    }
+    
     const initialize = async () => {
       setLoading(true);
       setError(null);
@@ -353,6 +363,7 @@ export const useBattleSession = (sessionId?: string) => {
       }
 
       setLoading(false);
+      sessionInitialized.current = true;
     };
 
     if (isAuthenticated && user) {
@@ -361,8 +372,7 @@ export const useBattleSession = (sessionId?: string) => {
       setLoading(false);
       setCurrentMap(null);
     }
-    // Используем user?.id вместо user чтобы избежать бесконечного цикла
-  }, [isAuthenticated, user?.id, sessionId]);
+  }, [sessionId]); // ⚠️ Только sessionId!
 
   return {
     session,

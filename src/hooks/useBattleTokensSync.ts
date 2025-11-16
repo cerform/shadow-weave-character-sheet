@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useEnhancedBattleStore, EnhancedToken } from '@/stores/enhancedBattleStore';
 import { useToast } from '@/hooks/use-toast';
@@ -6,10 +6,42 @@ import { useToast } from '@/hooks/use-toast';
 /**
  * Хук для синхронизации токенов боя с Supabase
  * Загружает токены из БД и подписывается на изменения в реальном времени
+ * С батчингом обновлений для производительности
  */
 export const useBattleTokensSync = (sessionId: string) => {
   const { setTokens, updateToken, addToken, removeToken } = useEnhancedBattleStore();
   const { toast } = useToast();
+  
+  // Очередь для батчинга обновлений
+  const pendingUpdates = useRef<Map<string, Partial<EnhancedToken>>>(new Map());
+  const updateScheduled = useRef(false);
+
+  
+  // Функция для flush очереди обновлений
+  const flushUpdates = useCallback(() => {
+    if (pendingUpdates.current.size === 0) return;
+    
+    // Применяем все обновления за раз
+    pendingUpdates.current.forEach((updates, tokenId) => {
+      updateToken(tokenId, updates);
+    });
+    
+    pendingUpdates.current.clear();
+    updateScheduled.current = false;
+  }, [updateToken]);
+  
+  // Функция для планирования обновления через RAF
+  const scheduleUpdate = useCallback((tokenId: string, updates: Partial<EnhancedToken>) => {
+    pendingUpdates.current.set(tokenId, {
+      ...pendingUpdates.current.get(tokenId),
+      ...updates
+    });
+    
+    if (!updateScheduled.current) {
+      updateScheduled.current = true;
+      requestAnimationFrame(flushUpdates);
+    }
+  }, [flushUpdates]);
 
   // Загружаем токены при монтировании
   useEffect(() => {
@@ -135,7 +167,8 @@ export const useBattleTokensSync = (sessionId: string) => {
           console.log('✏️ Обновление токена:', payload.new);
           const token = payload.new;
           
-          updateToken(token.id, {
+          // Используем батчинг вместо немедленного обновления
+          scheduleUpdate(token.id, {
             name: token.name,
             hp: token.current_hp,
             maxHp: token.max_hp,
@@ -176,7 +209,9 @@ export const useBattleTokensSync = (sessionId: string) => {
 
     return () => {
       console.log('🔕 Отписка от изменений токенов');
+      // Flush оставшиеся обновления перед размонтированием
+      flushUpdates();
       supabase.removeChannel(channel);
     };
-  }, [sessionId]); // Убрали addToken, updateToken, removeToken, toast из зависимостей
+  }, [sessionId, scheduleUpdate, flushUpdates]); // Добавили scheduleUpdate и flushUpdates
 };

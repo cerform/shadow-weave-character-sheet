@@ -35,56 +35,62 @@ export function useBattleMapState(sessionId: string): MapState {
 
   const mapLoadedOnce = useRef(false);
 
-  // --- Инициализация сессии ---
+  // --- ЦЕНТРАЛИЗОВАННАЯ ИНИЦИАЛИЗАЦИЯ: DM и Player ---
   useEffect(() => {
     if (!sessionId) return;
+    
+    // Пропускаем если уже загрузили
+    if (mapLoadedOnce.current) return;
 
-    // Сброс
-    setMapUrlState(null);
-    setMapSizeState(null);
-    mapLoadedOnce.current = false;
-  }, [sessionId]);
+    const initialize = async () => {
+      console.log('🗺️ [BattleMapState] Инициализация карты для сессии:', sessionId);
+      
+      // Сброс состояния
+      setMapUrlState(null);
+      setMapSizeState(null);
 
-  // --- DM: загружаем карту из session.currentMap ---
-  useEffect(() => {
-    if (!isDM) return;
-    if (!currentMap) return;
-
-    if (currentMap.file_url && !mapLoadedOnce.current) {
-      setMapUrlState(currentMap.file_url);
-
-      if (currentMap.width && currentMap.height) {
-        setMapSizeState({
-          width: currentMap.width,
-          height: currentMap.height,
-        });
+      // DM: загружаем из currentMap
+      if (isDM && currentMap?.file_url) {
+        console.log('🎯 [DM] Загружаем карту из currentMap');
+        setMapUrlState(currentMap.file_url);
+        
+        if (currentMap.width && currentMap.height) {
+          setMapSizeState({
+            width: currentMap.width,
+            height: currentMap.height,
+          });
+        }
+        
+        mapLoadedOnce.current = true;
+        return;
       }
 
-      mapLoadedOnce.current = true;
-    }
-  }, [currentMap, isDM]);
+      // PLAYER: загружаем из game_sessions
+      if (!isDM) {
+        console.log('👥 [PLAYER] Загружаем URL карты из game_sessions');
+        const { data } = await supabase
+          .from('game_sessions')
+          .select('current_map_url')
+          .eq('id', sessionId)
+          .maybeSingle();
 
-  // --- PLAYER: получаем URL карты из live-sync (game_sessions) ---
-  useEffect(() => {
-    if (isDM || !sessionId) return;
-
-    const loadMapUrl = async () => {
-      const { data } = await supabase
-        .from('game_sessions')
-        .select('current_map_url')
-        .eq('id', sessionId)
-        .maybeSingle();
-
-      if (data?.current_map_url) {
-        setMapUrlState(data.current_map_url);
-      } else {
-        setMapUrlState(null);
+        if (data?.current_map_url) {
+          setMapUrlState(data.current_map_url);
+        }
+        
+        mapLoadedOnce.current = true;
       }
     };
 
-    loadMapUrl();
+    initialize();
+  }, [sessionId]); // ⚠️ Только sessionId!
 
-    // Real-time подписка на изменения
+  // --- Real-time подписка для Player (отдельный эффект) ---
+  useEffect(() => {
+    if (isDM || !sessionId) return;
+
+    console.log('🔔 [PLAYER] Подписка на изменения карты');
+
     const channel = supabase
       .channel(`map-sync-player-${sessionId}`)
       .on(
@@ -114,9 +120,9 @@ export function useBattleMapState(sessionId: string): MapState {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [sessionId, isDM, toast]);
+  }, [sessionId]); // ⚠️ Только sessionId!
 
-  // --- Очистка blob URLs ---
+  // --- Очистка blob URLs при размонтировании ---
   useEffect(() => {
     return () => {
       if (mapUrl?.startsWith('blob:')) {

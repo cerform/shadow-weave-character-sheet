@@ -13,8 +13,11 @@ export const useProtectedRoute = () => {
   const [rolesFetched, setRolesFetched] = useState(false);
   
   useEffect(() => {
+    // Пропускаем если роли уже загружены
+    if (rolesFetched) return;
+    
     const fetchUserRoles = async () => {
-      console.log('📋 fetchUserRoles: начало', { isAuthenticated, hasUser: !!user, loading, rolesFetched });
+      console.log('📋 fetchUserRoles: начало', { isAuthenticated, hasUser: !!user, rolesFetched });
       
       if (isAuthenticated && user) {
         setRolesLoading(true);
@@ -32,19 +35,17 @@ export const useProtectedRoute = () => {
           setRolesFetched(true);
           console.log('✅ Загрузка ролей завершена');
         }
-      } else if (!loading) {
+      } else if (!loading && !isAuthenticated) {
         // Если не авторизован и загрузка auth завершена
         console.log('👤 Пользователь не авторизован, устанавливаем пустые роли');
         setUserRoles([]);
         setRolesLoading(false);
         setRolesFetched(true);
-      } else {
-        console.log('⏳ Ожидание завершения загрузки auth...');
       }
     };
 
     fetchUserRoles();
-  }, [isAuthenticated, user?.id, loading]);
+  }, [isAuthenticated, user?.id]); // ⚠️ Убрали loading из зависимостей!
 
   const isAdmin = userRoles.includes('admin');
   const isDM = userRoles.includes('dm') || isAdmin;
