@@ -239,7 +239,7 @@ const ControlPanel3D: React.FC<ControlPanel3DProps> = ({
                           className="w-3 h-3 rounded-full" 
                           style={{ backgroundColor: token.color }}
                         />
-                        <span className="text-xs text-white truncate">{token.name}</span>
+                        <span className="text-xs text-white truncate">{String(token.name || 'Token')}</span>
                       </div>
                       <div className="flex gap-1">
                         <Button

@@ -85,7 +85,7 @@ export function TokenLayer({
             e.stopPropagation();
             onContextMenu(e, token.id);
           }}
-          title={`${token.name} (${token.hp}/${token.maxHp})`}
+          title={`${String(token.name || 'Token')} (${Number(token.hp || 0)}/${Number(token.maxHp || 1)})`}
         >
           <TokenVisual
             token={{
@@ -103,7 +103,7 @@ export function TokenLayer({
           <div className="absolute -bottom-1 left-0 right-0 h-2 bg-background/70 rounded-b-lg overflow-hidden">
             <div
               className="h-full bg-green-500"
-              style={{ width: `${(token.hp / token.maxHp) * 100}%` }}
+              style={{ width: `${(Number(token.hp || 0) / Number(token.maxHp || 1)) * 100}%` }}
             />
           </div>
         </div>

@@ -148,7 +148,7 @@ export const EnhancedToken3D: React.FC<EnhancedToken3DProps> = ({ token }) => {
           {/* Token name */}
           <div className="bg-black/70 backdrop-blur-sm px-2 py-1 rounded-full">
             <span className="text-white font-semibold text-sm">
-              {token.name}
+              {String(token.name || 'Token')}
             </span>
             {isActive && (
               <Badge variant="secondary" className="ml-1 text-xs">
@@ -165,13 +165,13 @@ export const EnhancedToken3D: React.FC<EnhancedToken3DProps> = ({ token }) => {
                 className="h-1 flex-1"
               />
               <span className="text-white text-xs font-mono">
-                {token.hp}/{token.maxHp}
+                {Number(token.hp || 0)}/{Number(token.maxHp || 1)}
               </span>
             </div>
           </div>
 
           {/* Conditions */}
-          {token.conditions.length > 0 && (
+          {Array.isArray(token.conditions) && token.conditions.length > 0 && (
             <div className="flex flex-wrap gap-1 justify-center">
               {token.conditions.map((condition, idx) => (
                 <Badge
@@ -179,7 +179,7 @@ export const EnhancedToken3D: React.FC<EnhancedToken3DProps> = ({ token }) => {
                   variant="destructive"
                   className="text-xs px-1 py-0"
                 >
-                  {condition}
+                  {String(condition)}
                 </Badge>
               ))}
             </div>
@@ -188,7 +188,7 @@ export const EnhancedToken3D: React.FC<EnhancedToken3DProps> = ({ token }) => {
           {/* AC display */}
           <div className="bg-slate-700/70 backdrop-blur-sm px-2 py-0.5 rounded-full">
             <span className="text-slate-200 text-xs">
-              AC {token.ac}
+              AC {Number(token.ac || 0)}
             </span>
           </div>
         </div>

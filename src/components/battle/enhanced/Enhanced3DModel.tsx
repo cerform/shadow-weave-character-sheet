@@ -36,27 +36,27 @@ export const Enhanced3DModel: React.FC<Enhanced3DModelProps> = ({ token, modelUr
   // Load 3D model
   useEffect(() => {
     if (!modelUrl) {
-      console.log(`⚠️ No modelUrl provided for ${token.name}`);
+      console.log(`⚠️ No modelUrl provided for ${String(token.name || 'Token')}`);
       return;
     }
     
     setLoading(true);
     
-    console.log(`🔄 Loading model for ${token.name}:`, modelUrl);
+    console.log(`🔄 Loading model for ${String(token.name || 'Token')}:`, modelUrl);
     
     const loader = new GLTFLoader();
     loader.load(
       modelUrl,
       (gltf) => {
-        console.log(`✅ Model loaded successfully for ${token.name}`);
+        console.log(`✅ Model loaded successfully for ${String(token.name || 'Token')}`);
         setModel(gltf.scene);
         setLoading(false);
       },
       (progress) => {
-        console.log(`📊 Loading progress for ${token.name}:`, progress);
+        console.log(`📊 Loading progress for ${String(token.name || 'Token')}:`, progress);
       },
       (error) => {
-        console.error(`❌ Failed to load model for ${token.name}:`, error);
+        console.error(`❌ Failed to load model for ${String(token.name || 'Token')}:`, error);
         console.error(`❌ Model URL was:`, modelUrl);
         setLoading(false);
         // Оставляем model = null для fallback геометрии
@@ -79,7 +79,7 @@ export const Enhanced3DModel: React.FC<Enhanced3DModelProps> = ({ token, modelUr
       moveToken(token.id, [mapX, token.position[1], mapZ]);
     },
     (dragging: boolean) => {
-      console.log(`Dragging ${token.name}:`, dragging);
+      console.log(`Dragging ${String(token.name || 'Token')}:`, dragging);
     },
     () => selectToken(token.id)
   );
@@ -211,7 +211,7 @@ export const Enhanced3DModel: React.FC<Enhanced3DModelProps> = ({ token, modelUr
           {/* Token name */}
           <div className="bg-black/70 backdrop-blur-sm px-2 py-1 rounded-full">
             <span className="text-white font-semibold text-sm">
-              {token.name}
+              {String(token.name || 'Token')}
             </span>
             {isActive && (
               <Badge variant="secondary" className="ml-1 text-xs">
@@ -228,13 +228,13 @@ export const Enhanced3DModel: React.FC<Enhanced3DModelProps> = ({ token, modelUr
                 className="h-1 flex-1"
               />
               <span className="text-white text-xs font-mono">
-                {token.hp}/{token.maxHp}
+                {Number(token.hp || 0)}/{Number(token.maxHp || 1)}
               </span>
             </div>
           </div>
 
           {/* Conditions */}
-          {token.conditions.length > 0 && (
+          {Array.isArray(token.conditions) && token.conditions.length > 0 && (
             <div className="flex flex-wrap gap-1 justify-center">
               {token.conditions.map((condition, idx) => (
                 <Badge
@@ -242,7 +242,7 @@ export const Enhanced3DModel: React.FC<Enhanced3DModelProps> = ({ token, modelUr
                   variant="destructive"
                   className="text-xs px-1 py-0"
                 >
-                  {condition}
+                  {String(condition)}
                 </Badge>
               ))}
             </div>
@@ -251,7 +251,7 @@ export const Enhanced3DModel: React.FC<Enhanced3DModelProps> = ({ token, modelUr
           {/* AC display */}
           <div className="bg-slate-700/70 backdrop-blur-sm px-2 py-0.5 rounded-full">
             <span className="text-slate-200 text-xs">
-              AC {token.ac}
+              AC {Number(token.ac || 0)}
             </span>
           </div>
         </div>
