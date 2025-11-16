@@ -23,7 +23,6 @@ interface BattleMapUIProps {
 
 export default function BattleMapUI({ sessionId }: BattleMapUIProps) {
   const navigate = useNavigate();
-  const { isDM } = useUserRole();
   const [currentTool, setCurrentTool] = useState<VTTTool>('select');
   const [use3D, setUse3D] = useState(false);
 
@@ -39,8 +38,8 @@ export default function BattleMapUI({ sessionId }: BattleMapUIProps) {
     );
   }
 
-  const map = useBattleMapState(sessionId, isDM);
-  const tokens = useBattleTokens(sessionId, isDM);
+  const map = useBattleMapState(sessionId);
+  const tokens = useBattleTokens(sessionId, map.isDM);
   const fog = useFogController(sessionId);
   const camera = useCamera();
   const layers = useMapLayers();
@@ -60,13 +59,13 @@ export default function BattleMapUI({ sessionId }: BattleMapUIProps) {
   return (
     <div className="battle-map-ui w-full h-full flex relative bg-background">
       <Toolbar currentTool={currentTool} onToolChange={setCurrentTool} />
-      <LeftSidebar sessionId={sessionId} isDM={isDM} onCreateToken={handleCreateToken} />
+      <LeftSidebar sessionId={sessionId} isDM={map.isDM} onCreateToken={handleCreateToken} />
       
       <div className="flex-1 relative overflow-hidden">
         <BattleMap2D
-          mapImageUrl={map.mapImageUrl}
-          mapWidth={map.mapDimensions.width}
-          mapHeight={map.mapDimensions.height}
+          mapImageUrl={map.mapUrl}
+          mapWidth={map.mapSize?.width || 2000}
+          mapHeight={map.mapSize?.height || 2000}
           tokens={tokens.validTokens}
           selectedTokenId={tokens.selectedId}
           fogData={fog.fogData}
@@ -76,7 +75,7 @@ export default function BattleMapUI({ sessionId }: BattleMapUIProps) {
           onTokenClick={tokens.handleSelectToken}
           onTokenMove={tokens.handleMoveToken}
           onContextMenu={(e, tokenId) => contextMenu.handleShowContextMenu(e.clientX, e.clientY, tokenId)}
-          onMapDrop={map.handleMapUpload}
+          onMapDrop={(file) => map.setMapFile(file)}
         />
         <ZoomControls
           zoom={camera.zoom}
@@ -88,7 +87,7 @@ export default function BattleMapUI({ sessionId }: BattleMapUIProps) {
 
       <RightSidebar
         layers={layers.layers}
-        isDM={isDM}
+        isDM={map.isDM}
         onToggleLayer={layers.handleToggleLayer}
         onToggleLayerLock={layers.handleToggleLayerLock}
       />
