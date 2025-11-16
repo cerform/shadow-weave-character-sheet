@@ -1,0 +1,9 @@
+{
+  "*.{ts,tsx}": [
+    "eslint --fix",
+    "vitest related --run --reporter=verbose"
+  ],
+  "src/**/__tests__/**/*.{ts,tsx}": [
+    "vitest --run --reporter=verbose"
+  ]
+}
