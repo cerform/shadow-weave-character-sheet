@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { clamp } from '../utils/clamp';
 
 const MIN_ZOOM = 0.25;
@@ -38,7 +38,7 @@ export function useCamera() {
     setPan({ x: 0, y: 0 });
   }, []);
 
-  return {
+  return useMemo(() => ({
     zoom,
     pan,
     handleZoomIn,
@@ -47,5 +47,5 @@ export function useCamera() {
     handlePan,
     handleReset,
     handleFitView,
-  };
+  }), [zoom, pan, handleZoomIn, handleZoomOut, handleZoomSet, handlePan, handleReset, handleFitView]);
 }

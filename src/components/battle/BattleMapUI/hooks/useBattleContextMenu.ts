@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import type { ContextMenuState } from '../types';
 
 export function useBattleContextMenu() {
@@ -25,9 +25,9 @@ export function useBattleContextMenu() {
     setContextMenu((prev) => ({ ...prev, visible: false }));
   }, []);
 
-  return {
+  return useMemo(() => ({
     contextMenu,
     handleShowContextMenu,
     handleHideContextMenu,
-  };
+  }), [contextMenu, handleShowContextMenu, handleHideContextMenu]);
 }

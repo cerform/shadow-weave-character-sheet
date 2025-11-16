@@ -53,7 +53,7 @@ export function useMapLayers() {
     [layers]
   );
 
-  return {
+  return useMemo(() => ({
     layers,
     visibleLayers,
     handleToggleLayer,
@@ -61,5 +61,5 @@ export function useMapLayers() {
     handleReorderLayers,
     isLayerVisible,
     isLayerLocked,
-  };
+  }), [layers, visibleLayers, handleToggleLayer, handleToggleLayerLock, handleReorderLayers, isLayerVisible, isLayerLocked]);
 }

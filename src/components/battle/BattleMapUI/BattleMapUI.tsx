@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { useUserRole } from '@/hooks/use-auth';
 import { useBattleMapState } from "./hooks/useBattleMapState";
 import { useBattleTokens } from "./hooks/useBattleTokens";
@@ -42,10 +42,16 @@ export default function BattleMapUI({ sessionId }: BattleMapUIProps) {
   const map = useBattleMapState(sessionId);
   const tokens = useBattleTokens(sessionId, map.isDM);
   
-  // Calculate fog grid dimensions
+  // Calculate fog grid dimensions - memoize to prevent infinite re-renders
   const GRID_CELL_SIZE = 50;
-  const gridW = Math.ceil((map.mapSize?.width || 2000) / GRID_CELL_SIZE);
-  const gridH = Math.ceil((map.mapSize?.height || 2000) / GRID_CELL_SIZE);
+  const { gridW, gridH } = useMemo(() => {
+    const width = map.mapSize?.width || 2000;
+    const height = map.mapSize?.height || 2000;
+    return {
+      gridW: Math.ceil(width / GRID_CELL_SIZE),
+      gridH: Math.ceil(height / GRID_CELL_SIZE)
+    };
+  }, [map.mapSize?.width, map.mapSize?.height]);
   
   const fog = useFogController(sessionId, 'main-map', gridW, gridH);
   const camera = useCamera();

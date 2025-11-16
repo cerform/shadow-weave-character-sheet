@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useCallback, useRef, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useUserRole } from "@/hooks/use-auth";
@@ -185,21 +185,17 @@ export function useBattleMapState(sessionId: string): MapState {
     }
   }, [isDM, currentMap]);
 
-  return {
+  return useMemo(() => ({
     sessionId,
-
     mapUrl,
     mapSize,
-
     isDM,
     loading: loadingSession,
-
     setMapUrl,
     setMapFile,
     setMapSize,
-
     refreshSessionMap,
-  };
+  }), [sessionId, mapUrl, mapSize, isDM, loadingSession, setMapUrl, setMapFile, setMapSize, refreshSessionMap]);
 }
 
 // === Utility ===

@@ -111,7 +111,7 @@ export function useBattleTokens(sessionId: string, isDM: boolean) {
     setSelectedId(tokenId);
   }, []);
 
-  return {
+  return useMemo(() => ({
     tokens,
     sortedTokens,
     validTokens,
@@ -124,5 +124,5 @@ export function useBattleTokens(sessionId: string, isDM: boolean) {
     handleUpdateToken,
     handleRemoveToken,
     handleSelectToken,
-  };
+  }), [tokens, sortedTokens, validTokens, selectedId, selectedToken, draggedId, setDraggedId, handleAddToken, handleMoveToken, handleUpdateToken, handleRemoveToken, handleSelectToken]);
 }

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useUserRole } from "@/hooks/use-auth";
 import { FogEngine } from "@/modules/fog/FogEngine";
@@ -236,16 +236,15 @@ export function useFogController(
     []
   );
 
-  return {
+  return useMemo(() => ({
     engine: engineRef.current,
     grid,
     width: gridW,
     height: gridH,
-
     reveal,
     hide,
     toggle,
     applyCircle,
     isRevealed,
-  };
+  }), [grid, gridW, gridH, reveal, hide, toggle, applyCircle, isRevealed]);
 }
