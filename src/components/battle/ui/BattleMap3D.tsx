@@ -223,7 +223,7 @@ export default function BattleMap3D({
           <gridHelper args={[24, 24, "hsl(var(--primary))", "hsl(var(--muted))"]} />
 
           {/* Токены с улучшенной механикой движения */}
-          {enhancedTokens.map((token) => (
+          {enhancedTokens.filter(token => token && token.id).map((token) => (
             <EnhancedBattleToken3D key={token.id} token={token} />
           ))}
 
