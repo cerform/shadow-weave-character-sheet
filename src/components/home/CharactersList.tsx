@@ -12,14 +12,18 @@ import { toast } from 'sonner';
 
 const CharactersList = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, isAuthenticated, loading: authLoading } = useAuth();
   const { isAdmin, isDM } = useProtectedRoute();
-  const [characters, setCharacters] = useState<any[]>([]);  // Всегда инициализируем пустым массивом
+  const [characters, setCharacters] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const loadCharacters = async () => {
-    if (!user) return;
+    // Не загружаем если не аутентифицированы
+    if (!user || !isAuthenticated) {
+      console.log('⚠️ Пропускаем загрузку: пользователь не аутентифицирован');
+      return;
+    }
     
     setLoading(true);
     setError(null);
@@ -28,7 +32,6 @@ const CharactersList = () => {
       console.log('🔄 Загружаем персонажей пользователя через Supabase');
       const userCharacters = await getUserCharacters();
       console.log('✅ Получено персонажей:', userCharacters?.length || 0);
-      // Убеждаемся, что это массив
       setCharacters(Array.isArray(userCharacters) ? userCharacters : []);
     } catch (err) {
       console.error('❌ Ошибка загрузки персонажей:', err);
@@ -40,12 +43,29 @@ const CharactersList = () => {
   };
 
   useEffect(() => {
-    if (user) {
+    // Загружаем только если аутентифицированы и не идет загрузка auth
+    if (isAuthenticated && user && !authLoading) {
       loadCharacters();
     }
-  }, [user]);
+  }, [user, isAuthenticated, authLoading]);
 
-  if (!user) {
+  // Показываем загрузку только во время проверки аутентификации
+  if (authLoading) {
+    return (
+      <Card className="magic-card">
+        <CardContent className="p-6 text-center">
+          <RefreshCw className="mx-auto h-12 w-12 text-muted-foreground mb-4 animate-spin" />
+          <h3 className="text-lg font-fantasy-heading mb-2">Проверка аутентификации...</h3>
+          <p className="text-muted-foreground font-fantasy-body">
+            Пожалуйста, подождите
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Показываем форму входа если не аутентифицированы
+  if (!isAuthenticated || !user) {
     return (
       <Card className="magic-card">
         <CardContent className="p-6 text-center">
