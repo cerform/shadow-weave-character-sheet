@@ -32,6 +32,7 @@ import AdminAssetsPage from '@/pages/AdminAssetsPage';
 import DMMapEditorPage from '@/pages/DMMapEditorPage';
 import PlayerMapPage from '@/pages/PlayerMapPage';
 import UnifiedBattlePage from '@/pages/UnifiedBattlePage';
+import VTTBattlePage from '@/pages/VTTBattlePage';
 import { BestiaryPage } from '@/components/bestiary/BestiaryPage';
 import BattleMapPage from '@/pages/BattleMapPage';
 import DnD5ePage from '@/pages/DnD5ePage';
@@ -189,6 +190,13 @@ const AppRoutes: React.FC = () => {
       
       {/* Объединенная боевая система */}
       <Route path="/unified-battle" element={<UnifiedBattlePage />} />
+      
+      {/* WebGL VTT Engine (BG3 Tactical Style) */}
+      <Route path="/vtt/:sessionId" element={
+        <ProtectedAuthRoute>
+          <VTTBattlePage />
+        </ProtectedAuthRoute>
+      } />
       
       {/* Устаревшие боевые системы (редиректы) */}
       <Route path="/battle-map-3d" element={<Navigate to="/unified-battle" replace />} />
