@@ -40,7 +40,13 @@ export default function BattleMapUI({ sessionId }: BattleMapUIProps) {
 
   const map = useBattleMapState(sessionId);
   const tokens = useBattleTokens(sessionId, map.isDM);
-  const fog = useFogController(sessionId);
+  
+  // Calculate fog grid dimensions
+  const GRID_CELL_SIZE = 50;
+  const gridW = Math.ceil((map.mapSize?.width || 2000) / GRID_CELL_SIZE);
+  const gridH = Math.ceil((map.mapSize?.height || 2000) / GRID_CELL_SIZE);
+  
+  const fog = useFogController(sessionId, 'main-map', gridW, gridH);
   const camera = useCamera();
   const layers = useMapLayers();
   const contextMenu = useBattleContextMenu();
@@ -68,7 +74,9 @@ export default function BattleMapUI({ sessionId }: BattleMapUIProps) {
           mapHeight={map.mapSize?.height || 2000}
           tokens={tokens.validTokens}
           selectedTokenId={tokens.selectedId}
-          fogData={fog.fogData}
+          fogGrid={fog.grid}
+          fogWidth={fog.width}
+          fogHeight={fog.height}
           gridVisible={layers.isLayerVisible('grid')}
           fogVisible={layers.isLayerVisible('fog')}
           use3D={use3D}
