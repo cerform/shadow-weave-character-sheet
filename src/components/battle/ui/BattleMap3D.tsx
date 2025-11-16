@@ -41,8 +41,11 @@ export default function BattleMap3D({
   } = useEnhancedBattleStore();
   
   // Стабилизируем список токенов чтобы избежать ошибки #185
+  // Используем глубокую сравнение для предотвращения лишних ререндеров
   const stableTokens = useMemo(() => {
-    return enhancedTokens.filter(token => token && token.id);
+    const filtered = enhancedTokens.filter(token => token && token.id);
+    // Сортируем по id для стабильности порядка
+    return filtered.sort((a, b) => a.id.localeCompare(b.id));
   }, [enhancedTokens]);
   
   const { sessionState, updateSessionState } = useSessionSync(sessionId);
@@ -228,9 +231,11 @@ export default function BattleMap3D({
           <gridHelper args={[24, 24, "hsl(var(--primary))", "hsl(var(--muted))"]} />
 
           {/* Токены с улучшенной механикой движения */}
-          {stableTokens.map((token) => (
-            <EnhancedBattleToken3D key={token.id} token={token} />
-          ))}
+          <React.Suspense fallback={null}>
+            {stableTokens.map((token) => (
+              <EnhancedBattleToken3D key={`enhanced-token-${token.id}`} token={token} />
+            ))}
+          </React.Suspense>
 
           {/* Индикатор доступных клеток для движения */}
           {enhancedActiveId && (
