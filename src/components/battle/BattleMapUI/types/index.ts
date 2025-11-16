@@ -1,5 +1,6 @@
 import type { Vec2 } from '../utils/coordinates';
 import type { EnhancedToken } from '@/stores/enhancedBattleStore';
+import type { FogEngine } from '@/modules/fog/FogEngine';
 
 export type { Vec2, EnhancedToken };
 
@@ -21,6 +22,7 @@ export interface FogCell {
 }
 
 export interface FogController {
+  engine: FogEngine | null;
   grid: number[][];
   width: number;
   height: number;
