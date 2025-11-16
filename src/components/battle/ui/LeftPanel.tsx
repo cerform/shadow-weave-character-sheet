@@ -121,7 +121,7 @@ export const LeftPanel: React.FC<LeftPanelProps> = ({
                   </div>
                   <div className="flex items-center gap-1">
                     <Zap className="w-3 h-3" />
-                    {entity.movement.current}ft
+                    {Number(entity.movement.current || 0)}ft
                   </div>
                 </div>
               </div>
@@ -168,9 +168,9 @@ export const LeftPanel: React.FC<LeftPanelProps> = ({
             <div className="flex items-center justify-between text-xs mb-1">
               <span className="text-muted-foreground">Здоровье</span>
               <span className={`font-mono ${getHealthColor(entity.hp.current, entity.hp.max)}`}>
-                {entity.hp.current}/{entity.hp.max}
+                {Number(entity.hp.current || 0)}/{Number(entity.hp.max || 1)}
                 {entity.hp.temporary > 0 && (
-                  <span className="text-blue-500"> (+{entity.hp.temporary})</span>
+                  <span className="text-blue-500"> (+{Number(entity.hp.temporary || 0)})</span>
                 )}
               </span>
             </div>

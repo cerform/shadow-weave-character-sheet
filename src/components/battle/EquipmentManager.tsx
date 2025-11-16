@@ -86,13 +86,13 @@ const EquipmentManager: React.FC<EquipmentManagerProps> = ({
                         {equippedItem.stats && (
                           <div className="flex gap-2 mt-1">
                             {equippedItem.stats.damage && (
-                              <Badge variant="secondary">Урон: {equippedItem.stats.damage}</Badge>
+                              <Badge variant="secondary">Урон: {String(equippedItem.stats.damage)}</Badge>
                             )}
                             {equippedItem.stats.ac && (
-                              <Badge variant="secondary">AC: +{equippedItem.stats.ac}</Badge>
+                              <Badge variant="secondary">AC: +{Number(equippedItem.stats.ac || 0)}</Badge>
                             )}
                             {equippedItem.stats.bonus && (
-                              <Badge variant="secondary">{equippedItem.stats.bonus}</Badge>
+                              <Badge variant="secondary">{String(equippedItem.stats.bonus)}</Badge>
                             )}
                           </div>
                         )}
@@ -121,13 +121,13 @@ const EquipmentManager: React.FC<EquipmentManagerProps> = ({
                             {item.stats && (
                               <div className="flex gap-2 mt-1">
                                 {item.stats.damage && (
-                                  <Badge variant="outline" className="text-xs">Урон: {item.stats.damage}</Badge>
+                                  <Badge variant="outline" className="text-xs">Урон: {String(item.stats.damage)}</Badge>
                                 )}
                                 {item.stats.ac && (
-                                  <Badge variant="outline" className="text-xs">AC: +{item.stats.ac}</Badge>
+                                  <Badge variant="outline" className="text-xs">AC: +{Number(item.stats.ac || 0)}</Badge>
                                 )}
                                 {item.stats.bonus && (
-                                  <Badge variant="outline" className="text-xs">{item.stats.bonus}</Badge>
+                                  <Badge variant="outline" className="text-xs">{String(item.stats.bonus)}</Badge>
                                 )}
                               </div>
                             )}

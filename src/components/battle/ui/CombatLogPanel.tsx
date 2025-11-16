@@ -118,7 +118,7 @@ export function CombatLogPanel({
                 <span className="font-medium text-sm">{activeEntity.name}'s Turn</span>
               </div>
               <div className="text-xs text-muted-foreground mt-1">
-                HP: {activeEntity.hp.current}/{activeEntity.hp.max} | AC: {activeEntity.ac}
+                HP: {Number(activeEntity.hp.current || 0)}/{Number(activeEntity.hp.max || 1)} | AC: {Number(activeEntity.ac || 0)}
               </div>
             </div>
           )}
@@ -150,7 +150,7 @@ export function CombatLogPanel({
                     <div className="flex-1">
                       <div className="font-medium">{entity.name}</div>
                       <div className="text-xs text-muted-foreground">
-                        {entity.hp.current}/{entity.hp.max} HP
+                        {Number(entity.hp.current || 0)}/{Number(entity.hp.max || 1)} HP
                       </div>
                     </div>
                     <div className="flex gap-1">
@@ -184,7 +184,7 @@ export function CombatLogPanel({
                   <div className="flex-1">
                     <div className="font-medium">{entity.name}</div>
                     <div className="text-xs text-muted-foreground">
-                      {entity.hp.current}/{entity.hp.max} HP | AC {entity.ac}
+                      {Number(entity.hp.current || 0)}/{Number(entity.hp.max || 1)} HP | AC {Number(entity.ac || 0)}
                     </div>
                   </div>
                   <div className="flex gap-1">
@@ -210,7 +210,7 @@ export function CombatLogPanel({
                     <div className="flex-1">
                       <div className="font-medium">{entity.name}</div>
                       <div className="text-xs text-muted-foreground">
-                        {isDM ? `${entity.hp.current}/${entity.hp.max} HP | AC ${entity.ac}` : `AC ${entity.ac}`}
+                        {isDM ? `${Number(entity.hp.current || 0)}/${Number(entity.hp.max || 1)} HP | AC ${Number(entity.ac || 0)}` : `AC ${Number(entity.ac || 0)}`}
                       </div>
                     </div>
                     <div className="flex gap-1">

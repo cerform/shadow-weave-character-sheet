@@ -965,7 +965,7 @@ export default function CompleteBattleActionPanel() {
                     <SelectContent>
                       {conditions.map((condition) => (
                         <SelectItem key={condition.name} value={condition.name}>
-                          {condition.name}
+                          {String(condition.name || '')}
                         </SelectItem>
                       ))}
                     </SelectContent>

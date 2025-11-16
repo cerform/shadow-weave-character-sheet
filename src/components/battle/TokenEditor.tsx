@@ -479,7 +479,7 @@ const TokenEditor: React.FC<TokenEditorProps> = ({
                       className="cursor-pointer"
                       onClick={() => removeCondition(condition)}
                     >
-                      {condition} ×
+                      {String(condition)} ×
                     </Badge>
                   ))}
                 </div>

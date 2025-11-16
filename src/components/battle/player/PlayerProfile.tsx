@@ -213,7 +213,7 @@ export const PlayerProfile: React.FC<PlayerProfileProps> = ({
             <div className="flex flex-wrap gap-1">
               {token.conditions.map((condition, idx) => (
                 <Badge key={idx} variant="destructive" className="text-xs">
-                  {condition}
+                  {String(condition)}
                 </Badge>
               ))}
             </div>

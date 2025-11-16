@@ -158,13 +158,13 @@ export function ActionBar({
         <div className="px-3 pb-2 text-xs text-muted-foreground">
           <div className="flex items-center gap-4">
             <span className="font-medium">{activeEntity.name}</span>
-            <span>HP: {activeEntity.hp.current}/{activeEntity.hp.max}</span>
+            <span>HP: {Number(activeEntity.hp.current || 0)}/{Number(activeEntity.hp.max || 1)}</span>
             <span>AC: {activeEntity.ac}</span>
             {activeEntity.conditions.length > 0 && (
               <div className="flex gap-1">
                 {activeEntity.conditions.map((condition, i) => (
                   <Badge key={i} variant="outline" className="text-xs">
-                    {condition.key}
+                    {String(condition.key || condition)}
                   </Badge>
                 ))}
               </div>
