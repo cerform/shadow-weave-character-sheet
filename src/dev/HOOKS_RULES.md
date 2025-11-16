@@ -291,3 +291,55 @@ function Scene({ tokens }) {
 - [Rules of Hooks - React Documentation](https://react.dev/reference/rules/rules-of-hooks)
 - [ESLint Plugin: eslint-plugin-react-hooks](https://www.npmjs.com/package/eslint-plugin-react-hooks)
 - [React Three Fiber Best Practices](https://docs.pmnd.rs/react-three-fiber/advanced/pitfalls)
+
+## ⚠️ Частые ложные срабатывания
+
+### 1. .map() в инициализации useState
+
+✅ **ПРАВИЛЬНО (не является нарушением):**
+```tsx
+const [items, setItems] = useState(
+  Array(6).fill(0).map((_, i) => ({ id: i, value: 0 }))
+);
+```
+Хук вызывается ОДИН РАЗ при инициализации. `.map()` - это просто JavaScript выражение для создания начального значения.
+
+### 2. .map() внутри useMemo/useCallback
+
+✅ **ПРАВИЛЬНО (не является нарушением):**
+```tsx
+const processed = useMemo(
+  () => items.map(item => transform(item)),
+  [items]
+);
+
+const handlers = useCallback(
+  () => ids.map(id => createHandler(id)),
+  [ids]
+);
+```
+Хуки вызываются на верхнем уровне. `.map()` внутри callback - это нормально.
+
+### 3. .map() в return statement (JSX)
+
+❌ **ЭТО НАРУШЕНИЕ:**
+```tsx
+function List() {
+  return items.map(item => {
+    const [selected, setSelected] = useState(false); // ОШИБКА!
+    return <div>{item.name}</div>;
+  });
+}
+```
+
+✅ **ПРАВИЛЬНО:**
+```tsx
+function ListItem({ item }) {
+  const [selected, setSelected] = useState(false);
+  return <div>{item.name}</div>;
+}
+
+function List() {
+  return items.map(item => <ListItem key={item.id} item={item} />);
+}
+```

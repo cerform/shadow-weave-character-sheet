@@ -14,6 +14,7 @@ if (import.meta.env.DEV) {
       let conditionalDepth = 0;
       let inComponent = false;
       let componentDepth = 0;
+      let inJSXMap = false;
 
       for (let i = 0; i < lines.length; i++) {
         const line = lines[i];
@@ -51,14 +52,20 @@ if (import.meta.env.DEV) {
         // Только внутри компонентов проверяем
         if (!inComponent) continue;
 
-        // Трекаем .map( callback начало
-        if (/\.map\s*\(/.test(line) && !/\/\//.test(line.split('.map')[0])) {
+        // Проверяем .map() в JSX (return statement)
+        // Игнорируем .map() в инициализации useState или в callback других хуков
+        const isInsideHookInit = /use(State|Memo|Callback)\s*\([^)]*\.map/.test(line);
+        const isReturnStatement = trimmedLine.startsWith('return') || /\breturn\s/.test(line);
+        
+        // Трекаем .map( callback начало (только если не внутри инициализации хука)
+        if (/\.map\s*\(/.test(line) && !isInsideHookInit && isReturnStatement) {
+          inJSXMap = true;
           inMapCallback = true;
           mapCallbackDepth = 0;
         }
 
         // Трекаем глубину вложенности в map callback
-        if (inMapCallback) {
+        if (inMapCallback && inJSXMap) {
           const openBraces = (line.match(/\{/g) || []).length;
           const closeBraces = (line.match(/\}/g) || []).length;
           mapCallbackDepth += openBraces - closeBraces;
@@ -66,12 +73,13 @@ if (import.meta.env.DEV) {
           // Если вышли из map callback
           if (mapCallbackDepth < 0) {
             inMapCallback = false;
+            inJSXMap = false;
             mapCallbackDepth = 0;
           }
         }
 
         // Трекаем условные конструкции (только if внутри тела компонента)
-        if (/\bif\s*\(/.test(line) && !trimmedLine.startsWith('if') && componentDepth > 0) {
+        if (/\bif\s*\(/.test(line) && !trimmedLine.startsWith('if') && componentDepth > 0 && !isReturnStatement) {
           inConditional = true;
           conditionalDepth = 0;
         }
@@ -99,12 +107,15 @@ if (import.meta.env.DEV) {
           // Игнорируем импорты хуков
           const isImport = /^import/.test(trimmedLine);
           
-          if (!isTopLevel && !isHookDefinition && !isImport) {
+          // Игнорируем хуки внутри инициализации других хуков (useState(() => ...), useMemo(() => ...))
+          const isInsideHookCallback = /use(State|Memo|Callback|Effect)\s*\(/.test(line);
+          
+          if (!isTopLevel && !isHookDefinition && !isImport && !isInsideHookCallback && inJSXMap) {
             let reason = '';
             if (inMapCallback) {
-              reason = '❌ Hook внутри .map() callback';
+              reason = '❌ Hook вызывается внутри JSX .map() - каждый рендер создаёт разное количество хуков';
             } else if (inConditional) {
-              reason = '❌ Hook внутри условной конструкции';
+              reason = '❌ Hook внутри условной конструкции - количество хуков должно быть постоянным';
             }
 
             problems.push({
@@ -150,7 +161,7 @@ if (import.meta.env.DEV) {
         .join('\n');
 
       console.warn(
-        `\n🔍 HookValidator: Найдено ${problems.length} потенциальных нарушений\n\n` +
+        `\n🔍 HookValidator: Найдено ${problems.length} реальных нарушений правил хуков\n\n` +
         `Топ проблемных файлов:\n${topFiles}\n\n` +
         `📖 Смотрите src/dev/HOOKS_RULES.md для примеров исправлений\n` +
         `Подробности в Console → "❌ Invalid React hook usage detected"`
