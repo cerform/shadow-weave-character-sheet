@@ -8,7 +8,8 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { AlertTriangle, CheckCircle, XCircle, RefreshCw } from 'lucide-react';
+import { AlertTriangle, CheckCircle, XCircle, RefreshCw, Download } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 interface HookError {
   message: string;
@@ -20,6 +21,7 @@ interface HookError {
 export const HooksViolationDetector: React.FC = () => {
   const [errors, setErrors] = useState<HookError[]>([]);
   const [isActive, setIsActive] = useState(false);
+  const { toast } = useToast();
 
   useEffect(() => {
     if (!isActive) return;
@@ -62,6 +64,69 @@ export const HooksViolationDetector: React.FC = () => {
     }
   };
 
+  const exportReport = () => {
+    if (errors.length === 0) {
+      toast({
+        title: "Нет данных для экспорта",
+        description: "Ошибки React Hooks не обнаружены",
+        variant: "default",
+      });
+      return;
+    }
+
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const reportContent = generateReport();
+    
+    const blob = new Blob([reportContent], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `hooks-errors-report-${timestamp}.txt`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    toast({
+      title: "Отчет экспортирован",
+      description: `Сохранено ${errors.length} ошибок в файл`,
+      variant: "default",
+    });
+  };
+
+  const generateReport = (): string => {
+    let report = '═══════════════════════════════════════════════════\n';
+    report += '    ОТЧЕТ ОБ ОШИБКАХ REACT HOOKS\n';
+    report += '═══════════════════════════════════════════════════\n\n';
+    report += `Дата создания: ${new Date().toLocaleString('ru-RU')}\n`;
+    report += `Всего ошибок: ${errors.length}\n`;
+    report += `URL приложения: ${window.location.href}\n`;
+    report += `User Agent: ${navigator.userAgent}\n\n`;
+    report += '═══════════════════════════════════════════════════\n\n';
+
+    errors.forEach((error, index) => {
+      report += `\n━━━ ОШИБКА #${index + 1} ━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
+      report += `Время: ${new Date(error.timestamp).toLocaleString('ru-RU')}\n`;
+      report += `Сообщение: ${error.message}\n\n`;
+      
+      if (error.stack) {
+        report += 'Stack Trace:\n';
+        report += error.stack + '\n\n';
+      }
+      
+      if (error.componentStack) {
+        report += 'Component Stack:\n';
+        report += error.componentStack + '\n\n';
+      }
+    });
+
+    report += '\n═══════════════════════════════════════════════════\n';
+    report += '    КОНЕЦ ОТЧЕТА\n';
+    report += '═══════════════════════════════════════════════════\n';
+
+    return report;
+  };
+
   if (!isActive && errors.length === 0) {
     return (
       <div className="fixed bottom-4 right-4 z-50">
@@ -88,14 +153,26 @@ export const HooksViolationDetector: React.FC = () => {
             </span>
             <div className="flex gap-2">
               {errors.length > 0 && (
-                <Button
-                  onClick={clearErrors}
-                  variant="ghost"
-                  size="sm"
-                  className="h-6 px-2"
-                >
-                  <RefreshCw className="w-3 h-3" />
-                </Button>
+                <>
+                  <Button
+                    onClick={exportReport}
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 px-2"
+                    title="Экспортировать отчет"
+                  >
+                    <Download className="w-3 h-3" />
+                  </Button>
+                  <Button
+                    onClick={clearErrors}
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 px-2"
+                    title="Очистить ошибки"
+                  >
+                    <RefreshCw className="w-3 h-3" />
+                  </Button>
+                </>
               )}
               <Badge variant={isActive ? 'default' : 'secondary'}>
                 {isActive ? 'Активен' : 'Выключен'}
