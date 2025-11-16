@@ -5,6 +5,7 @@ import { useUnifiedBattleStore } from "@/stores/unifiedBattleStore";
 import { type EnhancedToken } from "@/stores/enhancedBattleStore";
 import { canMoveToPosition, snapToGrid, gridToWorld, type GridPosition } from "@/utils/movementUtils";
 import { MovementIndicator } from "./MovementIndicator";
+import { Model3DErrorBoundary } from "./Model3DErrorBoundary";
 import * as THREE from "three";
 
 // 3D модели для разных типов персонажей
@@ -25,7 +26,7 @@ interface EnhancedBattleToken3DProps {
 }
 
 // Компонент 3D модели персонажа
-// ИСПРАВЛЕНО: useGLTF вызывается ВНЕ try-catch для предотвращения React Error #185
+// ✅ ИСПРАВЛЕНО: useGLTF вызывается БЕЗУСЛОВНО (не в try-catch)
 const Character3DModel = ({ modelType, position, isActive, isSelected, isEnemy, scale = 1, token }: {
   modelType: keyof typeof MODEL_PATHS;
   position: [number, number, number];
@@ -37,17 +38,20 @@ const Character3DModel = ({ modelType, position, isActive, isSelected, isEnemy, 
 }) => {
   const modelPath = MODEL_PATHS[modelType] || MODEL_PATHS.default;
   
-  // ✅ КРИТИЧНО: Хук ВСЕГДА вызывается, независимо от ошибок
-  let gltf;
-  try {
-    gltf = useGLTF(modelPath);
-  } catch (error) {
-    gltf = null;
-  }
+  // ✅ ХУК ВСЕГДА ВЫЗЫВАЕТСЯ (без try-catch) - это требование React Rules of Hooks
+  const gltf = useGLTF(modelPath, true); // true = draco support
   
-  // Условный РЕНДЕРИНГ, а не условный ХУК
-  if (!gltf || !gltf.scene) {
-    // Fallback к базовой геометрии если модель не загрузилась
+  // ✅ УСЛОВНАЯ ПРОВЕРКА (не условный хук)
+  const hasValidModel = gltf?.scene;
+  
+  // ✅ ХУК ВСЕГДА ВЫЗЫВАЕТСЯ
+  const clonedScene = useMemo(
+    () => hasValidModel ? gltf.scene.clone() : null,
+    [gltf?.scene, hasValidModel]
+  );
+  
+  // Условный РЕНДЕРИНГ если модель не загрузилась
+  if (!hasValidModel || !clonedScene) {
     const tokenColor = token.color || (isEnemy ? "#ef4444" : "#22c55e");
     const emissiveColor = isSelected ? "#fbbf24" : (isActive ? "#3b82f6" : "#000000");
     
@@ -62,8 +66,6 @@ const Character3DModel = ({ modelType, position, isActive, isSelected, isEnemy, 
       </mesh>
     );
   }
-  
-  const clonedScene = useMemo(() => gltf.scene.clone(), [gltf.scene]);
   
   return (
     <primitive 
@@ -187,7 +189,7 @@ export const EnhancedBattleToken3D: React.FC<EnhancedBattleToken3DProps> = ({ to
         onCellClick={handleCellClick}
       />
       
-      {/* 3D модель персонажа */}
+      {/* 3D модель персонажа с ErrorBoundary для предотвращения краша */}
       <group
         onClick={handleTokenClick}
         onPointerOver={(e) => {
@@ -199,15 +201,17 @@ export const EnhancedBattleToken3D: React.FC<EnhancedBattleToken3DProps> = ({ to
           setHovered(false);
         }}
       >
-        <Character3DModel
-          modelType={getModelType(token)}
-          position={token.position}
-          isActive={isActive}
-          isSelected={isSelected}
-          isEnemy={token.isEnemy}
-          scale={0.8}
-          token={token}
-        />
+        <Model3DErrorBoundary token={token}>
+          <Character3DModel
+            modelType={getModelType(token)}
+            position={token.position}
+            isActive={isActive}
+            isSelected={isSelected}
+            isEnemy={token.isEnemy}
+            scale={0.8}
+            token={token}
+          />
+        </Model3DErrorBoundary>
       </group>
 
       {/* Кольцо активного токена */}

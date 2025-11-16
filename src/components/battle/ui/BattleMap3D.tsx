@@ -5,6 +5,7 @@ import { useBattleUIStore } from "@/stores/battleUIStore";
 import BattleToken3D from "./BattleToken3D";
 import { useEnhancedBattleStore } from "@/stores/enhancedBattleStore";
 import { EnhancedBattleToken3D } from "../enhanced/EnhancedBattleToken3D";
+import { Model3DErrorBoundary } from "../enhanced/Model3DErrorBoundary";
 import { MovementIndicator } from "../enhanced/MovementIndicator";
 import { Button } from "@/components/ui/button";
 import { Upload, X } from "lucide-react";
@@ -44,7 +45,12 @@ export default function BattleMap3D({
   // Стабилизируем список токенов с помощью глобального TokenSanitizer
   // Предотвращает React Error #185 через глубокое клонирование и валидацию
   const stableTokens = useMemo(
-    () => sanitizeTokens(enhancedTokens),
+    () => sanitizeTokens(enhancedTokens).filter(token => 
+      token && 
+      token.id && 
+      Array.isArray(token.position) && 
+      token.position.length === 3
+    ),
     [enhancedTokens]
   );
   
@@ -230,10 +236,12 @@ export default function BattleMap3D({
           {/* Сетка поля */}
           <gridHelper args={[24, 24, "hsl(var(--primary))", "hsl(var(--muted))"]} />
 
-          {/* Токены с улучшенной механикой движения */}
+          {/* Токены с улучшенной механикой движения и защитой от краша */}
           <React.Suspense fallback={null}>
             {stableTokens.map((token) => (
-              <EnhancedBattleToken3D key={`enhanced-token-${token.id}`} token={token} />
+              <Model3DErrorBoundary key={`enhanced-token-${token.id}`} token={token}>
+                <EnhancedBattleToken3D token={token} />
+              </Model3DErrorBoundary>
             ))}
           </React.Suspense>
 
