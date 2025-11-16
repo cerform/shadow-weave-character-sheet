@@ -18,6 +18,7 @@ import DebugPage from '@/pages/DebugPage';
 import HooksDebugPage from '@/pages/HooksDebugPage';
 import AdminPage from '@/pages/AdminPage';
 import AdminTestingPage from '@/pages/admin/AdminTestingPage';
+import TestReportsPage from '@/pages/admin/TestReportsPage';
 import ErrorLogsPage from '@/pages/admin/ErrorLogsPage';
 import CharactersListPage from '@/pages/CharactersListPage';
 import CharacterManagementPage from '@/pages/CharacterManagementPage';
@@ -283,6 +284,11 @@ const AppRoutes: React.FC = () => {
       <Route path="/admin/testing" element={
         <ProtectedAdminRoute>
           <AdminTestingPage />
+        </ProtectedAdminRoute>
+      } />
+      <Route path="/admin/test-reports" element={
+        <ProtectedAdminRoute>
+          <TestReportsPage />
         </ProtectedAdminRoute>
       } />
       
