@@ -1,0 +1,122 @@
+name: Circular Dependencies Check
+
+on:
+  push:
+    branches:
+      - main
+      - master
+      - develop
+  pull_request:
+    branches:
+      - main
+      - master
+      - develop
+
+jobs:
+  check-circular-deps:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check for circular dependencies
+        id: circular-check
+        run: |
+          node scripts/check-circular-deps.js > circular-deps-output.txt 2>&1 || echo "FAILED=true" >> $GITHUB_OUTPUT
+          cat circular-deps-output.txt
+
+      - name: Upload circular deps report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: circular-deps-report
+          path: circular-deps-output.txt
+
+      - name: Generate dependency graph
+        if: failure()
+        run: |
+          # Попытка создать граф (может не сработать без graphviz)
+          npx madge --image deps-graph.svg --extensions ts,tsx,js,jsx src/ || true
+        continue-on-error: true
+
+      - name: Upload dependency graph
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dependency-graph
+          path: deps-graph.svg
+        continue-on-error: true
+
+      - name: Comment on PR
+        if: github.event_name == 'pull_request' && failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            let output = '';
+            try {
+              output = fs.readFileSync('circular-deps-output.txt', 'utf8');
+            } catch (e) {
+              output = 'Could not read circular dependencies report';
+            }
+            
+            const body = `## ⚠️ Circular Dependencies Detected
+            
+            This PR introduces or contains circular dependencies that must be fixed before merging.
+            
+            **Why this matters:**
+            - Circular dependencies can cause React Error #185
+            - They make code harder to maintain and test
+            - Can lead to undefined components at runtime
+            
+            <details>
+            <summary>📋 Full Report (click to expand)</summary>
+            
+            \`\`\`
+            ${output}
+            \`\`\`
+            
+            </details>
+            
+            ### 🔧 How to fix:
+            
+            1. **Extract common code** into a separate file
+            2. **Use dependency injection** instead of direct imports
+            3. **Move shared types** to a types-only file
+            4. **Restructure** component hierarchy
+            
+            ### 📚 Resources:
+            - [Circular Dependencies Guide](../blob/main/CIRCULAR_DEPS_GUIDE.md)
+            - [Error #185 Quick Start](../blob/main/ERROR_185_QUICK_START.md)
+            
+            Please fix these issues and push again.`;
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: body
+            });
+
+      - name: Fail if circular dependencies found
+        if: steps.circular-check.outputs.FAILED == 'true'
+        run: |
+          echo "❌ Circular dependencies detected! Please fix before merging."
+          exit 1
+
+      - name: Success message
+        if: success()
+        run: |
+          echo "✅ No circular dependencies found!"
