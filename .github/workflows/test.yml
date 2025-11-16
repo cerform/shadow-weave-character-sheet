@@ -58,13 +58,21 @@ jobs:
           path: coverage/
           retention-days: 30
 
+      - name: 🎯 Check coverage thresholds
+        run: node scripts/check-coverage-thresholds.js
+
       - name: ✅ Coverage summary
+        if: always()
         run: |
           echo "## 📊 Test Coverage Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
           cat coverage/coverage-summary.txt || echo "Coverage summary not available"
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🎯 Coverage Thresholds" >> $GITHUB_STEP_SUMMARY
+          echo "- **Critical files** (stores/, battle/enhanced/): 90% minimum" >> $GITHUB_STEP_SUMMARY
+          echo "- **Other files**: 80% minimum" >> $GITHUB_STEP_SUMMARY
 
   hooks-protection:
     runs-on: ubuntu-latest

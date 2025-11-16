@@ -18,9 +18,10 @@
 1. ✅ ESLint проверка всех `.ts` и `.tsx` файлов
 2. ✅ Запуск всех unit тестов с подробным выводом
 3. ✅ Генерация coverage отчета
-4. ✅ Публикация coverage в Codecov
-5. ✅ Комментарий в PR с coverage информацией
-6. ✅ Загрузка coverage artifacts (доступны 30 дней)
+4. ✅ **Проверка coverage thresholds (блокирует PR при несоответствии)**
+5. ✅ Публикация coverage в Codecov
+6. ✅ Комментарий в PR с coverage информацией
+7. ✅ Загрузка coverage artifacts (доступны 30 дней)
 
 **Job: hooks-protection**
 1. ✅ Тесты стабильности селекторов

@@ -11,7 +11,7 @@ export default defineConfig({
     setupFiles: './src/__tests__/setup.ts',
     coverage: {
       provider: 'v8',
-      reporter: ['text', 'json', 'html'],
+      reporter: ['text', 'json', 'html', 'lcov', 'json-summary'],
       include: [
         'src/stores/**/*.ts',
         'src/components/battle/enhanced/**/*.tsx',
@@ -24,6 +24,27 @@ export default defineConfig({
         '**/types.ts',
         '**/index.ts',
       ],
+      // Строгие пороги покрытия для критичных файлов
+      thresholds: {
+        // Глобальные пороги (мягкие требования)
+        lines: 80,
+        functions: 80,
+        branches: 75,
+        statements: 80,
+        // Строгие пороги для критичных файлов
+        'src/stores/**/*.ts': {
+          lines: 90,
+          functions: 90,
+          branches: 85,
+          statements: 90,
+        },
+        'src/components/battle/enhanced/**/*.tsx': {
+          lines: 90,
+          functions: 90,
+          branches: 85,
+          statements: 90,
+        },
+      },
     },
   },
   resolve: {
