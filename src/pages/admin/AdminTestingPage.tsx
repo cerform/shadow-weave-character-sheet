@@ -28,16 +28,7 @@ import { BackendTestPanel } from '@/components/admin/testing/BackendTestPanel';
 import { PerformanceTestPanel } from '@/components/admin/testing/PerformanceTestPanel';
 import { SecurityTestPanel } from '@/components/admin/testing/SecurityTestPanel';
 import { IntegrationTestPanel } from '@/components/admin/testing/IntegrationTestPanel';
-
-export interface TestResult {
-  id: string;
-  name: string;
-  status: 'pending' | 'running' | 'passed' | 'failed' | 'warning';
-  message?: string;
-  details?: string;
-  duration?: number;
-  timestamp?: string;
-}
+import { TestResult, TestReport } from '@/types/testing';
 
 export interface TestSuite {
   name: string;

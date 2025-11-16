@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Separator } from '@/components/ui/separator';
 import { Play, CheckCircle2, XCircle, AlertTriangle, Loader2 } from 'lucide-react';
-import { TestResult } from '@/pages/admin/AdminTestingPage';
+import { TestResult } from '@/types/testing';
 import { supabase } from '@/integrations/supabase/client';
 
 interface BackendTestPanelProps {

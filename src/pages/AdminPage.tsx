@@ -139,6 +139,9 @@ const AdminPage: React.FC = () => {
             <Button variant="secondary" onClick={() => navigate('/admin/testing')}>
               Центр тестирования
             </Button>
+            <Button variant="secondary" onClick={() => navigate('/admin/test-reports')}>
+              Анализ отчетов
+            </Button>
             <Button variant="secondary" onClick={() => navigate('/admin/assets')}>
               Галерея ассетов
             </Button>
