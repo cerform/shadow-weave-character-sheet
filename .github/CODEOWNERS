@@ -1,0 +1,14 @@
+# Автоматическое назначение ревьюеров для критичных файлов
+
+# Защита от React Error #185
+/src/stores/unifiedBattleStore*.ts @your-username
+/src/components/battle/enhanced/ @your-username
+/src/utils/hooksValidator.ts @your-username
+
+# Конфигурация тестов
+/vitest.config.ts @your-username
+/.eslintrc.json @your-username
+/src/__tests__/ @your-username
+
+# GitHub Actions workflows
+/.github/workflows/ @your-username

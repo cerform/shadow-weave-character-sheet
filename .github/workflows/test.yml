@@ -1,0 +1,114 @@
+name: Tests & Coverage
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+    branches: ['**']
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🔧 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: 📦 Install dependencies
+        run: npm ci
+
+      - name: 🔍 ESLint check
+        run: npx eslint "src/**/*.{ts,tsx}" --max-warnings 0
+
+      - name: 🧪 Run all tests
+        run: npm run test -- --run --reporter=verbose
+
+      - name: 📊 Generate coverage report
+        run: npm run test -- --coverage --run
+
+      - name: 📈 Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          files: ./coverage/coverage-final.json
+          flags: unittests
+          name: codecov-umbrella
+          fail_ci_if_error: false
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+      - name: 💬 Comment PR with coverage
+        if: github.event_name == 'pull_request'
+        uses: romeovs/lcov-reporter-action@v0.3.1
+        with:
+          lcov-file: ./coverage/lcov.info
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          delete-old-comments: true
+
+      - name: 📤 Upload coverage artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage/
+          retention-days: 30
+
+      - name: ✅ Coverage summary
+        run: |
+          echo "## 📊 Test Coverage Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          cat coverage/coverage-summary.txt || echo "Coverage summary not available"
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+
+  hooks-protection:
+    runs-on: ubuntu-latest
+    name: React Error #185 Protection
+    timeout-minutes: 10
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🔧 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: 📦 Install dependencies
+        run: npm ci
+
+      - name: 🛡️ Run hooks protection tests
+        run: |
+          echo "🔍 Testing selector stability..."
+          npm run test -- src/stores/__tests__/unifiedBattleStoreExports.test.ts --run --reporter=verbose
+          
+          echo "🔍 Testing EnhancedBattleToken3D..."
+          npm run test -- src/components/battle/enhanced/__tests__/EnhancedBattleToken3D.test.tsx --run --reporter=verbose
+          
+          echo "🔍 Testing ModelLoader..."
+          npm run test -- src/components/battle/enhanced/__tests__/ModelLoader.test.tsx --run --reporter=verbose
+
+      - name: ✅ Protection status
+        if: success()
+        run: |
+          echo "## ✅ React Error #185 Protection Active" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "All hooks protection tests passed:" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Selector stability verified" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Rules of Hooks compliance confirmed" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ useGLTF fixed paths validated" >> $GITHUB_STEP_SUMMARY
+
+      - name: ❌ Protection failed
+        if: failure()
+        run: |
+          echo "## ❌ Hooks Protection Tests Failed!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "⚠️ React Error #185 regression detected!" >> $GITHUB_STEP_SUMMARY
+          echo "Please review the test output above and fix violations before merging." >> $GITHUB_STEP_SUMMARY

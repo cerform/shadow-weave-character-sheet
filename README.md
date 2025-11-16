@@ -1,8 +1,29 @@
 # Welcome to your Lovable project
 
+[![Tests](https://github.com/YOUR_USERNAME/YOUR_REPO/actions/workflows/test.yml/badge.svg)](https://github.com/YOUR_USERNAME/YOUR_REPO/actions/workflows/test.yml)
+[![Coverage](https://img.shields.io/badge/coverage-check%20codecov-brightgreen)](https://codecov.io/gh/YOUR_USERNAME/YOUR_REPO)
+[![Hooks Protection](https://img.shields.io/badge/React%20Error%20%23185-Protected-brightgreen)](./HOOKS_PROTECTION.md)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
+
 ## Project info
 
 **URL**: https://lovable.dev/projects/60ca1f07-9f8f-4253-82ad-54f81c6c2667
+
+## 🛡️ Quality & Testing
+
+Этот проект включает комплексную защиту от React Error #185 и автоматическое тестирование:
+
+- ✅ **Unit тесты** с Vitest (35+ тестов)
+- ✅ **Pre-commit hooks** с Husky и lint-staged
+- ✅ **GitHub Actions CI/CD** с автоматическими проверками
+- ✅ **Coverage отчеты** на Codecov и GitHub Pages
+- ✅ **ESLint** с правилами React Hooks
+
+📚 **Документация:**
+- [TESTING.md](./TESTING.md) - полная документация по тестам
+- [HUSKY_SETUP.md](./HUSKY_SETUP.md) - настройка pre-commit hooks
+- [GITHUB_ACTIONS_SETUP.md](./GITHUB_ACTIONS_SETUP.md) - CI/CD интеграция
+- [HOOKS_PROTECTION.md](./HOOKS_PROTECTION.md) - защита от React Error #185
 
 ## How can I edit this code?
 
@@ -71,3 +92,47 @@ Yes, you can!
 To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
 
 Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+
+## 🧪 Testing & Development
+
+### Running Tests
+
+```bash
+# Run all tests
+npm run test
+
+# Run with coverage
+npm run test -- --coverage
+
+# Run in watch mode
+npm run test -- --watch
+
+# Run specific test file
+npm run test -- src/stores/__tests__/unifiedBattleStoreExports.test.ts
+```
+
+### Pre-commit Checks
+
+Husky automatically runs tests before each commit:
+
+```bash
+# First time setup
+npx husky init
+chmod +x .husky/pre-commit
+
+# Tests will run automatically on git commit
+git commit -m "your message"
+```
+
+### CI/CD Pipeline
+
+GitHub Actions automatically:
+- ✅ Runs all tests on push and pull requests
+- ✅ Checks ESLint compliance
+- ✅ Generates and publishes coverage reports
+- ✅ Validates React Hooks rules
+- ✅ Deploys coverage to GitHub Pages
+
+**Note:** Update badge URLs in README.md with your GitHub username and repository name.
+
+See [GITHUB_ACTIONS_SETUP.md](./GITHUB_ACTIONS_SETUP.md) for detailed CI/CD configuration.

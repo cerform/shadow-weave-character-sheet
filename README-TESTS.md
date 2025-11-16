@@ -119,12 +119,104 @@ chmod +x .husky/pre-commit
 
 См. `HUSKY_SETUP.md` для подробностей.
 
+## GitHub Actions CI/CD 🚀
+
+Настроена полная интеграция с GitHub Actions для автоматического тестирования.
+
+### Что происходит автоматически:
+
+**При каждом push и pull request:**
+```
+✅ ESLint проверка всех файлов
+✅ Запуск всех unit тестов (35+)
+✅ Генерация coverage отчета
+✅ Публикация в Codecov
+✅ Комментарий в PR с результатами
+✅ Проверка защиты от React Error #185
+```
+
+**При push в main/master:**
+```
+✅ Деплой coverage отчета на GitHub Pages
+✅ Создание coverage badge
+✅ Публикация полного отчета
+```
+
+### Первоначальная настройка:
+
+1. **GitHub Actions** (уже настроен)
+   - Workflows в `.github/workflows/`
+   - Автоматически активируется при push
+
+2. **Codecov** (опционально, для красивых графиков):
+   ```bash
+   # 1. Зарегистрируйтесь на codecov.io
+   # 2. Подключите репозиторий
+   # 3. Скопируйте токен
+   # 4. Добавьте в GitHub: Settings → Secrets → CODECOV_TOKEN
+   ```
+
+3. **GitHub Pages** (опционально, для HTML отчетов):
+   ```bash
+   # Settings → Pages
+   # Source: Deploy from branch
+   # Branch: gh-pages / (root)
+   # 
+   # Coverage будет доступен на:
+   # https://[username].github.io/[repo]/coverage/
+   ```
+
+4. **Обновите badges в README.md**:
+   Замените `YOUR_USERNAME` и `YOUR_REPO` на реальные значения
+
+5. **Branch protection** (рекомендуется):
+   ```bash
+   # Settings → Branches → Add rule
+   # Branch: main
+   # ✅ Require status checks to pass
+   #    - test / test
+   #    - test / hooks-protection
+   ```
+
+### Мониторинг тестов:
+
+**GitHub Actions:**
+```
+https://github.com/[username]/[repo]/actions
+```
+
+**Codecov Dashboard:**
+```
+https://codecov.io/gh/[username]/[repo]
+```
+
+**Coverage HTML:**
+```
+https://[username].github.io/[repo]/coverage/
+```
+
+### Пример успешного CI прогона:
+
+```
+🟢 Tests & Coverage
+   ├─ ESLint: ✅ 0 errors, 0 warnings
+   ├─ All tests: ✅ 35/35 passed
+   ├─ Coverage: 95.2% lines
+   └─ Hooks Protection: ✅ Protected
+
+🟢 Coverage uploaded to Codecov
+🟢 PR commented with coverage diff
+🟢 Artifacts uploaded: coverage-report
+```
+
+См. `GITHUB_ACTIONS_SETUP.md` для полной документации.
+
 ## CI/CD Integration
 
 Тесты автоматически запускаются при:
 - **Pre-commit** - Husky hook перед коммитом (локально) ✨
-- **Push** - в любую ветку (в CI)
-- **Pull Request** - автоматическая проверка
+- **Push** - GitHub Actions на каждый push (в облаке) ✨
+- **Pull Request** - автоматическая проверка + комментарий ✨
 
 ## Troubleshooting
 
