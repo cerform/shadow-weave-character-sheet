@@ -1,5 +1,5 @@
 import React from "react";
-import { Html, useGLTF } from "@react-three/drei";
+import { Html } from "@react-three/drei";
 import { ThreeEvent, useFrame } from "@react-three/fiber";
 import { useRef, useState, useMemo, memo, useCallback } from "react";
 import { useUnifiedBattleStore } from "@/stores/unifiedBattleStore";
@@ -7,91 +7,14 @@ import { type EnhancedToken } from "@/stores/enhancedBattleStore";
 import { canMoveToPosition, snapToGrid, gridToWorld, type GridPosition } from "@/utils/movementUtils";
 import { MovementIndicator } from "./MovementIndicator";
 import { Model3DErrorBoundary } from "./Model3DErrorBoundary";
+import { Character3DModel, type ModelType } from "./ModelLoader";
 import * as THREE from "three";
-
-// 3D модели для разных типов персонажей
-const MODEL_PATHS = {
-  fighter: "/models/fighter.glb",
-  wizard: "/models/wizard.glb",
-  rogue: "/models/rogue.glb",
-  cleric: "/models/cleric.glb",
-  goblin: "/models/goblin.glb",
-  skeleton: "/models/skeleton.glb",
-  orc: "/models/orc.glb",
-  dragon: "/models/dragon.glb",
-  default: "/models/character.glb"
-} as const;
 
 interface EnhancedBattleToken3DProps {
   token: EnhancedToken;
 }
 
-// ✅ КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Отдельные компоненты для каждой модели
-// чтобы избежать динамического пути в useGLTF (нарушение Rules of Hooks)
-
-// Fallback компонент для ошибок загрузки модели
-const FallbackModel = memo(({ token, isActive, isSelected, isEnemy }: {
-  token: EnhancedToken;
-  isActive: boolean;
-  isSelected: boolean;
-  isEnemy: boolean;
-}) => {
-  const tokenColor = token.color || (isEnemy ? "#ef4444" : "#22c55e");
-  const emissiveColor = isSelected ? "#fbbf24" : (isActive ? "#3b82f6" : "#000000");
-  
-  return (
-    <mesh castShadow>
-      <cylinderGeometry args={[0.4, 0.4, 1.2]} />
-      <meshStandardMaterial 
-        color={tokenColor}
-        emissive={emissiveColor}
-        emissiveIntensity={isSelected ? 0.3 : (isActive ? 0.2 : 0)}
-      />
-    </mesh>
-  );
-});
-
-// Компонент для каждого типа модели с ФИКСИРОВАННЫМ путём
-const ModelComponent = memo(({ modelPath, scale = 1 }: { modelPath: string; scale?: number }) => {
-  // ✅ ХУК ВЫЗЫВАЕТСЯ С ФИКСИРОВАННЫМ ПУТЁМ
-  const gltf = useGLTF(modelPath, true);
-  
-  const clonedScene = useMemo(
-    () => gltf?.scene ? gltf.scene.clone() : null,
-    [gltf?.scene]
-  );
-  
-  if (!clonedScene) return null;
-  
-  return (
-    <primitive 
-      object={clonedScene} 
-      position={[0, 0, 0]}
-      scale={[scale, scale, scale]}
-      castShadow
-      receiveShadow
-    />
-  );
-});
-
-// Главный компонент выбирает правильную модель через УСЛОВНЫЙ РЕНДЕРИНГ
-const Character3DModel = memo(({ modelType, position, isActive, isSelected, isEnemy, scale = 1, token }: {
-  modelType: keyof typeof MODEL_PATHS;
-  position: [number, number, number];
-  isActive: boolean;
-  isSelected: boolean;
-  isEnemy: boolean;
-  scale?: number;
-  token: EnhancedToken;
-}) => {
-  const modelPath = MODEL_PATHS[modelType] || MODEL_PATHS.default;
-  
-  return (
-    <React.Suspense fallback={<FallbackModel token={token} isActive={isActive} isSelected={isSelected} isEnemy={isEnemy} />}>
-      <ModelComponent modelPath={modelPath} scale={scale} />
-    </React.Suspense>
-  );
-});
+// Убрано - теперь используется ModelLoader.tsx с отдельными компонентами для каждой модели
 
 export const EnhancedBattleToken3D = memo<EnhancedBattleToken3DProps>(({ token }) => {
   const meshRef = useRef<THREE.Group>(null);
@@ -114,7 +37,7 @@ export const EnhancedBattleToken3D = memo<EnhancedBattleToken3DProps>(({ token }
   const speed = token.speed || 6;
   
   // Определяем тип модели на основе имени или класса токена - мемоизируем
-  const modelType = useMemo<keyof typeof MODEL_PATHS>(() => {
+  const modelType = useMemo<ModelType>(() => {
     const name = token.name.toLowerCase();
     const tokenClass = token.class?.toLowerCase() || '';
     
@@ -219,12 +142,11 @@ export const EnhancedBattleToken3D = memo<EnhancedBattleToken3DProps>(({ token }
         <Model3DErrorBoundary token={token}>
           <Character3DModel
             modelType={modelType}
-            position={token.position}
+            scale={0.8}
+            token={token}
             isActive={isActive}
             isSelected={isSelected}
             isEnemy={token.isEnemy}
-            scale={0.8}
-            token={token}
           />
         </Model3DErrorBoundary>
       </group>
@@ -272,9 +194,4 @@ export const EnhancedBattleToken3D = memo<EnhancedBattleToken3DProps>(({ token }
       </Html>
     </group>
   );
-});
-
-// Preload 3D models
-Object.values(MODEL_PATHS).forEach((path) => {
-  useGLTF.preload(path);
 });
