@@ -197,13 +197,13 @@ export default function LayerPanel({
               {/* Слайдер прозрачности */}
               <div className="flex items-center gap-2">
                 <span className="text-xs text-muted-foreground w-8">
-                  {Math.round(layer.opacity * 100)}%
+                  {Math.round((typeof layer.opacity === 'number' ? layer.opacity : 1) * 100)}%
                 </span>
                 <input
                   type="range"
                   min="0"
                   max="100"
-                  value={layer.opacity * 100}
+                  value={(typeof layer.opacity === 'number' ? layer.opacity : 1) * 100}
                   onChange={(e) => {
                     e.stopPropagation();
                     onLayerOpacityChange(layer.id, parseInt(e.target.value) / 100);

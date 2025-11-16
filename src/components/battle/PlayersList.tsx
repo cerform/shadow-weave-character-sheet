@@ -170,11 +170,11 @@ export const PlayersList: React.FC<PlayersListProps> = ({ sessionId, isDM = fals
                     />
                     <div className="flex-1 min-w-0">
                       <div className="text-xs font-medium truncate">
-                        {player.userName}
+                        {String(player.userName || 'Игрок')}
                       </div>
                       {player.character && typeof player.character === 'string' && (
                         <div className="text-[10px] text-muted-foreground truncate">
-                          {player.character}
+                          {String(player.character)}
                         </div>
                       )}
                     </div>
