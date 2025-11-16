@@ -1,6 +1,6 @@
 import { Html, useGLTF } from "@react-three/drei";
 import { ThreeEvent, useFrame } from "@react-three/fiber";
-import { useRef, useState, useMemo, memo } from "react";
+import { useRef, useState, useMemo, memo, useCallback } from "react";
 import { useUnifiedBattleStore } from "@/stores/unifiedBattleStore";
 import { type EnhancedToken } from "@/stores/enhancedBattleStore";
 import { canMoveToPosition, snapToGrid, gridToWorld, type GridPosition } from "@/utils/movementUtils";
@@ -79,7 +79,7 @@ const Character3DModel = memo(({ modelType, position, isActive, isSelected, isEn
   );
 });
 
-export const EnhancedBattleToken3D: React.FC<EnhancedBattleToken3DProps> = ({ token }) => {
+export const EnhancedBattleToken3D = memo<EnhancedBattleToken3DProps>(({ token }) => {
   const meshRef = useRef<THREE.Group>(null);
   const ringRef = useRef<THREE.Mesh>(null);
   const [hovered, setHovered] = useState(false);
@@ -99,8 +99,8 @@ export const EnhancedBattleToken3D: React.FC<EnhancedBattleToken3DProps> = ({ to
   const isSelected = selectedTokenId === token.id;
   const speed = token.speed || 6;
   
-  // Определяем тип модели на основе имени или класса токена
-  const getModelType = (token: EnhancedToken): keyof typeof MODEL_PATHS => {
+  // Определяем тип модели на основе имени или класса токена - мемоизируем
+  const modelType = useMemo<keyof typeof MODEL_PATHS>(() => {
     const name = token.name.toLowerCase();
     const tokenClass = token.class?.toLowerCase() || '';
     
@@ -114,7 +114,7 @@ export const EnhancedBattleToken3D: React.FC<EnhancedBattleToken3DProps> = ({ to
     if (tokenClass.includes('cleric') || tokenClass.includes('priest')) return 'cleric';
     
     return 'default';
-  };
+  }, [token.name, token.class]);
   
   // Анимация активного кольца
   useFrame((state) => {
@@ -133,7 +133,7 @@ export const EnhancedBattleToken3D: React.FC<EnhancedBattleToken3DProps> = ({ to
     }
   });
 
-  const handleTokenClick = (event: ThreeEvent<PointerEvent>) => {
+  const handleTokenClick = useCallback((event: ThreeEvent<PointerEvent>) => {
     event.stopPropagation();
     
     // Выбираем токен и показываем сетку перемещения
@@ -143,10 +143,10 @@ export const EnhancedBattleToken3D: React.FC<EnhancedBattleToken3DProps> = ({ to
     if (!token.hasMovedThisTurn) {
       setShowMovementGrid(true);
     }
-  };
+  }, [token.id, token.hasMovedThisTurn, selectToken, setShowMovementGrid]);
 
 
-  const handleCellClick = (cell: GridPosition) => {
+  const handleCellClick = useCallback((cell: GridPosition) => {
     if (token.hasMovedThisTurn) return;
     
     const worldPosition = gridToWorld(cell);
@@ -179,7 +179,7 @@ export const EnhancedBattleToken3D: React.FC<EnhancedBattleToken3DProps> = ({ to
       
       console.log(`Token ${token.name} moved to position:`, worldPosition);
     }
-  };
+  }, [token, speed, tokens, updateToken, setShowMovementGrid, addCombatEvent]);
 
   return (
     <group position={token.position} ref={meshRef}>
@@ -204,7 +204,7 @@ export const EnhancedBattleToken3D: React.FC<EnhancedBattleToken3DProps> = ({ to
       >
         <Model3DErrorBoundary token={token}>
           <Character3DModel
-            modelType={getModelType(token)}
+            modelType={modelType}
             position={token.position}
             isActive={isActive}
             isSelected={isSelected}
@@ -258,7 +258,7 @@ export const EnhancedBattleToken3D: React.FC<EnhancedBattleToken3DProps> = ({ to
       </Html>
     </group>
   );
-};
+});
 
 // Preload 3D models
 Object.values(MODEL_PATHS).forEach((path) => {

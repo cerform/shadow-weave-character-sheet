@@ -25,24 +25,25 @@ interface ModelProps {
 const Model: React.FC<ModelProps> = ({ url, autoRotate = false }) => {
   const modelRef = useRef<THREE.Group>(null);
   
-  try {
-    const gltf = useGLTF(url);
-    
-    useFrame((state) => {
-      if (modelRef.current && autoRotate) {
-        modelRef.current.rotation.y += 0.01;
-      }
-    });
+  // ✅ ХУК ВСЕГДА ВЫЗЫВАЕТСЯ (не в try-catch)
+  const gltf = useGLTF(url);
+  
+  useFrame((state) => {
+    if (modelRef.current && autoRotate) {
+      modelRef.current.rotation.y += 0.01;
+    }
+  });
 
-    return (
-      <group ref={modelRef}>
-        <primitive object={gltf.scene} scale={1} />
-      </group>
-    );
-  } catch (error) {
-    console.error('Error loading model:', error);
+  // Условная проверка после вызова хуков
+  if (!gltf || !gltf.scene) {
     return null;
   }
+
+  return (
+    <group ref={modelRef}>
+      <primitive object={gltf.scene} scale={1} />
+    </group>
+  );
 };
 
 // Компонент загрузчика

@@ -38,9 +38,14 @@ export const MovementIndicator: React.FC<MovementIndicatorProps> = ({
     return Array.isArray(cells) ? cells : [];
   }, [token, tokens, tokenId, visible]);
 
+  // ✅ РАННИЙ ВОЗВРАТ СРАЗУ ПОСЛЕ ХУКОВ для стабильного порядка хуков
+  if (!visible || !token || token.hasMovedThisTurn || accessibleCells.length === 0) {
+    return null;
+  }
+
   // Обновляем позиции инстансов при изменении доступных клеток
   useEffect(() => {
-    if (!meshRef.current || accessibleCells.length === 0) return;
+    if (!meshRef.current) return;
     
     const mesh = meshRef.current;
     
@@ -66,7 +71,7 @@ export const MovementIndicator: React.FC<MovementIndicatorProps> = ({
 
   // Анимация пульсации
   useFrame((state) => {
-    if (!meshRef.current || !visible || accessibleCells.length === 0) return;
+    if (!meshRef.current) return;
     
     const pulse = Math.sin(state.clock.elapsedTime * 2) * 0.05 + 0.95;
     meshRef.current.scale.setScalar(pulse);
@@ -106,12 +111,9 @@ export const MovementIndicator: React.FC<MovementIndicatorProps> = ({
     }
   };
 
-  if (!visible || !token || token.hasMovedThisTurn || accessibleCells.length === 0) {
-    return null;
-  }
-
   return (
     <instancedMesh
+      key={`movement-${tokenId}-${accessibleCells.length}`}
       ref={meshRef}
       args={[undefined, undefined, accessibleCells.length]}
       onPointerDown={handlePointerDown}
