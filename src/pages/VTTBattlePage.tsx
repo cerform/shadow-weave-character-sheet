@@ -9,9 +9,14 @@ export default function VTTBattlePage() {
   const { sessionId } = useParams<{ sessionId: string }>();
   const isDM = true; // TODO: Get from auth context
   
+  // Test map URL - можно заменить на реальную карту из Supabase
+  const testMapUrl = 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=1200&q=80'; // Fantasy map placeholder
+  
   const { canvasRef, core, state } = useVTT({
     sessionId: sessionId || 'test-session',
-    isDM
+    isDM,
+    gridSize: 50,
+    mapUrl: testMapUrl
   });
 
   return (
