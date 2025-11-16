@@ -1,14 +1,11 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useUserRole } from "@/hooks/use-auth";
-
-export type FogCell = {
-  x: number;
-  y: number;
-  revealed: boolean;
-};
+import { FogEngine } from "@/modules/fog/FogEngine";
+import type { FogCell } from "@/modules/fog/FogTypes";
 
 export type FogController = {
+  engine: FogEngine | null;
   grid: number[][];
   width: number;
   height: number;
@@ -37,12 +34,28 @@ export function useFogController(
 ): FogController {
   const { isDM } = useUserRole();
 
+  // FogEngine instance
+  const engineRef = useRef<FogEngine | null>(null);
+
   // LOCAL GRID (always authoritative for rendering)
   const [grid, setGrid] = useState<number[][]>(() =>
     Array.from({ length: gridH }, () =>
       Array.from({ length: gridW }, () => 0)
     )
   );
+
+  // Initialize engine
+  useEffect(() => {
+    engineRef.current = new FogEngine(gridW, gridH);
+    engineRef.current.loadGrid(grid);
+  }, [gridW, gridH]);
+
+  // Sync grid with engine
+  useEffect(() => {
+    if (engineRef.current) {
+      engineRef.current.loadGrid(grid);
+    }
+  }, [grid]);
 
   // Prevent infinite loops
   const suppressNextUpdate = useRef(false);
@@ -165,13 +178,16 @@ export function useFogController(
   // ─────────────────────────────────────────────────────────────
   const applyLocal = useCallback(
     (x: number, y: number, revealed: boolean) => {
-      setGrid(prev => {
-        const g = prev.map(row => [...row]);
-        g[y][x] = revealed ? 1 : 0;
-        return g;
-      });
-
-      if (isDM) pendingCells.current.set(`${x}:${y}`, revealed);
+      if (!engineRef.current) return;
+      
+      const changed = revealed 
+        ? engineRef.current.reveal(x, y)
+        : engineRef.current.hide(x, y);
+      
+      if (changed) {
+        setGrid(engineRef.current.getGrid());
+        if (isDM) pendingCells.current.set(`${x}:${y}`, revealed);
+      }
     },
     [isDM]
   );
@@ -181,10 +197,16 @@ export function useFogController(
 
   const toggle = useCallback(
     (x: number, y: number) => {
-      const cur = grid[y]?.[x] ?? 0;
-      applyLocal(x, y, !cur);
+      if (!engineRef.current) return;
+      
+      const changed = engineRef.current.toggle(x, y);
+      if (changed) {
+        setGrid(engineRef.current.getGrid());
+        const revealed = engineRef.current.isRevealed(x, y);
+        if (isDM) pendingCells.current.set(`${x}:${y}`, revealed);
+      }
     },
-    [grid, applyLocal]
+    [isDM]
   );
 
   // ─────────────────────────────────────────────────────────────
@@ -192,24 +214,30 @@ export function useFogController(
   // ─────────────────────────────────────────────────────────────
   const applyCircle = useCallback(
     (cx: number, cy: number, r: number, revealState: boolean) => {
-      const r2 = r * r;
-
-      for (let y = cy - r; y <= cy + r; y++) {
-        for (let x = cx - r; x <= cx + r; x++) {
-          if (x < 0 || y < 0 || x >= gridW || y >= gridH) continue;
-
-          const dx = x - cx;
-          const dy = y - cy;
-          if (dx * dx + dy * dy <= r2) applyLocal(x, y, revealState);
+      if (!engineRef.current) return;
+      
+      const mode = revealState ? 'reveal' : 'hide';
+      const changed = engineRef.current.applyBrush(cx, cy, r, mode);
+      
+      if (changed.length > 0) {
+        setGrid(engineRef.current.getGrid());
+        if (isDM) {
+          changed.forEach(cell => {
+            pendingCells.current.set(`${cell.x}:${cell.y}`, cell.revealed);
+          });
         }
       }
     },
-    [applyLocal, gridW, gridH]
+    [isDM]
   );
 
-  const isRevealed = useCallback((x: number, y: number) => grid[y]?.[x] === 1, [grid]);
+  const isRevealed = useCallback(
+    (x: number, y: number) => engineRef.current?.isRevealed(x, y) ?? false, 
+    []
+  );
 
   return {
+    engine: engineRef.current,
     grid,
     width: gridW,
     height: gridH,

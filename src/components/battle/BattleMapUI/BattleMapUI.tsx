@@ -12,6 +12,7 @@ import { ZoomControls } from "./ui/ZoomControls";
 import { LeftSidebar } from "./sidebars/LeftSidebar";
 import { RightSidebar } from "./sidebars/RightSidebar";
 import { ContextMenuPortal } from "./ui/ContextMenuPortal";
+import { FogBrushTool } from "@/modules/fog/FogBrushTool";
 import type { VTTTool, EnhancedToken } from "./types";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -51,6 +52,10 @@ export default function BattleMapUI({ sessionId }: BattleMapUIProps) {
   const layers = useMapLayers();
   const contextMenu = useBattleContextMenu();
 
+  // Fog brush settings
+  const [fogBrushRadius, setFogBrushRadius] = useState(3);
+  const [fogMode, setFogMode] = useState<'reveal' | 'hide'>('reveal');
+
   const handleContextMenuAction = (action: string, tokenId?: string) => {
     if (action === 'delete' && tokenId) {
       tokens.handleRemoveToken(tokenId);
@@ -85,6 +90,21 @@ export default function BattleMapUI({ sessionId }: BattleMapUIProps) {
           onContextMenu={(e, tokenId) => contextMenu.handleShowContextMenu(e.clientX, e.clientY, tokenId)}
           onMapDrop={(file) => map.setMapFile(file)}
         />
+        
+        {/* Fog Brush Tool Overlay */}
+        {(currentTool === 'fog-reveal' || currentTool === 'fog-hide') && (
+          <FogBrushTool
+            engine={fog.engine}
+            mode={currentTool === 'fog-reveal' ? 'reveal' : 'hide'}
+            radius={fogBrushRadius}
+            cellSize={GRID_CELL_SIZE}
+            enabled={layers.isLayerVisible('fog') && map.isDM}
+            onDraw={() => {
+              // Batched updates handled by useFogController
+            }}
+          />
+        )}
+        
         <ZoomControls
           zoom={camera.zoom}
           onZoomIn={camera.handleZoomIn}
