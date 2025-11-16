@@ -1,4 +1,4 @@
-import React from "react";
+import React, { startTransition } from "react";
 import { Html } from "@react-three/drei";
 import { ThreeEvent, useFrame } from "@react-three/fiber";
 import { useRef, useState, useMemo, memo, useCallback } from "react";
@@ -73,13 +73,15 @@ export const EnhancedBattleToken3D = memo<EnhancedBattleToken3DProps>(({ token }
   const handleTokenClick = useCallback((event: ThreeEvent<PointerEvent>) => {
     event.stopPropagation();
     
-    // Выбираем токен и показываем сетку перемещения
-    selectToken(token.id);
-    
-    // Показываем сетку перемещения если токен еще не двигался
-    if (!token.hasMovedThisTurn) {
-      setShowMovementGrid(true);
-    }
+    // ✅ ИСПРАВЛЕНИЕ: Используем startTransition для безопасного обновления state
+    // Это предотвращает синхронные мутации во время render phase
+    startTransition(() => {
+      selectToken(token.id);
+      
+      if (!token.hasMovedThisTurn) {
+        setShowMovementGrid(true);
+      }
+    });
   }, [token.id, token.hasMovedThisTurn, selectToken, setShowMovementGrid]);
 
 
@@ -97,24 +99,24 @@ export const EnhancedBattleToken3D = memo<EnhancedBattleToken3DProps>(({ token }
       token.id,
       token.hasMovedThisTurn
     )) {
-      // Обновляем позицию токена
-      updateToken(token.id, { 
-        position: worldPosition,
-        hasMovedThisTurn: true 
+      // ✅ ИСПРАВЛЕНИЕ: Батчим все изменения в одной транзакции
+      startTransition(() => {
+        // Обновляем позицию токена
+        updateToken(token.id, {
+          position: worldPosition,
+          hasMovedThisTurn: true
+        });
+        
+        // Скрываем сетку после перемещения
+        setShowMovementGrid(false);
+        
+        // Добавляем событие в лог
+        addCombatEvent({
+          actor: token.name,
+          action: 'Перемещение',
+          description: `переместился на клетку [${cell.x}, ${cell.z}]`
+        });
       });
-      
-      // Скрываем сетку перемещения после хода
-      setShowMovementGrid(false);
-      
-      // Добавляем событие в лог
-      addCombatEvent({
-        actor: token.name,
-        action: 'Перемещение',
-        description: `${token.name} переместился на позицию (${cell.x}, ${cell.z})`,
-        playerName: token.name
-      });
-      
-      console.log(`Token ${token.name} moved to position:`, worldPosition);
     }
   }, [token, speed, tokens, updateToken, setShowMovementGrid, addCombatEvent]);
 
