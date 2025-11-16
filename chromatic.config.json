@@ -1,0 +1,19 @@
+{
+  "projectId": "PROJECT_ID_WILL_BE_SET_BY_CHROMATIC",
+  "buildScriptName": "build-storybook",
+  "storybookBuildDir": "storybook-static",
+  "exitZeroOnChanges": false,
+  "exitOnceUploaded": false,
+  "autoAcceptChanges": "main",
+  "onlyChanged": true,
+  "externals": [
+    "public/**",
+    "src/assets/**"
+  ],
+  "skip": [
+    "dependabot/**",
+    "renovate/**"
+  ],
+  "ignoreLastBuildOnBranch": "main",
+  "zip": true
+}
