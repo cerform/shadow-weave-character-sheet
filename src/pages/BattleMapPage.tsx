@@ -2,6 +2,7 @@ import React from 'react';
 import { useParams } from 'react-router-dom';
 import BattleMapUI from '@/components/BattleMapUI';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { HooksViolationDetector } from '@/components/debug/HooksViolationDetector';
 
 const BattleMapPage: React.FC = () => {
   const { sessionId } = useParams<{ sessionId: string }>();
@@ -20,6 +21,7 @@ const BattleMapPage: React.FC = () => {
     <ErrorBoundary>
       <div className="h-screen w-screen bg-background overflow-hidden">
         <BattleMapUI sessionId={sessionId} />
+        <HooksViolationDetector />
       </div>
     </ErrorBoundary>
   );
