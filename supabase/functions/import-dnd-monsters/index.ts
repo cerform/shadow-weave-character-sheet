@@ -126,7 +126,7 @@ serve(async (req) => {
     console.error('❌ Критическая ошибка:', error)
     return new Response(
       JSON.stringify({ 
-        error: error.message,
+        error: error instanceof Error ? error.message : 'Unknown error',
         success: false 
       }),
       { 

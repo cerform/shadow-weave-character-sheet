@@ -72,7 +72,7 @@ serve(async (req) => {
     console.error('Error fetching image:', error);
     return new Response(
       JSON.stringify({ 
-        error: error.message || 'Failed to fetch image',
+        error: error instanceof Error ? error.message : 'Failed to fetch image',
         details: 'Unable to load the image from the provided URL. It may be blocked by CORS or the URL is invalid.'
       }),
       { 
