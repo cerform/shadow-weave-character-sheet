@@ -5,7 +5,7 @@ import { screen } from "@testing-library/dom";
 import userEvent from "@testing-library/user-event";
 import { BrowserRouter } from "react-router-dom";
 import React from "react";
-import BattleMapUI from "@/components/BattleMapUI";
+import BattleMapUI from "@/components/battle/BattleMapUI";
 import { vi } from "vitest";
 
 // Мокаем сложные зависимости
