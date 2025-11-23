@@ -1,6 +1,6 @@
 import React from 'react';
 import { useParams } from 'react-router-dom';
-import BattleMapUI from '@/components/BattleMapUI';
+import BattleMapUI from '@/components/battle/BattleMapUI';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { HooksViolationDetector } from '@/components/debug/HooksViolationDetector';
 
