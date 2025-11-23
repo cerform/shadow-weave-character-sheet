@@ -1,6 +1,6 @@
 import React, { useRef, useMemo, useState } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
-import { Text, Box, Sphere, Cylinder, Cone, useGLTF } from '@react-three/drei';
+import { Text, Box, Sphere, Cylinder, Cone } from '@react-three/drei';
 import * as THREE from 'three';
 
 interface Equipment {
