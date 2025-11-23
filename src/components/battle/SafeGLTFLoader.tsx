@@ -1,5 +1,6 @@
 import React, { Suspense, useState, useEffect, useMemo } from 'react';
-import { useGLTF } from '@react-three/drei';
+import { useLoader } from '@react-three/fiber';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import * as THREE from 'three';
 
 interface SafeGLTFLoaderProps {
@@ -41,7 +42,7 @@ class GLTFErrorBoundary extends React.Component<
   }
 }
 
-// Internal component that uses useGLTF
+// ✅ ИСПРАВЛЕНО: используем useLoader вместо useGLTF для динамических путей
 const GLTFModel: React.FC<{ 
   url: string; 
   position: [number, number, number]; 
@@ -59,10 +60,11 @@ const GLTFModel: React.FC<{
   onPointerLeave,
   makeInteractive = false
 }) => {
-  const { scene } = useGLTF(url);
+  // ✅ ИСПРАВЛЕНО: useLoader безопасен для динамических путей
+  const gltf = useLoader(GLTFLoader, url) as THREE.Group & { scene: THREE.Group };
   
   const clonedScene = useMemo(() => {
-    const cloned = scene.clone();
+    const cloned = gltf.scene.clone();
     
     if (makeInteractive) {
       // Рекурсивно добавляем обработчики событий ко всем мешам в модели
@@ -86,7 +88,7 @@ const GLTFModel: React.FC<{
     }
     
     return cloned;
-  }, [scene, makeInteractive, onPointerDown, onPointerEnter, onPointerLeave]);
+  }, [gltf.scene, makeInteractive, onPointerDown, onPointerEnter, onPointerLeave]);
   
   const handlePointerEvent = (eventType: string) => (event: any) => {
     if (eventType === 'pointerdown' && onPointerDown) {

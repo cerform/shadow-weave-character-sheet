@@ -1,6 +1,6 @@
 import React, { Suspense, useRef, useState } from 'react';
 import { Canvas, useFrame, useLoader } from '@react-three/fiber';
-import { OrbitControls, Stage, useGLTF } from '@react-three/drei';
+import { OrbitControls, Stage } from '@react-three/drei';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -21,12 +21,12 @@ interface ModelProps {
   autoRotate?: boolean;
 }
 
-// Компонент для загрузки и отображения 3D модели
+// ✅ ИСПРАВЛЕНО: используем useLoader вместо useGLTF для динамических путей
 const Model: React.FC<ModelProps> = ({ url, autoRotate = false }) => {
   const modelRef = useRef<THREE.Group>(null);
   
-  // ✅ ХУК ВСЕГДА ВЫЗЫВАЕТСЯ (не в try-catch)
-  const gltf = useGLTF(url);
+  // ✅ ИСПРАВЛЕНО: useLoader безопасен для динамических путей
+  const gltf = useLoader(GLTFLoader, url) as THREE.Group & { scene: THREE.Group };
   
   useFrame((state) => {
     if (modelRef.current && autoRotate) {
