@@ -31,11 +31,12 @@ export function MapTexture({ imageUrl, width, height, onDrop }: MapTextureProps)
   if (!imageUrl) {
     return (
       <div
-        className="absolute inset-0 flex items-center justify-center bg-muted"
+        className="absolute inset-0 flex items-center justify-center bg-muted transition-colors hover:bg-muted/80"
         onDragOver={handleDragOver}
         onDrop={handleDrop}
+        style={{ pointerEvents: 'auto' }}
       >
-        <div className="text-center text-muted-foreground">
+        <div className="text-center text-muted-foreground pointer-events-none">
           <p className="text-lg font-medium">Карта не загружена</p>
           <p className="text-sm">Перетащите изображение сюда</p>
         </div>
@@ -47,10 +48,11 @@ export function MapTexture({ imageUrl, width, height, onDrop }: MapTextureProps)
     <img
       src={imageUrl}
       alt="Battle Map"
-      className="absolute inset-0 w-full h-full object-cover"
+      className="absolute inset-0 w-full h-full object-cover pointer-events-auto"
       draggable={false}
       onDragOver={handleDragOver}
       onDrop={handleDrop}
+      style={{ userSelect: 'none' }}
     />
   );
 }
