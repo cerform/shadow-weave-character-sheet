@@ -76,7 +76,14 @@ export default function BattleMapUI({ sessionId }: BattleMapUIProps) {
   return (
     <div className="battle-map-ui w-full h-full flex relative bg-background">
       <Toolbar currentTool={currentTool} onToolChange={setCurrentTool} />
-      <LeftSidebar sessionId={sessionId} isDM={map.isDM} onCreateToken={handleCreateToken} />
+      <LeftSidebar 
+        sessionId={sessionId} 
+        isDM={map.isDM} 
+        onCreateToken={handleCreateToken}
+        onMapFile={map.setMapFile}
+        onMapUrl={map.setMapUrl}
+        currentMapUrl={map.mapUrl}
+      />
       
       <div className="flex-1 relative overflow-hidden">
         <BattleMap2D

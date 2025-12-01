@@ -163,11 +163,29 @@ export function useBattleMapState(sessionId: string): MapState {
 
   // --- Устанавливаем карту через URL ---
   const setMapUrl = useCallback(
-    (url: string | null) => {
-      if (!isDM) return;
+    async (url: string | null) => {
+      if (!isDM || !url) return;
+      
       setMapUrlState(url);
+      
+      try {
+        // Сохраняем URL в Supabase
+        await saveMapFromUrl(url, 'Map from URL');
+        
+        toast({
+          title: "Карта загружена",
+          description: "Карта сохранена и синхронизирована с игроками.",
+        });
+      } catch (error) {
+        console.error('Error saving map URL:', error);
+        toast({
+          title: "Ошибка загрузки",
+          description: "Не удалось сохранить карту",
+          variant: "destructive",
+        });
+      }
     },
-    [isDM]
+    [isDM, saveMapFromUrl, toast]
   );
 
   // --- Установка размеров карты (используется onLoad изображения) ---
