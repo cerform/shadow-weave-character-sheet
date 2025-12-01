@@ -9,11 +9,15 @@ export function useBattleController(sessionId: string) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
-  // Инициализация контроллера
+  // Сохраняем isDM в ref для стабильности
+  const isDMRef = useRef(isDM);
+  isDMRef.current = isDM;
+
+  // Инициализация контроллера - только при смене sessionId
   useEffect(() => {
     if (!sessionId) return;
 
-    const controller = new BattleController(sessionId, isDM);
+    const controller = new BattleController(sessionId, isDMRef.current);
     controllerRef.current = controller;
 
     const unsubscribe = controller.subscribe(() => {
@@ -36,7 +40,7 @@ export function useBattleController(sessionId: string) {
       controller.destroy();
       controllerRef.current = null;
     };
-  }, [sessionId, isDM]);
+  }, [sessionId]); // Убрали isDM из зависимостей
 
   // API методы
   const setMap = useCallback(async (file: File) => {

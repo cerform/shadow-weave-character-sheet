@@ -55,6 +55,7 @@ export class BattleController {
   // ========================================
 
   getState(): BattleState {
+    // Возвращаем копию состояния для корректной работы React
     return { ...this.state };
   }
 
