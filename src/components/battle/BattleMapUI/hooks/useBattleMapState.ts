@@ -37,7 +37,7 @@ export function useBattleMapState(sessionId: string): MapState {
 
   // --- ЦЕНТРАЛИЗОВАННАЯ ИНИЦИАЛИЗАЦИЯ: DM и Player ---
   useEffect(() => {
-    if (!sessionId) return;
+    if (!sessionId || loadingSession) return;
     
     // Пропускаем если уже загрузили
     if (mapLoadedOnce.current) return;
@@ -51,7 +51,7 @@ export function useBattleMapState(sessionId: string): MapState {
 
       // DM: загружаем из currentMap
       if (isDM && currentMap?.file_url) {
-        console.log('🎯 [DM] Загружаем карту из currentMap');
+        console.log('🎯 [DM] Загружаем карту из currentMap:', currentMap.file_url);
         setMapUrlState(currentMap.file_url);
         
         if (currentMap.width && currentMap.height) {
@@ -75,7 +75,10 @@ export function useBattleMapState(sessionId: string): MapState {
           .maybeSingle();
 
         if (data?.current_map_url) {
+          console.log('👥 [PLAYER] Карта найдена:', data.current_map_url);
           setMapUrlState(data.current_map_url);
+        } else {
+          console.log('👥 [PLAYER] Карта не найдена');
         }
         
         mapLoadedOnce.current = true;
@@ -83,7 +86,7 @@ export function useBattleMapState(sessionId: string): MapState {
     };
 
     initialize();
-  }, [sessionId]); // ⚠️ Только sessionId!
+  }, [sessionId, loadingSession, isDM, currentMap]);
 
   // --- Real-time подписка для Player (отдельный эффект) ---
   useEffect(() => {
