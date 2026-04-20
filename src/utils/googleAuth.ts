@@ -41,7 +41,7 @@ export function initGoogleAuth({ clientId, onSuccess, onError }: GoogleAuthConfi
           console.log('🔄 Получили код от Google, отправляем на сервер');
         }
         
-        const result = await fetch('https://mqdjwhjtvjnktobgruuu.supabase.co/functions/v1/auth-google-callback', {
+        const result = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/auth-google-callback`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ code: response.code }),

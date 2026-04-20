@@ -55,11 +55,17 @@ export default defineConfig(({ mode }) => ({
   },
 
   build: {
+    target: "esnext",
     sourcemap: mode === "production", // Генерируем source maps только для production
     rollupOptions: {
       output: {
         sourcemapExcludeSources: false, // Включаем исходники в source maps
       },
+    },
+  },
+  optimizeDeps: {
+    esbuildOptions: {
+      target: "esnext",
     },
   },
 }));
