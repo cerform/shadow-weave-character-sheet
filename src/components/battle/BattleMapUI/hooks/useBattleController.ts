@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { BattleController, type BattleState } from '../core/BattleController';
 import { useUserRole } from '@/hooks/use-auth';
+import { socketService } from '@/services/socket';
 
 export function useBattleController(sessionId: string) {
   const { isDM } = useUserRole();
@@ -41,6 +42,24 @@ export function useBattleController(sessionId: string) {
       controllerRef.current = null;
     };
   }, [sessionId]); // Убрали isDM из зависимостей
+
+  // Подписка на Socket.io события для ИИ
+  useEffect(() => {
+    const socket = socketService.getSocket();
+    if (!socket || !sessionId) return;
+
+    const handleMapGenerated = (data: { imageUrl: string }) => {
+      if (controllerRef.current) {
+        controllerRef.current.setLocalMap(data.imageUrl);
+      }
+    };
+
+    socket.on('session:map_generated', handleMapGenerated);
+    
+    return () => {
+      socket.off('session:map_generated', handleMapGenerated);
+    };
+  }, [sessionId]);
 
   // API методы
   const setMap = useCallback(async (file: File) => {

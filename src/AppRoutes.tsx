@@ -44,6 +44,7 @@ import DnD5ePage from '@/pages/DnD5ePage';
 // Ленивая загрузка страниц, зависящих от WebSocket
 const GameRoomPage = React.lazy(() => import('@/pages/GameRoomPage'));
 const JoinSessionPage = React.lazy(() => import('@/pages/JoinSessionPage'));
+const CreateSessionPage = React.lazy(() => import('@/pages/CreateSessionPage'));
 const TestPage = React.lazy(() => import('@/pages/TestPage'));
 
 // Импорт хука для защиты маршрутов
@@ -293,6 +294,12 @@ const AppRoutes: React.FC = () => {
       } />
       
       {/* Игровые сессии */}
+      {/* /join и /join-session — публичные, не требуют авторизации */}
+      <Route path="/join" element={
+        <React.Suspense fallback={<LazyLoading />}>
+          <JoinSessionPage />
+        </React.Suspense>
+      } />
       <Route path="/join-session" element={
         <ProtectedPlayerRoute>
           <React.Suspense fallback={<LazyLoading />}>
@@ -305,9 +312,18 @@ const AppRoutes: React.FC = () => {
           <JoinSessionPage />
         </React.Suspense>
       } />
+
+      {/* Создание сессии — новый пошаговый мастер */}
+      <Route path="/create-session" element={
+        <ProtectedDMRoute>
+          <React.Suspense fallback={<LazyLoading />}>
+            <CreateSessionPage />
+          </React.Suspense>
+        </ProtectedDMRoute>
+      } />
       
       {/* Устаревшие редиректы */}
-      <Route path="/join-game" element={<Navigate to="/join-session" replace />} />
+      <Route path="/join-game" element={<Navigate to="/join" replace />} />
       <Route path="/dm-dashboard" element={<Navigate to="/dm" replace />} />
       <Route path="/dm-dashboard-new" element={<Navigate to="/dm" replace />} />
       <Route path="/dm-dashboard/:sessionId" element={<Navigate to="/dm" replace />} />

@@ -21,6 +21,8 @@ interface BattleMap2DProps {
   onTokenMove: (tokenId: string, position: [number, number, number]) => void;
   onContextMenu: (e: React.MouseEvent, tokenId?: string) => void;
   onMapDrop?: (file: File) => void;
+  isDM?: boolean;
+  currentUserId?: string;
 }
 
 export function BattleMap2D({
@@ -39,6 +41,8 @@ export function BattleMap2D({
   onTokenMove,
   onContextMenu,
   onMapDrop,
+  isDM = false,
+  currentUserId,
 }: BattleMap2DProps) {
   const handleMapContextMenu = useCallback(
     (e: React.MouseEvent) => {
@@ -76,6 +80,8 @@ export function BattleMap2D({
           e.stopPropagation();
           onContextMenu(e, tokenId);
         }}
+        isDM={isDM}
+        currentUserId={currentUserId}
       />
 
       {/* Fog of War */}

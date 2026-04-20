@@ -11,6 +11,8 @@ interface TokenLayerProps {
   onTokenClick: (tokenId: string) => void;
   onTokenDrag: (tokenId: string, position: [number, number, number]) => void;
   onContextMenu: (e: React.MouseEvent, tokenId: string) => void;
+  isDM: boolean;
+  currentUserId?: string;
 }
 
 export function TokenLayer({
@@ -20,6 +22,8 @@ export function TokenLayer({
   onTokenClick,
   onTokenDrag,
   onContextMenu,
+  isDM,
+  currentUserId,
 }: TokenLayerProps) {
   const [modelReady, setModelReady] = useState(true);
   const [brokenModels, setBrokenModels] = useState<Record<string, boolean>>({});
@@ -32,12 +36,20 @@ export function TokenLayer({
     [tokens]
   );
 
+  const canManageToken = (token: EnhancedToken) => {
+    if (isDM) return true;
+    if (!currentUserId) return false;
+    return token.ownerId === currentUserId;
+  };
+
   const handleModelError = (tokenId: string, msg: string) => {
     setBrokenModels((prev) => ({ ...prev, [tokenId]: true }));
     console.error(`Model error for token ${tokenId}: ${msg}`);
   };
 
   const handleMouseDown = (e: React.MouseEvent, token: EnhancedToken) => {
+    if (!canManageToken(token)) return;
+    
     setDraggingId(token.id);
     const rect = e.currentTarget.getBoundingClientRect();
     setDragOffset({
@@ -69,18 +81,22 @@ export function TokenLayer({
       {sortedTokens.map((token) => (
         <div
           key={token.id}
-          className={`absolute pointer-events-auto cursor-pointer transition-opacity ${
-            selectedId === token.id ? 'ring-2 ring-primary' : ''
-          } ${draggingId === token.id ? 'opacity-50' : ''}`}
+          className={`absolute pointer-events-auto transition-opacity ${
+            canManageToken(token) ? 'cursor-pointer' : 'cursor-default'
+          } ${selectedId === token.id ? 'ring-2 ring-primary border-4 border-primary/50 rounded-full' : ''} ${
+            draggingId === token.id ? 'opacity-50 scale-110' : ''
+          }`}
           style={{
             left: token.position[0],
             top: token.position[1],
             width: GRID * (token.size || 1),
             height: GRID * (token.size || 1),
+            zIndex: draggingId === token.id ? 100 : 10,
           }}
           onClick={() => onTokenClick(token.id)}
           onMouseDown={(e) => handleMouseDown(e, token)}
           onContextMenu={(e) => {
+            if (!canManageToken(token)) return;
             e.preventDefault();
             e.stopPropagation();
             onContextMenu(e, token.id);

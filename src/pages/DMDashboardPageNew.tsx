@@ -11,7 +11,9 @@ import { useToast } from '@/hooks/use-toast';
 import { Home, Crown, Users, Sword, Map, Dice6, Eye, Play, Pause, Trash2, Copy, Calendar } from 'lucide-react';
 import { sessionService } from '@/services/sessionService';
 import { supabase } from '@/integrations/supabase/client';
+import { socketService } from '@/services/socket';
 import { useAuth } from '@/hooks/use-auth';
+import { Brain, Scroll, Shield, Ghost } from 'lucide-react';
 
 const DMDashboardPageNew: React.FC = () => {
   const navigate = useNavigate();
@@ -127,49 +129,17 @@ const DMDashboardPageNew: React.FC = () => {
     });
   };
 
-  const handleCreateSession = async () => {
-    if (!sessionName.trim()) {
-      toast({
-        title: "Ошибка",
-        description: "Введите название сессии",
-        variant: "destructive"
-      });
-      return;
-    }
+  const shareInviteLink = (code: string) => {
+    const url = `${window.location.origin}/join?code=${code}`;
+    navigator.clipboard.writeText(url);
+    toast({
+      title: "Ссылка скопирована",
+      description: "Отправьте её игрокам для быстрого входа в сессию",
+    });
+  };
 
-    try {
-      setIsCreating(true);
-      console.log('🎮 Создание сессии:', { sessionName, sessionDescription });
-      
-      const newSession = await sessionService.createSession(
-        sessionName.trim(), 
-        sessionDescription.trim() || undefined
-      );
-      
-      console.log('✅ Сессия создана успешно:', newSession);
-      
-      toast({
-        title: "Сессия создана",
-        description: `Код сессии: ${newSession.session_code}`,
-      });
-      
-      // Перезагружаем сессии после создания
-      fetchSessions();
-      navigate(`/dm-session/${newSession.id}`);
-      
-    } catch (error) {
-      console.error('Ошибка при создании сессии:', error);
-      toast({
-        title: "Ошибка при создании сессии",
-        description: error instanceof Error ? error.message : "Неизвестная ошибка",
-        variant: "destructive"
-      });
-    } finally {
-      setIsCreating(false);
-      setIsCreateSessionOpen(false);
-      setSessionName('');
-      setSessionDescription('');
-    }
+  const handleCreateSession = () => {
+    navigate('/create-session');
   };
 
   return (
@@ -208,6 +178,55 @@ const DMDashboardPageNew: React.FC = () => {
             </Card>
           ))}
         </div>
+        
+        {/* AI DM Settings */}
+        <Card className="bg-slate-800 border-slate-700 mb-8 border-l-4 border-l-purple-500">
+          <CardHeader>
+            <CardTitle className="text-white flex items-center gap-2">
+              <Brain className="h-6 w-6 text-purple-400" />
+              Контроль AI Dungeon Master
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <Button 
+                variant="outline" 
+                className="flex flex-col items-center gap-2 h-auto py-4 bg-slate-700/50 hover:bg-purple-900/30 border-slate-600"
+                onClick={() => socketService.setAIPersonality('epic')}
+              >
+                <Scroll className="h-6 w-6 text-amber-400" />
+                <span>Сказитель</span>
+              </Button>
+              <Button 
+                variant="outline" 
+                className="flex flex-col items-center gap-2 h-auto py-4 bg-slate-700/50 hover:bg-red-900/30 border-slate-600"
+                onClick={() => socketService.setAIPersonality('merciless')}
+              >
+                <Sword className="h-6 w-6 text-red-500" />
+                <span>Судья</span>
+              </Button>
+              <Button 
+                variant="outline" 
+                className="flex flex-col items-center gap-2 h-auto py-4 bg-slate-700/50 hover:bg-blue-900/30 border-slate-600"
+                onClick={() => socketService.setAIPersonality('rules')}
+              >
+                <Shield className="h-6 w-6 text-blue-400" />
+                <span>Хранитель</span>
+              </Button>
+              <Button 
+                variant="outline" 
+                className="flex flex-col items-center gap-2 h-auto py-4 bg-slate-700/50 hover:bg-indigo-900/40 border-slate-600"
+                onClick={() => socketService.setAIPersonality('dark')}
+              >
+                <Ghost className="h-6 w-6 text-indigo-400" />
+                <span>Тень</span>
+              </Button>
+            </div>
+            <p className="text-xs text-slate-400 mt-4 text-center">
+              * Выбор характера изменит стиль комментариев ИИ в чате игры для всех участников.
+            </p>
+          </CardContent>
+        </Card>
 
         {/* Список активных сессий */}
         {!loading && sessions.length > 0 && (
@@ -245,11 +264,20 @@ const DMDashboardPageNew: React.FC = () => {
                       <div className="flex items-center gap-2">
                         <Button
                           size="sm"
-                          onClick={() => navigate(`/dm-session/${session.id}`)}
+                          onClick={() => navigate(`/vtt/${session.id}`)}
                           className="bg-blue-600 hover:bg-blue-700"
                         >
                           <Play className="h-4 w-4 mr-1" />
                           Управлять
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => shareInviteLink(session.session_code)}
+                          className="border-amber-500/50 text-amber-500 hover:bg-amber-500/10"
+                        >
+                          <Copy className="h-4 w-4 mr-1" />
+                          Ссылка
                         </Button>
                         {session.is_active ? (
                           <Button

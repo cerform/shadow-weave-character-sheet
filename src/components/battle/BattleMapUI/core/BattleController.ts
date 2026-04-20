@@ -240,6 +240,15 @@ export class BattleController {
     this.emit();
   }
 
+  async setLocalMap(url: string): Promise<void> {
+    const dimensions = await this.getImageDimensions(url);
+    this.state.mapUrl = url;
+    if (dimensions) {
+      this.state.mapSize = dimensions;
+    }
+    this.emit();
+  }
+
   // ========================================
   // TOKEN MANAGEMENT
   // ========================================

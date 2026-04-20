@@ -178,9 +178,15 @@ const SupabaseAuthForm: React.FC<SupabaseAuthFormProps> = ({ onSuccess }) => {
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/auth?callback=true`,
+          redirectTo: (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+            ? `${window.location.origin}/auth?callback=true`
+            : `${window.location.origin}/auth?callback=true`,
         },
       });
+
+      console.log('🔵 Инициирован редирект на URL:', (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+        ? `${window.location.origin}/auth?callback=true`
+        : `${window.location.origin}/auth?callback=true`);
 
       console.log('🔵 Результат OAuth:', { data, error });
 

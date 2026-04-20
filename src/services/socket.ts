@@ -98,18 +98,17 @@ class SocketService {
 
       console.log('🔌 Подключение к D&D серверу...');
       
-      // Для разработки используем mock-соединение без реального сервера
-      if (import.meta.env.DEV && !window.location.hostname.includes('localhost:3001')) {
-        console.log('📝 Режим разработки: используется mock-соединение');
-        setTimeout(() => {
-          console.log('✅ Mock-соединение установлено');
-          this.reconnectAttempts = 0;
-          resolve(true);
-        }, 500);
+      const serverUrl = import.meta.env.VITE_BACKEND_URL || 
+        (import.meta.env.DEV ? 'http://localhost:3001' : '');
+
+      // If no backend URL in production, use Supabase-only mode
+      if (!serverUrl) {
+        console.warn('⚠️ VITE_BACKEND_URL not set — running in Supabase-only mode (no Socket.IO)');
+        this.reconnectAttempts = 0;
+        resolve(true);
         return;
       }
-      
-      const serverUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001';
+
       this.socket = io(serverUrl, {
         transports: ['websocket', 'polling'],
         reconnection: true,
@@ -121,19 +120,18 @@ class SocketService {
       this.setupEventListeners();
 
       this.socket.on('connect', () => {
-        console.log('✅ Подключен к D&D серверу');
+        console.log('✅ Подключен к D&D серверу:', serverUrl);
         this.reconnectAttempts = 0;
         resolve(true);
       });
 
       this.socket.on('connect_error', (error) => {
-        console.error('❌ Ошибка подключения:', error);
+        console.error('❌ Ошибка подключения:', error.message);
         this.reconnectAttempts++;
         
         if (this.reconnectAttempts >= this.maxReconnectAttempts) {
-          // В режиме разработки всё равно возвращаем true для mock-соединения
-          console.log('🔄 Переход на mock-соединение');
-          resolve(true);
+          console.warn('🔄 Socket недоступен — режим Supabase Realtime');
+          resolve(true); // Don't block the app
         }
       });
     });
@@ -482,6 +480,15 @@ class SocketService {
       return true;
     }
     return this.socket?.connected || false;
+  }
+
+  getSocket(): Socket | null {
+    return this.socket;
+  }
+
+  setAIPersonality(personality: 'epic' | 'merciless' | 'rules' | 'dark') {
+    if (!this.socket?.connected) return;
+    this.socket.emit('ai:set_personality', personality);
   }
 
   // Утилиты
