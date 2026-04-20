@@ -109,7 +109,8 @@ class SocketService {
         return;
       }
       
-      this.socket = io('http://localhost:3001', {
+      const serverUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001';
+      this.socket = io(serverUrl, {
         transports: ['websocket', 'polling'],
         reconnection: true,
         reconnectionAttempts: this.maxReconnectAttempts,
@@ -389,7 +390,15 @@ class SocketService {
   addBattleToken(token: Omit<BattleToken, 'id'>) {
     if (!this.socket?.connected || !this.currentSession) return;
 
-    this.socket.emit('battle:token_add', { token });
+    this.socket.emit('battle:token_add', {
+      name: token.name,
+      x: token.x,
+      y: token.y,
+      current_hp: token.hp,
+      max_hp: token.maxHp,
+      image_url: token.image_url,
+      character_id: token.character_id
+    });
   }
 
   moveBattleToken(tokenId: string, x: number, y: number) {

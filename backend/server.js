@@ -1,11 +1,19 @@
-
+require('dotenv').config();
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
 const cors = require('cors');
+const { createClient } = require('@supabase/supabase-js');
+const { nanoid } = require('nanoid');
 
 const app = express();
 const server = http.createServer(app);
+
+// Инициализация Supabase (используем service_role для обхода RLS в бэкенде)
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY
+);
 
 app.use(cors({
   origin: "*",
@@ -19,427 +27,302 @@ const io = new Server(server, {
   }
 });
 
-// Хранилище игровых сессий D&D
-const gameSessions = new Map();
-const players = new Map(); // socketId -> playerInfo
-
-function generateSessionCode() {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-  let code = '';
-  for (let i = 0; i < 6; i++) {
-    code += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return code;
-}
-
-function createGameSession(sessionData) {
-  const code = generateSessionCode();
-  const session = {
-    id: Date.now().toString(),
-    code,
-    name: sessionData.name,
-    dmId: sessionData.dmId,
-    dmName: sessionData.dmName,
-    players: [],
-    isActive: true,
-    createdAt: new Date().toISOString(),
-    messages: [],
-    diceRolls: [],
-    battleMap: {
-      width: 800,
-      height: 600,
-      gridSize: 30,
-      tokens: [],
-      isActive: false
-    },
-    initiative: {
-      order: [],
-      currentTurn: 0,
-      round: 1
-    },
-    notes: [],
-    handouts: []
-  };
+// Хелперы для работы с БД
+async function getSessionByCode(code) {
+  const { data, error } = await supabase
+    .from('game_sessions')
+    .select('*, session_players(*)')
+    .eq('code', code)
+    .single();
   
-  gameSessions.set(code, session);
-  return session;
+  if (error) return null;
+  return data;
 }
 
 io.on('connection', (socket) => {
   console.log('✅ Подключение:', socket.id);
 
   // Создание сессии (DM)
-  socket.on('session:create', (data, callback) => {
+  socket.on('session:create', async (data, callback) => {
     try {
-      console.log('🎯 Создание сессии:', data);
+      console.log('🎯 Создание сессии в БД:', data);
       
-      const session = createGameSession({
-        name: data.name,
-        dmId: socket.id,
-        dmName: data.dmName,
-        character: data.character
-      });
+      const code = nanoid(6).toUpperCase();
+      
+      // 1. Создаем сессию
+      const { data: session, error: sError } = await supabase
+        .from('game_sessions')
+        .insert([{
+          code,
+          name: data.name,
+          dm_id: data.userId || null, // UUID пользователя если есть
+          is_active: true
+        }])
+        .select()
+        .single();
 
-      // Добавляем DM как игрока
-      const dmPlayer = {
-        id: socket.id,
-        name: data.dmName,
-        character: data.character,
-        isDM: true,
-        isOnline: true,
-        joinedAt: new Date().toISOString()
-      };
+      if (sError) throw sError;
+
+      // 2. Добавляем DM как игрока
+      const { data: player, error: pError } = await supabase
+        .from('session_players')
+        .insert([{
+          session_id: session.id,
+          user_id: data.userId || null,
+          socket_id: socket.id,
+          player_name: data.dmName,
+          is_dm: true,
+          is_online: true
+        }])
+        .select()
+        .single();
+
+      if (pError) throw pError;
+
+      socket.join(code);
+      socket.data.sessionCode = code;
+      socket.data.userId = data.userId;
+      socket.data.playerName = data.dmName;
+      socket.data.isDM = true;
+
+      console.log(`🎮 Сессия "${session.name}" создана в БД. Код: ${code}`);
       
-      session.players.push(dmPlayer);
-      players.set(socket.id, { ...dmPlayer, sessionCode: session.code });
-      
-      socket.join(session.code);
-      
-      console.log(`🎮 Сессия "${session.name}" создана с кодом: ${session.code}`);
-      
-      callback({ 
-        success: true, 
-        session: session 
-      });
-      
-      // Уведомляем всех в комнате об обновлении
-      io.to(session.code).emit('session:updated', session);
+      callback({ success: true, session: { ...session, players: [player] } });
       
     } catch (error) {
       console.error('❌ Ошибка создания сессии:', error);
-      callback({ 
-        success: false, 
-        error: 'Не удалось создать сессию' 
-      });
+      callback({ success: false, error: error.message });
     }
   });
 
-  // Присоединение к сессии (Player)
-  socket.on('session:join', (data, callback) => {
+  // Присоединение к сессии
+  socket.on('session:join', async (data, callback) => {
     try {
-      const { code, playerName, character } = data;
-      const session = gameSessions.get(code);
+      const { code, playerName, userId, character } = data;
+      const session = await getSessionByCode(code);
       
       if (!session) {
-        callback({ 
-          success: false, 
-          error: 'Сессия не найдена' 
-        });
-        return;
+        return callback({ success: false, error: 'Сессия не найдена' });
       }
 
-      // Проверяем, не присоединен ли уже игрок
-      const existingPlayer = session.players.find(p => p.name === playerName);
+      // Проверяем, есть ли уже такой игрок (по userId или имени)
+      const { data: existingPlayer } = await supabase
+        .from('session_players')
+        .select()
+        .eq('session_id', session.id)
+        .or(`player_name.eq."${playerName}",user_id.eq."${userId || 'null'}"`)
+        .maybeSingle();
+
       let player;
-      
-      if (existingPlayer && !existingPlayer.isOnline) {
-        // Переподключение игрока
-        existingPlayer.id = socket.id;
-        existingPlayer.isOnline = true;
-        player = existingPlayer;
-      } else if (!existingPlayer) {
-        // Новый игрок
-        player = {
-          id: socket.id,
-          name: playerName,
-          character: character,
-          isDM: false,
-          isOnline: true,
-          joinedAt: new Date().toISOString()
-        };
-        session.players.push(player);
+      if (existingPlayer) {
+        // Обновляем статус онлайн
+        const { data: updatedPlayer } = await supabase
+          .from('session_players')
+          .update({ is_online: true, socket_id: socket.id, character_data: character || existingPlayer.character_data })
+          .eq('id', existingPlayer.id)
+          .select()
+          .single();
+        player = updatedPlayer;
       } else {
-        callback({ 
-          success: false, 
-          error: 'Игрок с таким именем уже в сессии' 
-        });
-        return;
+        // Создаем нового игрока
+        const { data: newPlayer } = await supabase
+          .from('session_players')
+          .insert([{
+            session_id: session.id,
+            user_id: userId || null,
+            socket_id: socket.id,
+            player_name: playerName,
+            character_data: character || {},
+            is_dm: false,
+            is_online: true
+          }])
+          .select()
+          .single();
+        player = newPlayer;
       }
 
-      players.set(socket.id, { ...player, sessionCode: code });
       socket.join(code);
+      socket.data.sessionCode = code;
+      socket.data.playerName = playerName;
+      socket.data.isDM = player.is_dm;
+
+      console.log(`👥 ${playerName} вошел в сессию ${code}`);
       
-      console.log(`👥 ${playerName} присоединился к сессии ${code}`);
+      const fullSession = await getSessionByCode(code);
+      callback({ success: true, session: fullSession });
       
-      callback({ 
-        success: true, 
-        session: session 
-      });
-      
-      // Уведомляем всех об обновлении игроков
-      io.to(code).emit('session:updated', session);
+      io.to(code).emit('session:updated', fullSession);
       io.to(code).emit('session:player_joined', player);
       
     } catch (error) {
-      console.error('❌ Ошибка присоединения:', error);
-      callback({ 
-        success: false, 
-        error: 'Не удалось присоединиться к сессии' 
-      });
+      console.error('❌ Ошибка входа:', error);
+      callback({ success: false, error: error.message });
     }
   });
 
-  // Отправка сообщения
-  socket.on('session:send_message', (data) => {
+  // Чат и история сообщений
+  socket.on('session:send_message', async (data) => {
     try {
-      const player = players.get(socket.id);
-      if (!player) return;
+      const { sessionCode, playerName, isDM } = socket.data;
+      if (!sessionCode) return;
 
-      const session = gameSessions.get(player.sessionCode);
+      const session = await getSessionByCode(sessionCode);
       if (!session) return;
 
-      const message = {
-        id: Date.now().toString() + Math.random().toString(36).substr(2, 5),
-        type: data.type || 'chat',
-        sender: player.name,
-        content: data.content,
-        timestamp: new Date().toISOString(),
-        sessionId: session.id,
-        isDM: player.isDM
-      };
+      const { data: message, error } = await supabase
+        .from('session_messages')
+        .insert([{
+          session_id: session.id,
+          sender_name: playerName,
+          content: data.content,
+          type: data.type || 'chat',
+          is_dm: isDM
+        }])
+        .select()
+        .single();
 
-      session.messages.push(message);
+      if (error) throw error;
       
-      console.log(`💬 Сообщение в ${player.sessionCode}: ${player.name}: ${data.content}`);
-      
-      io.to(player.sessionCode).emit('session:message', message);
+      io.to(sessionCode).emit('session:message', message);
       
     } catch (error) {
-      console.error('❌ Ошибка отправки сообщения:', error);
+      console.error('❌ Ошибка чата:', error);
     }
   });
 
-  // Бросок кубиков
-  socket.on('session:roll_dice', (data) => {
+  // Бросок кубиков (теперь просто логируем в БД как сообщение типа dice)
+  socket.on('session:roll_dice', async (data) => {
     try {
-      const player = players.get(socket.id);
-      if (!player) return;
+      const { sessionCode, playerName } = socket.data;
+      if (!sessionCode) return;
 
-      const session = gameSessions.get(player.sessionCode);
-      if (!session) return;
-
-      // Парсим тип кубика (например, "d20", "2d6")
+      // Логика броска (выносим на сервер для честности)
       const diceMatch = data.diceType.match(/(\d*)d(\d+)/);
-      if (!diceMatch) return;
-
-      const count = parseInt(diceMatch[1]) || 1;
-      const sides = parseInt(diceMatch[2]);
+      const count = diceMatch ? (parseInt(diceMatch[1]) || 1) : 1;
+      const sides = diceMatch ? parseInt(diceMatch[2]) : 20;
       
       let total = 0;
       const rolls = [];
-      
       for (let i = 0; i < count; i++) {
         const roll = Math.floor(Math.random() * sides) + 1;
         rolls.push(roll);
         total += roll;
       }
       
-      const finalTotal = total + (data.modifier || 0);
-      
-      const diceResult = {
-        id: Date.now().toString() + Math.random().toString(36).substr(2, 5),
-        playerId: socket.id,
-        playerName: player.name,
+      const result = {
+        playerName,
         diceType: data.diceType,
-        result: total,
-        rolls: rolls,
-        modifier: data.modifier || 0,
-        total: finalTotal,
-        reason: data.reason || '',
-        timestamp: new Date().toISOString()
+        total: total + (data.modifier || 0),
+        rolls,
+        reason: data.reason
       };
 
-      session.diceRolls.push(diceResult);
-      
-      console.log(`🎲 ${player.name} бросил ${data.diceType}: ${rolls.join(', ')} = ${total} + ${data.modifier || 0} = ${finalTotal}`);
-      
-      io.to(player.sessionCode).emit('session:dice_roll', diceResult);
+      // Сохраняем бросок как особое сообщение
+      await supabase.from('session_messages').insert([{
+        session_id: (await getSessionByCode(sessionCode)).id,
+        sender_name: playerName,
+        content: JSON.stringify(result),
+        type: 'dice'
+      }]);
+
+      io.to(sessionCode).emit('session:dice_roll', result);
       
     } catch (error) {
-      console.error('❌ Ошибка броска кубиков:', error);
+      console.error('❌ Ошибка броска:', error);
     }
   });
 
-  // Обновление персонажа
-  socket.on('session:update_character', (data) => {
+  // --- Battle Map & Tokens ---
+  
+  // Добавление токена
+  socket.on('battle:token_add', async (data) => {
     try {
-      const player = players.get(socket.id);
-      if (!player) return;
+      const { sessionCode, isDM } = socket.data;
+      if (!sessionCode || !isDM) return;
 
-      const session = gameSessions.get(player.sessionCode);
+      const session = await getSessionByCode(sessionCode);
       if (!session) return;
 
-      // Обновляем персонажа в сессии
-      const sessionPlayer = session.players.find(p => p.id === socket.id);
-      if (sessionPlayer) {
-        sessionPlayer.character = { ...sessionPlayer.character, ...data.character };
-        players.set(socket.id, { ...player, character: sessionPlayer.character });
-      }
-      
-      console.log(`🧙 ${player.name} обновил персонажа`);
-      
-      io.to(player.sessionCode).emit('session:character_updated', {
-        playerId: socket.id,
-        character: sessionPlayer.character
-      });
-      
-    } catch (error) {
-      console.error('❌ Ошибка обновления персонажа:', error);
-    }
-  });
+      const { data: token, error } = await supabase
+        .from('battle_tokens')
+        .insert([{
+          session_id: session.id,
+          name: data.name,
+          position_x: data.x,
+          position_y: data.y,
+          current_hp: data.current_hp,
+          max_hp: data.max_hp,
+          image_url: data.image_url,
+          character_id: data.character_id
+        }])
+        .select()
+        .single();
 
-  // Управление боевой картой
-  socket.on('battle:token_add', (data) => {
-    try {
-      const player = players.get(socket.id);
-      if (!player || !player.isDM) return; // Только DM может добавлять токены
-
-      const session = gameSessions.get(player.sessionCode);
-      if (!session) return;
-
-      const token = {
-        ...data.token,
-        id: Date.now().toString() + Math.random().toString(36).substr(2, 5)
-      };
-
-      session.battleMap.tokens.push(token);
-      
-      io.to(player.sessionCode).emit('battle:token_added', token);
-      
+      if (error) throw error;
+      io.to(sessionCode).emit('battle:token_added', token);
     } catch (error) {
       console.error('❌ Ошибка добавления токена:', error);
     }
   });
 
-  socket.on('battle:token_move', (data) => {
+  // Перемещение токена
+  socket.on('battle:token_move', async (data) => {
     try {
-      const player = players.get(socket.id);
-      if (!player) return;
+      const { sessionCode } = socket.data;
+      if (!sessionCode) return;
 
-      const session = gameSessions.get(player.sessionCode);
-      if (!session) return;
+      // Обновляем в БД
+      const { data: token, error } = await supabase
+        .from('battle_tokens')
+        .update({ position_x: data.x, position_y: data.y })
+        .eq('id', data.tokenId)
+        .select()
+        .single();
 
-      const tokenIndex = session.battleMap.tokens.findIndex(t => t.id === data.tokenId);
-      if (tokenIndex >= 0) {
-        session.battleMap.tokens[tokenIndex].x = data.x;
-        session.battleMap.tokens[tokenIndex].y = data.y;
-        
-        io.to(player.sessionCode).emit('battle:token_moved', {
-          tokenId: data.tokenId,
-          x: data.x,
-          y: data.y
-        });
-      }
+      if (error) throw error;
       
+      // Рассылаем всем кроме отправителя (для плавности на клиенте)
+      socket.to(sessionCode).emit('battle:token_moved', {
+        tokenId: data.tokenId,
+        x: data.x,
+        y: data.y
+      });
     } catch (error) {
       console.error('❌ Ошибка перемещения токена:', error);
     }
   });
 
-  // Управление инициативой
-  socket.on('initiative:start', (data) => {
+  // Удаление токена
+  socket.on('battle:token_delete', async (tokenId) => {
     try {
-      const player = players.get(socket.id);
-      if (!player || !player.isDM) return;
+      const { sessionCode, isDM } = socket.data;
+      if (!sessionCode || !isDM) return;
 
-      const session = gameSessions.get(player.sessionCode);
-      if (!session) return;
-
-      session.initiative.order = data.order;
-      session.initiative.currentTurn = 0;
-      session.initiative.round = 1;
-      
-      io.to(player.sessionCode).emit('initiative:started', session.initiative);
-      
+      await supabase.from('battle_tokens').delete().eq('id', tokenId);
+      io.to(sessionCode).emit('battle:token_deleted', tokenId);
     } catch (error) {
-      console.error('❌ Ошибка запуска инициативы:', error);
+      console.error('❌ Ошибка удаления токена:', error);
     }
   });
 
-  // Завершение сессии
-  socket.on('session:end', () => {
+  socket.on('disconnect', async () => {
     try {
-      const player = players.get(socket.id);
-      if (!player || !player.isDM) return;
-
-      const session = gameSessions.get(player.sessionCode);
-      if (!session) return;
-
-      session.isActive = false;
-      session.endedAt = new Date().toISOString();
-      
-      io.to(player.sessionCode).emit('session:ended', { reason: 'DM ended session' });
-      
-      // Удаляем всех игроков из комнаты
-      const roomSockets = io.sockets.adapter.rooms.get(player.sessionCode);
-      if (roomSockets) {
-        roomSockets.forEach(socketId => {
-          const roomSocket = io.sockets.sockets.get(socketId);
-          if (roomSocket) {
-            roomSocket.leave(player.sessionCode);
-          }
-        });
+      const { sessionCode, playerName } = socket.data;
+      if (sessionCode) {
+        await supabase
+          .from('session_players')
+          .update({ is_online: false })
+          .eq('socket_id', socket.id);
+        
+        io.to(sessionCode).emit('session:player_disconnected', { playerName });
       }
-      
-      console.log(`🔚 Сессия ${player.sessionCode} завершена`);
-      
     } catch (error) {
-      console.error('❌ Ошибка завершения сессии:', error);
+      console.error('❌ Ошибка дисконнекта:', error);
     }
-  });
-
-  // Отключение игрока
-  socket.on('disconnect', () => {
-    try {
-      const player = players.get(socket.id);
-      if (!player) return;
-
-      const session = gameSessions.get(player.sessionCode);
-      if (session) {
-        const sessionPlayer = session.players.find(p => p.id === socket.id);
-        if (sessionPlayer) {
-          sessionPlayer.isOnline = false;
-          
-          console.log(`❌ ${player.name} отключился от сессии ${player.sessionCode}`);
-          
-          io.to(player.sessionCode).emit('session:player_disconnected', {
-            playerId: socket.id,
-            playerName: player.name
-          });
-        }
-      }
-      
-      players.delete(socket.id);
-      
-    } catch (error) {
-      console.error('❌ Ошибка отключения:', error);
-    }
-  });
-
-  // Ping-pong для поддержания соединения
-  socket.on('ping', () => {
-    socket.emit('pong');
   });
 });
 
-// Очистка неактивных сессий каждые 30 минут
-setInterval(() => {
-  const now = Date.now();
-  const thirtyMinutes = 30 * 60 * 1000;
-  
-  for (const [code, session] of gameSessions.entries()) {
-    const lastActivity = new Date(session.createdAt).getTime();
-    const onlinePlayers = session.players.filter(p => p.isOnline).length;
-    
-    if (now - lastActivity > thirtyMinutes && onlinePlayers === 0) {
-      console.log(`🗑️ Удаление неактивной сессии: ${code}`);
-      gameSessions.delete(code);
-    }
-  }
-}, 30 * 60 * 1000);
-
 const PORT = process.env.PORT || 3001;
 server.listen(PORT, () => {
-  console.log(`🚀 D&D Server запущен на порту ${PORT}`);
-  console.log(`🎮 Готов к игровым сессиям!`);
+  console.log(`🚀 Production-ready SSR Server запущен на порту ${PORT}`);
 });

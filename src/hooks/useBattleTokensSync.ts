@@ -2,6 +2,7 @@ import { useEffect, useRef, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useEnhancedBattleStore, EnhancedToken } from '@/stores/enhancedBattleStore';
 import { useToast } from '@/hooks/use-toast';
+import { socketService } from '@/services/socket';
 
 /**
  * Хук для синхронизации токенов боя с Supabase
@@ -206,6 +207,42 @@ export const useBattleTokensSync = (sessionId: string) => {
         }
       )
       .subscribe();
+      
+    // --- Добавляем прослушивание Socket.io для мгновенных обновлений ---
+    const handleBattleEvent = (data: any) => {
+      console.log('🔌 Socket battle event:', data);
+      
+      if (data.type === 'token_move' && data.tokenId) {
+        scheduleUpdate(data.tokenId, {
+          position: [data.x, 0, data.y] as [number, number, number]
+        });
+      } else if (data.type === 'token_add' && data.token) {
+        const token = data.token;
+        addToken({
+          id: token.id,
+          name: token.name,
+          hp: token.current_hp,
+          maxHp: token.max_hp,
+          position: [token.position_x, 0, token.position_y],
+          isEnemy: token.token_type === 'enemy',
+          avatarUrl: token.image_url,
+          size: token.size || 1
+        } as EnhancedToken);
+      } else if (data.type === 'token_delete') {
+        removeToken(data.tokenId);
+      }
+    };
+
+    socketService.onBattleEvent(handleBattleEvent);
+    socketService.connect(); // Убеждаемся что сокет активен
+
+    return () => {
+      console.log('🔕 Отписка от изменений токенов');
+      // Flush оставшиеся обновления перед размонтированием
+      flushUpdates();
+      supabase.removeChannel(channel);
+      socketService.removeBattleListener(handleBattleEvent);
+    };
 
     return () => {
       console.log('🔕 Отписка от изменений токенов');

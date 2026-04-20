@@ -7,6 +7,7 @@ import { useToast } from '@/hooks/use-toast';
 import { snap, GRID } from '../utils';
 import { uid } from '../utils/constants';
 import { stableSort } from '../utils/stableSort';
+import { socketService } from '@/services/socket';
 
 export function useBattleTokens(sessionId: string, isDM: boolean) {
   const { toast } = useToast();
@@ -65,6 +66,16 @@ export function useBattleTokens(sessionId: string, isDM: boolean) {
         image_url: token.image_url,
       };
       
+      socketService.addBattleToken({
+        name: newToken.name,
+        x: newToken.position[0],
+        y: newToken.position[2],
+        hp: newToken.hp,
+        maxHp: newToken.maxHp,
+        image_url: newToken.avatarUrl || '',
+        type: newToken.isEnemy ? 'monster' : 'player'
+      });
+      
       addToken(newToken);
       toast({
         title: "Токен добавлен",
@@ -82,6 +93,9 @@ export function useBattleTokens(sessionId: string, isDM: boolean) {
         newPosition[2],
       ];
       updateToken(tokenId, { position: snappedPosition });
+      
+      // Отправляем в сокет для мгновенной синхронизации
+      socketService.moveBattleToken(tokenId, snappedPosition[0], snappedPosition[2]);
     },
     [updateToken]
   );
