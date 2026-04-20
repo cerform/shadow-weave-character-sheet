@@ -5,6 +5,7 @@ const { Server } = require('socket.io');
 const cors = require('cors');
 const { createClient } = require('@supabase/supabase-js');
 const { nanoid } = require('nanoid');
+const aiManager = require('./services/aiManager');
 
 const app = express();
 const server = http.createServer(app);
@@ -50,20 +51,25 @@ io.on('connection', (socket) => {
       const code = nanoid(6).toUpperCase();
       
       // 1. Создаем сессию
+      const dmType = data.dmType || 'human'; // 'human' | 'ai'
+      aiManager.setDMType(dmType);
+
       const { data: session, error: sError } = await supabase
         .from('game_sessions')
         .insert([{
           code,
           name: data.name,
-          dm_id: data.userId || null, // UUID пользователя если есть
-          is_active: true
+          description: data.description || null,
+          dm_id: data.userId || null,
+          is_active: true,
+          is_ai_dm: dmType === 'ai',
         }])
         .select()
         .single();
 
       if (sError) throw sError;
 
-      // 2. Добавляем DM как игрока
+      // 2. DM as player
       const { data: player, error: pError } = await supabase
         .from('session_players')
         .insert([{
@@ -81,16 +87,38 @@ io.on('connection', (socket) => {
 
       socket.join(code);
       socket.data.sessionCode = code;
+      socket.data.sessionId = session.id;
       socket.data.userId = data.userId;
       socket.data.playerName = data.dmName;
       socket.data.isDM = true;
 
-      console.log(`🎮 Сессия "${session.name}" создана в БД. Код: ${code}`);
+      console.log(`🎮 Session "${session.name}" created. Code: ${code}. DM type: ${dmType}`);
+
+      // If AI DM and party provided, generate campaign
+      if (dmType === 'ai' && data.party && data.party.length > 0) {
+        const campaign = await aiManager.generateCampaign(data.party);
+        if (campaign) {
+          socket.emit('ai:campaign_generated', campaign);
+          // Auto-generate starting map
+          const mapPrompt = await aiManager.generateMapPrompt(campaign.location);
+          socket.emit('session:message', {
+            id: nanoid(),
+            sender_name: 'AI Dungeon Master',
+            content: `Кампания создана: «${campaign.title}». Генерирую карту...`,
+            type: 'system',
+            created_at: new Date().toISOString()
+          });
+          const imageUrl = await aiManager.generateImage(mapPrompt, 'map');
+          if (imageUrl) {
+            io.to(code).emit('session:map_generated', { imageUrl });
+          }
+        }
+      }
       
       callback({ success: true, session: { ...session, players: [player] } });
       
     } catch (error) {
-      console.error('❌ Ошибка создания сессии:', error);
+      console.error('\u274c Session create error:', error);
       callback({ success: false, error: error.message });
     }
   });
@@ -185,6 +213,23 @@ io.on('connection', (socket) => {
       
       io.to(sessionCode).emit('session:message', message);
       
+      // AI DM reaction
+      const aiComment = await aiManager.generateCommentary({
+        type: 'chat',
+        playerName: playerName,
+        content: data.content
+      });
+      
+      if (aiComment) {
+        io.to(sessionCode).emit('session:message', {
+          id: nanoid(),
+          sender_name: 'AI Dungeon Master',
+          content: aiComment,
+          type: 'text',
+          created_at: new Date().toISOString()
+        });
+      }
+      
     } catch (error) {
       console.error('❌ Ошибка чата:', error);
     }
@@ -227,12 +272,158 @@ io.on('connection', (socket) => {
 
       io.to(sessionCode).emit('session:dice_roll', result);
       
+      // AI DM reaction
+      const aiComment = await aiManager.generateCommentary({
+        type: 'dice_roll',
+        playerName: playerName,
+        diceType: data.diceType,
+        total: result.total
+      });
+      
+      if (aiComment) {
+        io.to(sessionCode).emit('session:message', {
+          id: nanoid(),
+          sender_name: 'AI Dungeon Master',
+          content: aiComment,
+          type: 'text',
+          created_at: new Date().toISOString()
+        });
+      }
+      
     } catch (error) {
       console.error('❌ Ошибка броска:', error);
     }
   });
 
-  // --- Battle Map & Tokens ---
+    // AI Customization
+    socket.on('ai:set_personality', (type) => {
+      if (!socket.data.isDM) return;
+      aiManager.setPersonality(type);
+      
+      const flavorNames = { 
+        epic: 'Эпический Сказитель', 
+        merciless: 'Беспощадный Судья', 
+        rules: 'Хранитель Правил', 
+        dark: 'Мрачная Тень' 
+      };
+
+      io.to(socket.data.sessionCode).emit('session:message', {
+        id: nanoid(),
+        sender_name: 'System',
+        content: `ИИ Мастер теперь: ${flavorNames[type] || type}`,
+        type: 'text',
+        created_at: new Date().toISOString()
+      });
+    });
+
+    socket.on('ai:set_model', (type) => {
+      if (!socket.data.isDM) return;
+      aiManager.setModelType(type);
+      io.to(socket.data.sessionCode).emit('session:message', {
+        id: nanoid(),
+        sender_name: 'System',
+        content: `ИИ переведен на модель: ${type === 'groq' ? 'Llama 3.1 (Высокая скорость)' : 'GPT-4o (Стандарт)'}`,
+        type: 'text',
+        created_at: new Date().toISOString()
+      });
+    });
+
+    socket.on('ai:generate_map', async (data) => {
+      if (!socket.data.isDM) return;
+      const imageUrl = await aiManager.generateImage(data.prompt, 'map');
+      if (imageUrl) {
+        // Сохраняем в БД для персистентности
+        await supabase
+          .from('game_sessions')
+          .update({ current_map_url: imageUrl })
+          .eq('id', socket.data.sessionCode);
+
+        await supabase
+          .from('battle_maps')
+          .upsert({
+            session_id: socket.data.sessionCode,
+            name: `AI: ${data.prompt}`,
+            file_url: imageUrl,
+            is_active: true
+          }, { onConflict: 'session_id' });
+
+        io.to(socket.data.sessionCode).emit('session:map_generated', { imageUrl });
+      }
+    });
+
+    socket.on('ai:generate_token', async (data) => {
+      if (!socket.data.isDM) return;
+      const imageUrl = await aiManager.generateImage(data.prompt, 'token');
+      if (imageUrl) {
+        socket.emit('ai:token_generated', { imageUrl });
+      }
+    });
+
+    // AI NPC Speaks with voice
+    socket.on('ai:npc_speak', async (data) => {
+      const { npcName, situation } = data;
+      const sessionCode = socket.data.sessionCode;
+      if (!sessionCode) return;
+
+      // Get party context
+      const session = await getSessionByCode(sessionCode);
+      const players = session?.session_players?.map(p => p.player_name).join(', ') || '';
+
+      const result = await aiManager.generateNPCSpeech(npcName, situation, players);
+      if (!result) return;
+
+      // Broadcast text to all
+      io.to(sessionCode).emit('session:message', {
+        id: nanoid(),
+        sender_name: npcName,
+        content: result.text,
+        type: 'npc',
+        npc_voice_role: result.voiceRole,
+        created_at: new Date().toISOString()
+      });
+
+      // Synthesize and send audio if ElevenLabs is configured
+      const audioBase64 = await aiManager.synthesizeSpeech(result.text, result.voiceId);
+      if (audioBase64) {
+        io.to(sessionCode).emit('ai:npc_audio', {
+          npcName,
+          voiceRole: result.voiceRole,
+          audioData: audioBase64
+        });
+      }
+    });
+
+    // AI campaign generation from party
+    socket.on('ai:generate_campaign', async (data) => {
+      if (!socket.data.isDM) return;
+      const { party } = data;
+      const campaign = await aiManager.generateCampaign(party);
+      if (campaign) {
+        io.to(socket.data.sessionCode).emit('ai:campaign_generated', campaign);
+        socket.emit('session:message', {
+          id: nanoid(),
+          sender_name: 'AI Dungeon Master',
+          content: `\u041aампания: \u00ab${campaign.title}\u00bb. ${campaign.hook}`,
+          type: 'system',
+          created_at: new Date().toISOString()
+        });
+      }
+    });
+
+    // DM type change
+    socket.on('ai:set_dm_type', (type) => {
+      if (!socket.data.isDM) return;
+      aiManager.setDMType(type);
+      io.to(socket.data.sessionCode).emit('session:message', {
+        id: nanoid(),
+        sender_name: 'System',
+        content: type === 'ai' ? '\u0418И взял управление кампанией' : 'Человек-Мастер взял бразды',
+        type: 'system',
+        created_at: new Date().toISOString()
+      });
+    });
+
+    // --- Battle Map & Tokens ---
   
   // Добавление токена
   socket.on('battle:token_add', async (data) => {
@@ -287,6 +478,26 @@ io.on('connection', (socket) => {
         x: data.x,
         y: data.y
       });
+
+      // AI DM Reaction (10% chance for movement)
+      if (Math.random() < 0.1) {
+        const aiComment = await aiManager.generateCommentary({
+          type: 'token_move',
+          tokenName: 'Something', // Ideally we'd fetch the name
+          x: data.x,
+          y: data.y
+        });
+        
+        if (aiComment) {
+          io.to(sessionCode).emit('session:message', {
+            id: nanoid(),
+            sender_name: 'AI Dungeon Master',
+            content: aiComment,
+            type: 'text',
+            created_at: new Date().toISOString()
+          });
+        }
+      }
     } catch (error) {
       console.error('❌ Ошибка перемещения токена:', error);
     }
