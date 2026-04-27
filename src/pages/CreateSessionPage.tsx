@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { sessionService } from '@/services/sessionService';
+import { AIDMService } from '@/services/ai/AIDMService';
 import { useCharacter } from '@/contexts/CharacterContext';
 import {
   Crown, Brain, Users, Scroll, Sword, Plus, Trash2,
@@ -128,8 +129,28 @@ export default function CreateSessionPage() {
     }
     setCreating(true);
     try {
+      // 1. Create session record
       const session = await sessionService.createSession(config.name, config.description || undefined);
-      toast({ title: 'Сессия создана!', description: `Код: ${session.session_code}` });
+
+      // 2. If AI DM — initialize campaign via Claude 3.5 Sonnet
+      if (config.dmType === 'ai') {
+        toast({ title: '🧠 AI генерирует мир...', description: 'Создаём кампанию специально для вашей партии' });
+
+        const aiResult = await AIDMService.initCampaign({
+          campaignName: config.name,
+          sessionId: session.id,
+          aiPersonality: config.aiPersonality,
+          party: config.party,
+        });
+
+        toast({
+          title: '✨ Кампания создана!',
+          description: `Злодей: ${aiResult.mainVillain.name} • Локация: ${aiResult.startingLocation.name}`,
+        });
+      } else {
+        toast({ title: 'Сессия создана!', description: `Код: ${session.session_code}` });
+      }
+
       navigate(`/dm-session/${session.id}`);
     } catch (err: any) {
       toast({ title: 'Ошибка', description: err.message, variant: 'destructive' });
