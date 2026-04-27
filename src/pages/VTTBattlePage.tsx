@@ -521,29 +521,7 @@ export default function VTTBattlePage() {
           Выйти
         </button>
 
-        {/* ── ALERTS / DICE BAR (center bottom) ── */}
-        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1.5 px-4 py-3 bg-slate-950/80 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl">
-          <button
-            onClick={() => setIsDiceModalOpen(true)}
-            className="flex items-center gap-2 px-6 py-2 rounded-xl bg-amber-500/20 hover:bg-amber-500/40 text-amber-300 font-bold border border-amber-500/30 transition-all active:scale-95 group"
-          >
-            <Dice6 className="h-5 w-5" />
-            Бросить 3D-кубики
-          </button>
 
-          {diceResults[0] && (
-            <div 
-              key={diceResults[0].id}
-              className={`ml-3 pl-3 border-l border-white/10 flex items-center gap-2 ${diceResults[0].isCritical ? 'text-green-400' : 'text-white'}`}
-            >
-              <span className="text-2xl font-black">{diceResults[0].total}</span>
-              <div className="text-[10px] uppercase tracking-widest text-slate-500 font-bold leading-tight">
-                <div>{diceResults[0].diceType}</div>
-                <div>{diceResults[0].playerName}</div>
-              </div>
-            </div>
-          )}
-        </div>
 
         {/* Token Radial Menu */}
         <TokenRadialMenu

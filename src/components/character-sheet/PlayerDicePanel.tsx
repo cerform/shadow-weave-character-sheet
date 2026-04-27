@@ -1,5 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
+import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import {
@@ -58,16 +60,20 @@ export const PlayerDicePanel: React.FC<PlayerDicePanelProps> = ({
   const [rollHistory, setRollHistory] = useState<any[]>([]);
   const [rollResult, setRollResult] = useState<number | null>(null);
   const [forceReroll, setForceReroll] = useState<boolean>(false);
+  const { sessionId } = useParams<{ sessionId: string }>();
+  const { user } = useAuth();
   const { toast } = useToast();
   
   const { theme } = useTheme();
   const currentTheme = themes[theme as keyof typeof themes] || themes.default;
   
-  const handleDiceRollComplete = (result: number) => {
+  const handleDiceRollComplete = async (result: number) => {
     setRollResult(result);
     
     // Симулируем запись истории бросков
     const now = new Date();
+    const finalCharacterName = characterName || user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Игрок';
+    
     const rollData = {
       diceCount,
       diceType,
@@ -77,12 +83,34 @@ export const PlayerDicePanel: React.FC<PlayerDicePanelProps> = ({
       reason: useCustomReason ? rollReason : predefinedRollReasons.find(r => r.value === rollReason)?.label || 'Бросок',
       message: rollMessage,
       timestamp: now.toLocaleTimeString(),
-      userId: 'user',
-      characterName: characterName || 'Персонаж'
+      userId: user?.id || 'unknown',
+      characterName: finalCharacterName
     };
     
-    setRollHistory((prev) => [...prev, rollData]);
+    setRollHistory((prev) => [...prev, rollData].slice(-10));
     
+    // ПРИВЯЗКА К СИСТЕМЕ БОЯ / СЕССИИ
+    if (sessionId && user) {
+      try {
+        await supabase.from('session_messages').insert({
+          session_id: sessionId,
+          user_id: user.id,
+          sender_name: finalCharacterName,
+          message_type: 'dice',
+          content: `Бросок ${diceCount}${diceType} ${modifier !== 0 ? (modifier > 0 ? '+' + modifier : modifier) : ''} (${rollData.reason}) → **${rollData.total}**`,
+          dice_roll_data: {
+            diceType: `${diceCount}${diceType}`,
+            total: rollData.total,
+            rolls: [result], // simplification
+            playerName: finalCharacterName,
+            isCritical: diceType === 'd20' && (result === 20 || result === 1)
+          }
+        });
+      } catch (err) {
+        console.error('Failed to log roll to session:', err);
+      }
+    }
+
     toast({
       title: "Бросок успешен",
       description: `${rollData.characterName} бросил ${diceCount}${diceType} ${modifier >= 0 ? '+' + modifier : modifier} = ${result + modifier}`,

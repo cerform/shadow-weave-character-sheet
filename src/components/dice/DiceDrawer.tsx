@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Dices, X } from 'lucide-react';
+import { Dice6, X } from 'lucide-react';
 import { 
   Drawer, 
   DrawerContent,
@@ -42,10 +42,11 @@ export const DiceDrawer: React.FC = () => {
 
   // Стили для кнопки открытия панели кубиков
   const buttonStyle = {
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
-    borderColor: currentTheme.accent,
-    color: currentTheme.textColor,
-    boxShadow: `0 0 5px ${currentTheme.accent}30`,
+    backgroundColor: 'rgba(5, 5, 10, 0.8)',
+    borderColor: '#a855f7', // Purple-500
+    color: '#d8b4fe', // Purple-300
+    boxShadow: `0 0 15px rgba(168, 85, 247, 0.4)`,
+    borderWidth: '2px'
   };
 
   // Стиль для контента панели
@@ -70,7 +71,7 @@ export const DiceDrawer: React.FC = () => {
                   style={buttonStyle}
                   className="relative hover:shadow-lg transition-all hover:scale-105"
                 >
-                  <Dices className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all" />
+                  <Dice6 className="h-5 w-5 text-purple-400 group-hover:text-purple-300 transition-colors" />
                   <span className="sr-only">Открыть кубики</span>
                   <div 
                     className="absolute bottom-0 right-0 h-2 w-2 rounded-full" 
@@ -121,7 +122,7 @@ export const DiceDrawer: React.FC = () => {
                 style={buttonStyle}
                 className="relative hover:shadow-lg transition-all hover:scale-105"
               >
-                <Dices className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all" />
+                <Dice6 className="h-5 w-5 text-purple-400 group-hover:text-purple-300 transition-colors" />
                 <span className="sr-only">Открыть кубики</span>
                 <div 
                   className="absolute bottom-0 right-0 h-2 w-2 rounded-full" 
