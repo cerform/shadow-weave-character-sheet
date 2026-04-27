@@ -87,20 +87,22 @@ interface AuthProviderProps {
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<ExtendedUser | null>(null);
-  const [session, setSession] = useState<Session | null>(null); // КРИТИЧНО: храним сессию для токенов
+  const [session, setSession] = useState<Session | null>(null);
+  // Start loading=true if there's a PKCE code in the URL so we don't flash the form
+  const hasCodeInUrl = typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('code');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let mounted = true;
     
-    console.log('🔍 AuthProvider mount. URL:', window.location.href);
-    
-    // 1. СНАЧАЛА подписываемся на события
+    console.log('🔍 AuthProvider mount. URL:', window.location.href, 'hasCode:', hasCodeInUrl);
+
+    // 1. Subscribe to auth state FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         console.log('🔐 onAuthStateChange event:', event, 'session:', !!session, 'user:', session?.user?.email);
         if (!mounted) return;
-        
+
         setSession(session);
         const mappedUser = session?.user ? mapSupabaseUser(session.user) : null;
         setUser(mappedUser);
@@ -116,19 +118,47 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           console.log(`👋 ${event}: User cleared`);
           SentryService.setUser(null);
         }
-        
-        // Stop loading on any successful session or after initial check
+
         if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN' || event === 'SIGNED_OUT') {
           setLoading(false);
         }
       }
     );
-    
-    // 2. ЗАТЕМ проверяем существующую сессию (на всякий случай)
+
+    // 2. If there is a PKCE ?code= in the URL, exchange it explicitly
+    const urlParams = new URLSearchParams(window.location.search);
+    const code = urlParams.get('code');
+    if (code) {
+      console.log('🔑 PKCE code detected in URL, exchanging for session...');
+      supabase.auth.exchangeCodeForSession(window.location.href)
+        .then(({ data, error }) => {
+          if (!mounted) return;
+          if (error) {
+            console.error('❌ exchangeCodeForSession error:', error);
+            setLoading(false);
+            return;
+          }
+          console.log('✅ exchangeCodeForSession success, user:', data?.session?.user?.email);
+          // Remove ?code= from URL cleanly without reload
+          const cleanUrl = window.location.pathname;
+          window.history.replaceState({}, document.title, cleanUrl);
+          // onAuthStateChange (SIGNED_IN) will fire and handle setUser/setLoading
+        })
+        .catch((err) => {
+          console.error('❌ exchangeCodeForSession exception:', err);
+          if (mounted) setLoading(false);
+        });
+      return () => {
+        mounted = false;
+        subscription.unsubscribe();
+      };
+    }
+
+    // 3. Normal startup: check existing session
     supabase.auth.getSession().then(({ data: { session }, error }) => {
       if (!mounted) return;
       if (error) console.error('❌ getSession error:', error);
-      
+
       console.log('📦 getSession result:', !!session, session?.user?.email);
       if (session) {
         setSession(session);
