@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { User, Session } from '@supabase/supabase-js';
 import { SentryService } from '@/services/SentryService';
+import { RemoteLogger } from '@/services/RemoteLogger';
 
 // Расширенный интерфейс пользователя с дополнительными свойствами
 interface ExtendedUser extends User {
@@ -95,12 +96,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   useEffect(() => {
     let mounted = true;
     
-    console.log('🔍 AuthProvider mount. URL:', window.location.href, 'hasCode:', hasCodeInUrl);
+    RemoteLogger.info('AUTH_PROVIDER_MOUNT', 'AuthProvider mounted', { url: window.location.href, hasCode: hasCodeInUrl });
 
     // 1. Subscribe to auth state FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
-        console.log('🔐 onAuthStateChange event:', event, 'session:', !!session, 'user:', session?.user?.email);
+        RemoteLogger.info('AUTH_STATE_CHANGE', `Event: ${event}`, { hasSession: !!session, userEmail: session?.user?.email });
         if (!mounted) return;
 
         setSession(session);
@@ -129,16 +130,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const urlParams = new URLSearchParams(window.location.search);
     const code = urlParams.get('code');
     if (code) {
-      console.log('🔑 PKCE code detected in URL, exchanging for session...');
+      RemoteLogger.info('PKCE_CODE_DETECTED', 'Exchanging PKCE code for session', { url: window.location.href });
       supabase.auth.exchangeCodeForSession(window.location.href)
         .then(({ data, error }) => {
           if (!mounted) return;
           if (error) {
-            console.error('❌ exchangeCodeForSession error:', error);
+            RemoteLogger.error('PKCE_EXCHANGE_ERROR', error.message, { errorCode: (error as any).code });
             setLoading(false);
             return;
           }
-          console.log('✅ exchangeCodeForSession success, user:', data?.session?.user?.email);
+          RemoteLogger.info('PKCE_EXCHANGE_SUCCESS', 'Session established via PKCE', { userEmail: data?.session?.user?.email });
           // Remove ?code= from URL cleanly without reload
           const cleanUrl = window.location.pathname;
           window.history.replaceState({}, document.title, cleanUrl);
