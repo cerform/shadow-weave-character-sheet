@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { Home, Crown, Users, Sword, Map, Dice6, Eye, Play, Pause, Trash2, Copy, Calendar } from 'lucide-react';
+import { Home, Crown, Users, Sword, Map, Dice6, Eye, Play, Pause, Trash2, Copy, Calendar, Brain, Scroll, Shield, Ghost } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { socketService } from '@/services/socket';
 import { useAuth } from '@/hooks/use-auth';
