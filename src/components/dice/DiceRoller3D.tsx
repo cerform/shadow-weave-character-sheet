@@ -15,7 +15,9 @@ const Dice = ({
   hideControls = false, 
   forceReroll = false, 
   themeColor = '#ffffff',
-  fixedPosition = false 
+  fixedPosition = false,
+  diceCount = 1,
+  rollMode = 'normal'
 }: { 
   type: 'd4' | 'd6' | 'd8' | 'd10' | 'd12' | 'd20' | 'd100',
   onRoll?: (result: number) => void,
@@ -24,7 +26,9 @@ const Dice = ({
   hideControls?: boolean,
   forceReroll?: boolean,
   themeColor?: string,
-  fixedPosition?: boolean
+  fixedPosition?: boolean,
+  diceCount?: number,
+  rollMode?: 'normal' | 'advantage' | 'disadvantage'
 }) => {
   const meshRef = useRef<THREE.Mesh>(null!);
   const initialPositionRef = useRef<THREE.Vector3>(new THREE.Vector3(0, 3, 0));
@@ -109,11 +113,21 @@ const Dice = ({
     
     // Определяем результат броска
     const maxValue = getMaxValue(type);
-    let newResult = Math.floor(Math.random() * maxValue) + 1;
-    
-    // Для d100, умножаем результат на 10
-    if (type === 'd100') {
-      newResult = newResult * 10;
+    let newResult = 0;
+
+    if (type === 'd20' && rollMode === 'advantage') {
+      const r1 = Math.floor(Math.random() * 20) + 1;
+      const r2 = Math.floor(Math.random() * 20) + 1;
+      newResult = Math.max(r1, r2);
+    } else if (type === 'd20' && rollMode === 'disadvantage') {
+      const r1 = Math.floor(Math.random() * 20) + 1;
+      const r2 = Math.floor(Math.random() * 20) + 1;
+      newResult = Math.min(r1, r2);
+    } else {
+      for (let i = 0; i < (diceCount || 1); i++) {
+        let roll = Math.floor(Math.random() * maxValue) + 1;
+        newResult += roll;
+      }
     }
     
     // Таймер для "остановки" кубика
@@ -214,6 +228,7 @@ interface DiceRoller3DProps {
   playerName?: string;
   diceCount?: number;
   forceReroll?: boolean;
+  rollMode?: 'normal' | 'advantage' | 'disadvantage';
 }
 
 export const DiceRoller3D = ({ 
@@ -225,7 +240,8 @@ export const DiceRoller3D = ({
   fixedPosition = false,
   playerName,
   diceCount = 1,
-  forceReroll = false
+  forceReroll = false,
+  rollMode = 'normal'
 }: DiceRoller3DProps) => {
   const [diceType, setDiceType] = useState<'d4' | 'd6' | 'd8' | 'd10' | 'd12' | 'd20' | 'd100'>(initialDice);
   const [roll, setRoll] = useState(false);
@@ -282,6 +298,8 @@ export const DiceRoller3D = ({
           forceReroll={internalForceReroll}
           themeColor={actualThemeColor}
           fixedPosition={fixedPosition}
+          diceCount={diceCount}
+          rollMode={rollMode}
         />
         {!fixedPosition && <OrbitControls enablePan={false} enableZoom={false} />}
       </Canvas>

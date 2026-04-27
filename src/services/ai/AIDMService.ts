@@ -120,7 +120,7 @@ export class AIDMService {
       updated_at: new Date().toISOString(),
     });
 
-    // Log opening event
+    // Log opening event (for history)
     await supabase.from('campaign_events').insert({
       session_id: params.sessionId,
       turn_number: 0,
@@ -132,6 +132,15 @@ export class AIDMService {
         mainVillain: result.mainVillain,
         startingLocation: result.startingLocation,
       },
+    });
+
+    // Also insert into session_messages so it appears in Chat immediately
+    await supabase.from('session_messages').insert({
+      session_id: params.sessionId,
+      sender_name: 'AI Dungeon Master',
+      message_type: 'ai',
+      user_id: params.sessionId, // System ID
+      content: result.openingScene,
     });
 
     // Save world facts to campaign_memory

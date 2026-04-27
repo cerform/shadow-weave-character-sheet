@@ -12,7 +12,7 @@ import { themes } from '@/lib/themes';
 interface DiceRollModalProps {
   open: boolean;
   onClose: () => void;
-  onRoll?: (formula: string, reason?: string, playerName?: string) => void;
+  onRoll?: (formula: string, reason: string, playerName: string, result: number) => void;
   playerName?: string;
 }
 
@@ -40,6 +40,7 @@ export function DiceRollModal({ open, onClose, onRoll, playerName: defaultPlayer
   const [lastRollTotal, setLastRollTotal] = useState<number | null>(null);
   const [key, setKey] = useState(0); // Для форсирования пересоздания компонента DiceRoller3D
   const [triggerRoll, setTriggerRoll] = useState(false); // Для запуска 3D анимации
+  const [rollMode, setRollMode] = useState<'normal' | 'advantage' | 'disadvantage'>('normal');
   const { theme } = useTheme();
   const themeKey = (theme as keyof typeof themes) || 'default';
   const currentTheme = themes[themeKey] || themes.default;
@@ -84,9 +85,6 @@ export function DiceRollModal({ open, onClose, onRoll, playerName: defaultPlayer
     // Запускаем 3D анимацию
     setTriggerRoll(prev => !prev);
     
-    if (onRoll) {
-      onRoll(formula, reason, playerName);
-    }
     // НЕ закрываем модальное окно здесь - пользователь должен сам его закрыть
   };
 
@@ -95,6 +93,10 @@ export function DiceRollModal({ open, onClose, onRoll, playerName: defaultPlayer
     const total = value + modifier;
     setDiceResult(value);
     setLastRollTotal(total);
+    
+    if (onRoll) {
+      onRoll(formula, reason, playerName || 'Игрок', total);
+    }
     
     // Добавляем запись в историю
     const rollEntry: RollHistoryEntry = {
@@ -202,6 +204,53 @@ export function DiceRollModal({ open, onClose, onRoll, playerName: defaultPlayer
                 />
               </div>
             </div>
+
+            {selectedDice === 'd20' && (
+              <div className="pt-2">
+                <Label className="text-foreground" style={{ color: currentTheme.textColor }}>Режим броска</Label>
+                <div className="grid grid-cols-3 gap-2 mt-2">
+                  <Button
+                    type="button"
+                    variant={rollMode === 'normal' ? 'default' : 'outline'}
+                    onClick={() => { setRollMode('normal'); setQuantity(1); updateFormula(1, 'd20', modifier); }}
+                    className="flex items-center justify-center p-0 h-8 text-xs"
+                    style={{
+                      backgroundColor: rollMode === 'normal' ? currentTheme.accent : 'transparent',
+                      borderColor: currentTheme.accent,
+                      color: rollMode === 'normal' ? '#fff' : currentTheme.textColor
+                    }}
+                  >
+                    Обычный
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={rollMode === 'advantage' ? 'default' : 'outline'}
+                    onClick={() => { setRollMode('advantage'); setQuantity(2); updateFormula(2, 'd20', modifier); }}
+                    className="flex items-center justify-center p-0 h-8 text-xs"
+                    style={{
+                      backgroundColor: rollMode === 'advantage' ? currentTheme.accent : 'transparent',
+                      borderColor: currentTheme.accent,
+                      color: rollMode === 'advantage' ? '#fff' : currentTheme.textColor
+                    }}
+                  >
+                    Преимущество
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={rollMode === 'disadvantage' ? 'default' : 'outline'}
+                    onClick={() => { setRollMode('disadvantage'); setQuantity(2); updateFormula(2, 'd20', modifier); }}
+                    className="flex items-center justify-center p-0 h-8 text-xs"
+                    style={{
+                      backgroundColor: rollMode === 'disadvantage' ? currentTheme.accent : 'transparent',
+                      borderColor: currentTheme.accent,
+                      color: rollMode === 'disadvantage' ? '#fff' : currentTheme.textColor
+                    }}
+                  >
+                    Помеха
+                  </Button>
+                </div>
+              </div>
+            )}
           </TabsContent>
           
           <TabsContent value="advanced" className="space-y-4">
@@ -267,6 +316,8 @@ export function DiceRollModal({ open, onClose, onRoll, playerName: defaultPlayer
             modifier={modifier}
             playerName={playerName}
             forceReroll={triggerRoll}
+            diceCount={quantity}
+            rollMode={rollMode}
           />
         </div>
 

@@ -206,20 +206,20 @@ const AppRoutes: React.FC = () => {
       
       <Route path="/dm/session/:sessionId" element={
         <ProtectedDMRoute>
-          <DMSessionPage />
+          <VTTBattlePage />
         </ProtectedDMRoute>
       } />
       
       {/* Обратная совместимость со старым путем */}
       <Route path="/dm-session/:sessionId" element={
         <ProtectedDMRoute>
-          <DMSessionPage />
+          <VTTBattlePage />
         </ProtectedDMRoute>
       } />
       
       <Route path="/dm/battle-map/:sessionId" element={
         <ProtectedDMRoute>
-          <BattleMapPage />
+          <VTTBattlePage />
         </ProtectedDMRoute>
       } />
       <Route path="/dm/map-editor/:mapId" element={

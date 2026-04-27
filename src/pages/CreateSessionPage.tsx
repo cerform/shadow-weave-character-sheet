@@ -142,7 +142,7 @@ export default function CreateSessionPage() {
         });
 
         // Navigate first, then AI runs in the background
-        navigate(`/dm-session/${session.id}`);
+        navigate(`/vtt/${session.id}`);
 
         AIDMService.initCampaign({
           campaignName: config.name,
@@ -166,7 +166,7 @@ export default function CreateSessionPage() {
       } else {
         // 2b. Human DM — navigate and done
         toast({ title: '✅ Сессия создана!', description: `Код: ${session.session_code}` });
-        navigate(`/dm-session/${session.id}`);
+        navigate(`/vtt/${session.id}`);
       }
     } catch (err: any) {
       toast({ title: 'Ошибка', description: err.message, variant: 'destructive' });

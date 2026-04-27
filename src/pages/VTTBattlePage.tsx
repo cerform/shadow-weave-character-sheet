@@ -11,6 +11,9 @@ import { FogTools } from '@/vtt/ui/FogTools';
 import { AIGenerator } from '@/components/battle/BattleMapUI/sidebars/AIGenerator';
 import { NPCVoicePanel } from '@/components/battle/NPCVoicePanel';
 import { TokenRadialMenu } from '@/components/battle/TokenRadialMenu';
+import { useEnhancedBattleStore } from '@/stores/enhancedBattleStore';
+import { useBattleTokensSync } from '@/hooks/useBattleTokensSync';
+import { DiceRollModal } from '@/components/dice/DiceRollModal';
 import {
   Loader2, Crown, Users, Dice6, Sword, Map,
   Mic, MicOff, Settings, ArrowLeft, Copy, Share2,
@@ -75,12 +78,60 @@ export default function VTTBattlePage() {
   });
   const chatEndRef = useRef<HTMLDivElement>(null);
 
+  // Sync VTT tokens to the Store via battle_tokens subscription hook
+  useBattleTokensSync(sessionId || '');
+
   // ─── VTT Engine ─────────────────────────────────────────────────────────
   const { canvasRef, core, state: vttState, fog } = useVTT({
     sessionId: sessionId || '',
     isDM,
     gridSize: 50,
     mapUrl: session?.current_map_url || 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=1600&q=80'
+  }, {
+    onTokenMove: async (tokenId, newX, newY) => {
+      // Find the token in the store/state to check ownership
+      const playerTokenList = useEnhancedBattleStore.getState().tokens;
+      const t = playerTokenList.find(t => t.id === tokenId);
+      if (!t) return;
+
+      // Ensure permission
+      const canMove = isDM || t.character_id === user?.id;
+      if (!canMove) {
+        toast({ title: 'Отказано в доступе', description: 'Вы не можете перемещать чужой токен', variant: 'destructive' });
+        // It will snap back because Zustand hasn't changed and hook will sync on next render
+        return;
+      }
+
+      await supabase.from('battle_tokens').update({
+        position_x: newX,
+        position_y: newY
+      }).eq('id', tokenId);
+    },
+    onTokenClick: (tokenId, event) => {
+      const playerTokenList = useEnhancedBattleStore.getState().tokens;
+      const t = playerTokenList.find(t => t.id === tokenId);
+      if (!t) return;
+      setRadialMenu({
+        visible: true,
+        x: event.clientX,
+        y: event.clientY,
+        tokenId: t.id,
+        tokenName: t.name
+      });
+    },
+    onTokenContextMenu: (tokenId, event) => {
+      // same behavior as click for now
+      const playerTokenList = useEnhancedBattleStore.getState().tokens;
+      const t = playerTokenList.find(t => t.id === tokenId);
+      if (!t) return;
+      setRadialMenu({
+        visible: true,
+        x: event.clientX,
+        y: event.clientY,
+        tokenId: t.id,
+        tokenName: t.name
+      });
+    }
   });
 
   // ─── Load Session ─────────────────────────────────────────────────────────
@@ -108,6 +159,15 @@ export default function VTTBattlePage() {
         .select('*')
         .eq('session_id', sessionId);
       setPlayers(pl || []);
+
+      // Load initial chat messages
+      const { data: msgs } = await supabase
+        .from('session_messages')
+        .select('*')
+        .eq('session_id', sessionId)
+        .order('created_at', { ascending: true })
+        .limit(50);
+      if (msgs) setMessages(msgs as ChatMessage[]);
 
       setLoading(false);
     };
@@ -259,6 +319,33 @@ export default function VTTBattlePage() {
       });
     }
   }, [user, sessionId, toast]);
+
+  const handle3DDiceRoll = useCallback((formula: string, reason: string, playerName: string, resultTotal: number) => {
+    const isCritical = formula.includes('d20') && (resultTotal >= 20); // Approximation without raw rolls, since result is total
+    const result: DiceResult = {
+      id: crypto.randomUUID(),
+      playerName: playerName || user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Player',
+      diceType: formula,
+      total: resultTotal,
+      rolls: [resultTotal],
+      timestamp: new Date().toISOString(),
+      isCritical,
+    };
+
+    setDiceResults(prev => [result, ...prev].slice(0, 20));
+    socketService.rollDice(formula);
+
+    if (sessionId && user) {
+      supabase.from('session_messages').insert({
+        session_id: sessionId,
+        user_id: user.id,
+        sender_name: result.playerName,
+        message_type: 'dice',
+        content: `Бросок ${formula} ${reason ? '(' + reason + ')' : ''} → ${resultTotal}${isCritical ? ' 🎯 КРИТ!' : ''}`,
+        dice_roll_data: result,
+      });
+    }
+  }, [user, sessionId]);
 
   const copyInviteLink = () => {
     if (!session) return;
@@ -433,45 +520,27 @@ export default function VTTBattlePage() {
           Выйти
         </button>
 
-        {/* ── DICE BAR (center bottom) ── */}
+        {/* ── ALERTS / DICE BAR (center bottom) ── */}
         <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1.5 px-4 py-3 bg-slate-950/80 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl">
-          {DICE_TYPES.map(d => {
-            const lastResult = diceResults.find(r => r.diceType === d);
-            return (
-              <button
-                key={d}
-                onClick={() => rollDice(d)}
-                className="relative flex flex-col items-center justify-center w-12 h-12 rounded-xl hover:bg-amber-500/10 hover:text-amber-400 text-slate-400 transition-all active:scale-90 group"
-              >
-                <Dice6 className="h-5 w-5 opacity-50 group-hover:opacity-100" />
-                <span className="text-[9px] font-bold absolute bottom-1">{d}</span>
-                {lastResult && (
-                  <motion.div
-                    initial={{ scale: 2, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    className={`absolute -top-6 text-xs font-black ${lastResult.isCritical ? (lastResult.total === parseInt(d.slice(1)) ? 'text-green-400' : 'text-red-400') : 'text-white'}`}
-                  >
-                    {lastResult.total}
-                  </motion.div>
-                )}
-              </button>
-            );
-          })}
-          
-          {/* Recent roll display */}
+          <button
+            onClick={() => setIsDiceModalOpen(true)}
+            className="flex items-center gap-2 px-6 py-2 rounded-xl bg-amber-500/20 hover:bg-amber-500/40 text-amber-300 font-bold border border-amber-500/30 transition-all active:scale-95 group"
+          >
+            <Dice6 className="h-5 w-5" />
+            Бросить 3D-кубики
+          </button>
+
           {diceResults[0] && (
-            <motion.div
+            <div 
               key={diceResults[0].id}
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              className={`ml-3 pl-3 border-l border-white/10 flex items-center gap-2 ${diceResults[0].isCritical ? (diceResults[0].total === parseInt(diceResults[0].diceType.slice(1)) ? 'text-green-400' : 'text-red-400') : 'text-white'}`}
+              className={`ml-3 pl-3 border-l border-white/10 flex items-center gap-2 ${diceResults[0].isCritical ? 'text-green-400' : 'text-white'}`}
             >
               <span className="text-2xl font-black">{diceResults[0].total}</span>
-              <div className="text-[10px] text-slate-500 leading-tight">
+              <div className="text-[10px] uppercase tracking-widest text-slate-500 font-bold leading-tight">
                 <div>{diceResults[0].diceType}</div>
                 <div>{diceResults[0].playerName}</div>
               </div>
-            </motion.div>
+            </div>
           )}
         </div>
 
@@ -488,8 +557,9 @@ export default function VTTBattlePage() {
             if (!tokenId || !sessionId) return;
 
             // Permission: DM can do all; player can only act on their own token
+            const playerTokenList = useEnhancedBattleStore.getState().tokens;
+            const token = playerTokenList.find(t => t.id === tokenId);
             if (!isDM) {
-              const token = vttState.tokens?.find((t: any) => t.id === tokenId);
               if (!token || token.character_id !== user?.id) return;
             }
 
@@ -617,6 +687,13 @@ export default function VTTBattlePage() {
           </motion.aside>
         )}
       </AnimatePresence>
+
+      <DiceRollModal
+        open={isDiceModalOpen}
+        onClose={() => setIsDiceModalOpen(false)}
+        onRoll={handle3DDiceRoll}
+        playerName={user?.user_metadata?.full_name || user?.email?.split('@')[0]}
+      />
     </div>
   );
 }

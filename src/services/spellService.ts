@@ -1,36 +1,46 @@
-
 import { SpellData } from '@/types/spells';
 
+const CUSTOM_SPELLS_KEY = 'shadow_weave_custom_spells';
+
 /**
- * Сохраняет заклинание в базу данных
+ * Сохраняет заклинание в базу данных (локально для пользовательских)
  * @param spell Заклинание для сохранения
  * @param userId ID пользователя (опционально)
  * @returns Promise с ID сохраненного заклинания
  */
 export async function saveSpellToDatabase(spell: SpellData, userId?: string | null): Promise<string> {
-  // В реальном приложении здесь был бы код для сохранения в Firestore или другую базу данных
-  console.log('Сохранение заклинания в базу данных:', spell, 'для пользователя:', userId || 'системное');
+  const id = spell.id?.toString() || `spell-${Date.now()}`;
   
-  // Имитируем задержку сетевого запроса
-  await new Promise(resolve => setTimeout(resolve, 500));
+  try {
+    const customSpells = JSON.parse(localStorage.getItem(CUSTOM_SPELLS_KEY) || '[]');
+    
+    const existingIndex = customSpells.findIndex((s: SpellData) => s.id === spell.id);
+    if (existingIndex >= 0) {
+      customSpells[existingIndex] = { ...spell, id };
+    } else {
+      customSpells.push({ ...spell, id });
+    }
+    
+    localStorage.setItem(CUSTOM_SPELLS_KEY, JSON.stringify(customSpells));
+  } catch (error) {
+    console.error('Error saving spell:', error);
+  }
   
-  // Возвращаем ID заклинания (в реальном коде это был бы ID из базы данных)
-  return spell.id?.toString() || `spell-${Date.now()}`;
+  return id;
 }
 
 /**
- * Получает все заклинания из базы данных
+ * Получает все кастомные заклинания
  * @returns Promise с массивом заклинаний
  */
 export async function getAllSpellsFromDatabase(): Promise<SpellData[]> {
-  // В реальном приложении здесь был бы код для получения из базы данных
-  console.log('Получение всех заклинаний из базы данных');
-  
-  // Имитируем задержку сетевого запроса
-  await new Promise(resolve => setTimeout(resolve, 500));
-  
-  // Возвращаем пустой массив (в реальном коде это были бы данные из БД)
-  return [];
+  try {
+    const customSpells = JSON.parse(localStorage.getItem(CUSTOM_SPELLS_KEY) || '[]');
+    return customSpells;
+  } catch (error) {
+    console.error('Error loading custom spells:', error);
+    return [];
+  }
 }
 
 /**
@@ -39,11 +49,13 @@ export async function getAllSpellsFromDatabase(): Promise<SpellData[]> {
  * @returns Promise с результатом операции
  */
 export async function deleteSpellFromDatabase(spellId: string): Promise<boolean> {
-  console.log('Удаление заклинания с ID:', spellId);
-  
-  // Имитируем задержку сетевого запроса
-  await new Promise(resolve => setTimeout(resolve, 500));
-  
-  // Возвращаем успешный результат
-  return true;
+  try {
+    let customSpells = JSON.parse(localStorage.getItem(CUSTOM_SPELLS_KEY) || '[]');
+    customSpells = customSpells.filter((s: SpellData) => s.id !== spellId);
+    localStorage.setItem(CUSTOM_SPELLS_KEY, JSON.stringify(customSpells));
+    return true;
+  } catch (error) {
+    console.error('Error deleting spell:', error);
+    return false;
+  }
 }
