@@ -1,3 +1,13 @@
+/**
+ * Canonical Character type for Shadow Weave.
+ *
+ * This is the SINGLE SOURCE OF TRUTH for the Character data model.
+ * All other files must import from here — do NOT define a local Character interface.
+ *
+ * @see src/types/character.d.ts  — deprecated shim, re-exports from here
+ * @see src/types/session.ts      — imports Character from here
+ * @see src/types/index.ts        — barrel export
+ */
 export interface Character {
   id?: string;
   name: string;
@@ -64,7 +74,8 @@ export interface Character {
     items?: string[];
   };
   features?: Feature[] | string[];
-  spells?: CharacterSpell[];
+  /** Accepts CharacterSpell objects or legacy string array for compatibility */
+  spells?: CharacterSpell[] | string[];
   spellSlots?: Record<number, { max: number; used: number }>;
   money?: {
     cp?: number;

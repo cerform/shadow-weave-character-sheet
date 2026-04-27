@@ -57,57 +57,25 @@ const LazyLoading = () => (
   </div>
 );
 
-// Компонент для защиты маршрутов DM
+// Route guard: DM or Admin only
 const ProtectedDMRoute = ({ children }: { children: React.ReactNode }) => {
-  const { loading, canAccessDMDashboard, isAuthenticated, isDM, isAdmin, userRoles } = useProtectedRoute();
-  
-  console.log('🔒 ProtectedDMRoute проверка:', { 
-    loading, 
-    canAccessDMDashboard, 
-    isAuthenticated, 
-    isDM,
-    isAdmin,
-    userRoles,
-    timestamp: new Date().toISOString()
-  });
-  
-  // Показываем загрузку пока идет проверка авторизации или ролей
-  if (loading) {
-    console.log('⏳ ProtectedDMRoute: загрузка ролей...');
-    return <LazyLoading />;
-  }
-  
-  // Если не авторизован, редиректим на /auth
-  if (!isAuthenticated) {
-    console.log('❌ ProtectedDMRoute: не авторизован, редирект на /auth');
-    return <Navigate to="/auth" replace />;
-  }
-  
-  // Проверяем доступ: либо isDM, либо isAdmin, либо canAccessDMDashboard
-  if (!isDM && !isAdmin && !canAccessDMDashboard) {
-    console.log('❌ ProtectedDMRoute: нет доступа DM/Admin, редирект на /unauthorized');
-    return <Navigate to="/unauthorized" replace />;
-  }
-  
-  console.log('✅ ProtectedDMRoute: доступ разрешен');
+  const { loading, canAccessDMDashboard, isAuthenticated, isDM, isAdmin } = useProtectedRoute();
+
+  if (loading) return <LazyLoading />;
+  if (!isAuthenticated) return <Navigate to="/auth" replace />;
+  if (!isDM && !isAdmin && !canAccessDMDashboard) return <Navigate to="/unauthorized" replace />;
+
   return <>{children}</>;
 };
 
-// Компонент для защиты админских маршрутов
+// Route guard: Admin only
 const ProtectedAdminRoute = ({ children }: { children: React.ReactNode }) => {
   const { loading, isAdmin, isAuthenticated } = useProtectedRoute();
-  
-  console.log('ProtectedAdminRoute check:', { loading, isAdmin, isAuthenticated });
-  
-  if (loading) {
-    return <LazyLoading />;
-  }
-  
-  if (!isAdmin) {
-    console.log('Redirecting to /unauthorized - no admin access');
-    return <Navigate to="/unauthorized" replace />;
-  }
-  
+
+  if (loading) return <LazyLoading />;
+  if (!isAuthenticated) return <Navigate to="/auth" replace />;
+  if (!isAdmin) return <Navigate to="/unauthorized" replace />;
+
   return <>{children}</>;
 };
 
@@ -161,14 +129,6 @@ const RoleBasedRedirect = () => {
 };
 
 const AppRoutes: React.FC = () => {
-  console.log('AppRoutes: Инициализация маршрутов');
-  console.log('DndSpellsPage импортирована:', DndSpellsPage);
-  console.log('AdminPage импортирована:', AdminPage);
-  console.log('DMDashboardPageNew импортирована:', DMDashboardPageNew);
-  // console.log('BattleMap3DPage импортирована:', BattleMap3DPage);
-  console.log('HomePage импортирована:', HomePage);
-  console.log('window.location.pathname:', window.location.pathname);
-  
   return (
     <Routes>
       {/* Главная страница */}
@@ -207,12 +167,32 @@ const AppRoutes: React.FC = () => {
       <Route path="/integrated-battle" element={<Navigate to="/unified-battle" replace />} />
       
       
-      {/* Персонажи */}
-      <Route path="/character-creation" element={<CharacterCreationPage />} />
-      <Route path="/characters" element={<CharactersListPage />} />
-      <Route path="/character/:id" element={<CharacterViewPage />} />
-      <Route path="/character-sheet/:id" element={<CharacterSheetPage />} />
-      <Route path="/character-management" element={<CharacterManagementPage />} />
+      {/* Characters — require auth */}
+      <Route path="/character-creation" element={
+        <ProtectedAuthRoute>
+          <CharacterCreationPage />
+        </ProtectedAuthRoute>
+      } />
+      <Route path="/characters" element={
+        <ProtectedAuthRoute>
+          <CharactersListPage />
+        </ProtectedAuthRoute>
+      } />
+      <Route path="/character/:id" element={
+        <ProtectedAuthRoute>
+          <CharacterViewPage />
+        </ProtectedAuthRoute>
+      } />
+      <Route path="/character-sheet/:id" element={
+        <ProtectedAuthRoute>
+          <CharacterSheetPage />
+        </ProtectedAuthRoute>
+      } />
+      <Route path="/character-management" element={
+        <ProtectedAuthRoute>
+          <CharacterManagementPage />
+        </ProtectedAuthRoute>
+      } />
       
       {/* Профиль */}
       <Route path="/profile" element={<ProfilePage />} />

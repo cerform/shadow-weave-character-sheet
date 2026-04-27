@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Character } from '@/types/character';
 import { useCharacterCreation } from '@/hooks/useCharacterCreation';
-import { Save } from 'lucide-react';
+import { Save, Loader2 } from 'lucide-react';
 import { getSubracesForRace } from '@/data/races';
 import { getCharacterSteps } from '@/config/characterCreationSteps';
 import { useAbilitiesRoller } from '@/hooks/useAbilitiesRoller';
@@ -16,14 +16,59 @@ import CharacterCreationContent from '@/components/character-creation/CharacterC
 import IconOnlyNavigation from '@/components/navigation/IconOnlyNavigation';
 import { AbilityRollMethod } from '@/components/character-creation/AbilityScoreMethodSelector';
 import { supabase } from '@/integrations/supabase/client';
-import { saveCharacter } from "@/services/supabaseCharacterService";
+import { saveCharacter, updateCharacter, getCharacterById } from "@/services/supabaseCharacterService";
+import { hasUndefinedValues, cleanUndefinedValues } from '@/utils/cleanUndefinedValues';
 
 const CharacterCreationPage: React.FC = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { toast } = useToast();
-  const { character, updateCharacter, isMagicClass, convertToCharacter, currentStep, setCurrentStep, nextStep, prevStep } = useCharacterCreation();
+  const { character, updateCharacter: updateLocal, isMagicClass, convertToCharacter, currentStep, setCurrentStep, nextStep, prevStep } = useCharacterCreation();
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingEdit, setIsLoadingEdit] = useState(false);
   const [abilitiesMethod, setAbilitiesMethod] = useState<AbilityRollMethod>('standard');
+
+  // ── Edit mode ────────────────────────────────────────────────────────────
+  // Detect ?edit=<id> query param. When present, load existing character.
+  const editId = searchParams.get('edit');
+  const isEditMode = Boolean(editId);
+
+  useEffect(() => {
+    if (!editId) return;
+
+    const loadForEdit = async () => {
+      setIsLoadingEdit(true);
+      try {
+        const existing = await getCharacterById(editId);
+        if (!existing) {
+          toast({
+            title: "Персонаж не найден",
+            description: `Персонаж с ID ${editId} не найден. Создаётся новый.`,
+            variant: "destructive",
+          });
+          return;
+        }
+        // Pre-fill form with existing character data
+        updateLocal(existing);
+        setCurrentStep(0);
+        toast({
+          title: "Персонаж загружен",
+          description: `Редактирование: ${existing.name}`,
+        });
+      } catch (err) {
+        toast({
+          title: "Ошибка загрузки",
+          description: err instanceof Error ? err.message : "Не удалось загрузить персонажа для редактирования.",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoadingEdit(false);
+      }
+    };
+
+    loadForEdit();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editId]);
 
   const abilityRoller = useAbilitiesRoller(abilitiesMethod, character.level || 1);
 
@@ -48,19 +93,15 @@ const CharacterCreationPage: React.FC = () => {
   }, [hasSubraces, currentStep]);
 
   const handleLevelChange = useCallback((level: number) => {
-    updateCharacter({ level });
-  }, [updateCharacter]);
+    updateLocal({ level });
+  }, [updateLocal]);
 
-  // 🔥 Удалён localStorage.getItem('character_creation_progress') — больше не нужен
-
+  // ── Save handler (create or update) ──────────────────────────────────────
   const handleSaveCharacter = useCallback(async () => {
-    console.log('=== НАЧАЛО СОХРАНЕНИЯ ПЕРСОНАЖА ===');
     setIsLoading(true);
     try {
-      // Проверяем авторизацию через Supabase
+      // Auth check
       const { data: { user } } = await supabase.auth.getUser();
-      console.log('Supabase пользователь:', user);
-
       if (!user) {
         toast({
           title: "Ошибка",
@@ -71,83 +112,90 @@ const CharacterCreationPage: React.FC = () => {
         return;
       }
 
+      // Required field validation
       if (!character.name || !character.race || !character.class) {
         toast({
           title: "Ошибка",
-          description: "Пожалуйста, заполните все обязательные поля (Имя, Раса, Класс).",
+          description: "Пожалуйста, заполните все обязательные поля: Имя, Раса, Класс.",
           variant: "destructive",
         });
         return;
       }
 
       const characterToSave = convertToCharacter(character);
-      // userId теперь устанавливается автоматически в Supabase сервисе
 
-      // Дополнительная валидация: убеждаемся, что нет undefined значений
-      if (hasUndefinedValues(characterToSave)) {
-        console.warn('⚠️ Обнаружены undefined значения в персонаже, выполняется очистка...');
-        
-        // Очищаем undefined значения перед сохранением
-        const cleanedCharacter = cleanUndefinedValues(characterToSave);
-        console.log('✅ Очищенный персонаж:', cleanedCharacter);
-        
-        const savedCharacter = await saveCharacter(cleanedCharacter);
-        
-        if (savedCharacter && savedCharacter.id) {
-          toast({
-            title: "Персонаж сохранен!",
-            description: "Ваш персонаж успешно сохранен (с автоматической очисткой данных).",
-          });
+      // Sanitize data before write
+      const finalCharacter: Character = hasUndefinedValues(characterToSave)
+        ? cleanUndefinedValues(characterToSave)
+        : characterToSave;
 
-          setTimeout(() => {
-            navigate(`/character-sheet/${savedCharacter.id}`);
-          }, 100);
-        }
-        return;
-      }
-
-      console.log('✅ Данные персонажа для сохранения (валидированы):', characterToSave);
-
-      const savedCharacter = await saveCharacter(characterToSave);
-
-      if (savedCharacter && savedCharacter.id) {
+      if (isEditMode && editId) {
+        // ── Edit mode: UPDATE existing record ──────────────────────────────
+        const withId: Character = { ...finalCharacter, id: editId };
+        await updateCharacter(withId);
         toast({
-          title: "Персонаж сохранен!",
-          description: "Ваш персонаж успешно сохранен.",
+          title: "Персонаж обновлён!",
+          description: `${finalCharacter.name} успешно сохранён.`,
         });
-
-        setTimeout(() => {
-          navigate(`/character-sheet/${savedCharacter.id}`);
-        }, 100);
+        setTimeout(() => navigate(`/character-sheet/${editId}`), 100);
       } else {
-        toast({
-          title: "Ошибка сохранения",
-          description: "Не удалось сохранить персонажа. Попробуйте еще раз.",
-          variant: "destructive",
-        });
+        // ── Create mode: INSERT new record ─────────────────────────────────
+        const savedCharacter = await saveCharacter(finalCharacter);
+        if (savedCharacter && savedCharacter.id) {
+          // Clear creation progress from localStorage once saved to Supabase
+          localStorage.removeItem('character_creation_progress');
+          toast({
+            title: "Персонаж создан!",
+            description: `${savedCharacter.name} успешно сохранён.`,
+          });
+          setTimeout(() => navigate(`/character-sheet/${savedCharacter.id}`), 100);
+        } else {
+          toast({
+            title: "Ошибка сохранения",
+            description: "Не удалось сохранить персонажа. Попробуйте ещё раз.",
+            variant: "destructive",
+          });
+        }
       }
     } catch (error) {
       toast({
         title: "Ошибка сохранения",
-        description: error instanceof Error ? error.message : "Произошла неизвестная ошибка при сохранении персонажа.",
+        description: error instanceof Error ? error.message : "Произошла неизвестная ошибка.",
         variant: "destructive",
       });
     } finally {
       setIsLoading(false);
     }
-  }, [character, convertToCharacter, navigate, toast]);
+  }, [character, convertToCharacter, navigate, toast, isEditMode, editId]);
+
+  // ── Loading state while fetching character for edit ──────────────────────
+  if (isLoadingEdit) {
+    return (
+      <div className="flex flex-col min-h-screen items-center justify-center gap-4">
+        <Loader2 className="h-10 w-10 animate-spin text-primary" />
+        <p className="text-muted-foreground text-sm">Загрузка персонажа для редактирования…</p>
+      </div>
+    );
+  }
+
+  const saveLabel = isEditMode ? 'Сохранить изменения' : 'Завершить создание';
 
   return (
     <div className="flex flex-col min-h-screen">
       <IconOnlyNavigation />
       <div className="flex flex-1">
-        <CreationSidebar 
+        <CreationSidebar
           steps={steps}
           currentStep={currentStep}
           setCurrentStep={setCurrentStep}
         />
         <main className="flex-1 p-6">
-          <CreationStepper 
+          {isEditMode && (
+            <div className="mb-4 px-4 py-2 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-400 text-sm font-medium">
+              ✏️ Режим редактирования — изменения будут сохранены в существующий персонаж
+            </div>
+          )}
+          <CreationStepper
             steps={steps}
             currentStep={currentStep}
             setCurrentStep={setCurrentStep}
@@ -155,7 +203,7 @@ const CharacterCreationPage: React.FC = () => {
           <CharacterCreationContent
             currentStep={currentStep}
             character={character}
-            updateCharacter={updateCharacter}
+            updateCharacter={updateLocal}
             nextStep={nextStep}
             prevStep={prevStep}
             abilitiesMethod={abilitiesMethod}
@@ -175,8 +223,11 @@ const CharacterCreationPage: React.FC = () => {
           {currentStep !== steps.length - 1 && (
             <div className="mt-6 flex justify-end">
               <Button onClick={handleSaveCharacter} disabled={isLoading}>
-                <Save className="mr-2 h-4 w-4" />
-                {isLoading ? "Сохраняем..." : "Завершить создание"}
+                {isLoading ? (
+                  <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Сохраняем…</>
+                ) : (
+                  <><Save className="mr-2 h-4 w-4" />{saveLabel}</>
+                )}
               </Button>
             </div>
           )}
@@ -185,76 +236,5 @@ const CharacterCreationPage: React.FC = () => {
     </div>
   );
 };
-
-/**
- * Проверяет, есть ли в объекте undefined значения
- */
-function hasUndefinedValues(obj: any, path = ''): boolean {
-  if (obj === undefined) {
-    console.log(`🔍 Найдено undefined значение в ${path}`);
-    return true;
-  }
-
-  if (obj === null || typeof obj !== 'object') {
-    return false;
-  }
-
-  if (Array.isArray(obj)) {
-    return obj.some((item, index) => hasUndefinedValues(item, `${path}[${index}]`));
-  }
-
-  for (const [key, value] of Object.entries(obj)) {
-    if (hasUndefinedValues(value, path ? `${path}.${key}` : key)) {
-      return true;
-    }
-  }
-
-  return false;
-}
-
-/**
- * Очищает undefined значения из объекта
- */
-function cleanUndefinedValues(obj: any): any {
-  if (obj === undefined || obj === null || typeof obj !== 'object') {
-    return obj === undefined ? null : obj;
-  }
-
-  if (Array.isArray(obj)) {
-    return obj.map(item => cleanUndefinedValues(item));
-  }
-
-  const cleaned: any = {};
-  for (const [key, value] of Object.entries(obj)) {
-    if (value !== undefined) {
-      if (typeof value === 'object' && value !== null) {
-        // Специальная обработка для заклинаний
-        if (key === 'spells' && Array.isArray(value)) {
-          cleaned[key] = value.map(spell => {
-            const cleanedSpell = { ...spell };
-            
-            // Очищаем некорректные объекты с _type: "undefined"
-            if (cleanedSpell.verbal && typeof cleanedSpell.verbal === 'object') {
-              cleanedSpell.verbal = cleanedSpell.components?.includes('В') || false;
-            }
-            if (cleanedSpell.somatic && typeof cleanedSpell.somatic === 'object') {
-              cleanedSpell.somatic = cleanedSpell.components?.includes('С') || false;
-            }
-            if (cleanedSpell.material && typeof cleanedSpell.material === 'object') {
-              cleanedSpell.material = cleanedSpell.components?.includes('М') || false;
-            }
-            
-            return cleanUndefinedValues(cleanedSpell);
-          });
-        } else {
-          cleaned[key] = cleanUndefinedValues(value);
-        }
-      } else {
-        cleaned[key] = value;
-      }
-    }
-  }
-  return cleaned;
-}
 
 export default CharacterCreationPage;

@@ -3,7 +3,8 @@ import { LightSource } from "@/types/battle";
 
 // Импортируем необходимые типы
 export interface Token {
-  id: number;
+  /** UUID string — matches Supabase battle_tokens.id */
+  id: string;
   name: string;
   type: "player" | "monster" | "npc" | "boss";
   img: string;
@@ -18,12 +19,14 @@ export interface Token {
   spellSlots?: { [key: string]: { used: number; max: number } };
   visible: boolean;
   size: number;
-  color?: string; // Добавляем поле цвета для токена
+  color?: string;
 }
 
 export interface Initiative {
-  id: number;
-  tokenId: number;
+  /** UUID string */
+  id: string;
+  /** UUID string matching Token.id */
+  tokenId: string;
   name: string;
   roll: number;
   isActive: boolean;
@@ -54,7 +57,7 @@ interface BattleStore {
   tokens: Token[];
   initiative: Initiative[];
   battleState: BattleState;
-  selectedTokenId: number | null;
+  selectedTokenId: string | null;
   isDM: boolean;
   
   // Настройки карты
@@ -65,11 +68,11 @@ interface BattleStore {
   
   // Действия с токенами
   addToken: (token: Token) => void;
-  updateToken: (id: number, updates: Partial<Token>) => void;
-  removeToken: (id: number) => void;
-  updateTokenPosition: (id: number, x: number, y: number) => void;
-  updateTokenHP: (id: number, change: number) => void;
-  selectToken: (id: number | null) => void;
+  updateToken: (id: string, updates: Partial<Token>) => void;
+  removeToken: (id: string) => void;
+  updateTokenPosition: (id: string, x: number, y: number) => void;
+  updateTokenHP: (id: string, change: number) => void;
+  selectToken: (id: string | null) => void;
   
   // Действия с боем
   startBattle: () => void;
@@ -134,11 +137,11 @@ const useBattleStore = create<BattleStore>((set, get) => ({
       tokens: [...state.tokens, token]
     }));
     
-    // Если бой активен, добавляем в инициативу
+    // If battle is active, add to initiative
     if (get().battleState.isActive) {
       const roll = Math.floor(Math.random() * 20) + 1 + token.initiative;
-      const newInitiative = {
-        id: Date.now(),
+      const newInitiative: Initiative = {
+        id: crypto.randomUUID(),
         tokenId: token.id,
         name: token.name,
         roll,
@@ -203,17 +206,14 @@ const useBattleStore = create<BattleStore>((set, get) => ({
       return;
     }
     
-    // Генерируем инициативу
-    const initiativeRolls = state.tokens.map(token => {
-      const roll = Math.floor(Math.random() * 20) + 1 + token.initiative;
-      return {
-        id: Date.now() + token.id,
-        tokenId: token.id,
-        name: token.name,
-        roll,
-        isActive: false,
-      };
-    });
+    // Generate initiative rolls
+    const initiativeRolls: Initiative[] = state.tokens.map((token) => ({
+      id: crypto.randomUUID(),
+      tokenId: token.id,
+      name: token.name,
+      roll: Math.floor(Math.random() * 20) + 1 + token.initiative,
+      isActive: false,
+    }));
     
     const sortedInitiative = [...initiativeRolls].sort((a, b) => b.roll - a.roll);
     

@@ -1,12 +1,18 @@
-
-import { Timestamp } from "firebase/firestore";
+/**
+ * Session types for Shadow Weave multiplayer system.
+ *
+ * IMPORTANT: Character type is imported from @/types/character — do NOT
+ * define a local Character interface here. Use the canonical source.
+ */
+import { Character } from '@/types/character';
 
 export interface Session {
   id: string;
   campaignId?: string;
   title: string;
   description: string;
-  dmId: string; // ID мастера, создавшего сессию
+  /** ID of the Dungeon Master who created the session */
+  dmId: string;
   players: string[];
   startTime: string;
   endTime?: string;
@@ -18,38 +24,32 @@ export interface Session {
     authorId: string;
   }[];
   mapId?: string;
-  lastActivity?: string | Timestamp;
+  /** ISO 8601 timestamp string — Supabase compatible */
+  lastActivity?: string;
   createdAt: string;
   code?: string;
-  name?: string; 
-  users?: User[];
+  name?: string;
+  users?: SessionUser[];
   updatedAt?: string;
 }
 
-export interface User {
+export interface SessionUser {
   id: string;
   name: string;
   themePreference: string;
   isOnline: boolean;
   isDM: boolean;
-  character?: Character; // Добавляем персонажа к пользователю
+  /** Player's character in this session */
+  character?: Character;
 }
 
-export interface Character {
-  id: string;
-  name: string;
-  race?: string;
-  class?: string;
-  className?: string; // Поддерживаем оба варианта - class и className
-  level: number;
-  avatarUrl?: string;
-  userId?: string;
-  createdAt?: string;
-  updatedAt?: string;
-}
+// Legacy alias — prefer SessionUser for new code
+export type User = SessionUser;
 
-// Добавляем типы для хранения персонажей
+/** Lightweight character reference stored with session player slots */
 export interface CharacterStorage {
   characters: Character[];
-  lastUsed?: string; // ID последнего использованного персонажа
+  lastUsed?: string;
 }
+
+export type { Character };

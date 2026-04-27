@@ -1,80 +1,75 @@
-
+/**
+ * Session store — Zustand-based state for the current game session.
+ *
+ * REFACTORED (Phase 1): Removed useSession() and useAuth() hook calls from
+ * non-component code. React hooks must only be called inside React components
+ * or custom hooks — calling them here caused React Error #185.
+ *
+ * Session state is now managed directly via Zustand. Components that need
+ * session data should use this store via `useSessionStore()`.
+ *
+ * For real-time Supabase session CRUD, use sessionService.ts directly.
+ */
+import { create } from 'zustand';
 import { DMSession } from '@/contexts/SessionContext';
-import { useAuth } from '@/hooks/use-auth';
-import { useSession } from '@/contexts/SessionContext';
 
-// Определяем тип для состояния сессии
-interface SessionStore {
+interface SessionStoreState {
   currentSession: DMSession | null;
   sessions: DMSession[];
-  fetchSessions: () => Promise<DMSession[]>;
-  createSession: (name: string, description?: string) => DMSession;
-  joinSession: (code: string, player: { name: string; character: any }) => boolean;
-  endSession: (id: string) => void;
-  updateSession: (session: Partial<DMSession>) => void;
+  isLoading: boolean;
 }
 
-// Хук, безопасно использующий контекст сессий; при отсутствии провайдера возвращает заглушки
-const useSessionStore = (): SessionStore => {
-  const defaultStore: SessionStore = {
-    currentSession: null,
-    sessions: [],
-    fetchSessions: async () => [],
-    createSession: (name, description) => {
-      console.warn('SessionProvider не найден. Сессия не может быть создана.');
-      return {
-        id: 'placeholder',
-        name,
-        code: 'DEMO',
-        players: [],
-        createdAt: new Date().toISOString(),
-        description,
-        isActive: false,
-      } as unknown as DMSession;
-    },
-    joinSession: () => {
-      console.warn('SessionProvider не найден. Невозможно присоединиться к сессии.');
-      return false;
-    },
-    endSession: () => {
-      console.warn('SessionProvider не найден. Сессия не может быть завершена.');
-    },
-    updateSession: () => {
-      console.warn('SessionProvider не найден. Невозможно обновить сессию.');
-    },
-  };
+interface SessionStoreActions {
+  setCurrentSession: (session: DMSession | null) => void;
+  setSessions: (sessions: DMSession[]) => void;
+  addSession: (session: DMSession) => void;
+  updateSession: (update: Partial<DMSession> & { id: string }) => void;
+  removeSession: (id: string) => void;
+  setLoading: (loading: boolean) => void;
+  reset: () => void;
+}
 
-  try {
-    const sessionContext = useSession();
-    const { user: currentUser } = useAuth();
+type SessionStore = SessionStoreState & SessionStoreActions;
 
-    return {
-      currentSession: sessionContext.currentSession,
-      sessions: sessionContext.sessions || [],
-      fetchSessions: sessionContext.fetchSessions,
-      createSession: (name: string, description?: string): DMSession => {
-        const newSession = sessionContext.createSession(name, description);
-        if ((currentUser as any)?.uid || (currentUser as any)?.id) {
-          const uid = (currentUser as any).uid ?? (currentUser as any).id;
-          const sessionWithDm = {
-            ...newSession,
-            dmId: uid,
-            isActive: true,
-          } as DMSession;
-          sessionContext.updateSession(sessionWithDm);
-          return sessionWithDm;
-        }
-        return newSession;
-      },
-      joinSession: sessionContext.joinSession,
-      endSession: sessionContext.endSession,
-      updateSession: sessionContext.updateSession,
-    };
-  } catch (error) {
-    // Если хук useSession брошен вне провайдера – возвращаем заглушки
-    console.warn('SessionContext не доступен, использую заглушки', error);
-    return defaultStore;
-  }
+const initialState: SessionStoreState = {
+  currentSession: null,
+  sessions: [],
+  isLoading: false,
 };
 
+const useSessionStore = create<SessionStore>((set) => ({
+  ...initialState,
+
+  setCurrentSession: (session) => set({ currentSession: session }),
+
+  setSessions: (sessions) => set({ sessions }),
+
+  addSession: (session) =>
+    set((state) => ({ sessions: [...state.sessions, session] })),
+
+  updateSession: (update) =>
+    set((state) => {
+      const sessions = state.sessions.map((s) =>
+        s.id === update.id ? { ...s, ...update } : s
+      );
+      const currentSession =
+        state.currentSession?.id === update.id
+          ? { ...state.currentSession, ...update }
+          : state.currentSession;
+      return { sessions, currentSession };
+    }),
+
+  removeSession: (id) =>
+    set((state) => ({
+      sessions: state.sessions.filter((s) => s.id !== id),
+      currentSession:
+        state.currentSession?.id === id ? null : state.currentSession,
+    })),
+
+  setLoading: (isLoading) => set({ isLoading }),
+
+  reset: () => set(initialState),
+}));
+
 export default useSessionStore;
+export type { SessionStore };

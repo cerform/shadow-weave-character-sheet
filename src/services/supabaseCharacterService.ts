@@ -51,8 +51,8 @@ export const updateCharacter = async (character: Character): Promise<void> => {
       throw new Error('Пользователь не авторизован');
     }
 
-    // Подготавливаем данные для обновления (без id)
-    const { id, ...characterData } = prepareCharacterForDB(character, user.id);
+    // Prepare update payload — prepareCharacterForDB does not include id
+    const characterData = prepareCharacterForDB(character, user.id);
 
     console.log('🔄 Обновляем персонажа в Supabase:', characterData);
 
@@ -153,77 +153,97 @@ export const getCharacterById = async (id: string): Promise<Character | null> =>
 };
 
 /**
- * Подготавливает объект персонажа для сохранения в БД
+ * Prepares a Character object for Supabase INSERT/UPDATE.
+ * Maps all Character interface fields to snake_case DB columns.
+ * All JSON fields are stored as JSONB.
  */
-function prepareCharacterForDB(character: Character, userId: string): any {
-  // Очищаем заклинания от некорректных значений
-  const cleanSpells = (character.spells || []).map(spell => {
-    const cleanedSpell: any = { ...spell };
-    
-    // Убираем некорректные объекты с _type: "undefined"
-    if (cleanedSpell.verbal && typeof cleanedSpell.verbal === 'object') {
-      cleanedSpell.verbal = undefined;
+function prepareCharacterForDB(character: Character, userId: string) {
+  // Sanitize spells — fix objects stored as {_type: "undefined"} from upstream bug
+  const rawSpells = (character.spells || []) as any[];
+  const cleanSpells = rawSpells.map((spell: any) => {
+    const s: any = { ...spell };
+    if (s.verbal && typeof s.verbal === 'object') {
+      s.verbal = s.components?.includes('V') || s.components?.includes('В') || false;
     }
-    if (cleanedSpell.somatic && typeof cleanedSpell.somatic === 'object') {
-      cleanedSpell.somatic = undefined;
+    if (s.somatic && typeof s.somatic === 'object') {
+      s.somatic = s.components?.includes('S') || s.components?.includes('С') || false;
     }
-    if (cleanedSpell.material && typeof cleanedSpell.material === 'object') {
-      cleanedSpell.material = undefined;
+    if (s.material && typeof s.material === 'object') {
+      s.material = s.components?.includes('M') || s.components?.includes('М') || false;
     }
-    
-    // Устанавливаем корректные boolean значения на основе компонентов
-    if (cleanedSpell.components && typeof cleanedSpell.components === 'string') {
-      cleanedSpell.verbal = cleanedSpell.components.includes('В');
-      cleanedSpell.somatic = cleanedSpell.components.includes('С');
-      cleanedSpell.material = cleanedSpell.components.includes('М');
-    }
-    
-    return cleanedSpell;
+    // Strip undefined values before JSON serialization
+    return Object.fromEntries(
+      Object.entries(s).filter(([, v]) => v !== undefined)
+    );
   });
 
   return {
     user_id: userId,
+
+    // ── Core identity ────────────────────────────────────────────────────────
     name: character.name || '',
-    race: character.race || '',
+    race: character.race || null,
     subrace: character.subrace || null,
-    class: character.class || '',
+    class: character.class || null,
     subclass: character.subclass || null,
+    background: character.background || null,
+    alignment: character.alignment || null,
+    gender: character.gender || null,
     level: character.level || 1,
     experience: character.experience || 0,
-    
-    // Основные характеристики
-    strength: character.strength || 10,
-    dexterity: character.dexterity || 10,
-    constitution: character.constitution || 10,
-    intelligence: character.intelligence || 10,
-    wisdom: character.wisdom || 10,
-    charisma: character.charisma || 10,
-    
-    // Здоровье и защита
-    max_hp: character.maxHp || 8,
-    current_hp: character.currentHp || 8,
-    armor_class: character.armorClass || 10,
-    speed: character.speed || 30,
-    proficiency_bonus: character.proficiencyBonus || 2,
-    
-    // JSON поля
+
+    // ── Ability scores (flat columns) ────────────────────────────────────────
+    strength: character.strength ?? character.stats?.strength ?? character.abilities?.strength ?? 10,
+    dexterity: character.dexterity ?? character.stats?.dexterity ?? character.abilities?.dexterity ?? 10,
+    constitution: character.constitution ?? character.stats?.constitution ?? character.abilities?.constitution ?? 10,
+    intelligence: character.intelligence ?? character.stats?.intelligence ?? character.abilities?.intelligence ?? 10,
+    wisdom: character.wisdom ?? character.stats?.wisdom ?? character.abilities?.wisdom ?? 10,
+    charisma: character.charisma ?? character.stats?.charisma ?? character.abilities?.charisma ?? 10,
+
+    // ── Derived stats ─────────────────────────────────────────────────────────
+    max_hp: character.maxHp ?? character.hitPoints?.maximum ?? 8,
+    current_hp: character.currentHp ?? character.hitPoints?.current ?? 8,
+    temp_hp: character.tempHp ?? character.temporaryHp ?? character.hitPoints?.temporary ?? 0,
+    armor_class: character.armorClass ?? 10,
+    speed: character.speed ?? 30,
+    proficiency_bonus: character.proficiencyBonus ?? 2,
+    initiative: typeof character.initiative === 'number' ? character.initiative : null,
+
+    // ── JSONB fields ──────────────────────────────────────────────────────────
+    stats: character.stats ?? null,
+    hit_points: character.hitPoints ?? null,
     spells: cleanSpells,
-    equipment: character.equipment || [],
-    money: character.money || { gp: 0, sp: 0, cp: 0 },
-    stats: character.stats || {},
-    hit_points: character.hitPoints || { current: 8, maximum: 8, temporary: 0 },
-    proficiencies: character.proficiencies || [],
-    
-    // Текстовые поля
-    background: character.background || null,
-    backstory: character.backstory || null,
-    alignment: character.alignment || null,
-    gender: character.gender || null
+    spell_slots: character.spellSlots ?? null,
+    equipment: character.equipment ?? [],
+    money: character.money ?? { gp: 0, sp: 0, cp: 0, ep: 0, pp: 0 },
+    proficiencies: character.proficiencies ?? null,
+    skills: character.skills ?? null,
+    saving_throws: character.savingThrows ?? null,
+    features: character.features ?? null,
+    feats: character.feats ?? null,
+    race_features: character.raceFeatures ?? null,
+    class_features: character.classFeatures ?? null,
+    background_features: character.backgroundFeatures ?? null,
+    resources: character.resources ?? null,
+    sorcery_points: character.sorceryPoints ?? null,
+    hit_dice: character.hitDice ?? null,
+    death_saves: character.deathSaves ?? null,
+
+    // ── Text / narrative fields ───────────────────────────────────────────────
+    backstory: character.backstory ?? null,
+    appearance: character.appearance ?? null,
+    personality_traits: character.personalityTraits ?? null,
+    ideals: character.ideals ?? null,
+    bonds: character.bonds ?? null,
+    flaws: character.flaws ?? null,
+    notes: character.notes ?? null,
+    image: character.image ?? null,
   };
 }
 
 /**
- * Конвертирует данные из БД в объект Character
+ * Converts a raw Supabase DB row into a typed Character object.
+ * Maps all snake_case columns back to camelCase Character fields.
  */
 function convertFromDB(dbData: any): Character {
   return {
@@ -234,47 +254,77 @@ function convertFromDB(dbData: any): Character {
     subrace: dbData.subrace,
     class: dbData.class,
     subclass: dbData.subclass,
+    background: dbData.background,
+    alignment: dbData.alignment,
+    gender: dbData.gender,
     level: dbData.level,
     experience: dbData.experience,
-    
-    // Основные характеристики
+
+    // Ability scores
     strength: dbData.strength,
     dexterity: dbData.dexterity,
     constitution: dbData.constitution,
     intelligence: dbData.intelligence,
     wisdom: dbData.wisdom,
     charisma: dbData.charisma,
-    
-    // Здоровье и защита
+
+    // Derived
     maxHp: dbData.max_hp,
     currentHp: dbData.current_hp,
+    tempHp: dbData.temp_hp ?? 0,
+    temporaryHp: dbData.temp_hp ?? 0,
     armorClass: dbData.armor_class,
     speed: dbData.speed,
     proficiencyBonus: dbData.proficiency_bonus,
-    
-    // JSON поля
-    spells: dbData.spells || [],
-    equipment: dbData.equipment || [],
-    money: dbData.money || { gp: 0, sp: 0, cp: 0 },
-    stats: dbData.stats || {
+    initiative: dbData.initiative ?? undefined,
+
+    // Rebuild stats object from flat columns if not stored separately
+    stats: dbData.stats ?? {
       strength: dbData.strength,
       dexterity: dbData.dexterity,
       constitution: dbData.constitution,
       intelligence: dbData.intelligence,
       wisdom: dbData.wisdom,
-      charisma: dbData.charisma
+      charisma: dbData.charisma,
     },
-    hitPoints: dbData.hit_points || { current: dbData.current_hp, maximum: dbData.max_hp, temporary: 0 },
-    proficiencies: dbData.proficiencies || [],
-    
-    // Текстовые поля
-    background: dbData.background,
+
+    // HP object
+    hitPoints: dbData.hit_points ?? {
+      current: dbData.current_hp,
+      maximum: dbData.max_hp,
+      temporary: dbData.temp_hp ?? 0,
+    },
+
+    // JSONB fields
+    spells: dbData.spells ?? [],
+    spellSlots: dbData.spell_slots ?? undefined,
+    equipment: dbData.equipment ?? [],
+    money: dbData.money ?? { gp: 0, sp: 0, cp: 0, ep: 0, pp: 0 },
+    proficiencies: dbData.proficiencies ?? undefined,
+    skills: dbData.skills ?? undefined,
+    savingThrows: dbData.saving_throws ?? undefined,
+    features: dbData.features ?? undefined,
+    feats: dbData.feats ?? undefined,
+    raceFeatures: dbData.race_features ?? undefined,
+    classFeatures: dbData.class_features ?? undefined,
+    backgroundFeatures: dbData.background_features ?? undefined,
+    resources: dbData.resources ?? undefined,
+    sorceryPoints: dbData.sorcery_points ?? undefined,
+    hitDice: dbData.hit_dice ?? undefined,
+    deathSaves: dbData.death_saves ?? undefined,
+
+    // Text / narrative
     backstory: dbData.backstory,
-    alignment: dbData.alignment,
-    gender: dbData.gender,
-    
-    // Метаданные
+    appearance: dbData.appearance,
+    personalityTraits: dbData.personality_traits,
+    ideals: dbData.ideals,
+    bonds: dbData.bonds,
+    flaws: dbData.flaws,
+    notes: dbData.notes,
+    image: dbData.image,
+
+    // Timestamps
     createdAt: dbData.created_at,
-    updatedAt: dbData.updated_at
+    updatedAt: dbData.updated_at,
   };
 }
