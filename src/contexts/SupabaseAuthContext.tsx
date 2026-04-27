@@ -93,50 +93,48 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   useEffect(() => {
     let mounted = true;
     
+    console.log('🔍 AuthProvider mount. URL:', window.location.href);
+    
     // 1. СНАЧАЛА подписываемся на события
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
-        console.log('🔐 onAuthStateChange:', event, 'сессия:', !!session, 'user:', session?.user?.email);
+        console.log('🔐 onAuthStateChange event:', event, 'session:', !!session, 'user:', session?.user?.email);
         if (!mounted) return;
         
-        // Сохраняем сессию и пользователя
         setSession(session);
         const mappedUser = session?.user ? mapSupabaseUser(session.user) : null;
-        
+        setUser(mappedUser);
+
         if (mappedUser) {
-          console.log(`✅ ${event}: установка пользователя`, mappedUser.email);
-          setUser(mappedUser);
+          console.log(`✅ ${event}: User set`, mappedUser.email);
           SentryService.setUser({
             id: mappedUser.id,
             email: mappedUser.email,
             username: mappedUser.displayName,
           });
         } else {
-          console.log(`👋 ${event}: очистка пользователя`);
-          setUser(null);
+          console.log(`👋 ${event}: User cleared`);
           SentryService.setUser(null);
         }
         
-        // Снимаем loading после первого события
-        if (event === 'INITIAL_SESSION') {
+        // Stop loading on any successful session or after initial check
+        if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN' || event === 'SIGNED_OUT') {
           setLoading(false);
         }
       }
     );
     
-    // 2. ЗАТЕМ проверяем существующую сессию
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    // 2. ЗАТЕМ проверяем существующую сессию (на всякий случай)
+    supabase.auth.getSession().then(({ data: { session }, error }) => {
       if (!mounted) return;
-      console.log('📦 getSession результат:', !!session, session?.user?.email);
-      setSession(session);
-      const mappedUser = session?.user ? mapSupabaseUser(session.user) : null;
-      setUser(mappedUser);
-      if (mappedUser) {
-        SentryService.setUser({
-          id: mappedUser.id,
-          email: mappedUser.email,
-          username: mappedUser.displayName,
-        });
+      if (error) console.error('❌ getSession error:', error);
+      
+      console.log('📦 getSession result:', !!session, session?.user?.email);
+      if (session) {
+        setSession(session);
+        const mappedUser = mapSupabaseUser(session.user);
+        setUser(mappedUser);
+        setLoading(false);
       }
     });
 
