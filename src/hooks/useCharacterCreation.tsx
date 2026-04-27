@@ -16,18 +16,21 @@ export interface UseCharacterCreationReturn {
   convertToCharacter: (data: any) => Character;
   nextStep: () => void;
   prevStep: () => void;
+  clearDraft: () => void;
 }
 
-export const useCharacterCreation = (): UseCharacterCreationReturn => {
+export const useCharacterCreation = (skipDraftRestore = false): UseCharacterCreationReturn => {
   const { saveCharacter } = useCharacter();
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(0);
   const [character, setCharacter] = useState<Character>(createDefaultCharacter());
 
-  // При монтировании компонента инициализируем персонажа
+  const DRAFT_KEY = 'character_creation_progress';
+
+  // Restore draft on mount — skipped when in edit mode (caller passes skipDraftRestore=true)
   useEffect(() => {
-    // Проверяем, есть ли сохраненный процесс создания
-    const savedCharacterCreation = localStorage.getItem('character_creation_progress');
+    if (skipDraftRestore) return;
+    const savedCharacterCreation = localStorage.getItem(DRAFT_KEY);
     if (savedCharacterCreation) {
       try {
         const parsedData = JSON.parse(savedCharacterCreation);
@@ -35,24 +38,24 @@ export const useCharacterCreation = (): UseCharacterCreationReturn => {
         setCurrentStep(parsedData.step);
       } catch (error) {
         console.error('Ошибка при загрузке процесса создания:', error);
-        // В случае ошибки используем дефолтные значения
         setCharacter(createDefaultCharacter());
       }
     }
-  }, []);
+  }, [skipDraftRestore]);
 
-  // Сохраняем прогресс создания персонажа при каждом изменении
+  // Persist draft on every change — also skipped in edit mode to avoid overwriting
   useEffect(() => {
-    // Сохраняем данные в localStorage
+    if (skipDraftRestore) return; // edit mode: never overwrite with stale draft
     try {
-      localStorage.setItem('character_creation_progress', JSON.stringify({
-        character,
-        step: currentStep
-      }));
+      localStorage.setItem(DRAFT_KEY, JSON.stringify({ character, step: currentStep }));
     } catch (error) {
       console.error('Ошибка при сохранении прогресса:', error);
     }
-  }, [character, currentStep]);
+  }, [character, currentStep, skipDraftRestore]);
+
+  const clearDraft = () => {
+    try { localStorage.removeItem(DRAFT_KEY); } catch { /* ignore */ }
+  };
 
   // Проверяем, является ли выбранный класс магическим
   const isMagicClass = !!character.class && ['Волшебник', 'Колдун', 'Чародей', 'Бард', 'Друид', 'Жрец', 'Паладин', 'Следопыт'].includes(character.class);
@@ -62,22 +65,15 @@ export const useCharacterCreation = (): UseCharacterCreationReturn => {
     setCharacter(prev => ({ ...prev, ...updates }));
   };
 
-  // Функция для создания персонажа
+  // Create character via context, then clear draft
   const createCharacter = async () => {
     try {
-      // Убедимся, что у персонажа есть имя
       if (!character.name || character.name.trim() === '') {
         alert('Пожалуйста, укажите имя персонажа');
         return;
       }
-
-      // Сохраняем персонажа
       const savedCharacter = await saveCharacter(character);
-
-      // Очищаем данные о процессе создания
-      localStorage.removeItem('character_creation_progress');
-
-      // Переходим на страницу просмотра персонажа
+      clearDraft();
       if (savedCharacter && savedCharacter.id) {
         navigate(`/characters/${savedCharacter.id}`);
       } else {
@@ -162,6 +158,7 @@ export const useCharacterCreation = (): UseCharacterCreationReturn => {
     isMagicClass,
     convertToCharacter,
     nextStep,
-    prevStep
+    prevStep,
+    clearDraft,
   };
 };

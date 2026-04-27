@@ -24,51 +24,28 @@ const CharacterViewPage = () => {
   const [error, setError] = useState<string | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
-  // Функция загрузки персонажа
+  // Load character — Supabase only
   const loadCharacter = async () => {
     if (!id) return;
-    
+
     setLoading(true);
     setError(null);
-    
+
     try {
-      console.log('CharacterViewPage: Загрузка персонажа по ID:', id);
-      
-      // Пытаемся загрузить персонажа через контекст
       const loadedCharacter = await getCharacterById(id);
-      
+
       if (loadedCharacter) {
-        console.log('CharacterViewPage: Персонаж найден:', loadedCharacter.name);
-        // Преобразуем загруженные данные через конвертер
         const convertedCharacter = convertToCharacter(loadedCharacter);
         setCharacter(convertedCharacter);
         setProcessedCharacter(convertedCharacter);
-        
-        // Сохраняем последнего загруженного персонажа
-        localStorage.setItem('last-selected-character', id);
       } else {
-        console.log('CharacterViewPage: Персонаж с ID не найден:', id);
-        
-        // Проверяем локальное хранилище
-        const storedCharacter = localStorage.getItem(`character_${id}`);
-        
-        if (storedCharacter) {
-          console.log('CharacterViewPage: Персонаж найден в localStorage');
-          const localCharacter = JSON.parse(storedCharacter);
-          const convertedCharacter = convertToCharacter(localCharacter);
-          setCharacter(convertedCharacter);
-          setProcessedCharacter(convertedCharacter);
-          localStorage.setItem('last-selected-character', id);
-        } else {
-          console.error('CharacterViewPage: Персонаж не найден нигде');
-          setError(`Персонаж с ID ${id} не найден.`);
-          toast.error(`Персонаж с ID ${id} не найден.`);
-        }
+        setError(`Персонаж с ID ${id} не найден.`);
+        toast.error(`Персонаж с ID ${id} не найден.`);
       }
     } catch (err) {
       console.error('Ошибка при загрузке персонажа:', err);
-      setError("Ошибка при загрузке персонажа.");
-      toast.error("Ошибка при загрузке персонажа.");
+      setError('Ошибка при загрузке персонажа.');
+      toast.error('Ошибка при загрузке персонажа.');
     } finally {
       setLoading(false);
     }
@@ -79,23 +56,12 @@ const CharacterViewPage = () => {
     loadCharacter();
   }, [id]);
 
-  // Обработчик обновления персонажа
+  // In-memory update only — durable save is triggered via the sheet's own save action
   const handleUpdateCharacter = (updates: Partial<Character>) => {
     if (!processedCharacter) return;
-    
     const updatedCharacter = { ...processedCharacter, ...updates };
-    
-    // Обновляем состояние
     setProcessedCharacter(updatedCharacter);
     setCharacter(updatedCharacter);
-    
-    // Сохраняем обновленные данные в localStorage как резервную копию
-    if (updatedCharacter.id) {
-      localStorage.setItem(`character_${updatedCharacter.id}`, JSON.stringify(updatedCharacter));
-      localStorage.setItem('last-selected-character', updatedCharacter.id);
-    }
-    
-    toast.success('Изменения сохранены локально');
   };
 
   // Функция повторной загрузки персонажа

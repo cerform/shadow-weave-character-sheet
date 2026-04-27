@@ -129,35 +129,49 @@ export default function CreateSessionPage() {
     }
     setCreating(true);
     try {
-      // 1. Create session record
+      // 1. Create session record in Supabase
       const session = await sessionService.createSession(config.name, config.description || undefined);
 
-      // 2. If AI DM — initialize campaign via Claude 3.5 Sonnet
       if (config.dmType === 'ai') {
-        toast({ title: '🧠 AI генерирует мир...', description: 'Создаём кампанию специально для вашей партии' });
+        // 2a. Show toast and navigate immediately — AI init runs in background
+        toast({
+          title: '🧠 AI генерирует мир...',
+          description: 'Открываем сессию — мир появится через несколько секунд',
+        });
 
-        const aiResult = await AIDMService.initCampaign({
+        // Navigate first, then AI runs in the background
+        navigate(`/dm-session/${session.id}`);
+
+        AIDMService.initCampaign({
           campaignName: config.name,
           sessionId: session.id,
           aiPersonality: config.aiPersonality,
           party: config.party,
-        });
-
-        toast({
-          title: '✨ Кампания создана!',
-          description: `Злодей: ${aiResult.mainVillain.name} • Локация: ${aiResult.startingLocation.name}`,
+        }).then((aiResult) => {
+          toast({
+            title: '✨ Мир готов!',
+            description: `Злодей: ${aiResult.mainVillain.name} • Локация: ${aiResult.startingLocation.name}`,
+          });
+        }).catch((err: any) => {
+          console.error('[CreateSession] AI init failed:', err);
+          toast({
+            title: '⚠️ AI-генерация не удалась',
+            description: 'Сессия создана, вы сможете настроить кампанию позже',
+            variant: 'destructive',
+          });
         });
       } else {
-        toast({ title: 'Сессия создана!', description: `Код: ${session.session_code}` });
+        // 2b. Human DM — navigate and done
+        toast({ title: '✅ Сессия создана!', description: `Код: ${session.session_code}` });
+        navigate(`/dm-session/${session.id}`);
       }
-
-      navigate(`/dm-session/${session.id}`);
     } catch (err: any) {
       toast({ title: 'Ошибка', description: err.message, variant: 'destructive' });
     } finally {
       setCreating(false);
     }
   };
+
 
   // ─── Steps ────────────────────────────────────────────────────────────────
   const steps = [

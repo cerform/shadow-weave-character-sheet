@@ -23,15 +23,16 @@ const CharacterCreationPage: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { toast } = useToast();
-  const { character, updateCharacter: updateLocal, isMagicClass, convertToCharacter, currentStep, setCurrentStep, nextStep, prevStep } = useCharacterCreation();
+
+  // Detect edit mode before hook call so we can pass skipDraftRestore
+  const editId = searchParams.get('edit');
+  const isEditMode = Boolean(editId);
+
+  const { character, updateCharacter: updateLocal, isMagicClass, convertToCharacter, currentStep, setCurrentStep, nextStep, prevStep, clearDraft } = useCharacterCreation(isEditMode);
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingEdit, setIsLoadingEdit] = useState(false);
   const [abilitiesMethod, setAbilitiesMethod] = useState<AbilityRollMethod>('standard');
 
-  // ── Edit mode ────────────────────────────────────────────────────────────
-  // Detect ?edit=<id> query param. When present, load existing character.
-  const editId = searchParams.get('edit');
-  const isEditMode = Boolean(editId);
 
   useEffect(() => {
     if (!editId) return;
@@ -142,8 +143,8 @@ const CharacterCreationPage: React.FC = () => {
         // ── Create mode: INSERT new record ─────────────────────────────────
         const savedCharacter = await saveCharacter(finalCharacter);
         if (savedCharacter && savedCharacter.id) {
-          // Clear creation progress from localStorage once saved to Supabase
-          localStorage.removeItem('character_creation_progress');
+          // Draft is cleared by clearDraft() after successful save
+          clearDraft();
           toast({
             title: "Персонаж создан!",
             description: `${savedCharacter.name} успешно сохранён.`,
