@@ -24,6 +24,7 @@ interface PartyMember {
 interface SessionConfig {
   name: string;
   description: string;
+  worldSeed: string;       // Optional lore/setting seed for AI generation
   dmType: 'human' | 'ai';
   party: PartyMember[];
   aiPersonality: 'epic' | 'merciless' | 'rules' | 'dark';
@@ -81,6 +82,7 @@ export default function CreateSessionPage() {
   const [config, setConfig] = useState<SessionConfig>({
     name: '',
     description: '',
+    worldSeed: '',
     dmType: 'human',
     party: [],
     aiPersonality: 'epic',
@@ -147,6 +149,7 @@ export default function CreateSessionPage() {
           sessionId: session.id,
           aiPersonality: config.aiPersonality,
           party: config.party,
+          worldSeed: config.worldSeed || undefined,
         }).then((aiResult) => {
           toast({
             title: '✨ Мир готов!',
@@ -196,9 +199,28 @@ export default function CreateSessionPage() {
               value={config.description}
               onChange={e => setConfig(c => ({ ...c, description: e.target.value }))}
               placeholder="Краткая синопсис кампании для игроков..."
-              rows={3}
+              rows={2}
               className="w-full bg-black/40 border border-slate-700 rounded-xl px-4 py-3 text-white placeholder:text-slate-600 focus:outline-none focus:border-amber-500/60 transition resize-none"
             />
+          </div>
+
+          {/* World Seed for AI */}
+          <div className="space-y-2">
+            <label className="text-xs uppercase tracking-widest font-bold flex items-center gap-2 text-purple-300/80">
+              <span>🌍 Лор / Сеттинг для ИИ</span>
+              <span className="bg-purple-500/20 border border-purple-500/30 text-purple-300 rounded-md px-1.5 py-0.5 text-[9px] normal-case tracking-normal font-medium">необязательно</span>
+            </label>
+            <textarea
+              value={config.worldSeed}
+              onChange={e => setConfig(c => ({ ...c, worldSeed: e.target.value }))}
+              placeholder={'Опишите мир, атмосферу, жанр, особую магию, важных NPC...\nПример: «Тёмное готическое фэнтези с элементами ужаса. Проклятая страна под властью вампира-тирана. Магия запрещена. Крестьяне живут в страхе.»\n\nЕсли оставить пустым — ИИ придумает всё сам из названия кампании.'}
+              rows={4}
+              className="w-full bg-black/40 border border-purple-700/30 rounded-xl px-4 py-3 text-white text-sm placeholder:text-slate-600/70 focus:outline-none focus:border-purple-500/50 transition resize-none"
+            />
+            <p className="text-xs text-purple-400/60 flex items-center gap-1">
+              <span>✨</span>
+              <span>Чем подробнее — тем точнее ИИ создаст ваш мир</span>
+            </p>
           </div>
         </div>
       )

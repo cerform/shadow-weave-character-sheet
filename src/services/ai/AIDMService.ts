@@ -24,6 +24,7 @@ export interface CampaignInitParams {
   sessionId: string;
   aiPersonality: AIPersonality;
   party: PartyMember[];
+  worldSeed?: string;      // Optional lore/setting seed from the DM
 }
 
 export interface CampaignInitResult {
@@ -89,6 +90,7 @@ export class AIDMService {
         campaignName: params.campaignName,
         aiPersonality: params.aiPersonality,
         party: params.party,
+        worldSeed: params.worldSeed || null,
       },
     });
 

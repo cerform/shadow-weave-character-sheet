@@ -46,12 +46,22 @@ import {
   UserPlus
 } from "lucide-react";
 
-// Define the Player type since it doesn't exist in session.ts
-interface Player {
+interface SessionMessage {
   id: string;
-  name: string;
-  character?: any;
-  connected: boolean;
+  sender_name: string;
+  content: string;
+  message_type: string;
+  created_at: string;
+  user_id: string;
+}
+
+interface SessionPlayer {
+  id: string;
+  player_name: string;
+  character_id?: string;
+  is_online: boolean;
+  joined_at: string;
+  user_id: string;
 }
 
 const DMSessionPage = () => {
@@ -59,13 +69,11 @@ const DMSessionPage = () => {
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
   const [currentSession, setCurrentSession] = useState<any | null>(null);
-  const [players, setPlayers] = useState<any[]>([]);
+  const [players, setPlayers] = useState<SessionPlayer[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isAddingPlayer, setIsAddingPlayer] = useState(false);
-  const [newPlayerName, setNewPlayerName] = useState('');
-  const [isEndingSession, setIsEndingSession] = useState(false);
+  const [isSending, setIsSending] = useState(false);
   const [message, setMessage] = useState('');
-  const [messages, setMessages] = useState<any[]>([]);
+  const [messages, setMessages] = useState<SessionMessage[]>([]);
   const { toast } = useToast();
   const { theme, setTheme } = useTheme();
 
@@ -77,13 +85,9 @@ const DMSessionPage = () => {
     }
     
     const loadSession = async () => {
-      if (!sessionId) {
-        navigate('/dm');
-        return;
-      }
+      if (!sessionId) { navigate('/dm'); return; }
 
       try {
-        // Загружаем сессию
         const { data: session, error: sessionError } = await supabase
           .from('game_sessions')
           .select('*')
@@ -91,229 +95,163 @@ const DMSessionPage = () => {
           .single();
 
         if (sessionError || !session) {
-          toast({
-            title: "Сессия не найдена",
-            variant: "destructive"
-          });
+          toast({ title: 'Сессия не найдена', variant: 'destructive' });
           navigate('/dm');
           return;
         }
 
-        // Проверяем права доступа
+        // ── Ownership guard ──────────────────────────────────────────────
         if (session.dm_id !== user?.id) {
-          toast({
-            title: "Доступ запрещен",
-            description: "У вас нет прав для просмотра этой сессии",
-            variant: "destructive"
-          });
+          toast({ title: 'Доступ запрещен', description: 'У вас нет прав для просмотра этой сессии', variant: 'destructive' });
           navigate('/dm');
           return;
         }
 
         setCurrentSession(session);
 
-        // Загружаем игроков
-        console.log('🔍 Загружаем игроков для сессии:', sessionId);
+        // Load players
         const { data: sessionPlayers, error: playersError } = await supabase
           .from('session_players')
           .select('*')
-          .eq('session_id', sessionId);
+          .eq('session_id', sessionId)
+          .order('joined_at');
 
-        console.log('📊 Результат загрузки игроков:', { sessionPlayers, playersError });
+        if (!playersError) setPlayers((sessionPlayers ?? []) as SessionPlayer[]);
 
-        if (playersError) {
-          console.error('❌ Ошибка загрузки игроков:', playersError);
-        } else {
-          console.log(`✅ Загружено игроков: ${sessionPlayers?.length || 0}`);
-          setPlayers(sessionPlayers || []);
-        }
+        // Load last 50 chat messages
+        const { data: chatMessages } = await supabase
+          .from('session_messages')
+          .select('*')
+          .eq('session_id', sessionId)
+          .order('created_at', { ascending: true })
+          .limit(50);
+
+        if (chatMessages) setMessages(chatMessages as SessionMessage[]);
 
       } catch (error) {
         console.error('Error loading session:', error);
-        toast({
-          title: "Ошибка загрузки",
-          description: "Не удалось загрузить сессию",
-          variant: "destructive"
-        });
+        toast({ title: 'Ошибка загрузки', description: 'Не удалось загрузить сессию', variant: 'destructive' });
         navigate('/dm');
       } finally {
         setLoading(false);
       }
     };
-    
+
     loadSession();
   }, [isAuthenticated, navigate, sessionId, user?.id, toast]);
 
-  // Real-time синхронизация участников и карт
+  // ── Realtime subscriptions ──────────────────────────────────────────────
   useEffect(() => {
     if (!sessionId || !user?.id) return;
 
-    console.log('🔄 Подписка на real-time изменения для сессии:', sessionId);
-
-    // Обновляем статус "онлайн" для DM
-    const updateDMStatus = async () => {
-      try {
-        const { error } = await supabase
-          .from('game_sessions')
-          .update({ updated_at: new Date().toISOString() })
-          .eq('id', sessionId)
-          .eq('dm_id', user.id);
-
-        if (!error) {
-          console.log('✅ DM статус обновлен');
-        }
-      } catch (error) {
-        console.error('Ошибка обновления статуса DM:', error);
-      }
-    };
+    // Heartbeat for DM presence
+    const updateDMStatus = () =>
+      supabase.from('game_sessions').update({ updated_at: new Date().toISOString() })
+        .eq('id', sessionId).eq('dm_id', user.id);
 
     updateDMStatus();
-
-    // Подписка на изменения игроков
-    const playersChannel = supabase
-      .channel(`session-players-${sessionId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'session_players',
-          filter: `session_id=eq.${sessionId}`
-        },
-        async (payload) => {
-          console.log('👥 Изменение в session_players:', payload);
-          
-          // Перезагружаем список игроков
-          const { data: sessionPlayers } = await supabase
-            .from('session_players')
-            .select('*')
-            .eq('session_id', sessionId);
-
-          if (sessionPlayers) {
-            setPlayers(sessionPlayers);
-            toast({
-              title: "Обновление участников",
-              description: `Список участников обновлен (${sessionPlayers.length} игроков)`,
-            });
-          }
-        }
-      )
-      .subscribe();
-
-    // Подписка на изменения сессии
-    const sessionChannel = supabase
-      .channel(`game-session-${sessionId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'game_sessions',
-          filter: `id=eq.${sessionId}`
-        },
-        (payload) => {
-          console.log('🎮 Обновление сессии:', payload);
-          setCurrentSession(payload.new);
-          toast({
-            title: "Сессия обновлена",
-            description: "Настройки сессии изменены",
-          });
-        }
-      )
-      .subscribe();
-
-    // Heartbeat для обновления статуса каждые 30 секунд
     const heartbeatInterval = setInterval(updateDMStatus, 30000);
 
+    // Players channel
+    const playersChannel = supabase
+      .channel(`dm-session-players-${sessionId}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'session_players', filter: `session_id=eq.${sessionId}` },
+        async () => {
+          const { data } = await supabase.from('session_players').select('*').eq('session_id', sessionId).order('joined_at');
+          if (data) setPlayers(data as SessionPlayer[]);
+        })
+      .subscribe();
+
+    // Chat messages channel — DM sees all incoming messages in realtime
+    const messagesChannel = supabase
+      .channel(`dm-session-messages-${sessionId}`)
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'session_messages', filter: `session_id=eq.${sessionId}` },
+        (payload) => {
+          setMessages(prev => [...prev, payload.new as SessionMessage].slice(-100));
+        })
+      .subscribe();
+
+    // Session update channel
+    const sessionChannel = supabase
+      .channel(`dm-game-session-${sessionId}`)
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'game_sessions', filter: `id=eq.${sessionId}` },
+        (payload) => { setCurrentSession(payload.new); })
+      .subscribe();
+
     return () => {
-      console.log('🔌 Отписка от real-time каналов');
       clearInterval(heartbeatInterval);
       supabase.removeChannel(playersChannel);
+      supabase.removeChannel(messagesChannel);
       supabase.removeChannel(sessionChannel);
     };
-  }, [sessionId, user?.id, toast]);
+  }, [sessionId, user?.id]);
 
   const handleEndSession = async () => {
     if (!sessionId) return;
-
+    // ── Ownership guard ──────────────────────────────────────────────────
+    if (currentSession?.dm_id !== user?.id) {
+      toast({ title: 'Доступ запрещен', variant: 'destructive' });
+      return;
+    }
     try {
       const { error } = await supabase
         .from('game_sessions')
         .update({ is_active: false, ended_at: new Date().toISOString() })
-        .eq('id', sessionId);
-
+        .eq('id', sessionId)
+        .eq('dm_id', user!.id); // double-check ownership at DB level
       if (error) throw error;
-
       navigate('/dm');
-      toast({
-        title: "Сессия успешно завершена",
-      });
+      toast({ title: 'Сессия успешно завершена' });
     } catch (error) {
       console.error('Error ending session:', error);
-      toast({
-        title: "Ошибка",
-        description: "Не удалось завершить сессию",
-        variant: "destructive"
-      });
+      toast({ title: 'Ошибка', description: 'Не удалось завершить сессию', variant: 'destructive' });
     }
   };
 
   const handleRemovePlayer = async (playerId: string) => {
-    try {
-      const { error } = await supabase
-        .from('session_players')
-        .delete()
-        .eq('id', playerId);
-
-      if (error) throw error;
-
-      toast({
-        title: "Игрок удален",
-        description: "Игрок успешно удален из сессии",
-      });
-    } catch (error) {
-      console.error('Error removing player:', error);
-      toast({
-        title: "Ошибка",
-        description: "Не удалось удалить игрока",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const handleAddPlayer = () => {
-    if (!newPlayerName.trim()) {
-      toast({
-        title: "Ошибка",
-        description: "Введите имя игрока",
-        variant: "destructive"
-      });
+    // ── Ownership guard ──────────────────────────────────────────────────
+    if (currentSession?.dm_id !== user?.id) {
+      toast({ title: 'Доступ запрещен', variant: 'destructive' });
       return;
     }
-    
-    setNewPlayerName('');
-    setIsAddingPlayer(false);
-    toast({
-      title: "Успех",
-      description: `Игрок ${newPlayerName} добавлен в сессию`
-    });
+    try {
+      const { error } = await supabase.from('session_players').delete().eq('id', playerId);
+      if (error) throw error;
+      toast({ title: 'Игрок удален', description: 'Игрок успешно удален из сессии' });
+    } catch (error) {
+      console.error('Error removing player:', error);
+      toast({ title: 'Ошибка', description: 'Не удалось удалить игрока', variant: 'destructive' });
+    }
   };
 
-  const handleSendMessage = () => {
-    if (!message.trim()) return;
-    
-    const newMessage = {
-      id: Date.now().toString(),
-      sender: user?.user_metadata?.full_name || 'DM',
-      content: message,
-      timestamp: new Date().toISOString(),
-      isDM: true
-    };
-    
-    setMessages(prev => [...prev, newMessage]);
+  // Copy session invite link to clipboard — the proper way to invite players
+  const handleCopyInviteLink = () => {
+    if (!currentSession?.session_code) return;
+    const url = `${window.location.origin}/join?code=${currentSession.session_code}`;
+    navigator.clipboard.writeText(url);
+    toast({ title: 'Ссылка скопирована', description: url });
+  };
+
+  const handleSendMessage = async () => {
+    if (!message.trim() || !sessionId || !user) return;
+    const content = message.trim();
     setMessage('');
-    
-    // В реальном приложении здесь отправка через сокет
+    setIsSending(true);
+    try {
+      const { error } = await supabase.from('session_messages').insert({
+        session_id: sessionId,
+        user_id: user.id,
+        sender_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'DM',
+        message_type: 'chat',
+        content,
+      });
+      if (error) throw error;
+    } catch (err) {
+      console.error('Error sending message:', err);
+      toast({ title: 'Ошибка отправки', variant: 'destructive' });
+    } finally {
+      setIsSending(false);
+    }
   };
 
   if (loading) {

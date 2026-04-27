@@ -481,9 +481,44 @@ export default function VTTBattlePage() {
           onClose={() => setRadialMenu(m => ({ ...m, visible: false }))}
           position={{ x: radialMenu.x, y: radialMenu.y }}
           tokenName={radialMenu.tokenName}
-          onAction={(action) => {
-            console.log('Token action:', action, radialMenu.tokenId);
+          onAction={async (action) => {
+            const tokenId = radialMenu.tokenId;
             setRadialMenu(m => ({ ...m, visible: false }));
+
+            if (!tokenId || !sessionId) return;
+
+            // Permission: DM can do all; player can only act on their own token
+            if (!isDM) {
+              const token = vttState.tokens?.find((t: any) => t.id === tokenId);
+              if (!token || token.character_id !== user?.id) return;
+            }
+
+            if (action === 'delete') {
+              if (!isDM) return; // only DM can delete
+              await supabase.from('battle_tokens').delete().eq('id', tokenId);
+            } else if (action === 'hide') {
+              if (!isDM) return;
+              await supabase.from('battle_tokens')
+                .update({ is_hidden_from_players: true })
+                .eq('id', tokenId);
+            } else if (action === 'show') {
+              if (!isDM) return;
+              await supabase.from('battle_tokens')
+                .update({ is_hidden_from_players: false })
+                .eq('id', tokenId);
+            } else if (action === 'ping') {
+              // Broadcast a 'ping' system message so all players see it
+              if (sessionId && user) {
+                await supabase.from('session_messages').insert({
+                  session_id: sessionId,
+                  user_id: user.id,
+                  sender_name: 'System',
+                  message_type: 'system',
+                  content: `📍 ${radialMenu.tokenName} отмечен на карте`,
+                });
+              }
+            }
+            // HP change actions are handled by the VTT engine's own HP panel
           }}
         />
       </div>

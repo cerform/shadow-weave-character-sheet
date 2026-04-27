@@ -1,4 +1,9 @@
-
+/**
+ * @deprecated Phase 4 — SessionContext is a legacy mock with ZERO active consumers.
+ * All production session CRUD must use src/services/sessionService.ts + Supabase.
+ * This file is retained only to prevent import errors in any residual SessionProvider
+ * wrapper. It will be removed in Phase 9.
+ */
 import React, { createContext, useContext, useState, ReactNode, useEffect, useCallback } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 
@@ -38,23 +43,8 @@ export const SessionProvider = ({ children }: { children: ReactNode }) => {
   const [initialized, setInitialized] = useState(false);
   const { currentUser } = useAuth();
 
-  // Загрузка сессий при инициализации
-  useEffect(() => {
-    if (!initialized) {
-      const savedSessions = localStorage.getItem('dnd-sessions');
-      if (savedSessions) {
-        setSessions(JSON.parse(savedSessions));
-      }
-      setInitialized(true);
-    }
-  }, [initialized]);
-
-  // Сохранение сессий при изменении
-  useEffect(() => {
-    if (initialized && sessions.length > 0) {
-      localStorage.setItem('dnd-sessions', JSON.stringify(sessions));
-    }
-  }, [sessions, initialized]);
+  // Legacy context is in-memory only — no localStorage persistence
+  useEffect(() => { setInitialized(true); }, []);
 
   // Generate a random 6 character code
   const generateSessionCode = (): string => {
@@ -72,9 +62,8 @@ export const SessionProvider = ({ children }: { children: ReactNode }) => {
     if (!currentUser) {
       throw new Error("Пользователь не авторизован");
     }
-    
     const newSession: DMSession = {
-      id: Date.now().toString(),
+      id: crypto.randomUUID(),
       name,
       code: generateSessionCode(),
       players: [],
@@ -93,14 +82,11 @@ export const SessionProvider = ({ children }: { children: ReactNode }) => {
   // Join an existing session as a player
   const joinSession = useCallback((code: string, player: { name: string, character: any }): boolean => {
     const sessionIndex = sessions.findIndex(s => s.code === code);
-    
-    if (sessionIndex === -1) {
-      return false;
-    }
-    
+    if (sessionIndex === -1) return false;
+
     const session = sessions[sessionIndex];
     const newPlayer: Player = {
-      id: Date.now().toString(),
+      id: crypto.randomUUID(),
       name: player.name,
       character: player.character,
       connected: true

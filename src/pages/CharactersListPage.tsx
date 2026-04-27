@@ -8,6 +8,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { getUserCharacters } from '@/services/supabaseCharacterService';
 import { useCharacterOperations } from '@/hooks/useCharacterOperations';
 import { useToast } from '@/hooks/use-toast';
+import { Character } from '@/types/character';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -26,7 +27,7 @@ const CharactersListPage: React.FC = () => {
   const { user } = useAuth();
   const { deleteCharacter } = useCharacterOperations();
   const { toast } = useToast();
-  const [characters, setCharacters] = useState<any[]>([]);
+  const [characters, setCharacters] = useState<Character[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<string | null>(null);

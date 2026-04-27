@@ -1,3 +1,19 @@
+/**
+ * @deprecated Phase 3 — DO NOT USE for character persistence.
+ *
+ * All character CRUD (create, read, update, delete) must go through:
+ *   src/services/supabaseCharacterService.ts
+ *
+ * This class is retained to prevent import errors in any unknown consumers
+ * but must not be called from any active code path. It will be removed in Phase 9.
+ *
+ * Allowed localStorage keys (not managed here):
+ *   'character_creation_progress'  — wizard draft (useCharacterCreation.tsx)
+ *   'character-filter-sets'        — UI preference (useCharacterFilters.ts)
+ *   'player-active-session'        — session recovery (PlayerSessionPage.tsx)
+ *   'active-session'               — session tracker (PlayerDashboardPage.tsx)
+ *   'hook_violations'              — debug tool (HookErrorsService.ts)
+ */
 import { Character } from '@/types/character';
 import { normalizeCharacterAbilities } from '@/utils/characterNormalizer';
 
@@ -5,6 +21,7 @@ import { normalizeCharacterAbilities } from '@/utils/characterNormalizer';
 export class LocalCharacterStore {
   private static STORAGE_KEY = 'dnd-characters';
   private static CHARACTER_PREFIX = 'character_';
+
 
   // Сохранить персонажа в localStorage
   static save(character: Character): Character {

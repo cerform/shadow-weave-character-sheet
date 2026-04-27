@@ -1,5 +1,4 @@
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/use-auth';
 
 export interface GameSession {
   id: string;
@@ -149,32 +148,37 @@ class SessionService {
     return data;
   }
 
-  // Получение сессий пользователя
+  // Get all sessions where the current user is DM or a joined player.
+  // Fixed: was using nested await inside template string (race condition).
   async getUserSessions(): Promise<GameSession[]> {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('Пользователь не авторизован');
 
-    const { data, error } = await supabase
-      .from('game_sessions')
-      .select('*')
-      .or(`dm_id.eq.${user.id},id.in.(${await this.getUserSessionIds()})`)
-      .order('created_at', { ascending: false });
-
-    if (error) throw error;
-    return data;
-  }
-
-  // Получение ID сессий где участвует пользователь
-  private async getUserSessionIds(): Promise<string> {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return '';
-
-    const { data } = await supabase
+    // Step 1: session IDs where user is a player
+    const { data: playerRows } = await supabase
       .from('session_players')
       .select('session_id')
       .eq('user_id', user.id);
 
-    return data?.map(p => p.session_id).join(',') || '';
+    const playerSessionIds: string[] = playerRows?.map((p) => p.session_id) ?? [];
+
+    // Step 2: fetch DM sessions + joined sessions in one query
+    let query = supabase
+      .from('game_sessions')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (playerSessionIds.length > 0) {
+      // user is DM of some sessions OR player in others
+      query = query.or(`dm_id.eq.${user.id},id.in.(${playerSessionIds.join(',')})`);
+    } else {
+      // user is only potentially a DM
+      query = query.eq('dm_id', user.id);
+    }
+
+    const { data, error } = await query;
+    if (error) throw error;
+    return data ?? [];
   }
 
   // Получение игроков сессии

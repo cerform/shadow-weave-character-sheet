@@ -17,14 +17,14 @@ const CharacterSheetPage = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // Загрузка персонажа из Firestore
+  // Load character from Supabase
   useEffect(() => {
     if (!id) {
       setError("Не указан ID персонажа.");
       return;
     }
 
-    const loadCharacterFromFirestore = async () => {
+    const loadCharacter = async () => {
       setLoading(true);
       try {
         const data = await getCharacterById(id);
@@ -32,7 +32,6 @@ const CharacterSheetPage = () => {
           setError(`Персонаж с ID ${id} не найден.`);
         } else {
           setCharacter(data as Character);
-          console.log("Персонаж загружен:", data);
         }
       } catch (err) {
         console.error("Ошибка при загрузке персонажа:", err);
@@ -42,7 +41,7 @@ const CharacterSheetPage = () => {
       }
     };
 
-    loadCharacterFromFirestore();
+    loadCharacter();
   }, [id, setCharacter]);
 
   // Подключение к сессии если активна

@@ -27,6 +27,7 @@ interface InitRequest {
     class: string;
     level: number;
   }>;
+  worldSeed?: string | null;  // Optional lore/setting notes from the DM
 }
 
 interface CampaignInitResult {
@@ -59,7 +60,7 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
-    const { campaignName, aiPersonality, party } =
+    const { campaignName, aiPersonality, party, worldSeed } =
       (await req.json()) as InitRequest;
 
     const partyText = party
@@ -84,10 +85,13 @@ Deno.serve(async (req: Request) => {
     const userPrompt = `Создай стартовый мир для D&D 5e кампании:
 
 Название: "${campaignName}"
-Партия: ${partyText}
+Партия: ${partyText}${worldSeed ? `
+
+📜 ЗАМЕТКИ МАСТЕРА (используй как основу, расшири и детализируй):
+${worldSeed}` : ""}
 
 Создай:
-1. Уникальный мир с историей и особенностями
+1. Уникальный мир с историей и особенностями${worldSeed ? " (расширяй указанные заметки)" : ""}
 2. Центрального злодея с личной связью к КАЖДОМУ члену партии
 3. Стартовую локацию с атмосферным описанием
 4. 2-3 начальных квеста разной сложности
