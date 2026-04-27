@@ -73,6 +73,7 @@ export default function VTTBattlePage() {
   const [leftOpen, setLeftOpen] = useState(true);
   const [rightOpen, setRightOpen] = useState(true);
   const [chatInput, setChatInput] = useState('');
+  const [isDiceModalOpen, setIsDiceModalOpen] = useState(false);
   const [radialMenu, setRadialMenu] = useState<{ visible: boolean; x: number; y: number; tokenId: string; tokenName: string }>({
     visible: false, x: 0, y: 0, tokenId: '', tokenName: ''
   });
