@@ -8,13 +8,13 @@ import { Home, Crown, Users, Sword, Map, Dice6, Eye, Play, Pause, Trash2, Copy, 
 import { supabase } from '@/integrations/supabase/client';
 import { socketService } from '@/services/socket';
 import { useAuth } from '@/hooks/use-auth';
-import { Brain, Scroll, Shield, Ghost } from 'lucide-react';
+import { GameSession } from '@/services/sessionService';
 
 const DMDashboardPageNew: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
-  const [sessions, setSessions] = useState<any[]>([]);
+  const [sessions, setSessions] = useState<GameSession[]>([]);
   const [loading, setLoading] = useState(true);
 
   const features = [
