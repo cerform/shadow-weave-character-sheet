@@ -79,15 +79,18 @@ export interface GameSession {
 class SocketService {
   private socket: Socket | null = null;
   private currentSession: GameSession | null = null;
-  private reconnectAttempts = 0;
-  private maxReconnectAttempts = 5;
-  
-  // Callbacks
-  private messageCallbacks = new Set<(message: SessionMessage) => void>();
-  private diceCallbacks = new Set<(roll: DiceRollResult) => void>();
-  private sessionUpdateCallbacks = new Set<(session: GameSession) => void>();
-  private playerUpdateCallbacks = new Set<(players: SessionPlayer[]) => void>();
   private battleCallbacks = new Set<(data: any) => void>();
+
+  constructor() {
+    this.connect = this.connect.bind(this);
+    this.disconnect = this.disconnect.bind(this);
+    this.isConnected = this.isConnected.bind(this);
+    this.sendMessage = this.sendMessage.bind(this);
+    this.rollDice = this.rollDice.bind(this);
+    this.updateCharacter = this.updateCharacter.bind(this);
+    this.createSession = this.createSession.bind(this);
+    this.joinSession = this.joinSession.bind(this);
+  }
 
   connect(): Promise<boolean> {
     return new Promise((resolve) => {
@@ -96,41 +99,52 @@ class SocketService {
         return;
       }
 
-      console.log('🔌 Подключение к D&D серверу...');
-      
-      const serverUrl = import.meta.env.VITE_BACKEND_URL || 
-        (import.meta.env.DEV ? 'http://localhost:3001' : '');
+      const serverUrl = import.meta.env.VITE_BACKEND_URL;
+      const isProduction = import.meta.env.PROD || window.location.hostname.includes('vercel.app');
 
-      // If no backend URL in production, use Supabase-only mode
-      if (!serverUrl) {
-        console.warn('⚠️ VITE_BACKEND_URL not set — running in Supabase-only mode (no Socket.IO)');
+      // 1. Determine if we should skip connection
+      const isInvalidUrl = !serverUrl || serverUrl === 'undefined' || serverUrl === 'null' || serverUrl === '';
+      const isCurrentHost = serverUrl && (serverUrl.startsWith('/') || serverUrl.includes(window.location.hostname) || serverUrl.includes('localhost'));
+
+      if (isProduction && (isInvalidUrl || isCurrentHost)) {
+        if (import.meta.env.DEV) {
+          console.info('ℹ️ WebSocket connection skipped: No external backend URL provided.');
+        }
         this.reconnectAttempts = 0;
         resolve(true);
         return;
       }
 
+      // 2. Additional safety: ensure it's an absolute URL
+      if (serverUrl && !serverUrl.startsWith('http') && !serverUrl.startsWith('ws')) {
+        resolve(true);
+        return;
+      }
+
+      console.log('🔌 Connecting to D&D Socket Server:', serverUrl);
+      
       this.socket = io(serverUrl, {
         transports: ['websocket', 'polling'],
         reconnection: true,
         reconnectionAttempts: this.maxReconnectAttempts,
-        reconnectionDelay: 1000,
+        reconnectionDelay: 5000, // Longer delay to reduce spam if it fails
         timeout: 10000
       });
 
       this.setupEventListeners();
 
       this.socket.on('connect', () => {
-        console.log('✅ Подключен к D&D серверу:', serverUrl);
+        console.log('✅ Connected to D&D Server:', serverUrl);
         this.reconnectAttempts = 0;
         resolve(true);
       });
 
       this.socket.on('connect_error', (error) => {
-        console.error('❌ Ошибка подключения:', error.message);
+        console.error('❌ Socket connection error:', error.message);
         this.reconnectAttempts++;
         
         if (this.reconnectAttempts >= this.maxReconnectAttempts) {
-          console.warn('🔄 Socket недоступен — режим Supabase Realtime');
+          console.warn('🔄 Socket unavailable — falling back to Supabase Realtime');
           resolve(true); // Don't block the app
         }
       });
@@ -220,56 +234,20 @@ class SocketService {
   // DM методы
   async createSession(name: string, dmName: string, character?: Character): Promise<GameSession> {
     if (!this.socket?.connected) {
-      await this.connect();
+      // In Supabase-only mode, session creation should be handled via Supabase directly
+      // This is a placeholder for when the app is fully transitioned
+      throw new Error('Socket.IO backend required for this method. Use Supabase sessions instead.');
     }
 
     return new Promise((resolve, reject) => {
-      // Mock режим для разработки
-      if (!this.socket?.connected) {
-        console.log('🎮 Mock: Создание сессии');
-        const mockSession: GameSession = {
-          id: Date.now().toString(),
-          name,
-          code: this.generateCode(),
-          dmId: 'mock-dm-id',
-          dmName,
-          players: [],
-          isActive: true,
-          createdAt: new Date().toISOString(),
-          messages: [],
-          diceRolls: [],
-          battleMap: {
-            width: 800,
-            height: 600,
-            gridSize: 25,
-            tokens: [],
-            isActive: false
-          },
-          initiative: {
-            order: [],
-            currentTurn: 0,
-            round: 1
-          },
-          notes: [],
-          handouts: []
-        };
-        
-        this.currentSession = mockSession;
-        console.log('🎯 Mock-сессия создана:', mockSession.name, mockSession.code);
-        
-        // Имитируем небольшую задержку
-        setTimeout(() => resolve(mockSession), 300);
-        return;
-      }
-
-      this.socket.emit('session:create', { name, dmName, character }, (response: any) => {
+      this.socket!.emit('session:create', { name, dmName, character }, (response: any) => {
         if (response.success) {
           this.currentSession = response.session;
-          console.log('🎯 Сессия создана:', response.session.name, response.session.code);
+          console.log('🎯 Session created:', response.session.name, response.session.code);
           resolve(response.session);
         } else {
-          console.error('❌ Ошибка создания сессии:', response.error);
-          reject(new Error(response.error || 'Ошибка создания сессии'));
+          console.error('❌ Session creation error:', response.error);
+          reject(new Error(response.error || 'Failed to create session'));
         }
       });
     });
@@ -283,62 +261,18 @@ class SocketService {
   // Player методы
   async joinSession(code: string, playerName: string, character?: Character): Promise<GameSession> {
     if (!this.socket?.connected) {
-      await this.connect();
+       throw new Error('Socket.IO backend required for this method.');
     }
 
     return new Promise((resolve, reject) => {
-      // Mock режим для разработки
-      if (!this.socket?.connected) {
-        console.log('🎮 Mock: Присоединение к сессии');
-        const mockSession: GameSession = {
-          id: 'mock-session-' + code,
-          name: `Сессия ${code}`,
-          code,
-          dmId: 'mock-dm-id',
-          dmName: 'Mock DM',
-          players: [{
-            id: 'mock-player-id',
-            name: playerName,
-            character,
-            isOnline: true,
-            isDM: false,
-            joinedAt: new Date().toISOString()
-          }],
-          isActive: true,
-          createdAt: new Date().toISOString(),
-          messages: [],
-          diceRolls: [],
-          battleMap: {
-            width: 800,
-            height: 600,
-            gridSize: 25,
-            tokens: [],
-            isActive: false
-          },
-          initiative: {
-            order: [],
-            currentTurn: 0,
-            round: 1
-          },
-          notes: [],
-          handouts: []
-        };
-        
-        this.currentSession = mockSession;
-        console.log('👥 Mock: Присоединился к сессии:', mockSession.name);
-        
-        setTimeout(() => resolve(mockSession), 300);
-        return;
-      }
-
-      this.socket.emit('session:join', { code, playerName, character }, (response: any) => {
+      this.socket!.emit('session:join', { code, playerName, character }, (response: any) => {
         if (response.success) {
           this.currentSession = response.session;
-          console.log('👥 Присоединился к сессии:', response.session.name);
+          console.log('👥 Joined session:', response.session.name);
           resolve(response.session);
         } else {
-          console.error('❌ Ошибка присоединения:', response.error);
-          reject(new Error(response.error || 'Ошибка подключения к сессии'));
+          console.error('❌ Join session error:', response.error);
+          reject(new Error(response.error || 'Failed to connect to session'));
         }
       });
     });

@@ -1,61 +1,82 @@
-import { SpellData } from '@/types/spells';
-
-const CUSTOM_SPELLS_KEY = 'shadow_weave_custom_spells';
+import { supabase } from '@/integrations/supabase/client';
+import { CharacterSpell } from '@/types/character';
 
 /**
- * Сохраняет заклинание в базу данных (локально для пользовательских)
- * @param spell Заклинание для сохранения
- * @param userId ID пользователя (опционально)
- * @returns Promise с ID сохраненного заклинания
+ * Saves a spell to the character's spellbook in Supabase
+ * @param characterId ID of the character
+ * @param spell Spell to add/update
+ * @returns Promise with success status
  */
-export async function saveSpellToDatabase(spell: SpellData, userId?: string | null): Promise<string> {
-  const id = spell.id?.toString() || `spell-${Date.now()}`;
-  
+export async function saveCharacterSpell(characterId: string, spell: CharacterSpell): Promise<boolean> {
   try {
-    const customSpells = JSON.parse(localStorage.getItem(CUSTOM_SPELLS_KEY) || '[]');
+    // 1. Get current spells
+    const { data: character, error: fetchError } = await supabase
+      .from('characters')
+      .select('spells')
+      .eq('id', characterId)
+      .single();
+
+    if (fetchError) throw fetchError;
+
+    const currentSpells = (character?.spells as CharacterSpell[]) || [];
     
-    const existingIndex = customSpells.findIndex((s: SpellData) => s.id === spell.id);
+    // 2. Update or Add
+    const existingIndex = currentSpells.findIndex(s => s.name === spell.name);
+    let newSpells;
     if (existingIndex >= 0) {
-      customSpells[existingIndex] = { ...spell, id };
+      newSpells = [...currentSpells];
+      newSpells[existingIndex] = { ...spell };
     } else {
-      customSpells.push({ ...spell, id });
+      newSpells = [...currentSpells, { ...spell }];
     }
-    
-    localStorage.setItem(CUSTOM_SPELLS_KEY, JSON.stringify(customSpells));
-  } catch (error) {
-    console.error('Error saving spell:', error);
-  }
-  
-  return id;
-}
 
-/**
- * Получает все кастомные заклинания
- * @returns Promise с массивом заклинаний
- */
-export async function getAllSpellsFromDatabase(): Promise<SpellData[]> {
-  try {
-    const customSpells = JSON.parse(localStorage.getItem(CUSTOM_SPELLS_KEY) || '[]');
-    return customSpells;
-  } catch (error) {
-    console.error('Error loading custom spells:', error);
-    return [];
-  }
-}
+    // 3. Save back
+    const { error: saveError } = await supabase
+      .from('characters')
+      .update({ spells: newSpells as any })
+      .eq('id', characterId);
 
-/**
- * Удаляет заклинание из базы данных
- * @param spellId ID заклинания для удаления
- * @returns Promise с результатом операции
- */
-export async function deleteSpellFromDatabase(spellId: string): Promise<boolean> {
-  try {
-    let customSpells = JSON.parse(localStorage.getItem(CUSTOM_SPELLS_KEY) || '[]');
-    customSpells = customSpells.filter((s: SpellData) => s.id !== spellId);
-    localStorage.setItem(CUSTOM_SPELLS_KEY, JSON.stringify(customSpells));
+    if (saveError) throw saveError;
     return true;
   } catch (error) {
-    console.error('Error deleting spell:', error);
+    console.error('[SpellService] Error saving spell:', error);
+    return false;
+  }
+}
+
+/**
+ * Legacy wrapper for custom spells (now strictly returns empty or loads from a designated character)
+ */
+export async function getAllSpellsFromDatabase(): Promise<CharacterSpell[]> {
+  console.warn('[SpellService] getAllSpellsFromDatabase is deprecated. Use character-specific spell loading.');
+  return [];
+}
+
+/**
+ * Deletes a spell from the character's spellbook
+ */
+export async function deleteCharacterSpell(characterId: string, spellName: string): Promise<boolean> {
+  try {
+    const { data: character, error: fetchError } = await supabase
+      .from('characters')
+      .select('spells')
+      .eq('id', characterId)
+      .single();
+
+    if (fetchError) throw fetchError;
+
+    const currentSpells = (character?.spells as CharacterSpell[]) || [];
+    const newSpells = currentSpells.filter(s => s.name !== spellName);
+
+    const { error: saveError } = await supabase
+      .from('characters')
+      .update({ spells: newSpells as any })
+      .eq('id', characterId);
+
+    if (saveError) throw saveError;
+    return true;
+  } catch (error) {
+    console.error('[SpellService] Error deleting spell:', error);
     return false;
   }
 }

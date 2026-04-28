@@ -26,21 +26,48 @@ class WebSocketService {
   private connectionAttempts = 0;
   private maxRetries = 5;
 
-  connect(url: string = 'http://localhost:3001') {
-    if (this.socket?.connected) {
-      console.log('WebSocket уже подключен');
+  constructor() {
+    this.connect = this.connect.bind(this);
+    this.disconnect = this.disconnect.bind(this);
+    this.isConnected = this.isConnected.bind(this);
+    this.getConnectionStatus = this.getConnectionStatus.bind(this);
+    this.createRoom = this.createRoom.bind(this);
+    this.joinRoom = this.joinRoom.bind(this);
+    this.sendMessage = this.sendMessage.bind(this);
+    this.rollDice = this.rollDice.bind(this);
+  }
+
+  connect(url: string = '') {
+    // 1. Skip if already connected
+    if (this.socket?.connected) return;
+
+    // 2. Determine the actual URL to use
+    const envUrl = import.meta.env.VITE_BACKEND_URL;
+    const targetUrl = url || envUrl;
+    
+    // 3. Strict production check
+    const isProduction = import.meta.env.PROD || window.location.hostname.includes('vercel.app');
+    
+    // Check if URL is invalid or points to same host/localhost in production
+    const isInvalid = !targetUrl || targetUrl === 'undefined' || targetUrl === 'null' || targetUrl === '';
+    const isLocalOrSameHost = targetUrl && (targetUrl.includes('localhost') || targetUrl.includes(window.location.hostname) || targetUrl.startsWith('/'));
+
+    if (isProduction && (isInvalid || isLocalOrSameHost)) {
+      console.info('ℹ️ Legacy WebSocket service disabled in production');
       return;
     }
 
-    console.log('Подключение к WebSocket серверу:', url);
+    if (isInvalid) return;
+
+    console.log('🔌 Connecting to Legacy WebSocket server:', targetUrl);
     
-    this.socket = io(url, {
+    this.socket = io(targetUrl, {
       autoConnect: true,
       transports: ['websocket', 'polling'],
-      timeout: 20000,
+      timeout: 10000,
       reconnection: true,
       reconnectionAttempts: this.maxRetries,
-      reconnectionDelay: 1000
+      reconnectionDelay: 5000
     });
 
     this.socket.on('connect', () => {

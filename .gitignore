@@ -24,3 +24,11 @@ dist-ssr
 *.sln
 *.sw?
 .vercel
+*.zip
+*.exe
+*.exe.bak
+*.mjs
+supabase_bin/
+install_supabase.ps1
+deploy_functions.ps1
+redeploy.ps1

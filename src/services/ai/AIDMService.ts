@@ -94,13 +94,53 @@ export class AIDMService {
       },
     });
 
-    if (error) throw new Error(`Campaign init failed: ${error.message}`);
-    if (!data.success) throw new Error(data.error ?? 'Unknown error from ai-campaign-init');
+    let result: CampaignInitResult;
 
-    const result = data.data as CampaignInitResult;
+    if (error || !data?.success) {
+      console.warn('[AIDMService] Campaign init failed, using fallback generation due to:', error?.message || data?.error);
+      
+      result = {
+        worldFacts: {
+          settingName: params.campaignName,
+          mainTheme: params.aiPersonality === 'dark' ? "Выживание в мрачном мире" : "Эпическое путешествие",
+          currentCrisis: "Древнее зло пробудилось",
+          geography: "Туманные долины и разрушенные замки"
+        },
+        shortSummary: `Партия прибыла в опасные земли. Начинается новая глава: ${params.campaignName}.`,
+        openingScene: `Вы стоите на пороге неизвестности. Туман клубится вокруг ваших ног, а вдалеке слышен зловещий вой. Ваша легенда только начинается...`,
+        mainVillain: {
+          name: "Лорд Теней",
+          description: "Высокая фигура, закутанная в тьму.",
+          motivation: "Уничтожить свет и надежду в этом мире.",
+          personalConnectionToParty: "Он следил за каждым шагом героев."
+        },
+        startingLocation: {
+          name: "Заброшенный Храм",
+          description: "Старые руины, поросшие мхом. Здесь безопасно, но только пока горит костер.",
+          imagePrompt: "A dark, atmospheric fantasy ruins, moody lighting, foggy, highly detailed, digital painting"
+        },
+        initialQuests: [
+          {
+            title: "Разведать окрестности",
+            description: "Найти безопасное место для привала.",
+            reward: "100 XP",
+            difficulty: "Легко"
+          }
+        ],
+        atmosphereImagePrompt: "A dark fantasy tabletop rpg banner, highly detailed, mysterious, menacing"
+      };
+    } else {
+      result = data.data as CampaignInitResult;
+    }
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      console.error('[AIDMService] No user found for campaign initialization');
+      return result;
+    }
 
     // Save to campaign_context
-    await supabase.from('campaign_context').upsert({
+    const { error: ctxError } = await supabase.from('campaign_context').upsert({
       session_id: params.sessionId,
       campaign_name: params.campaignName,
       ai_personality: params.aiPersonality,
@@ -120,8 +160,10 @@ export class AIDMService {
       updated_at: new Date().toISOString(),
     });
 
+    if (ctxError) console.error('[AIDMService] Error saving campaign context:', ctxError);
+
     // Log opening event (for history)
-    await supabase.from('campaign_events').insert({
+    const { error: eventError } = await supabase.from('campaign_events').insert({
       session_id: params.sessionId,
       turn_number: 0,
       event_type: 'campaign_init',
@@ -134,17 +176,21 @@ export class AIDMService {
       },
     });
 
+    if (eventError) console.error('[AIDMService] Error saving campaign event:', eventError);
+
     // Also insert into session_messages so it appears in Chat immediately
-    await supabase.from('session_messages').insert({
+    const { error: msgError } = await supabase.from('session_messages').insert({
       session_id: params.sessionId,
       sender_name: 'AI Dungeon Master',
       message_type: 'ai',
-      user_id: params.sessionId, // System ID
+      user_id: user.id, // Current user ID is required by RLS
       content: result.openingScene,
     });
 
+    if (msgError) console.error('[AIDMService] Error saving session message:', msgError);
+
     // Save world facts to campaign_memory
-    await supabase.from('campaign_memory').upsert([
+    const { error: memError } = await supabase.from('campaign_memory').upsert([
       {
         session_id: params.sessionId,
         type: 'world_state',
@@ -158,6 +204,8 @@ export class AIDMService {
         value: result.mainVillain,
       },
     ]);
+
+    if (memError) console.error('[AIDMService] Error saving campaign memory:', memError);
 
     console.log('[AIDMService] Campaign initialized successfully');
     return result;

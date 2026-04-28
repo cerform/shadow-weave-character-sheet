@@ -12,6 +12,7 @@ export interface Token {
   y: number;
   hp: number;
   maxHp: number;
+  tempHp?: number;
   ac: number;
   initiative: number;
   conditions: string[];

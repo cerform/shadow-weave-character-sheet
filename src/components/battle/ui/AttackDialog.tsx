@@ -12,6 +12,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { DiceRoller3D } from '@/components/dice/DiceRoller3D';
+import { CombatEngineService } from '@/services/combatEngineService';
+import { supabase } from '@/integrations/supabase/client';
+import { CombatAction } from '@/types/combat';
 import { useEnhancedBattleStore, EnhancedToken } from '@/stores/enhancedBattleStore';
 import { Target, Sword, Crosshair, Zap } from 'lucide-react';
 import { useTheme } from '@/hooks/use-theme';
@@ -29,6 +32,7 @@ interface AttackType {
   type: 'physical' | 'magical';
   range: number;
   icon: any;
+  isAoE?: boolean;
 }
 
 const attackTypes: AttackType[] = [
@@ -56,6 +60,15 @@ const attackTypes: AttackType[] = [
     range: 12,
     icon: Zap
   },
+  { 
+    name: "АоЕ Заклинание (Спасбросок)", 
+    stat: "intelligence", 
+    damage: "8d6", 
+    type: "magical", 
+    range: 30,
+    icon: Zap,
+    isAoE: true
+  },
 ];
 
 // D&D 5e stats
@@ -76,7 +89,7 @@ export const AttackDialog: React.FC<AttackDialogProps> = ({ children, attacker }
   const [open, setOpen] = useState(false);
   const [phase, setPhase] = useState<AttackPhase>('setup');
   const [selectedAttackType, setSelectedAttackType] = useState<string>('');
-  const [selectedTarget, setSelectedTarget] = useState<string>('');
+  const [selectedTargets, setSelectedTargets] = useState<string[]>([]);
   const [diceKey, setDiceKey] = useState(0);
   const [hitRoll, setHitRoll] = useState<number>(0);
   const [hitTotal, setHitTotal] = useState<number>(0);
@@ -101,7 +114,7 @@ export const AttackDialog: React.FC<AttackDialogProps> = ({ children, attacker }
   const resetDialog = () => {
     setPhase('setup');
     setSelectedAttackType('');
-    setSelectedTarget('');
+    setSelectedTargets([]);
     setHitRoll(0);
     setHitTotal(0);
     setDamageRoll(0);
@@ -111,23 +124,14 @@ export const AttackDialog: React.FC<AttackDialogProps> = ({ children, attacker }
   };
 
   const startAttackRoll = () => {
-    if (!selectedAttackType || !selectedTarget) return;
+    if (!selectedAttackType || selectedTargets.length === 0) return;
     
     const attackType = attackTypes.find(a => a.name === selectedAttackType);
-    const target = tokens.find(t => t.id === selectedTarget);
-    
-    if (!attackType || !target) return;
+    if (!attackType) return;
 
-    // Проверяем дистанцію
-    const distance = calculateDistance(attacker.position, target.position);
-    if (distance > attackType.range) {
-      addCombatEvent({
-        actor: attacker.name,
-        action: 'Атака',
-        target: target.name,
-        description: `Цель слишком далеко! Расстояние: ${distance.toFixed(1)}, дальность: ${attackType.range}`,
-        playerName: 'ДМ'
-      });
+    if (attackType.isAoE) {
+      setPhase('damage-rolling');
+      setDiceKey(Date.now());
       return;
     }
 
@@ -137,15 +141,15 @@ export const AttackDialog: React.FC<AttackDialogProps> = ({ children, attacker }
 
   const handleHitRoll = (roll: number) => {
     const attackType = attackTypes.find(a => a.name === selectedAttackType);
-    const target = tokens.find(t => t.id === selectedTarget);
+    const primaryTarget = tokens.find(t => t.id === selectedTargets[0]);
     
-    if (!attackType || !target) return;
+    if (!attackType || !primaryTarget) return;
 
     const stat = dndStats[attackType.stat];
     const modifier = getModifier(stat);
     const proficiencyBonus = 3;
     const total = roll + modifier + proficiencyBonus;
-    const hit = total >= target.ac;
+    const hit = total >= primaryTarget.ac;
     
     setHitRoll(roll);
     setHitTotal(total);
@@ -156,8 +160,8 @@ export const AttackDialog: React.FC<AttackDialogProps> = ({ children, attacker }
     addCombatEvent({
       actor: attacker.name,
       action: 'Бросок атаки',
-      target: target.name,
-      description: `${attackType.name}: d20(${roll}) + ${modifier + proficiencyBonus} = ${total} vs AC ${target.ac} - ${hit ? 'ПОПАДАНИЕ!' : 'ПРОМАХ'}`,
+      target: primaryTarget.name,
+      description: `${attackType.name}: d20(${roll}) + ${modifier + proficiencyBonus} = ${total} vs AC ${primaryTarget.ac} - ${hit ? 'ПОПАДАНИЕ!' : 'ПРОМАХ'}`,
       diceRoll: {
         dice: `1d20+${modifier + proficiencyBonus}`,
         result: total,
@@ -183,9 +187,8 @@ export const AttackDialog: React.FC<AttackDialogProps> = ({ children, attacker }
 
   const handleDamageRoll = (roll: number) => {
     const attackType = attackTypes.find(a => a.name === selectedAttackType);
-    const target = tokens.find(t => t.id === selectedTarget);
     
-    if (!attackType || !target) return;
+    if (!attackType || selectedTargets.length === 0) return;
 
     const stat = dndStats[attackType.stat];
     const modifier = getModifier(stat);
@@ -195,37 +198,78 @@ export const AttackDialog: React.FC<AttackDialogProps> = ({ children, attacker }
     setDamageTotal(total);
     setPhase('damage-result');
 
-    // Применяем урон
-    const newHp = Math.max(0, target.hp - total);
-    updateToken(target.id, { hp: newHp });
-    
-    // Проверяем на потерю сознания
-    if (newHp === 0) {
-      updateToken(target.id, { 
-        conditions: [...target.conditions, "Без сознания"]
-      });
-    }
+    const sessionIdMatch = window.location.pathname.match(/\/dm\/session\/([a-zA-Z0-9-]+)/) 
+                        || window.location.pathname.match(/\/dm-session\/([a-zA-Z0-9-]+)/)
+                        || window.location.pathname.match(/\/player-session\/([a-zA-Z0-9-]+)/);
+    const sessionId = sessionIdMatch ? sessionIdMatch[1] : 'unknown-session';
 
-    // Логируем урон
-    addCombatEvent({
-      actor: attacker.name,
-      action: 'Урон',
-      target: target.name,
-      damage: total,
-      description: `${attackType.name}: ${attackType.damage}(${roll}) + ${modifier} = ${total} урона (${target.hp} → ${newHp})${newHp === 0 ? ' - ЦЕЛЬ ПОВЕРЖЕНА!' : ''}`,
-      diceRoll: {
-        dice: `${attackType.damage}+${modifier}`,
-        result: total,
-        breakdown: `${roll}+${modifier}`
-      },
-      playerName: 'ДМ'
+    const updatesPromises: any[] = [];
+    let logNames: string[] = [];
+
+    // Применяем AoE логику для всех выбранных целей
+    selectedTargets.forEach((targetId) => {
+        const target = tokens.find(t => t.id === targetId);
+        if (!target) return;
+
+        let dmgTypeClassified = attackType.type === 'magical' ? 'fire' : 'slashing';
+        let isSavePassed = false;
+        
+        // Auto-roll saving throw for AoE
+        if (attackType.isAoE) {
+            const saveRoll = Math.floor(Math.random() * 20) + 1 + 3; // +3 random dummy bonus
+            isSavePassed = saveRoll >= 15; // DC 15
+        }
+
+        const combatAction: CombatAction = {
+          actionId: crypto.randomUUID(),
+          sessionId: sessionId,
+          actorTokenId: attacker.id,
+          targetTokenIds: [target.id],
+          actionType: attackType.isAoE ? 'saving_throw_spell' : 'weapon_attack',
+          sourceName: attackType.name,
+          damageFormula: total.toString(),
+          damageType: dmgTypeClassified,
+          timestamp: new Date().toISOString(),
+          createdBy: 'system'
+        };
+
+        const res = CombatEngineService.evaluateAction(combatAction, target, attackType.isAoE ? isSavePassed : undefined);
+        
+        const newConditions = res.isDefeated && !target.conditions.includes("Без сознания") 
+            ? [...target.conditions, "Без сознания"] 
+            : target.conditions;
+
+        updateToken(target.id, { 
+          hp: res.newHp,
+          tempHp: res.newTempHp,
+          conditions: newConditions
+        });
+        
+        updatesPromises.push(
+            supabase.from('battle_tokens').update({
+              current_hp: res.newHp,
+              conditions: newConditions
+            }).eq('id', target.id)
+        );
+
+        logNames.push(target.name);
+        
+        // Single target immediate log (simpler UI sync)
+        CombatEngineService.logCombatEvent(combatAction, {
+          ...res,
+          damageApplied: res.damageApplied,
+          healingApplied: 0,
+          targetTokenId: target.id
+        }, target.name);
     });
+
+    Promise.all(updatesPromises).catch(console.error);
 
     // Закрываем диалог через задержку
     setTimeout(() => {
       setOpen(false);
       resetDialog();
-    }, 3000);
+    }, 4000);
   };
 
   const getDiceTypeFromDamage = (damageString: string): 'd4' | 'd6' | 'd8' | 'd10' | 'd12' | 'd20' | 'd100' => {
@@ -273,31 +317,36 @@ export const AttackDialog: React.FC<AttackDialogProps> = ({ children, attacker }
       </div>
 
       <div className="space-y-2">
-        <label className="text-sm font-medium">Цель</label>
-        <Select value={selectedTarget} onValueChange={setSelectedTarget}>
-          <SelectTrigger>
-            <SelectValue placeholder="Выберите цель" />
-          </SelectTrigger>
-          <SelectContent>
-            {availableTargets.map((token) => (
-              <SelectItem key={token.id} value={token.id}>
-                <div className="flex items-center gap-2">
-                  <Target className="w-4 h-4" />
-                  <span>{token.name}</span>
-                  <Badge variant="secondary">AC {token.ac}</Badge>
-                  <Badge variant="outline">HP {token.hp}/{token.maxHp}</Badge>
+        <label className="text-sm font-medium">Цели (Множественный выбор для АоЕ)</label>
+        <div className="flex flex-col gap-2 max-h-40 overflow-y-auto w-full p-2 border rounded-md border-border bg-card">
+            {availableTargets.map((token) => {
+              const isSelected = selectedTargets.includes(token.id);
+              return (
+                <div 
+                  key={token.id} 
+                  className={`flex items-center justify-between p-2 rounded cursor-pointer transition-colors ${isSelected ? 'bg-primary/20 hover:bg-primary/30 border border-primary/50' : 'hover:bg-accent'}`}
+                  onClick={() => setSelectedTargets(p => p.includes(token.id) ? p.filter(id => id !== token.id) : [...p, token.id])}
+                >
+                  <div className="flex items-center gap-2">
+                    <Target className="w-4 h-4" />
+                    <span>{token.name}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Badge variant="secondary">AC {token.ac}</Badge>
+                    <Badge variant="outline">HP {token.hp}/{token.maxHp}</Badge>
+                  </div>
                 </div>
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+              );
+            })}
+            {availableTargets.length === 0 && <span className="text-muted-foreground text-sm">Нет доступных целей</span>}
+        </div>
       </div>
     </div>
   );
 
   const renderRollingPhase = () => {
     const attackType = attackTypes.find(a => a.name === selectedAttackType);
-    const target = tokens.find(t => t.id === selectedTarget);
+    const target = tokens.find(t => t.id === selectedTargets[0]);
     
     if (!attackType || !target) return null;
 
@@ -330,7 +379,7 @@ export const AttackDialog: React.FC<AttackDialogProps> = ({ children, attacker }
 
   const renderHitResultPhase = () => {
     const attackType = attackTypes.find(a => a.name === selectedAttackType);
-    const target = tokens.find(t => t.id === selectedTarget);
+    const target = tokens.find(t => t.id === selectedTargets[0]);
     
     if (!attackType || !target) return null;
 
@@ -401,29 +450,35 @@ export const AttackDialog: React.FC<AttackDialogProps> = ({ children, attacker }
 
   const renderDamageResultPhase = () => {
     const attackType = attackTypes.find(a => a.name === selectedAttackType);
-    const target = tokens.find(t => t.id === selectedTarget);
     
-    if (!attackType || !target) return null;
+    if (!attackType || selectedTargets.length === 0) return null;
 
     return (
       <div className="space-y-4">
         <div className="text-center">
           <h3 className="text-xl font-bold text-orange-400">УРОН НАНЕСЕН!</h3>
           
-          <Card className="mt-3 border-orange-400/30 bg-orange-900/20">
-            <CardContent className="pt-4">
+          <Card className="mt-3 border-orange-400/30 bg-orange-900/20 max-h-[300px] overflow-y-auto">
+            <CardContent className="pt-4 flex flex-col gap-3">
               <div className="text-lg font-semibold">
-                Урон: {damageTotal}
+                Базовый Урон: {damageTotal} 
               </div>
-              <div className="text-sm text-muted-foreground">
+              <div className="text-sm text-muted-foreground mb-2">
                 {attackType.damage}({damageRoll}) + модификатор = {damageTotal}
               </div>
-              <div className="text-sm text-muted-foreground mt-2">
-                {target.name}: {target.hp}/{target.maxHp} HP
-                {target.hp === 0 && (
-                  <span className="text-red-400 font-bold ml-2">ПОВЕРЖЕН!</span>
-                )}
-              </div>
+              
+              {selectedTargets.map((targetId) => {
+                 const target = tokens.find(t => t.id === targetId);
+                 if (!target) return null;
+                 return (
+                  <div key={target.id} className="text-sm text-left p-2 bg-black/20 rounded border border-white/5">
+                    <span className="font-bold text-white">{target.name}:</span> {target.hp}/{target.maxHp} HP {target.tempHp ? `(+${target.tempHp} Врем.)` : ''}
+                    {target.hp === 0 && (
+                      <span className="text-red-400 font-bold ml-2">ПОВЕРЖЕН!</span>
+                    )}
+                  </div>
+                 )
+              })}
             </CardContent>
           </Card>
         </div>
@@ -461,10 +516,10 @@ export const AttackDialog: React.FC<AttackDialogProps> = ({ children, attacker }
               </Button>
               <Button 
                 onClick={startAttackRoll}
-                disabled={!selectedAttackType || !selectedTarget}
+                disabled={!selectedAttackType || selectedTargets.length === 0}
                 style={{ backgroundColor: currentTheme.accent }}
               >
-                Бросок на попадание
+                Бросок
               </Button>
             </>
           )}

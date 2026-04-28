@@ -7,6 +7,8 @@ import { Wand2, Loader2, Image as ImageIcon, Map as MapIcon, Brain, Settings, Sc
 import { socketService } from '@/services/socket';
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { AIDMService, type AIPersonality } from '@/services/ai/AIDMService';
+import { supabase } from '@/integrations/supabase/client';
 
 interface AIGeneratorProps {
   sessionId: string;
@@ -25,22 +27,28 @@ export const AIGenerator: React.FC<AIGeneratorProps> = ({ sessionId }) => {
     setIsGeneratingMap(true);
     
     try {
-      const socket = socketService.getSocket();
-      socket?.emit('ai:generate_map', { sessionId, prompt: mapPrompt });
-      
       toast({
         title: "Генерация запущена",
-        description: "ИИ начал рисовать вашу карту. Это займет около 15-20 секунд.",
+        description: "ИИ начал рисовать вашу карту...",
       });
       
-      setTimeout(() => setIsGeneratingMap(false), 20000);
-      
-    } catch (error) {
+      const result = await AIDMService.generateImage({
+        assetType: 'map',
+        subject: mapPrompt,
+        prompt: `Beautiful D&D top-down battlemap, professional fantasy art, ${mapPrompt}`,
+        sessionId
+      });
+
+      await supabase.from('game_sessions').update({ current_map_url: result.url }).eq('id', sessionId);
+
+      toast({ title: "Успех", description: "Карта успешно создана!" });
+    } catch (error: any) {
       toast({
         title: "Ошибка",
-        description: "Не удалось отправить запрос на генерацию",
+        description: "Не удалось создать карту: " + (error.message || "Неизвестная ошибка"),
         variant: "destructive"
       });
+    } finally {
       setIsGeneratingMap(false);
     }
   };
@@ -50,42 +58,63 @@ export const AIGenerator: React.FC<AIGeneratorProps> = ({ sessionId }) => {
     setIsGeneratingToken(true);
     
     try {
-      const socket = socketService.getSocket();
-      socket?.emit('ai:generate_token', { sessionId, prompt: tokenPrompt });
-      
       toast({
         title: "Генерация токена",
         description: "ИИ создает аватар персонажа...",
       });
       
-      setTimeout(() => setIsGeneratingToken(false), 15000);
-      
-    } catch (error) {
+      // We generate the image
+      const result = await AIDMService.generateImage({
+        assetType: 'portrait',
+        subject: tokenPrompt,
+        prompt: `Fantasy RPG character portrait, high quality, concept art, ${tokenPrompt}`,
+        sessionId
+      });
+
+      // Insert as a monster/npc token to the map
+      await supabase.from('battle_tokens').insert({
+        session_id: sessionId,
+        name: tokenPrompt.slice(0, 20),
+        image_url: result.url,
+        position_x: 5,
+        position_y: 5,
+        max_hp: 30,
+        current_hp: 30,
+        armor_class: 10,
+        token_type: 'enemy'
+      });
+
+      toast({ title: "Успех", description: "Токен добавлен на карту!" });
+    } catch (error: any) {
       toast({
         title: "Ошибка",
-        description: "Не удалось создать токен",
+        description: "Не удалось создать токен: " + (error.message || "Неизвестная ошибка"),
         variant: "destructive"
       });
+    } finally {
       setIsGeneratingToken(false);
     }
   };
 
-  const setPersonality = (type: string) => {
-    const socket = socketService.getSocket();
-    socket?.emit('ai:set_personality', type);
+  const setPersonality = async (type: AIPersonality) => {
     toast({
       title: "Характер изменен",
       description: `ИИ теперь действует как: ${type}`,
     });
+    // Record choice in context to actually influence the Orchestrator
+    const { data } = await supabase.from('campaign_context').select('short_summary').eq('session_id', sessionId).single();
+    if (data) {
+        await supabase.from('campaign_context').update({ ai_personality: type }).eq('session_id', sessionId);
+    }
   };
 
   const setModel = (type: 'openai' | 'groq') => {
-    const socket = socketService.getSocket();
-    socket?.emit('ai:set_model', type);
+    // Current AI orchestrator is fixed to Anthropic/Fal.ai via Edge Functions.
+    // Changing model locally might be unimplemented safely without Edge Function updates, but log it for now.
     setCurrentModel(type);
     toast({
       title: "Модель изменена",
-      description: `ИИ переключен на: ${type === 'groq' ? 'Llama 3.1' : 'GPT-4o'}`,
+      description: `Локальный UI переключен на: ${type === 'groq' ? 'Llama 3.1' : 'GPT-4o'}`,
     });
   };
 

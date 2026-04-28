@@ -5,9 +5,13 @@ export interface EnhancedToken {
   name: string;
   hp: number;
   maxHp: number;
+  tempHp?: number;
   ac: number;
   position: [number, number, number];
   conditions: string[];
+  resistances?: string[];
+  immunities?: string[];
+  vulnerabilities?: string[];
   isEnemy?: boolean;
   isVisible?: boolean;
   avatarUrl?: string;

@@ -5,6 +5,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { sessionService } from '@/services/sessionService';
 import { AIDMService } from '@/services/ai/AIDMService';
+import { supabase } from '@/integrations/supabase/client';
 import { useCharacter } from '@/contexts/CharacterContext';
 import {
   Crown, Brain, Users, Scroll, Sword, Plus, Trash2,
@@ -135,6 +136,9 @@ export default function CreateSessionPage() {
       const session = await sessionService.createSession(config.name, config.description || undefined);
 
       if (config.dmType === 'ai') {
+        // Flag session as AI DM
+        await supabase.from('game_sessions').update({ is_ai_dm: true }).eq('id', session.id);
+
         // 2a. Show toast and navigate immediately — AI init runs in background
         toast({
           title: '🧠 AI генерирует мир...',

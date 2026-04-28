@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { DiceService } from '@/services/diceService';
 import { supabase } from '@/integrations/supabase/client';
 import { socketService } from '@/services/socket';
 import { useAuth } from '@/hooks/use-auth';
@@ -9,6 +10,7 @@ import { useVTT } from '@/vtt/hooks/useVTT';
 import { VTTLayout } from '@/components/vtt/VTTLayout';
 import { FogTools } from '@/vtt/ui/FogTools';
 import { AIGenerator } from '@/components/battle/BattleMapUI/sidebars/AIGenerator';
+import { AIDMService } from '@/services/ai/AIDMService';
 import { NPCVoicePanel } from '@/components/battle/NPCVoicePanel';
 import { TokenRadialMenu } from '@/components/battle/TokenRadialMenu';
 import { useEnhancedBattleStore } from '@/stores/enhancedBattleStore';
@@ -74,6 +76,7 @@ export default function VTTBattlePage() {
   const [rightOpen, setRightOpen] = useState(true);
   const [chatInput, setChatInput] = useState('');
   const [isDiceModalOpen, setIsDiceModalOpen] = useState(false);
+  const [aiThinking, setAiThinking] = useState(false);
   const [radialMenu, setRadialMenu] = useState<{ visible: boolean; x: number; y: number; tokenId: string; tokenName: string }>({
     visible: false, x: 0, y: 0, tokenId: '', tokenName: ''
   });
@@ -168,7 +171,15 @@ export default function VTTBattlePage() {
         .eq('session_id', sessionId)
         .order('created_at', { ascending: true })
         .limit(50);
-      if (msgs) setMessages(msgs as ChatMessage[]);
+      if (msgs) {
+        setMessages(prev => {
+          const existingIds = new Set(prev.map(m => m.id));
+          const newMsgs = (msgs as ChatMessage[]).filter(m => !existingIds.has(m.id));
+          return [...prev, ...newMsgs].sort((a, b) => 
+            new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+          ).slice(-100);
+        });
+      }
 
       setLoading(false);
     };
@@ -272,61 +283,90 @@ export default function VTTBattlePage() {
     const content = chatInput.trim();
     setChatInput('');
 
+    const playerName = user.user_metadata?.full_name || user.email?.split('@')[0] || 'Player';
+
     await supabase.from('session_messages').insert({
       session_id: sessionId,
       user_id: user.id,
-      sender_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'Player',
+      sender_name: playerName,
       message_type: 'chat',
       content,
     });
-  }, [chatInput, sessionId, user]);
 
-  const rollDice = useCallback((diceType: string) => {
-    const sides = parseInt(diceType.slice(1));
-    const roll = Math.floor(Math.random() * sides) + 1;
-    const isCritical = sides === 20 && (roll === 20 || roll === 1);
+    // If AI DM session, process the player action through the orchestrator
+    if (session?.is_ai_dm) {
+      setAiThinking(true);
+      try {
+        const response = await AIDMService.processAction(
+          {
+            sessionId,
+            playerId: user.id,
+            characterName: playerName,
+            actionType: 'speech',
+            content,
+          },
+          sessionId
+        );
+
+        // Insert AI response into session_messages
+        await supabase.from('session_messages').insert({
+          session_id: sessionId,
+          user_id: user.id, // Must be current user ID for RLS
+          sender_name: 'AI Dungeon Master',
+          message_type: 'ai',
+          content: response.narration,
+        });
+      } catch (err: any) {
+        console.error('[VTT] AI DM response failed:', err);
+        // Insert a fallback response so the player knows AI heard them
+        await supabase.from('session_messages').insert({
+          session_id: sessionId,
+          user_id: user.id,
+          sender_name: 'AI Dungeon Master',
+          message_type: 'ai',
+          content: '⚠️ Мастер обдумывает ситуацию... (AI временно недоступен)',
+        });
+      } finally {
+        setAiThinking(false);
+      }
+    }
+  }, [chatInput, sessionId, user, session?.is_ai_dm]);
+
+  const rollDice = useCallback(async (diceType: string) => {
+    if (!sessionId || !user) return;
+    const playerName = user.user_metadata?.full_name || user.email?.split('@')[0] || 'Player';
+    const { total, rolls } = DiceService.roll(diceType);
+    const isCritical = diceType.toLowerCase().includes('d20') && rolls.includes(20);
     
     const result: DiceResult = {
-      id: crypto.randomUUID(),
-      playerName: user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Player',
-      diceType,
-      total: roll,
-      rolls: [roll],
+      formula: diceType,
+      playerName,
+      total,
+      rolls,
       timestamp: new Date().toISOString(),
       isCritical,
     };
 
     setDiceResults(prev => [result, ...prev].slice(0, 20));
 
-    // Broadcast via socket
-    socketService.rollDice(diceType);
+    await supabase.from('session_messages').insert({
+      session_id: sessionId,
+      user_id: user.id,
+      sender_name: playerName,
+      message_type: 'dice',
+      content: `Бросок ${diceType} → **${total}**${isCritical ? ' 🎯 КРИТ!' : ''}`,
+      dice_roll_data: result,
+    });
+  }, [user, sessionId]);
 
-    // Save to DB
-    if (sessionId && user) {
-      supabase.from('session_messages').insert({
-        session_id: sessionId,
-        user_id: user.id,
-        sender_name: result.playerName,
-        message_type: 'dice',
-        content: `Бросил ${diceType} → ${roll}${isCritical ? (roll === 20 ? ' 🎯 КРИТ!' : ' 💀 ПРОВАЛ!') : ''}`,
-        dice_roll_data: result,
-      });
-    }
-
-    if (isCritical) {
-      toast({
-        title: roll === 20 ? '🎯 Критический успех!' : '💀 Критический провал!',
-        description: `${diceType}: ${roll}`,
-      });
-    }
-  }, [user, sessionId, toast]);
-
-  const handle3DDiceRoll = useCallback((formula: string, reason: string, playerName: string, resultTotal: number) => {
-    const isCritical = formula.includes('d20') && (resultTotal >= 20); // Approximation without raw rolls, since result is total
+  const handle3DDiceRoll = useCallback(async (formula: string, reason: string, playerName: string, resultTotal: number) => {
+    if (!sessionId || !user) return;
+    const isCritical = formula.toLowerCase().includes('d20') && resultTotal >= 20;
+    
     const result: DiceResult = {
-      id: crypto.randomUUID(),
-      playerName: playerName || user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Player',
-      diceType: formula,
+      formula,
+      playerName,
+      reason,
       total: resultTotal,
       rolls: [resultTotal],
       timestamp: new Date().toISOString(),
@@ -334,18 +374,15 @@ export default function VTTBattlePage() {
     };
 
     setDiceResults(prev => [result, ...prev].slice(0, 20));
-    socketService.rollDice(formula);
-
-    if (sessionId && user) {
-      supabase.from('session_messages').insert({
-        session_id: sessionId,
-        user_id: user.id,
-        sender_name: result.playerName,
-        message_type: 'dice',
-        content: `Бросок ${formula} ${reason ? '(' + reason + ')' : ''} → ${resultTotal}${isCritical ? ' 🎯 КРИТ!' : ''}`,
-        dice_roll_data: result,
-      });
-    }
+    
+    await supabase.from('session_messages').insert({
+      session_id: sessionId,
+      user_id: user.id,
+      sender_name: playerName,
+      message_type: 'dice',
+      content: `Бросок ${formula} ${reason ? '(' + reason + ')' : ''} → **${resultTotal}**${isCritical ? ' 🎯 КРИТ!' : ''}`,
+      dice_roll_data: result,
+    });
   }, [user, sessionId]);
 
   const copyInviteLink = () => {
@@ -355,29 +392,26 @@ export default function VTTBattlePage() {
     toast({ title: '🔗 Ссылка скопирована', description: url });
   };
 
-  // ─── Loading screen ───────────────────────────────────────────────────────
-  if (loading) {
-    return (
-      <div className="fixed inset-0 bg-[#050508] flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <motion.div
-            animate={{ rotate: 360 }}
-            transition={{ repeat: Infinity, duration: 3, ease: 'linear' }}
-            className="text-5xl"
-          >
-            ⚔️
-          </motion.div>
-          <div className="text-white/60 text-sm">Входим в Нексус...</div>
-        </div>
-      </div>
-    );
-  }
-
   const onlinePlayers = players.filter(p => p.is_online);
   const DICE_TYPES = ['d4', 'd6', 'd8', 'd10', 'd12', 'd20'];
 
   return (
     <div className="fixed inset-0 bg-[#050508] text-slate-100 flex overflow-hidden select-none">
+      {/* ─── Loading screen Overlay ────────────────────────────────────────────── */}
+      {loading && (
+        <div className="absolute inset-0 z-50 bg-[#050508] flex items-center justify-center">
+          <div className="flex flex-col items-center gap-4">
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ repeat: Infinity, duration: 3, ease: 'linear' }}
+              className="text-5xl"
+            >
+              ⚔️
+            </motion.div>
+            <div className="text-white/60 text-sm">Входим в Нексус...</div>
+          </div>
+        </div>
+      )}
 
       {/* ══ LEFT SIDEBAR ══ */}
       <AnimatePresence>
@@ -479,11 +513,24 @@ export default function VTTBattlePage() {
         />
 
         {/* VTT Loading overlay */}
-        {vttState.loading && (
+        {(vttState.loading || vttState.error) && (
           <div className="absolute inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm z-10">
             <div className="flex flex-col items-center gap-3">
-              <Loader2 className="h-8 w-8 animate-spin text-amber-400" />
-              <p className="text-sm text-slate-400">Загрузка карты...</p>
+              {vttState.loading ? (
+                <>
+                  <Loader2 className="h-8 w-8 animate-spin text-amber-400" />
+                  <p className="text-sm text-slate-400">Загрузка карты...</p>
+                </>
+              ) : (
+                <>
+                  <div className="text-red-500 text-3xl mb-2">⚠️</div>
+                  <p className="text-sm text-red-400 font-medium">Ошибка инициализации</p>
+                  <p className="text-xs text-red-500/70 max-w-xs text-center">{vttState.error}</p>
+                  <Button variant="outline" size="sm" className="mt-4 border-red-500/30 text-red-400 hover:bg-red-500/10" onClick={() => window.location.reload()}>
+                    Перезагрузить
+                  </Button>
+                </>
+              )}
             </div>
           </div>
         )}
@@ -535,28 +582,23 @@ export default function VTTBattlePage() {
 
             if (!tokenId || !sessionId) return;
 
-            // Permission: DM can do all; player can only act on their own token
             const playerTokenList = useEnhancedBattleStore.getState().tokens;
             const token = playerTokenList.find(t => t.id === tokenId);
-            if (!isDM) {
-              if (!token || token.character_id !== user?.id) return;
-            }
+            
+            // Permission check: DM can do all; player can only act on their own token
+            if (!isDM && (!token || token.owner_id !== user?.id)) return;
 
             if (action === 'delete') {
-              if (!isDM) return; // only DM can delete
+              if (!isDM) return;
               await supabase.from('battle_tokens').delete().eq('id', tokenId);
+              toast({ title: "Токен удален", description: `${token?.name} покинул поле боя` });
             } else if (action === 'hide') {
               if (!isDM) return;
-              await supabase.from('battle_tokens')
-                .update({ is_hidden_from_players: true })
-                .eq('id', tokenId);
+              await supabase.from('battle_tokens').update({ is_hidden_from_players: true }).eq('id', tokenId);
             } else if (action === 'show') {
               if (!isDM) return;
-              await supabase.from('battle_tokens')
-                .update({ is_hidden_from_players: false })
-                .eq('id', tokenId);
+              await supabase.from('battle_tokens').update({ is_hidden_from_players: false }).eq('id', tokenId);
             } else if (action === 'ping') {
-              // Broadcast a 'ping' system message so all players see it
               if (sessionId && user) {
                 await supabase.from('session_messages').insert({
                   session_id: sessionId,
@@ -566,8 +608,50 @@ export default function VTTBattlePage() {
                   content: `📍 ${radialMenu.tokenName} отмечен на карте`,
                 });
               }
+            } else if (action === 'attack') {
+              const rollResult = Math.floor(Math.random() * 20) + 1;
+              if (sessionId && user) {
+                await supabase.from('session_messages').insert({
+                  session_id: sessionId,
+                  user_id: user.id,
+                  sender_name: token?.name || 'Unknown',
+                  message_type: 'dice',
+                  content: `⚔️ **Атака** от ${token?.name || 'неизвестного'}: Бросок d20 → **${rollResult}**`,
+                  dice_roll_data: { diceType: 'd20', total: rollResult, rolls: [rollResult], playerName: token?.name }
+                });
+              }
+              toast({ title: "Атака", description: `${token?.name} атакует! Бросок: ${rollResult}` });
+            } else if (action === 'heal') {
+              const healAmount = Math.floor(Math.random() * 8) + 2; 
+              if (token) {
+                const newHp = Math.min(token.maxHp, token.hp + healAmount);
+                await supabase.from('battle_tokens').update({ hp: newHp }).eq('id', tokenId);
+                
+                if (sessionId && user) {
+                  await supabase.from('session_messages').insert({
+                    session_id: sessionId,
+                    user_id: user.id,
+                    sender_name: 'System',
+                    message_type: 'system',
+                    content: `💚 ${token.name} восстановил **${healAmount}** хитов.`,
+                  });
+                }
+                toast({ title: "Лечение", description: `${token.name} восстановил ${healAmount} хитов` });
+              }
+            } else if (action === 'defend') {
+              if (sessionId && user) {
+                await supabase.from('session_messages').insert({
+                  session_id: sessionId,
+                  user_id: user.id,
+                  sender_name: token?.name || 'Unknown',
+                  message_type: 'system',
+                  content: `🛡️ ${token?.name} встает в защитную стойку.`,
+                });
+              }
+              toast({ title: "Защита", description: `${token?.name} защищается` });
+            } else if (action === 'target') {
+               toast({ title: "Цель", description: `${token?.name} выбран целью` });
             }
-            // HP change actions are handled by the VTT engine's own HP panel
           }}
         />
       </div>
@@ -642,6 +726,20 @@ export default function VTTBattlePage() {
                 </div>
               ))}
               <div ref={chatEndRef} />
+
+              {/* AI thinking indicator */}
+              {aiThinking && (
+                <div className="text-xs rounded-xl p-2.5 bg-purple-950/40 border border-purple-700/20 animate-pulse">
+                  <div className="flex items-center gap-1.5">
+                    <Bot className="h-3 w-3 text-purple-400" />
+                    <span className="text-purple-400 font-semibold text-[10px]">AI Dungeon Master</span>
+                  </div>
+                  <p className="text-purple-200 italic mt-1 flex items-center gap-2">
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                    Мастер обдумывает ответ...
+                  </p>
+                </div>
+              )}
             </div>
 
             {/* Chat input */}
@@ -650,13 +748,14 @@ export default function VTTBattlePage() {
                 <input
                   value={chatInput}
                   onChange={e => setChatInput(e.target.value)}
-                  onKeyDown={e => e.key === 'Enter' && sendMessage()}
-                  placeholder="Что делает ваш герой?.."
-                  className="flex-1 bg-slate-900/60 border border-white/10 rounded-xl px-3 py-2 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-amber-500/40"
+                  onKeyDown={e => e.key === 'Enter' && !aiThinking && sendMessage()}
+                  placeholder={aiThinking ? "AI обрабатывает..." : "Что делает ваш герой?.."}
+                  disabled={aiThinking}
+                  className="flex-1 bg-slate-900/60 border border-white/10 rounded-xl px-3 py-2 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-amber-500/40 disabled:opacity-40"
                 />
                 <button
                   onClick={sendMessage}
-                  disabled={!chatInput.trim()}
+                  disabled={!chatInput.trim() || aiThinking}
                   className="px-3 py-2 bg-amber-600 hover:bg-amber-500 disabled:opacity-30 rounded-xl text-white text-xs transition"
                 >
                   →

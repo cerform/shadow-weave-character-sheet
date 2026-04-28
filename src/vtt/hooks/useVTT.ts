@@ -36,14 +36,21 @@ export function useVTT(config: VTTConfig, callbacks?: VTTInteractionCallbacks) {
   const tokens = useEnhancedBattleStore((state) => state.tokens);
 
   useEffect(() => {
-    if (!canvasRef.current) return;
+    // Only initialize if we have a canvas and haven't initialized yet for this session
+    if (!canvasRef.current || (state.initialized && coreRef.current)) return;
 
-    console.log('[useVTT] Initializing VTT Core');
+    console.log('[useVTT] Initializing VTT Core for session:', config.sessionId);
     
+    // Safety timeout to ensure loading spinner disappears even if WebGL hangs
+    const safetyTimeout = setTimeout(() => {
+      setState(prev => prev.loading ? { ...prev, loading: false, error: 'Initialization timed out' } : prev);
+    }, 10000);
+
     try {
-      // Initialize VTT Core ONCE
-      coreRef.current = new VTTCore(canvasRef.current, config);
-      coreRef.current.start();
+      // Initialize VTT Core
+      const core = new VTTCore(canvasRef.current, config);
+      coreRef.current = core;
+      core.start();
       
       setState({
         initialized: true,
@@ -61,15 +68,24 @@ export function useVTT(config: VTTConfig, callbacks?: VTTInteractionCallbacks) {
       });
     }
 
-    // Cleanup on unmount or sessionId change
     return () => {
-      console.log('[useVTT] Cleaning up VTT Core');
+      clearTimeout(safetyTimeout);
       if (coreRef.current) {
+        console.log('[useVTT] Cleaning up VTT Core');
         coreRef.current.dispose();
         coreRef.current = null;
+        setState({ initialized: false, loading: true, error: null });
       }
     };
-  }, [config.sessionId]); // Only re-initialize if sessionId changes
+  }, [config.sessionId, !!canvasRef.current]); 
+
+  // Sync map updates separately
+  useEffect(() => {
+    if (coreRef.current && config.mapUrl && state.initialized) {
+      console.log('[useVTT] Map URL updated:', config.mapUrl);
+      coreRef.current.loadMap(config.mapUrl, config.gridSize);
+    }
+  }, [config.mapUrl, config.gridSize, state.initialized]);
 
   // Map user inputs (Pan, Zoom, Drag&Drop)
   useEffect(() => {

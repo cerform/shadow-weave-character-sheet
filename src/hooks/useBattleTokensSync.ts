@@ -243,12 +243,5 @@ export const useBattleTokensSync = (sessionId: string) => {
       supabase.removeChannel(channel);
       socketService.removeBattleListener(handleBattleEvent);
     };
-
-    return () => {
-      console.log('🔕 Отписка от изменений токенов');
-      // Flush оставшиеся обновления перед размонтированием
-      flushUpdates();
-      supabase.removeChannel(channel);
-    };
-  }, [sessionId, scheduleUpdate, flushUpdates]); // Добавили scheduleUpdate и flushUpdates
+  }, [sessionId]);
 };
