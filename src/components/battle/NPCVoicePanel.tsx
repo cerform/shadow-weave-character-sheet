@@ -49,7 +49,7 @@ export function NPCVoicePanel({ sessionId, isDM }: NPCVoicePanelProps) {
 
     const handleNPCAudio = (data: { npcName: string; voiceRole: string; audioData: string }) => {
       setIsGenerating(false);
-      const id = crypto.randomUUID();
+      const id = Math.random().toString(36).substring(2, 11);
       const speech: NPCSpeech = {
         id,
         npcName: data.npcName,
@@ -77,7 +77,7 @@ export function NPCVoicePanel({ sessionId, isDM }: NPCVoicePanelProps) {
           // If no match, add text-only entry
           if (!updated.some(s => s.npcName === msg.sender_name && s.text === msg.content)) {
             const entry: NPCSpeech = {
-              id: crypto.randomUUID(),
+              id: Math.random().toString(36).substring(2, 11),
               npcName: msg.sender_name,
               text: msg.content,
               voiceRole: msg.npc_voice_role || 'default',

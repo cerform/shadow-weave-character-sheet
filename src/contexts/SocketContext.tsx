@@ -2,6 +2,7 @@
 import React, { createContext, useContext, ReactNode, useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { realtimeManager } from '@/services/RealtimeService';
 
 interface SocketContextProps {
   sendUpdate: ((data: any) => void) | null;
@@ -52,16 +53,10 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
     try {
       console.log('📡 Отправка данных через Supabase:', data);
       
-      // Отправляем обновления через broadcast в канал сессии
-      const channel = supabase.channel(`session-${sessionData.id}`);
-      const result = await channel.send({
-        type: 'broadcast',
-        event: 'session_update',
-        payload: {
-          ...data,
-          timestamp: new Date().toISOString(),
-          sessionId: sessionData.id
-        }
+      const result = await realtimeManager.sendBroadcast(sessionData.id, 'session_update', {
+        ...data,
+        timestamp: new Date().toISOString(),
+        sessionId: sessionData.id
       });
 
       if (result === 'ok') {
@@ -87,69 +82,48 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
       console.log(`🔌 Подключение к сессии: ${sessionId}`);
       setConnectionError(null);
 
+      const user = (await supabase.auth.getUser()).data.user;
+
       // Создаем канал для сессии
-      const channel = supabase.channel(`session-${sessionId}`, {
-        config: {
-          presence: {
-            key: sessionId,
-          },
-          broadcast: {
-            self: true,
-          },
-        },
-      });
+      const channel = await realtimeManager.connectSession(sessionId, user?.id, playerName, characterId);
 
       // Подписываемся на обновления состояния сессии
-      channel
-        .on('broadcast', { event: 'session_update' }, (payload) => {
-          console.log('📨 Получено обновление сессии:', payload);
-          setLastUpdate({
-            ...payload.payload,
-            timestamp: new Date(payload.payload.timestamp)
-          });
-        })
-        .on('presence', { event: 'sync' }, () => {
-          const state = channel.presenceState();
-          console.log('👥 Обновление участников:', state);
-        })
-        .on('presence', { event: 'join' }, ({ key, newPresences }) => {
-          console.log('👋 Пользователь присоединился:', key, newPresences);
-        })
-        .on('presence', { event: 'leave' }, ({ key, leftPresences }) => {
-          console.log('👋 Пользователь покинул сессию:', key, leftPresences);
-        })
-        .subscribe(async (status) => {
-          if (status === 'SUBSCRIBED') {
-            console.log('✅ Подключен к каналу сессии');
-            setIsConnected(true);
-            setConnected(true);
-            
-            // Регистрируем присутствие пользователя
-            await channel.track({
-              user_id: (await supabase.auth.getUser()).data.user?.id,
-              player_name: playerName,
-              character_id: characterId,
-              online_at: new Date().toISOString(),
-            });
-            
-            setSessionData({ 
-              id: sessionId, 
-              name: `Сессия ${sessionId}`,
-              playerName,
-              characterId,
-              channel
-            });
-
-            toast({
-              title: "Подключение установлено",
-              description: "Вы подключены к сессии",
-            });
-          } else if (status === 'CHANNEL_ERROR') {
-            throw new Error('Ошибка подключения к каналу');
-          }
+      realtimeManager.onBroadcast(sessionId, 'session_update', (payload) => {
+        console.log('📨 Получено обновление сессии:', payload);
+        setLastUpdate({
+          ...payload.payload,
+          timestamp: new Date(payload.payload.timestamp)
         });
+      });
 
+      realtimeManager.onPresence(sessionId, 'sync', (state) => {
+        console.log('👥 Обновление участников:', state);
+      });
+
+      realtimeManager.onPresence(sessionId, 'join', ({ key, newPresences }) => {
+        console.log('👋 Пользователь присоединился:', key, newPresences);
+      });
+
+      realtimeManager.onPresence(sessionId, 'leave', ({ key, leftPresences }) => {
+        console.log('👋 Пользователь покинул сессию:', key, leftPresences);
+      });
+
+      setIsConnected(true);
+      setConnected(true);
       setSocket(channel);
+      setSessionData({ 
+        id: sessionId, 
+        name: `Сессия ${sessionId}`,
+        playerName,
+        characterId,
+        channel
+      });
+
+      toast({
+        title: "Подключение установлено",
+        description: "Вы подключены к сессии",
+      });
+
     } catch (error) {
       console.error('❌ Ошибка подключения к сессии:', error);
       setConnectionError('Не удалось подключиться к сессии');
@@ -166,12 +140,13 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
   // Очистка при размонтировании
   useEffect(() => {
     return () => {
-      if (socket) {
+      if (sessionData?.id) {
         console.log('🔌 Отключение от канала сессии');
-        supabase.removeChannel(socket);
+        // We don't strictly call removeChannel here because VTT might still be using it.
+        // It's safer to rely on garbage collection or explicit disconnects when leaving the VTT page.
       }
     };
-  }, [socket]);
+  }, [sessionData]);
 
   return (
     <SocketContext.Provider 

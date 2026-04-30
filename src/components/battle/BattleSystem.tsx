@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { realtimeManager } from '@/services/RealtimeService';
 import { Badge } from '@/components/ui/badge';
 import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
@@ -80,35 +81,17 @@ export const BattleSystem: React.FC<BattleSystemProps> = ({
     loadTokens();
     if (mapId) loadFogOfWar();
     
+    realtimeManager.connectSession(sessionId).catch(console.error);
+
     // Subscribe to real-time updates
-    const initiativeChannel = supabase
-      .channel(`initiative_${sessionId}`)
-      .on('postgres_changes', 
-        { event: '*', schema: 'public', table: 'initiative_tracker', filter: `session_id=eq.${sessionId}` },
-        () => loadInitiative()
-      )
-      .subscribe();
-
-    const tokensChannel = supabase
-      .channel(`tokens_${sessionId}`)
-      .on('postgres_changes',
-        { event: '*', schema: 'public', table: 'battle_tokens', filter: `session_id=eq.${sessionId}` },
-        () => loadTokens()
-      )
-      .subscribe();
-
-    const fogChannel = mapId ? supabase
-      .channel(`fog_${mapId}`)
-      .on('postgres_changes',
-        { event: '*', schema: 'public', table: 'fog_of_war', filter: `map_id=eq.${mapId}` },
-        () => loadFogOfWar()
-      )
-      .subscribe() : null;
+    const unsubInit = realtimeManager.onPgChange(sessionId, 'initiative_tracker', '*', () => loadInitiative());
+    const unsubTokens = realtimeManager.onPgChange(sessionId, 'battle_tokens', '*', () => loadTokens());
+    const unsubFog = mapId ? realtimeManager.onPgChange(sessionId, 'fog_of_war', '*', () => loadFogOfWar()) : () => {};
 
     return () => {
-      initiativeChannel.unsubscribe();
-      tokensChannel.unsubscribe();
-      if (fogChannel) fogChannel.unsubscribe();
+      unsubInit();
+      unsubTokens();
+      unsubFog();
     };
   }, [sessionId, mapId]);
 

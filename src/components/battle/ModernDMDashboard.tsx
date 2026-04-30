@@ -58,6 +58,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate, useParams } from 'react-router-dom';
+import { realtimeManager } from '@/services/RealtimeService';
 
 interface BattleToken extends TokenData {
   session_id?: string;
@@ -109,25 +110,14 @@ const ModernDMDashboard: React.FC = () => {
   useEffect(() => {
     if (!sessionId) return;
 
-    const tokenChannel = supabase
-      .channel('battle_tokens_changes')
-      .on('postgres_changes', 
-        { event: '*', schema: 'public', table: 'battle_tokens', filter: `session_id=eq.${sessionId}` },
-        () => loadBattleData()
-      )
-      .subscribe();
+    realtimeManager.connectSession(sessionId).catch(console.error);
 
-    const initiativeChannel = supabase
-      .channel('initiative_changes')
-      .on('postgres_changes',
-        { event: '*', schema: 'public', table: 'initiative_tracker', filter: `session_id=eq.${sessionId}` },
-        () => loadInitiative()
-      )
-      .subscribe();
+    const unsubTokens = realtimeManager.onPgChange(sessionId, 'battle_tokens', '*', () => loadBattleData());
+    const unsubInit = realtimeManager.onPgChange(sessionId, 'initiative_tracker', '*', () => loadInitiative());
 
     return () => {
-      supabase.removeChannel(tokenChannel);
-      supabase.removeChannel(initiativeChannel);
+      unsubTokens();
+      unsubInit();
     };
   }, [sessionId]);
 

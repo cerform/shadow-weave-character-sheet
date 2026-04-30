@@ -3,11 +3,11 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { DiceService } from '@/services/diceService';
 import { supabase } from '@/integrations/supabase/client';
-import { socketService } from '@/services/socket';
+import { Button } from '@/components/ui/button';
+import { realtimeManager } from '@/services/RealtimeService';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { useVTT } from '@/vtt/hooks/useVTT';
-import { VTTLayout } from '@/components/vtt/VTTLayout';
 import { FogTools } from '@/vtt/ui/FogTools';
 import { AIGenerator } from '@/components/battle/BattleMapUI/sidebars/AIGenerator';
 import { AIDMService } from '@/services/ai/AIDMService';
@@ -86,23 +86,23 @@ export default function VTTBattlePage() {
   useBattleTokensSync(sessionId || '');
 
   // ─── VTT Engine ─────────────────────────────────────────────────────────
-  const { canvasRef, core, state: vttState, fog } = useVTT({
+  // ─── VTT Engine Initialization ──────────────────────────────────────────
+  const vttConfig = React.useMemo(() => ({
     sessionId: sessionId || '',
     isDM,
     gridSize: 50,
     mapUrl: session?.current_map_url || 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=1600&q=80'
-  }, {
-    onTokenMove: async (tokenId, newX, newY) => {
-      // Find the token in the store/state to check ownership
+  }), [sessionId, isDM, session?.current_map_url]);
+
+  const vttCallbacks = React.useMemo(() => ({
+    onTokenMove: async (tokenId: string, newX: number, newY: number) => {
       const playerTokenList = useEnhancedBattleStore.getState().tokens;
       const t = playerTokenList.find(t => t.id === tokenId);
       if (!t) return;
 
-      // Ensure permission
-      const canMove = isDM || t.character_id === user?.id;
+      const canMove = isDM || t.owner_id === user?.id;
       if (!canMove) {
         toast({ title: 'Отказано в доступе', description: 'Вы не можете перемещать чужой токен', variant: 'destructive' });
-        // It will snap back because Zustand hasn't changed and hook will sync on next render
         return;
       }
 
@@ -111,7 +111,7 @@ export default function VTTBattlePage() {
         position_y: newY
       }).eq('id', tokenId);
     },
-    onTokenClick: (tokenId, event) => {
+    onTokenClick: (tokenId: string, event: PointerEvent) => {
       const playerTokenList = useEnhancedBattleStore.getState().tokens;
       const t = playerTokenList.find(t => t.id === tokenId);
       if (!t) return;
@@ -123,8 +123,7 @@ export default function VTTBattlePage() {
         tokenName: t.name
       });
     },
-    onTokenContextMenu: (tokenId, event) => {
-      // same behavior as click for now
+    onTokenContextMenu: (tokenId: string, event: PointerEvent) => {
       const playerTokenList = useEnhancedBattleStore.getState().tokens;
       const t = playerTokenList.find(t => t.id === tokenId);
       if (!t) return;
@@ -136,7 +135,9 @@ export default function VTTBattlePage() {
         tokenName: t.name
       });
     }
-  });
+  }), [isDM, user?.id, toast]);
+
+  const { canvasRef, core, state: vttState, fog } = useVTT(vttConfig, vttCallbacks);
 
   // ─── Load Session ─────────────────────────────────────────────────────────
   useEffect(() => {
@@ -190,56 +191,42 @@ export default function VTTBattlePage() {
   useEffect(() => {
     if (!sessionId) return;
 
-    // Subscribe to player changes
-    const playerSub = supabase
-      .channel(`vtt-players-${sessionId}`)
-      .on('postgres_changes', {
-        event: '*', schema: 'public', table: 'session_players',
-        filter: `session_id=eq.${sessionId}`
-      }, (payload) => {
-        if (payload.eventType === 'INSERT') {
-          setPlayers(prev => [...prev, payload.new as PlayerInfo]);
-        } else if (payload.eventType === 'UPDATE') {
-          setPlayers(prev => prev.map(p => p.id === payload.new.id ? payload.new as PlayerInfo : p));
-        } else if (payload.eventType === 'DELETE') {
-          setPlayers(prev => prev.filter(p => p.id !== payload.old.id));
-        }
-      })
-      .subscribe();
+    // Connect unified channel
+    const connectChannel = async () => {
+      await realtimeManager.connectSession(sessionId, user?.id, user?.user_metadata?.full_name || user?.email);
+    };
+    connectChannel();
 
-    // Subscribe to messages
-    const msgSub = supabase
-      .channel(`vtt-messages-${sessionId}`)
-      .on('postgres_changes', {
-        event: 'INSERT', schema: 'public', table: 'session_messages',
-        filter: `session_id=eq.${sessionId}`
-      }, (payload) => {
-        const msg = payload.new as ChatMessage;
-        setMessages(prev => [...prev, msg].slice(-100));
-      })
-      .subscribe();
+    const unsubPlayers = realtimeManager.onPgChange(sessionId, 'session_players', '*', (payload) => {
+      if (payload.eventType === 'INSERT') {
+        setPlayers(prev => [...prev, payload.new as PlayerInfo]);
+      } else if (payload.eventType === 'UPDATE') {
+        setPlayers(prev => prev.map(p => p.id === payload.new.id ? payload.new as PlayerInfo : p));
+      } else if (payload.eventType === 'DELETE') {
+        setPlayers(prev => prev.filter(p => p.id !== payload.old.id));
+      }
+    });
 
-    // Subscribe to session changes (map updates, etc.)
-    const sessionSub = supabase
-      .channel(`vtt-session-${sessionId}`)
-      .on('postgres_changes', {
-        event: 'UPDATE', schema: 'public', table: 'game_sessions',
-        filter: `id=eq.${sessionId}`
-      }, (payload) => {
-        setSession(prev => prev ? { ...prev, ...payload.new } : null);
-        // If map URL changed, update VTT
-        if (payload.new.current_map_url && core) {
-          core.loadMap(payload.new.current_map_url);
-        }
-      })
-      .subscribe();
+    const unsubMsgs = realtimeManager.onPgChange(sessionId, 'session_messages', 'INSERT', (payload) => {
+      const msg = payload.new as ChatMessage;
+      setMessages(prev => [...prev, msg].slice(-100));
+    });
+
+    const unsubSession = realtimeManager.onPgChange(sessionId, 'game_sessions', 'UPDATE', (payload) => {
+      setSession(prev => prev ? { ...prev, ...payload.new } : null);
+      if (payload.new.current_map_url && core) {
+        core.loadMap(payload.new.current_map_url);
+      }
+    });
 
     return () => {
-      supabase.removeChannel(playerSub);
-      supabase.removeChannel(msgSub);
-      supabase.removeChannel(sessionSub);
+      unsubPlayers();
+      unsubMsgs();
+      unsubSession();
+      // We don't disconnect here because other components (like TokensSync) might be using the channel.
+      // A full disconnect happens on high-level unmount if needed, or we just let it be.
     };
-  }, [sessionId, core]);
+  }, [sessionId, core, user]);
 
   // ─── Socket Events (if backend available) ────────────────────────────────
   useEffect(() => {
@@ -285,13 +272,23 @@ export default function VTTBattlePage() {
 
     const playerName = user.user_metadata?.full_name || user.email?.split('@')[0] || 'Player';
 
-    await supabase.from('session_messages').insert({
+    const { error } = await supabase.from('session_messages').insert({
       session_id: sessionId,
       user_id: user.id,
       sender_name: playerName,
       message_type: 'chat',
       content,
     });
+
+    if (error) {
+      console.error('[VTT] Failed to send message:', error);
+      toast({
+        title: 'Ошибка отправки',
+        description: 'Не удалось отправить сообщение: ' + error.message,
+        variant: 'destructive',
+      });
+      return;
+    }
 
     // If AI DM session, process the player action through the orchestrator
     if (session?.is_ai_dm) {
@@ -520,6 +517,14 @@ export default function VTTBattlePage() {
                 <>
                   <Loader2 className="h-8 w-8 animate-spin text-amber-400" />
                   <p className="text-sm text-slate-400">Загрузка карты...</p>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="mt-2 text-[10px] text-slate-500 hover:text-white"
+                    onClick={() => window.location.reload()}
+                  >
+                    Зависло? Перезагрузить
+                  </Button>
                 </>
               ) : (
                 <>

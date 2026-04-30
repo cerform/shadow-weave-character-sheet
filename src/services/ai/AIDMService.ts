@@ -85,6 +85,7 @@ export class AIDMService {
   static async initCampaign(params: CampaignInitParams): Promise<CampaignInitResult> {
     console.log('[AIDMService] Initializing campaign:', params.campaignName);
 
+    console.log('[AIDMService] Calling Edge Function: ai-campaign-init');
     const { data, error } = await supabase.functions.invoke('ai-campaign-init', {
       body: {
         campaignName: params.campaignName,
@@ -97,41 +98,11 @@ export class AIDMService {
     let result: CampaignInitResult;
 
     if (error || !data?.success) {
-      console.warn('[AIDMService] Campaign init failed, using fallback generation due to:', error?.message || data?.error);
-      
-      result = {
-        worldFacts: {
-          settingName: params.campaignName,
-          mainTheme: params.aiPersonality === 'dark' ? "Выживание в мрачном мире" : "Эпическое путешествие",
-          currentCrisis: "Древнее зло пробудилось",
-          geography: "Туманные долины и разрушенные замки"
-        },
-        shortSummary: `Партия прибыла в опасные земли. Начинается новая глава: ${params.campaignName}.`,
-        openingScene: `Вы стоите на пороге неизвестности. Туман клубится вокруг ваших ног, а вдалеке слышен зловещий вой. Ваша легенда только начинается...`,
-        mainVillain: {
-          name: "Лорд Теней",
-          description: "Высокая фигура, закутанная в тьму.",
-          motivation: "Уничтожить свет и надежду в этом мире.",
-          personalConnectionToParty: "Он следил за каждым шагом героев."
-        },
-        startingLocation: {
-          name: "Заброшенный Храм",
-          description: "Старые руины, поросшие мхом. Здесь безопасно, но только пока горит костер.",
-          imagePrompt: "A dark, atmospheric fantasy ruins, moody lighting, foggy, highly detailed, digital painting"
-        },
-        initialQuests: [
-          {
-            title: "Разведать окрестности",
-            description: "Найти безопасное место для привала.",
-            reward: "100 XP",
-            difficulty: "Легко"
-          }
-        ],
-        atmosphereImagePrompt: "A dark fantasy tabletop rpg banner, highly detailed, mysterious, menacing"
-      };
-    } else {
-      result = data.data as CampaignInitResult;
+      console.error('[AIDMService] Campaign init failed:', error?.message || data?.error);
+      throw new Error(`AI Campaign Generation failed: ${error?.message || data?.error || 'Unknown error'}`);
     }
+    
+    result = data.data as CampaignInitResult;
 
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {

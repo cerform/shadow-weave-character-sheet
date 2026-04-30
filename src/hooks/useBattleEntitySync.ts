@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { BattleEntity } from '@/types/Monster';
 import { loadGLB, playIfExists } from '@/services/ModelLoader';
 import { getModelForSlug } from '@/services/ModelRegistry';
+import { realtimeManager } from '@/services/RealtimeService';
 
 export function useBattleEntitySync(sessionId: string, scene: Scene | null) {
   const entitiesRef = useRef<Map<string, Object3D>>(new Map());
@@ -13,40 +14,30 @@ export function useBattleEntitySync(sessionId: string, scene: Scene | null) {
 
     console.log(`🔄 Setting up entity sync for session: ${sessionId}`);
 
-    // Подписываемся на изменения в таблице battle_entities
-    const channel = supabase
-      .channel('battle-entities-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'battle_entities',
-          filter: `session_id=eq.${sessionId}`
-        },
-        async (payload) => {
-          console.log('📡 Battle entity change:', payload);
+    realtimeManager.connectSession(sessionId).catch(console.error);
 
-          if (payload.eventType === 'INSERT') {
-            const entity = payload.new as BattleEntity & { size: string };
-            await handleEntityAdded(entity);
-          } else if (payload.eventType === 'UPDATE') {
-      const entity = payload.new as BattleEntity & { size: string };
-            await handleEntityUpdated(entity);
-          } else if (payload.eventType === 'DELETE') {
-            const entity = payload.old as BattleEntity & { size: string };
-            handleEntityRemoved(entity);
-          }
-        }
-      )
-      .subscribe();
+    // Подписываемся на изменения в таблице battle_entities
+    const unsub = realtimeManager.onPgChange(sessionId, 'battle_entities', '*', async (payload) => {
+      console.log('📡 Battle entity change:', payload);
+
+      if (payload.eventType === 'INSERT') {
+        const entity = payload.new as BattleEntity & { size: string };
+        await handleEntityAdded(entity);
+      } else if (payload.eventType === 'UPDATE') {
+        const entity = payload.new as BattleEntity & { size: string };
+        await handleEntityUpdated(entity);
+      } else if (payload.eventType === 'DELETE') {
+        const entity = payload.old as BattleEntity & { size: string };
+        handleEntityRemoved(entity);
+      }
+    });
 
     // Загружаем существующие сущности при инициализации
     loadExistingEntities();
 
     return () => {
       console.log('🔌 Cleaning up entity sync');
-      supabase.removeChannel(channel);
+      unsub();
       
       // Очищаем все объекты из сцены
       entitiesRef.current.forEach((object) => {

@@ -40,7 +40,13 @@ export class VTTCore {
     this.fogRenderer = new FogRenderer(this.renderer.scene);
     
     // Initialize scene
-    this.initScene();
+    try {
+      this.initScene().catch(err => {
+        console.error('[VTTCore] initScene background task failed:', err);
+      });
+    } catch (err) {
+      console.error('[VTTCore] Scene initialization error:', err);
+    }
   }
 
   private async initScene() {

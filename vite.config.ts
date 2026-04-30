@@ -60,6 +60,26 @@ export default defineConfig(({ mode }) => ({
     rollupOptions: {
       output: {
         sourcemapExcludeSources: false, // Включаем исходники в source maps
+        manualChunks: {
+          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+          'vendor-three': ['three'],
+          'vendor-supabase': ['@supabase/supabase-js'],
+          'vendor-lucide': ['lucide-react'],
+          'vendor-framer': ['framer-motion'],
+          'vendor-pdf': ['jspdf', 'html2canvas'],
+          'vendor-ui': [
+            '@radix-ui/react-dialog',
+            '@radix-ui/react-dropdown-menu',
+            '@radix-ui/react-label',
+            '@radix-ui/react-popover',
+            '@radix-ui/react-select',
+            '@radix-ui/react-tabs',
+            '@radix-ui/react-tooltip',
+            '@radix-ui/react-scroll-area',
+            '@radix-ui/react-separator',
+            '@radix-ui/react-slot',
+          ],
+        },
       },
     },
   },

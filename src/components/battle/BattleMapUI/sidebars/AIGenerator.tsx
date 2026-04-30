@@ -4,7 +4,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Wand2, Loader2, Image as ImageIcon, Map as MapIcon, Brain, Settings, Scroll, Shield, Ghost, Sword } from 'lucide-react';
-import { socketService } from '@/services/socket';
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AIDMService, type AIPersonality } from '@/services/ai/AIDMService';
@@ -24,6 +23,7 @@ export const AIGenerator: React.FC<AIGeneratorProps> = ({ sessionId }) => {
 
   const handleGenerateMap = async () => {
     if (!mapPrompt.trim()) return;
+    console.log('[AIGenerator] Starting map generation with prompt:', mapPrompt);
     setIsGeneratingMap(true);
     
     try {
@@ -39,10 +39,18 @@ export const AIGenerator: React.FC<AIGeneratorProps> = ({ sessionId }) => {
         sessionId
       });
 
-      await supabase.from('game_sessions').update({ current_map_url: result.url }).eq('id', sessionId);
+      console.log('[AIGenerator] Map generation result:', result);
+
+      if (!result.url) {
+        throw new Error('AI не вернул URL изображения');
+      }
+
+      const { error: updateError } = await supabase.from('game_sessions').update({ current_map_url: result.url }).eq('id', sessionId);
+      if (updateError) throw updateError;
 
       toast({ title: "Успех", description: "Карта успешно создана!" });
     } catch (error: any) {
+      console.error('[AIGenerator] Map generation failed:', error);
       toast({
         title: "Ошибка",
         description: "Не удалось создать карту: " + (error.message || "Неизвестная ошибка"),

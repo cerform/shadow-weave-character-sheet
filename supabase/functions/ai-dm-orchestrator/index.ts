@@ -141,21 +141,12 @@ ${action.diceResult ? `Бросок: ${action.diceResult.type} = ${action.diceRe
     const message = err instanceof Error ? err.message : "Unknown error";
     console.error("[ai-dm-orchestrator] Error:", message);
 
-    // Return a fallback narration instead of a hard error
     return new Response(
       JSON.stringify({
-        narration:
-          "Мир замирает на мгновение... Мастер собирается с мыслями. Продолжайте свои действия.",
-        mood: "neutral",
-        triggerMap: null,
-        triggerImage: null,
-        memoryUpdates: [],
-        nextActions: ["Попробуйте другое действие"],
+        success: false,
+        error: message
       }),
-      {
-        status: 200,
-        headers: CORS_HEADERS,
-      }
+      { status: 500, headers: CORS_HEADERS }
     );
   }
 });

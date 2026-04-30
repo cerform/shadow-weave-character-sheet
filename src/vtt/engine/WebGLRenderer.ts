@@ -46,7 +46,12 @@ export class WebGLRendererCore {
     this.setSize(window.innerWidth, window.innerHeight);
 
     // Handle resize
-    window.addEventListener("resize", () => this.handleResize());
+    this.onResize = this.onResize.bind(this);
+    window.addEventListener("resize", this.onResize);
+  }
+
+  private onResize() {
+    this.handleResize();
   }
 
   /** Set renderer & camera size */
@@ -120,7 +125,7 @@ export class WebGLRendererCore {
   /** Destroy renderer */
   dispose() {
     this.stop();
-    window.removeEventListener("resize", () => this.handleResize());
+    window.removeEventListener("resize", this.onResize);
     this.renderer.dispose();
     this.scene.clear();
   }

@@ -1,13 +1,10 @@
-// src/vtt/hooks/useVTT.ts
 import { useRef, useEffect, useState } from 'react';
 import { VTTCore } from '../engine/VTTCore';
 import type { VTTConfig, VTTState } from '../types/engine';
 import type { FogBrush } from '../types/fog';
-import { useEnhancedBattleStore } from '@/stores/enhancedBattleStore';
 import * as THREE from 'three';
 import { useEnhancedBattleStore } from '@/stores/enhancedBattleStore';
 import { enhancedTokenToVTT } from '../utils/tokenAdapter';
-import type { BattleToken } from '@/services/socket';
 
 export interface VTTInteractionCallbacks {
   onTokenMove?: (tokenId: string, newX: number, newY: number) => void;
@@ -50,8 +47,11 @@ export function useVTT(config: VTTConfig, callbacks?: VTTInteractionCallbacks) {
       // Initialize VTT Core
       const core = new VTTCore(canvasRef.current, config);
       coreRef.current = core;
+      
+      // Start the core and wait for initial scene setup
       core.start();
       
+      console.log('[useVTT] Setting loading to false');
       setState({
         initialized: true,
         loading: false,
@@ -69,13 +69,14 @@ export function useVTT(config: VTTConfig, callbacks?: VTTInteractionCallbacks) {
     }
 
     return () => {
+      console.log('[useVTT] Cleaning up VTT Core');
       clearTimeout(safetyTimeout);
       if (coreRef.current) {
-        console.log('[useVTT] Cleaning up VTT Core');
         coreRef.current.dispose();
         coreRef.current = null;
-        setState({ initialized: false, loading: true, error: null });
       }
+      // Do NOT reset loading to true here, as it might cause flickering on re-renders
+      setState(prev => ({ ...prev, initialized: false }));
     };
   }, [config.sessionId, !!canvasRef.current]); 
 

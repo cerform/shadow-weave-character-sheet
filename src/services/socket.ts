@@ -108,9 +108,15 @@ class SocketService {
 
       if (isProduction && (isInvalidUrl || isCurrentHost)) {
         if (import.meta.env.DEV) {
-          console.info('ℹ️ WebSocket connection skipped: No external backend URL provided.');
+          console.info('ℹ️ WebSocket connection skipped: No valid external backend URL provided.');
         }
         this.reconnectAttempts = 0;
+        resolve(true);
+        return;
+      }
+
+      // 1.5. Safety: if serverUrl is falsy, don't even try to call io()
+      if (!serverUrl) {
         resolve(true);
         return;
       }
@@ -125,9 +131,10 @@ class SocketService {
       
       this.socket = io(serverUrl, {
         transports: ['websocket', 'polling'],
+        autoConnect: true, // explicit
         reconnection: true,
         reconnectionAttempts: this.maxReconnectAttempts,
-        reconnectionDelay: 5000, // Longer delay to reduce spam if it fails
+        reconnectionDelay: 5000,
         timeout: 10000
       });
 

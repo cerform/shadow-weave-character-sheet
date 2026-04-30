@@ -2,6 +2,7 @@
 import { useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useFogStore } from '@/stores/fogStore';
+import { realtimeManager } from '@/services/RealtimeService';
 
 /**
  * Синхронизация тумана войны через Supabase Realtime
@@ -76,93 +77,76 @@ export function useFogSync(sessionId: string, mapId: string = 'main-map') {
     loadFogState();
 
     // Подписываемся на изменения в realtime
-    const channel = supabase
-      .channel(`fog:${sessionId}:${mapId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'fog_of_war',
-          filter: `session_id=eq.${sessionId}`
-        },
-        (payload) => {
-          console.log('🔄 Real-time fog change:', payload.eventType, payload);
+    realtimeManager.connectSession(sessionId).catch(console.error);
+
+    const unsub = realtimeManager.onPgChange(sessionId, 'fog_of_war', '*', (payload) => {
+      console.log('🔄 Real-time fog change:', payload.eventType, payload);
+      
+      if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
+        const cell = payload.new as any;
+        
+        // Проверяем что это наша карта
+        if (cell.map_id !== mapId) {
+          console.log(`⏭️ Skipping fog update for different map: ${cell.map_id}`);
+          return;
+        }
+        
+        const { maps, sizes } = useFogStore.getState();
+        let map = maps[mapId];
+        let size = sizes[mapId];
+        
+        if (!map || !size) {
+          console.warn('⚠️ Fog map not initialized, creating new map');
+          // Создаем карту если ее еще нет
+          const w = Math.max(cell.grid_x + 1, 50);
+          const h = Math.max(cell.grid_y + 1, 50);
+          map = new Uint8Array(w * h);
+          size = { w, h };
+          useFogStore.getState().setMap(mapId, map, w, h);
+        }
+
+        // Если координаты выходят за границы, расширяем карту
+        let currentW = size.w;
+        let currentH = size.h;
+        
+        if (cell.grid_x >= size.w || cell.grid_y >= size.h) {
+          const newW = Math.max(size.w, cell.grid_x + 10);
+          const newH = Math.max(size.h, cell.grid_y + 10);
+          const newMap = new Uint8Array(newW * newH);
           
-          if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
-            const cell = payload.new as any;
-            
-            // Проверяем что это наша карта
-            if (cell.map_id !== mapId) {
-              console.log(`⏭️ Skipping fog update for different map: ${cell.map_id}`);
-              return;
-            }
-            
-            const { maps, sizes } = useFogStore.getState();
-            let map = maps[mapId];
-            let size = sizes[mapId];
-            
-            if (!map || !size) {
-              console.warn('⚠️ Fog map not initialized, creating new map');
-              // Создаем карту если ее еще нет
-              const w = Math.max(cell.grid_x + 1, 50);
-              const h = Math.max(cell.grid_y + 1, 50);
-              map = new Uint8Array(w * h);
-              size = { w, h };
-              useFogStore.getState().setMap(mapId, map, w, h);
-            }
-
-            // Если координаты выходят за границы, расширяем карту
-            let currentW = size.w;
-            let currentH = size.h;
-            
-            if (cell.grid_x >= size.w || cell.grid_y >= size.h) {
-              const newW = Math.max(size.w, cell.grid_x + 10);
-              const newH = Math.max(size.h, cell.grid_y + 10);
-              const newMap = new Uint8Array(newW * newH);
-              
-              // Копируем старые данные
-              for (let y = 0; y < size.h; y++) {
-                for (let x = 0; x < size.w; x++) {
-                  newMap[y * newW + x] = map[y * size.w + x];
-                }
-              }
-              
-              map = newMap;
-              currentW = newW;
-              currentH = newH;
-              console.log(`📏 Expanded fog map to ${newW}x${newH}`);
-            } else {
-              map = new Uint8Array(map);
-            }
-
-            const idx = cell.grid_y * currentW + cell.grid_x;
-            
-            if (idx >= 0 && idx < map.length) {
-              map[idx] = cell.is_revealed ? 1 : 0;
-              useFogStore.getState().setMap(
-                mapId, 
-                map, 
-                currentW,
-                currentH
-              );
-              console.log(`✅ Real-time update: cell (${cell.grid_x}, ${cell.grid_y}) = ${cell.is_revealed ? 'revealed' : 'hidden'}`);
+          // Копируем старые данные
+          for (let y = 0; y < size.h; y++) {
+            for (let x = 0; x < size.w; x++) {
+              newMap[y * newW + x] = map[y * size.w + x];
             }
           }
+          
+          map = newMap;
+          currentW = newW;
+          currentH = newH;
+          console.log(`📏 Expanded fog map to ${newW}x${newH}`);
+        } else {
+          map = new Uint8Array(map);
         }
-      )
-      .subscribe((status) => {
-        console.log(`📡 Fog sync subscription status: ${status}`);
-        if (status === 'SUBSCRIBED') {
-          console.log('✅ Successfully subscribed to fog updates');
-        } else if (status === 'CHANNEL_ERROR') {
-          console.error('❌ Error subscribing to fog updates');
+
+        const idx = cell.grid_y * currentW + cell.grid_x;
+        
+        if (idx >= 0 && idx < map.length) {
+          map[idx] = cell.is_revealed ? 1 : 0;
+          useFogStore.getState().setMap(
+            mapId, 
+            map, 
+            currentW,
+            currentH
+          );
+          console.log(`✅ Real-time update: cell (${cell.grid_x}, ${cell.grid_y}) = ${cell.is_revealed ? 'revealed' : 'hidden'}`);
         }
-      });
+      }
+    });
 
     return () => {
       console.log('🌫️ Cleaning up fog sync');
-      supabase.removeChannel(channel);
+      unsub();
     };
   }, [sessionId, mapId]);
 }

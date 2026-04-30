@@ -4,7 +4,7 @@
  */
 
 import { supabase } from '@/integrations/supabase/client';
-import type { RealtimeChannel } from '@supabase/supabase-js';
+import { realtimeManager } from '@/services/RealtimeService';
 
 export interface BattleState {
   sessionId: string;
@@ -32,7 +32,7 @@ export interface BattleToken {
 export class BattleController {
   private sessionId: string;
   private isDM: boolean;
-  private channels: RealtimeChannel[] = [];
+  private unsubs: (() => void)[] = [];
   private listeners: Set<() => void> = new Set();
   
   private state: BattleState;
@@ -286,7 +286,7 @@ export class BattleController {
 
   async addToken(token: Partial<BattleToken>): Promise<string> {
     const newToken: BattleToken = {
-      id: crypto.randomUUID(),
+      id: Math.random().toString(36).substring(2, 11),
       name: token.name || 'New Token',
       position: token.position || [100, 100, 0],
       hp: token.hp || 10,
@@ -440,103 +440,52 @@ export class BattleController {
   // ========================================
 
   private setupRealtimeSync(): void {
+    realtimeManager.connectSession(this.sessionId).catch(console.error);
+
     // Синхронизация карты
-    const mapChannel = supabase
-      .channel(`map-sync-${this.sessionId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'game_sessions',
-          filter: `id=eq.${this.sessionId}`,
-        },
-        (payload: any) => {
-          if (payload.new?.current_map_url) {
-            this.state.mapUrl = payload.new.current_map_url;
-            this.emit();
-          }
-        }
-      )
-      .subscribe();
+    const mapUnsub = realtimeManager.onPgChange(this.sessionId, 'game_sessions', 'UPDATE', (payload: any) => {
+      if (payload.new?.current_map_url) {
+        this.state.mapUrl = payload.new.current_map_url;
+        this.emit();
+      }
+    });
 
     // Синхронизация токенов
-    const tokensChannel = supabase
-      .channel(`tokens-sync-${this.sessionId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'battle_tokens',
-          filter: `session_id=eq.${this.sessionId}`,
-        },
-        (payload: any) => {
-          const newToken = this.mapTokenFromDB(payload.new);
-          if (!this.state.tokens.find(t => t.id === newToken.id)) {
-            this.state.tokens.push(newToken);
-            this.emit();
-          }
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'battle_tokens',
-          filter: `session_id=eq.${this.sessionId}`,
-        },
-        (payload: any) => {
-          const updated = this.mapTokenFromDB(payload.new);
-          const index = this.state.tokens.findIndex(t => t.id === updated.id);
-          if (index !== -1) {
-            this.state.tokens[index] = updated;
-            this.emit();
-          }
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: 'DELETE',
-          schema: 'public',
-          table: 'battle_tokens',
-          filter: `session_id=eq.${this.sessionId}`,
-        },
-        (payload: any) => {
-          this.state.tokens = this.state.tokens.filter(t => t.id !== payload.old.id);
-          this.emit();
-        }
-      )
-      .subscribe();
+    const tokensUnsubInsert = realtimeManager.onPgChange(this.sessionId, 'battle_tokens', 'INSERT', (payload: any) => {
+      const newToken = this.mapTokenFromDB(payload.new);
+      if (!this.state.tokens.find(t => t.id === newToken.id)) {
+        this.state.tokens.push(newToken);
+        this.emit();
+      }
+    });
+
+    const tokensUnsubUpdate = realtimeManager.onPgChange(this.sessionId, 'battle_tokens', 'UPDATE', (payload: any) => {
+      const updated = this.mapTokenFromDB(payload.new);
+      const index = this.state.tokens.findIndex(t => t.id === updated.id);
+      if (index !== -1) {
+        this.state.tokens[index] = updated;
+        this.emit();
+      }
+    });
+
+    const tokensUnsubDelete = realtimeManager.onPgChange(this.sessionId, 'battle_tokens', 'DELETE', (payload: any) => {
+      this.state.tokens = this.state.tokens.filter(t => t.id !== payload.old.id);
+      this.emit();
+    });
 
     // Синхронизация тумана войны (только для игроков)
+    let fogUnsub = () => {};
     if (!this.isDM) {
-      const fogChannel = supabase
-        .channel(`fog-sync-${this.sessionId}`)
-        .on(
-          'postgres_changes',
-          {
-            event: '*',
-            schema: 'public',
-            table: 'fog_of_war',
-            filter: `session_id=eq.${this.sessionId}`,
-          },
-          (payload: any) => {
-            const cell = payload.new;
-            if (cell && this.state.fogGrid[cell.grid_y]) {
-              this.state.fogGrid[cell.grid_y][cell.grid_x] = cell.is_revealed ? 1 : 0;
-              this.emit();
-            }
-          }
-        )
-        .subscribe();
-
-      this.channels.push(fogChannel);
+      fogUnsub = realtimeManager.onPgChange(this.sessionId, 'fog_of_war', '*', (payload: any) => {
+        const cell = payload.new;
+        if (cell && this.state.fogGrid[cell.grid_y]) {
+          this.state.fogGrid[cell.grid_y][cell.grid_x] = cell.is_revealed ? 1 : 0;
+          this.emit();
+        }
+      });
     }
 
-    this.channels.push(mapChannel, tokensChannel);
+    this.unsubs.push(mapUnsub, tokensUnsubInsert, tokensUnsubUpdate, tokensUnsubDelete, fogUnsub);
   }
 
   // ========================================
@@ -545,10 +494,8 @@ export class BattleController {
 
   destroy(): void {
     console.log('[BattleController] Очистка...');
-    this.channels.forEach(channel => {
-      supabase.removeChannel(channel);
-    });
-    this.channels = [];
+    this.unsubs.forEach(unsub => unsub());
+    this.unsubs = [];
     this.listeners.clear();
   }
 }

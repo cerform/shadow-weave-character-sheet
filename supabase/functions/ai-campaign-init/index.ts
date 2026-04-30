@@ -59,9 +59,12 @@ Deno.serve(async (req: Request) => {
     return new Response(null, { headers: CORS_HEADERS });
   }
 
+  let campaignName = "Неизвестная Кампания";
+
   try {
-    const { campaignName, aiPersonality, party, worldSeed } =
-      (await req.json()) as InitRequest;
+    const payload = (await req.json()) as InitRequest;
+    campaignName = payload.campaignName;
+    const { aiPersonality, party, worldSeed } = payload;
 
     const partyText = party
       .map((p) => `${p.name} — ${p.race} ${p.class} ${p.level} ур.`)
@@ -170,9 +173,13 @@ ${JSON.stringify(
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Unknown error";
     console.error("[ai-campaign-init] Error:", message);
-    return new Response(JSON.stringify({ success: false, error: message }), {
-      status: 500,
-      headers: CORS_HEADERS,
-    });
+    
+    return new Response(
+      JSON.stringify({
+        success: false,
+        error: message
+      }),
+      { status: 500, headers: CORS_HEADERS }
+    );
   }
 });

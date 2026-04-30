@@ -78,7 +78,7 @@ export const useWorldStore = create<WorldState>((set, get) => ({
   placeAt: (x,y,z) => set(s => {
     if (!get().canPlace(x,y,z, s.activeType)) return s;
     const b: Brick = { 
-      id: crypto.randomUUID(), 
+      id: Math.random().toString(36).substring(2, 11), 
       t: s.activeType, 
       x, y, z, 
       rot: s.activeRot, 

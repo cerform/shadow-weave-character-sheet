@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { realtimeManager } from '@/services/RealtimeService';
 
 // Используем типы из базы данных (для совместимости с существующими таблицами)
 export interface SessionState {
@@ -99,101 +100,55 @@ export const useSessionSync = (sessionId: string) => {
   useEffect(() => {
     if (!sessionId) return;
 
+    realtimeManager.connectSession(sessionId).catch(console.error);
+
     // Подписка на новые сообщения
-    const messagesChannel = supabase
-      .channel('session-messages-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'session_messages',
-          filter: `session_id=eq.${sessionId}`
-        },
-        (payload) => {
-          console.log('💬 Новое сообщение:', payload);
-          const newMessage = {
-            id: payload.new.id,
-            session_id: payload.new.session_id,
-            user_id: payload.new.user_id,
-            sender_name: payload.new.sender_name,
-            content: payload.new.content,
-            message_type: payload.new.message_type as 'chat' | 'system' | 'dice' | 'action',
-            created_at: payload.new.created_at
-          };
-          setMessages(prev => [...prev, newMessage]);
-        }
-      )
-      .subscribe();
+    const unsubMessages = realtimeManager.onPgChange(sessionId, 'session_messages', 'INSERT', (payload) => {
+      console.log('💬 Новое сообщение:', payload);
+      const newMessage = {
+        id: payload.new.id,
+        session_id: payload.new.session_id,
+        user_id: payload.new.user_id,
+        sender_name: payload.new.sender_name,
+        content: payload.new.content,
+        message_type: payload.new.message_type as 'chat' | 'system' | 'dice' | 'action',
+        created_at: payload.new.created_at
+      };
+      setMessages(prev => [...prev, newMessage]);
+    });
 
     // Подписка на изменения игровых сессий  
-    const sessionChannel = supabase
-      .channel('game-session-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'game_sessions',
-          filter: `id=eq.${sessionId}`
-        },
-        (payload) => {
-          console.log('🎮 Обновление сессии:', payload);
-          toast({
-            title: "Сессия обновлена",
-            description: "Мастер изменил настройки сессии",
-          });
-        }
-      )
-      .subscribe();
+    const unsubSession = realtimeManager.onPgChange(sessionId, 'game_sessions', 'UPDATE', (payload) => {
+      console.log('🎮 Обновление сессии:', payload);
+      toast({
+        title: "Сессия обновлена",
+        description: "Мастер изменил настройки сессии",
+      });
+    });
 
     // Подписка на изменения токенов на карте
-    const tokensChannel = supabase
-      .channel('battle-tokens-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'battle_tokens',
-          filter: `session_id=eq.${sessionId}`
-        },
-        (payload) => {
-          console.log('🎯 Изменение токенов:', payload);
-          toast({
-            title: "Карта обновлена",
-            description: "Позиции токенов изменились",
-          });
-        }
-      )
-      .subscribe();
+    const unsubTokens = realtimeManager.onPgChange(sessionId, 'battle_tokens', '*', (payload) => {
+      console.log('🎯 Изменение токенов:', payload);
+      toast({
+        title: "Карта обновлена",
+        description: "Позиции токенов изменились",
+      });
+    });
 
     // Подписка на изменения карт
-    const mapsChannel = supabase
-      .channel('battle-maps-changes') 
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'battle_maps',
-          filter: `session_id=eq.${sessionId}`
-        },
-        (payload) => {
-          console.log('🗺️ Изменение карты:', payload);
-          toast({
-            title: "Новая карта",
-            description: "Мастер сменил карту боя",
-          });
-        }
-      )
-      .subscribe();
+    const unsubMaps = realtimeManager.onPgChange(sessionId, 'battle_maps', '*', (payload) => {
+      console.log('🗺️ Изменение карты:', payload);
+      toast({
+        title: "Новая карта",
+        description: "Мастер сменил карту боя",
+      });
+    });
 
     return () => {
-      supabase.removeChannel(messagesChannel);
-      supabase.removeChannel(sessionChannel);
-      supabase.removeChannel(tokensChannel);
-      supabase.removeChannel(mapsChannel);
+      unsubMessages();
+      unsubSession();
+      unsubTokens();
+      unsubMaps();
     };
   }, [sessionId, toast]);
 

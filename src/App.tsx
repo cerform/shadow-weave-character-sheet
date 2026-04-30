@@ -13,7 +13,6 @@ import FloatingActionWidget from "@/components/ui/FloatingActionWidget";
 import { Toaster } from "@/components/ui/sonner";
 
 function App() {
-  // ...
   const basename = import.meta.env.BASE_URL || "/";
 
   return (

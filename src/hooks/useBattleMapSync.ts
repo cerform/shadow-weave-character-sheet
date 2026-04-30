@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useEnhancedBattleStore } from '@/stores/enhancedBattleStore';
 import { useToast } from '@/hooks/use-toast';
+import { realtimeManager } from '@/services/RealtimeService';
 
 /**
  * Хук для синхронизации карты боя между мастером и игроками
@@ -58,42 +59,31 @@ export const useBattleMapSync = (sessionId: string, isDM: boolean) => {
 
     // Подписываемся на изменения URL карты в game_sessions
     console.log('📡 [PLAYER] Подписка на изменения карты для сессии:', sessionId);
-    const channel = supabase
-      .channel(`map-sync-player-${sessionId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'game_sessions',
-          filter: `id=eq.${sessionId}`
-        },
-        (payload) => {
-          console.log('🔄 [PLAYER] Real-time обновление game_sessions:', payload);
-          const newMapUrl = (payload.new as any).current_map_url;
-          
-          console.log('🗺️ [PLAYER] Новый URL карты из real-time:', newMapUrl);
-          
-          if (newMapUrl) {
-            console.log('✅ [PLAYER] Применяем новую карту:', newMapUrl);
-            setMapImageUrl(newMapUrl);
-            toast({
-              title: "Карта обновлена",
-              description: "Мастер сменил карту боя",
-            });
-          } else {
-            console.log('ℹ️ [PLAYER] Обновление без карты (current_map_url пустой)');
-            setMapImageUrl(null);
-          }
-        }
-      )
-      .subscribe((status) => {
-        console.log('📡 [PLAYER] Статус подписки на карту:', status);
-      });
+    
+    realtimeManager.connectSession(sessionId).catch(console.error);
+
+    const unsub = realtimeManager.onPgChange(sessionId, 'game_sessions', 'UPDATE', (payload) => {
+      console.log('🔄 [PLAYER] Real-time обновление game_sessions:', payload);
+      const newMapUrl = (payload.new as any).current_map_url;
+      
+      console.log('🗺️ [PLAYER] Новый URL карты из real-time:', newMapUrl);
+      
+      if (newMapUrl) {
+        console.log('✅ [PLAYER] Применяем новую карту:', newMapUrl);
+        setMapImageUrl(newMapUrl);
+        toast({
+          title: "Карта обновлена",
+          description: "Мастер сменил карту боя",
+        });
+      } else {
+        console.log('ℹ️ [PLAYER] Обновление без карты (current_map_url пустой)');
+        setMapImageUrl(null);
+      }
+    });
 
     return () => {
       console.log('🔕 [PLAYER] Отписка от изменений карты');
-      supabase.removeChannel(channel);
+      unsub();
     };
   }, [sessionId, isDM]); // Убрали setMapImageUrl и toast из зависимостей
 

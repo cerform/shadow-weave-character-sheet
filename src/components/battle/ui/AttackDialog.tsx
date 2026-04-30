@@ -221,7 +221,7 @@ export const AttackDialog: React.FC<AttackDialogProps> = ({ children, attacker }
         }
 
         const combatAction: CombatAction = {
-          actionId: crypto.randomUUID(),
+          actionId: Math.random().toString(36).substring(2, 11),
           sessionId: sessionId,
           actorTokenId: attacker.id,
           targetTokenIds: [target.id],

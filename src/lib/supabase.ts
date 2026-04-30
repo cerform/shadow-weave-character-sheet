@@ -9,7 +9,7 @@ export async function createCharacter(character: Character): Promise<Character> 
   console.log('Создание персонажа:', character);
   
   // Генерируем уникальный идентификатор
-  const id = crypto.randomUUID();
+  const id = Math.random().toString(36).substring(2, 11);
   
   // Возвращаем персонажа с id
   return { ...character, id };

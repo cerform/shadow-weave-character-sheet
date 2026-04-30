@@ -135,7 +135,7 @@ export const useUnifiedBattleStore = create<UnifiedBattleState>()(
       addToken: (tokenData) => {
         const token: EnhancedToken = {
           ...tokenData,
-          id: crypto.randomUUID(),
+          id: Math.random().toString(36).substring(2, 11),
         };
         set((state) => ({
           tokens: [...state.tokens, token],
@@ -192,7 +192,7 @@ export const useUnifiedBattleStore = create<UnifiedBattleState>()(
       addCombatEvent: (eventData) => {
         const event: CombatEvent = {
           ...eventData,
-          id: crypto.randomUUID(),
+          id: Math.random().toString(36).substring(2, 11),
           timestamp: Date.now(),
         };
         set((state) => ({

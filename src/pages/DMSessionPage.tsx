@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from '@/hooks/use-auth';
 import { supabase } from '@/integrations/supabase/client';
+import { realtimeManager } from '@/services/RealtimeService';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -172,39 +173,33 @@ const DMSessionPage = () => {
     updateDMStatus();
     const heartbeatInterval = setInterval(updateDMStatus, 30000);
 
-    const playersChannel = supabase.channel(`dm-players-${sessionId}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'session_players', filter: `session_id=eq.${sessionId}` },
-        async () => {
-          const { data } = await supabase.from('session_players').select('*').eq('session_id', sessionId).order('joined_at');
-          if (data) setPlayers(data as SessionPlayer[]);
-        }).subscribe();
+    realtimeManager.connectSession(sessionId).catch(console.error);
 
-    const messagesChannel = supabase.channel(`dm-messages-${sessionId}`)
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'session_messages', filter: `session_id=eq.${sessionId}` },
-        (payload) => {
-          setMessages(prev => [...prev, payload.new as SessionMessage].slice(-100));
-        }).subscribe();
+    const unsubPlayers = realtimeManager.onPgChange(sessionId, 'session_players', '*', async () => {
+      const { data } = await supabase.from('session_players').select('*').eq('session_id', sessionId).order('joined_at');
+      if (data) setPlayers(data as SessionPlayer[]);
+    });
 
-    const tokensChannel = supabase.channel(`dm-tokens-${sessionId}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'battle_tokens', filter: `session_id=eq.${sessionId}` },
-        async () => {
-          const { data } = await supabase.from('battle_tokens').select('*').eq('session_id', sessionId);
-          if (data) setTokens(data as BattleToken[]);
-        }).subscribe();
+    const unsubMessages = realtimeManager.onPgChange(sessionId, 'session_messages', 'INSERT', (payload) => {
+      setMessages(prev => [...prev, payload.new as SessionMessage].slice(-100));
+    });
 
-    const initChannel = supabase.channel(`dm-init-${sessionId}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'initiative_tracker', filter: `session_id=eq.${sessionId}` },
-        async () => {
-          const { data } = await supabase.from('initiative_tracker').select('*').eq('session_id', sessionId).order('initiative_roll', { ascending: false });
-          if (data) setInitiative(data as InitiativeEntry[]);
-        }).subscribe();
+    const unsubTokens = realtimeManager.onPgChange(sessionId, 'battle_tokens', '*', async () => {
+      const { data } = await supabase.from('battle_tokens').select('*').eq('session_id', sessionId);
+      if (data) setTokens(data as BattleToken[]);
+    });
+
+    const unsubInit = realtimeManager.onPgChange(sessionId, 'initiative_tracker', '*', async () => {
+      const { data } = await supabase.from('initiative_tracker').select('*').eq('session_id', sessionId).order('initiative_roll', { ascending: false });
+      if (data) setInitiative(data as InitiativeEntry[]);
+    });
 
     return () => {
       clearInterval(heartbeatInterval);
-      supabase.removeChannel(playersChannel);
-      supabase.removeChannel(messagesChannel);
-      supabase.removeChannel(tokensChannel);
-      supabase.removeChannel(initChannel);
+      unsubPlayers();
+      unsubMessages();
+      unsubTokens();
+      unsubInit();
     };
   }, [sessionId, user?.id]);
 

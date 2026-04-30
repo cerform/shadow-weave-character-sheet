@@ -144,7 +144,7 @@ export class CombatEngineService {
 
       await supabase.from('session_messages').insert({
         session_id: action.sessionId,
-        sender: 'Combat System',
+        sender_name: 'Combat System',
         message_type: 'combat_log',
         content,
         timestamp: action.timestamp,
@@ -153,7 +153,7 @@ export class CombatEngineService {
 
       // Blast to local sockets immediately for fast UI
       socketService.sendMessage({
-        id: crypto.randomUUID(),
+        id: Math.random().toString(36).substring(2, 11),
         sessionId: action.sessionId,
         sender: 'Combat System',
         type: 'system',

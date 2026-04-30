@@ -63,7 +63,7 @@ export const SessionProvider = ({ children }: { children: ReactNode }) => {
       throw new Error("Пользователь не авторизован");
     }
     const newSession: DMSession = {
-      id: crypto.randomUUID(),
+      id: Math.random().toString(36).substring(2, 11),
       name,
       code: generateSessionCode(),
       players: [],
@@ -86,7 +86,7 @@ export const SessionProvider = ({ children }: { children: ReactNode }) => {
 
     const session = sessions[sessionIndex];
     const newPlayer: Player = {
-      id: crypto.randomUUID(),
+      id: Math.random().toString(36).substring(2, 11),
       name: player.name,
       character: player.character,
       connected: true

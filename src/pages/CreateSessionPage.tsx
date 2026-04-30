@@ -102,7 +102,7 @@ export default function CreateSessionPage() {
     if (!newMember.name.trim()) return;
     setConfig(c => ({
       ...c,
-      party: [...c.party, { ...newMember, id: crypto.randomUUID() }]
+      party: [...c.party, { ...newMember, id: Math.random().toString(36).substring(2, 11) }]
     }));
     setNewMember({ name: '', race: 'Человек', class: 'Воин', level: 1 });
   };
@@ -148,6 +148,7 @@ export default function CreateSessionPage() {
         // Navigate first, then AI runs in the background
         navigate(`/vtt/${session.id}`);
 
+        console.log('[CreateSession] Triggering AI campaign initialization for session:', session.id);
         AIDMService.initCampaign({
           campaignName: config.name,
           sessionId: session.id,

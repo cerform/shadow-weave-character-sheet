@@ -239,7 +239,7 @@ export const useDamageLog = (
       
       setEvents((prev) => [
         {
-          id: crypto.randomUUID(),
+          id: Math.random().toString(36).substring(2, 11),
           type: difference > 0 ? 'heal' : 'damage',
           amount: Math.abs(difference),
           source: 'Ручное изменение',

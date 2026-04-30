@@ -142,7 +142,7 @@ const useBattleStore = create<BattleStore>((set, get) => ({
     if (get().battleState.isActive) {
       const roll = Math.floor(Math.random() * 20) + 1 + token.initiative;
       const newInitiative: Initiative = {
-        id: crypto.randomUUID(),
+        id: Math.random().toString(36).substring(2, 11),
         tokenId: token.id,
         name: token.name,
         roll,
@@ -209,7 +209,7 @@ const useBattleStore = create<BattleStore>((set, get) => ({
     
     // Generate initiative rolls
     const initiativeRolls: Initiative[] = state.tokens.map((token) => ({
-      id: crypto.randomUUID(),
+      id: Math.random().toString(36).substring(2, 11),
       tokenId: token.id,
       name: token.name,
       roll: Math.floor(Math.random() * 20) + 1 + token.initiative,
