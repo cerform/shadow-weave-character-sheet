@@ -5,6 +5,7 @@ import { ErrorLogsService } from '@/services/ErrorLogsService';
 import { SentryService } from '@/services/SentryService';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card } from '@/components/ui/card';
+import { generateRandomId } from '@/utils/idGenerator';
 
 interface ErrorBoundaryProps {
   children: React.ReactNode;
@@ -124,7 +125,7 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
   private getSessionId(): string {
     let sessionId = sessionStorage.getItem('error-session-id');
     if (!sessionId) {
-      sessionId = `session-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      sessionId = generateRandomId();
       sessionStorage.setItem('error-session-id', sessionId);
     }
     return sessionId;

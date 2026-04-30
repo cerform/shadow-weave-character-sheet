@@ -1,7 +1,7 @@
-
 /**
- * Генерирует случайный уникальный идентификатор
+ * Генерирует случайный уникальный идентификатор (UUID)
+ * Использует стандартный Web Crypto API для совместимости с базой данных
  */
 export const generateRandomId = (): string => {
-  return Math.random().toString(36).substring(2, 11) + Date.now().toString(36);
+  return crypto.randomUUID();
 };
