@@ -145,17 +145,23 @@ export default function VTTBattlePage() {
     if (!sessionId) return;
 
     const load = async () => {
-      const { data: sess } = await supabase
-        .from('game_sessions')
-        .select('*')
-        .eq('id', sessionId)
-        .single();
+        const { data: sess, error: sessionError } = await supabase
+          .from('game_sessions')
+          .select('*')
+          .eq('id', sessionId)
+          .single();
 
-      if (!sess) {
-        toast({ title: 'Сессия не найдена', variant: 'destructive' });
-        navigate('/dm');
-        return;
-      }
+        if (sessionError) {
+          console.error('❌ [VTT] Supabase Session Fetch Error:', sessionError);
+          console.error('Error Code:', sessionError.code);
+          console.error('Error Message:', sessionError.message);
+          console.error('Error Details:', sessionError.details);
+          console.error('Error Hint:', sessionError.hint);
+          toast({ title: 'Сессия не найдена', variant: 'destructive' });
+          navigate('/dm');
+          return;
+        }
+
       setSession(sess);
       setIsDM(sess.dm_id === user?.id);
 
