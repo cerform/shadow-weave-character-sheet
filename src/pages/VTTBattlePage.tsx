@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { DiceService } from '@/services/diceService';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
+import { socketService } from '@/services/socket';
 import { realtimeManager } from '@/services/RealtimeService';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
